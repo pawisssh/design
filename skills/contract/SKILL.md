@@ -1,6 +1,6 @@
 ---
 name: contract
-description: The shared Contract (component.json) and foundations document reference used by every other skill. Use when reading, writing, validating or editing a Contract or a foundations document, or when writing an Adapter.
+description: Contract (component.json) and foundations document schemas. Use when writing or editing a Contract or a foundations document, or when writing an Adapter.
 ---
 
 # Contract
@@ -11,7 +11,7 @@ The neutral, shared skill: the one place that defines the **Contract** (one `com
 
 - [Contract schema](references/contract-schema.md): every field of a Contract, its match patterns, rules and value forms. Read before writing or editing a Contract.
 - [Foundations schema](references/foundations-schema.md): collections, modes, variables, scopes, codeSyntax and Text Styles, plus the foundations ledger. Read before generating or reading a foundations document.
-- [Mapping](references/mapping.md): how the older hand-off files (selection manifest, expected file, layout and token plans, build plan) map onto the Contract.
+- [Mapping](references/mapping.md): how the older hand-off files (selection manifest, expected file, layout and token plans, build plan) map onto the Contract. Read when a skill still names one of those files.
 
 ## Instances
 

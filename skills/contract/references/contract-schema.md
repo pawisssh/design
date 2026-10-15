@@ -2,7 +2,7 @@
 
 Answer for [#7](https://github.com/pawisssh/design/issues/7), part of map [#1](https://github.com/pawisssh/design/issues/1). The vocabulary follows `GLOSSARY.md`: Code Library, Design Library, Component Family, Property Axis, Base Component, Sub-component, Component Set, Contract, Adapter.
 
-The Contract is the library-neutral, canonical and readable description of one Component Family. The Adapter for a Code Library writes it, the owner approves it in To-preview, and the To-design builder reads it. This is one file per Component Family. Compaction for `use_figma` is the packager's job ([#12](https://github.com/pawisssh/design/issues/12), #18); the Contract itself is never compacted.
+The Contract is the library-neutral, canonical and readable description of one Component Family. The Adapter for a Code Library writes it, the owner approves it once, at the end of To-design's base loop, and the To-design builder reads it. (The approval shape in [Selection](#selection) is updated in #24.) This is one file per Component Family. Compaction for `use_figma` is the packager's job ([#12](https://github.com/pawisssh/design/issues/12), #18); the Contract itself is never compacted.
 
 Worked example: [`button.component.json`](../../../design-systems/carbon/contracts/button.component.json), Carbon React Button at `v11.118.0`. Checker: the research expander `docs/contract/tools/expand_contract.py` on branch `research/skills-split` (`python3 docs/contract/tools/expand_contract.py <contract> --table`), replaced by the shared Contract module in #24. Mapping from today's artifacts: [`mapping.md`](mapping.md).
 

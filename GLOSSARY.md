@@ -49,7 +49,7 @@ The translation from one specific Code Library into the Contract.
 _Avoid_: Source adapter, connector, parser
 
 **Foundations document**:
-The generated description of a Design System's shared tokens (variables, theme modes and Text Styles) that every Contract in that Design System binds to. There is one per Design System, and an Adapter writes it.
+The generated description of a Design System's shared tokens and themes, which every Contract in that Design System refers to. One per Design System.
 _Avoid_: Tokens file, theme file, variables JSON
 
 ## Skills
@@ -59,5 +59,5 @@ The skill that shows a Contract's combinations, rendered with the real Code Libr
 _Avoid_: component-sheet-html, component sheet, HTML catalog skill
 
 **To-design**:
-The skill that builds a Design Library in Figma from Contracts: foundations and icons first, then the Base Component for owner approval, then the full Component Set.
-_Avoid_: code-to-canvas, builder
+The skill that builds a Design Library in Figma from Contracts, where the owner approves each Base Component before its Component Set is built.
+_Avoid_: code-to-canvas

@@ -1,6 +1,6 @@
 ---
 name: adapter-carbon
-description: The Carbon Adapter, which turns Carbon React source at a pinned commit into a draft Contract and the Carbon foundations document. Use when generating or refreshing a Carbon Contract or foundations document, or rendering Carbon React specimens for To-preview.
+description: Carbon React Adapter, from Carbon source at a pinned commit to a draft Contract and the Carbon foundations document. Use when creating or refreshing a Carbon Contract or the Carbon foundations document.
 ---
 
 # Carbon Adapter
