@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Kind=Primary, Size=Large, State=Enabled",
+    "changes": [
+      {
+        "kind": "detached",
+        "section": "layout",
+        "node": "Label",
+        "field": "textStyle",
+        "from": {
+          "token": "body-compact-01"
+        },
+        "to": null
+      },
+      {
+        "kind": "unmapped",
+        "section": "layout",
+        "node": "Label",
+        "field": "letterSpacing",
+        "from": 0.16,
+        "to": 0.32,
+        "why": "Contract v1 has no field for this; only textStyle"
+      }
+    ]
+  }
+]

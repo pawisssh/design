@@ -1,0 +1,20 @@
+{
+  "_note": "PROTOTYPE foundations for #8 only. Approximate Carbon v11.118.0 values for the handful of tokens the prototype variants use. spacing-06 is OUTSIDE Button's derived closure; it exists here to simulate a Layout collection that carries the full spacing scale, so a token-backed owner tweak is possible.",
+  "collection": "proto-8 / Foundations",
+  "modes": ["White", "Gray 100"],
+  "colors": {
+    "button-primary":       ["#0f62fe", "#0f62fe"],
+    "button-primary-hover": ["#0050e6", "#0050e6"],
+    "text-on-color":        ["#ffffff", "#ffffff"],
+    "link-primary":         ["#0f62fe", "#78a9ff"]
+  },
+  "floats": {
+    "spacing-03": 8, "spacing-05": 16, "spacing-06": 24, "spacing-07": 32,
+    "size-md": 40, "size-lg": 48, "size-xl": 64,
+    "icon-size-01": 16, "icon-size-02": 20,
+    "border-radius-00": 0
+  },
+  "textStyles": {
+    "body-compact-01": { "family": "IBM Plex Sans", "style": "Regular", "fontSize": 14, "lineHeight": 18, "letterSpacing": 0.16 }
+  }
+}

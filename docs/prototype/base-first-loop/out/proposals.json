@@ -1,0 +1,168 @@
+[
+  {
+    "change": {
+      "kind": "token-edit",
+      "section": "layout",
+      "node": "Button",
+      "field": "gap",
+      "from": {
+        "token": "spacing-07"
+      },
+      "to": {
+        "token": "spacing-06"
+      }
+    },
+    "expressible": true,
+    "rule": 0,
+    "ruleMatch": {},
+    "scope": "shared",
+    "widerThanBase": false,
+    "newValue": {
+      "token": "spacing-06",
+      "by": "owner",
+      "was": {
+        "token": "spacing-07"
+      }
+    },
+    "strategies": {
+      "A_editInPlace": {
+        "count": 150,
+        "of": 245,
+        "sample": [
+          "primary/xs/enabled",
+          "primary/xs/hover",
+          "primary/xs/active"
+        ]
+      },
+      "B_appendSameMatch": {
+        "count": 245,
+        "of": 245,
+        "sample": [
+          "primary/xs/enabled",
+          "primary/xs/hover",
+          "primary/xs/active"
+        ]
+      },
+      "C_appendBaseOnly": {
+        "count": 1,
+        "of": 245,
+        "sample": [
+          "primary/lg/enabled"
+        ]
+      }
+    },
+    "shields": [
+      {
+        "rule": 8,
+        "match": {
+          "size": "lg-expressive"
+        },
+        "value": "raw 28",
+        "reason": "derived: 64px end space − 16px end padding − 20px icon"
+      },
+      {
+        "rule": 9,
+        "match": {
+          "kind": [
+            "ghost",
+            "danger--ghost"
+          ]
+        },
+        "value": "{spacing-03}"
+      }
+    ],
+    "tokenOutsideClosure": "spacing-06"
+  },
+  {
+    "change": {
+      "kind": "raw-edit",
+      "section": "layout",
+      "node": "Button",
+      "field": "paddingTop",
+      "from": {
+        "raw": 15,
+        "level": "info",
+        "reason": "derived, capped at the lg value; xl/2xl labels sit top-aligned"
+      },
+      "to": {
+        "raw": 14
+      }
+    },
+    "expressible": true,
+    "rule": 4,
+    "ruleMatch": {
+      "size": [
+        "lg",
+        "xl",
+        "2xl"
+      ]
+    },
+    "scope": "axis-specific",
+    "widerThanBase": true,
+    "newValue": {
+      "raw": 14,
+      "by": "owner",
+      "was": {
+        "raw": 15
+      },
+      "level": "warning",
+      "reason": "owner tweak at Base Component approval; no token"
+    },
+    "strategies": {
+      "A_editInPlace": {
+        "count": 105,
+        "of": 245,
+        "sample": [
+          "primary/lg/enabled",
+          "primary/lg/hover",
+          "primary/lg/active"
+        ]
+      },
+      "B_appendSameMatch": {
+        "count": 105,
+        "of": 245,
+        "sample": [
+          "primary/lg/enabled",
+          "primary/lg/hover",
+          "primary/lg/active"
+        ]
+      },
+      "C_appendBaseOnly": {
+        "count": 1,
+        "of": 245,
+        "sample": [
+          "primary/lg/enabled"
+        ]
+      }
+    },
+    "shields": [],
+    "tokenCandidates": []
+  },
+  {
+    "change": {
+      "kind": "detached",
+      "section": "layout",
+      "node": "Label",
+      "field": "textStyle",
+      "from": {
+        "token": "body-compact-01"
+      },
+      "to": null
+    },
+    "expressible": false,
+    "note": "binding lost in Figma (side effect of a raw override); the Contract keeps the token"
+  },
+  {
+    "change": {
+      "kind": "unmapped",
+      "section": "layout",
+      "node": "Label",
+      "field": "letterSpacing",
+      "from": 0.16,
+      "to": 0.32,
+      "why": "Contract v1 has no field for this; only textStyle"
+    },
+    "expressible": false,
+    "note": "no Contract field"
+  }
+]

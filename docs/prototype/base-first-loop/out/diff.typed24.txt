@@ -1,0 +1,17 @@
+
+Kind=Primary, Size=Large, State=Enabled  (typed-24 (hypothetical, no Figma call))  4 difference(s)
+  [raw-edit] layout.Button.gap: {spacing-07} -> raw 24
+  [raw-edit] layout.Button.paddingTop: raw 15 -> raw 14
+  [detached] layout.Label.textStyle: {body-compact-01} -> ∅
+  [unmapped] layout.Label.letterSpacing: 0.16 -> 0.32  (Contract v1 has no field for this; only textStyle)
+
+Proposed Contract edits:
+  ✓ layout[0] match={} (shared) Button.gap := {"raw":24,"by":"owner","was":{"token":"spacing-07"},"level":"warning","reason":"owner tweak at Base Component approval; no token"}
+      blast radius  A edit-in-place 150/245   B append-same-match 245   C append-base-only 1
+      shielded by layout[8] {"size":"lg-expressive"} = raw 28  reason: derived: 64px end space − 16px end padding − 20px icon
+      shielded by layout[9] {"kind":["ghost","danger--ghost"]} = {spacing-03}
+      raw value equals token(s) spacing-06 -> ask the owner: bind the token instead? (never upgrade silently)
+  ✓ layout[4] match={"size":["lg","xl","2xl"]} (axis-specific, wider than the base) Button.paddingTop := {"raw":14,"by":"owner","was":{"raw":15},"level":"warning","reason":"owner tweak at Base Component approval; no token"}
+      blast radius  A edit-in-place 105/245   B append-same-match 105   C append-base-only 1
+  ✗ Label.textStyle: NOT expressible (binding lost in Figma (side effect of a raw override); the Contract keeps the token)
+  ✗ Label.letterSpacing: NOT expressible (no Contract field)

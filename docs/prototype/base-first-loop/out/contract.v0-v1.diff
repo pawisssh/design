@@ -1,0 +1,44 @@
+--- contract.v0.json (normalized)
++++ contract.v1.json (normalized)
+@@ -265,7 +265,11 @@
+                     "alignMain": "start",
+                     "direction": "row",
+                     "gap": {
+-                        "token": "spacing-07"
++                        "by": "owner",
++                        "token": "spacing-06",
++                        "was": {
++                            "token": "spacing-07"
++                        }
+                     },
+                     "height": "hug",
+                     "maxWidth": {
+@@ -393,9 +397,13 @@
+                         "reason": "derived, capped at the lg value"
+                     },
+                     "paddingTop": {
+-                        "level": "info",
+-                        "raw": 15,
+-                        "reason": "derived, capped at the lg value; xl/2xl labels sit top-aligned"
++                        "by": "owner",
++                        "level": "warning",
++                        "raw": 14,
++                        "reason": "owner tweak at Base Component approval; no token",
++                        "was": {
++                            "raw": 15
++                        }
+                     }
+                 }
+             }
+@@ -527,6 +535,11 @@
+             "at": "source.commit",
+             "level": "info",
+             "message": "v11.118.0 is an annotated tag: tag object 3169e192 dereferences to commit 44f90d8. The #13 research note calls 3169e192 the commit."
++        },
++        {
++            "at": "layout.Label.letterSpacing",
++            "level": "warning",
++            "message": "Owner tweak at Base Component review not carried: letterSpacing 0.16 -> 0.32 (no Contract field; in Figma it also detached the text style). Not carried; discarded when the Base Component is rebuilt from the Contract. Needs a token or a schema field."
+         }
+     ],
+     "paint": [

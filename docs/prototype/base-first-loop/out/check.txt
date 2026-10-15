@@ -1,0 +1,37 @@
+== check: rebuilt base + derived variants vs Contract v1 (each against its own tuple)
+
+Kind=Primary, Size=Large, State=Enabled  (19:5)  MATCHES the Contract
+
+Kind=Primary, Size=Large, State=Hover  (19:10)  MATCHES the Contract
+
+Kind=Primary, Size=Medium, State=Enabled  (19:15)  MATCHES the Contract
+
+Kind=Ghost, Size=Large, State=Enabled  (19:20)  MATCHES the Contract
+
+Kind=Primary, Size=Extra Large, State=Enabled  (19:25)  MATCHES the Contract
+
+== same canvas vs Contract v0 (what propagated)
+
+Kind=Primary, Size=Large, State=Enabled  (19:5)  2 difference(s)
+  [token-edit] layout.Button.gap: {spacing-07} -> {spacing-06}
+  [raw-edit] layout.Button.paddingTop: raw 15 -> raw 14
+
+Kind=Primary, Size=Large, State=Hover  (19:10)  2 difference(s)
+  [token-edit] layout.Button.gap: {spacing-07} -> {spacing-06}
+  [raw-edit] layout.Button.paddingTop: raw 15 -> raw 14
+
+Kind=Primary, Size=Medium, State=Enabled  (19:15)  1 difference(s)
+  [token-edit] layout.Button.gap: {spacing-07} -> {spacing-06}
+
+Kind=Ghost, Size=Large, State=Enabled  (19:20)  1 difference(s)
+  [raw-edit] layout.Button.paddingTop: raw 15 -> raw 14
+
+Kind=Primary, Size=Extra Large, State=Enabled  (19:25)  2 difference(s)
+  [token-edit] layout.Button.gap: {spacing-07} -> {spacing-06}
+  [raw-edit] layout.Button.paddingTop: raw 15 -> raw 14
+
+== owner-tweaked node 18:31 vs Contract v1 (residue = what the Contract cannot carry)
+
+Kind=Primary, Size=Large, State=Enabled  (18:31)  2 difference(s)
+  [detached] layout.Label.textStyle: {body-compact-01} -> ∅
+  [unmapped] layout.Label.letterSpacing: 0.16 -> 0.32  (Contract v1 has no field for this; only textStyle)

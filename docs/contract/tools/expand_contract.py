@@ -65,6 +65,8 @@ def walk_values(obj, tokens, raws, path):
                 fail(f"raw value without level/reason at {path}")
             raws.append((path, obj["raw"], obj["level"]))
         for k, v in obj.items():
+            if k == "was":  # owner edit history (#8): the replaced value, not a live one
+                continue
             walk_values(v, tokens, raws, f"{path}.{k}")
     elif isinstance(obj, list):
         for i, v in enumerate(obj):

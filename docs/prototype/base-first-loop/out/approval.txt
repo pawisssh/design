@@ -1,0 +1,8 @@
+1. approve the Adapter Contract (To-preview): {"by":"owner (simulated by orchestrator)","at":"2026-10-16T00:00:00Z","snapshotId":"sha256:4c82c3cc7f2af6fa24fba39bb5e159c415b5691800130268c9d8903901164152","contentHash":"sha256:4a9e9f38d7a42ccfd0ea029241862365784bfe49b7f087e48ceee8ee07711bf5"}
+   valid? { q25: true, withHash: true }
+2. same approval block carried onto the owner-edited Contract:
+   valid? { q25: true, withHash: false }  <- Q25 (snapshotId only) still says valid
+3. re-approve after the base loop: {"by":"owner (simulated by orchestrator)","at":"2026-10-16T00:00:00Z","snapshotId":"sha256:4c82c3cc7f2af6fa24fba39bb5e159c415b5691800130268c9d8903901164152","contentHash":"sha256:13b933ccd24187dde686ba721bdc98e976b0f58a9c0ca450fa28a1fe914330b1"}
+   valid? { q25: true, withHash: true }
+4. any later edit: { q25: true, withHash: false }
+5. Adapter re-run with new source: { q25: false, withHash: false }

@@ -1,0 +1,26 @@
+domain 245  valid 245  selected 245  expectedCount 245
+Base Component: Kind=Primary, Size=Large, State=Enabled
+
+tokens used (38): background, background-active, background-hover, body-compact-01, body-compact-02, border-radius-00, button-danger-active, button-danger-hover, button-danger-primary, button-danger-secondary, button-disabled, button-primary, button-primary-active, button-primary-hover, button-secondary, button-secondary-active, button-secondary-hover, button-tertiary, button-tertiary-active, button-tertiary-hover, focus, icon-size-01, icon-size-02, link-primary, link-primary-hover, size-2xl, size-lg, size-md, size-sm, size-xl, size-xs, spacing-03, spacing-05, spacing-07, text-disabled, text-inverse, text-on-color, text-on-color-disabled
+
+added vs #9 closure: ['spacing-07']
+in #9 closure but unused by Button: ['background-selected', 'button-separator', 'icon-on-color-disabled', 'icon-primary', 'layer-selected-disabled', 'skeleton-background', 'skeleton-element', 'spacing-10']
+
+raw values (distinct path=value):
+  info    layout.Button.gap = 28
+  info    layout.Button.paddingBottom = 11
+  info    layout.Button.paddingBottom = 13
+  info    layout.Button.paddingBottom = 15
+  info    layout.Button.paddingBottom = 3
+  info    layout.Button.paddingBottom = 7
+  info    layout.Button.paddingTop = 11
+  info    layout.Button.paddingTop = 13
+  info    layout.Button.paddingTop = 15
+  info    layout.Button.paddingTop = 3
+  info    layout.Button.paddingTop = 7
+  warning layout.Button.maxWidth = 320
+  warning layout.Button.strokeWeight = 1
+  warning paint.Button.effects[0].spread = 3
+  warning paint.Button.effects[1].spread = 2
+
+OK

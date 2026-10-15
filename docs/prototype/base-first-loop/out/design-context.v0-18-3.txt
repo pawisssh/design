@@ -1,0 +1,6 @@
+get_design_context 18:3 (Base Component v0, built from Contract), screenshot excluded. Key lines:
+<div className="bg-[var(--cds-button-primary,#0f62fe)] content-stretch flex gap-[var(--cds-spacing-07,32px)] items-start max-w-[320px] min-h-[48px] px-[var(--cds-spacing-05,16px)] py-[15px] relative" data-node-id="18:3">
+<p className="... font-['IBM_Plex_Sans:Regular'] font-normal leading-[18px] ... text-[14px] text-[color:var(--cds-text-on-color,white)] tracking-[0.16px] whitespace-nowrap" data-node-id="18:4">Button</p>
+<div className="... size-[16px]" data-node-id="18:5" data-name="Icon"> <div ... data-name="Glyph"> <img .../> 
+Trailer: "These styles are contained in the design: proto-8/body-compact-01: Font(family: "IBM Plex Sans", style: Regular, size: 14, weight: 400, lineHeight: 18, letterSpacing: 0.1599999964237213)."
+Observations: bound minHeight (size-lg) shows as raw min-h-[48px]; bound Icon width/height (icon-size-01) shows as raw size-[16px]; bound radius (border-radius-00) not shown at all; text style named only in a trailer, not tied to a node.

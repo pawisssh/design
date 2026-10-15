@@ -1,0 +1,6 @@
+get_design_context 18:31 (Base Component after simulated owner tweaks). Key lines:
+<div className="bg-[var(--cds-button-primary,#0f62fe)] content-stretch flex gap-[var(--cds-spacing-06,24px)] items-start max-w-[320px] min-h-[48px] pb-[15px] pt-[14px] px-[var(--cds-spacing-05,16px)] relative" data-node-id="18:31">
+<p className="... leading-[18px] ... text-[14px] text-[color:var(--cds-text-on-color,white)] tracking-[0.32px] whitespace-nowrap" data-node-id="18:32">Button</p>
+<div className="... size-[16px]" data-node-id="18:33" data-name="Icon"> ...
+Trailer: no "These styles are contained in the design" line (text style detached).
+Observations: token tweak visible (gap var spacing-06, via codeSyntax WEB); raw tweaks visible (pt 14, tracking 0.32px); the detach is visible only as the missing trailer line; minHeight/Icon size bindings still invisible.
