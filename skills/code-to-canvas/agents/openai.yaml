@@ -1,4 +1,0 @@
-interface:
-  display_name: "Native Figma Component Script"
-  short_description: "Generate native Figma batch scripts from selections"
-  default_prompt: "Use $code-to-canvas to generate one native Figma batch script from my approved component selection, with Auto Layout, tokens and component properties, saving MCP and Console/Scripter wrappers."

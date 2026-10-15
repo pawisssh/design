@@ -1,4 +1,0 @@
-interface:
-  display_name: "Component Sheet HTML"
-  short_description: "Preview variants and export approved selections"
-  default_prompt: "Use $component-sheet-html to build a real-library component catalog with variant checkboxes, size/state/theme filters, dependency summaries and selection-manifest export."
