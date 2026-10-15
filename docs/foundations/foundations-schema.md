@@ -19,7 +19,7 @@ python3 docs/foundations/tools/derive_foundations.py --repo <carbon checkout @ 4
 
 The Contract input is [`../contract/examples/carbon-button.component.json`](../contract/examples/carbon-button.component.json) on this branch, which is cut from `research/contract-probe-20` and so includes the #20 resolutions (focus effects in Figma array order, resolved verify notes). Those changes do not alter the token closure. The output does not depend on the order of the `--contract` arguments, and two runs produce byte-identical files, so the ledger's `documentHash` is stable.
 
-Output for Button: 38 closure tokens, 65 variables (20 Primitives, 24 Theme, 12 Layout, 9 Type) and 2 Text Styles. All 96 Theme mode values, 3 spacing values and 8 type values match the compiled `@carbon/styles` CSS. All 9 Sass codeSyntax fallbacks exist in `@carbon/layout`. All 51 Contract uses of a token fall inside that variable's scopes.
+Output for Button: 38 closure tokens, 75 variables (20 Primitives, 24 Theme, 22 Layout, 9 Type) and 2 Text Styles. Layout holds 12 closure tokens plus the 10 other `spacing-*` steps (see [Who writes it](#who-writes-it)). All 96 Theme mode values, 13 spacing values and 8 type values match the compiled `@carbon/styles` CSS. All 9 Sass codeSyntax fallbacks exist in `@carbon/layout`. All 51 Contract uses of a token fall inside that variable's scopes.
 
 ## Top level
 
@@ -28,7 +28,7 @@ Output for Button: 38 closure tokens, 65 variables (20 Primitives, 24 Theme, 12 
 | `schemaVersion` | yes | Integer, `1`. Same rule as the Contract: an additive optional field keeps it; a rename, removal or change of meaning bumps it. |
 | `designSystem` | yes | `{key, name}`. `key` names the file (`carbon.foundations.json`) and the ledger section. |
 | `source` | yes | Same shape as the Contract's `source`: `codeLibrary`, `adapter`, `repository`, `tag`, `commit`, `packages`, `files {path: sha256:…}`, `snapshotId`. `files` lists every file the Adapter read for foundations, and `snapshotId` is computed over it the same way as the Contract's. It includes `colors.json` and `scale.ts`, which are not in Button's Contract. |
-| `closure` | yes | `contracts: [{family, path, snapshotId}]` is the Contracts this document was derived from. `tokens` is the sorted union of their token references, including `textStyle` references. |
+| `closure` | yes | `contracts: [{family, path, snapshotId}]` is the Contracts this document was derived from. `tokens` is the sorted union of their token references, including `textStyle` references. `fullScales` lists the Layout groups carried whole regardless of the closure (`["size", "spacing"]`). |
 | `collections` | yes | Ordered list `{key, name, modes: [{key, label}], hidden?}`. The first mode is the default. |
 | `variables` | yes | Map from flat name to variable. See [Variables](#variables). The order is collection order, then name, which is also the creation order (aliases need their targets first). |
 | `textStyles` | yes (may be `{}`) | Map from flat name to Text Style. See [Text Styles](#text-styles). |
@@ -41,7 +41,7 @@ Output for Button: 38 closure tokens, 65 variables (20 Primitives, 24 Theme, 12 
 |---|---|---|---|
 | `primitives` | `Primitives` | `default` | Palette entries that some Theme mode aliases. `hidden: true` (`hiddenFromPublishing`), scopes `[]`. |
 | `theme` | `Theme` | `white` White, `g10` Gray 10, `g90` Gray 90, `g100` Gray 100 | Theme and `button-*` component tokens (#9). |
-| `layout` | `Layout` | `default` | Spacing, Size, Icon size and Border radius. |
+| `layout` | `Layout` | `default` | Spacing and Size (full scales), Icon size and Border radius (closure only). |
 | `type` | `Type` | `default` | The variables that Text Styles bind. |
 
 - **Modes are keyed by the Code Library's theme key** (`white`, `g10`, `g90`, `g100`), not by the Figma label. `label` is the Figma mode name, so renaming a label never breaks values or the ledger, the same rule as Contract axis values. The Adapter iterates this fixed list, so extra DTCG keys such as `button-separator`'s `fallback` are ignored.
@@ -149,7 +149,7 @@ The Adapter generates the document. Nobody edits it by hand. Its inputs are:
 2. the token closure, which is the union of every listed Contract's token references (layout, paint, effects and `textStyle`),
 3. the Adapter's fixed mapping rules: the collection split, mode list, naming, scopes, codeSyntax and raw exceptions above.
 
-Scope follows the closure. A Primitive appears only if some Theme mode aliases it, and a Type variable only if a Text Style binds it. The document does not hold the whole Carbon theme. That stays in map fog ("Theming beyond what Button needs").
+Scope follows the closure, with one exception. The `Layout` collection carries Carbon's full `spacing-*` (01–13) and `size-*` (xs–2xl) scales regardless of the closure, because an owner can only bind a variable that already exists, and adjusting a Base Component (#8) needs the other spacing steps in the picker. Those variables have an empty `usedBy`. Theme colours, Type variables and Primitives stay closure-only: a Primitive appears only if some Theme mode aliases it, and a Type variable only if a Text Style binds it. `icon-size-*`, `border-radius-*`, `fluid-spacing-*`, `container-*` and `layout-*` stay closure-only too. The document does not hold the whole Carbon theme. That stays in map fog ("Theming beyond what Button needs").
 
 To change a value, change the source pin or an Adapter rule and regenerate. To add a Component Family, add its Contract to `closure.contracts` and regenerate. There is no separate approval step: the document is a pure function of approved inputs, and the foundations slice report (created, updated, orphaned) is what the owner reviews.
 
@@ -159,7 +159,7 @@ The document is stale, and must be regenerated before any build, when any of the
 
 - `source.commit` differs from the `source.commit` of any Contract in `closure.contracts`. A Design System is pinned to one Code Library version. Contracts at different commits are rejected.
 - A listed Contract's current `source.snapshotId` differs from the one recorded in `closure.contracts`.
-- The recomputed token union differs from `closure.tokens`, for example after a Contract edit that did not change its snapshot.
+- The recomputed token union differs from `closure.tokens`, for example after a Contract edit that did not change its snapshot, or the Adapter's full-scale rule differs from `closure.fullScales`.
 - Contract validation rule 6 ("every token exists in the foundations") fails.
 
 The ledger records the `documentHash` (sha256 of the document bytes) that it was applied from. The components slice refuses to bind when the hash differs, and the foundations slice must run first.
@@ -180,15 +180,15 @@ The foundations ledger is one section of the single authoritative ledger per Des
     "collections": { "theme": { "id": "VariableCollectionId:21:2", "modes": { "white": "21:1", "g10": "21:2", "g90": "21:3", "g100": "21:4" } }, … },
     "variables":   { "blue.60": "VariableID:21:103", "button-primary": "VariableID:21:131", "spacing-05": "VariableID:21:150", … },
     "textStyles":  { "body-compact-01": "S:…,21:900", "body-compact-02": "S:…,21:901" },
-    "orphans":     { "variables": { "spacing-10": { "id": "VariableID:21:99", "since": "sha256:<documentHash>" } }, "textStyles": {} }
+    "orphans":     { "variables": { "icon-primary": { "id": "VariableID:21:99", "since": "sha256:<documentHash>" } }, "textStyles": {} }
   },
   "sets": {}
 }
 ```
 
 - Keys are flat names in both `variables` and `textStyles`, and mode keys in `collections.*.modes`. These are the same strings the Contract and the document use, so the builder binds with `ledger.variables[token]` and `ledger.textStyles[token]`.
-- The slice returns this section uncompacted. It is about 2.6 KB for Button, far under the 20 KB output cap, so #18's ID-array compaction is not needed here.
-- The foundations slice package carries the document without the review-only fields (`source`, `from`, `reason`, `level`, `usedBy`, `resolved`, `notes`, `checks`). That is about 15.6 K characters for Button, under the 50 K code cap with room for the core. Proposed, not yet implemented: the packager strips these fields and asserts that the stripped copy still builds the same objects.
+- The slice returns this section uncompacted. It is about 3 KB for Button, far under the 20 KB output cap, so #18's ID-array compaction is not needed here.
+- The foundations slice package carries the document without the review-only fields (`source`, `from`, `reason`, `level`, `usedBy`, `resolved`, `notes`, `checks`). That is about 18.4 K characters of compact JSON for Button, under the 50 K code cap with room for the core. Proposed, not yet implemented: the packager strips these fields and asserts that the stripped copy still builds the same objects.
 
 ## Update semantics (idempotent)
 

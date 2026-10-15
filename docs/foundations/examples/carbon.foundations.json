@@ -76,6 +76,10 @@
       "text-inverse",
       "text-on-color",
       "text-on-color-disabled"
+    ],
+    "fullScales": [
+      "size",
+      "spacing"
     ]
   },
   "collections": [
@@ -1344,7 +1348,7 @@
       },
       "values": {
         "default": {
-          "value": 0.0,
+          "value": 0,
           "from": "0px"
         }
       },
@@ -1365,7 +1369,7 @@
       },
       "values": {
         "default": {
-          "value": 16.0,
+          "value": 16,
           "from": "1rem x 16"
         }
       },
@@ -1386,7 +1390,7 @@
       },
       "values": {
         "default": {
-          "value": 20.0,
+          "value": 20,
           "from": "1.25rem x 16"
         }
       },
@@ -1520,6 +1524,44 @@
         "button"
       ]
     },
+    "spacing-01": {
+      "collection": "layout",
+      "name": "Spacing/spacing-01",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-01",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-01)"
+      },
+      "values": {
+        "default": {
+          "value": 2,
+          "from": "0.25 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-02": {
+      "collection": "layout",
+      "name": "Spacing/spacing-02",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-02",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-02)"
+      },
+      "values": {
+        "default": {
+          "value": 4,
+          "from": "0.5 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
     "spacing-03": {
       "collection": "layout",
       "name": "Spacing/spacing-03",
@@ -1540,6 +1582,25 @@
       "usedBy": [
         "button"
       ]
+    },
+    "spacing-04": {
+      "collection": "layout",
+      "name": "Spacing/spacing-04",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-04",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-04)"
+      },
+      "values": {
+        "default": {
+          "value": 12,
+          "from": "1.5 miniUnits x 8"
+        }
+      },
+      "usedBy": []
     },
     "spacing-05": {
       "collection": "layout",
@@ -1562,6 +1623,25 @@
         "button"
       ]
     },
+    "spacing-06": {
+      "collection": "layout",
+      "name": "Spacing/spacing-06",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-06",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-06)"
+      },
+      "values": {
+        "default": {
+          "value": 24,
+          "from": "3 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
     "spacing-07": {
       "collection": "layout",
       "name": "Spacing/spacing-07",
@@ -1582,6 +1662,120 @@
       "usedBy": [
         "button"
       ]
+    },
+    "spacing-08": {
+      "collection": "layout",
+      "name": "Spacing/spacing-08",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-08",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-08)"
+      },
+      "values": {
+        "default": {
+          "value": 40,
+          "from": "5 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-09": {
+      "collection": "layout",
+      "name": "Spacing/spacing-09",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-09",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-09)"
+      },
+      "values": {
+        "default": {
+          "value": 48,
+          "from": "6 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-10": {
+      "collection": "layout",
+      "name": "Spacing/spacing-10",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-10",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-10)"
+      },
+      "values": {
+        "default": {
+          "value": 64,
+          "from": "8 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-11": {
+      "collection": "layout",
+      "name": "Spacing/spacing-11",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-11",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-11)"
+      },
+      "values": {
+        "default": {
+          "value": 80,
+          "from": "10 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-12": {
+      "collection": "layout",
+      "name": "Spacing/spacing-12",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-12",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-12)"
+      },
+      "values": {
+        "default": {
+          "value": 96,
+          "from": "12 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-13": {
+      "collection": "layout",
+      "name": "Spacing/spacing-13",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-13",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-13)"
+      },
+      "values": {
+        "default": {
+          "value": 160,
+          "from": "20 miniUnits x 8"
+        }
+      },
+      "usedBy": []
     },
     "body-compact-01-font-size": {
       "collection": "type",
@@ -1829,7 +2023,7 @@
     "css": {
       "against": "@carbon/styles@1.117.0 css/styles.css",
       "sha256": "sha256:13f00ebee3715ac407ba7960ea1e51f6307ba0ddfb147604f06fec1bc94bf9db",
-      "matched": 107,
+      "matched": 117,
       "missing": []
     },
     "sass": {

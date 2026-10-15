@@ -4,7 +4,7 @@
   "foundations": {
     "designSystem": "carbon",
     "snapshotId": "sha256:20458d326bb6fa1a0ccf122d9c25f83bbb6dc789a644320bf87a61dbb16858fb",
-    "documentHash": "sha256:09381a2ab6e3d98e23c674f1bf81aa3b71a7da84874a0a5168189d3de90704b3",
+    "documentHash": "sha256:93b2805c69099b657358c10542b0c2604e048d25a45824f1b49a824888ff5ea4",
     "appliedAt": "2026-10-16T00:00:00Z",
     "collections": {
       "primitives": {
@@ -89,18 +89,28 @@
       "size-sm": "VariableID:21:151",
       "size-xl": "VariableID:21:152",
       "size-xs": "VariableID:21:153",
-      "spacing-03": "VariableID:21:154",
-      "spacing-05": "VariableID:21:155",
-      "spacing-07": "VariableID:21:156",
-      "body-compact-01-font-size": "VariableID:21:157",
-      "body-compact-01-font-weight": "VariableID:21:158",
-      "body-compact-01-letter-spacing": "VariableID:21:159",
-      "body-compact-01-line-height": "VariableID:21:160",
-      "body-compact-02-font-size": "VariableID:21:161",
-      "body-compact-02-font-weight": "VariableID:21:162",
-      "body-compact-02-letter-spacing": "VariableID:21:163",
-      "body-compact-02-line-height": "VariableID:21:164",
-      "font-family-sans": "VariableID:21:165"
+      "spacing-01": "VariableID:21:154",
+      "spacing-02": "VariableID:21:155",
+      "spacing-03": "VariableID:21:156",
+      "spacing-04": "VariableID:21:157",
+      "spacing-05": "VariableID:21:158",
+      "spacing-06": "VariableID:21:159",
+      "spacing-07": "VariableID:21:160",
+      "spacing-08": "VariableID:21:161",
+      "spacing-09": "VariableID:21:162",
+      "spacing-10": "VariableID:21:163",
+      "spacing-11": "VariableID:21:164",
+      "spacing-12": "VariableID:21:165",
+      "spacing-13": "VariableID:21:166",
+      "body-compact-01-font-size": "VariableID:21:167",
+      "body-compact-01-font-weight": "VariableID:21:168",
+      "body-compact-01-letter-spacing": "VariableID:21:169",
+      "body-compact-01-line-height": "VariableID:21:170",
+      "body-compact-02-font-size": "VariableID:21:171",
+      "body-compact-02-font-weight": "VariableID:21:172",
+      "body-compact-02-letter-spacing": "VariableID:21:173",
+      "body-compact-02-line-height": "VariableID:21:174",
+      "font-family-sans": "VariableID:21:175"
     },
     "textStyles": {
       "body-compact-01": "S:d535c581ef510f4eefa624df24d40ec45fe0a74b,21:900",
@@ -108,7 +118,7 @@
     },
     "orphans": {
       "variables": {
-        "spacing-10": {
+        "icon-primary": {
           "id": "VariableID:21:99",
           "since": "sha256:<documentHash of the run that dropped it>"
         }

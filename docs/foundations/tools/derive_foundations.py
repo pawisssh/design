@@ -194,6 +194,10 @@ def theme_scopes(group, name):
     return ["ALL_FILLS", "STROKE_COLOR"]
 
 
+FULL_SCALES = ("spacing", "size")  # Layout groups carried whole, regardless of the closure: an owner can only bind a
+                                   # variable that exists, so the picker must offer the whole scale (#8 base loop).
+                                   # Colours, Type and Primitives stay closure-only.
+
 LAYOUT_GROUP = {  # DTCG group -> (Figma group, scopes, px converter)
     "spacing": ("Spacing", ["GAP"]),
     "size": ("Size", ["WIDTH_HEIGHT"]),
@@ -203,6 +207,11 @@ LAYOUT_GROUP = {  # DTCG group -> (Figma group, scopes, px converter)
 
 
 def layout_px(node):
+    px, how = _layout_px(node)
+    return (int(px) if float(px).is_integer() else px), how
+
+
+def _layout_px(node):
     v, conv = node["$value"], node.get("$extensions", {}).get("carbon.layout", {}).get("converter")
     if conv == "miniUnits":
         return v * 8, f"{v:g} miniUnits x 8"
@@ -324,7 +333,7 @@ def main():
                            "values": values, "usedBy": sorted(used_by[name])}
 
     # 3. layout
-    for name in sorted(t for t in uses if t in layout):
+    for name in sorted(t for t in layout if t in uses or layout[t][0] in FULL_SCALES):
         group, node, ptr = layout[name]
         fig_group, scopes = LAYOUT_GROUP[group]
         px, how = layout_px(node)
@@ -337,7 +346,7 @@ def main():
         variables[name] = {"collection": "layout", "name": f"{fig_group}/{name}", "type": "FLOAT",
                            "source": "packages/layout/src/dtcg/layout.json" + ptr, "scopes": scopes,
                            "codeSyntax": code_syntax(name, f"${name}"),
-                           "values": {"default": {"value": px, "from": how}}, "usedBy": sorted(used_by[name])}
+                           "values": {"default": {"value": px, "from": how}}, "usedBy": sorted(used_by.get(name, ()))}
 
     unknown = set(uses) - set(variables)
     if unknown:
@@ -418,6 +427,7 @@ def main():
             "contracts": sorted(({"family": c["family"]["key"], "path": p.as_posix(), "snapshotId": c["source"]["snapshotId"]}
                                  for c, p in zip(contracts, args.contract)), key=lambda e: e["family"]),
             "tokens": sorted(set(uses) | styles),
+            "fullScales": sorted(FULL_SCALES),
         },
         "collections": [
             {"key": "primitives", "name": "Primitives", "modes": [dict(key=k, label=l) for k, l in SINGLE], "hidden": True},
