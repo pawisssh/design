@@ -4,7 +4,7 @@ Follow-up to [`figma-mcp-batch-builder.md`](https://github.com/pawisssh/design/b
 
 Researched 2026-10-16. Figma's first-party skill repo is cited at a pinned commit, [`figma/mcp-server-guide@f278942`](https://github.com/figma/mcp-server-guide/tree/f2789420e7e8b4e2465dfeb1e12e1fc6a31397e5). Claude Code docs are cited as they read on the research date.
 
-**What was run.** Three canvas-free `use_figma` probes on the smoke-test draft file (`Alpt8YsrzDVu6DnwsrF26h`). No nodes were created or changed.
+**What was run.** Three `use_figma` probes on the smoke-test draft file (`Alpt8YsrzDVu6DnwsrF26h`). No canvas nodes were touched. Probe B did write document-root `sharedPluginData`, and Probe C cleared it.
 
 - **Probe A** checked the runtime globals.
 - **Probe B** wrote `sharedPluginData` on `figma.root` and tried `clientStorage` and `setPluginData`.
@@ -23,7 +23,8 @@ So today the package passes through model output. In the smoke test, 2 of 4 call
 1. **Yes, there is a way to skip re-emission.** A Claude Code `PreToolUse` hook can replace a tool call's arguments before it runs (`updatedInput`), and MCP tools go through the same hook events. The agent sends a short stub naming the package and its hash. The hook reads the file from disk, verifies it and swaps it into `code`.
    - This is documented, but untested for `use_figma` specifically.
    - Every other route either still passes the bytes through the model or is not available. This covers Figma-side storage, fetching, MCP resources, `@`-mentions and a direct HTTP client.
-2. **As defense in depth, the core verifies its plan before any mutation.** It checks three things: the embedded plan text length, the entry count, and an FNV-1a-32 hash. `crypto` is undefined in the `use_figma` runtime (probed). On mismatch, the script returns a short error and has created nothing.
+2. **As defense in depth, the core verifies its whole package before any mutation.** It checks FNV-1a-32 hashes of three things: the embedded plan text (plus its length and entry count), the `BUILD_STATE` text, and its own source via `buildComponentSets.toString()`. `crypto` is undefined in the `use_figma` runtime (probed). On mismatch, the script returns a short error and has created nothing.
+   - This catches accidental drift only. A model re-typing the package can just as easily edit the expected values. Only the hook removes re-typing.
 3. **Yes, compact the per-variant encoding, but only inside the package.** The core never reads `specimenId`, `themeId`, or per-entry `familyId`. Dropping them and writing axis values as tuples takes an entry from 155 chars to about 30. The 20 KB output cap binds next, at about 410 variants, so the returned ledger has to be compacted too. The approved selection manifest stays canonical and readable.
 
 ## Findings
@@ -45,7 +46,7 @@ So today the package passes through model output. In the smoke test, 2 of 4 call
 | Claude Code `PreToolUse` hook with `updatedInput` | **Yes (documented, untested here)** | See below. |
 | `@`-mention of an MCP resource | **No** | "Resources are automatically fetched and included as attachments when referenced" ([Claude Code MCP: Use MCP resources](https://code.claude.com/docs/en/mcp#use-mcp-resources)). That adds them to model context, not to a tool argument. In MCP, `tools/call` carries an `arguments` object defined by the tool's `inputSchema`, and resource links appear only in *results* ([MCP spec: Tools](https://modelcontextprotocol.io/specification/2025-06-18/server/tools)). |
 | `mcp_tool` hook calling `use_figma` itself | **No** | `input` "String values support `${path}` substitution from the hook's JSON input" ([Hooks: MCP tool hook fields](https://code.claude.com/docs/en/hooks#mcp-tool-hook-fields)). It can't read a file, so the code would still have to come from somewhere. |
-| Own script calling `https://mcp.figma.com/mcp` directly | **No (not supported)** | "Only clients listed in the Figma MCP catalog" can connect ([Remote server installation](https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/)). A Figma staff forum post says the check is a `client_name` allowlist at dynamic client registration ([forum thread](https://forum.figma.com/report-a-problem-6/figma-s-approach-breaks-the-core-promise-of-mcp-52507), secondary source). Getting in means impersonating an allowed client, which is unendorsed. Not recommended. |
+| Own script calling `https://mcp.figma.com/mcp` directly | **No (not supported)** | "Only clients listed in the Figma MCP catalog" can connect ([Remote server installation](https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/)). How the server tells clients apart is not documented. A client outside the catalog is unsupported, and posing as a listed one would be unendorsed. Not recommended. |
 | Figma "generative plugin" (stored plugin code) | **Not a fit** | The source is stored in the account, but it is authored by sending full `code.ts` content through `update_generative_plugin`, so it still goes through the model. A human runs it from its UI in the editor ([figma-generative-plugins SKILL.md](https://github.com/figma/mcp-server-guide/blob/f2789420e7e8b4e2465dfeb1e12e1fc6a31397e5/skills/figma-generative-plugins/SKILL.md)). It could be a manual fallback but cannot deliver code into `use_figma`. |
 
 #### The hook route
@@ -70,7 +71,7 @@ Proposed shape (*inferred*):
    - Otherwise it reads the file and checks its sha256 against both the marker and `script-package.json`. It also checks the file length is ≤ 50,000.
    - It returns `updatedInput` = `{fileKey, description, skillNames?, code: <file text>}` with `permissionDecision: "ask"` (or `"allow"` once trusted).
    - On any mismatch it exits 2 with a one-line reason, which Claude sees.
-3. **The transcript then shows the stub, not 24K chars of package.** This is also an input-token saving, because the model never emits the package. The package's text is still bounded by the server's 50K `maxLength`.
+3. **The model emits only the stub.** That saves output tokens and removes re-typing. Whether the transcript and later context hold the stub or the substituted code is not verified. The package's text is still bounded by the server's 50K `maxLength`.
 
 Not verified:
 
@@ -108,21 +109,23 @@ Proposed package layout (*inferred*):
 // Native build package: <identity>
 <core>
 const PLAN_SRC = String.raw`<plan json text>`;
-const PLAN_CHECK = { len: 16256, entries: 100, fnv1a32: "1cad0a0f" };
-const BUILD_STATE = {...};
-return await buildComponentSets(figma, PLAN_SRC, PLAN_CHECK, BUILD_STATE);
+const STATE_SRC = String.raw`<state json text>`;
+const CHECK = { planLen: 16256, entries: 100, plan: "1cad0a0f", state: "<fnv>", core: "<fnv>" };
+return await buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK);
 ```
 
 Why it is built this way:
 
 - **`String.raw` adds no escaping.** Every JSON escape (`\"`, `\uXXXX`) stays literal text that `JSON.parse` understands. The packager must reject plan text containing a backtick or `${`.
 - **`ensure_ascii=True` makes every char code a single byte.** So JS `charCodeAt` over `PLAN_SRC` and a Python loop over the same string produce the same FNV-1a-32 hash with no UTF-8 encoder. Python over the smoke `plan-c100.json` encoding gives len 16,256 and FNV-1a-32 `0x1cad0a0f`.
-- **The core runs four checks first, before any `figma.*` write, `loadFontAsync` or `setCurrentPageAsync`:**
-  1. `PLAN_SRC.length === len`.
-  2. `fnv1a32(PLAN_SRC) === fnv1a32` (about 10 lines; 16K chars is negligible time).
-  3. `JSON.parse` succeeds.
-  4. `entries.length === entries`.
-- **Optionally also hash the core's own source.** `buildComponentSets.toString()` returned the exact source text in the probe (`fnToString`). An FNV over it catches a hand-edited core.
+- **The core runs five checks first, before any `figma.*` write, `loadFontAsync` or `setCurrentPageAsync`:**
+  1. `PLAN_SRC.length === planLen`.
+  2. `fnv1a32(PLAN_SRC) === plan` (about 10 lines; 16K chars is negligible time).
+  3. `fnv1a32(STATE_SRC) === state`. The state is the ledger the agent carries between calls, so it can drift too.
+  4. `fnv1a32(buildComponentSets.toString()) === core`. This is **mandatory**: smoke call 4's drift was an edited *core* (the components branch was removed and a readback added), which a plan-only check would miss. `Function.prototype.toString` returned the exact source text in the probe (`fnToString`).
+  5. `JSON.parse` succeeds and `entries.length === entries`.
+- **The packager must hash exactly what `toString()` returns.** That is the slice from `async function buildComponentSets` to its closing `}`, without the header comments. The core must be ASCII, or both sides must hash UTF-16 code units.
+- **This is a drift check, not a defense against re-typing.** Anyone re-typing the package can edit or delete `CHECK` too. It catches a dropped row or a hand-trimmed branch that a well-meaning agent did not reconcile. The hook is what removes re-typing.
 - **On failure, return without throwing:**
   ```js
   return { error: "package-mismatch", field: "fnv1a32", expected: "1cad0a0f", got: "…" };
@@ -173,7 +176,7 @@ Trade-off:
 ## Recommendation
 
 1. **Adopt the `PreToolUse` hook as the delivery path.** The agent emits a fail-closed stub with `@package <path> sha256=<hash>`, and the hook substitutes the verified file with `onFailure: "block"`. This removes the observed drift at its source: the model never re-types the package.
-2. **Keep an in-script integrity check anyway.** Embed the plan as `String.raw` text and check length, entry count and FNV-1a-32 before the first mutation. On mismatch, return `{error:"package-mismatch",…}`. This catches a bypassed or misconfigured hook and any manual run.
+2. **Keep an in-script integrity check anyway.** Embed the plan and state as `String.raw` text, then check FNV-1a-32 of the plan, state and core source, plus the plan length and entry count, before the first mutation. On mismatch, return `{error:"package-mismatch",…}`. This catches accidental drift when the hook is bypassed or misconfigured, and in manual runs. It cannot stop a deliberate re-type that also rewrites the expected values.
 3. **Switch the package's selection encoding to value tuples grouped by family**, about 30 chars/entry, and keep the manifest canonical. **Compact the returned ledger** to tuple-ordered ID arrays at the same time, because otherwise output (about 410 variants) still binds before code.
 4. **Don't build the stored-core-in-`sharedPluginData` path now.** It relies on undocumented `eval`, the stored data is publicly readable, and it doesn't remove re-emission. Revisit only if the real core exceeds about 25K chars.
 5. **Do not build a direct MCP HTTP client.** It is catalog-gated, and getting in means impersonating an allowed client.
@@ -183,8 +186,8 @@ Trade-off:
 - Write a `PreToolUse` hook script (matcher `mcp__.*__use_figma`, `onFailure: "block"`) that replaces an `@package <path> sha256=<hash>` stub with the verified package file via `updatedInput`, and passes un-marked calls through untouched.
 - Have `package_native_builder.py` record `fileSha256` of `build-components.mcp.js` in `script-package.json` and print the ready-to-send stub, so the hook can verify the exact file bytes rather than only `inputHash`.
 - Run a live check that `updatedInput` substitution reaches the remote `use_figma` server: a stub plus a 24K-char package on the smoke file, with the run confirmed from the returned `PLAN_CHECK`.
-- Change the packager to embed the plan as `const PLAN_SRC = String.raw\`…\`` with `PLAN_CHECK {len, entries, fnv1a32}`, and to reject plan text containing a backtick or `${`.
-- Add a pre-mutation integrity gate to the builder core (length, FNV-1a-32 and entry count, optionally an FNV of `buildComponentSets.toString()`) that returns `{error:"package-mismatch", field, expected, got}` and touches nothing.
+- Change the packager to embed plan and state as `String.raw` text with a `CHECK {planLen, entries, plan, state, core}` block of FNV-1a-32 hashes (the core hashed exactly as `toString()` returns it), and to reject text containing a backtick or `${` or non-ASCII.
+- Add a pre-mutation integrity gate to the builder core that verifies the plan, state and core-source FNV-1a-32 hashes plus the entry count, returns `{error:"package-mismatch", field, expected, got}`, and touches nothing.
 - Define a compact package selection encoding (entries grouped by family as axis-ordered value tuples) and have the packager assert that it decodes back to the approved selection's tuples.
 - Change the core's return value to tuple-ordered variant ID arrays per Component Set, so the 20 KB output cap allows about 2,000 variants instead of about 410.
 - Re-measure the time slope on a ≥500-variant set to confirm the about 22 ms/variant linear estimate and set a safe per-call variant ceiling below the about 90–180 s connection limit.
@@ -215,7 +218,6 @@ Trade-off:
   - [Hooks](https://code.claude.com/docs/en/hooks): PreToolUse decision control, matchers, MCP tool hook fields, `onFailure`
   - [MCP](https://code.claude.com/docs/en/mcp): Use MCP resources, `anthropic/requiresUserInteraction`
 - MCP spec: [Tools (2025-06-18)](https://modelcontextprotocol.io/specification/2025-06-18/server/tools)
-- Secondary: [Figma forum: client_name allowlist](https://forum.figma.com/report-a-problem-6/figma-s-approach-breaks-the-core-promise-of-mcp-52507)
 - This repo:
   - `skills/code-to-canvas/scripts/package_native_builder.py`
   - `skills/code-to-canvas/scripts/check_coverage.py`
