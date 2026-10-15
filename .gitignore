@@ -1,2 +1,10 @@
 .DS_Store
-.scratch/
+
+# Scratch output stays local. Only the per-skill folders are kept (via .gitkeep).
+.scratch/*
+!.scratch/to-preview/
+.scratch/to-preview/*
+!.scratch/to-preview/.gitkeep
+!.scratch/to-design/
+.scratch/to-design/*
+!.scratch/to-design/.gitkeep

@@ -4,7 +4,7 @@ Read for native construction, dual-runtime packaging, one-call execution or resu
 
 ## Responsibility and scope
 
-`component-sheet-html` owns source discovery, full source matrices and selected preview evidence. `code-to-canvas` owns selection-to-build orchestration, packaging, parity and a single native ledger. Load `figma-generate-library` for construction/foundations and `figma-use` for API/executor rules; both are required for component authoring. Load each once, not recursively. For requested new files also load `figma-create-new-file`.
+`to-preview` owns source discovery, full source matrices and selected preview evidence. `to-design` owns selection-to-build orchestration, packaging, parity and a single native ledger. Load `figma-generate-library` for construction/foundations and `figma-use` for API/executor rules; both are required for component authoring. Load each once, not recursively. For requested new files also load `figma-create-new-file`.
 
 Lock selected unpublished component scope. Library-wide examples must not silently add publishing/Code Connect. `figma-generate-design` owns composed product screens; `figma-design-to-code` owns the reverse direction. No separate `create-component-set` route remains.
 
@@ -30,16 +30,16 @@ Only update native assets whose IDs/family/tuple identity are recorded as owned 
 
 For deselected previously-owned variants, move exact tracked components outside the active set to a run-owned Deprecated area on the same page, keeping their IDs/instances alive. Record that status. Do not delete their unrelated dependents or silently retain them as active selected variants. Restore/reuse the same IDs if selected again. Preserve existing user-owned content and report a conflict if reconciliation cannot safely update it.
 
-Maintain one durable ledger under `.scratch/code-to-canvas/` for file/page/collection/mode/component/variant/property IDs, source snapshot, script hash and selected mappings. If another loaded skill expects a temp state file, use a pointer/copy from this ledger with explicit synchronization; it is not an independent authority.
+Maintain one durable ledger under `.scratch/to-design/` for file/page/collection/mode/component/variant/property IDs, source snapshot, script hash and selected mappings. If another loaded skill expects a temp state file, use a pointer/copy from this ledger with explicit synchronization; it is not an independent authority.
 
 ## Packaging and syntax validation
 
 ```bash
-python3 /absolute/path/to/code-to-canvas/scripts/package_native_builder.py \
-  .scratch/code-to-canvas/native-builder-core.js \
-  .scratch/code-to-canvas/build-plan.json \
-  .scratch/code-to-canvas/generated \
-  --state .scratch/code-to-canvas/native-state.json
+python3 /absolute/path/to/to-design/scripts/package_native_builder.py \
+  .scratch/to-design/native-builder-core.js \
+  .scratch/to-design/build-plan.json \
+  .scratch/to-design/generated \
+  --state .scratch/to-design/native-state.json
 ```
 
 Omit `--state` for an initial empty ledger. The helper validates packaging identity/snapshot fields and emits:

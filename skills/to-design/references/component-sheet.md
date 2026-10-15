@@ -1,6 +1,6 @@
 # Native Figma coverage audit
 
-Read when mapping a verified sheet to native component properties or auditing direct variant matrices. The source matrix and sheet evidence come from [component-sheet-html's contract](../../component-sheet-html/references/sheet-contract.md).
+Read when mapping a verified sheet to native component properties or auditing direct variant matrices. The source matrix and sheet evidence come from [to-preview's contract](../../to-preview/references/sheet-contract.md).
 
 ## Source-to-design mapping
 
@@ -60,10 +60,10 @@ return {
 Save the response with the actual file key from the connected target. Follow the connected executor's page-context rules when locating nodes.
 
 ```bash
-python3 /absolute/path/to/code-to-canvas/scripts/check_coverage.py \
-  .scratch/component-sheet-html/Button.expected.json \
-  .scratch/code-to-canvas/Button.actual.json \
-  --selection .scratch/component-sheet-html/selection-manifest.json
+python3 /absolute/path/to/to-design/scripts/check_coverage.py \
+  .scratch/to-preview/Button.expected.json \
+  .scratch/to-design/Button.actual.json \
+  --selection .scratch/to-preview/selection-manifest.json
 ```
 
 Exit `0`: every in-scope selected tuple (or full source tuple without --selection) appears exactly once as a COMPONENT in the recorded set, with unique IDs and no unexpected tuples. Exit `1`: coverage fails. Exit `2`: invalid inputs. Unsupported, duplicated or undocumented exclusions fail input validation.
