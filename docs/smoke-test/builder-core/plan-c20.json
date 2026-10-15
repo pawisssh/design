@@ -1,0 +1,258 @@
+{
+ "schemaVersion": 1,
+ "snapshotId": "carbon-react@v11.118.0",
+ "slice": "components",
+ "page": "Smoke test",
+ "origin": {
+  "x": 400,
+  "y": 100
+ },
+ "onExisting": "rebuild",
+ "font": {
+  "family": "IBM Plex Sans",
+  "style": "Regular"
+ },
+ "selection": {
+  "schemaVersion": 1,
+  "snapshotId": "carbon-react@v11.118.0",
+  "selectedFamilies": [
+   "button"
+  ],
+  "entries": [
+   {
+    "specimenId": "button:primary:md:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "md",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:primary:md:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "md",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:primary:md:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "md",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:primary:md:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "md",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:secondary:md:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "md",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:secondary:md:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "md",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:secondary:md:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "md",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:secondary:md:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "md",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:md:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "md",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:md:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "md",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:md:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "md",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:md:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "md",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:ghost:md:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "md",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:ghost:md:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "md",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:ghost:md:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "md",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:ghost:md:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "md",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:danger:md:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "md",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:danger:md:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "md",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:danger:md:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "md",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:danger:md:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "md",
+     "state": "disabled"
+    }
+   }
+  ]
+ },
+ "families": [
+  {
+   "id": "button",
+   "name": "Button",
+   "axes": [
+    "kind",
+    "size",
+    "state"
+   ],
+   "description": "Smoke-test Button Component Set (Carbon v11 pilot).",
+   "sizes": {
+    "sm": {
+     "height": 32,
+     "paddingRight": 32
+    },
+    "md": {
+     "height": 40,
+     "paddingRight": 64
+    },
+    "lg": {
+     "height": 48,
+     "paddingRight": 64
+    },
+    "xl": {
+     "height": 64,
+     "paddingRight": 64
+    },
+    "2xl": {
+     "height": 80,
+     "paddingRight": 64
+    }
+   }
+  }
+ ]
+}

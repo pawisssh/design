@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "inputHash": "ff2dc6b382437b3fdc4ef8ac8acb937771bea0c5352e2b1969c6786442dd0cab",
+  "snapshotId": "carbon-react@v11.118.0",
+  "execution": "not-run",
+  "files": [
+    "build-components.mcp.js",
+    "build-components.js"
+  ]
+}

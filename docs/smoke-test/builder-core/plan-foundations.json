@@ -1,0 +1,547 @@
+{
+ "schemaVersion": 1,
+ "snapshotId": "carbon-react@v11.118.0",
+ "slice": "foundations",
+ "page": "Smoke test",
+ "origin": {
+  "x": 400,
+  "y": 100
+ },
+ "onExisting": "rebuild",
+ "font": {
+  "family": "IBM Plex Sans",
+  "style": "Regular"
+ },
+ "selection": {
+  "schemaVersion": 1,
+  "snapshotId": "carbon-react@v11.118.0",
+  "selectedFamilies": [
+   "button"
+  ],
+  "entries": [
+   {
+    "specimenId": "button:primary:md:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "md",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:primary:md:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "md",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:primary:md:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "md",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:primary:md:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "md",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:secondary:md:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "md",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:secondary:md:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "md",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:secondary:md:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "md",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:secondary:md:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "md",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:md:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "md",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:md:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "md",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:md:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "md",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:md:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "md",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:ghost:md:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "md",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:ghost:md:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "md",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:ghost:md:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "md",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:ghost:md:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "md",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:danger:md:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "md",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:danger:md:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "md",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:danger:md:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "md",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:danger:md:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "md",
+     "state": "disabled"
+    }
+   }
+  ]
+ },
+ "foundations": {
+  "collection": "Smoke / Button",
+  "modes": [
+   "White",
+   "G100"
+  ],
+  "colors": {
+   "button/primary/default/bg": {
+    "css": "button-primary-default",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#0f62fe",
+     "G100": "#0f62fe"
+    }
+   },
+   "button/primary/hover/bg": {
+    "css": "button-primary-hover",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#0050e6",
+     "G100": "#0050e6"
+    }
+   },
+   "button/primary/active/bg": {
+    "css": "button-primary-active",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#002d9c",
+     "G100": "#002d9c"
+    }
+   },
+   "button/primary/disabled/bg": {
+    "css": "button-primary-disabled",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#c6c6c6",
+     "G100": "#525252"
+    }
+   },
+   "button/primary/text": {
+    "css": "text-on-primary",
+    "scopes": [
+     "TEXT_FILL"
+    ],
+    "values": {
+     "White": "#ffffff",
+     "G100": "#ffffff"
+    }
+   },
+   "button/secondary/default/bg": {
+    "css": "button-secondary-default",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#393939",
+     "G100": "#6f6f6f"
+    }
+   },
+   "button/secondary/hover/bg": {
+    "css": "button-secondary-hover",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#474747",
+     "G100": "#5e5e5e"
+    }
+   },
+   "button/secondary/active/bg": {
+    "css": "button-secondary-active",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#6f6f6f",
+     "G100": "#393939"
+    }
+   },
+   "button/secondary/disabled/bg": {
+    "css": "button-secondary-disabled",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#c6c6c6",
+     "G100": "#525252"
+    }
+   },
+   "button/secondary/text": {
+    "css": "text-on-secondary",
+    "scopes": [
+     "TEXT_FILL"
+    ],
+    "values": {
+     "White": "#ffffff",
+     "G100": "#ffffff"
+    }
+   },
+   "button/tertiary/default/bg": {
+    "css": "button-tertiary-default",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#ffffff",
+     "G100": "#161616"
+    }
+   },
+   "button/tertiary/hover/bg": {
+    "css": "button-tertiary-hover",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#0050e6",
+     "G100": "#f4f4f4"
+    }
+   },
+   "button/tertiary/active/bg": {
+    "css": "button-tertiary-active",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#002d9c",
+     "G100": "#c6c6c6"
+    }
+   },
+   "button/tertiary/disabled/bg": {
+    "css": "button-tertiary-disabled",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#c6c6c6",
+     "G100": "#525252"
+    }
+   },
+   "button/tertiary/text": {
+    "css": "text-on-tertiary",
+    "scopes": [
+     "TEXT_FILL"
+    ],
+    "values": {
+     "White": "#0f62fe",
+     "G100": "#ffffff"
+    }
+   },
+   "button/ghost/default/bg": {
+    "css": "button-ghost-default",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#ffffff",
+     "G100": "#161616"
+    }
+   },
+   "button/ghost/hover/bg": {
+    "css": "button-ghost-hover",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#e8e8e8",
+     "G100": "#333333"
+    }
+   },
+   "button/ghost/active/bg": {
+    "css": "button-ghost-active",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#c6c6c6",
+     "G100": "#525252"
+    }
+   },
+   "button/ghost/disabled/bg": {
+    "css": "button-ghost-disabled",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#c6c6c6",
+     "G100": "#525252"
+    }
+   },
+   "button/ghost/text": {
+    "css": "text-on-ghost",
+    "scopes": [
+     "TEXT_FILL"
+    ],
+    "values": {
+     "White": "#0f62fe",
+     "G100": "#78a9ff"
+    }
+   },
+   "button/danger/default/bg": {
+    "css": "button-danger-default",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#da1e28",
+     "G100": "#da1e28"
+    }
+   },
+   "button/danger/hover/bg": {
+    "css": "button-danger-hover",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#b81921",
+     "G100": "#b81921"
+    }
+   },
+   "button/danger/active/bg": {
+    "css": "button-danger-active",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#750e13",
+     "G100": "#750e13"
+    }
+   },
+   "button/danger/disabled/bg": {
+    "css": "button-danger-disabled",
+    "scopes": [
+     "FRAME_FILL",
+     "SHAPE_FILL"
+    ],
+    "values": {
+     "White": "#c6c6c6",
+     "G100": "#525252"
+    }
+   },
+   "button/danger/text": {
+    "css": "text-on-danger",
+    "scopes": [
+     "TEXT_FILL"
+    ],
+    "values": {
+     "White": "#ffffff",
+     "G100": "#ffffff"
+    }
+   },
+   "button/disabled/text": {
+    "css": "text-on-color-disabled",
+    "scopes": [
+     "TEXT_FILL"
+    ],
+    "values": {
+     "White": "#8d8d8d",
+     "G100": "#8d8d8d"
+    }
+   }
+  }
+ },
+ "families": [
+  {
+   "id": "button",
+   "name": "Button",
+   "axes": [
+    "kind",
+    "size",
+    "state"
+   ],
+   "description": "Smoke-test Button Component Set (Carbon v11 pilot).",
+   "sizes": {
+    "sm": {
+     "height": 32,
+     "paddingRight": 32
+    },
+    "md": {
+     "height": 40,
+     "paddingRight": 64
+    },
+    "lg": {
+     "height": 48,
+     "paddingRight": 64
+    },
+    "xl": {
+     "height": 64,
+     "paddingRight": 64
+    },
+    "2xl": {
+     "height": 80,
+     "paddingRight": 64
+    }
+   }
+  }
+ ]
+}
