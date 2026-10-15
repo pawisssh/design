@@ -229,8 +229,8 @@
         "Button": {
           "stroke": { "token": "focus" },
           "effects": [
-            { "type": "inner-shadow", "spread": { "raw": 2, "level": "warning", "reason": "focus band: 1px border + inset 1px $button-outline-width; no design token" }, "color": { "token": "focus" } },
-            { "type": "inner-shadow", "spread": { "raw": 3, "level": "warning", "reason": "gap ring: 1px border + inset 2px $button-border-width; no design token" }, "color": { "token": "background" } }
+            { "type": "inner-shadow", "spread": { "raw": 3, "level": "warning", "reason": "gap ring: 1px border + inset 2px $button-border-width; no design token" }, "color": { "token": "background" } },
+            { "type": "inner-shadow", "spread": { "raw": 2, "level": "warning", "reason": "focus band: 1px border + inset 1px $button-outline-width; no design token" }, "color": { "token": "focus" } }
           ]
         }
       }
@@ -272,12 +272,12 @@
   },
 
   "notes": [
-    { "level": "verify", "at": "paint[kind=ghost].Glyph/Vector.fill", "message": "Ghost text button: svg { fill: icon-primary } loses to the more specific .cds--btn__icon path rule (fill: currentColor = link-primary). Confirm by render; if it renders icon-primary, add an explicit override." },
+    { "level": "info", "at": "paint[kind=ghost].Glyph/Vector.fill", "message": "Resolved (#20, browser render of @carbon/react 1.118.0): on ghost the svg element computes to icon-primary (.cds--btn--ghost:not([disabled]) svg), but every icon path matches .cds--btn--ghost .cds--btn__icon path:not([data-icon-path]):not([fill=none]) { fill: currentColor }, so the visible fill equals the label colour: link-primary, link-primary-hover on hover and active, text-disabled when disabled. danger--ghost follows its label too. Checked on all 9 preferred icons (single path each, no data-icon-path), White and G100. sameAs Label.fill stands; icon-primary stays out of the closure." },
     { "level": "info", "at": "layout.Icon", "message": "Carbon centres the 16px icon on the 18px label line (1px lower than the label top for lg/xl/2xl). The Contract top-aligns the Icon slot with the label; ≤1px deviation accepted." },
     { "level": "info", "at": "layout.Label", "message": "Label wrapping at maxWidth 320 needs a render check against Carbon's max-inline-size behaviour." },
     { "level": "info", "at": "axes.kind", "message": "Value order follows Carbon docs and the kit (primary, secondary, tertiary, ghost, danger…), not ButtonKinds source order (primary, secondary, danger, ghost, …, tertiary)." },
-    { "level": "verify", "at": "properties.icon.binds", "message": "Probe: one set-level BOOLEAN referencing Glyph on some variants and the Icon slot on others; confirm the value carries over when an instance switches Kind." },
-    { "level": "verify", "at": "paint[state=focus].Button.effects", "message": "Probe: inner shadows with spread, colour bound via setBoundVariableForEffect, under a 1px INSIDE stroke, render as 2px focus + 1px background gap." },
+    { "level": "info", "at": "properties.icon.binds", "message": "Resolved (#20, Figma): one set-level BOOLEAN can reference Glyph.visible on some variants and Icon.visible on others. Both references survive combineAsVariants whether bound before or after combining, toggling works in each variant, and an instance keeps the value across Kind switches in both directions. Builder: set figma.skipInvisibleInstanceChildren = false to reach a hidden Glyph inside an instance." },
+    { "level": "info", "at": "paint[state=focus].Button.effects", "message": "Adjusted (#20, Figma): effects are listed in Figma array order, where later entries paint above earlier ones (the reverse of CSS box-shadow order), and the stroke paints above inner shadows. With background spread 3 first and focus spread 2 last, under the 1px INSIDE focus stroke, the edge reads focus, focus, background, fill: a 2px focus band plus a 1px background gap, in White and G100. The CSS order rendered a 1px focus line plus a 2px gap." },
     { "level": "info", "at": "source.commit", "message": "v11.118.0 is an annotated tag: tag object 3169e192 dereferences to commit 44f90d8. The #13 research note calls 3169e192 the commit." }
   ]
 }

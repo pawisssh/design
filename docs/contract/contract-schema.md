@@ -25,7 +25,7 @@ Worked example: [`examples/carbon-button.component.json`](examples/carbon-button
 | `dependencies` | yes | `families`: other Component Families used as instances, as `{key, contract, source.tag}`. `fonts`: the fonts used. Tokens and icons are not listed here, because they are derived (see [Derived, not stored](#derived-not-stored)). |
 | `figma` | yes | Figma-only presentation: `page` (plural), `componentSetName`, `description`, `header` (Type, Title, Namespace for the `Component Header` instance), and `grid` (`columns` and `rows` as axis keys). |
 | `code` | yes | Code Connect: `framework`, `package`, `component`, `import`, `alwaysEmit`. Per-value and per-property code mappings sit next to the value or property they describe. |
-| `notes` | no | Report entries `{level: info|warning|verify, at, message}` for decisions and render checks that are not tied to a single raw value. |
+| `notes` | no | Report entries `{level: info|warning|verify, at, message}` for decisions and render checks that are not tied to a single raw value. When a probe settles a `verify` note, it becomes `info` and its message starts with `Resolved (#N)` or `Adjusted (#N)`. |
 
 ## Axes
 
@@ -87,7 +87,7 @@ Themes are not an axis. They are Figma Variable modes, defined once per Design S
 | `BOOLEAN` | `default`, `binds: [{match?, node, field: "visible"}]`, `code: {prop, whenFalse}` |
 | `INSTANCE_SWAP` | `default: "icon:default"`, `preferred: "icon:preferred"`, `binds: [{node, field: "mainComponent"}]`, `code: {prop, valueFrom}` |
 
-- `binds` may differ per variant through `match`. Every selected variant must get exactly one bind per property. Button uses this so that the `Icon` BOOLEAN hides `Glyph` (the slot keeps its space) on kinds that reserve the end padding, and hides the whole `Icon` slot on ghost kinds.
+- `binds` may differ per variant through `match`. Every selected variant must get exactly one bind per property. Button uses this so that the `Icon` BOOLEAN hides `Glyph` (the slot keeps its space) on kinds that reserve the end padding, and hides the whole `Icon` slot on ghost kinds. Figma supports this: one set-level property referenced by different nodes in different variants keeps every reference and its instance value across variant switches (checked in #20).
 - `label` is the Figma property name. `key` is the stable id.
 
 ## Rules
@@ -97,6 +97,8 @@ Themes are not an axis. They are Figma Variable modes, defined once per Design S
 **Layout fields** (a neutral vocabulary that maps 1:1 to Auto Layout): `direction` (`row`/`column`), `width`/`height` (`hug`/`fill`/`fixed` or a value), `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `alignMain`, `alignCross` (`start`/`center`/`end`/`space-between`), `paddingTop`/`Right`/`Bottom`/`Left`, `gap`, `radius`, `strokeWeight`, `strokeAlign` (`inside`/`center`/`outside`), `textStyle`, `textResize`.
 
 **Paint fields:** `fill`, `stroke`, `effects` (a list of `{type: inner-shadow|drop-shadow, spread, blur, x, y, color}`), `opacity`. On a TEXT node `fill` is the text colour.
+
+`effects` are listed in Figma array order: a later entry paints above an earlier one. This is the reverse of CSS `box-shadow`, where the first shadow is on top, so the Adapter reverses the CSS list. The stroke paints above inner shadows. The builder writes the list as given and never reorders it (checked in #20).
 
 ### Value references
 
@@ -137,7 +139,7 @@ These are computed from the Contract, never written into it:
 - the expanded variant tuples and specimen ids
 - Figma ids and keys, which live in the builder ledger
 
-`tools/expand_contract.py` prints the derived closure. For Button it adds `spacing-07` to #9's list. It also shows that Button does not use `spacing-10`, `icon-primary`, `icon-on-color-disabled`, `background-selected`, `layer-selected-disabled`, `button-separator` or the skeleton tokens.
+`tools/expand_contract.py` prints the derived closure. For Button it adds `spacing-07` to #9's list. It also shows that Button does not use `spacing-10`, `icon-primary` (the ghost icon renders `link-primary`, checked by render in #20), `icon-on-color-disabled`, `background-selected`, `layer-selected-disabled`, `button-separator` or the skeleton tokens.
 
 ## Validation
 
