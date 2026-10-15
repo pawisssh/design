@@ -1,0 +1,1058 @@
+{
+ "schemaVersion": 1,
+ "snapshotId": "carbon-react@v11.118.0",
+ "slice": "components",
+ "page": "Smoke test",
+ "origin": {
+  "x": 400,
+  "y": 100
+ },
+ "onExisting": "rebuild",
+ "font": {
+  "family": "IBM Plex Sans",
+  "style": "Regular"
+ },
+ "selection": {
+  "schemaVersion": 1,
+  "snapshotId": "carbon-react@v11.118.0",
+  "selectedFamilies": [
+   "button"
+  ],
+  "entries": [
+   {
+    "specimenId": "button:primary:sm:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "sm",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:primary:sm:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "sm",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:primary:sm:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "sm",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:primary:sm:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "sm",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:primary:md:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "md",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:primary:md:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "md",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:primary:md:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "md",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:primary:md:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "md",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:primary:lg:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "lg",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:primary:lg:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "lg",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:primary:lg:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "lg",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:primary:lg:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "lg",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:primary:xl:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "xl",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:primary:xl:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "xl",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:primary:xl:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "xl",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:primary:xl:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "xl",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:primary:2xl:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "2xl",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:primary:2xl:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "2xl",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:primary:2xl:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "2xl",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:primary:2xl:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "primary",
+     "size": "2xl",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:secondary:sm:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "sm",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:secondary:sm:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "sm",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:secondary:sm:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "sm",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:secondary:sm:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "sm",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:secondary:md:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "md",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:secondary:md:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "md",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:secondary:md:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "md",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:secondary:md:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "md",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:secondary:lg:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "lg",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:secondary:lg:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "lg",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:secondary:lg:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "lg",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:secondary:lg:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "lg",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:secondary:xl:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "xl",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:secondary:xl:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "xl",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:secondary:xl:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "xl",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:secondary:xl:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "xl",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:secondary:2xl:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "2xl",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:secondary:2xl:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "2xl",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:secondary:2xl:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "2xl",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:secondary:2xl:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "secondary",
+     "size": "2xl",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:sm:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "sm",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:sm:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "sm",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:sm:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "sm",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:sm:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "sm",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:md:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "md",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:md:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "md",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:md:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "md",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:md:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "md",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:lg:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "lg",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:lg:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "lg",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:lg:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "lg",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:lg:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "lg",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:xl:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "xl",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:xl:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "xl",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:xl:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "xl",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:xl:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "xl",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:2xl:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "2xl",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:2xl:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "2xl",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:2xl:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "2xl",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:tertiary:2xl:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "tertiary",
+     "size": "2xl",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:ghost:sm:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "sm",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:ghost:sm:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "sm",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:ghost:sm:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "sm",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:ghost:sm:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "sm",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:ghost:md:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "md",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:ghost:md:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "md",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:ghost:md:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "md",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:ghost:md:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "md",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:ghost:lg:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "lg",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:ghost:lg:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "lg",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:ghost:lg:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "lg",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:ghost:lg:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "lg",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:ghost:xl:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "xl",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:ghost:xl:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "xl",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:ghost:xl:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "xl",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:ghost:xl:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "xl",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:ghost:2xl:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "2xl",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:ghost:2xl:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "2xl",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:ghost:2xl:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "2xl",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:ghost:2xl:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "ghost",
+     "size": "2xl",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:danger:sm:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "sm",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:danger:sm:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "sm",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:danger:sm:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "sm",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:danger:sm:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "sm",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:danger:md:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "md",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:danger:md:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "md",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:danger:md:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "md",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:danger:md:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "md",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:danger:lg:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "lg",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:danger:lg:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "lg",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:danger:lg:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "lg",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:danger:lg:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "lg",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:danger:xl:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "xl",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:danger:xl:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "xl",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:danger:xl:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "xl",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:danger:xl:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "xl",
+     "state": "disabled"
+    }
+   },
+   {
+    "specimenId": "button:danger:2xl:default",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "2xl",
+     "state": "default"
+    }
+   },
+   {
+    "specimenId": "button:danger:2xl:hover",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "2xl",
+     "state": "hover"
+    }
+   },
+   {
+    "specimenId": "button:danger:2xl:active",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "2xl",
+     "state": "active"
+    }
+   },
+   {
+    "specimenId": "button:danger:2xl:disabled",
+    "familyId": "button",
+    "themeId": "white",
+    "properties": {
+     "kind": "danger",
+     "size": "2xl",
+     "state": "disabled"
+    }
+   }
+  ]
+ },
+ "families": [
+  {
+   "id": "button",
+   "name": "Button",
+   "axes": [
+    "kind",
+    "size",
+    "state"
+   ],
+   "description": "Smoke-test Button Component Set (Carbon v11 pilot).",
+   "sizes": {
+    "sm": {
+     "height": 32,
+     "paddingRight": 32
+    },
+    "md": {
+     "height": 40,
+     "paddingRight": 64
+    },
+    "lg": {
+     "height": 48,
+     "paddingRight": 64
+    },
+    "xl": {
+     "height": 64,
+     "paddingRight": 64
+    },
+    "2xl": {
+     "height": 80,
+     "paddingRight": 64
+    }
+   }
+  }
+ ]
+}

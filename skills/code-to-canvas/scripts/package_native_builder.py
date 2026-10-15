@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import sys
@@ -56,14 +57,18 @@ def main():
         plan = json.loads(args.plan.read_text())
         state = json.loads(args.state.read_text()) if args.state else {}
         mcp, standalone, identity = package(core, plan, state)
+        mcp_bytes = mcp.encode()
+        file_sha = hashlib.sha256(mcp_bytes).hexdigest()
         args.output.mkdir(parents=True, exist_ok=True)
-        (args.output / "build-components.mcp.js").write_text(mcp)
+        (args.output / "build-components.mcp.js").write_bytes(mcp_bytes)
         (args.output / "build-components.js").write_text(standalone)
-        (args.output / "script-package.json").write_text(json.dumps({"schemaVersion": 1, "inputHash": identity, "snapshotId": plan["snapshotId"], "execution": "not-run", "files": ["build-components.mcp.js", "build-components.js"]}, indent=2))
+        (args.output / "script-package.json").write_text(json.dumps({"schemaVersion": 1, "inputHash": identity, "fileSha256": file_sha, "snapshotId": plan["snapshotId"], "execution": "not-run", "files": ["build-components.mcp.js", "build-components.js"]}, indent=2))
+        # Stub for use_figma's code argument; the PreToolUse hook swaps in the verified file. Path is relative to the repo root.
+        stub = f'/*@package {os.path.relpath(args.output / "build-components.mcp.js")} sha256={file_sha}*/ throw new Error("package not injected");'
     except (OSError, ValueError, TypeError) as error:
         print(json.dumps({"status": "invalid-input", "error": str(error)}))
         return 2
-    print(json.dumps({"status": "packaged", "inputHash": identity, "output": str(args.output), "execution": "not-run"}))
+    print(json.dumps({"status": "packaged", "inputHash": identity, "fileSha256": file_sha, "chars": len(mcp), "output": str(args.output), "execution": "not-run", "stub": stub}))
     return 0
 
 
