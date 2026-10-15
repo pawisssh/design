@@ -1,11 +1,11 @@
 ---
-name: component-sheet-html
+name: to-preview
 description: Build an interactive HTML component catalog from real library code or component specs, with full state/size/theme grids, variant checkboxes, filters and selection-manifest export. Use to review and select component families or individual variants before generating native Figma scripts.
 ---
 
-# Component Sheet HTML
+# To-preview
 
-Own source discovery, interactive preview and selection evidence. Produce an inspectable catalog backed by real components plus a versioned selection manifest. Native Figma script generation belongs to `code-to-canvas`; this skill returns its artifacts to the caller without starting that workflow itself.
+Own source discovery, interactive preview and selection evidence. Produce an inspectable catalog backed by real components plus a versioned selection manifest. Native Figma script generation belongs to `to-design`; this skill returns its artifacts to the caller without starting that workflow itself.
 
 ## Source and scope
 
@@ -35,6 +35,6 @@ The Export / Apply Selection action creates `selection-manifest.json` containing
 
 Before export, render/verify every selected family and confirm selected specimen IDs, tuples/themes and dependency closure against the independent matrix. Record actual fonts/assets/states and short/long-label, optional-icon and narrow/wide behavior. Distinguish complete-family selection from a deliberate partial selection; full source coverage remains available for audit, but only approved rows are build scope.
 
-Persist source catalog, full expected matrices, plans, preview adapter/start command, batch URLs, verification and selection under `.scratch/component-sheet-html/`. Pin selection to the reviewed source snapshot; source drift invalidates approval and requires refreshed preview/selection.
+Persist source catalog, full expected matrices, plans, preview adapter/start command, batch URLs, verification and selection under `.scratch/to-preview/`. Pin selection to the reviewed source snapshot; source drift invalidates approval and requires refreshed preview/selection.
 
-Return preview path/URL/start command and exported manifest location with selected/unselected counts and unresolved gaps. Opening the catalog alone is not verification of unopened families. Return to the caller; `code-to-canvas` can consume the handoff when the user requests script generation. HTML export approves content selection, not external execution by itself.
+Return preview path/URL/start command and exported manifest location with selected/unselected counts and unresolved gaps. Opening the catalog alone is not verification of unopened families. Return to the caller; `to-design` can consume the handoff when the user requests script generation. HTML export approves content selection, not external execution by itself.

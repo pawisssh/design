@@ -1,15 +1,15 @@
 ---
-name: code-to-canvas
-description: Generate and optionally execute programmatic native Figma batch scripts from approved HTML component selections, layout specs and tokens. Use for selected variants with Auto Layout, bound component properties and tracked in-place updates; component-sheet-html prepares the interactive preview.
+name: to-design
+description: Generate and optionally execute programmatic native Figma batch scripts from approved HTML component selections, layout specs and tokens. Use for selected variants with Auto Layout, bound component properties and tracked in-place updates; to-preview prepares the interactive preview.
 ---
 
-# Code to Canvas — Native Script Workflow
+# To-design — Native Script Workflow
 
 Own orchestration, script packaging, execution state and source-to-Figma parity. Consume approved selection/spec data and generate native Figma API code; `figma-generate-library` owns component construction guidance and `figma-use` owns executor/API rules. HTML is the review surface, not a required capture/import step.
 
 ## Prepare the selected input
 
-These two custom skills are an installation pair. Read [component-sheet-html's contract](../component-sheet-html/references/sheet-contract.md). If a verified selection is missing, load `component-sheet-html`, prepare the interactive catalog and obtain the user's selected snapshot before generating the native script. Sheet-only requests finish there; avoid reciprocal workflow calls.
+These two custom skills are an installation pair. Read [to-preview's contract](../to-preview/references/sheet-contract.md). If a verified selection is missing, load `to-preview`, prepare the interactive catalog and obtain the user's selected snapshot before generating the native script. Sheet-only requests finish there; avoid reciprocal workflow calls.
 
 Require exact selected specimen IDs/variant tuples/themes, full source matrices, source/version snapshot, layout/token/property plans and dependency closure. Reject stale snapshots, unknown IDs, unsupported tuples or missing selected-case evidence. Default to full selected families, honoring explicit per-variant/state/size/theme exclusions. Collapse duplicate native tuples across token modes only when their structure really matches; preserve selected mode coverage separately.
 
@@ -31,7 +31,7 @@ Default to generating artifacts without Figma writes. Execute only when the user
 
 For requested execution, resolve the actual file and create one only with that scope, loading `figma-create-new-file` first. Read/embed the saved MCP script as the `code` argument to `use_figma`. Build all selected sets on one page in one call, with a single page switch and dependency-first loops; there is no call per variant. Reuse the same page/IDs on updates. Split only if the live executor limit/failure or an explicit multi-page destination requires it; retain the complete selection and report the actual batch count.
 
-Return all created/updated IDs, component/property mappings, coverage evidence and partial state even on recoverable failures. Persist one authoritative ledger under `.scratch/code-to-canvas/`; subordinate skill state paths reference that ledger. Inspect partial output before retry, then regenerate the packaged script with reconciled state. Keep canvas mutations serialized under the live executor contract.
+Return all created/updated IDs, component/property mappings, coverage evidence and partial state even on recoverable failures. Persist one authoritative ledger under `.scratch/to-design/`; subordinate skill state paths reference that ledger. Inspect partial output before retry, then regenerate the packaged script with reconciled state. Keep canvas mutations serialized under the live executor contract.
 
 ## Validate and complete
 

@@ -1,6 +1,6 @@
 # Catalog, source matrix and selection contract
 
-This contract is the single handoff between the two custom skills. Install `component-sheet-html` and `code-to-canvas` together; the consumer references this resource rather than pretending it can read it when the producer is absent.
+This contract is the single handoff between the two custom skills. Install `to-preview` and `to-design` together; the consumer references this resource rather than pretending it can read it when the producer is absent.
 
 ## Independent source matrix
 
@@ -59,6 +59,6 @@ Use original source components/styles/providers/fonts/assets, stable transient-s
 
 ## Snapshot and handoff
 
-Persist catalog, full expected JSON, source/spec adapters, layout/token plans, renderer/start command, specimen-to-props mapping and selected verification under `.scratch/component-sheet-html/`. Paths resolve against a recorded project/manifest base. Hash relevant source and plan content; do not rely on a timestamp alone. Source drift invalidates the reviewed selection.
+Persist catalog, full expected JSON, source/spec adapters, layout/token plans, renderer/start command, specimen-to-props mapping and selected verification under `.scratch/to-preview/`. Paths resolve against a recorded project/manifest base. Hash relevant source and plan content; do not rely on a timestamp alone. Source drift invalidates the reviewed selection.
 
-Pass preview URL, catalog/spec plans, full matrices and exact selected manifest to `code-to-canvas`. It adds generated native script artifacts and a single authoritative native-ID/property ledger; the producer never guesses Figma IDs or calls back into the consumer itself.
+Pass preview URL, catalog/spec plans, full matrices and exact selected manifest to `to-design`. It adds generated native script artifacts and a single authoritative native-ID/property ledger; the producer never guesses Figma IDs or calls back into the consumer itself.
