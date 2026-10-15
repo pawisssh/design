@@ -1,21 +1,125 @@
 {
   "date": "2026-10-16",
-  "target": {"fileKey": "Alpt8YsrzDVu6DnwsrF26h", "page": "Smoke test", "server": "remote Figma MCP use_figma"},
-  "runtime": {"rawApi": "createComponent/createFrame/createText/combineAsVariants/createNodeFromSvg/variables all typeof function", "editorType": "figma", "ibmPlexSans": "available (styles Regular, Medium, SemiBold - no space, Bold, ...)", "fontsListed": 8941},
-  "sizes": {"coreChars": 5813, "packages": {"foundations": 13770, "components20": 11093, "components100": 23598}, "planCharsPerVariant": 156, "fixedOverheadChars": 7970, "toolCodeMaxChars": 50000, "variantsPerCallByCodeCap": 269},
+  "target": {
+    "fileKey": "Alpt8YsrzDVu6DnwsrF26h",
+    "page": "Smoke test",
+    "server": "remote Figma MCP use_figma"
+  },
+  "runtime": {
+    "rawApi": "createComponent/createFrame/createText/combineAsVariants/createNodeFromSvg/variables all typeof function",
+    "editorType": "figma",
+    "ibmPlexSans": "available (styles Regular, Medium, SemiBold - no space, Bold, ...)",
+    "fontsListed": 8941
+  },
+  "sizes": {
+    "coreChars": 5813,
+    "packages": {
+      "foundations": 13770,
+      "components20": 11093,
+      "components100": 23598
+    },
+    "planCharsPerVariant": 156,
+    "fixedOverheadChars": 7970,
+    "toolCodeMaxChars": 50000,
+    "variantsPerCallByCodeCap": "~269 with this 5.8K-char minimal core only; a real core (icons, booleans, INSTANCE_SWAP, structure rules, review grid) will be larger and lower this",
+    "variantsPerCallFormula": "(50000 - coreChars - stateChars - planHeaderChars) / planCharsPerVariant"
+  },
   "calls": [
-    {"n": 1, "slice": "foundations", "sentChars": 10300, "note": "packaged file with selection.entries trimmed by hand", "ms": 135, "outputBytes": 1375, "created": {"variables": 26}, "collection": "VariableCollectionId:4:2", "modes": ["White", "G100"]},
-    {"n": 2, "slice": "components", "variants": 20, "sentChars": 11093, "ms": 519, "outputBytes": 2337, "set": "5:43 (later removed by call 3)"},
-    {"n": 3, "slice": "components", "variants": 100, "sentChars": 23598, "ms": 2264, "outputBytes": 6058, "set": "6:202", "removed": ["5:43"], "labelProperty": "Label#6:0"},
-    {"n": 4, "slice": "foundations", "rerun": true, "ms": 57, "created": {"variables": 0}, "reused": {"variables": 26}, "collectionsInFile": ["Smoke / Button:2m:26v"]}
+    {
+      "n": 1,
+      "slice": "foundations",
+      "sentChars": 10300,
+      "note": "NOT verbatim: packaged gen-foundations file with selection.entries trimmed by hand before sending",
+      "ms": 135,
+      "outputBytes": 1375,
+      "created": {
+        "variables": 26
+      },
+      "collection": "VariableCollectionId:4:2",
+      "modes": [
+        "White",
+        "G100"
+      ]
+    },
+    {
+      "n": 2,
+      "slice": "components",
+      "variants": 20,
+      "sentChars": 11093,
+      "ms": 519,
+      "outputBytes": 2337,
+      "set": "5:43 (later removed by call 3)",
+      "note": "verbatim gen-c20 package"
+    },
+    {
+      "n": 3,
+      "slice": "components",
+      "variants": 100,
+      "sentChars": 23598,
+      "ms": 2264,
+      "outputBytes": 6058,
+      "set": "6:202",
+      "removed": [
+        "5:43"
+      ],
+      "labelProperty": "Label#6:0",
+      "note": "verbatim gen-c100 package (state-after-c20.json)"
+    },
+    {
+      "n": 4,
+      "slice": "foundations",
+      "rerun": true,
+      "ms": 57,
+      "created": {
+        "variables": 0
+      },
+      "reused": {
+        "variables": 26
+      },
+      "collectionsInFile": [
+        "Smoke / Button:2m:26v"
+      ],
+      "note": "NOT verbatim: same foundations logic, but components branch and plan header removed and a collectionsInFile readback added; still carried the original package hash header"
+    }
   ],
-  "slope": {"msPerVariant": 22, "outputBytesPerVariant": 46.5, "outputBaseBytes": 1400, "variantsPerCallByOutputCap": 410},
+  "slope": {
+    "msPerVariant": 22,
+    "outputBytesPerVariant": 46.5,
+    "outputBaseBytes": 1400,
+    "variantsPerCallByOutputCap": 410
+  },
   "probes": {
-    "outputCap": {"returned": 30029, "result": "error: Return value exceeds the 20480-byte limit. Canvas edits from this run were not committed.", "markerCommitted": false},
-    "time30s": {"result": "ok", "markerCommitted": true},
-    "time90s": {"result": "ok", "markerCommitted": true},
-    "time180s": {"result": "client error: MCP server connection lost", "markerCommitted": true, "note": "script finished server-side; client lost the result"},
+    "outputCap": {
+      "returned": 30029,
+      "result": "error: Return value exceeds the 20480-byte limit. Canvas edits from this run were not committed.",
+      "markerCommitted": false
+    },
+    "time30s": {
+      "result": "ok",
+      "markerCommitted": true
+    },
+    "time90s": {
+      "result": "ok",
+      "markerCommitted": true
+    },
+    "time180s": {
+      "result": "client error: MCP server connection lost",
+      "markerCommitted": true,
+      "note": "at least the pre-loop marker mutation committed; whether the script ran to completion is unknown"
+    },
     "pageContext": "currentPage persisted across calls (was 'Smoke test' at the start of later calls), contrary to the docs' reset-to-first-page; still switch explicitly each call"
   },
-  "cleanup": {"probeMarkersRemoved": ["6:204", "6:205", "6:206"], "kept": ["6:202 Button Component Set", "VariableCollectionId:4:2 Smoke / Button", "1:2 MCP write test"]}
+  "cleanup": {
+    "probeMarkersRemoved": [
+      "6:204",
+      "6:205",
+      "6:206"
+    ],
+    "kept": [
+      "6:202 Button Component Set",
+      "VariableCollectionId:4:2 Smoke / Button",
+      "1:2 MCP write test"
+    ]
+  },
+  "integrity": "The package is re-typed through model output into use_figma's code argument; nothing at runtime checks it matches the packaged file (the hash header is not verified)."
 }
