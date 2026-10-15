@@ -27,8 +27,12 @@ One dimension along which a Component Family's variants differ, such as Size, St
 _Avoid_: Prop, variant property, dimension
 
 **Base Component**:
-The first variant of a Component Family that is built in Figma and approved by the user before the other variants are derived from it.
+The single final variant of a Component Family with every Property Axis at its default, such as Button Primary/Large/Enabled. It is built in Figma and approved by the user before the other variants are derived from it.
 _Avoid_: Master, template, first variant
+
+**Sub-component**:
+A private component, prefixed `_`, at tier Item or Base, used to compose a Component Family; never published on its own.
+_Avoid_: Base Component (that is the first approved final variant), building block, part
 
 **Component Set**:
 The Figma node that groups a Component Family's variants. Used only for the Figma artifact.
