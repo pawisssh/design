@@ -90,7 +90,7 @@ Don't cross it with Kind or State. Model it as one extra row per Size, or as its
 
 ## Invalid combinations (exclusions)
 
-This is in the `expected.json` shape from `skills/component-sheet-html/references/sheet-contract.md`. Axis names are the proposals above. "Text" and "IconOnly" are split by the `IconOnly` axis.
+This is modeled on the `expected.json` shape from `skills/component-sheet-html/references/sheet-contract.md`. Axis names are the proposals above. "Text" and "IconOnly" are split by the `IconOnly` axis.
 
 ```json
 {
@@ -108,14 +108,18 @@ This is in the `expected.json` shape from `skills/component-sheet-html/reference
     {"match": {"Kind": "danger--primary"}, "reason": "Type-only legacy value: listed in ButtonKinds but no SCSS selector styles .cds--btn--danger--primary (renders as unstyled .cds--btn); removed per migrate-to-7.x; omitted from story options", "evidence": ["Button.tsx L20", "_button.scss L332-427 (only &--tertiary and &--ghost nested)", "migrate-to-7.x.md L8", "Button.stories.js L220-229"]},
     {"match": {"IconOnly": "true", "Kind": ["danger", "danger--tertiary", "danger--ghost"]}, "reason": "IconButtonKinds excludes danger kinds; propTypes validator errors; docs: danger cannot be icon-only", "evidence": ["IconButton L25-30", "Button.tsx L322-339", "usage.mdx L1431"]},
     {"match": {"IconOnly": "true", "Size": ["xl", "2xl"]}, "reason": "IconButton size is Extract<'xs'|'sm'|'md'|'lg'>; Button passes through with @ts-expect-error", "evidence": ["IconButton L137", "Button.tsx L212-219"]},
-    {"match": {"IconOnly": "true", "Icon": "none"}, "reason": "icon-only requires an icon; Icon axis is implicit (always present)", "evidence": ["Button.tsx L172-178"]},
+    {"match": {"IconOnly": "true", "Icon": "none"}, "reason": "Structural: an icon-only button with no icon is an empty square with no content; the icon is the only child (Button.tsx renders iconOnlyImage ?? children). The Icon axis is implicit (always present) for icon-only", "evidence": ["Button.tsx L180, L236-238", "_button.scss L247-261"]},
     {"match": {"Selected": "true", "IconOnly": "false"}, "reason": "cds--btn--selected only emitted for hasIconOnly", "evidence": ["ButtonBase.tsx L57"]},
     {"match": {"Selected": "true", "Kind": ["primary", "secondary", "tertiary"]}, "reason": "selected only for kind ghost", "evidence": ["ButtonBase.tsx L57", "Button.tsx L68-71"]},
-    {"match": {"Expressive": "true", "Size": ["xs", "sm", "md", "xl", "2xl"]}, "reason": "Expressive applies only to large; code does not enforce (xl/2xl classes still emitted) but docs define only 'Large (expressive)'", "evidence": ["Button.tsx L63-66", "ButtonBase.tsx L46-51", "style.mdx Size table"]},
-    {"match": {"Expressive": "true", "IconOnly": "true"}, "reason": "UNCERTAIN: story TODO says expressive does not work on React icon buttons; SCSS has .btn--icon-only.btn--expressive padding 12px 13px", "evidence": ["Button.stories.js L269", "_button.scss L443-446"]}
+    {"match": {"Expressive": "true", "Size": ["xs", "sm", "md", "xl", "2xl"]}, "reason": "Design-intent exclusion, not code-enforced: the prop comment and docs define Expressive only for Large ('Large (expressive)'); code still emits classes and renders these tuples", "evidence": ["Button.tsx L63-66", "ButtonBase.tsx L46-51", "style.mdx Size table"]}
+  ],
+  "review": [
+    {"match": {"Expressive": "true", "IconOnly": "true"}, "reason": "UNCERTAIN, not subtracted: story TODO says expressive does not work on React icon buttons; SCSS has .btn--icon-only.btn--expressive padding 12px 13px. Needs a render", "evidence": ["Button.stories.js L269", "_button.scss L443-446"]}
   ]
 }
 ```
+
+The `match` entries are **patterns**: an array value means "any of these values". This block isn't a literal `expected.json`. Tickets #7 and #9 must expand each pattern into complete tuples over the axes before validating a selection against it. `review` entries stay in the matrix and are flagged for verification, as `sheet-contract.md` treats content and property review cases.
 
 Selected × State: the selected rule `.cds--btn--icon-only.cds--btn--selected` [_button L293] has the same specificity as `.cds--btn--ghost:hover`/`:active` and comes later in the file. So `$background-selected` probably **overrides** hover and active backgrounds. A browser render has to confirm this before Selected × {hover, active} counts as distinct.
 
