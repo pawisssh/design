@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "fileKey": "<Design Library file key>",
+  "foundations": {
+    "designSystem": "carbon",
+    "snapshotId": "sha256:20458d326bb6fa1a0ccf122d9c25f83bbb6dc789a644320bf87a61dbb16858fb",
+    "documentHash": "sha256:09381a2ab6e3d98e23c674f1bf81aa3b71a7da84874a0a5168189d3de90704b3",
+    "appliedAt": "2026-10-16T00:00:00Z",
+    "collections": {
+      "primitives": {
+        "id": "VariableCollectionId:21:1",
+        "modes": {
+          "default": "21:0"
+        }
+      },
+      "theme": {
+        "id": "VariableCollectionId:21:2",
+        "modes": {
+          "white": "21:1",
+          "g10": "21:2",
+          "g90": "21:3",
+          "g100": "21:4"
+        }
+      },
+      "layout": {
+        "id": "VariableCollectionId:21:3",
+        "modes": {
+          "default": "21:5"
+        }
+      },
+      "type": {
+        "id": "VariableCollectionId:21:4",
+        "modes": {
+          "default": "21:6"
+        }
+      }
+    },
+    "variables": {
+      "blue.30": "VariableID:21:101",
+      "blue.40": "VariableID:21:102",
+      "blue.60": "VariableID:21:103",
+      "blue.60Hover": "VariableID:21:104",
+      "blue.70": "VariableID:21:105",
+      "blue.80": "VariableID:21:106",
+      "gray.10": "VariableID:21:107",
+      "gray.100": "VariableID:21:108",
+      "gray.30": "VariableID:21:109",
+      "gray.50": "VariableID:21:110",
+      "gray.60": "VariableID:21:111",
+      "gray.60Hover": "VariableID:21:112",
+      "gray.80": "VariableID:21:113",
+      "gray.80Hover": "VariableID:21:114",
+      "gray.90": "VariableID:21:115",
+      "red.40": "VariableID:21:116",
+      "red.50": "VariableID:21:117",
+      "red.60": "VariableID:21:118",
+      "red.80": "VariableID:21:119",
+      "white": "VariableID:21:120",
+      "background": "VariableID:21:121",
+      "background-active": "VariableID:21:122",
+      "background-hover": "VariableID:21:123",
+      "button-danger-active": "VariableID:21:124",
+      "button-danger-hover": "VariableID:21:125",
+      "button-danger-primary": "VariableID:21:126",
+      "button-danger-secondary": "VariableID:21:127",
+      "button-disabled": "VariableID:21:128",
+      "button-primary": "VariableID:21:129",
+      "button-primary-active": "VariableID:21:130",
+      "button-primary-hover": "VariableID:21:131",
+      "button-secondary": "VariableID:21:132",
+      "button-secondary-active": "VariableID:21:133",
+      "button-secondary-hover": "VariableID:21:134",
+      "button-tertiary": "VariableID:21:135",
+      "button-tertiary-active": "VariableID:21:136",
+      "button-tertiary-hover": "VariableID:21:137",
+      "focus": "VariableID:21:138",
+      "link-primary": "VariableID:21:139",
+      "link-primary-hover": "VariableID:21:140",
+      "text-disabled": "VariableID:21:141",
+      "text-inverse": "VariableID:21:142",
+      "text-on-color": "VariableID:21:143",
+      "text-on-color-disabled": "VariableID:21:144",
+      "border-radius-00": "VariableID:21:145",
+      "icon-size-01": "VariableID:21:146",
+      "icon-size-02": "VariableID:21:147",
+      "size-2xl": "VariableID:21:148",
+      "size-lg": "VariableID:21:149",
+      "size-md": "VariableID:21:150",
+      "size-sm": "VariableID:21:151",
+      "size-xl": "VariableID:21:152",
+      "size-xs": "VariableID:21:153",
+      "spacing-03": "VariableID:21:154",
+      "spacing-05": "VariableID:21:155",
+      "spacing-07": "VariableID:21:156",
+      "body-compact-01-font-size": "VariableID:21:157",
+      "body-compact-01-font-weight": "VariableID:21:158",
+      "body-compact-01-letter-spacing": "VariableID:21:159",
+      "body-compact-01-line-height": "VariableID:21:160",
+      "body-compact-02-font-size": "VariableID:21:161",
+      "body-compact-02-font-weight": "VariableID:21:162",
+      "body-compact-02-letter-spacing": "VariableID:21:163",
+      "body-compact-02-line-height": "VariableID:21:164",
+      "font-family-sans": "VariableID:21:165"
+    },
+    "textStyles": {
+      "body-compact-01": "S:d535c581ef510f4eefa624df24d40ec45fe0a74b,21:900",
+      "body-compact-02": "S:ae6cc953c04e78f355aa57bd7fbb2a66f7695ab4,21:901"
+    },
+    "orphans": {
+      "variables": {
+        "spacing-10": {
+          "id": "VariableID:21:99",
+          "since": "sha256:<documentHash of the run that dropped it>"
+        }
+      },
+      "textStyles": {}
+    }
+  },
+  "sets": {}
+}
