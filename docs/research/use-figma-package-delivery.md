@@ -185,7 +185,7 @@ Trade-off:
 
 - Write a `PreToolUse` hook script (matcher `mcp__.*__use_figma`, `onFailure: "block"`) that replaces an `@package <path> sha256=<hash>` stub with the verified package file via `updatedInput`, and passes un-marked calls through untouched.
 - Have `package_native_builder.py` record `fileSha256` of `build-components.mcp.js` in `script-package.json` and print the ready-to-send stub, so the hook can verify the exact file bytes rather than only `inputHash`.
-- Run a live check that `updatedInput` substitution reaches the remote `use_figma` server: a stub plus a 24K-char package on the smoke file, with the run confirmed from the returned `PLAN_CHECK`.
+- Run a live check that `updatedInput` substitution reaches the remote `use_figma` server: a stub plus a 24K-char package on the smoke file, with the run confirmed by the returned `CHECK` hashes.
 - Change the packager to embed plan and state as `String.raw` text with a `CHECK {planLen, entries, plan, state, core}` block of FNV-1a-32 hashes (the core hashed exactly as `toString()` returns it), and to reject text containing a backtick or `${` or non-ASCII.
 - Add a pre-mutation integrity gate to the builder core that verifies the plan, state and core-source FNV-1a-32 hashes plus the entry count, returns `{error:"package-mismatch", field, expected, got}`, and touches nothing.
 - Define a compact package selection encoding (entries grouped by family as axis-ordered value tuples) and have the packager assert that it decodes back to the approved selection's tuples.
