@@ -47,3 +47,17 @@ _Avoid_: component.json (that is the file, not the concept), spec, schema
 **Adapter**:
 The translation from one specific Code Library into the Contract.
 _Avoid_: Source adapter, connector, parser
+
+**Foundations document**:
+The generated description of a Design System's shared tokens (variables, theme modes and Text Styles) that every Contract in that Design System binds to. There is one per Design System, and an Adapter writes it.
+_Avoid_: Tokens file, theme file, variables JSON
+
+## Skills
+
+**To-preview**:
+The skill that shows a Contract's combinations, rendered with the real Code Library, so the owner can leave out the ones they don't want. It never approves anything.
+_Avoid_: component-sheet-html, component sheet, HTML catalog skill
+
+**To-design**:
+The skill that builds a Design Library in Figma from Contracts: foundations and icons first, then the Base Component for owner approval, then the full Component Set.
+_Avoid_: code-to-canvas, builder
