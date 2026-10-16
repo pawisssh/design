@@ -203,7 +203,7 @@ These are computed from the Contract, never written into it:
   - `layout.<node>.<field>` for a value in the base rule (`match: {}`), `layout<match>.<node>.<field>` for any other rule, with the match as canonical JSON (keys sorted, no spaces): `layout{"size":"sm"}.Box.height`. `draftedKey(section, match, node, field)` writes it. The same holds for `paint`.
   - Not yet: excluded combinations have no key form.
 - `drafted` is inside `contentHash`, so one approval covers every entry, and adding a table to an approved Contract voids its approval. An approved Contract gains its table at its next re-approval.
-- The base loop's review package lists the entries by kind, the most taste-prone first, and To-preview marks a drafted axis label on each card.
+- The base loop's review package lists the entries by kind, the most taste-prone first, and To-preview marks a drafted axis value label on each card (a drafted axis label shows only in the tooltip).
 
 ## Validation
 

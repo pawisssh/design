@@ -454,11 +454,11 @@ export function approve(contract, at, { prototype = false } = {}) {
 const DRAFTABLE = ['family', 'axes', 'anatomy', 'properties', 'layout', 'paint', 'icons', 'figma', 'code'];
 const BIND_FIELDS = ['characters', 'visible', 'mainComponent'];
 const OWNER_BY = /^owner( \(simulated[^)]*\))?$/;
-const isEmpty = o => !isObj(o) || Object.keys(o).length === 0;
+const noMatch = o => !isObj(o) || Object.keys(o).length === 0;
 
 /** The `drafted` key of a value set by a layout or paint rule: `layout.Button.width`, or `layout{"size":"sm"}.Box.height` under a non-empty match. */
 export function draftedKey(section, match, node, field) {
-  return `${section}${isEmpty(match) ? '' : canonical(match)}.${node}.${field}`;
+  return `${section}${noMatch(match) ? '' : canonical(match)}.${node}.${field}`;
 }
 
 /**
@@ -480,7 +480,7 @@ export function draftedValue(contract, key) {
     let value;
     let found = false;
     for (const rule of contract[root] || []) {
-      const same = match === undefined ? isEmpty(rule.match) : !isEmpty(rule.match) && canonical(rule.match) === match;
+      const same = match === undefined ? noMatch(rule.match) : !noMatch(rule.match) && canonical(rule.match) === match;
       if (same && isObj(rule.set) && isObj(rule.set[node]) && Object.prototype.hasOwnProperty.call(rule.set[node], field)) {
         found = true;
         value = rule.set[node][field];
