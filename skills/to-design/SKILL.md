@@ -36,7 +36,7 @@ The builder cores are fixed. Each is `async function buildComponentSets(figma, P
   - **Batch ids only.** A call carries and returns only its batch's variant ids. `ledger.mjs record` merges them into `sets[family].variants` (an array of `total` ids) and keeps the other families.
   - **Lost connection.** A call whose result was lost may still have committed. Run `--mode reconcile` (it finds the set's variants by name and records them) before retrying the batch.
 
-  Read modes write nothing:
+  Read modes leave the file as they found it:
   - `coverage` returns every variant's name, cell and property wiring, plus the set, section, Header and property definitions.
   - `sample` reads chosen variants in full, as the base slice does.
   - `theme` resolves each bound colour in every mode of its collection, then restores the explicit modes.

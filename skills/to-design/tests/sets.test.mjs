@@ -59,10 +59,12 @@ async function setup({ withBase = true } = {}) {
 async function sets(env, options = {}, { contract = BUTTON, drop = false } = {}) {
   const { plan, state } = setsPlan(contract, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, ...options });
   const { code, out } = pack(plan, state);
+  const from = env.mock.log.length;
   const result = await runPackage(code, env.mock.figma);
   assert.ok(!result.error, JSON.stringify(result));
   if (!drop && result.summary.conflicts === 0 && result.ledger) env.ledger = recordResult(env.ledger, result);
-  return { plan, result, out };
+  const switches = env.mock.log.slice(from).filter(([op]) => op === 'setCurrentPage').length;
+  return { plan, result, out, switches };
 }
 
 async function buildAll(env, contract = BUTTON, options = {}) {
@@ -109,8 +111,9 @@ test('245 variants build in batches into one grid set on the Base Component, and
   const env = await setup();
   const base = { ...env.ledger.bases.button };
   const runs = await buildAll(env);
-  for (const { result, out, plan } of runs) {
+  for (const { result, out, plan, switches } of runs) {
     assert.equal(result.summary.conflicts, 0, JSON.stringify(result.conflicts));
+    assert.ok(switches <= 1, `batch ${plan.options.batch}: ${switches} page switches (figma-workflow.md: one per call)`);
     assert.deepEqual(result.missing, []);
     assert.ok(out.chars < 50000, `batch ${plan.options.batch}: ${out.chars} chars`);
     assert.ok(result.outputBytes < 20000, `batch ${plan.options.batch}: ${result.outputBytes} bytes out`);
@@ -245,9 +248,13 @@ test('the coverage check catches a renamed, a moved and a deleted variant, and a
   set.gridRowCount = 36; // a hand drags a variant below the grid
   b.setGridChildPosition(35, 0);
   c.remove();
+  set.dashPattern = [4, 4]; // and restyles the sheet
+  set.parent.itemSpacing = 40;
   const report = checkCoverage(BUTTON, (await sets(env, { mode: 'coverage' })).result);
   const kinds = report.problems.map(p => p.what);
   for (const k of ['label', 'extra', 'missing', 'cell']) assert.ok(kinds.includes(k), `${k} in ${kinds}`);
+  assert.ok(report.problems.some(p => p.what === 'set' && p.field === 'dash'), JSON.stringify(report.problems.filter(p => p.what === 'set')));
+  assert.ok(report.problems.some(p => p.what === 'content' && p.field === 'gap'));
   assert.ok(report.problems.some(p => p.what === 'missing' && p.name === lost));
   await buildAll(env);
   assert.deepEqual(checkCoverage(BUTTON, (await sets(env, { mode: 'coverage' })).result).problems, []);

@@ -470,9 +470,8 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const TF = plan.templates.header.fields;
     if (!tpl) {
       if (!tplPage) { tplPage = figma.createPage(); tplPage.name = plan.templates.page; made.push('templates-page'); }
-      await figma.setCurrentPageAsync(tplPage);
       tpl = figma.createComponent();
-      tplPage.appendChild(tpl);
+      tplPage.appendChild(tpl); // moved onto its page without a page switch: one switch per call (figma-workflow.md)
       tpl.name = plan.templates.header.name;
       tpl.layoutMode = 'VERTICAL';
       tpl.resize(2560, 100);
@@ -702,16 +701,20 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       for (const id of Object.keys(cols)) {
         const col = cols[id];
         const before = (host.explicitVariableModes || {})[id];
-        for (const m of col.modes) {
-          host.setExplicitVariableModeForCollection(col, m.modeId);
-          for (const job of jobs) {
-            if (job[4].variableCollectionId !== id) continue;
-            const r = job[4].resolveForConsumer(job[3]);
-            const c = r && r.value;
-            (job[0][job[1]] = job[0][job[1]] || {})[m.name] = c && typeof c === 'object' ? hex(c) + (c.a != null && c.a < 1 ? '/' + Math.round(c.a * 1000) / 1000 : '') : c;
+        try {
+          for (const m of col.modes) {
+            host.setExplicitVariableModeForCollection(col, m.modeId);
+            for (const job of jobs) {
+              if (job[4].variableCollectionId !== id) continue;
+              const r = job[4].resolveForConsumer(job[3]);
+              const c = r && r.value;
+              (job[0][job[1]] = job[0][job[1]] || {})[m.name] = c && typeof c === 'object' ? hex(c) + (c.a != null && c.a < 1 ? '/' + Math.round(c.a * 1000) / 1000 : '') : c;
+            }
           }
+        } finally {
+          // the file is left as it was found, even when a resolve throws
+          if (before) host.setExplicitVariableModeForCollection(col, before); else host.clearExplicitVariableModeForCollection(col);
         }
-        if (before) host.setExplicitVariableModeForCollection(col, before); else host.clearExplicitVariableModeForCollection(col);
       }
       return { summary: { variants: E.length, conflicts: 0 }, [what]: out };
     }

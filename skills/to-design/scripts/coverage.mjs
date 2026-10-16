@@ -34,6 +34,14 @@ function refsOf(contract, tuple) {
 const sortKeys = o => (o && typeof o === 'object' && !Array.isArray(o) ? Object.fromEntries(Object.keys(o).sort().map(k => [k, sortKeys(o[k])])) : o);
 const eqJ = (a, b) => JSON.stringify(sortKeys(a)) === JSON.stringify(sortKeys(b));
 
+// The component sheet (#22): the set's grid chrome, the Components frame and its Content. Written out here, apart
+// from the core that builds it, so the check does not trust the builder.
+const SHEET = {
+  set: { gap: [20, 20], padding: 20, dash: [10, 5], radius: 5, stroke: { raw: '#9747ff' } },
+  section: { name: 'Components', layoutMode: 'VERTICAL', children: ['Header', 'Content'], minWidth: 2560, minHeight: 1440 },
+  content: { padding: [80, 80, 80, 80], gap: 80 },
+};
+
 /**
  * Every expanded variant against a `coverage` readback: names (every `Prop=Value` label is a Contract axis and
  * value label), no missing, extra or duplicate variant, every one a component in its grid cell with the
@@ -68,13 +76,14 @@ export function checkCoverage(contract, readback) {
 
   const s = readback.set || {};
   const def = variantName(contract, baseTuple(contract));
-  const rows = contract.figma.grid.rows.reduce((m, k) => m * contract.axes.find(a => a.key === k).values.length, 1);
-  const cols = contract.figma.grid.columns.reduce((m, k) => m * contract.axes.find(a => a.key === k).values.length, 1);
-  const expectSet = { name: contract.figma.componentSetName, description: contract.figma.description, layoutMode: 'GRID', grid: [rows, cols],
-    defaultVariant: def, page: contract.figma.page, parents: ['Content', 'Components'] };
+  const cells = keys => keys.reduce((m, k) => m * contract.axes.find(a => a.key === k).values.length, 1);
+  const expectSet = { name: contract.figma.componentSetName, description: contract.figma.description, layoutMode: 'GRID',
+    grid: [cells(contract.figma.grid.rows), cells(contract.figma.grid.columns)], defaultVariant: def, page: contract.figma.page,
+    parents: ['Content', 'Components'], ...SHEET.set };
   for (const [k, v] of Object.entries(expectSet)) if (!eqJ(s[k], v)) bad('set', { field: k, want: v, got: s[k] });
   const sec = readback.section || {};
-  if (!eqJ(sec.children, ['Header', 'Content']) || sec.minWidth !== 2560 || sec.minHeight !== 1440) bad('section', { got: sec });
+  for (const [k, v] of Object.entries(SHEET.section)) if (!eqJ(sec[k], v)) bad('section', { field: k, want: v, got: sec[k] });
+  for (const [k, v] of Object.entries(SHEET.content)) if (!eqJ((readback.content || {})[k], v)) bad('content', { field: k, want: v, got: (readback.content || {})[k] });
   const h = contract.figma.header;
   const wantHeader = { Type: h.type, Title: h.title, Namespace: h.namespace };
   if (!eqJ(readback.header, wantHeader)) bad('header', { want: wantHeader, got: readback.header });
