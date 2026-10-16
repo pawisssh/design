@@ -53,7 +53,7 @@ export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune
   if (doc.schemaVersion !== 1) throw new Error('foundations document schemaVersion must be 1');
   // the selected subset of the whole theme (#107), split by group when it needs several calls;
   // documentHash stays the whole document's, as later slices check it
-  const names = selection(doc, selectedGroups(ledger));
+  const names = selection(doc, selectedGroups(ledger, doc));
   const stripped = stripReviewFields(doc);
   const parts = chunks(doc, names, (kind, n) => JSON.stringify(stripped[kind][n]).length + 2 * n.length + 36, budget);
   if (!(chunk >= 1 && chunk <= parts.length)) throw new Error(`there is no chunk ${chunk} of ${parts.length}`);

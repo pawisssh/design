@@ -120,7 +120,7 @@ export function pruneList(preview, names) {
  */
 export function setGroups(ledger, fileKey, doc, { add = [], remove = [] } = {}) {
   if (ledger && ledger.fileKey !== fileKey) throw new Error(`ledger is for ${ledger.fileKey}, not ${fileKey}`);
-  const groups = new Set(selectedGroups(ledger));
+  const groups = new Set(selectedGroups(ledger, doc));
   const absent = remove.filter(g => !groups.has(g));
   if (absent.length) throw new Error(`${absent.join(', ')} is not a selected group (selected: ${[...groups].join(', ')})`);
   for (const g of remove) groups.delete(g);
