@@ -42,6 +42,10 @@ _Avoid_: Master, template, first variant
 A private component, prefixed `_`, at tier Item or Base, used to compose a Component Family; never published on its own.
 _Avoid_: Base Component (that is the first approved final variant), building block, part
 
+**Repeated child**:
+A child component that a Component Family's code takes any number of, with content the feature chooses, such as a Select's SelectItem options. The Contract names its component and props; a Usage lists them.
+_Avoid_: Item (that is a Sub-component tier), option, slot
+
 **Component Set**:
 The Figma node that groups a Component Family's variants. Used only for the Figma artifact.
 _Avoid_: Variant group
@@ -99,7 +103,7 @@ Feature code made quickly to show what a feature should do, such as a v0 or Lova
 _Avoid_: Mockup, vibe code, POC, prototype Contract (that is a Contract approved only for a trial build)
 
 **Usage**:
-One element of a feature's input, as the Handoff records it: a Contract with a tuple of its axis values, a Component Proposal, or a raw element with a reason. It always records how it was recognised.
+One element of a feature's input, as the Handoff records it: a Contract with a tuple of its axis values (and its Repeated children, if the family has them), a Component Proposal, or a raw element with a reason. It always records how it was recognised.
 _Avoid_: Instance (that is the Figma node), component reference, match
 
 **Stand-in**:
