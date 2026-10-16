@@ -139,7 +139,7 @@ Core: `builder-core-components.js`. `sets` takes an approved Contract only: it r
 - **Package size.** Packages run 40-47K chars, so 64 per call left too little room under 50,000.
 - **Output.** Build output is at most 2.3KB. A coverage read is about 1.5KB plus 23 bytes per variant (6.6KB at 245, 13.1KB at 539); `use_figma` output must stay under 20KB, so one coverage read holds about 800 variants. A sample read is about 1.6KB per variant (keep it to 12 or fewer); a theme read is about 0.35KB per variant.
 - **Time.** A creating call costs about 1.6 ms × variants created × set size: 5.1s at 49, 18.6s at 245, 41.8s at 539, so building a family is quadratic (539 variants took 263s over 11 calls). An update-free rerun call takes 0.4-1.1s, and a coverage read 0.3s at 539.
-- **Ceiling: 49 per call.** At 49 the largest package was 47,190 chars (the orphan flow of #67 later added about 1,300 chars to the core, so expect about 48.5K until a live run measures it again), and 64 per call at 539 variants would take about 55s, beyond the longest call measured. For a family above about 600 variants, lower `--per-call` so that 1.6 ms × per-call × set size stays under about 45s.
+- **Ceiling: 49 per call.** At 49 the largest Button package measured 48,006 chars live (with the orphan flow of #67), and 64 per call at 539 variants would take about 55s, beyond the longest call measured. For a family above about 600 variants, lower `--per-call` so that 1.6 ms × per-call × set size stays under about 45s.
 
 ### Dropped variants: orphans and prune
 
