@@ -114,7 +114,7 @@ export async function review({ handoffPath, designSystem }) {
   const signed = existsSync(signedPath) ? readJson(signedPath) : null;
   const diff = signed ? diffJson(contentOf(signed), contentOf(h)) : [];
   const blocks = blocksOf(h, system);
-  if (h.status === 'approved') blocks.unshift(`already signed off at r${h.approval.revision}`);
+  if (h.status === 'approved') blocks.unshift(`already signed off at r${(h.approval || {}).revision}`);
   const pending = pendingProposals(h, system);
   const used = Object.keys(h.source.proposals || {});
   const drifts = [];
@@ -190,7 +190,7 @@ export async function approve({ handoffPath, designSystem, contentHash, proposal
   const hash = handoffContentHash(h);
   const reasons = [];
   if (test && !inScratch(handoffPath)) reasons.push(`a test approval is written only under ${join(REPO_ROOT, '.scratch')}/`);
-  if (h.status === 'approved') reasons.push(`the Handoff is already signed off at r${h.approval.revision}; a change re-runs To-handoff first`);
+  if (h.status === 'approved') reasons.push(`the Handoff is already signed off at r${(h.approval || {}).revision}; a change re-runs To-handoff first`);
   reasons.push(...blocksOf(h, system));
   if (contentHash !== hash) reasons.push(`the Handoff's content hash moved since the review: ${contentHash} given, ${hash} now`);
   const used = (h.source && h.source.proposals) || {};
