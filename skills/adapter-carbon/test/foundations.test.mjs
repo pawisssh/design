@@ -44,8 +44,9 @@ test('every resolved value matches the compiled Carbon CSS, and every Sass fallb
   assert.equal(checks.css.sha256, `sha256:${sources.css.sha256}`);
   // Theme (234 themes.json + 15 button.json) x 4 modes = 996; Layout 13 spacing + 4 fluid-spacing = 17;
   // Type 36 styles x 4 properties, less helper-text-01's absent font-weight and the 2 differing line heights = 141,
-  // plus the font-family of code-01/02 and fluid-quotation-01/02 = 4.
-  assert.equal(checks.css.matched, 996 + 17 + 141 + 4);
+  // plus the font-family of code-01/02 and fluid-quotation-01/02 = 4;
+  // Layer 15 sets x 3 layer classes, each naming the aliased token with its White value as fallback = 45.
+  assert.equal(checks.css.matched, 996 + 17 + 141 + 4 + 45);
   assert.deepEqual(checks.css.missing, []);
   assert.deepEqual(checks.css.differs, ['expressive-heading-01-line-height', 'heading-07-line-height']);
   // size 6 + icon-size 2 + border-radius 7 + container 5 + layout 7
@@ -97,20 +98,64 @@ test('generation fails when a listed styles.ts/CSS difference no longer holds', 
   assert.throws(fixed, /heading-07-line-height: the recorded CSS difference \(1\.19\) no longer holds/);
 });
 
-test('collections: Primitives (hidden), Theme with four modes, Layout and Type', { skip }, () => {
+test('collections: Primitives (hidden), Theme with four modes, Layer after Theme, Layout and Type', { skip }, () => {
   const { collections } = run().doc;
   assert.deepEqual(collections.map(c => [c.key, c.name]),
-    [['primitives', 'Primitives'], ['theme', 'Theme'], ['layout', 'Layout'], ['type', 'Type']]);
+    [['primitives', 'Primitives'], ['theme', 'Theme'], ['layer', 'Layer'], ['layout', 'Layout'], ['type', 'Type']]);
   assert.equal(collections[0].hidden, true);
   assert.deepEqual(collections[1].modes, [
-    { key: 'white', label: 'White' }, { key: 'g10', label: 'Gray 10' },
-    { key: 'g90', label: 'Gray 90' }, { key: 'g100', label: 'Gray 100' }]);
-  for (const c of [collections[0], collections[2], collections[3]]) assert.deepEqual(c.modes, [{ key: 'default', label: 'Default' }]);
+    { key: 'white', label: 'White', selector: '.cds--white' }, { key: 'g10', label: 'Gray 10', selector: '.cds--g10' },
+    { key: 'g90', label: 'Gray 90', selector: '.cds--g90' }, { key: 'g100', label: 'Gray 100', selector: '.cds--g100' }]);
+  assert.deepEqual(collections[2].modes, [
+    { key: 'one', label: 'One', selector: '.cds--layer-one' }, { key: 'two', label: 'Two', selector: '.cds--layer-two' },
+    { key: 'three', label: 'Three', selector: '.cds--layer-three' }]);
+  for (const c of [collections[0], collections[3], collections[4]]) assert.deepEqual(c.modes, [{ key: 'default', label: 'Default' }]);
+});
+
+test('Layer holds Carbon\'s 15 layer sets, each mode aliasing the Theme token of its level (#109)', { skip }, () => {
+  const { doc } = run();
+  const layer = Object.entries(doc.variables).filter(([, v]) => v.collection === 'layer').map(([k]) => k);
+  assert.deepEqual(layer, ['border-strong', 'border-subtle', 'border-subtle-selected', 'border-tile', 'field', 'field-hover',
+    'layer', 'layer-accent', 'layer-accent-active', 'layer-accent-hover', 'layer-active', 'layer-background', 'layer-hover',
+    'layer-selected', 'layer-selected-hover']);
+  const field = doc.variables.field;
+  assert.deepEqual(field.values, { one: { alias: 'field-01' }, two: { alias: 'field-02' }, three: { alias: 'field-03' } });
+  assert.equal(field.name, 'Field/field');
+  assert.equal(field.type, 'COLOR');
+  assert.equal(field.source, 'packages/styles/scss/layer/_layer-sets.scss#field');
+  assert.deepEqual(field.codeSyntax, { WEB: 'var(--cds-field)' });
+  assert.deepEqual(field.scopes, doc.variables['field-01'].scopes);
+  // border-subtle lists four tokens (-00 to -03); level n takes the nth, so level one is -00
+  assert.deepEqual(doc.variables['border-subtle'].values,
+    { one: { alias: 'border-subtle-00' }, two: { alias: 'border-subtle-01' }, three: { alias: 'border-subtle-02' } });
+  assert.equal(doc.variables.layer.name, 'Layer/layer');
+  for (const k of layer)
+    for (const m of Object.values(doc.variables[k].values)) assert.equal(doc.variables[m.alias].collection, 'theme', `${k} aliases a Theme token`);
+  assert.ok(Object.keys(doc.source.files).includes('packages/styles/scss/layer/_layer-sets.scss'));
+});
+
+test('generation fails when a compiled layer class maps a set to another token than the layer sets do', { skip }, () => {
+  const text = sources.css.text.replace('--cds-field: var(--cds-field-02, #ffffff)', () => '--cds-field: var(--cds-field-03, #ffffff)');
+  assert.notEqual(text, sources.css.text);
+  assert.throws(() => generate({ sources: { ...sources, css: { ...sources.css, text } }, contracts: [{ path: CONTRACT, contract: button() }] }),
+    /field\/two: .*field-02.*CSS .*field-03/);
+});
+
+test('generation fails when a layer set lists fewer than three Theme tokens', { skip }, () => {
+  assert.throws(withFile('packages/styles/scss/layer/_layer-sets.scss', t => t.replace('    theme.$field-03,\n', () => '')), /layer set field/);
+});
+
+test('a Contract may bind a Layer name: it joins the closure and passes rule 6', { skip }, () => {
+  const c = button();
+  c.paint.push({ match: { kind: 'primary' }, set: { Button: { fill: { token: 'field' } } } });
+  const { doc } = run([{ path: CONTRACT, contract: c }]);
+  assert.ok(doc.closure.tokens.includes('field'));
+  assert.deepEqual(doc.variables.field.usedBy, ['button']);
 });
 
 test('Primitives hold the whole palette, hidden, and every Theme alias targets one', { skip }, () => {
   const { variables } = run().doc;
-  const aliased = new Set(Object.values(variables).flatMap(v => Object.values(v.values).map(m => m.alias).filter(Boolean)));
+  const aliased = new Set(Object.values(variables).filter(v => v.collection === 'theme').flatMap(v => Object.values(v.values).map(m => m.alias).filter(Boolean)));
   const primitives = Object.entries(variables).filter(([, v]) => v.collection === 'primitives');
   assert.equal(primitives.length, 244);
   for (const a of aliased) assert.equal(variables[a].collection, 'primitives', `${a} is a Primitive`);

@@ -20,6 +20,7 @@
     "files": {
       "packages/colors/src/dtcg/colors.json": "sha256:af0c7d35f8a20d64332fb3e895c0522b0684b75a06d9da484ab05b21818d6674",
       "packages/layout/src/dtcg/layout.json": "sha256:b337e0e6c8ee8be4845f0a8b2fa0320930bd2999ffbd53c83748afb12723e821",
+      "packages/styles/scss/layer/_layer-sets.scss": "sha256:4891d76581d6b3ea42f50a2e0ebdea0c843485a3c74ada02dfa2a5cf21177baa",
       "packages/themes/src/dtcg/components/button.json": "sha256:56d85c6538f45449901b98da4358169c7b01a2d5b2e6f6f496ac268a1831ea36",
       "packages/themes/src/dtcg/themes.json": "sha256:7f1febe786830b88b26db78e3e573b1cfe2ca9af546ecac54708719df1330ac8",
       "packages/type/src/fontFamily.ts": "sha256:433150c88e95926de09b5f82865a1dba49476e18be7349a0792ef1d54fe9ef0a",
@@ -27,7 +28,7 @@
       "packages/type/src/scale.ts": "sha256:c379f62d305ff79158d73a28d2460512cc3232de13812a3baf3dd19f20ced070",
       "packages/type/src/styles.ts": "sha256:c6a491d1233ad3af8cfc08681a86780f2a1a2b1865cdac5eb9375dcb556fbbdf"
     },
-    "snapshotId": "sha256:20458d326bb6fa1a0ccf122d9c25f83bbb6dc789a644320bf87a61dbb16858fb"
+    "snapshotId": "sha256:bd3fe594dcc19c0e7cd5febd0d048b74e02d38e4826ca312bfba40b0ceab119d"
   },
   "closure": {
     "contracts": [
@@ -96,19 +97,44 @@
       "modes": [
         {
           "key": "white",
-          "label": "White"
+          "label": "White",
+          "selector": ".cds--white"
         },
         {
           "key": "g10",
-          "label": "Gray 10"
+          "label": "Gray 10",
+          "selector": ".cds--g10"
         },
         {
           "key": "g90",
-          "label": "Gray 90"
+          "label": "Gray 90",
+          "selector": ".cds--g90"
         },
         {
           "key": "g100",
-          "label": "Gray 100"
+          "label": "Gray 100",
+          "selector": ".cds--g100"
+        }
+      ]
+    },
+    {
+      "key": "layer",
+      "name": "Layer",
+      "modes": [
+        {
+          "key": "one",
+          "label": "One",
+          "selector": ".cds--layer-one"
+        },
+        {
+          "key": "two",
+          "label": "Two",
+          "selector": ".cds--layer-two"
+        },
+        {
+          "key": "three",
+          "label": "Three",
+          "selector": ".cds--layer-three"
         }
       ]
     },
@@ -12126,6 +12152,381 @@
       },
       "usedBy": []
     },
+    "border-strong": {
+      "collection": "layer",
+      "name": "Border/border-strong",
+      "type": "COLOR",
+      "source": "packages/styles/scss/layer/_layer-sets.scss#border-strong",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-border-strong)"
+      },
+      "values": {
+        "one": {
+          "alias": "border-strong-01"
+        },
+        "two": {
+          "alias": "border-strong-02"
+        },
+        "three": {
+          "alias": "border-strong-03"
+        }
+      },
+      "usedBy": []
+    },
+    "border-subtle": {
+      "collection": "layer",
+      "name": "Border/border-subtle",
+      "type": "COLOR",
+      "source": "packages/styles/scss/layer/_layer-sets.scss#border-subtle",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-border-subtle)"
+      },
+      "values": {
+        "one": {
+          "alias": "border-subtle-00"
+        },
+        "two": {
+          "alias": "border-subtle-01"
+        },
+        "three": {
+          "alias": "border-subtle-02"
+        }
+      },
+      "usedBy": []
+    },
+    "border-subtle-selected": {
+      "collection": "layer",
+      "name": "Border/border-subtle-selected",
+      "type": "COLOR",
+      "source": "packages/styles/scss/layer/_layer-sets.scss#border-subtle-selected",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-border-subtle-selected)"
+      },
+      "values": {
+        "one": {
+          "alias": "border-subtle-selected-01"
+        },
+        "two": {
+          "alias": "border-subtle-selected-02"
+        },
+        "three": {
+          "alias": "border-subtle-selected-03"
+        }
+      },
+      "usedBy": []
+    },
+    "border-tile": {
+      "collection": "layer",
+      "name": "Border/border-tile",
+      "type": "COLOR",
+      "source": "packages/styles/scss/layer/_layer-sets.scss#border-tile",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-border-tile)"
+      },
+      "values": {
+        "one": {
+          "alias": "border-tile-01"
+        },
+        "two": {
+          "alias": "border-tile-02"
+        },
+        "three": {
+          "alias": "border-tile-03"
+        }
+      },
+      "usedBy": []
+    },
+    "field": {
+      "collection": "layer",
+      "name": "Field/field",
+      "type": "COLOR",
+      "source": "packages/styles/scss/layer/_layer-sets.scss#field",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-field)"
+      },
+      "values": {
+        "one": {
+          "alias": "field-01"
+        },
+        "two": {
+          "alias": "field-02"
+        },
+        "three": {
+          "alias": "field-03"
+        }
+      },
+      "usedBy": []
+    },
+    "field-hover": {
+      "collection": "layer",
+      "name": "Field/field-hover",
+      "type": "COLOR",
+      "source": "packages/styles/scss/layer/_layer-sets.scss#field-hover",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-field-hover)"
+      },
+      "values": {
+        "one": {
+          "alias": "field-hover-01"
+        },
+        "two": {
+          "alias": "field-hover-02"
+        },
+        "three": {
+          "alias": "field-hover-03"
+        }
+      },
+      "usedBy": []
+    },
+    "layer": {
+      "collection": "layer",
+      "name": "Layer/layer",
+      "type": "COLOR",
+      "source": "packages/styles/scss/layer/_layer-sets.scss#layer",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-layer)"
+      },
+      "values": {
+        "one": {
+          "alias": "layer-01"
+        },
+        "two": {
+          "alias": "layer-02"
+        },
+        "three": {
+          "alias": "layer-03"
+        }
+      },
+      "usedBy": []
+    },
+    "layer-accent": {
+      "collection": "layer",
+      "name": "Layer/layer-accent",
+      "type": "COLOR",
+      "source": "packages/styles/scss/layer/_layer-sets.scss#layer-accent",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-layer-accent)"
+      },
+      "values": {
+        "one": {
+          "alias": "layer-accent-01"
+        },
+        "two": {
+          "alias": "layer-accent-02"
+        },
+        "three": {
+          "alias": "layer-accent-03"
+        }
+      },
+      "usedBy": []
+    },
+    "layer-accent-active": {
+      "collection": "layer",
+      "name": "Layer/layer-accent-active",
+      "type": "COLOR",
+      "source": "packages/styles/scss/layer/_layer-sets.scss#layer-accent-active",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-layer-accent-active)"
+      },
+      "values": {
+        "one": {
+          "alias": "layer-accent-active-01"
+        },
+        "two": {
+          "alias": "layer-accent-active-02"
+        },
+        "three": {
+          "alias": "layer-accent-active-03"
+        }
+      },
+      "usedBy": []
+    },
+    "layer-accent-hover": {
+      "collection": "layer",
+      "name": "Layer/layer-accent-hover",
+      "type": "COLOR",
+      "source": "packages/styles/scss/layer/_layer-sets.scss#layer-accent-hover",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-layer-accent-hover)"
+      },
+      "values": {
+        "one": {
+          "alias": "layer-accent-hover-01"
+        },
+        "two": {
+          "alias": "layer-accent-hover-02"
+        },
+        "three": {
+          "alias": "layer-accent-hover-03"
+        }
+      },
+      "usedBy": []
+    },
+    "layer-active": {
+      "collection": "layer",
+      "name": "Layer/layer-active",
+      "type": "COLOR",
+      "source": "packages/styles/scss/layer/_layer-sets.scss#layer-active",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-layer-active)"
+      },
+      "values": {
+        "one": {
+          "alias": "layer-active-01"
+        },
+        "two": {
+          "alias": "layer-active-02"
+        },
+        "three": {
+          "alias": "layer-active-03"
+        }
+      },
+      "usedBy": []
+    },
+    "layer-background": {
+      "collection": "layer",
+      "name": "Layer/layer-background",
+      "type": "COLOR",
+      "source": "packages/styles/scss/layer/_layer-sets.scss#layer-background",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-layer-background)"
+      },
+      "values": {
+        "one": {
+          "alias": "layer-background-01"
+        },
+        "two": {
+          "alias": "layer-background-02"
+        },
+        "three": {
+          "alias": "layer-background-03"
+        }
+      },
+      "usedBy": []
+    },
+    "layer-hover": {
+      "collection": "layer",
+      "name": "Layer/layer-hover",
+      "type": "COLOR",
+      "source": "packages/styles/scss/layer/_layer-sets.scss#layer-hover",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-layer-hover)"
+      },
+      "values": {
+        "one": {
+          "alias": "layer-hover-01"
+        },
+        "two": {
+          "alias": "layer-hover-02"
+        },
+        "three": {
+          "alias": "layer-hover-03"
+        }
+      },
+      "usedBy": []
+    },
+    "layer-selected": {
+      "collection": "layer",
+      "name": "Layer/layer-selected",
+      "type": "COLOR",
+      "source": "packages/styles/scss/layer/_layer-sets.scss#layer-selected",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-layer-selected)"
+      },
+      "values": {
+        "one": {
+          "alias": "layer-selected-01"
+        },
+        "two": {
+          "alias": "layer-selected-02"
+        },
+        "three": {
+          "alias": "layer-selected-03"
+        }
+      },
+      "usedBy": []
+    },
+    "layer-selected-hover": {
+      "collection": "layer",
+      "name": "Layer/layer-selected-hover",
+      "type": "COLOR",
+      "source": "packages/styles/scss/layer/_layer-sets.scss#layer-selected-hover",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-layer-selected-hover)"
+      },
+      "values": {
+        "one": {
+          "alias": "layer-selected-hover-01"
+        },
+        "two": {
+          "alias": "layer-selected-hover-02"
+        },
+        "three": {
+          "alias": "layer-selected-hover-03"
+        }
+      },
+      "usedBy": []
+    },
     "border-radius-00": {
       "collection": "layout",
       "name": "Border radius/border-radius-00",
@@ -16652,7 +17053,7 @@
     "css": {
       "against": "@carbon/styles@1.117.0 css/styles.css",
       "sha256": "sha256:13f00ebee3715ac407ba7960ea1e51f6307ba0ddfb147604f06fec1bc94bf9db",
-      "matched": 1158,
+      "matched": 1203,
       "missing": [],
       "differs": [
         "expressive-heading-01-line-height",

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // The Carbon Adapter's foundations step (#28): the Carbon foundations document, generated from the pinned
 // Carbon sources. It carries the whole theme (#108, ADR 0006): every themes.json token, the whole palette, every
-// layout.json group and every @carbon/type style, plus the component tokens of each family that has a Contract.
+// layout.json group and every @carbon/type style, plus the component tokens of each family that has a Contract,
+// and Carbon's layer sets as the Layer collection (#109, ADR 0012).
 // The Contracts' token closure is recorded and checked against it. Never edit its output by hand.
 //
 //   node skills/adapter-carbon/scripts/foundations.mjs [--contracts <dir>] [--sources <dir>] [-o <file>]
@@ -22,13 +23,18 @@ import { closure, validate } from '../../contract/scripts/contract.mjs';
 import { CARBON, DEFAULT_DIR, REPO_ROOT, fetchSources, hasSources, readSources, sha256, snapshotId } from './sources.mjs';
 
 const MODES = [['white', 'White'], ['g10', 'Gray 10'], ['g90', 'Gray 90'], ['g100', 'Gray 100']]; // fixed; DTCG may add keys such as "fallback"
+const LAYER_MODES = [['one', 'One'], ['two', 'Two'], ['three', 'Three']]; // Carbon's layer levels, in order (#109)
 const SINGLE = [['default', 'Default']];
-const COLLECTIONS = ['primitives', 'theme', 'layout', 'type'];
+const COLLECTIONS = ['primitives', 'theme', 'layer', 'layout', 'type'];
+// A Mode's selector (ADR 0012): the class that switches a subtree to it in the compiled CSS.
+const themeSelector = mode => `.cds--${mode}`;
+const layerSelector = mode => `.cds--layer-${mode}`;
 const PACKAGES = ['@carbon/colors', '@carbon/layout', '@carbon/styles', '@carbon/themes', '@carbon/type'];
 const FILE = {
   colors: 'packages/colors/src/dtcg/colors.json',
   layout: 'packages/layout/src/dtcg/layout.json',
   button: 'packages/themes/src/dtcg/components/button.json',
+  layerSets: 'packages/styles/scss/layer/_layer-sets.scss',
   themes: 'packages/themes/src/dtcg/themes.json',
   fontFamily: 'packages/type/src/fontFamily.ts',
   fontWeight: 'packages/type/src/fontWeight.ts',
@@ -102,6 +108,24 @@ function palette(doc) {
     if ('$value' in v) hex(k, v.$value);
     else for (const [step, node] of Object.entries(v)) if (!step.startsWith('$')) hex(`${k}.${step}`, node.$value);
   }
+  return out;
+}
+
+/**
+ * _layer-sets.scss: each layer set's Theme tokens, level one first. Level n takes the nth token, so
+ * border-subtle, which lists -00 to -03, is border-subtle-00 at level one (as the compiled .cds--layer-one has it).
+ */
+function layerSets(text) {
+  const map = /\$-default-layer-sets:\s*\(([\s\S]*?)\n\);/.exec(text);
+  if (!map) fail(`${FILE.layerSets}: cannot find $-default-layer-sets`);
+  const out = {};
+  for (const m of map[1].matchAll(/^\s*([a-z0-9-]+):\s*\(([^)]*)\)/gm)) {
+    const tokens = [...m[2].matchAll(/theme\.\$([a-z0-9-]+)/g)].map(t => t[1]);
+    if (tokens.length < LAYER_MODES.length)
+      fail(`${FILE.layerSets}: layer set ${m[1]} lists ${tokens.length} Theme tokens, fewer than the ${LAYER_MODES.length} layers`);
+    out[m[1]] = tokens;
+  }
+  if (!Object.keys(out).length) fail(`${FILE.layerSets}: no layer sets read`);
   return out;
 }
 
@@ -210,14 +234,17 @@ function typeSource(files) {
 
 // ---------- compiled CSS ----------
 
+// `blocks`: the custom properties each Mode selector (.cds--white, .cds--layer-two) declares, by selector.
 function cssIndex(css) {
   const blocks = {};
+  const selectors = new Set([...MODES.map(([m]) => themeSelector(m)), ...LAYER_MODES.map(([m]) => layerSelector(m))]);
   for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     const sel = m[1].trim();
-    for (const [mode] of MODES)
-      if (sel === `.cds--${mode}`)
-        blocks[mode] = Object.fromEntries([...m[2].matchAll(/--cds-([a-z0-9-]+):\s*([^;]+)/g)].map(p => [p[1], p[2]]));
+    if (selectors.has(sel))
+      blocks[sel] = Object.fromEntries([...m[2].matchAll(/--cds-([a-z0-9-]+):\s*([^;]+)/g)].map(p => [p[1], p[2]]));
   }
+  const unmatched = [...selectors].filter(s => !blocks[s]);
+  if (unmatched.length) fail(`Mode selectors with no rule in the compiled CSS: ${unmatched.join(', ')}`);
   const props = new Set([...css.matchAll(/--cds-([a-z0-9-]+):/g)].map(m => m[1]));
   const first = name => { const m = new RegExp(`--cds-${name}:\\s*([^;]+)`).exec(css); return m ? m[1].trim() : null; };
   return { blocks, props, first };
@@ -263,6 +290,7 @@ export function generate({ sources, contracts }) {
   if (definedTwice.length) fail(`tokens in both themes.json and a component file: ${definedTwice.join(', ')}`);
   const layout = flattenLayout(JSON.parse(files[FILE.layout]));
   const pal = palette(JSON.parse(files[FILE.colors]));
+  const sets = layerSets(files[FILE.layerSets]);
   const type = typeSource(files);
   const css = cssIndex(sources.css.text);
 
@@ -282,7 +310,7 @@ export function generate({ sources, contracts }) {
   };
 
   // every closure token must be something Carbon defines
-  const unknown = tokens.filter(t => !comps[t] && !themes[t] && !layout[t] && !type.styles[t]);
+  const unknown = tokens.filter(t => !comps[t] && !themes[t] && !sets[t] && !layout[t] && !type.styles[t]);
   if (unknown.length) fail(`tokens not found in the Carbon sources: ${unknown.join(', ')}`);
 
   // 2. Theme: every themes.json token, and the component tokens of each family that has a Contract
@@ -313,7 +341,7 @@ export function generate({ sources, contracts }) {
             reason: `DTCG literal, not a palette alias; kept exact (nearest primitive ${near.map(k => `${k} ${pal[k]}`).join(', ') || 'none'} differs)` };
         }
       }
-      const cssV = (css.blocks[mode] || {})[name];
+      const cssV = css.blocks[themeSelector(mode)][name];
       if (cssV === undefined) checks.cssMissing.push(`${name}/${mode}`);
       else if (cssV.trim().toLowerCase() !== values[mode].resolved) fail(`CSS mismatch ${name}/${mode}: document ${values[mode].resolved}, CSS ${cssV}`);
       else checks.css++;
@@ -322,7 +350,29 @@ export function generate({ sources, contracts }) {
       scopes: themeScopes(group, name), codeSyntax: codeSyntax(name), values, usedBy: users(name), ...(family ? { family } : {}) };
   }
 
-  // 3. Layout: every layout.json group
+  // 3. Layer (#109): one variable per layer set, named as Carbon's CSS names it (field, not field-01). Each mode
+  // aliases the Theme token of its level, so the value follows the Theme mode too; there is no single resolved
+  // value. The compiled .cds--layer-<mode> rule must point --cds-<set> at the same token, with its White value
+  // as the fallback.
+  for (const name of Object.keys(sets).sort(byKey)) {
+    const values = {};
+    LAYER_MODES.forEach(([mode], level) => {
+      const target = sets[name][level];
+      const t = variables[target];
+      if (!t || t.collection !== 'theme') fail(`layer set ${name}/${mode}: ${target} is not a Theme token`);
+      const decl = (css.blocks[layerSelector(mode)][name] || '').trim();
+      const m = /^var\(--cds-([a-z0-9-]+),\s*(.+)\)$/.exec(decl);
+      if (!m || m[1] !== target || m[2].trim().toLowerCase() !== t.values.white.resolved)
+        fail(`CSS mismatch ${name}/${mode}: document ${target} (white ${t.values.white.resolved}), CSS ${decl || 'none'}`);
+      checks.css++;
+      values[mode] = { alias: target };
+    });
+    const first = variables[sets[name][0]];
+    variables[name] = { collection: 'layer', name: `${first.name.split('/')[0]}/${name}`, type: 'COLOR', source: `${FILE.layerSets}#${name}`,
+      scopes: first.scopes, codeSyntax: codeSyntax(name), values, usedBy: users(name) };
+  }
+
+  // 4. Layout: every layout.json group
   for (const name of Object.keys(layout).sort(byKey)) {
     const { group, node, source } = layout[name];
     if (!LAYOUT_GROUP[group]) fail(`layout token ${name}: group ${group} has no Figma mapping`);
@@ -347,12 +397,12 @@ export function generate({ sources, contracts }) {
       codeSyntax: codeSyntax(name), values: { default: { value: px, from: how, ...(deprecated ? { level: 'info', reason: DEPRECATED_REASON } : {}) } }, usedBy: users(name) };
   }
 
-  // 4. Primitives: the whole palette
+  // 5. Primitives: the whole palette
   for (const key of Object.keys(pal).sort(byKey))
     variables[key] = { collection: 'primitives', name: primitiveName(key), type: 'COLOR',
       source: `${FILE.colors}#/${key.replace('.', '/')}`, scopes: [], hidden: true, values: { default: { value: pal[key] } } };
 
-  // 5. Type variables and Text Styles: every style, one font-family variable per family they use
+  // 6. Type variables and Text Styles: every style, one font-family variable per family they use
   const styleNames = Object.keys(type.styles).sort(byKey);
   for (const family of [...new Set(styleNames.map(s => type.styles[s].family))].sort(byKey)) {
     const fam = `font-family-${family}`;
@@ -445,7 +495,8 @@ export function generate({ sources, contracts }) {
     },
     collections: [
       { key: 'primitives', name: 'Primitives', modes: SINGLE.map(([key, label]) => ({ key, label })), hidden: true },
-      { key: 'theme', name: 'Theme', modes: MODES.map(([key, label]) => ({ key, label })) },
+      { key: 'theme', name: 'Theme', modes: MODES.map(([key, label]) => ({ key, label, selector: themeSelector(key) })) },
+      { key: 'layer', name: 'Layer', modes: LAYER_MODES.map(([key, label]) => ({ key, label, selector: layerSelector(key) })) },
       { key: 'layout', name: 'Layout', modes: SINGLE.map(([key, label]) => ({ key, label })) },
       { key: 'type', name: 'Type', modes: SINGLE.map(([key, label]) => ({ key, label })) },
     ],
@@ -464,7 +515,7 @@ export function generate({ sources, contracts }) {
     ],
   };
 
-  // 6. validation rule 6 against the generated document: every token exists and is used inside its
+  // 7. validation rule 6 against the generated document: every token exists and is used inside its
   // variable's scopes. Other rules (expectedCount, approval) are the Contract's business, not this step's.
   for (const { path, contract } of contracts) {
     const errors = validate(contract, doc).errors.filter(e => e.rule === 6 || e.rule === 'schema');

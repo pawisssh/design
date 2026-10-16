@@ -10,8 +10,9 @@
 // - A State value whose `code` is null is forced in the page through the CSS pseudo-class in its `css`.
 // - Cards (#45): see references/interactive-template.md. The footer's sourceLabel is the Contract's Code
 //   Library package and its pinned version (`@carbon/react 1.118.0`).
-// - Theme: a display-only toggle over the foundations document's multi-mode collection; the first mode
-//   is the default, and export needs only that every checked specimen rendered in it.
+// - Modes (#109): a display-only toggle per multi-mode collection of the foundations document (Theme, Layer),
+//   each Mode applied as the one class its `selector` names (else the renderer's modeClass). Each collection's
+//   first mode is the default, and export needs only that every checked specimen rendered in the defaults.
 // The foundations document defaults to the single *.foundations.json next to the contracts folder; the page
 // defaults to .scratch/to-preview/<family>/index.html (gitignored).
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -31,9 +32,15 @@ export function buildCatalog({ contract, foundations, renderer }) {
   const { ok, errors } = contractModule.validate(contract, foundations);
   if (!ok) throw new Error(`invalid Contract:\n${errors.map(e => `  [rule ${e.rule}] ${e.message}`).join('\n')}`);
 
-  const themed = foundations.collections.filter(c => c.modes.length > 1);
-  if (themed.length > 1) throw new Error(`the theme toggle covers one multi-mode collection; found ${themed.map(c => c.key).join(', ')}`);
-  const modes = themed.length ? themed[0].modes.map(m => ({ key: m.key, label: m.label, className: renderer.modeClass(m.key) })) : [];
+  // One toggle per multi-mode collection, in document order (Theme, then Layer). A Mode applies as one class,
+  // its `selector`; a Mode with none takes the renderer's class for its key.
+  const classOf = (c, m) => {
+    if (m.selector === undefined) return renderer.modeClass(m.key);
+    if (!/^\.[A-Za-z_][\w-]*$/.test(m.selector)) throw new Error(`${c.key}/${m.key}: selector "${m.selector}" is not one class, and the page applies a Mode as one class`);
+    return m.selector.slice(1);
+  };
+  const toggles = foundations.collections.filter(c => c.modes.length > 1)
+    .map(c => ({ key: c.key, label: c.name, modes: c.modes.map(m => ({ key: m.key, label: m.label, className: classOf(c, m) })) }));
 
   const forces = [];
   for (const axis of contract.axes)
@@ -51,7 +58,7 @@ export function buildCatalog({ contract, foundations, renderer }) {
   const specimens = {};
   for (const s of new Selection(contract, contractModule).specimens.values()) specimens[s.id] = renderer.render(s.tuple);
 
-  const data = JSON.stringify({ contract, modes, forces, sourceLabel, specimens }).replace(/</g, '\\u003c');
+  const data = JSON.stringify({ contract, toggles, forces, sourceLabel, specimens }).replace(/</g, '\\u003c');
   // Inline the shared module as a classic script: strip `export` and expose what the page uses.
   const contractScript = `window.Contract = (function () {\n"use strict";\n${readFileSync(new URL('../../contract/scripts/contract.mjs', import.meta.url), 'utf8').replace(/^export /gm, '')}\nreturn { matches, expand, baseTuple, tupleKey, variantName, applyOmit };\n})();`;
   const script = text => `<script>\n${text.replace(/<\/script/gi, '<\\/script')}\n</script>`;
