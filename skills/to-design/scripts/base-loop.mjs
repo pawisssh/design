@@ -463,12 +463,12 @@ function writeContract(path, c, foundations) {
 export function regenerate(fixturesDir, contract, foundations) {
   const rb = name => readReadback(join(fixturesDir, `readback.${name}.json`));
   const out = {};
+  // The prototype's tweaks were made by a simulated owner, so every proposed and applied edit names it.
+  const by = 'owner (simulated, prototype #8)';
   for (const name of ['v0', 'typed24', 'tweaked']) {
     const r = rb(name);
-    out[`diff.${name}.txt`] = formatDiff(contract, r, review(contract, r, foundations));
+    out[`diff.${name}.txt`] = formatDiff(contract, r, review(contract, r, foundations, { by }));
   }
-  // The prototype's tweaks were made by a simulated owner, so the edit names it.
-  const by = 'owner (simulated, prototype #8)';
   const tweaked = review(contract, rb('tweaked'), foundations, { by });
   const applied = applyEdits(contract, tweaked.proposals, { confirm: 'all' });
   out['contract.edited.json'] = JSON.stringify(applied.contract, null, 2) + '\n';
