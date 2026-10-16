@@ -74,6 +74,18 @@ _Avoid_: Handoff doc, spec, feature spec, brief, blueprint
 A colour, spacing, size, radius or type value in a feature's input that matches no token in the Foundations document, exactly or nearly, and is kept as written in the Handoff with a reason.
 _Avoid_: Raw value (when the unmatched kind is meant), hard-coded value, magic number
 
+**Prototype**:
+Feature code made quickly to show what a feature should do, such as a v0 or Lovable app or a single HTML file, given to To-handoff as input. It is read, never edited, and its code is never handed to developers.
+_Avoid_: Mockup, vibe code, POC, prototype Contract (that is a Contract approved only for a trial build)
+
+**Usage**:
+One element of a feature's input, as the Handoff records it: a Contract with a tuple of its axis values, a Component Proposal, or a raw element with a reason. It always records how it was recognised.
+_Avoid_: Instance (that is the Figma node), component reference, match
+
+**Stand-in**:
+Anything in a Prototype that fakes what the real feature will do, such as mock data, a stub API, fake latency or placeholder copy. The Handoff records what it pretends to do, never how.
+_Avoid_: Mock (when more than data is meant), fake, throwaway code
+
 **Rendering**:
 One output format's layout of a Handoff, such as HTML, Markdown, a Figma frame or a Confluence page. It never adds or drops a Handoff's content.
 _Avoid_: Export, view, handoff document
