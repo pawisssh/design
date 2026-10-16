@@ -67,7 +67,7 @@ Output for Button: 38 closure tokens, 75 variables (20 Primitives, 24 Theme, 22 
 |---|---|
 | map key | The **flat name**: the Code Library's own name for Theme, Layout and Type (`button-primary`, `spacing-05`, `body-compact-01-font-size`), the same string a Contract writes. Primitives use the palette path (`blue.60Hover`, `white`). The dot cannot occur in a Carbon flat name, so the two namespaces cannot collide. |
 | `collection` | A collection `key`. |
-| `name` | The Figma variable name, `<Group>/<flat-name>` (#9). Group is the DTCG top-level key in Title Case (`Button`, `Text`, `Background`, `Spacing`, `Size`, `Icon size`, `Border radius`). Primitives use `<Hue>/<step>` (`Blue/60Hover`), and single-level palette entries use `Neutral/<Name>`. |
+| `name` | The Figma variable name, `<Group>/<flat-name>` (#9). Group is the DTCG top-level key in sentence case: first word capitalised, the rest lowercase (`Button`, `Text`, `Background`, `Spacing`, `Size`, `Icon size`, `Border radius`, `Font family`). Owner-confirmed 2026-10-16. Axis value labels in a Contract stay Title Case; groups are variable folders, not property values. Primitives use `<Hue>/<step>` (`Blue/60Hover`), and single-level palette entries use `Neutral/<Name>`. |
 | `type` | `COLOR`, `FLOAT` or `STRING`. Figma cannot change a variable's type after creation. |
 | `source` | The DTCG file and JSON pointer, or the `@carbon/type` export. The Adapter stores the flat name explicitly, because no single rule derives it: `themes.json` joins the path (`text` › `on` › `color` → `text-on-color`), while in `layout.json` the leaf key is already the full name (`spacing` › `spacing-05`). |
 | `scopes` | The Figma `VariableScope` list, stored per variable (see [Scopes](#scopes)). |
