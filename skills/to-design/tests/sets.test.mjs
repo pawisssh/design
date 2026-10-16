@@ -9,7 +9,7 @@ import { mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { approve, asDraft, expand, variantName } from '../../contract/scripts/contract.mjs';
+import { applyOmit, approve, asDraft, expand, variantName } from '../../contract/scripts/contract.mjs';
 import { basePlan, decodeEntries, foundationsPlan, iconsPlan, PER_CALL, setsPlan } from '../scripts/build-plan.mjs';
 import { checkCoverage, checkSample, checkTheme } from '../scripts/coverage.mjs';
 import { diff, normalizeBaseResult } from '../scripts/base-loop.mjs';
@@ -144,6 +144,26 @@ test('a rerun updates nothing and creates nothing', async () => {
   for (const { result } of reruns) assert.deepEqual([result.summary.created, result.summary.updated, result.made], [0, 0, []], JSON.stringify(result.updated));
   assert.deepEqual(writes(env.mock), []);
   assert.equal((await setNode(env)).children.length, TOTAL);
+});
+
+// Variant ids are recorded by expansion index, so a Contract that expands differently must not reuse them:
+// before this, the rebuild renamed variants onto other tuples and never finished placing them.
+test('after an omit edit the rebuild finds every kept variant by name and leaves the dropped ones for coverage to report', async () => {
+  const env = await setup();
+  await buildAll(env);
+  const ids = new Map((await setNode(env)).children.map(k => [k.name, k.id]));
+  const patch = { family: 'button', snapshotId: BUTTON.source.snapshotId, omit: [{ state: 'focus' }], expectedCount: TOTAL - 49 };
+  const omitted = approve(applyOmit(BUTTON, patch), AT);
+  const runs = await buildAll(env, omitted);
+  for (const { result } of runs) assert.deepEqual([result.summary.created, result.summary.updated], [0, 0], JSON.stringify(result.updated));
+  const rec = env.ledger.sets.button;
+  assert.equal(rec.variants.length, TOTAL - 49);
+  assert.deepEqual(rec.variants, expand(omitted).map(t => ids.get(variantName(omitted, t))));
+  assert.equal((await setNode(env)).children.length, TOTAL, 'the sets slice never deletes a variant');
+  const report = checkCoverage(omitted, (await sets(env, { mode: 'coverage' }, { contract: omitted })).result);
+  assert.deepEqual([...new Set(report.problems.map(p => p.what))], ['extra']);
+  assert.equal(report.problems.length, 49);
+  assert.ok(report.problems.every(p => p.name.endsWith('State=Focus')));
 });
 
 // One rule for the Base Component's property values: the review specimen (every BOOLEAN on) while it stands

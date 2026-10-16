@@ -358,8 +358,11 @@ export function setsPlan(contract, docText, ledger, {
   const rec = ledger.sets && ledger.sets[family];
   const sets = {};
   if (rec) {
+    // Ids are recorded by expansion index, and another Contract may expand differently (an omit edit shifts the
+    // indexes), so they are carried only for the Contract the set was built from; otherwise the core finds each
+    // variant by name in the set.
     const ids = {};
-    for (const i of picked) if (rec.variants && rec.variants[i]) ids[i] = rec.variants[i];
+    if (rec.contentHash === plan.contentHash) for (const i of picked) if (rec.variants && rec.variants[i]) ids[i] = rec.variants[i];
     sets[family] = { ...rec, variants: ids };
   }
   return { plan, state: { schemaVersion: 1, fileKey, variables, textStyles, icons, bases, sets, templates: ledger.templates || null } };

@@ -31,7 +31,9 @@ export function recordResult(ledger, result) {
     out.sets = { ...(before.sets || {}) };
     for (const [family, rec] of Object.entries(result.ledger.sets)) {
       const old = out.sets[family];
-      const variants = old && Array.isArray(old.variants) && old.variants.length === rec.total ? old.variants.slice() : new Array(rec.total).fill(null);
+      // ids are by expansion index, so a set rebuilt from another Contract starts a fresh list
+      const keep = old && Array.isArray(old.variants) && old.variants.length === rec.total && old.contentHash === rec.contentHash;
+      const variants = keep ? old.variants.slice() : new Array(rec.total).fill(null);
       for (const [i, id] of Object.entries(rec.variants || {})) variants[Number(i)] = id;
       out.sets[family] = { ...rec, variants };
     }
