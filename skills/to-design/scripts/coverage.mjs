@@ -12,6 +12,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { baseTuple, expand, resolve, variantName } from '../../contract/scripts/contract.mjs';
 import { diff } from './base-loop.mjs';
+import { valueAt } from './foundations-value.mjs';
 import { defaultProps, iconRef, normalizeReadback } from './readback.mjs';
 import { defaultLedgerPath, readLedger } from './ledger.mjs';
 
@@ -136,13 +137,12 @@ export function colourKey(v) {
 }
 
 /**
- * A `theme` readback: every bound colour resolved with the Theme switched to each mode equals the foundations
- * document's resolved value for that mode. Reports how many colours change between modes.
+ * A `theme` readback: every bound colour, resolved with its variable's collection switched to each mode (the
+ * Theme, or the Layer for a contextual Layer token), equals the foundations document's value for that mode.
+ * Reports how many colours change between modes.
  */
 export function checkTheme(contract, readback, foundations) {
   const byName = new Map(expand(contract).map(t => [variantName(contract, t), t]));
-  const modeKey = {};
-  for (const c of foundations.collections) for (const m of c.modes) { modeKey[m.key] = m.key; modeKey[m.label] = m.key; }
   const problems = [];
   let checked = 0;
   let switching = 0;
@@ -164,9 +164,12 @@ export function checkTheme(contract, readback, foundations) {
       const modes = (foundations.collections.find(c => c.key === v.collection) || { modes: [] }).modes;
       if (Object.keys(perMode).length !== modes.length) problems.push({ what: 'modes', name, at: where, want: modes.map(m => m.key), got: Object.keys(perMode) });
       for (const [mode, got] of Object.entries(perMode)) {
-        const exp = v.values[modeKey[mode]];
+        // the token's own collection at the read mode, any collection its alias reaches at its default: a Layer
+        // token is followed to the Theme token of that level, in the default Theme (#109)
+        const key = (modes.find(m => m.key === mode || m.label === mode) || {}).key;
+        const exp = key && valueAt(foundations, token, { [v.collection]: key });
         checked++;
-        if (!exp || colourKey(exp.resolved) !== got) problems.push({ what: 'colour', name, at: where, token, mode, want: exp && colourKey(exp.resolved), got });
+        if (exp == null || colourKey(exp) !== got) problems.push({ what: 'colour', name, at: where, token, mode, want: exp == null ? undefined : colourKey(exp), got });
       }
       if (new Set(Object.values(perMode)).size > 1) switching++;
     }

@@ -22,6 +22,7 @@ import { foundationsPathFor, readJson, writeJson } from '../../contract/scripts/
 import { anatomyTree, baseProps, expectedBase, expectedVariant, near, norm, normalizeReadback, same } from './readback.mjs';
 import { defaultLedgerPath, readLedger } from './ledger.mjs';
 import { groupOf } from './foundations-subset.mjs';
+import { valueAt } from './foundations-value.mjs';
 
 
 const SECTIONS = ['layout', 'paint'];
@@ -43,13 +44,9 @@ export function show(v) {
   return String(v);
 }
 
-// The value a token stands for in the default mode: a number, or a resolved colour "#rrggbb".
-function tokenValue(foundations, token) {
-  const v = foundations.variables[token];
-  if (!v) return undefined;
-  const first = Object.values(v.values)[0];
-  return v.type === 'COLOR' ? String(first.resolved).toLowerCase() : first.value;
-}
+// The value a token stands for with every collection at its default mode: a number, or a resolved colour
+// "#rrggbb". A Layer token is followed to its Theme token at Layer One, in the default Theme (#109).
+const tokenValue = (foundations, token) => valueAt(foundations, token);
 
 // The typography a Text Style sets, as the readback's `extras` reports it.
 function styleTypography(style) {

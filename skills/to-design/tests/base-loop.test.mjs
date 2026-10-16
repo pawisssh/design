@@ -127,6 +127,20 @@ test('a binding lost while the value stayed is detached, not an edit', () => {
   assert.deepEqual(kinds(diff(CONTRACT, r, FOUNDATIONS)), ['detached layout.Button.gap']);
 });
 
+test('a Layer token is followed to its Theme token: a raw fill equal to `field` at the default levels is detached (#109)', () => {
+  const FORMS = join(ROOT, 'skills/contract/test/fixtures/form-controls');
+  const textInput = read(join(FORMS, 'text-input.component.json'));
+  const doc = read(join(FORMS, 'carbon.foundations.json'));
+  const r = expectedBase(textInput);
+  assert.deepEqual(r.paint.Field.fill, { token: 'field' });
+  assert.deepEqual(diff(textInput, r, doc).changes, []);
+  // field at Layer One is field-01, White #f4f4f4 (Carbon's themes.json)
+  r.paint.Field.fill = { raw: '#f4f4f4' };
+  assert.deepEqual(kinds(diff(textInput, r, doc)), ['detached paint.Field.fill']);
+  r.paint.Field.fill = { raw: '#ffffff' };
+  assert.deepEqual(kinds(diff(textInput, r, doc)), ['raw-edit paint.Field.fill']);
+});
+
 test('effects are compared in order', () => {
   const focus = { ...CONTRACT, selection: CONTRACT.selection };
   const ruleIdx = focus.paint.findIndex(r => r.match.state === 'focus' && r.set.Button && r.set.Button.effects);
