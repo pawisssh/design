@@ -1,0 +1,26 @@
+{
+  "$comment": "PROTOTYPE for #63: a sample Component Proposal in the #60 shape, stored as design-systems/carbon/proposals/avatar-stack.proposal.json would be.",
+  "schemaVersion": 1,
+  "family": { "key": "avatar-stack", "name": "Avatar Stack", "description": "Overlapping initials of the people in a workspace, with an overflow count." },
+  "proposal": {
+    "by": "agent",
+    "reason": "Carbon has no avatar or avatar group component, and no existing Contract shows people.",
+    "considered": [ { "contract": "button", "whyNot": "Not interactive; it shows who is in the workspace." } ],
+    "origin": { "input": "prototype", "ref": "docs/prototype/html-handoff/sample-prototype/index.html:65", "handoff": "invite-teammates" },
+    "home": { "where": "app" }
+  },
+  "axes": [
+    { "key": "size", "label": "Size", "default": "sm", "defaultSource": "prototype", "values": [ { "key": "sm", "label": "Small" }, { "key": "md", "label": "Medium" } ] }
+  ],
+  "anatomy": { "name": "Avatar Stack", "role": "root", "children": [ { "name": "Avatar", "role": "avatar", "repeat": true }, { "name": "Overflow", "role": "overflow-count" } ] },
+  "properties": [
+    { "key": "people", "label": "People", "type": "LIST" },
+    { "key": "max", "label": "Max shown", "type": "NUMBER", "default": 2 }
+  ],
+  "paint": {
+    "avatar": { "fill": { "token": "layer-accent-01" }, "ring": { "token": "layer-01" }, "text": { "token": "text-primary" } }
+  },
+  "layout": { "sm": { "avatar": "24px", "overlap": { "raw": "-6px", "level": "warning", "reason": "Overlap is not a Carbon spacing step." } } },
+  "status": "pending",
+  "approval": null
+}
