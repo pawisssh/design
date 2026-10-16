@@ -316,7 +316,7 @@ test('a package for another file changes nothing', async () => {
   assert.deepEqual(mock.log, []);
 });
 
-test('recording a result replaces the foundations section, keeps other sections and refuses a failed call', async () => {
+test('recording a single-call result records its foundations section as returned, keeps other sections and refuses a failed call', async () => {
   const mock = mockFigma({ fileKey: FILE_KEY });
   const result = await call(mock);
   const ledger = recordResult({ schemaVersion: 1, fileKey: FILE_KEY, foundations: null, sets: { button: { id: '1:2' } } }, result);
@@ -354,7 +354,7 @@ test('the build-plan and ledger CLIs run from a path that contains a space', () 
   mkdirSync(dir, { recursive: true });
   mkdirSync(join(base, 'skills/contract/scripts'), { recursive: true });
   copyFileSync(new URL('../../contract/scripts/contract.mjs', import.meta.url), join(base, 'skills/contract/scripts/contract.mjs'));
-  for (const name of ['build-plan.mjs', 'ledger.mjs', 'base-loop.mjs', 'readback.mjs']) copyFileSync(new URL(`../scripts/${name}`, import.meta.url), join(dir, name));
+  for (const name of ['build-plan.mjs', 'ledger.mjs', 'base-loop.mjs', 'readback.mjs', 'foundations-subset.mjs']) copyFileSync(new URL(`../scripts/${name}`, import.meta.url), join(dir, name));
   const plan = spawnSync('node', [join(dir, 'build-plan.mjs'), 'foundations', '--doc', fileURLToPath(DOC_PATH), '--file-key', FILE_KEY, '--out', join(dir, 'run')], { cwd: dir, encoding: 'utf8' });
   assert.equal(plan.status, 0, plan.stderr);
   assert.equal(JSON.parse(plan.stdout).status, 'derived');

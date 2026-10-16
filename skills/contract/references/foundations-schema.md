@@ -17,7 +17,7 @@ node skills/adapter-carbon/scripts/foundations.mjs
 
 It reads every Contract in `design-systems/carbon/contracts/` and the pinned Carbon sources, which `skills/adapter-carbon/scripts/sources.mjs` fetches into gitignored `.scratch/adapter-carbon/sources/` and checks against their pinned hashes. The token closure comes from the shared module's `closure()`, and the scope check is rule 6 of the shared module's `validate()`, run on the generated document. The output does not depend on the order of the Contracts, and two runs produce byte-identical files, so the ledger's `documentHash` is stable.
 
-Output for Button: 38 closure tokens, 75 variables (20 Primitives, 24 Theme, 22 Layout, 9 Type) and 2 Text Styles. Layout holds 12 closure tokens plus the 10 other `spacing-*` steps (see [Who writes it](#who-writes-it)). All 96 Theme mode values, 13 spacing values and 8 type values match the compiled `@carbon/styles` CSS. All 9 Sass codeSyntax fallbacks exist in `@carbon/layout`. The Button Contract passes rule 6 against the document, so every Contract use of a token falls inside that variable's scopes.
+Output for Button: 38 closure tokens, 75 variables (20 Primitives, 24 Theme, 22 Layout, 9 Type) and 2 Text Styles. Layout holds 12 closure tokens plus the 10 other `spacing-*` steps (see [Who writes it](#who-writes-it)). Today's document is exactly To-design's default subset; the whole-theme generator is [#108](https://github.com/pawisssh/design/issues/108). All 96 Theme mode values, 13 spacing values and 8 type values match the compiled `@carbon/styles` CSS. All 9 Sass codeSyntax fallbacks exist in `@carbon/layout`. The Button Contract passes rule 6 against the document, so every Contract use of a token falls inside that variable's scopes.
 
 ## Top level
 
@@ -26,14 +26,16 @@ Output for Button: 38 closure tokens, 75 variables (20 Primitives, 24 Theme, 22 
 | `schemaVersion` | yes | Integer, `1`. Same rule as the Contract: an additive optional field keeps it; a rename, removal or change of meaning bumps it. |
 | `designSystem` | yes | `{key, name}`. `key` names the file (`carbon.foundations.json`) and the ledger section. |
 | `source` | yes | Same shape as the Contract's `source`: `codeLibrary`, `adapter`, `repository`, `tag`, `commit`, `packages`, `files {path: sha256:…}`, `snapshotId`. `files` lists every file the Adapter read for foundations, and `snapshotId` is computed over it the same way as the Contract's. It includes `colors.json` and `scale.ts`, which are not in Button's Contract. |
-| `closure` | yes | `contracts: [{family, path, snapshotId}]` is the Contracts this document was derived from. `tokens` is the sorted union of their token references, including `textStyle` references. `fullScales` lists the Layout groups carried whole regardless of the closure (`["size", "spacing"]`). |
-| `collections` | yes | Ordered list `{key, name, modes: [{key, label}], hidden?}`. The first mode is the default. |
-| `variables` | yes | Map from flat name to variable. See [Variables](#variables). The order is collection order, then name, which is also the creation order (aliases need their targets first). |
+| `closure` | yes | A record of what Contracts use, not the document's scope (#107). `contracts: [{family, path, snapshotId}]` is the Contracts this document was derived from. `tokens` is the sorted union of their token references, including `textStyle` references. To-design builds the closure in every Design Library file (see [To-design builds a subset](#to-design-builds-a-subset)). |
+| `collections` | yes | Ordered list `{key, name, modes: [{key, label, selector?}], hidden?}`. The first mode is the default. `selector` is the CSS that switches to the mode (`[data-carbon-theme="g100"]`, `.cds--layer-two`, later `.dark`). It is review-only: To-preview reads it, and the build plan strips it. |
+| `variables` | yes | Map from flat name to variable. See [Variables](#variables). The order is collection order, then tokens by name, which is also the creation order (aliases need their targets first). |
 | `textStyles` | yes (may be `{}`) | Map from flat name to Text Style. See [Text Styles](#text-styles). |
 | `checks` | yes | Evidence from generation: a CSS cross-check (`against`, `sha256`, `matched`, `missing`), a Sass fallback check (`against`, `matched`) and the scope check (`by`, the validator and rule that ran; `contracts`, how many Contracts it checked; `errors`, always 0, since generation fails otherwise). |
 | `notes` | no | `{level: info|warning|verify, at, message}`, as in the Contract. |
 
 ## Collections and modes
+
+The Carbon collections as today's generator emits them (the closure plus full Spacing and Size); the whole-theme generator ([#108](https://github.com/pawisssh/design/issues/108)) fills each collection with the whole theme.
 
 | key | name | modes | Content |
 |---|---|---|---|
@@ -75,13 +77,15 @@ Output for Button: 38 closure tokens, 75 variables (20 Primitives, 24 Theme, 22 
 | `hidden` | `true` → `hiddenFromPublishing`. Set on Primitives. |
 | `values` | One entry per mode key of the collection. See the value forms below. |
 | `usedBy` | Component Family keys whose Contracts reference this token. Derived. It is used for review and for orphan reports. |
+| `family` | Optional. The Component Family key that marks this variable as a component token (`button-primary` → `button`), whether or not a Contract uses it yet. `validateProposal` reads it (#111). Review-only: the build plan strips it. |
 
 ### Value forms (per mode)
 
 | Form | Meaning | Figma write |
 |---|---|---|
-| `{alias, resolved}` | Alias to a Primitive by its flat name. `resolved` is the final colour. | `createVariableAlias(primitive)` |
+| `{alias, resolved}` | Alias to any variable earlier in document order, by its flat name: a Primitive, or a Theme token for a Layer token. `resolved` is the final colour. The builder core today accepts only a target in an earlier collection, so a same-collection alias (a Synthesized token, ADR 0009) waits on a core change. | `createVariableAlias(target)` |
 | `{raw, alpha, resolved, from, level, reason}` | The source value is an alias plus alpha (`{value, alpha}` in `themes.json`, `org.carbon.alphaModifiers` in `button.json`). It is flattened to RGBA because a Figma alias cannot carry alpha. `from` keeps the source alias. | `{r, g, b, a}` |
+| any COLOR form with `from.css` | Optional. The value's source text as CSS (a custom property's declared value). Review-only, like the rest of `from`. | as the form |
 | `{value, resolved?, level?, reason?}` | A literal that is the token's own source value: palette hexes, layout px, type numbers, and `button-danger-hover` `#b81921`. In the Theme collection a `value` always carries `level` and `reason`, because Theme is otherwise alias-only. `button-danger-hover` is kept exact; the nearest primitive, `red.60Hover` `#b81922`, is off by one. | literal |
 
 - `resolved` is present on every COLOR mode value. It is written in the same notation as the compiled CSS (`#0f62fe`, `rgba(141, 141, 141, 0.3)`), so the generator can compare it against each `.cds--<theme>` block, and To-preview can use it without resolving aliases.
@@ -147,7 +151,7 @@ The Adapter generates the document. Nobody edits it by hand. Its inputs are:
 2. the token closure, which is the union of every listed Contract's token references (layout, paint, effects and `textStyle`),
 3. the Adapter's fixed mapping rules: the collection split, mode list, naming, scopes, codeSyntax and raw exceptions above.
 
-Scope follows the closure, with one exception. The `Layout` collection carries Carbon's full `spacing-*` (01–13) and `size-*` (xs–2xl) scales regardless of the closure, because an owner can only bind a variable that already exists, and adjusting a Base Component (#8) needs the other spacing steps in the picker. Those variables have an empty `usedBy`. Theme colours, Type variables and Primitives stay closure-only: a Primitive appears only if some Theme mode aliases it, and a Type variable only if a Text Style binds it. `icon-size-*`, `border-radius-*`, `fluid-spacing-*`, `container-*` and `layout-*` stay closure-only too. The document does not hold the whole Carbon theme. That stays in map fog ("Theming beyond what Button needs").
+The document carries the whole theme (ADR 0006, #107); a variable no Contract uses has an empty `usedBy`. What a Design Library file holds is To-design's choice, not the document's (see [To-design builds a subset](#to-design-builds-a-subset)). Until the whole-theme generator lands ([#108](https://github.com/pawisssh/design/issues/108)), the Carbon Adapter still emits the closure plus Carbon's full `spacing-*` (01–13) and `size-*` (xs–2xl) scales, which is exactly To-design's default subset.
 
 To change a value, change the source pin or an Adapter rule and regenerate. To add a Component Family, add its Contract to `closure.contracts` and regenerate. There is no separate approval step: the document is a pure function of approved inputs, and the foundations slice report (created, updated, orphaned) is what the owner reviews.
 
@@ -157,7 +161,7 @@ The document is stale, and must be regenerated before any build, when any of the
 
 - `source.commit` differs from the `source.commit` of any Contract in `closure.contracts`. A Design System is pinned to one Code Library version. Contracts at different commits are rejected.
 - A listed Contract's current `source.snapshotId` differs from the one recorded in `closure.contracts`.
-- The recomputed token union differs from `closure.tokens`, for example after a Contract edit that did not change its snapshot, or the Adapter's full-scale rule differs from `closure.fullScales`.
+- The recomputed token union differs from `closure.tokens`, for example after a Contract edit that did not change its snapshot.
 - Contract validation rule 6 ("every token exists in the foundations") fails.
 
 The ledger records the `documentHash` (sha256 of the document bytes) that it was applied from. The components slice refuses to bind when the hash differs, and the foundations slice must run first.
@@ -170,6 +174,7 @@ The foundations ledger is one section of the single authoritative ledger per Des
 {
   "schemaVersion": 1,
   "fileKey": "<Design Library file key>",
+  "foundationsGroups": ["Size", "Spacing"],   // the owner's selection; absent means this default
   "foundations": {
     "designSystem": "carbon",
     "snapshotId": "sha256:…",          // document source.snapshotId
@@ -186,7 +191,18 @@ The foundations ledger is one section of the single authoritative ledger per Des
 
 - Keys are flat names in both `variables` and `textStyles`, and mode keys in `collections.*.modes`. These are the same strings the Contract and the document use, so the builder binds with `ledger.variables[token]` and `ledger.textStyles[token]`.
 - The slice returns this section uncompacted. It is about 3 KB for Button, far under the 20 KB output cap, so #18's ID-array compaction is not needed here.
-- The foundations slice package carries the document without the review-only fields (`source`, `closure`, `from`, `reason`, `level`, `usedBy`, `resolved`, `notes`, `checks`). That is about 17.8 K characters of compact JSON for Button, under the 50 K code cap with room for the core (the whole package was 34.1 K characters on the first live run and 37.6 K with a full ledger). `skills/to-design/scripts/build-plan.mjs` strips these fields when it derives the build plan, and a to-design test asserts that the stripped and the full document build the same objects (#29).
+- The foundations slice package carries the selected subset of the document (or one chunk of it) without the review-only fields (`source`, `closure`, `from`, `reason`, `level`, `usedBy`, `family`, `resolved`, `notes`, `checks`, and each mode's `selector`). That is about 17.8 K characters of compact JSON for Button, under the 50 K code cap with room for the core (the whole package was 34.1 K characters on the first live run and 37.6 K with a full ledger). `skills/to-design/scripts/build-plan.mjs` strips these fields when it derives the build plan, and a to-design test asserts that the stripped and the full document build the same objects (#29).
+
+## To-design builds a subset
+
+The document carries the whole theme; a Design Library file holds only a selection of it (ADR 0006, #107). `skills/to-design/scripts/foundations-subset.mjs` computes it, and `build-plan.mjs --slice foundations` packages it.
+
+- **Group** is the first segment of the Figma `name`: `Spacing/spacing-05` is in Spacing, `Body/body-compact-01` in Body.
+- **The selection** is `closure.tokens`, plus every variable and Text Style in the file's groups, plus every alias target and Text Style bind target they reach, transitively. A file's groups are the ledger's `foundationsGroups`, Spacing and Size when it names none. The owner changes them with `node skills/to-design/scripts/ledger.mjs groups --doc <foundations.json> --file-key <key> --add <group> --remove <group>`; an unknown group is refused. A slice result never carries `foundationsGroups`, so recording a build keeps it.
+- **The plan** holds the selected entries in document order and only the collections they use. `documentHash` is still the whole document's hash.
+- **Over the cap, chunked by group.** When the plan and state would pass the `use_figma` code cap, the selection is split into calls of whole groups in document order, so Primitives come first; each chunk carries the alias and bind targets its groups reach. `build-plan.mjs --chunk N` derives chunk N, and refuses it until every earlier chunk's groups are recorded from this document. A chunk's state holds only the chunk's names, so the unchanged core orphans none of the other chunks' names, and `ledger.mjs record` merges a chunk's names into the section. Chunk 1 also carries the recorded names that left the selection, so they are orphaned once, and `prune` runs only with chunk 1. A single group too big for one call is refused by name.
+- **Removing a group** makes its entries Orphans on the next build (rule 6 below), never deletions; an entry a remaining selection still reaches stays built.
+- **The base-loop picker** lists every document variable and marks those this file has not built (`name (not built: add group G)`). A token edit to an unbuilt token is refused with the group to add.
 
 ## Update semantics (idempotent)
 
@@ -200,7 +216,7 @@ Identity is the flat name, carried through the ledger id. Figma names and labels
    - If the resolved type differs, the result is `conflict: type-change`. Figma cannot change a variable's type, and deleting it would unbind consumers, so the owner decides. A recorded variable found in a different collection is `conflict: collection-change`.
    - Then compare and write only what differs: `name`, `scopes`, `codeSyntax` (removing WEB when it is `{}`), `hiddenFromPublishing`, and every mode value. Figma stores numbers as float32 (`0.16` reads back as `0.1599999964`), so numbers compare within 1e-4 and colour channels within 1/512. The report lists the changed fields per name; a name with none counts as unchanged.
 5. **Text Styles**, after Type: resolve or create, load the font, write the literals for a new style or for fields no variable binds, then `setBoundVariable` for each bind whose bound id differs.
-6. **Orphans.** A ledger entry whose name is no longer in the document is never deleted. It moves to `orphans` with the `since` hash and appears in the report. Consumers keep their bindings. If the name returns, the same id is restored from `orphans`. Deletion happens only through the explicit run option `prune: [names]`, which the owner confirms.
+6. **Orphans.** A ledger entry whose name is no longer in the selection (it left the document, or the owner removed its group) is never deleted. It moves to `orphans` with the `since` hash and appears in the report. Consumers keep their bindings. If the name returns, the same id is restored from `orphans`. Deletion happens only through the explicit run option `prune: [names]`, which the owner confirms.
 7. **Renames.** A token renamed in the Code Library is a new flat name plus an orphan, with no rename inference in v1. A variable renamed by hand in Figma is renamed back, because the document is the source.
 8. **Return** `{slice: "foundations", fileKey, summary, created, updated, orphaned, restored, pruned, conflicts, extraModes, ledger: {foundations}, ms, outputBytes}`. `summary` counts `created` (collections, modes, variables and Text Styles), `updated`, `unchanged`, `orphaned`, `restored`, `pruned` and `conflicts`. A run with conflicts returns the old ledger section unchanged. The agent records the result with `node skills/to-design/scripts/ledger.mjs record <result.json>` before the next call. Live on the draft file (#29): the first run created 88 objects in 457 ms (5.3 KB output); the second created 0, updated 0 and left 81 unchanged in 174 ms (3.9 KB).
 
@@ -217,7 +233,7 @@ Identity is the flat name, carried through the ledger id. Figma names and labels
 ## Validation (generator)
 
 1. Every Contract in `closure.contracts` pins the same `source.commit`.
-2. Every closure token resolves in the Code Library sources, and every alias target exists in the palette.
+2. Every closure token resolves in the Code Library sources, and every alias target exists in the palette. The schema allows any earlier variable; the generator checks the wider rule once it emits one ([#108](https://github.com/pawisssh/design/issues/108)).
 3. Every resolved Theme value equals the compiled CSS in the matching `.cds--white` / `.cds--g10` / `.cds--g90` / `.cds--g100` block. Every emitted layout and type custom property matches in px.
 4. Every Sass codeSyntax fallback exists in `@carbon/layout`.
 5. Every Contract passes rule 6 of the shared module's `validate()` against the generated document, so every Contract use (fill on FRAME, TEXT or vector; stroke; effect colour; padding or gap; min height or size; radius) is inside the bound variable's scopes.

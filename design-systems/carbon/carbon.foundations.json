@@ -76,10 +76,6 @@
       "text-inverse",
       "text-on-color",
       "text-on-color-disabled"
-    ],
-    "fullScales": [
-      "size",
-      "spacing"
     ]
   },
   "collections": [

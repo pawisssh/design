@@ -77,7 +77,7 @@ test('Theme holds exactly the closure colour tokens; Layout adds the full spacin
   const tokens = closure(button());
   const inCollection = key => Object.keys(doc.variables).filter(k => doc.variables[k].collection === key).sort();
   assert.deepEqual(doc.closure.tokens, tokens);
-  assert.deepEqual(doc.closure.fullScales, ['size', 'spacing']);
+  assert.deepEqual(Object.keys(doc.closure), ['contracts', 'tokens'], 'closure is a record of what Contracts use; fullScales is dropped (#107)');
   const spacing = Array.from({ length: 13 }, (_, i) => `spacing-${String(i + 1).padStart(2, '0')}`);
   const size = ['size-xs', 'size-sm', 'size-md', 'size-lg', 'size-xl', 'size-2xl'];
   assert.deepEqual(inCollection('layout'), [...new Set([...spacing, ...size, ...tokens.filter(t => /^(icon-size|border-radius|spacing|size)-/.test(t))])].sort());

@@ -12,4 +12,4 @@ To-design does not build all of it in Figma. By default it builds the closure pl
 
 ## Status
 
-Decided, not built. Until it is, the Carbon Adapter generates the closure plus full `spacing-*` and `size-*` scales, and To-design builds every variable in the document.
+To-design side built in [#107](https://github.com/pawisssh/design/issues/107): the schema drops `fullScales`, and To-design builds the selected subset, chunked by group over the cap. The whole-theme generator is [#108](https://github.com/pawisssh/design/issues/108); until it lands, the Carbon Adapter generates the closure plus full `spacing-*` and `size-*` scales, which is exactly the default subset.

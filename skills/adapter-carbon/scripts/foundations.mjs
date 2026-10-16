@@ -36,7 +36,8 @@ const FILE = {
 const ALPHA_REASON = 'alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA';
 
 // Layout groups carried whole, regardless of the closure: an owner can only bind a variable that exists, so
-// the picker must offer the whole scale (#8 base loop). Colours, Type and Primitives stay closure-only.
+// the picker must offer the whole scale (#8 base loop). Colours, Type and Primitives stay closure-only until the
+// document carries the whole theme (#108, ADR 0006); the document no longer records this list (#107).
 const FULL_SCALES = ['size', 'spacing'];
 // DTCG layout group -> [Figma group, scopes]. Figma has no PADDING scope; GAP covers padding and gap (#27).
 const LAYOUT_GROUP = {
@@ -348,7 +349,6 @@ export function generate({ sources, contracts }) {
       contracts: contracts.map(({ path, contract }) => ({ family: contract.family.key, path, snapshotId: contract.source.snapshotId }))
         .sort((a, b) => byKey(a.family, b.family)),
       tokens,
-      fullScales: [...FULL_SCALES].sort(byKey),
     },
     collections: [
       { key: 'primitives', name: 'Primitives', modes: SINGLE.map(([key, label]) => ({ key, label })), hidden: true },

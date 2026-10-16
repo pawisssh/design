@@ -21,6 +21,7 @@ import {
 import { foundationsPathFor, readJson, writeJson } from '../../contract/scripts/io.mjs';
 import { anatomyTree, baseProps, expectedBase, expectedVariant, near, norm, normalizeReadback, same } from './readback.mjs';
 import { defaultLedgerPath, readLedger } from './ledger.mjs';
+import { groupOf } from './foundations-subset.mjs';
 
 
 const SECTIONS = ['layout', 'paint'];
@@ -168,8 +169,10 @@ export const isOwner = by => by === 'owner' || /^owner \(simulated[^)]*\)$/.test
  * `by` and `was`, the blast radius (selected variants whose value changes), `shared` (the edit changes more
  * than the Base Component, so the owner is asked first), the later rules that shield variants from it, the
  * derived raws it may make stale, and, for a typed number, the tokens of the field's scope with that value.
+ * The document carries the whole theme (#107): given `built` (the ledger's foundations variables), the tokens
+ * this file has not built are listed in `unbuiltGroups`, each with the group the owner would add.
  */
-export function propose(contract, change, foundations, { by = 'owner' } = {}) {
+export function propose(contract, change, foundations, { by = 'owner', built = null } = {}) {
   if (!isOwner(by)) throw new Error(`an edit is by "owner" (or "owner (simulated, ...)" in a prototype), not "${by}"`);
   const { kind, section, node, field } = change;
   if (kind === 'detached') return { change, expressible: false, note: 'binding lost in Figma; the Contract keeps the token and a rebuild restores it' };
@@ -195,6 +198,8 @@ export function propose(contract, change, foundations, { by = 'owner' } = {}) {
     else if (!foundations.variables[newValue.token]) problem = `token "${newValue.token}" is not in the foundations document`;
     else if (!need || !coversScope(foundations.variables[newValue.token].scopes || [], need))
       problem = `token "${newValue.token}" is scoped [${foundations.variables[newValue.token].scopes}] and ${node}.${field} needs ${need}`;
+    else if (built && !(newValue.token in built))
+      problem = `token "${newValue.token}" is not built in this file: add group ${groupOf(foundations.variables[newValue.token])} (ledger.mjs groups --add) and rebuild foundations`;
   }
   const tokenCandidates = isRaw(newValue) && need
     ? Object.entries(foundations.variables)
@@ -202,9 +207,10 @@ export function propose(contract, change, foundations, { by = 'owner' } = {}) {
       .filter(([n]) => { const tv = tokenValue(foundations, n); return near(tv, newValue.raw) || tv === String(newValue.raw).toLowerCase(); })
       .map(([n]) => n).sort()
     : [];
+  const unbuiltGroups = built ? Object.fromEntries(tokenCandidates.filter(n => !(n in built)).map(n => [n, groupOf(foundations.variables[n])])) : {};
   return {
     change, expressible: true, id: `${node}.${field}`, path: `${section}[${ruleIdx}].${node}.${field}`, rule: ruleIdx, ruleMatch: rule.match,
-    newValue, blast, shared: blast.count > 1, shields, stale, tokenCandidates, ...(problem ? { problem } : {}),
+    newValue, blast, shared: blast.count > 1, shields, stale, tokenCandidates, unbuiltGroups, ...(problem ? { problem } : {}),
   };
 }
 
@@ -336,7 +342,8 @@ export function formatDiff(contract, readback, result) {
     lines.push(`      blast radius ${p.blast.count}/${p.blast.of}${p.shared ? '  (shared rule: ask the owner first; narrowing means splitting the rule)' : ''}`);
     for (const s of p.shields) lines.push(`      shielded by ${ch.section}[${s.rule}] ${JSON.stringify(s.match)} = ${show(s.value)}${s.value.reason ? `  reason: ${s.value.reason}` : ''}`);
     for (const s of p.stale) lines.push(`      verify: derived ${s.path} = ${show(s.value)} may be stale`);
-    if (p.tokenCandidates.length) lines.push(`      raw value equals token(s) ${p.tokenCandidates.join(', ')} -> ask the owner: bind the token instead? (never upgraded silently)`);
+    const mark = n => (p.unbuiltGroups && p.unbuiltGroups[n] ? `${n} (not built: add group ${p.unbuiltGroups[n]})` : n);
+    if (p.tokenCandidates.length) lines.push(`      raw value equals token(s) ${p.tokenCandidates.map(mark).join(', ')} -> ask the owner: bind the token instead? (never upgraded silently)`);
     if (p.problem) lines.push(`      cannot carry: ${p.problem}`);
   }
   return lines.join('\n') + '\n';
@@ -489,7 +496,11 @@ function main() {
   }
   if (cmd === 'review') {
     if (!values['file-key']) throw new Error('review needs --file-key');
-    return print(formatReview(contract, readback, review(contract, readback, foundations), { fileKey: values['file-key'], contractPath: a, readbackPath: b }));
+    // the file's built variables mark the picker's unbuilt tokens (#107); a review needs no ledger otherwise
+    let ledgerPath = values.ledger;
+    try { ledgerPath = ledgerPath || defaultLedgerPath(values['file-key']); } catch (e) { ledgerPath = null; console.error(`base-loop: unbuilt tokens not marked: ${e.message}`); }
+    const f = ledgerPath && (readLedger(ledgerPath) || {}).foundations;
+    return print(formatReview(contract, readback, review(contract, readback, foundations, f ? { built: f.variables } : {}), { fileKey: values['file-key'], contractPath: a, readbackPath: b }));
   }
   if (cmd === 'approve') {
     if (values.prototype) {

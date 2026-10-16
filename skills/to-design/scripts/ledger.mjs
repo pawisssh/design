@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 // The ledger: one per Design Library file, in gitignored .scratch/to-design/<fileKey>.ledger.json.
 // It maps flat names to Figma ids. Each slice returns its own section (`{ledger: {foundations}}`),
-// which `record` merges into the file; other sections are kept.
+// which `record` merges into the file; other sections are kept. `foundationsGroups` is the owner's
+// selection (`groups`), which no slice returns.
 //
 //   node skills/to-design/scripts/ledger.mjs record <result.json> [--ledger <path>]
 //   node skills/to-design/scripts/ledger.mjs prune-list <prune-preview result.json> --name <variant name> [--name ...] --out <prune.json>
+//   node skills/to-design/scripts/ledger.mjs groups --doc <foundations.json> --file-key <key> [--add <group>] [--remove <group>] [--ledger <path>]
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { selectedGroups, selection } from './foundations-subset.mjs';
 
 export const ledgerPath = (fileKey, root = process.env.CLAUDE_PROJECT_DIR || process.cwd()) =>
   join(root, '.scratch', 'to-design', `${fileKey}.ledger.json`);
@@ -40,7 +43,8 @@ export const readLedger = path => (existsSync(path) ? JSON.parse(readFileSync(pa
 
 /**
  * The ledger after a slice result. Refuses an error result; a result with conflicts carries the old section back
- * unchanged. Sections replace whole, except `sets` (#32): a sets call returns its one family, with the variant ids
+ * unchanged. Sections replace whole, except `foundations`, whose names a chunked build returns a chunk at a time
+ * (#107), and `sets` (#32): a sets call returns its one family, with the variant ids
  * of its own entries as {expansion index: id or null}. The other families are kept, and the ids are merged into
  * the family's list of `total` ids, so a call carries no ids beyond its batch.
  */
@@ -50,6 +54,14 @@ export function recordResult(ledger, result) {
   if (ledger && ledger.fileKey !== result.fileKey) throw new Error(`ledger is for ${ledger.fileKey}, result for ${result.fileKey}`);
   const before = ledger || emptyLedger(result.fileKey);
   const out = { ...before, ...result.ledger };
+  // a chunk's state holds only its own names (#107), so names the result neither holds nor orphaned are kept;
+  // a single call's state holds every name, so this is its result unchanged
+  const f = result.slice === 'foundations' && result.ledger.foundations;
+  if (f && before.foundations) {
+    const keep = kind => Object.fromEntries(Object.entries(before.foundations[kind] || {})
+      .filter(([n]) => !(n in (f[kind] || {})) && !((f.orphans || {})[kind] || {})[n]));
+    out.foundations = { ...f, variables: { ...f.variables, ...keep('variables') }, textStyles: { ...f.textStyles, ...keep('textStyles') } };
+  }
   if (result.slice === 'sets' && result.ledger.sets) {
     out.sets = { ...(before.sets || {}) };
     for (const [family, rec] of Object.entries(result.ledger.sets)) {
@@ -101,19 +113,50 @@ export function pruneList(preview, names) {
   return { schemaVersion: 1, fileKey: preview.fileKey, family: preview.family, prune };
 }
 
+/**
+ * The ledger with the owner's foundations groups changed (#107, ADR 0006): `foundationsGroups` names the groups the
+ * file builds next to the closure (Spacing and Size until the owner changes it). A slice result never carries this
+ * section, so recording a build keeps it. A removed group's variables become orphans on the next foundations build.
+ */
+export function setGroups(ledger, fileKey, doc, { add = [], remove = [] } = {}) {
+  if (ledger && ledger.fileKey !== fileKey) throw new Error(`ledger is for ${ledger.fileKey}, not ${fileKey}`);
+  const groups = new Set(selectedGroups(ledger));
+  const absent = remove.filter(g => !groups.has(g));
+  if (absent.length) throw new Error(`${absent.join(', ')} is not a selected group (selected: ${[...groups].join(', ')})`);
+  for (const g of remove) groups.delete(g);
+  for (const g of add) groups.add(g);
+  const foundationsGroups = [...groups].sort();
+  selection(doc, foundationsGroups);
+  return { ...(ledger || emptyLedger(fileKey)), foundationsGroups };
+}
+
 const USAGE = [
   'usage: ledger.mjs record <result.json> [--ledger <path>]',
   '       ledger.mjs prune-list <prune-preview result.json> --name <variant name> [--name ...] --out <prune.json>',
+  '       ledger.mjs groups --doc <foundations.json> --file-key <key> [--add <group>] [--remove <group>] [--ledger <path>]',
 ].join('\n');
 
 function main() {
   let args;
   try {
-    args = parseArgs({ allowPositionals: true, options: { ledger: { type: 'string' }, name: { type: 'string', multiple: true }, out: { type: 'string' } } });
+    args = parseArgs({ allowPositionals: true, options: {
+      ledger: { type: 'string' }, name: { type: 'string', multiple: true }, out: { type: 'string' },
+      doc: { type: 'string' }, 'file-key': { type: 'string' }, add: { type: 'string', multiple: true }, remove: { type: 'string', multiple: true },
+    } });
   } catch {
     args = { positionals: [], values: {} };
   }
   const [command, resultPath] = args.positionals;
+  if (command === 'groups') {
+    const { doc, 'file-key': fileKey } = args.values;
+    if (!doc || !fileKey) { console.error(USAGE); process.exit(2); }
+    const path = args.values.ledger || defaultLedgerPath(fileKey);
+    const ledger = setGroups(readLedger(path), fileKey, JSON.parse(readFileSync(doc, 'utf8')), { add: args.values.add || [], remove: args.values.remove || [] });
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, JSON.stringify(ledger, null, 2) + '\n');
+    console.log(JSON.stringify({ status: 'written', ledger: path, groups: ledger.foundationsGroups }));
+    return;
+  }
   if (!['record', 'prune-list'].includes(command) || !resultPath || (command === 'prune-list' && !args.values.out)) {
     console.error(USAGE);
     process.exit(2);

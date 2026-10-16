@@ -4,7 +4,7 @@
 // and writes plan.json and state.json for the packager. The plan is disposable: re-derive it for every call.
 //
 //   node skills/to-design/scripts/build-plan.mjs foundations --doc <foundations.json> --file-key <key> --out <dir>
-//        [--adopt] [--prune name,name] [--page "Page 1"] [--ledger <path>]
+//        [--adopt] [--prune name,name] [--page "Page 1"] [--chunk N] [--ledger <path>]
 //   node skills/to-design/scripts/build-plan.mjs icons --contract <component.json> [--contract ...]
 //        --icons-dir <unpacked icon package> --file-key <key> --out <dir> [--adopt] [--page Icons] [--ledger <path>]
 //   node skills/to-design/scripts/build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir>
@@ -20,9 +20,10 @@ import { parseArgs } from 'node:util';
 import { baseTuple, contentHash, expand, icons as iconKeys, iconName, PROTOTYPE_APPROVER, resolve, validate, variantName } from '../../contract/scripts/contract.mjs';
 import { anatomyTree, baseProps, defaultProps, expectedBase, expectedVariant, iconRef as iconRefKey, norm } from './readback.mjs';
 import { defaultLedgerPath, emptyLedger, readLedger } from './ledger.mjs';
+import { assertRecorded, CALL_BUDGET, chunks, chunkState, selectedGroups, selection, subsetDocument } from './foundations-subset.mjs';
 
-// Fields only a reviewer reads. The core never needs them, so the package leaves them out.
-const REVIEW_ONLY = { document: ['source', 'closure', 'checks', 'notes'], entry: ['source', 'usedBy'], value: ['from', 'reason', 'level', 'resolved'] };
+// Fields the core never needs, so the package leaves them out: the reviewer's, and a Mode's selector (To-preview and To-handoff read it).
+const REVIEW_ONLY = { document: ['source', 'closure', 'checks', 'notes'], entry: ['source', 'usedBy', 'family'], value: ['from', 'reason', 'level', 'resolved'], mode: ['selector'] };
 const omit = (obj, keys) => Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
 const mapValues = (obj, fn) => Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, fn(v)]));
 
@@ -30,6 +31,7 @@ const mapValues = (obj, fn) => Object.fromEntries(Object.entries(obj).map(([k, v
 export function stripReviewFields(doc) {
   return {
     ...omit(doc, REVIEW_ONLY.document),
+    collections: doc.collections.map(c => ({ ...c, modes: c.modes.map(m => omit(m, REVIEW_ONLY.mode)) })),
     variables: mapValues(doc.variables, v => ({ ...omit(v, REVIEW_ONLY.entry), values: mapValues(v.values, x => omit(x, REVIEW_ONLY.value)) })),
     textStyles: mapValues(doc.textStyles, s => omit(s, REVIEW_ONLY.entry)),
   };
@@ -41,13 +43,23 @@ export const documentHash = docText => `sha256:${createHash('sha256').update(doc
 /**
  * The foundations slice's plan and state.
  * `docText` is the document file's text (its bytes are the documentHash); `ledger` is the file's ledger or null.
- * Options: fileKey (required), adopt, prune (orphan names the owner confirmed for deletion), page, at, strip.
+ * Options: fileKey (required), adopt, prune (orphan names the owner confirmed for deletion), page, at, strip,
+ * chunk (1-based, when the selection needs several calls: `plan.chunk` says how many) and budget (chars per call).
  */
-export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune = [], page = null, at = new Date().toISOString(), strip = true } = {}) {
+export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune = [], page = null, at = new Date().toISOString(), strip = true, chunk = 1, budget = CALL_BUDGET } = {}) {
   if (!fileKey) throw new Error('fileKey is required');
   if (ledger && ledger.fileKey !== fileKey) throw new Error(`ledger is for ${ledger.fileKey}, not ${fileKey}`);
   const doc = JSON.parse(docText);
   if (doc.schemaVersion !== 1) throw new Error('foundations document schemaVersion must be 1');
+  // the selected subset of the whole theme (#107), split by group when it needs several calls;
+  // documentHash stays the whole document's, as later slices check it
+  const names = selection(doc, selectedGroups(ledger));
+  const stripped = stripReviewFields(doc);
+  const parts = chunks(doc, names, (kind, n) => JSON.stringify(stripped[kind][n]).length + 2 * n.length + 36, budget);
+  if (!(chunk >= 1 && chunk <= parts.length)) throw new Error(`there is no chunk ${chunk} of ${parts.length}`);
+  if (chunk > 1 && prune.length) throw new Error('prune runs with chunk 1, which carries the whole selection\'s orphans');
+  assertRecorded(ledger, parts, chunk, documentHash(docText));
+  const sub = subsetDocument(doc, parts.length > 1 ? parts[chunk - 1].names : names);
   const plan = {
     schemaVersion: 1,
     slice: 'foundations',
@@ -58,9 +70,13 @@ export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune
     designSystem: doc.designSystem.key,
     snapshotId: doc.source.snapshotId,
     documentHash: documentHash(docText),
-    foundations: strip ? stripReviewFields(doc) : doc,
+    foundations: strip ? stripReviewFields(sub) : sub,
+    ...(parts.length > 1 ? { chunk: { index: chunk, of: parts.length, groups: parts[chunk - 1].groups } } : {}),
   };
-  return { plan, state: ledger || emptyLedger(fileKey) };
+  const state = !ledger ? emptyLedger(fileKey) : parts.length > 1 ? chunkState(ledger, parts[chunk - 1], chunk === 1 ? names : null) : ledger;
+  const chars = JSON.stringify(plan).length + JSON.stringify(state).length;
+  if (strip && chars > budget) throw new Error(`the foundations plan and state are ${chars} chars, over the ${budget} a call takes`);
+  return { plan, state };
 }
 
 // Shapes that paint nothing: Carbon's two-tone inner path (fill="none", data-icon-path, or opacity="0" in
@@ -388,7 +404,7 @@ export function setsPlan(contract, docText, ledger, {
 }
 
 const USAGE = [
-  'usage: build-plan.mjs foundations --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--prune a,b] [--page <name>] [--ledger <path>]',
+  'usage: build-plan.mjs foundations --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--prune a,b] [--page <name>] [--chunk N] [--ledger <path>]',
   '       build-plan.mjs icons --contract <component.json> [--contract ...] --icons-dir <package dir> --file-key <key> --out <dir> [--adopt] [--page <name>] [--ledger <path>]',
   '       build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--read-only] [--page <name>] [--ledger <path>]',
   '       build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--mode build|reconcile|coverage|sample|theme|prune-preview|prune]',
@@ -403,7 +419,7 @@ function main() {
       adopt: { type: 'boolean', default: false }, prune: { type: 'string', default: '' }, page: { type: 'string' },
       contract: { type: 'string', multiple: true }, 'icons-dir': { type: 'string' }, 'read-only': { type: 'boolean', default: false },
       mode: { type: 'string', default: 'build' }, batch: { type: 'string', default: '0' }, 'per-call': { type: 'string' }, sample: { type: 'string', default: '' },
-      prototype: { type: 'boolean', default: false }, 'prune-list': { type: 'string' },
+      prototype: { type: 'boolean', default: false }, 'prune-list': { type: 'string' }, chunk: { type: 'string', default: '1' },
     },
   });
   const slice = positionals[0];
@@ -439,7 +455,7 @@ function main() {
     })
     : slice === 'foundations'
     ? foundationsPlan(readFileSync(values.doc, 'utf8'), readLedger(path), {
-      fileKey, adopt: values.adopt, prune: values.prune ? values.prune.split(',').map(s => s.trim()).filter(Boolean) : [], page: values.page ?? null,
+      fileKey, adopt: values.adopt, prune: values.prune ? values.prune.split(',').map(s => s.trim()).filter(Boolean) : [], page: values.page ?? null, chunk: Number(values.chunk),
     })
     : iconsPlan(values.contract.map(p => JSON.parse(readFileSync(p, 'utf8'))), values['icons-dir'], readLedger(path), {
       fileKey, adopt: values.adopt, ...(values.page ? { page: values.page } : {}),
@@ -447,7 +463,7 @@ function main() {
   mkdirSync(values.out, { recursive: true });
   writeFileSync(join(values.out, 'plan.json'), JSON.stringify(plan, null, 2) + '\n');
   writeFileSync(join(values.out, 'state.json'), JSON.stringify(state, null, 2) + '\n');
-  const detail = slice === 'foundations' ? { documentHash: plan.documentHash }
+  const detail = slice === 'foundations' ? { documentHash: plan.documentHash, chunk: { index: plan.chunk ? plan.chunk.index : 1, of: plan.chunk ? plan.chunk.of : 1 } }
     : slice === 'base' ? { base: plan.base.name, contentHash: plan.contentHash }
     : slice === 'sets' ? { family: plan.family, entries: plan.selection.entries.length, total: plan.total, contentHash: plan.contentHash }
     : { icons: plan.icons.length };

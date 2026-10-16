@@ -69,10 +69,12 @@ From a worktree the path starts with `.claude/worktrees/<worktree>/`. Copy the s
 ## 1. Foundations
 
 ```
-node skills/to-design/scripts/build-plan.mjs foundations --doc design-systems/<ds>/<ds>.foundations.json --file-key <key> --out .scratch/to-design/<run> [--page <name>] [--adopt] [--prune a,b]
+node skills/to-design/scripts/build-plan.mjs foundations --doc design-systems/<ds>/<ds>.foundations.json --file-key <key> --out .scratch/to-design/<run> [--page <name>] [--adopt] [--prune a,b] [--chunk N]
 ```
 
 Core: `builder-core.js`. It builds the Variable collections, modes, variables and Text Styles and follows the [update semantics](../contract/references/foundations-schema.md#update-semantics-idempotent): ownership through the ledger, `conflict` before any change, diff-based writes, mode order fixed with `setDefaultMode`, orphans kept until `--prune` with names the owner confirmed. The plan drops the document's review-only fields. Record the result: the ledger's `foundations.documentHash` gates every later slice, so rebuild foundations after every regeneration of the document that changed it.
+
+The plan holds only the file's [subset](../contract/references/foundations-schema.md#to-design-builds-a-subset) of the document: the closure, the owner's groups (Spacing and Size by default) and every alias and bind target they reach (ADR 0006). The owner changes the groups with `node skills/to-design/scripts/ledger.mjs groups --doc <foundations.json> --file-key <key> --add <group> --remove <group> [--ledger <path>]`, then rebuilds foundations; a removed group's variables become orphans. When the output's `chunk.of` is above 1, the selection is over one call: run chunk 1, record it, then `--chunk 2` and so on, recording each before the next (a later chunk is refused until the earlier ones are recorded). Prune only with chunk 1.
 
 ## 2. Icons
 
