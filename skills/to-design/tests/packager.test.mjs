@@ -85,7 +85,7 @@ test('a selection with the same entry twice is refused', () => {
   writeFileSync(join(root, 'plan.json'), JSON.stringify({ ...PLAN, selection: { ...PLAN.selection, entries: [entry, { ...entry }] } }));
   const run = pack(root);
   assert.equal(run.status, 2);
-  assert.match(run.json.error, /unique/);
+  assert.match(run.json.error, /entries must be unique/);
 });
 
 test('chars counts the way the hook does (UTF-16 units), so a non-BMP character counts twice', () => {
