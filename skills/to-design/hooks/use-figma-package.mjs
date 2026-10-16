@@ -54,7 +54,7 @@ try {
 // hook. Local refs only (no fetch, the hook has 10s); any git failure skips the warning and never blocks the call.
 let behind = 0;
 try {
-  const r = spawnSync('git', ['rev-list', '--count', 'HEAD..@{upstream}', '--', 'skills/to-design/hooks', '.claude/settings.json'], { cwd: root, encoding: 'utf8', timeout: 2000 });
+  const r = spawnSync('git', ['rev-list', '--count', 'HEAD..@{upstream}', '--', ':/skills/to-design/hooks', ':/.claude/settings.json'], { cwd: root, encoding: 'utf8', timeout: 2000 });
   if (r.status === 0) behind = Number(r.stdout.trim()) || 0;
 } catch {}
 const stale = behind

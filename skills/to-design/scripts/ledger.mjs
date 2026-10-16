@@ -6,7 +6,7 @@
 //   node skills/to-design/scripts/ledger.mjs record <result.json> [--ledger <path>]
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
@@ -16,9 +16,11 @@ export const ledgerPath = (fileKey, root = process.env.CLAUDE_PROJECT_DIR || pro
 // The main checkout's folder when `dir` is in a linked git worktree; null in the main checkout, outside a repo, or without git.
 function mainCheckoutOf(dir) {
   const r = spawnSync('git', ['rev-parse', '--path-format=absolute', '--git-dir', '--git-common-dir'], { cwd: dir, encoding: 'utf8' });
-  if (r.status !== 0) return null;
-  const [gitDir, commonDir] = r.stdout.trim().split('\n');
-  return gitDir && commonDir && gitDir !== commonDir ? dirname(commonDir) : null;
+  const lines = r.status === 0 ? r.stdout.trim().split('\n') : [];
+  // a git without --path-format echoes the flag back: anything but two absolute paths is not a verdict
+  if (lines.length !== 2 || !lines.every(l => isAbsolute(l))) return null;
+  const [gitDir, commonDir] = lines;
+  return gitDir !== commonDir ? dirname(commonDir) : null;
 }
 
 /**
@@ -81,4 +83,6 @@ function main() {
   console.log(JSON.stringify({ status: 'recorded', ledger: path, slice: result.slice, summary: result.summary }));
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  try { main(); } catch (e) { console.error(`ledger: ${e.message}`); process.exit(1); }
+}

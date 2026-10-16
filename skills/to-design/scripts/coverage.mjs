@@ -188,4 +188,6 @@ function main() {
   process.exit(report.ok ? 0 : 1);
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  try { main(); } catch (e) { console.error(`coverage: ${e.message}`); process.exit(1); }
+}

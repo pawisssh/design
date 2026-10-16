@@ -22,7 +22,7 @@ function project(code = '// package\nreturn await buildComponentSets(figma, BUIL
   return { root, bytes, sha: sha256(bytes) };
 }
 
-function runHook(root, code) {
+function runHook(root, code, env = {}) {
   const input = {
     session_id: 's',
     cwd: root,
@@ -31,9 +31,9 @@ function runHook(root, code) {
     tool_use_id: 'toolu_1',
     tool_input: { fileKey: 'abc123', description: 'Build Button', code },
   };
-  return spawnSync('node', [HOOK], {
+  return spawnSync(process.execPath, [HOOK], {
     input: JSON.stringify(input),
-    env: { ...process.env, CLAUDE_PROJECT_DIR: root },
+    env: { ...process.env, CLAUDE_PROJECT_DIR: root, ...env },
     encoding: 'utf8',
   });
 }
@@ -131,9 +131,12 @@ test('a package of exactly 50,000 chars is allowed', () => {
 });
 
 // The project as a git checkout tracking a branch that has `ahead` commits, each writing `file`.
-function checkout(file, ahead = 1) {
+function checkoutBehind(file, ahead = 1) {
   const p = project();
-  const git = (...args) => assert.equal(spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { cwd: p.root }).status, 0);
+  const git = (...args) => {
+    const r = spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { cwd: p.root, encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+  };
   git('init', '-q', '-b', 'main');
   git('commit', '-q', '--allow-empty', '-m', 'init');
   git('checkout', '-q', '-b', 'up');
@@ -150,7 +153,7 @@ function checkout(file, ahead = 1) {
 
 test('a checkout behind its upstream on the hook or settings still swaps, and warns the agent and the owner to pull', () => {
   for (const file of ['skills/to-design/hooks/use-figma-package.mjs', '.claude/settings.json']) {
-    const { root, bytes, sha } = checkout(file);
+    const { root, bytes, sha } = checkoutBehind(file);
     const run = runHook(root, stubFor(PKG, sha));
     assert.equal(run.status, 0, run.stderr);
     const out = JSON.parse(run.stdout);
@@ -161,9 +164,13 @@ test('a checkout behind its upstream on the hook or settings still swaps, and wa
   }
 });
 
-test('a checkout behind only on other files, or outside git, swaps with no warning', () => {
-  for (const { root, sha } of [checkout('docs/notes.md', 3), project()]) {
-    const out = JSON.parse(runHook(root, stubFor(PKG, sha)).stdout);
+test('a checkout up to date, behind only on other files, outside git, or without git swaps with no warning', () => {
+  const stale = checkoutBehind('.claude/settings.json');
+  const cases = [[checkoutBehind('.claude/settings.json', 0)], [checkoutBehind('docs/notes.md', 3)], [project()], [stale, { PATH: '' }]];
+  for (const [{ root, sha }, env] of cases) {
+    const run = runHook(root, stubFor(PKG, sha), env);
+    assert.equal(run.status, 0, run.stderr);
+    const out = JSON.parse(run.stdout);
     assert.equal(out.systemMessage, undefined);
     assert.equal(out.hookSpecificOutput.additionalContext, undefined);
   }
