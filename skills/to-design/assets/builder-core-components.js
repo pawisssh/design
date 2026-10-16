@@ -471,7 +471,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     if (!tpl) {
       if (!tplPage) { tplPage = figma.createPage(); tplPage.name = plan.templates.page; made.push('templates-page'); }
       tpl = figma.createComponent();
-      tplPage.appendChild(tpl); // moved onto its page without a page switch: one switch per call (figma-workflow.md)
+      tplPage.appendChild(tpl); // moved onto its page without a page switch: at most one switch per call
       tpl.name = plan.templates.header.name;
       tpl.layoutMode = 'VERTICAL';
       tpl.resize(2560, 100);

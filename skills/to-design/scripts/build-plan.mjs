@@ -17,7 +17,7 @@ import { join, resolve as resolvePath, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { baseTuple, contentHash, expand, icons as iconKeys, iconName, PROTOTYPE_APPROVER, resolve, validate, variantName } from '../../contract/scripts/contract.mjs';
-import { anatomyTree, defaultProps, expectedBase, expectedVariant, iconRef as iconRefKey, norm } from './expected.mjs';
+import { anatomyTree, baseProps, defaultProps, expectedBase, expectedVariant, iconRef as iconRefKey, norm } from './readback.mjs';
 import { emptyLedger, ledgerPath, readLedger } from './ledger.mjs';
 
 // Fields only a reviewer reads. The core never needs them, so the package leaves them out.
@@ -124,7 +124,8 @@ export function basePlan(contract, docText, ledger, { fileKey, adopt = false, re
   const f = ledger.foundations;
   if (!f) throw new Error('the ledger has no foundations: build them first');
   if (f.documentHash !== documentHash(docText)) throw new Error(`the foundations document changed since the last foundations build (${f.documentHash}); rebuild foundations first`);
-  const exp = expectedBase(contract);
+  // the review specimen while the base stands alone; the property defaults once the family's set holds it
+  const exp = expectedBase(contract, baseProps(contract, !!(ledger.sets && ledger.sets[contract.family.key])));
   const strip = sec => Object.fromEntries(Object.entries(sec).map(([n, fields]) => [n, Object.fromEntries(Object.entries(fields).map(([k, x]) => [k, norm(x)]))]));
   const base = { name: exp.name, tree: exp.tree, layout: strip(exp.layout), paint: strip(exp.paint), visible: exp.visible, text: exp.text, swap: exp.swap, fonts: [] };
   const variables = {};
@@ -357,8 +358,11 @@ export function setsPlan(contract, docText, ledger, {
   const rec = ledger.sets && ledger.sets[family];
   const sets = {};
   if (rec) {
+    // Ids are recorded by expansion index, and another Contract may expand differently (an omit edit shifts the
+    // indexes), so they are carried only for the Contract the set was built from; otherwise the core finds each
+    // variant by name in the set.
     const ids = {};
-    for (const i of picked) if (rec.variants && rec.variants[i]) ids[i] = rec.variants[i];
+    if (rec.contentHash === plan.contentHash) for (const i of picked) if (rec.variants && rec.variants[i]) ids[i] = rec.variants[i];
     sets[family] = { ...rec, variants: ids };
   }
   return { plan, state: { schemaVersion: 1, fileKey, variables, textStyles, icons, bases, sets, templates: ledger.templates || null } };

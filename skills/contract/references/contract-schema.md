@@ -4,7 +4,7 @@ Answer for [#7](https://github.com/pawisssh/design/issues/7), part of map [#1](h
 
 The Contract is the library-neutral, canonical and readable description of one Component Family. The Adapter for a Code Library writes it, the owner approves it once, at the end of To-design's base loop (see [Approval](#approval)), and the To-design builder reads it. This is one file per Component Family. Compaction for `use_figma` is the packager's job ([#12](https://github.com/pawisssh/design/issues/12), #18); the Contract itself is never compacted.
 
-Worked example: [`button.component.json`](../../../design-systems/carbon/contracts/button.component.json), Carbon React Button at `v11.118.0`. Formal schema: [`contract.schema.json`](../contract.schema.json). Checker: the shared Contract module [`scripts/contract.mjs`](../scripts/contract.mjs), from the command line `node skills/contract/scripts/check.mjs <contract> [--table]`. Mapping from today's artifacts: [`mapping.md`](mapping.md).
+Worked example: [`button.component.json`](../../../design-systems/carbon/contracts/button.component.json), Carbon React Button at `v11.118.0`. Formal schema: [`contract.schema.json`](../contract.schema.json). Checker: the shared Contract module [`scripts/contract.mjs`](../scripts/contract.mjs), from the command line `node skills/contract/scripts/check.mjs <contract> [--table]`. How an Adapter writes one: the [Adapter guide](adapter-guide.md).
 
 ## Top level
 
@@ -102,7 +102,7 @@ A tweak the owner makes to the Base Component in Figma lands **in place**, on th
 - The agent asks first when the rule is shared by other variants (blast radius). There is no top-level edit log. A derived raw that an edit made stale gets a `verify` note, not a recompute. Tweaks the Contract cannot express (for example `letterSpacing`, a structure change) become `notes` at level `warning` and block approval: `approve()` refuses and rule 8 rejects an approved Contract while one is open.
 - Which derived raws get a `verify` note (there is no `derivedFrom` link yet): an `info` raw whose `reason` starts with `derived` in a later rule that shields part of the edit's blast radius for the same field, and a derived raw on a sibling field of the same node in the edited rule. The note sits at that value's path, for example `layout[8].Button.gap`.
 - A `warning` note is cleared only by the owner's decision to drop the tweak, once a rebuild from the Contract reads back with no difference and reports the noted field: run `base-loop.mjs discard` only when the owner says so. It turns the note into `info` with a message that starts `Discarded (base loop rebuild): `.
-- [base-loop.mjs](../../to-design/scripts/base-loop.mjs) (`diff`, `apply`, `discard`, `review`, `approve`) writes owner edits, notes and approvals. Edits and notes go through `asDraft()`. A write keeps the omit patch's 2-space JSON format and is refused when the result does not validate (a prototype approval excepted, under `.scratch/` only) or a shared rule is not confirmed. `by` is `owner`; only a prototype or a test names a simulated owner, `owner (simulated, ...)`.
+- [base-loop.mjs](../../to-design/scripts/base-loop.mjs) (`diff`, `apply`, `discard`, `review`, `approve`) writes owner edits, notes and approvals. Edits and notes go through `asDraft()`. A write keeps the file's layout (`writeJson` in [io.mjs](../scripts/io.mjs) splices only the changed values) and is refused when the result does not validate (a prototype approval excepted, under `.scratch/` only) or a shared rule is not confirmed. `by` is `owner`; only a prototype or a test names a simulated owner, `owner (simulated, ...)`.
 - An Adapter re-run keeps `by: "owner"` values and reports a conflict when the source value also changed (merge mechanics not yet specified).
 
 ## Anatomy
@@ -177,7 +177,7 @@ These are computed from the Contract, never written into it:
 
 - the token closure, which feeds the foundations scope (#9)
 - the icon list: `icons(contract)` returns one Contract's `default` then its `preferred`, without duplicates (the builder takes the union over Contracts), and `iconName(key)` gives the kit-style name (`trash-can` → `Trash-can`)
-- the expanded variant tuples and specimen ids
+- the expanded variant tuples and their tuple keys (`tupleKey`, To-preview's internal ids)
 - Figma ids and keys, which live in the builder ledger
 
 `closure()` derives the token closure: the tokens (variables and Text Styles) that the selected variants resolve to, after `sameAs`, skipping `was`. A token used only by omitted variants, or only by a value a later rule always overrides, is not in it. For Button it is 38 tokens, which adds `spacing-07` to #9's list. It also shows that Button does not use `spacing-10`, `icon-primary` (the ghost icon renders `link-primary`, checked by render in #20), `icon-on-color-disabled`, `background-selected`, `layer-selected-disabled`, `button-separator` or the skeleton tokens.

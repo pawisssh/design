@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Pinned Carbon sources for the foundations step (#28) and the icon atoms (#30), and the one place that fetches them.
 //   node skills/adapter-carbon/scripts/sources.mjs [--dir <dir>]   fetch into .scratch/adapter-carbon/sources
+//   node skills/adapter-carbon/scripts/sources.mjs snapshot <repo path>... [--dir <dir>]
+//       fetch a Contract's source files at the pinned commit and print its `source.files` and `snapshotId`
 // The command also fetches the preview renderer's packages (preview.mjs) into .scratch/adapter-carbon/preview.
 //
 // - Value files: raw files from the Carbon repository at the pinned commit, each checked against its sha256.
@@ -13,6 +15,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
 
 export const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 export const DEFAULT_DIR = join(REPO_ROOT, '.scratch/adapter-carbon/sources');
@@ -88,6 +91,34 @@ export async function fetchSources(dir = DEFAULT_DIR) {
   return dir;
 }
 
+/**
+ * A Contract's `source.snapshotId` from its `source.files` map {path: "sha256:<hex>"}: the sha256 of the
+ * `shasum -a 256` manifest of those files, one `<hex>  <path>\n` line per file, sorted by path in byte order.
+ * In a shell, from the folder the paths are relative to:
+ *   printf '%s\n' <path>... | LC_ALL=C sort | xargs shasum -a 256 | shasum -a 256
+ */
+export function snapshotId(files) {
+  const manifest = Object.keys(files).sort().map(p => `${files[p].replace(/^sha256:/, '')}  ${p}\n`).join('');
+  return 'sha256:' + sha256(manifest);
+}
+
+/**
+ * Fetch repository paths at the pinned commit into `dir`/carbon, as they are (these are what the Contract
+ * pins, so there is nothing to check them against yet). Returns {tag, commit, files, snapshotId}.
+ */
+export async function snapshotSources(paths, dir = DEFAULT_DIR) {
+  const files = {};
+  for (const path of [...new Set(paths)].sort()) {
+    if (path.startsWith('/') || path.split('/').includes('..')) throw new Error(`${path}: give a path inside the repository`);
+    const bytes = await download(`https://raw.githubusercontent.com/carbon-design-system/carbon/${CARBON.commit}/${path}`);
+    const out = join(dir, 'carbon', path);
+    mkdirSync(dirname(out), { recursive: true });
+    writeFileSync(out, bytes);
+    files[path] = `sha256:${sha256(bytes)}`;
+  }
+  return { tag: CARBON.tag, commit: CARBON.commit, files, snapshotId: snapshotId(files) };
+}
+
 async function download(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`GET ${url}: HTTP ${res.status}`);
@@ -130,15 +161,19 @@ export function readSources(dir = DEFAULT_DIR) {
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const args = process.argv.slice(2);
-  const dir = args.includes('--dir') ? args[args.indexOf('--dir') + 1] : DEFAULT_DIR;
-  fetchSources(dir).then(
-    async d => {
-      readSources(d);
-      console.log(`Carbon ${CARBON.tag} sources OK in ${d}`);
-      // The preview renderer's pinned React packages (#33), so one fetch step readies every test.
-      const { PREVIEW_DIR, fetchPreviewPackages } = await import('./preview.mjs');
-      console.log(`Carbon preview packages OK in ${fetchPreviewPackages(PREVIEW_DIR)}`);
-    },
-    e => { console.error(`FAIL: ${e.message}`); process.exit(1); });
+  const { values, positionals } = parseArgs({ allowPositionals: true, options: { dir: { type: 'string', default: DEFAULT_DIR } } });
+  const fail = e => { console.error(`FAIL: ${e.message}`); process.exit(1); };
+  if (positionals[0] === 'snapshot') {
+    if (positionals.length < 2) fail(new Error('usage: sources.mjs snapshot <repo path>... [--dir <dir>]'));
+    snapshotSources(positionals.slice(1), values.dir).then(r => console.log(JSON.stringify(r, null, 2)), fail);
+  } else {
+    fetchSources(values.dir).then(
+      async d => {
+        readSources(d);
+        console.log(`Carbon ${CARBON.tag} sources OK in ${d}`);
+        // The preview renderer's pinned React packages (#33), so one fetch step readies every test.
+        const { PREVIEW_DIR, fetchPreviewPackages } = await import('./preview.mjs');
+        console.log(`Carbon preview packages OK in ${fetchPreviewPackages(PREVIEW_DIR)}`);
+      }, fail);
+  }
 }

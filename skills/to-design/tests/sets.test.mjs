@@ -9,9 +9,10 @@ import { mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { approve, asDraft, expand, variantName } from '../../contract/scripts/contract.mjs';
+import { applyOmit, approve, asDraft, expand, variantName } from '../../contract/scripts/contract.mjs';
 import { basePlan, decodeEntries, foundationsPlan, iconsPlan, PER_CALL, setsPlan } from '../scripts/build-plan.mjs';
 import { checkCoverage, checkSample, checkTheme } from '../scripts/coverage.mjs';
+import { diff, normalizeBaseResult } from '../scripts/base-loop.mjs';
 import { recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
 
@@ -113,7 +114,7 @@ test('245 variants build in batches into one grid set on the Base Component, and
   const runs = await buildAll(env);
   for (const { result, out, plan, switches } of runs) {
     assert.equal(result.summary.conflicts, 0, JSON.stringify(result.conflicts));
-    assert.ok(switches <= 1, `batch ${plan.options.batch}: ${switches} page switches (figma-workflow.md: one per call)`);
+    assert.ok(switches <= 1, `batch ${plan.options.batch}: ${switches} page switches (at most one per call)`);
     assert.deepEqual(result.missing, []);
     assert.ok(out.chars < 50000, `batch ${plan.options.batch}: ${out.chars} chars`);
     assert.ok(result.outputBytes < 20000, `batch ${plan.options.batch}: ${result.outputBytes} bytes out`);
@@ -143,6 +144,48 @@ test('a rerun updates nothing and creates nothing', async () => {
   for (const { result } of reruns) assert.deepEqual([result.summary.created, result.summary.updated, result.made], [0, 0, []], JSON.stringify(result.updated));
   assert.deepEqual(writes(env.mock), []);
   assert.equal((await setNode(env)).children.length, TOTAL);
+});
+
+// Variant ids are recorded by expansion index, so a Contract that expands differently must not reuse them:
+// before this, the rebuild renamed variants onto other tuples and never finished placing them.
+test('after an omit edit the rebuild finds every kept variant by name and leaves the dropped ones for coverage to report', async () => {
+  const env = await setup();
+  await buildAll(env);
+  const ids = new Map((await setNode(env)).children.map(k => [k.name, k.id]));
+  const patch = { family: 'button', snapshotId: BUTTON.source.snapshotId, omit: [{ state: 'focus' }], expectedCount: TOTAL - 49 };
+  const omitted = approve(applyOmit(BUTTON, patch), AT);
+  const runs = await buildAll(env, omitted);
+  for (const { result } of runs) assert.deepEqual([result.summary.created, result.summary.updated], [0, 0], JSON.stringify(result.updated));
+  const rec = env.ledger.sets.button;
+  assert.equal(rec.variants.length, TOTAL - 49);
+  assert.deepEqual(rec.variants, expand(omitted).map(t => ids.get(variantName(omitted, t))));
+  assert.equal((await setNode(env)).children.length, TOTAL, 'the sets slice never deletes a variant');
+  const report = checkCoverage(omitted, (await sets(env, { mode: 'coverage' }, { contract: omitted })).result);
+  assert.deepEqual([...new Set(report.problems.map(p => p.what))], ['extra']);
+  assert.equal(report.problems.length, 49);
+  assert.ok(report.problems.every(p => p.name.endsWith('State=Focus')));
+});
+
+// One rule for the Base Component's property values: the review specimen (every BOOLEAN on) while it stands
+// alone, the property defaults once its Component Set holds it, for the build and the readback alike.
+test('inside its set the Base Component is built and read at the property defaults: a base rerun writes nothing and diffs clean', async () => {
+  const env = await setup();
+  const alone = basePlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT }).plan.base.visible;
+  assert.deepEqual(alone, { Label: true, Icon: true, Glyph: true }, 'the review specimen: Icon on');
+  await buildAll(env);
+  for (const readOnly of [false, true]) {
+    const { plan, state } = basePlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, readOnly });
+    assert.equal(plan.base.visible.Glyph, false, 'in the set: Icon at its default (off)');
+    const result = await runPackage(pack(plan, state).code, env.mock.figma);
+    assert.deepEqual([result.summary.conflicts, result.summary.created, result.summary.updated], [0, 0, 0], JSON.stringify(result.updated));
+    const readback = normalizeBaseResult(result, env.ledger);
+    assert.equal(readback.specimen, 'set');
+    const d = diff(BUTTON, readback, DOC);
+    assert.deepEqual([d.changes, d.unread], [[], []]);
+  }
+  // the sets rerun after the base rerun still writes nothing: no ping-pong over the Glyph's visibility
+  env.mock.log.length = 0;
+  for (const { result } of await buildAll(env)) assert.deepEqual([result.summary.created, result.summary.updated], [0, 0]);
 });
 
 test('after a lost connection the ledger is reconciled before the retry, and nothing duplicates', async () => {
@@ -248,7 +291,7 @@ test('the coverage check catches a renamed, a moved and a deleted variant, and a
   set.gridRowCount = 36; // a hand drags a variant below the grid
   b.setGridChildPosition(35, 0);
   c.remove();
-  set.dashPattern = [4, 4]; // and restyles the sheet
+  set.dashPattern = [4, 4]; // and restyles the grid
   set.parent.itemSpacing = 40;
   const report = checkCoverage(BUTTON, (await sets(env, { mode: 'coverage' })).result);
   const kinds = report.problems.map(p => p.what);

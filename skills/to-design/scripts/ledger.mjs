@@ -3,10 +3,11 @@
 // It maps flat names to Figma ids. Each slice returns its own section (`{ledger: {foundations}}`),
 // which `record` merges into the file; other sections are kept.
 //
-//   node skills/to-design/scripts/ledger.mjs record <result.json>
+//   node skills/to-design/scripts/ledger.mjs record <result.json> [--ledger <path>]
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
 
 export const ledgerPath = (fileKey, root = process.env.CLAUDE_PROJECT_DIR || process.cwd()) =>
   join(root, '.scratch', 'to-design', `${fileKey}.ledger.json`);
@@ -31,7 +32,9 @@ export function recordResult(ledger, result) {
     out.sets = { ...(before.sets || {}) };
     for (const [family, rec] of Object.entries(result.ledger.sets)) {
       const old = out.sets[family];
-      const variants = old && Array.isArray(old.variants) && old.variants.length === rec.total ? old.variants.slice() : new Array(rec.total).fill(null);
+      // ids are by expansion index, so a set rebuilt from another Contract starts a fresh list
+      const keep = old && Array.isArray(old.variants) && old.variants.length === rec.total && old.contentHash === rec.contentHash;
+      const variants = keep ? old.variants.slice() : new Array(rec.total).fill(null);
       for (const [i, id] of Object.entries(rec.variants || {})) variants[Number(i)] = id;
       out.sets[family] = { ...rec, variants };
     }
@@ -40,13 +43,19 @@ export function recordResult(ledger, result) {
 }
 
 function main() {
-  const [command, resultPath] = process.argv.slice(2);
+  let args;
+  try {
+    args = parseArgs({ allowPositionals: true, options: { ledger: { type: 'string' } } });
+  } catch {
+    args = { positionals: [], values: {} };
+  }
+  const [command, resultPath] = args.positionals;
   if (command !== 'record' || !resultPath) {
-    console.error('usage: ledger.mjs record <result.json>');
+    console.error('usage: ledger.mjs record <result.json> [--ledger <path>]');
     process.exit(2);
   }
   const result = JSON.parse(readFileSync(resultPath, 'utf8'));
-  const path = ledgerPath(result.fileKey);
+  const path = args.values.ledger || ledgerPath(result.fileKey);
   const ledger = recordResult(readLedger(path), result);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(ledger, null, 2) + '\n');

@@ -10,8 +10,9 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { approve, contentHash, PROTOTYPE_APPROVER, validate } from '../../contract/scripts/contract.mjs';
 import {
-  applyEdits, approveReviewed, diff, discardNote, expectedBase, normalizeReadback, ownerEdits, regenerate, review, RAW_REASON,
+  applyEdits, approveReviewed, diff, discardNote, ownerEdits, regenerate, review, RAW_REASON,
 } from '../scripts/base-loop.mjs';
+import { expectedBase, normalizeReadback } from '../scripts/readback.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const FIX = join(ROOT, 'skills/to-design/tests/fixtures/base-loop');
@@ -207,6 +208,11 @@ test('the approve CLI writes a prototype approval only under .scratch/', () => {
   assert.equal(inside.status, 0, inside.stderr);
   assert.deepEqual(read(join(root, '.scratch/base-loop/approved.json')).selection.approval,
     { by: PROTOTYPE_APPROVER, at: AT, snapshotId: CONTRACT.source.snapshotId, contentHash: contentHash(CONTRACT) });
+  // the write keeps the source Contract's layout: outside the selection block not a byte changed
+  const outsideSelection = text => text.replace(/\n  "selection": \{[\s\S]*?\n  \},\n/, '');
+  const source = readFileSync(join(FIX, 'button.component.json'), 'utf8');
+  assert.notEqual(outsideSelection(source), source);
+  assert.equal(outsideSelection(readFileSync(join(root, '.scratch/base-loop/approved.json'), 'utf8')), outsideSelection(source));
   const stale = approveTo(join(root, 'owner.json'), '--content-hash', 'sha256:0');
   assert.equal(stale.status, 1);
   assert.match(stale.stderr, /the Contract changed since the review/);

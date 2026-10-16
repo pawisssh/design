@@ -5,29 +5,24 @@
 // (design-systems/<ds>/contracts/<family>.component.json -> design-systems/<ds>/<ds>.foundations.json).
 // --table prints the resolved paint for the Figma grid rows (figma.grid.rows) at the default of
 // every other axis. Exit code 1 when the Contract is invalid.
-import { readFileSync, readdirSync } from 'node:fs';
-import { dirname, join, resolve as resolvePath } from 'node:path';
+import { parseArgs } from 'node:util';
 import { validate, expand, baseTuple, variantName, closure, resolve } from './contract.mjs';
+import { foundationsPathFor, readJson } from './io.mjs';
 
-const args = process.argv.slice(2);
-const contractPath = args.find(a => !a.startsWith('--') && args[args.indexOf(a) - 1] !== '--foundations');
+const { values: args, positionals } = parseArgs({ allowPositionals: true, options: { foundations: { type: 'string' }, table: { type: 'boolean', default: false } } });
+const [contractPath] = positionals;
 if (!contractPath) {
   console.error('usage: check.mjs <component.json> [--foundations <file>] [--table]');
   process.exit(2);
 }
-let foundationsPath = args.includes('--foundations') ? args[args.indexOf('--foundations') + 1] : null;
-if (!foundationsPath) {
-  const dsDir = resolvePath(dirname(contractPath), '..');
-  const found = readdirSync(dsDir).filter(f => f.endsWith('.foundations.json'));
-  if (found.length !== 1) {
-    console.error(`no single *.foundations.json in ${dsDir}; pass --foundations <file>`);
-    process.exit(2);
-  }
-  foundationsPath = join(dsDir, found[0]);
+let c, foundations;
+try {
+  c = readJson(contractPath);
+  foundations = readJson(foundationsPathFor(contractPath, args.foundations));
+} catch (e) {
+  console.error(e.message);
+  process.exit(2);
 }
-
-const c = JSON.parse(readFileSync(contractPath, 'utf8'));
-const foundations = JSON.parse(readFileSync(foundationsPath, 'utf8'));
 const { ok, errors } = validate(c, foundations);
 for (const e of errors) console.log(`FAIL [rule ${e.rule}] ${e.message}`);
 if (errors.some(e => e.rule === 'schema' || e.rule === 3)) process.exit(1);
@@ -38,7 +33,7 @@ console.log(`variants ${selected.length} (expectedCount ${c.selection.expectedCo
 console.log(`Base Component: ${variantName(c, baseTuple(c))}`);
 console.log(`token closure (${tokens.length}): ${tokens.join(', ')}`);
 
-if (args.includes('--table')) {
+if (args.table) {
   const rows = (c.figma && c.figma.grid && c.figma.grid.rows) || c.axes.map(a => a.key);
   const base = baseTuple(c);
   const show = v => (Array.isArray(v) ? `[${v.length} effects]` : v && typeof v === 'object' ? (v.token || `raw ${v.raw}`) : String(v));

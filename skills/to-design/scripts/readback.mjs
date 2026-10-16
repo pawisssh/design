@@ -19,6 +19,16 @@ export function defaultProps(contract) {
   return Object.fromEntries(contract.properties.map(p => [p.key, p.default]));
 }
 
+/**
+ * The property values the Base Component is built and read back at. While it stands alone (the base-first
+ * loop, before the batch build) it is the review specimen, so the owner sees every optional layer. Once its
+ * Component Set holds it, it is a variant like the others, at the property defaults, since the set's
+ * property definitions drive every variant. `inSet`: the ledger records a set for the family.
+ */
+export function baseProps(contract, inSet) {
+  return inSet ? defaultProps(contract) : reviewProps(contract);
+}
+
 // "icon:default" -> the Contract's default icon key; "icon:<key>" -> key.
 export const iconRef = (contract, ref) => {
   const key = String(ref).replace(/^icon:/, '');
@@ -59,7 +69,7 @@ export function expectedVariant(contract, tuple, props) {
   return { tuple, name: variantName(contract, tuple), tree: anatomyTree(contract.anatomy), layout: r.layout, paint: r.paint, visible, text, swap, refs };
 }
 
-/** What the Base Component should read back as, for the review specimen `props` (see expectedVariant). */
+/** What the Base Component should read back as, for `props` (default: the review specimen; see baseProps). */
 export function expectedBase(contract, props = reviewProps(contract)) {
   return expectedVariant(contract, baseTuple(contract), props);
 }
