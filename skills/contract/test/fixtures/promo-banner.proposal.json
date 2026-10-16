@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "family": { "key": "promo-banner", "name": "Promo banner", "description": "A full-width banner that promotes a plan or feature, with a title and an action." },
+  "proposal": {
+    "by": "agent",
+    "reason": "Carbon's inline notification is for system status, and a tile has no tone; the prototype's banner is promotional content with its own emphasis.",
+    "considered": [
+      { "contract": "button", "whyNot": "Only the banner's action is a Button; the banner itself is a container." }
+    ],
+    "origin": { "input": "prototype", "repo": "github.com/example/shop", "commit": "0123456789abcdef0123456789abcdef01234567", "at": "src/Promo.tsx:12" },
+    "home": { "where": "app", "path": "src/components/promo-banner" }
+  },
+  "axes": [
+    {
+      "key": "emphasis", "label": "Emphasis", "default": "high", "defaultSource": "prototype",
+      "values": [ { "key": "high", "label": "High" }, { "key": "low", "label": "Low" } ]
+    }
+  ],
+  "anatomy": {
+    "name": "Banner", "type": "COMPONENT", "role": "container",
+    "children": [
+      { "name": "Title", "type": "TEXT", "role": "label" },
+      { "name": "Action", "type": "INSTANCE", "role": "action", "instanceOf": "family:button" }
+    ]
+  },
+  "properties": [
+    { "key": "title", "label": "Title", "type": "TEXT", "default": "Upgrade to Pro", "binds": [ { "node": "Title", "field": "characters" } ] }
+  ],
+  "layout": [
+    { "match": {}, "set": {
+      "Banner": { "direction": "HORIZONTAL", "paddingTop": { "token": "spacing-05" }, "paddingRight": { "token": "spacing-05" }, "paddingBottom": { "token": "spacing-05" }, "paddingLeft": { "token": "spacing-05" }, "gap": { "token": "spacing-07" } },
+      "Title": { "textStyle": { "token": "body-compact-02" } }
+    } }
+  ],
+  "paint": [
+    { "match": { "emphasis": "high" }, "set": { "Banner": { "fill": { "token": "background-active" }, "stroke": "none" }, "Title": { "fill": { "token": "text-on-color" } } } },
+    { "match": { "emphasis": "low" }, "set": { "Banner": { "fill": { "token": "background" }, "stroke": { "raw": "#0f62fe", "level": "warning", "reason": "The prototype's border has no theme token; asked in the Handoff." } }, "Title": { "fill": { "token": "text-inverse" } } } }
+  ],
+  "dependencies": { "families": [ { "key": "button", "contract": "button" } ] },
+  "status": "pending",
+  "approval": null
+}

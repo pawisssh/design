@@ -189,52 +189,15 @@ export function validate(contract, foundations) {
   const c = contract;
   // 1. keys and labels
   if (c.schemaVersion !== 1) err(1, 'schemaVersion', `unknown schemaVersion ${JSON.stringify(c.schemaVersion)}; this module reads 1`);
-  dupes(c.axes.map(a => a.key)).forEach(k => err(1, 'axes', `duplicate axis key "${k}"`));
-  dupes(c.properties.map(p => p.key)).forEach(k => err(1, 'properties', `duplicate property key "${k}"`));
-  for (const a of c.axes) {
-    dupes(a.values.map(v => v.key)).forEach(k => err(1, `axes.${a.key}`, `duplicate value key "${k}"`));
-    dupes(a.values.map(v => v.label)).forEach(l => err(1, `axes.${a.key}`, `duplicate value label "${l}"`));
-    for (const v of a.values) {
-      if (/[=,]/.test(v.label)) err(1, `axes.${a.key}.${v.key}`, `label "${v.label}" contains "=" or ","`);
-      if (/(^|\s)[^\sA-Za-z0-9]*[a-z]/.test(v.label)) err(1, `axes.${a.key}.${v.key}`, `label "${v.label}" is not Title Case`);
-    }
-  }
+  checkKeys(c, err);
 
   // 3. patterns, rule nodes and bind nodes
-  const domain = Object.fromEntries(c.axes.map(a => [a.key, a.values.map(v => v.key)]));
-  const checkPattern = (pattern, at) => {
-    if (!isObj(pattern)) return err(3, at, 'match must be an object');
-    for (const [axis, want] of Object.entries(pattern)) {
-      if (!domain[axis]) { err(3, at, `unknown axis "${axis}"`); continue; }
-      for (const v of Array.isArray(want) ? want : [want])
-        if (!domain[axis].includes(v)) err(3, at, `unknown ${axis} value "${v}"`);
-    }
-  };
-  c.excluded.forEach((e, i) => {
-    checkPattern(e.match, `excluded[${i}].match`);
-    if (!e.reason || !e.evidence || (Array.isArray(e.evidence) && !e.evidence.length))
-      err(3, `excluded[${i}]`, 'an exclusion needs `reason` and `evidence`');
-  });
-  c.selection.omit.forEach((o, i) => checkPattern(o.match, `selection.omit[${i}].match`));
-  const anatomy = anatomyIndex(c);
-  const nodeKnown = name => !!anatomy[name] ||
-    (name.includes('/') && anatomy[name.split('/')[0]] && anatomy[name.split('/')[0]].type === 'INSTANCE');
-  for (const section of SECTIONS)
-    c[section].forEach((rule, i) => {
-      checkPattern(rule.match, `${section}[${i}].match`);
-      for (const node of Object.keys(rule.set || {}))
-        if (!nodeKnown(node)) err(3, `${section}[${i}].set`, `unknown anatomy node "${node}"`);
-    });
-  c.properties.forEach(p => (p.binds || []).forEach((b, i) => {
-    if (b.match) checkPattern(b.match, `properties.${p.key}.binds[${i}].match`);
-    if (!anatomy[b.node]) err(3, `properties.${p.key}.binds[${i}]`, `unknown anatomy node "${b.node}"`);
-  }));
+  const domain = checkPatterns(c, err);
   if (errors.length) return { ok: false, errors }; // rules 2, 4, 5 and 6 expand, which needs valid patterns
 
   // 2. defaults and the Base Component
   const selected = expand(c);
-  for (const a of c.axes)
-    if (!domain[a.key].includes(a.default)) err(2, `axes.${a.key}.default`, `default "${a.default}" is not a value of ${a.key}`);
+  checkDefaults(c, domain, err);
   const base = baseTuple(c);
   if (!selected.some(t => c.axes.every(a => t[a.key] === base[a.key])))
     err(2, 'selection', `the Base Component (${variantName(c, base)}) is not selected`);
@@ -244,6 +207,7 @@ export function validate(contract, foundations) {
     err(4, 'selection.expectedCount', `expansion gives ${selected.length} variants but expectedCount is ${c.selection.expectedCount}`);
 
   // 5. every selected variant resolves every required field and gets exactly one bind per property
+  const anatomy = anatomyIndex(c);
   const required = { layout: {}, paint: {} };
   for (const [name, node] of Object.entries(anatomy))
     for (const section of SECTIONS) required[section][name] = new Set((REQUIRED[node.type] || REQUIRED.INSTANCE)[section]);
@@ -274,8 +238,74 @@ export function validate(contract, foundations) {
     err(5, at, `${problem} in ${tuples.length} selected variant${tuples.length === 1 ? '' : 's'}, e.g. ${variantName(c, tuples[0])}`);
 
   // 6. raw values carry level and reason; tokens exist and are used inside their variable's scopes
+  checkTokens(c, foundations, err);
+
+  // 7. instance targets
+  checkInstances(c, err, key => c.dependencies.families.some(f => f.key === key));
+
+  // 8. selection status and approval
+  checkApproval(c, err);
+
+  return { ok: errors.length === 0, errors };
+}
+
+// Rule 1 (keys and labels, without schemaVersion), shared by validate and validateProposal.
+function checkKeys(c, err) {
+  dupes(c.axes.map(a => a.key)).forEach(k => err(1, 'axes', `duplicate axis key "${k}"`));
+  dupes((c.properties || []).map(p => p.key)).forEach(k => err(1, 'properties', `duplicate property key "${k}"`));
+  for (const a of c.axes) {
+    dupes(a.values.map(v => v.key)).forEach(k => err(1, `axes.${a.key}`, `duplicate value key "${k}"`));
+    dupes(a.values.map(v => v.label)).forEach(l => err(1, `axes.${a.key}`, `duplicate value label "${l}"`));
+    for (const v of a.values) {
+      if (/[=,]/.test(v.label)) err(1, `axes.${a.key}.${v.key}`, `label "${v.label}" contains "=" or ","`);
+      if (/(^|\s)[^\sA-Za-z0-9]*[a-z]/.test(v.label)) err(1, `axes.${a.key}.${v.key}`, `label "${v.label}" is not Title Case`);
+    }
+  }
+}
+
+// Rule 3 (patterns, rule nodes and bind nodes). Returns the axis domain {axisKey: [valueKey]}.
+function checkPatterns(c, err) {
+  const domain = Object.fromEntries(c.axes.map(a => [a.key, a.values.map(v => v.key)]));
+  const checkPattern = (pattern, at) => {
+    if (!isObj(pattern)) return err(3, at, 'match must be an object');
+    for (const [axis, want] of Object.entries(pattern)) {
+      if (!domain[axis]) { err(3, at, `unknown axis "${axis}"`); continue; }
+      for (const v of Array.isArray(want) ? want : [want])
+        if (!domain[axis].includes(v)) err(3, at, `unknown ${axis} value "${v}"`);
+    }
+  };
+  (c.excluded || []).forEach((e, i) => {
+    checkPattern(e.match, `excluded[${i}].match`);
+    if (!e.reason || !e.evidence || (Array.isArray(e.evidence) && !e.evidence.length))
+      err(3, `excluded[${i}]`, 'an exclusion needs `reason` and `evidence`');
+  });
+  (c.selection ? c.selection.omit : []).forEach((o, i) => checkPattern(o.match, `selection.omit[${i}].match`));
+  const anatomy = anatomyIndex(c);
+  const nodeKnown = name => !!anatomy[name] ||
+    (name.includes('/') && anatomy[name.split('/')[0]] && anatomy[name.split('/')[0]].type === 'INSTANCE');
   for (const section of SECTIONS)
-    c[section].forEach((rule, i) => {
+    (c[section] || []).forEach((rule, i) => {
+      checkPattern(rule.match, `${section}[${i}].match`);
+      for (const node of Object.keys(rule.set || {}))
+        if (!nodeKnown(node)) err(3, `${section}[${i}].set`, `unknown anatomy node "${node}"`);
+    });
+  (c.properties || []).forEach(p => (p.binds || []).forEach((b, i) => {
+    if (b.match) checkPattern(b.match, `properties.${p.key}.binds[${i}].match`);
+    if (!anatomy[b.node]) err(3, `properties.${p.key}.binds[${i}]`, `unknown anatomy node "${b.node}"`);
+  }));
+  return domain;
+}
+
+// Rule 2's first half: every axis default is one of its values.
+function checkDefaults(c, domain, err) {
+  for (const a of c.axes)
+    if (!domain[a.key].includes(a.default)) err(2, `axes.${a.key}.default`, `default "${a.default}" is not a value of ${a.key}`);
+}
+
+// Rule 6. `extra(variable, token, path)` returns a further problem for a token use, or undefined.
+function checkTokens(c, foundations, err, extra) {
+  for (const section of SECTIONS)
+    (c[section] || []).forEach((rule, i) => {
       for (const [node, fields] of Object.entries(rule.set || {}))
         for (const [field, value] of Object.entries(fields))
           walkRefs(value, `${section}[${i}].${node}.${field}`, (ref, path) => {
@@ -299,28 +329,27 @@ export function validate(contract, foundations) {
       if (!need) problem = `${path} cannot bind a variable (token "${t}")`;
       else if (!coversScope(scopes, need))
         problem = `token "${t}" is used as ${need} at ${path} but its variable is scoped [${scopes.join(', ')}]`;
+      else if (extra) problem = extra(foundations.variables[t], t, path);
     }
     if (problem && !seen.has(problem)) { seen.add(problem); err(6, path, problem); }
   });
+}
 
-  // 7. instance targets
+// Rule 7. `familyKnown(key)` says whether a `family:<key>` instance target is declared.
+function checkInstances(c, err, familyKnown) {
+  const anatomy = anatomyIndex(c);
   const icons = c.icons;
   for (const n of Object.values(anatomy)) {
     const to = n.instanceOf;
     if (!to) continue;
     const [kind, name] = [to.slice(0, to.indexOf(':')), to.slice(to.indexOf(':') + 1)];
     const ok = kind === 'icon' ? !!(icons && icons.default)
-      : kind === 'family' ? c.dependencies.families.some(f => f.key === name)
-      : kind === 'sub' ? c.subComponents.some(s => s.name === name) : false;
+      : kind === 'family' ? familyKnown(name)
+      : kind === 'sub' ? (c.subComponents || []).some(s => s.name === name) : false;
     if (!ok) err(7, `anatomy.${n.name}.instanceOf`, `instance target "${to}" is not declared`);
   }
   if (icons && Array.isArray(icons.preferred) && !icons.preferred.includes(icons.default))
     err(7, 'icons.default', `default icon "${icons.default}" is not in icons.preferred`);
-
-  // 8. selection status and approval
-  checkApproval(c, err);
-
-  return { ok: errors.length === 0, errors };
 }
 
 // A fill binds TEXT_FILL on a TEXT node, SHAPE_FILL on a vector inside an instance ("Glyph/Vector"),
@@ -388,6 +417,208 @@ function checkShape(c, err) {
     });
   if (isObj(c.anatomy) && (typeof c.anatomy.name !== 'string' || typeof c.anatomy.type !== 'string'))
     err('schema', 'anatomy', 'the anatomy root needs `name` and `type`');
+}
+
+// ---------- Component Proposal (#60, #80): a family the Code Library does not ship ----------
+
+const PROPOSAL_REQUIRED = { schemaVersion: 'number', family: 'object', proposal: 'object', axes: 'array', anatomy: 'object' };
+const PROPOSAL_OPTIONAL = { properties: 'array', layout: 'array', paint: 'array', icons: 'object', subComponents: 'array', dependencies: 'object', notes: 'array', retirement: 'object', built: 'object' };
+const PROPOSAL_FORBIDDEN = ['source', 'code', 'selection', 'excluded', 'figma'];
+
+/**
+ * Validate a Component Proposal against the foundations document and the Design System's other files.
+ * `known` is {contracts: [Contract], proposals: [Proposal]} (an array is read as `contracts`); checks that need
+ * them are skipped when they are not given. Rules 1, 2 (defaults only), 3, 6 and 7 are the Contract's; rules
+ * 4 and 5 do not apply. Further rules: "schema" (required, optional and forbidden blocks), 6 also refuses
+ * component tokens and Primitives, 7 lets `family:<key>` name a Contract or a Proposal, "cycle", "considered",
+ * 8 (status and approval), "retirement" and "built".
+ * Returns {ok, errors, readyToRetire}: `readyToRetire` is the Contract key equal to the Proposal's key, or null.
+ * A collision is not an error; the owner confirms retirement in chat (#80).
+ */
+export function validateProposal(proposal, foundations, known) {
+  const errors = [];
+  const err = (rule, at, message) => errors.push({ rule, at, message });
+  const opts = Array.isArray(known) ? { contracts: known } : known || {};
+  const contracts = opts.contracts || [], proposals = opts.proposals || [];
+  const p = proposal;
+
+  checkProposalShape(p, err);
+  if (!isObj(foundations) || !isObj(foundations.variables) || !isObj(foundations.textStyles))
+    err('schema', 'foundations', 'a foundations document with `variables` and `textStyles` is required (rule 6)');
+  if (errors.length) return { ok: false, errors, readyToRetire: null };
+
+  // 1. keys and labels
+  if (p.schemaVersion !== 1) err(1, 'schemaVersion', `unknown Proposal schemaVersion ${JSON.stringify(p.schemaVersion)}; this module reads 1`);
+  checkKeys(p, err);
+  // 3. patterns, rule nodes and bind nodes
+  const domain = checkPatterns(p, err);
+  if (errors.length) return { ok: false, errors, readyToRetire: null };
+  // 2. defaults (no selection, so no Base Component check)
+  checkDefaults(p, domain, err);
+
+  // 6. tokens, theme tokens only
+  const asContract = Object.assign({}, p, { excluded: [], selection: { omit: [] } });
+  checkTokens(asContract, foundations, err, (variable, t) => {
+    if (variable.family) return `token "${t}" is a component token of "${variable.family}"; a Proposal binds theme tokens only`;
+    if (variable.hidden) return `token "${t}" is a hidden Primitive; a Proposal binds theme tokens only`;
+  });
+
+  // 7. instance targets: a declared dependency that names a Contract or a Proposal
+  const contractKeys = contracts.map(c => c.family.key), proposalKeys = proposals.map(x => x.family.key);
+  const deps = (p.dependencies && p.dependencies.families) || [];
+  const exists = key => contractKeys.indexOf(key) >= 0 || proposalKeys.indexOf(key) >= 0;
+  checkInstances(p, err, key => deps.some(f => f.key === key));
+  if (contracts.length || proposals.length)
+    deps.forEach((f, i) => { if (!exists(f.key)) err(7, `dependencies.families[${i}]`, `family "${f.key}" is neither a Contract nor a Proposal in this Design System`); });
+
+  // cycle: a Proposal may compose other Proposals, never itself
+  const byKey = {};
+  proposals.forEach(x => { byKey[x.family.key] = x; });
+  byKey[p.family.key] = p;
+  const cycle = findCycle(p.family.key, byKey);
+  if (cycle) err('cycle', 'dependencies.families', `Proposals compose in a cycle: ${cycle.join(' → ')}`);
+
+  // considered: every family considered and rejected is a Contract
+  if (contracts.length)
+    p.proposal.considered.forEach((c, i) => {
+      if (contractKeys.indexOf(c.contract) < 0) err('considered', `proposal.considered[${i}]`, `considered Contract "${c.contract}" does not exist`);
+    });
+
+  // 8. status and approval (no snapshotId: there is no code)
+  checkProposalApproval(p, err);
+
+  // retirement: a tombstone skips the collision report and names a real Contract and real keys
+  let readyToRetire = null;
+  if (p.retirement) checkRetirement(p, contracts, err);
+  else if (contractKeys.indexOf(p.family.key) >= 0) readyToRetire = p.family.key;
+  if (p.built) {
+    const b = p.built;
+    if (p.proposal.home.where !== 'app') err('built', 'built', '`built` is only for a Proposal whose home is the app');
+    if (typeof b.ref !== 'string' || !b.ref || typeof b.export !== 'string' || b.by !== 'owner' || typeof b.at !== 'string')
+      err('built', 'built', '`built` is {ref: "repo@commit:path", export, by: "owner", at}');
+  }
+
+  return { ok: errors.length === 0, errors, readyToRetire };
+}
+
+function checkProposalShape(p, err) {
+  const typeOf = v => (Array.isArray(v) ? 'array' : v === null ? 'null' : typeof v);
+  if (!isObj(p)) return err('schema', '', 'a Proposal is a JSON object');
+  for (const [key, type] of Object.entries(PROPOSAL_REQUIRED))
+    if (typeOf(p[key]) !== type) err('schema', key, `\`${key}\` is required and must be ${type === 'array' ? 'an' : 'a'} ${type}`);
+  for (const [key, type] of Object.entries(PROPOSAL_OPTIONAL))
+    if (key in p && typeOf(p[key]) !== type) err('schema', key, `\`${key}\` must be ${type === 'array' ? 'an' : 'a'} ${type}`);
+  for (const key of ['status', 'approval']) if (!(key in p)) err('schema', key, `\`${key}\` is required`);
+  for (const key of PROPOSAL_FORBIDDEN)
+    if (key in p) err('schema', key, `a Proposal never has \`${key}\`: it has no code source, selection or Figma mapping`);
+  if (isObj(p.family) && (typeof p.family.key !== 'string' || !/^[a-z][a-z0-9-]*$/.test(p.family.key) || typeof p.family.name !== 'string'))
+    err('schema', 'family', '`family` needs a kebab-case `key` and a `name`');
+  if (isObj(p.proposal)) {
+    const pr = p.proposal;
+    if (typeof pr.reason !== 'string' || !pr.reason) err('schema', 'proposal.reason', '`proposal.reason` says why no existing Contract fits');
+    if (!Array.isArray(pr.considered) || pr.considered.some(c => !isObj(c) || typeof c.contract !== 'string' || typeof c.whyNot !== 'string'))
+      err('schema', 'proposal.considered', '`proposal.considered` is a list of {contract, whyNot}');
+    if (!isObj(pr.origin) || typeof pr.origin.input !== 'string') err('schema', 'proposal.origin', '`proposal.origin` needs `input`');
+    if (!isObj(pr.home) || ['code-library', 'app'].indexOf(pr.home.where) < 0)
+      err('schema', 'proposal.home', '`proposal.home.where` is "code-library" or "app"');
+  }
+  (Array.isArray(p.axes) ? p.axes : []).forEach((a, i) => {
+    if (!isObj(a) || typeof a.key !== 'string' || typeof a.label !== 'string' || !Array.isArray(a.values) || !a.values.length || !('default' in a))
+      return err('schema', `axes[${i}]`, 'an axis needs `key`, `label`, `default` and non-empty `values`');
+    a.values.forEach((v, j) => {
+      if (!isObj(v) || typeof v.key !== 'string' || typeof v.label !== 'string') err('schema', `axes[${i}].values[${j}]`, 'a value needs `key` and `label`');
+      else if ('code' in v) err('schema', `axes[${i}].values[${j}].code`, 'a Proposal has no code mapping; the value key is the suggested prop value');
+    });
+  });
+  (Array.isArray(p.properties) ? p.properties : []).forEach((x, i) => {
+    if (!isObj(x) || typeof x.key !== 'string' || !['TEXT', 'BOOLEAN', 'INSTANCE_SWAP'].includes(x.type) || !Array.isArray(x.binds))
+      err('schema', `properties[${i}]`, 'a property needs `key`, `type` (TEXT, BOOLEAN or INSTANCE_SWAP) and `binds`');
+    else if ('code' in x) err('schema', `properties[${i}].code`, 'a Proposal has no code mapping; the property key is the suggested prop name');
+  });
+  for (const section of SECTIONS)
+    (Array.isArray(p[section]) ? p[section] : []).forEach((r, i) => {
+      if (!isObj(r) || !isObj(r.match) || !isObj(r.set)) err('schema', `${section}[${i}]`, 'a rule is {match, set}');
+    });
+  if (isObj(p.anatomy) && (typeof p.anatomy.name !== 'string' || typeof p.anatomy.type !== 'string'))
+    err('schema', 'anatomy', 'the anatomy root needs `name` and `type`');
+  if (isObj(p.dependencies) && 'families' in p.dependencies && !Array.isArray(p.dependencies.families))
+    err('schema', 'dependencies.families', '`dependencies.families` must be an array');
+}
+
+function findCycle(start, byKey) {
+  const path = [];
+  const walk = key => {
+    const i = path.indexOf(key);
+    if (i >= 0) return path.slice(i).concat(key);
+    const x = byKey[key];
+    if (!x) return null;
+    path.push(key);
+    for (const f of (x.dependencies && x.dependencies.families) || []) {
+      const found = walk(f.key);
+      if (found) return found;
+    }
+    path.pop();
+    return null;
+  };
+  const found = walk(start);
+  return found && found.indexOf(start) >= 0 ? found : null;
+}
+
+function checkProposalApproval(p, err) {
+  if (p.status === 'pending') {
+    if (p.approval !== null) err(8, 'approval', 'a pending Proposal has `approval: null`');
+    return;
+  }
+  if (p.status !== 'approved') return err(8, 'status', `status must be "pending" or "approved", not ${JSON.stringify(p.status)}`);
+  if (!isObj(p.approval)) return err(8, 'approval', 'an approved Proposal needs an approval {by, at, contentHash}');
+  if (p.approval.by !== 'owner') err(8, 'approval.by', `only the owner approves (by: "owner"), not ${JSON.stringify(p.approval.by)}`);
+  if (typeof p.approval.at !== 'string' || !p.approval.at) err(8, 'approval.at', 'approval.at must be an ISO time');
+  const hash = proposalContentHash(p);
+  if (p.approval.contentHash !== hash)
+    err(8, 'approval.contentHash', `approval.contentHash ${p.approval.contentHash} does not match the Proposal's ${hash}: the Proposal changed since approval`);
+}
+
+// retirement: {contract, how: "built" | "replaced", map: {values: {"<axis>.<value>": {axis, value} | {property, value} | null},
+// properties: {"<property>": "<contract property>" | null}}, by: "owner", at}.
+function checkRetirement(p, contracts, err) {
+  const r = p.retirement;
+  if (typeof r.contract !== 'string' || ['built', 'replaced'].indexOf(r.how) < 0 || !isObj(r.map) || r.by !== 'owner' || typeof r.at !== 'string')
+    return err('retirement', 'retirement', '`retirement` is {contract, how: "built" | "replaced", map, by: "owner", at}');
+  if (!contracts.length) return;
+  const target = contracts.find(c => c.family.key === r.contract);
+  if (!target) return err('retirement', 'retirement.contract', `retired into Contract "${r.contract}", which does not exist`);
+  const contractValue = (axis, value) => target.axes.some(a => a.key === axis && a.values.some(v => v.key === value));
+  const contractProperty = key => (target.properties || []).some(x => x.key === key);
+  for (const [from, to] of Object.entries(r.map.values || {})) {
+    const [axis, value] = [from.slice(0, from.indexOf('.')), from.slice(from.indexOf('.') + 1)];
+    if (!p.axes.some(a => a.key === axis && a.values.some(v => v.key === value)))
+      err('retirement', `retirement.map.values.${from}`, `"${from}" is not a value of this Proposal`);
+    if (to === null) continue;
+    const ok = isObj(to) && ('axis' in to ? contractValue(to.axis, to.value) : 'property' in to && contractProperty(to.property));
+    if (!ok) err('retirement', `retirement.map.values.${from}`, `${JSON.stringify(to)} is not an axis value or property of Contract "${r.contract}"`);
+  }
+  for (const [from, to] of Object.entries(r.map.properties || {})) {
+    if (!(p.properties || []).some(x => x.key === from)) err('retirement', `retirement.map.properties.${from}`, `"${from}" is not a property of this Proposal`);
+    if (to !== null && !contractProperty(to)) err('retirement', `retirement.map.properties.${from}`, `"${to}" is not a property of Contract "${r.contract}"`);
+  }
+}
+
+/** sha256 of the canonical Proposal without `status`, `approval`, `retirement` and `built`, as "sha256:<hex>". */
+export function proposalContentHash(proposal) {
+  const p = clone(proposal);
+  delete p.status;
+  delete p.approval;
+  delete p.retirement;
+  delete p.built;
+  return 'sha256:' + sha256(canonical(p));
+}
+
+/** A copy marked as edited: `status: "pending"`, `approval: null`. Call it on every Proposal write except one that only adds `retirement` or `built`. */
+export function asPending(proposal) {
+  const p = clone(proposal);
+  p.status = 'pending';
+  p.approval = null;
+  return p;
 }
 
 // ---------- writes: every write returns a copy with status "draft" and approval null ----------

@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pawisssh/design/skills/contract/proposal.schema.json",
+  "title": "Component Proposal (proposal.json), schemaVersion 1",
+  "description": "Structure of a Component Proposal: a Component Family the Code Library does not ship (#60, #80). Stored at design-systems/<ds>/proposals/<key>.proposal.json. The cross-field rules (patterns name real axes, theme tokens only inside their scopes, instance targets, no composition cycle, considered Contracts exist, approval matches, the retirement map names real keys, a key collision reports ready to retire) are in validateProposal() of scripts/contract.mjs; see references/contract-schema.md#component-proposal. Rule definitions it shares with the Contract are referenced from contract.schema.json.",
+  "type": "object",
+  "required": ["schemaVersion", "family", "proposal", "axes", "anatomy", "status", "approval"],
+  "not": { "anyOf": [
+    { "required": ["source"] }, { "required": ["code"] }, { "required": ["selection"] }, { "required": ["excluded"] }, { "required": ["figma"] }
+  ] },
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "family": {
+      "type": "object",
+      "required": ["key", "name"],
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+        "name": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "proposal": {
+      "type": "object",
+      "required": ["reason", "considered", "origin", "home"],
+      "properties": {
+        "by": { "const": "agent" },
+        "reason": { "type": "string", "minLength": 1 },
+        "considered": {
+          "type": "array",
+          "items": { "type": "object", "required": ["contract", "whyNot"], "properties": { "contract": { "type": "string" }, "whyNot": { "type": "string" } } }
+        },
+        "origin": {
+          "type": "object",
+          "required": ["input"],
+          "properties": {
+            "input": { "type": "string" },
+            "repo": { "type": "string" },
+            "commit": { "type": "string" },
+            "url": { "type": "string" },
+            "at": { "type": "string" }
+          }
+        },
+        "home": {
+          "type": "object",
+          "required": ["where"],
+          "properties": {
+            "where": { "enum": ["code-library", "app"] },
+            "package": { "type": "string" },
+            "path": { "type": "string" }
+          }
+        }
+      }
+    },
+    "axes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "label", "default", "values"],
+        "properties": {
+          "key": { "type": "string" },
+          "label": { "type": "string" },
+          "default": { "type": "string" },
+          "defaultSource": { "type": "string" },
+          "values": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "object", "required": ["key", "label"], "properties": { "key": { "type": "string" }, "label": { "type": "string", "pattern": "^[^=,]+$" } } }
+          }
+        }
+      }
+    },
+    "anatomy": { "$ref": "contract.schema.json#/$defs/node" },
+    "properties": { "type": "array", "items": { "$ref": "contract.schema.json#/$defs/property" } },
+    "layout": { "type": "array", "items": { "$ref": "contract.schema.json#/$defs/rule" } },
+    "paint": { "type": "array", "items": { "$ref": "contract.schema.json#/$defs/rule" } },
+    "icons": { "type": "object", "required": ["default"], "properties": { "default": { "type": "string" }, "preferred": { "type": "array", "items": { "type": "string" } } } },
+    "subComponents": { "type": "array", "items": { "type": "object", "required": ["name", "anatomy"], "properties": { "name": { "type": "string", "pattern": "^_" } } } },
+    "dependencies": {
+      "type": "object",
+      "properties": {
+        "families": { "type": "array", "items": { "type": "object", "required": ["key"], "properties": { "key": { "type": "string" }, "contract": { "type": "string" }, "proposal": { "type": "string" } } } }
+      }
+    },
+    "notes": { "type": "array", "items": { "$ref": "contract.schema.json#/$defs/note" } },
+    "status": { "enum": ["pending", "approved"] },
+    "approval": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["by", "at", "contentHash"],
+          "properties": {
+            "by": { "const": "owner" },
+            "at": { "type": "string" },
+            "contentHash": { "$ref": "contract.schema.json#/$defs/sha256" }
+          }
+        }
+      ]
+    },
+    "retirement": {
+      "description": "Written when the owner confirms a Contract takes the Proposal's place (#80). Not part of contentHash; the file is then a read-only tombstone.",
+      "type": "object",
+      "required": ["contract", "how", "map", "by", "at"],
+      "properties": {
+        "contract": { "type": "string" },
+        "how": { "enum": ["built", "replaced"] },
+        "map": {
+          "type": "object",
+          "properties": {
+            "values": { "type": "object", "additionalProperties": { "anyOf": [
+              { "type": "null" },
+              { "type": "object", "required": ["axis", "value"], "properties": { "axis": { "type": "string" }, "value": { "type": "string" } } },
+              { "type": "object", "required": ["property", "value"], "properties": { "property": { "type": "string" } } }
+            ] } },
+            "properties": { "type": "object", "additionalProperties": { "type": ["string", "null"] } }
+          }
+        },
+        "by": { "const": "owner" },
+        "at": { "type": "string" }
+      }
+    },
+    "built": {
+      "description": "Written for a home.where: \"app\" Proposal once the owner says where it was built (#80). Not part of contentHash.",
+      "type": "object",
+      "required": ["ref", "export", "by", "at"],
+      "properties": {
+        "ref": { "type": "string", "pattern": "^.+@.+:.+$" },
+        "export": { "type": "string" },
+        "by": { "const": "owner" },
+        "at": { "type": "string" }
+      }
+    }
+  }
+}

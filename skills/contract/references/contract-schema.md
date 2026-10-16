@@ -195,6 +195,41 @@ These are computed from the Contract, never written into it:
 7. Every `instanceOf` target is declared: `icon:*` needs `icons` (whose `default` is in `preferred`), `family:<key>` needs `dependencies.families`, `sub:<name>` needs `subComponents`. That each target is built first is enforced by the builder's build order, not by `validate`.
 8. `status` is `draft` with `approval: null`, or `approved` with an [approval](#approval) by the owner whose `snapshotId` and `contentHash` both match, and no `warning` note (an uncarried owner tweak) is open.
 
+## Component Proposal
+
+A Component Proposal records a Component Family the Code Library does not ship ([#60](https://github.com/pawisssh/design/issues/60), [#80](https://github.com/pawisssh/design/issues/80), ADR 0005). It is stored at `design-systems/<ds>/proposals/<key>.proposal.json`, one per family, and shared by every Handoff that uses it. Worked example: [`promo-banner.proposal.json`](../test/fixtures/promo-banner.proposal.json). Formal schema: [`proposal.schema.json`](../proposal.schema.json). It has its own `schemaVersion` (1), counted separately from the Contract's.
+
+- **Required:** `schemaVersion`, `family`, `proposal`, `axes` (may be `[]`), `anatomy`, `status` and `approval`.
+  - `proposal` is `{by: "agent", reason, considered: [{contract, whyNot}], origin: {input, repo?, commit?, url?, at?}, home: {where: "code-library" | "app", package?, path?}}`.
+- **Optional:** `properties`, `layout`, `paint`, `icons`, `subComponents`, `dependencies` and `notes`, written as in a Contract. Anything present must validate.
+  - `dependencies.families` entries are `{key, contract}` or `{key, proposal}`.
+- **Never present:** `source`, `code`, `selection`, `excluded` and `figma`, and no `code` mapping on an axis value or a property. Axis, value and property keys double as the suggested prop names.
+- **Theme tokens only.** A component token (a Foundations variable with `family`) or a hidden Primitive fails rule 6. A mode-specific paint is an Off-system value in the Handoff.
+- **Approval.** `status: "pending"` with `approval: null`, or `status: "approved"` with `approval: {by: "owner", at, contentHash}`. There is no `snapshotId`, since there is no code.
+  - `proposalContentHash()` hashes the canonical Proposal without `status`, `approval`, `retirement` and `built`.
+  - Every write goes through `asPending()`, except one that only adds `retirement` or `built`.
+- **`retirement`** (optional) is `{contract, how: "built" | "replaced", map, by: "owner", at}`. It is written when the owner confirms a Contract takes the Proposal's place. The file then becomes a read-only tombstone.
+  - `map` is `{values: {"<axis>.<value>": {axis, value} | {property, value} | null}, properties: {"<property>": "<contract property>" | null}}` **[assumption, #111]**.
+- **`built`** (optional) is `{ref: "repo@commit:path", export, by: "owner", at}`, for a `home.where: "app"` Proposal.
+
+`validateProposal(proposal, foundations, {contracts, proposals})` returns `{ok, errors, readyToRetire}`. An array as the third argument is read as `contracts`. The checks that need those lists are skipped when they are not given.
+
+- **Applied from the Contract:**
+  - rule 1;
+  - rule 2's defaults (there is no selection);
+  - rule 3;
+  - rule 6, plus theme tokens only;
+  - rule 7, where `family:<key>` must be declared and name a Contract or a Proposal.
+- **Not applied:** rule 4, rule 5 (a description-only input could never meet it) and rule 8's `snapshotId` part.
+- **Added:**
+  - `"schema"`: required, optional and forbidden blocks;
+  - `"cycle"`: Proposals never compose in a cycle;
+  - `"considered"`: every `considered[].contract` exists;
+  - `8`: status and approval with `contentHash`;
+  - `"retirement"`: the Contract exists and the map names real keys;
+  - `"built"`: home is the app.
+- **Key collision.** A Contract whose `family.key` equals the Proposal's is not an error. `readyToRetire` names it, and the owner confirms retirement in chat. A retired Proposal skips this check.
+
 ## Versioning
 
 - `schemaVersion` is an integer. Adding an optional field does not change it. Renaming, removing or changing the meaning of a field increments it, and tools reject a version they do not know.
