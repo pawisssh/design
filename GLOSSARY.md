@@ -64,6 +64,16 @@ _Avoid_: Draft Contract, proposed Contract, custom component
 The generated description of a Design System's shared tokens and themes, which every Contract in that Design System refers to. One per Design System.
 _Avoid_: Tokens file, theme file, variables JSON
 
+## Handoffs
+
+**Handoff**:
+The library-bound description of one feature (one user goal, across its screens and states) for developers to build, referring to a Design System's Contracts and Component Proposals by key.
+_Avoid_: Handoff doc, spec, feature spec, brief, blueprint
+
+**Rendering**:
+One output format's layout of a Handoff, such as HTML, Markdown, a Figma frame or a Confluence page. It never adds or drops a Handoff's content.
+_Avoid_: Export, view, handoff document
+
 ## Skills
 
 **To-preview**:
@@ -75,5 +85,5 @@ The skill that builds a Design Library in Figma from Contracts, where the owner 
 _Avoid_: code-to-canvas
 
 **To-handoff**:
-The skill that turns one feature, given as prototype code, a Figma URL, an artifact URL or a description, into a handoff for developers written against a Design System's Contracts and Component Proposals.
+The skill that turns one feature, given as prototype code, a Figma URL, an artifact URL or a description, into a Handoff for developers written against a Design System's Contracts and Component Proposals.
 _Avoid_: design-handoff, handoff doc skill, spec generator
