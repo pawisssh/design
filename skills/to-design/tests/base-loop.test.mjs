@@ -10,8 +10,9 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { approve, contentHash, PROTOTYPE_APPROVER, validate } from '../../contract/scripts/contract.mjs';
 import {
-  applyEdits, approveReviewed, diff, discardNote, expectedBase, normalizeReadback, ownerEdits, regenerate, review, RAW_REASON,
+  applyEdits, approveReviewed, diff, discardNote, ownerEdits, regenerate, review, RAW_REASON,
 } from '../scripts/base-loop.mjs';
+import { expectedBase, normalizeReadback } from '../scripts/readback.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const FIX = join(ROOT, 'skills/to-design/tests/fixtures/base-loop');

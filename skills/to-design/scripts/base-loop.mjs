@@ -18,10 +18,9 @@ import { parseArgs } from 'node:util';
 import {
   approve, asDraft, baseTuple, closure, contentHash, coversScope, expand, matches, resolve, scopeFor, validate, variantName,
 } from '../../contract/scripts/contract.mjs';
-import { anatomyTree, expectedBase, expectedVariant, near, norm, normalizeReadback, reviewProps, same } from './expected.mjs';
+import { anatomyTree, baseProps, expectedBase, expectedVariant, near, norm, normalizeReadback, same } from './readback.mjs';
 import { ledgerPath, readLedger } from './ledger.mjs';
 
-export { anatomyTree, expectedBase, expectedVariant, normalizeReadback, reviewProps, same, norm };
 
 const SECTIONS = ['layout', 'paint'];
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -68,14 +67,24 @@ const UNMAPPED = {
 };
 
 /**
+ * A base slice result's readback in Contract vocabulary (see normalizeReadback), marked with the property
+ * values it was built at: `specimen` is "set" once the ledger records the family's Component Set (property
+ * defaults), else "review" (every BOOLEAN on). See baseProps.
+ */
+export function normalizeBaseResult(result, ledger) {
+  const inSet = !!(ledger && ledger.sets && ledger.sets[result.family]);
+  return { ...normalizeReadback(result.readback, ledger), specimen: inSet ? 'set' : 'review' };
+}
+
+/**
  * Diff a normalized Base Component readback against what the Contract resolves to for the Base Component
- * (or for `tuple`, a variant of the set).
+ * (or for `tuple`, a variant of the set). `props` defaults to the readback's `specimen` (see baseProps).
  * Returns {name, changes, unread}: each change is {kind, section, node, field, from, to, why?} with kind
  * `token-edit` (the owner bound a variable), `raw-edit` (a typed value), `detached` (a binding lost while the
  * value stayed, which a rebuild restores) or `unmapped` (a tweak the Contract cannot carry, `why` says which).
  * `unread` lists the expected fields the readback does not report. Effects are compared in order.
  */
-export function diff(contract, readback, foundations, props = reviewProps(contract), tuple = baseTuple(contract)) {
+export function diff(contract, readback, foundations, props = baseProps(contract, readback.specimen === 'set'), tuple = baseTuple(contract)) {
   const exp = expectedVariant(contract, tuple, props);
   const changes = [];
   const unread = [];
@@ -421,7 +430,7 @@ function main() {
     const result = readJson(a);
     if (result.error || !result.readback) throw new Error(`no readback in ${a}: ${result.error || 'missing'}`);
     const ledger = readLedger(values.ledger || ledgerPath(result.fileKey));
-    writeJson(values.out, normalizeReadback(result.readback, ledger));
+    writeJson(values.out, normalizeBaseResult(result, ledger));
     return print(`wrote ${values.out}\n`);
   }
   if (cmd === 'regen' && a && b) {

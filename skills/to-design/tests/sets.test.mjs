@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { approve, asDraft, expand, variantName } from '../../contract/scripts/contract.mjs';
 import { basePlan, decodeEntries, foundationsPlan, iconsPlan, PER_CALL, setsPlan } from '../scripts/build-plan.mjs';
 import { checkCoverage, checkSample, checkTheme } from '../scripts/coverage.mjs';
+import { diff, normalizeBaseResult } from '../scripts/base-loop.mjs';
 import { recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
 
@@ -143,6 +144,28 @@ test('a rerun updates nothing and creates nothing', async () => {
   for (const { result } of reruns) assert.deepEqual([result.summary.created, result.summary.updated, result.made], [0, 0, []], JSON.stringify(result.updated));
   assert.deepEqual(writes(env.mock), []);
   assert.equal((await setNode(env)).children.length, TOTAL);
+});
+
+// One rule for the Base Component's property values: the review specimen (every BOOLEAN on) while it stands
+// alone, the property defaults once its Component Set holds it, for the build and the readback alike.
+test('inside its set the Base Component is built and read at the property defaults: a base rerun writes nothing and diffs clean', async () => {
+  const env = await setup();
+  const alone = basePlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT }).plan.base.visible;
+  assert.deepEqual(alone, { Label: true, Icon: true, Glyph: true }, 'the review specimen: Icon on');
+  await buildAll(env);
+  for (const readOnly of [false, true]) {
+    const { plan, state } = basePlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, readOnly });
+    assert.equal(plan.base.visible.Glyph, false, 'in the set: Icon at its default (off)');
+    const result = await runPackage(pack(plan, state).code, env.mock.figma);
+    assert.deepEqual([result.summary.conflicts, result.summary.created, result.summary.updated], [0, 0, 0], JSON.stringify(result.updated));
+    const readback = normalizeBaseResult(result, env.ledger);
+    assert.equal(readback.specimen, 'set');
+    const d = diff(BUTTON, readback, DOC);
+    assert.deepEqual([d.changes, d.unread], [[], []]);
+  }
+  // the sets rerun after the base rerun still writes nothing: no ping-pong over the Glyph's visibility
+  env.mock.log.length = 0;
+  for (const { result } of await buildAll(env)) assert.deepEqual([result.summary.created, result.summary.updated], [0, 0]);
 });
 
 test('after a lost connection the ledger is reconciled before the retry, and nothing duplicates', async () => {

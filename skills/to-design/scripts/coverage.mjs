@@ -12,7 +12,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { baseTuple, expand, resolve, variantName } from '../../contract/scripts/contract.mjs';
 import { diff } from './base-loop.mjs';
-import { defaultProps, iconRef, normalizeReadback } from './expected.mjs';
+import { defaultProps, iconRef, normalizeReadback } from './readback.mjs';
 import { ledgerPath, readLedger } from './ledger.mjs';
 
 // The grid cell [row, column] a tuple sits in: figma.grid lists the axes that make the rows and the columns;
