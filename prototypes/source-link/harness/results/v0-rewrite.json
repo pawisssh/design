@@ -1,0 +1,186 @@
+{
+  "app": "v0",
+  "variant": "rewrite",
+  "installMs": 9147,
+  "buildMs": 25327,
+  "tagStats": {
+    "files": 12,
+    "elements": 89,
+    "failed": []
+  },
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "states": {
+    "default": {
+      "hosts": 37,
+      "direct": 27,
+      "libAnc": 1,
+      "untAnc": 9,
+      "none": 0,
+      "untaggedTags": {
+        "div": 1,
+        "path": 3,
+        "select": 1,
+        "option": 3,
+        "section": 1
+      },
+      "fiberNone": [
+        "default:div:null:app/layout.tsx:28:7"
+      ],
+      "fiber_none": 1,
+      "fiber_untagged-ancestor": 8,
+      "fiber_library-ancestor": 1,
+      "labels": 21,
+      "raw": 20,
+      "joined": 21,
+      "fiberJoined": 21
+    },
+    "select-open": {
+      "hosts": 54,
+      "direct": 31,
+      "libAnc": 10,
+      "untAnc": 13,
+      "none": 0,
+      "untaggedTags": {
+        "span": 2,
+        "div": 2,
+        "path": 4,
+        "select": 1,
+        "option": 3,
+        "section": 1
+      },
+      "fiberNone": [
+        "select-open:span:null:app/layout.tsx:28:7",
+        "select-open:div:null:app/layout.tsx:28:7",
+        "select-open:span:null:app/layout.tsx:28:7"
+      ],
+      "fiber_none": 3,
+      "fiber_untagged-ancestor": 10,
+      "fiber_library-ancestor": 10,
+      "labels": 5,
+      "raw": 5,
+      "joined": 5,
+      "fiberJoined": 5
+    },
+    "loading": {
+      "hosts": 39,
+      "direct": 28,
+      "libAnc": 1,
+      "untAnc": 10,
+      "none": 0,
+      "untaggedTags": {
+        "div": 1,
+        "path": 4,
+        "select": 1,
+        "option": 3,
+        "section": 1
+      },
+      "fiberNone": [
+        "loading:div:null:app/layout.tsx:28:7"
+      ],
+      "fiber_none": 1,
+      "fiber_untagged-ancestor": 9,
+      "fiber_library-ancestor": 1,
+      "labels": 2,
+      "raw": 2,
+      "joined": 2,
+      "fiberJoined": 2
+    },
+    "error": {
+      "hosts": 44,
+      "direct": 31,
+      "libAnc": 1,
+      "untAnc": 12,
+      "none": 0,
+      "untaggedTags": {
+        "div": 1,
+        "path": 3,
+        "circle": 1,
+        "line": 2,
+        "select": 1,
+        "option": 3,
+        "section": 1
+      },
+      "fiberNone": [
+        "error:div:null:app/layout.tsx:28:7"
+      ],
+      "fiber_none": 1,
+      "fiber_untagged-ancestor": 11,
+      "fiber_library-ancestor": 1,
+      "labels": 4,
+      "raw": 4,
+      "joined": 4,
+      "fiberJoined": 4
+    },
+    "success": {
+      "hosts": 31,
+      "direct": 16,
+      "libAnc": 1,
+      "untAnc": 14,
+      "none": 0,
+      "untaggedTags": {
+        "div": 5,
+        "path": 4,
+        "circle": 2,
+        "section": 1,
+        "ol": 1,
+        "li": 1
+      },
+      "fiberNone": [
+        "success:div:null:app/layout.tsx:28:7"
+      ],
+      "fiber_none": 1,
+      "fiber_untagged-ancestor": 13,
+      "fiber_library-ancestor": 1,
+      "labels": 4,
+      "raw": 3,
+      "joined": 3,
+      "fiberJoined": 4
+    }
+  },
+  "total": {
+    "hosts": 205,
+    "direct": 133,
+    "libAnc": 14,
+    "untAnc": 58,
+    "none": 0,
+    "labels": 36,
+    "raw": 34,
+    "joined": 35,
+    "instance": 3,
+    "instanceTotal": 3,
+    "fiberJoined": 36,
+    "fiber_library-ancestor": 14,
+    "fiber_untagged-ancestor": 51,
+    "fiber_none": 7
+  },
+  "misses": [
+    {
+      "state": "default",
+      "sel": "a[href='/signin']",
+      "nth": 0,
+      "kind": "asChild",
+      "expect": "app/page.tsx:33",
+      "got": "app/page.tsx:34:13",
+      "how": "direct",
+      "chain": "app/page.tsx:34:13",
+      "joined": true
+    },
+    {
+      "state": "success",
+      "sel": "[data-sonner-toast]",
+      "nth": 0,
+      "kind": "node_modules",
+      "expect": "app/layout.tsx:32",
+      "got": "app/layout.tsx:28:7",
+      "how": "untagged-ancestor",
+      "chain": null,
+      "joined": false
+    }
+  ]
+}

@@ -1,0 +1,1243 @@
+{
+  "app": "lovable",
+  "mode": "owner-stack (dev, no transform)",
+  "labels": 35,
+  "ok": 35,
+  "misses": [],
+  "rows": [
+    {
+      "state": "default",
+      "sel": "h1",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:47",
+      "got": "src/pages/Index.tsx:47",
+      "fiber": true,
+      "first": [
+        {
+          "name": "h1",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:47"
+          }
+        },
+        {
+          "name": "header",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:46"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:45"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:44"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "header p",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:48",
+      "got": "src/pages/Index.tsx:48",
+      "fiber": true,
+      "first": [
+        {
+          "name": "p",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:48"
+          }
+        },
+        {
+          "name": "header",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:46"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:45"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:44"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card]",
+      "nth": 0,
+      "expect": "src/components/PlanCard.tsx:15",
+      "got": "src/components/PlanCard.tsx:15",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/card.tsx:10"
+          }
+        },
+        {
+          "name": "Card",
+          "host": false,
+          "site": {
+            "loc": "src/components/PlanCard.tsx:15"
+          }
+        },
+        {
+          "name": "PlanCard",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:53"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:51"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card]",
+      "nth": 1,
+      "expect": "src/components/PlanCard.tsx:15",
+      "got": "src/components/PlanCard.tsx:15",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/card.tsx:10"
+          }
+        },
+        {
+          "name": "Card",
+          "host": false,
+          "site": {
+            "loc": "src/components/PlanCard.tsx:15"
+          }
+        },
+        {
+          "name": "PlanCard",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:53"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:51"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card]",
+      "nth": 2,
+      "expect": "src/components/PlanCard.tsx:15",
+      "got": "src/components/PlanCard.tsx:15",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/card.tsx:10"
+          }
+        },
+        {
+          "name": "Card",
+          "host": false,
+          "site": {
+            "loc": "src/components/PlanCard.tsx:15"
+          }
+        },
+        {
+          "name": "PlanCard",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:53"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:51"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-header]",
+      "nth": 0,
+      "expect": "src/components/PlanCard.tsx:16",
+      "got": "src/components/PlanCard.tsx:16",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/card.tsx:24"
+          }
+        },
+        {
+          "name": "CardHeader",
+          "host": false,
+          "site": {
+            "loc": "src/components/PlanCard.tsx:16"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/card.tsx:10"
+          }
+        },
+        {
+          "name": "Card",
+          "host": false,
+          "site": {
+            "loc": "src/components/PlanCard.tsx:15"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-title]",
+      "nth": 0,
+      "expect": "src/components/PlanCard.tsx:17",
+      "got": "src/components/PlanCard.tsx:17",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/card.tsx:37"
+          }
+        },
+        {
+          "name": "CardTitle",
+          "host": false,
+          "site": {
+            "loc": "src/components/PlanCard.tsx:17"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/card.tsx:24"
+          }
+        },
+        {
+          "name": "CardHeader",
+          "host": false,
+          "site": {
+            "loc": "src/components/PlanCard.tsx:16"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-title] svg",
+      "nth": 0,
+      "expect": "src/components/PlanCard.tsx:19",
+      "got": "src/components/PlanCard.tsx:19",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Check",
+          "host": false,
+          "site": {
+            "loc": "src/components/PlanCard.tsx:19"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/card.tsx:37"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-description]",
+      "nth": 0,
+      "expect": "src/components/PlanCard.tsx:21",
+      "got": "src/components/PlanCard.tsx:21",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/card.tsx:50"
+          }
+        },
+        {
+          "name": "CardDescription",
+          "host": false,
+          "site": {
+            "loc": "src/components/PlanCard.tsx:21"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/card.tsx:24"
+          }
+        },
+        {
+          "name": "CardHeader",
+          "host": false,
+          "site": {
+            "loc": "src/components/PlanCard.tsx:16"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "label[for=name]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:76",
+      "got": "src/pages/Index.tsx:76",
+      "fiber": true,
+      "first": [
+        {
+          "name": "label",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.label",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": {
+            "loc": "src/components/ui/label.tsx:10"
+          }
+        },
+        {
+          "name": "Label",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:76"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#name",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:77",
+      "got": "src/pages/Index.tsx:77",
+      "fiber": true,
+      "first": [
+        {
+          "name": "input",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/input.tsx:6"
+          }
+        },
+        {
+          "name": "Input",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:77"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:75"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:74"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "label[for=email]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:80",
+      "got": "src/pages/Index.tsx:80",
+      "fiber": true,
+      "first": [
+        {
+          "name": "label",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.label",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": {
+            "loc": "src/components/ui/label.tsx:10"
+          }
+        },
+        {
+          "name": "Label",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:80"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#email",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:81",
+      "got": "src/pages/Index.tsx:81",
+      "fiber": true,
+      "first": [
+        {
+          "name": "input",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/input.tsx:6"
+          }
+        },
+        {
+          "name": "Input",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:81"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:79"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:74"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "label[for=size]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:85",
+      "got": "src/pages/Index.tsx:85",
+      "fiber": true,
+      "first": [
+        {
+          "name": "label",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.label",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": {
+            "loc": "src/components/ui/label.tsx:10"
+          }
+        },
+        {
+          "name": "Label",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:85"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#size",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:87",
+      "got": "src/pages/Index.tsx:87",
+      "fiber": true,
+      "first": [
+        {
+          "name": "button",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.button",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Primitive.div.Slot",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Primitive.div",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#size [data-slot=select-value]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:88",
+      "got": "src/pages/Index.tsx:88",
+      "fiber": true,
+      "first": [
+        {
+          "name": "span",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.span",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": {
+            "loc": "src/components/ui/select.tsx:28"
+          }
+        },
+        {
+          "name": "SelectValue",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:88"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#size > svg",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:87",
+      "got": "src/pages/Index.tsx:87",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "ChevronDown",
+          "host": false,
+          "site": {
+            "loc": "src/components/ui/select.tsx:51"
+          }
+        },
+        {
+          "name": "Primitive.span.Slot",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "label[for=notes]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:98",
+      "got": "src/pages/Index.tsx:98",
+      "fiber": true,
+      "first": [
+        {
+          "name": "label",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.label",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": {
+            "loc": "src/components/ui/label.tsx:10"
+          }
+        },
+        {
+          "name": "Label",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:98"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#notes",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:99",
+      "got": "src/pages/Index.tsx:99",
+      "fiber": true,
+      "first": [
+        {
+          "name": "textarea",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/textarea.tsx:6"
+          }
+        },
+        {
+          "name": "Textarea",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:99"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:97"
+          }
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:66"
+          }
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "button[type=submit]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:101",
+      "got": "src/pages/Index.tsx:101",
+      "fiber": true,
+      "first": [
+        {
+          "name": "button",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/button.tsx:56"
+          }
+        },
+        {
+          "name": "Button",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:101"
+          }
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:66"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:45"
+          }
+        }
+      ]
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-content]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:90",
+      "got": "src/pages/Index.tsx:90",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.div",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "SelectContentContext",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:91",
+      "got": "src/pages/Index.tsx:91",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.div",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot.Slot",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 1,
+      "expect": "src/pages/Index.tsx:92",
+      "got": "src/pages/Index.tsx:92",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.div",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot.Slot",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 2,
+      "expect": "src/pages/Index.tsx:93",
+      "got": "src/pages/Index.tsx:93",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.div",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot.Slot",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item] svg",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:92",
+      "got": "src/pages/Index.tsx:92",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Check",
+          "host": false,
+          "site": {
+            "loc": "src/components/ui/select.tsx:119"
+          }
+        },
+        {
+          "name": "span",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "loading",
+      "sel": "button[type=submit]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:101",
+      "got": "src/pages/Index.tsx:101",
+      "fiber": true,
+      "first": [
+        {
+          "name": "button",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/button.tsx:56"
+          }
+        },
+        {
+          "name": "Button",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:101"
+          }
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:66"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:45"
+          }
+        }
+      ]
+    },
+    {
+      "state": "loading",
+      "sel": "button[type=submit] svg",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:102",
+      "got": "src/pages/Index.tsx:102",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "LoaderCircle",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:102"
+          }
+        },
+        {
+          "name": "button",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/button.tsx:56"
+          }
+        }
+      ]
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:68",
+      "got": "src/pages/Index.tsx:68",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/alert.tsx:27"
+          }
+        },
+        {
+          "name": "Alert",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:68"
+          }
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:66"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:45"
+          }
+        }
+      ]
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert] > svg",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:69",
+      "got": "src/pages/Index.tsx:69",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "CircleAlert",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:69"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/alert.tsx:27"
+          }
+        }
+      ]
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert-title]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:70",
+      "got": "src/pages/Index.tsx:70",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/alert.tsx:38"
+          }
+        },
+        {
+          "name": "AlertTitle",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:70"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/alert.tsx:27"
+          }
+        },
+        {
+          "name": "Alert",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:68"
+          }
+        }
+      ]
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert-description]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:71",
+      "got": "src/pages/Index.tsx:71",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/alert.tsx:54"
+          }
+        },
+        {
+          "name": "AlertDescription",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:71"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/alert.tsx:27"
+          }
+        },
+        {
+          "name": "Alert",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:68"
+          }
+        }
+      ]
+    },
+    {
+      "state": "success",
+      "sel": "svg.text-emerald-600",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:59",
+      "got": "src/pages/Index.tsx:59",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "CalendarCheck",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:59"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:58"
+          }
+        }
+      ]
+    },
+    {
+      "state": "success",
+      "sel": "p.font-medium",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:60",
+      "got": "src/pages/Index.tsx:60",
+      "fiber": true,
+      "first": [
+        {
+          "name": "p",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:60"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:58"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:45"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:44"
+          }
+        }
+      ]
+    },
+    {
+      "state": "success",
+      "sel": "button[data-variant=outline]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:61",
+      "got": "src/pages/Index.tsx:61",
+      "fiber": true,
+      "first": [
+        {
+          "name": "button",
+          "host": true,
+          "site": {
+            "loc": "src/components/ui/button.tsx:56"
+          }
+        },
+        {
+          "name": "Button",
+          "host": false,
+          "site": {
+            "loc": "src/pages/Index.tsx:61"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:58"
+          }
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": {
+            "loc": "src/pages/Index.tsx:45"
+          }
+        }
+      ]
+    },
+    {
+      "state": "success",
+      "sel": "[data-sonner-toast]",
+      "nth": 0,
+      "expect": "src/App.tsx:9",
+      "got": "src/App.tsx:9",
+      "fiber": true,
+      "first": [
+        {
+          "name": "li",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Toast",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "ol",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "section",
+          "host": true,
+          "site": null
+        }
+      ]
+    }
+  ]
+}

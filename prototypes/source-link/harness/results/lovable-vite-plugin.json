@@ -1,0 +1,175 @@
+{
+  "app": "lovable",
+  "variant": "vite-plugin",
+  "installMs": 4833,
+  "buildMs": 4419,
+  "tagStats": null,
+  "consoleErrors": [],
+  "states": {
+    "default": {
+      "hosts": 45,
+      "direct": 35,
+      "libAnc": 1,
+      "untAnc": 6,
+      "none": 3,
+      "untaggedTags": {
+        "body": 1,
+        "div": 1,
+        "section": 1,
+        "path": 2,
+        "select": 1,
+        "option": 3
+      },
+      "fiberNone": [
+        "default:body:null:undefined",
+        "default:div:null:undefined"
+      ],
+      "fiber_none": 2,
+      "fiber_untagged-ancestor": 7,
+      "fiber_library-ancestor": 1,
+      "labels": 20,
+      "raw": 20,
+      "joined": 20,
+      "fiberJoined": 20
+    },
+    "select-open": {
+      "hosts": 62,
+      "direct": 39,
+      "libAnc": 10,
+      "untAnc": 7,
+      "none": 6,
+      "untaggedTags": {
+        "body": 1,
+        "span": 2,
+        "div": 2,
+        "section": 1,
+        "path": 3,
+        "select": 1,
+        "option": 3
+      },
+      "fiberNone": [
+        "select-open:body:null:undefined",
+        "select-open:span:null:undefined",
+        "select-open:div:null:undefined",
+        "select-open:span:null:undefined"
+      ],
+      "fiber_none": 4,
+      "fiber_untagged-ancestor": 9,
+      "fiber_library-ancestor": 10,
+      "labels": 5,
+      "raw": 5,
+      "joined": 5,
+      "fiberJoined": 5
+    },
+    "loading": {
+      "hosts": 47,
+      "direct": 36,
+      "libAnc": 1,
+      "untAnc": 7,
+      "none": 3,
+      "untaggedTags": {
+        "body": 1,
+        "div": 1,
+        "section": 1,
+        "path": 3,
+        "select": 1,
+        "option": 3
+      },
+      "fiberNone": [
+        "loading:body:null:undefined",
+        "loading:div:null:undefined"
+      ],
+      "fiber_none": 2,
+      "fiber_untagged-ancestor": 8,
+      "fiber_library-ancestor": 1,
+      "labels": 2,
+      "raw": 2,
+      "joined": 2,
+      "fiberJoined": 2
+    },
+    "error": {
+      "hosts": 52,
+      "direct": 39,
+      "libAnc": 1,
+      "untAnc": 9,
+      "none": 3,
+      "untaggedTags": {
+        "body": 1,
+        "div": 1,
+        "section": 1,
+        "path": 2,
+        "circle": 1,
+        "line": 2,
+        "select": 1,
+        "option": 3
+      },
+      "fiberNone": [
+        "error:body:null:undefined",
+        "error:div:null:undefined"
+      ],
+      "fiber_none": 2,
+      "fiber_untagged-ancestor": 10,
+      "fiber_library-ancestor": 1,
+      "labels": 4,
+      "raw": 4,
+      "joined": 4,
+      "fiberJoined": 4
+    },
+    "success": {
+      "hosts": 41,
+      "direct": 23,
+      "libAnc": 0,
+      "untAnc": 6,
+      "none": 12,
+      "untaggedTags": {
+        "body": 1,
+        "div": 5,
+        "section": 1,
+        "ol": 1,
+        "li": 1,
+        "circle": 1,
+        "path": 6,
+        "rect": 1
+      },
+      "fiberNone": [
+        "success:body:null:undefined",
+        "success:div:null:undefined"
+      ],
+      "fiber_none": 2,
+      "fiber_untagged-ancestor": 15,
+      "fiber_library-ancestor": 1,
+      "labels": 4,
+      "raw": 3,
+      "joined": 3,
+      "fiberJoined": 4
+    }
+  },
+  "total": {
+    "hosts": 247,
+    "direct": 172,
+    "libAnc": 13,
+    "untAnc": 35,
+    "none": 27,
+    "labels": 35,
+    "raw": 34,
+    "joined": 34,
+    "instance": 3,
+    "instanceTotal": 3,
+    "fiberJoined": 35,
+    "fiber_library-ancestor": 14,
+    "fiber_untagged-ancestor": 49,
+    "fiber_none": 12
+  },
+  "misses": [
+    {
+      "state": "success",
+      "sel": "[data-sonner-toast]",
+      "nth": 0,
+      "kind": "node_modules",
+      "expect": "src/App.tsx:9",
+      "how": "none",
+      "chain": null,
+      "joined": false
+    }
+  ]
+}

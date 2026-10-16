@@ -1,0 +1,2098 @@
+{
+  "app": "v0",
+  "mode": "owner-stack (dev, no transform)",
+  "labels": 36,
+  "ok": 0,
+  "misses": [
+    {
+      "state": "default",
+      "sel": "[data-slot=card]",
+      "nth": 0,
+      "expect": "app/page.tsx:18",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "main",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "SegmentViewNode",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-header]",
+      "nth": 0,
+      "expect": "app/page.tsx:19",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "main",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "SegmentViewNode",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-header] svg",
+      "nth": 0,
+      "expect": "app/page.tsx:21",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-title]",
+      "nth": 0,
+      "expect": "app/page.tsx:22",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-description]",
+      "nth": 0,
+      "expect": "app/page.tsx:24",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "main",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-content]",
+      "nth": 0,
+      "expect": "app/page.tsx:28",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "main",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "SegmentViewNode",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-footer]",
+      "nth": 0,
+      "expect": "app/page.tsx:31",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "main",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "SegmentViewNode",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-footer] > span",
+      "nth": 0,
+      "expect": "app/page.tsx:32",
+      "fiber": true,
+      "first": [
+        {
+          "name": "span",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "main",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "a[href='/signin']",
+      "nth": 0,
+      "expect": "app/page.tsx:33",
+      "fiber": true,
+      "first": [
+        {
+          "name": "a",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "LinkComponent",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "form",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:56",
+      "fiber": true,
+      "first": [
+        {
+          "name": "form",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "RequestAccessForm",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "label[for=name]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:65",
+      "fiber": true,
+      "first": [
+        {
+          "name": "label",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.label",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Label",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#name",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:66",
+      "fiber": true,
+      "first": [
+        {
+          "name": "input",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Input",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "label[for=email]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:69",
+      "fiber": true,
+      "first": [
+        {
+          "name": "label",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.label",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Label",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#email",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:70",
+      "fiber": true,
+      "first": [
+        {
+          "name": "input",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Input",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "label[for=team]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:73",
+      "fiber": true,
+      "first": [
+        {
+          "name": "label",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.label",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Label",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#team",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:75",
+      "fiber": true,
+      "first": [
+        {
+          "name": "button",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.button",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Primitive.div.Slot",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Primitive.div",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#team [data-slot=select-value]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:76",
+      "fiber": true,
+      "first": [
+        {
+          "name": "span",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.span",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectValue",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#team > svg",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:75",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "ChevronDown",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Primitive.span.Slot",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "label[for=reason]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:86",
+      "fiber": true,
+      "first": [
+        {
+          "name": "label",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.label",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Label",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#reason",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:87",
+      "fiber": true,
+      "first": [
+        {
+          "name": "textarea",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Textarea",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "button[type=submit]",
+      "nth": 0,
+      "expect": "components/submit-button.tsx:11",
+      "fiber": true,
+      "first": [
+        {
+          "name": "button",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Button",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SubmitButton",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-content]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:78",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.div",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "SelectContentContext",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:79",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.div",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot.Slot",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 1,
+      "expect": "app/request-access-form.tsx:80",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.div",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot.Slot",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 2,
+      "expect": "app/request-access-form.tsx:81",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.div",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot.Slot",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item] svg",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:79",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Check",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "span",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "loading",
+      "sel": "button[type=submit]",
+      "nth": 0,
+      "expect": "components/submit-button.tsx:11",
+      "fiber": true,
+      "first": [
+        {
+          "name": "button",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Button",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SubmitButton",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "loading",
+      "sel": "button[type=submit] svg",
+      "nth": 0,
+      "expect": "components/submit-button.tsx:12",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "LoaderCircle",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "button",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:58",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Alert",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "RequestAccessForm",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert] > svg",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:59",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "CircleAlert",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert-title]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:60",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "AlertTitle",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Alert",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert-description]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:61",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "AlertDescription",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Alert",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "success",
+      "sel": "svg.text-emerald-600",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:46",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "CircleCheck",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "success",
+      "sel": "p.font-medium",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:47",
+      "fiber": true,
+      "first": [
+        {
+          "name": "p",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "RequestAccessForm",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "success",
+      "sel": "button[data-variant=outline]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:48",
+      "fiber": true,
+      "first": [
+        {
+          "name": "button",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Button",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "RequestAccessForm",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "success",
+      "sel": "[data-sonner-toast]",
+      "nth": 0,
+      "expect": "app/layout.tsx:32",
+      "fiber": true,
+      "first": [
+        {
+          "name": "li",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Toast",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "ol",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "section",
+          "host": true,
+          "site": null
+        }
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "state": "default",
+      "sel": "[data-slot=card]",
+      "nth": 0,
+      "expect": "app/page.tsx:18",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "main",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "SegmentViewNode",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-header]",
+      "nth": 0,
+      "expect": "app/page.tsx:19",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "main",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "SegmentViewNode",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-header] svg",
+      "nth": 0,
+      "expect": "app/page.tsx:21",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-title]",
+      "nth": 0,
+      "expect": "app/page.tsx:22",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-description]",
+      "nth": 0,
+      "expect": "app/page.tsx:24",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "main",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-content]",
+      "nth": 0,
+      "expect": "app/page.tsx:28",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "main",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "SegmentViewNode",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-footer]",
+      "nth": 0,
+      "expect": "app/page.tsx:31",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "main",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "SegmentViewNode",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "[data-slot=card-footer] > span",
+      "nth": 0,
+      "expect": "app/page.tsx:32",
+      "fiber": true,
+      "first": [
+        {
+          "name": "span",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "main",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "a[href='/signin']",
+      "nth": 0,
+      "expect": "app/page.tsx:33",
+      "fiber": true,
+      "first": [
+        {
+          "name": "a",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "LinkComponent",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "form",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:56",
+      "fiber": true,
+      "first": [
+        {
+          "name": "form",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "RequestAccessForm",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "label[for=name]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:65",
+      "fiber": true,
+      "first": [
+        {
+          "name": "label",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.label",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Label",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#name",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:66",
+      "fiber": true,
+      "first": [
+        {
+          "name": "input",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Input",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "label[for=email]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:69",
+      "fiber": true,
+      "first": [
+        {
+          "name": "label",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.label",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Label",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#email",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:70",
+      "fiber": true,
+      "first": [
+        {
+          "name": "input",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Input",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "label[for=team]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:73",
+      "fiber": true,
+      "first": [
+        {
+          "name": "label",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.label",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Label",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#team",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:75",
+      "fiber": true,
+      "first": [
+        {
+          "name": "button",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.button",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Primitive.div.Slot",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Primitive.div",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#team [data-slot=select-value]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:76",
+      "fiber": true,
+      "first": [
+        {
+          "name": "span",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.span",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectValue",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#team > svg",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:75",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "ChevronDown",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Primitive.span.Slot",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "label[for=reason]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:86",
+      "fiber": true,
+      "first": [
+        {
+          "name": "label",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.label",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Label",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "#reason",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:87",
+      "fiber": true,
+      "first": [
+        {
+          "name": "textarea",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Textarea",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "default",
+      "sel": "button[type=submit]",
+      "nth": 0,
+      "expect": "components/submit-button.tsx:11",
+      "fiber": true,
+      "first": [
+        {
+          "name": "button",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Button",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SubmitButton",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-content]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:78",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.div",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "SelectContentContext",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:79",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.div",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot.Slot",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 1,
+      "expect": "app/request-access-form.tsx:80",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.div",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot.Slot",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 2,
+      "expect": "app/request-access-form.tsx:81",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Primitive.div",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot.Slot",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SelectCollectionItemSlot",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item] svg",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:79",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "Check",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "span",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "loading",
+      "sel": "button[type=submit]",
+      "nth": 0,
+      "expect": "components/submit-button.tsx:11",
+      "fiber": true,
+      "first": [
+        {
+          "name": "button",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Button",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "SubmitButton",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "loading",
+      "sel": "button[type=submit] svg",
+      "nth": 0,
+      "expect": "components/submit-button.tsx:12",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "LoaderCircle",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "button",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:58",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Alert",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "form",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "RequestAccessForm",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert] > svg",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:59",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "CircleAlert",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert-title]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:60",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "AlertTitle",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Alert",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert-description]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:61",
+      "fiber": true,
+      "first": [
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "AlertDescription",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Alert",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "success",
+      "sel": "svg.text-emerald-600",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:46",
+      "fiber": true,
+      "first": [
+        {
+          "name": "svg",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": null,
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "CircleCheck",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "success",
+      "sel": "p.font-medium",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:47",
+      "fiber": true,
+      "first": [
+        {
+          "name": "p",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "RequestAccessForm",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "success",
+      "sel": "button[data-variant=outline]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:48",
+      "fiber": true,
+      "first": [
+        {
+          "name": "button",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Button",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "div",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "RequestAccessForm",
+          "host": false,
+          "site": null
+        }
+      ]
+    },
+    {
+      "state": "success",
+      "sel": "[data-sonner-toast]",
+      "nth": 0,
+      "expect": "app/layout.tsx:32",
+      "fiber": true,
+      "first": [
+        {
+          "name": "li",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "Toast",
+          "host": false,
+          "site": null
+        },
+        {
+          "name": "ol",
+          "host": true,
+          "site": null
+        },
+        {
+          "name": "section",
+          "host": true,
+          "site": null
+        }
+      ]
+    }
+  ]
+}
