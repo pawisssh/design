@@ -48,7 +48,7 @@ The builder cores are fixed. Each is `async function buildComponentSets(figma, P
   - **Package size.** Packages run 40-47K chars, so 64 per call left too little room under 50,000.
   - **Output.** Build output is at most 2.3KB. A coverage read is about 1.5KB plus 23 bytes per variant (6.6KB at 245, 13.1KB at 539), so 20KB holds about 800 variants. A sample read is about 1.6KB per variant (keep it to 12 or fewer); a theme read is about 0.35KB per variant.
   - **Time.** A creating call costs about 1.6 ms × variants created × set size. The calls took 5.1s at 49, 13.1s at 147, 18.6s at 245, 28.4s at 343, 37.6s at 441 and 41.8s at 539, so building a family is quadratic: 539 variants took 263s over 11 calls. An update-free rerun call takes 0.4-1.1s, and a coverage read takes 0.3s at 539.
-  - **Ceiling.** No call failed at 41.8s. For a family above about 600 variants, lower `--per-call` so that 1.6 ms × per-call × set size stays under about 45s.
+  - **Ceiling: 49 per call, for two reasons.** First, packages: at 49 the largest package was 47,190 chars, leaving under 3K under 50,000, and a growing core uses that up. Second, time: at 539 variants, 64 per call would take about 1.6 ms × 64 × 539 ≈ 55s, beyond the longest call measured (41.8s, which did not fail). For a family above about 600 variants, lower `--per-call` so that 1.6 ms × per-call × set size stays under about 45s.
 
 ```
 node skills/to-design/scripts/build-plan.mjs foundations --doc design-systems/carbon/carbon.foundations.json --file-key <key> --out .scratch/to-design/<run> [--page <name>] [--adopt] [--prune a,b]
