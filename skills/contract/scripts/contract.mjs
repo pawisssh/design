@@ -148,8 +148,24 @@ const FIELD_SCOPE = {
   color: 'EFFECT_COLOR', spread: 'EFFECT_FLOAT', blur: 'EFFECT_FLOAT', x: 'EFFECT_FLOAT', y: 'EFFECT_FLOAT',
 };
 const FILLS = ['FRAME_FILL', 'SHAPE_FILL', 'TEXT_FILL'];
-const covers = (scopes, need) =>
+/** Whether a variable's `scopes` cover the scope `need` (ALL_SCOPES covers all, ALL_FILLS every fill). */
+export const coversScope = (scopes, need) =>
   scopes.includes(need) || scopes.includes('ALL_SCOPES') || (scopes.includes('ALL_FILLS') && FILLS.includes(need));
+
+/**
+ * The VariableScope a token bound at `node.field` needs (rule 6), or undefined when the field cannot bind a
+ * variable. `key` names a reference nested in the field, such as an effect's "color" or "spread".
+ */
+export function scopeFor(contract, node, field, key) {
+  return key === undefined && field === 'fill' ? fillScope(anatomyIndex(contract), node) : FIELD_SCOPE[key || field];
+}
+
+// Anatomy nodes by name.
+function anatomyIndex(contract) {
+  const anatomy = {};
+  (function walk(n) { anatomy[n.name] = n; (n.children || []).forEach(walk); })(contract.anatomy);
+  return anatomy;
+}
 
 /**
  * Validate a Contract against the foundations document of its Design System.
@@ -195,8 +211,7 @@ export function validate(contract, foundations) {
       err(3, `excluded[${i}]`, 'an exclusion needs `reason` and `evidence`');
   });
   c.selection.omit.forEach((o, i) => checkPattern(o.match, `selection.omit[${i}].match`));
-  const anatomy = {};
-  (function walk(n) { anatomy[n.name] = n; (n.children || []).forEach(walk); })(c.anatomy);
+  const anatomy = anatomyIndex(c);
   const nodeKnown = name => !!anatomy[name] ||
     (name.includes('/') && anatomy[name.split('/')[0]] && anatomy[name.split('/')[0]].type === 'INSTANCE');
   for (const section of SECTIONS)
@@ -274,10 +289,10 @@ export function validate(contract, foundations) {
       problem = `token "${t}" is not a variable in the foundations document`;
     } else {
       // `key` is set for a reference nested in a field (an effect's color or spread)
-      const need = key === undefined && field === 'fill' ? fillScope(anatomy, node) : FIELD_SCOPE[key || field];
+      const need = scopeFor(c, node, field, key);
       const scopes = foundations.variables[t].scopes || [];
       if (!need) problem = `${path} cannot bind a variable (token "${t}")`;
-      else if (!covers(scopes, need))
+      else if (!coversScope(scopes, need))
         problem = `token "${t}" is used as ${need} at ${path} but its variable is scoped [${scopes.join(', ')}]`;
     }
     if (problem && !seen.has(problem)) { seen.add(problem); err(6, path, problem); }
@@ -405,18 +420,23 @@ export function asDraft(contract) {
   return c;
 }
 
+/** Who a prototype approval names. Rule 8 rejects it, so it is never valid outside a prototype. */
+export const PROTOTYPE_APPROVER = 'orchestrator (prototype)';
+
 /**
  * Record the owner's approval, given only after an explicit "approve" in chat at the end of the base
  * loop. Returns a copy with status "approved" and approval {by: "owner", at, snapshotId, contentHash}.
+ * `{prototype: true}` writes `by: PROTOTYPE_APPROVER` instead, for a prototype run only: validate() rejects
+ * it (rule 8), because only the owner approves outside prototypes.
  * Throws while a `warning` note (an uncarried owner tweak) is open: resolve or remove it first.
  */
-export function approve(contract, at) {
+export function approve(contract, at, { prototype = false } = {}) {
   const blocking = blockingNotes(contract);
   if (blocking.length)
     throw new Error(`cannot approve: ${blocking.length} warning note(s) block approval, first at ${blocking[0].at}: ${blocking[0].message}`);
   const c = clone(contract);
   c.selection.status = 'approved';
-  c.selection.approval = { by: 'owner', at, snapshotId: c.source.snapshotId, contentHash: contentHash(c) };
+  c.selection.approval = { by: prototype ? PROTOTYPE_APPROVER : 'owner', at, snapshotId: c.source.snapshotId, contentHash: contentHash(c) };
   return c;
 }
 

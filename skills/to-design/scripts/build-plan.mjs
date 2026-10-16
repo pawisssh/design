@@ -7,12 +7,15 @@
 //        [--adopt] [--prune name,name] [--page "Page 1"] [--ledger <path>]
 //   node skills/to-design/scripts/build-plan.mjs icons --contract <component.json> [--contract ...]
 //        --icons-dir <unpacked icon package> --file-key <key> --out <dir> [--adopt] [--page Icons] [--ledger <path>]
+//   node skills/to-design/scripts/build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir>
+//        [--adopt] [--read-only] [--page <name>] [--ledger <path>]
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { icons as iconKeys, iconName } from '../../contract/scripts/contract.mjs';
+import { contentHash, icons as iconKeys, iconName, validate } from '../../contract/scripts/contract.mjs';
+import { expectedBase, norm } from './base-loop.mjs';
 import { emptyLedger, ledgerPath, readLedger } from './ledger.mjs';
 
 // Fields only a reviewer reads. The core never needs them, so the package leaves them out.
@@ -102,9 +105,66 @@ export function iconsPlan(contracts, iconsDir, ledger, { fileKey, adopt = false,
   return { plan, state: { schemaVersion: 1, fileKey, icons: (ledger && ledger.icons) || null } };
 }
 
+/**
+ * The base slice's plan and state (#31): the Base Component of one Contract, resolved here (the core never
+ * matches rules), with values stripped to what Figma shows ({token}, {raw}, keywords, effects with every
+ * number). The Contract must validate against the foundations document, and that document must be the one
+ * the file's foundations were last built from (ledger documentHash), so every token has a variable. State
+ * carries only the ids this plan uses, plus the ledger's `bases` section.
+ * Options: fileKey (required), adopt, readOnly, page (default the Contract's figma.page), at.
+ */
+export function basePlan(contract, docText, ledger, { fileKey, adopt = false, readOnly = false, page = null, at = new Date().toISOString() } = {}) {
+  if (!fileKey) throw new Error('fileKey is required');
+  if (!ledger || ledger.fileKey !== fileKey) throw new Error(`no ledger for ${fileKey}: build foundations and icons first`);
+  const doc = JSON.parse(docText);
+  const v = validate(contract, doc);
+  if (!v.ok) throw new Error(`the Contract does not validate: ${v.errors.map(e => `${e.at}: ${e.message}`).join("; ")}`);
+  const f = ledger.foundations;
+  if (!f) throw new Error('the ledger has no foundations: build them first');
+  if (f.documentHash !== documentHash(docText)) throw new Error(`the foundations document changed since the last foundations build (${f.documentHash}); rebuild foundations first`);
+  const exp = expectedBase(contract);
+  const strip = sec => Object.fromEntries(Object.entries(sec).map(([n, fields]) => [n, Object.fromEntries(Object.entries(fields).map(([k, x]) => [k, norm(x)]))]));
+  const base = { name: exp.name, tree: exp.tree, layout: strip(exp.layout), paint: strip(exp.paint), visible: exp.visible, text: exp.text, swap: exp.swap, fonts: [] };
+  const variables = {};
+  const textStyles = {};
+  const use = (field, x) => {
+    if (Array.isArray(x)) return x.forEach(e => Object.entries(e).forEach(([k, y]) => use(k, y)));
+    if (!x || typeof x !== 'object' || !('token' in x)) return;
+    const [map, have] = field === 'textStyle' ? [textStyles, f.textStyles] : [variables, f.variables];
+    if (!have[x.token]) throw new Error(`${x.token} is not in the ledger's foundations`);
+    map[x.token] = have[x.token];
+  };
+  for (const sec of [base.layout, base.paint]) for (const fields of Object.values(sec)) for (const [k, x] of Object.entries(fields)) use(k, x);
+  const fonts = new Set((contract.dependencies.fonts || []).flatMap(ft => ft.styles.map(s => JSON.stringify({ family: ft.family, style: s }))));
+  for (const t of Object.keys(textStyles)) fonts.add(JSON.stringify({ family: doc.textStyles[t].fontFamily, style: doc.textStyles[t].fontStyle }));
+  base.fonts = [...fonts].sort().map(s => JSON.parse(s));
+  const comps = (ledger.icons && ledger.icons.components) || {};
+  const icons = {};
+  for (const key of Object.values(base.swap)) {
+    if (!comps[key]) throw new Error(`icon ${key} is not in the ledger: build icons first`);
+    icons[key] = comps[key].id;
+  }
+  const plan = {
+    schemaVersion: 1,
+    slice: 'base',
+    fileKey,
+    page: page || contract.figma.page,
+    at,
+    options: { adopt: !!adopt, readOnly: !!readOnly },
+    family: contract.family.key,
+    designSystem: doc.designSystem.key,
+    snapshotId: contract.source.snapshotId,
+    contentHash: contentHash(contract),
+    documentHash: f.documentHash,
+    base,
+  };
+  return { plan, state: { schemaVersion: 1, fileKey, variables, textStyles, icons, bases: ledger.bases || null } };
+}
+
 const USAGE = [
   'usage: build-plan.mjs foundations --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--prune a,b] [--page <name>] [--ledger <path>]',
   '       build-plan.mjs icons --contract <component.json> [--contract ...] --icons-dir <package dir> --file-key <key> --out <dir> [--adopt] [--page <name>] [--ledger <path>]',
+  '       build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--read-only] [--page <name>] [--ledger <path>]',
 ].join('\n');
 
 function main() {
@@ -113,19 +173,24 @@ function main() {
     options: {
       doc: { type: 'string' }, 'file-key': { type: 'string' }, out: { type: 'string' }, ledger: { type: 'string' },
       adopt: { type: 'boolean', default: false }, prune: { type: 'string', default: '' }, page: { type: 'string' },
-      contract: { type: 'string', multiple: true }, 'icons-dir': { type: 'string' },
+      contract: { type: 'string', multiple: true }, 'icons-dir': { type: 'string' }, 'read-only': { type: 'boolean', default: false },
     },
   });
   const slice = positionals[0];
   const ok = values['file-key'] && values.out
-    && ((slice === 'foundations' && values.doc) || (slice === 'icons' && values.contract && values['icons-dir']));
+    && ((slice === 'foundations' && values.doc) || (slice === 'icons' && values.contract && values['icons-dir'])
+      || (slice === 'base' && values.doc && values.contract && values.contract.length === 1));
   if (!ok) {
     console.error(USAGE);
     process.exit(2);
   }
   const fileKey = values['file-key'];
   const path = values.ledger || ledgerPath(fileKey);
-  const { plan, state } = slice === 'foundations'
+  const { plan, state } = slice === 'base'
+    ? basePlan(JSON.parse(readFileSync(values.contract[0], 'utf8')), readFileSync(values.doc, 'utf8'), readLedger(path), {
+      fileKey, adopt: values.adopt, readOnly: values['read-only'], ...(values.page ? { page: values.page } : {}),
+    })
+    : slice === 'foundations'
     ? foundationsPlan(readFileSync(values.doc, 'utf8'), readLedger(path), {
       fileKey, adopt: values.adopt, prune: values.prune ? values.prune.split(',').map(s => s.trim()).filter(Boolean) : [], page: values.page ?? null,
     })
@@ -135,7 +200,8 @@ function main() {
   mkdirSync(values.out, { recursive: true });
   writeFileSync(join(values.out, 'plan.json'), JSON.stringify(plan, null, 2) + '\n');
   writeFileSync(join(values.out, 'state.json'), JSON.stringify(state, null, 2) + '\n');
-  const detail = slice === 'foundations' ? { documentHash: plan.documentHash } : { icons: plan.icons.length };
+  const detail = slice === 'foundations' ? { documentHash: plan.documentHash }
+    : slice === 'base' ? { base: plan.base.name, contentHash: plan.contentHash } : { icons: plan.icons.length };
   console.log(JSON.stringify({ status: 'derived', slice, fileKey, ledger: path, ...detail, options: plan.options, out: values.out }));
 }
 

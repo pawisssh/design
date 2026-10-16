@@ -8,6 +8,16 @@ const SCOPES = new Set(['ALL_SCOPES', 'TEXT_CONTENT', 'CORNER_RADIUS', 'WIDTH_HE
   'FONT_FAMILY', 'FONT_STYLE', 'FONT_WEIGHT', 'FONT_SIZE', 'LINE_HEIGHT', 'LETTER_SPACING', 'PARAGRAPH_SPACING', 'PARAGRAPH_INDENT']);
 const WEIGHTS = { 100: 'Thin', 200: 'ExtraLight', 300: 'Light', 400: 'Regular', 500: 'Medium', 600: 'SemiBold', 700: 'Bold' };
 const f32 = Math.fround;
+// Node fields the base slice reads and writes, with Figma's defaults for a new frame.
+const LAYOUT_DEFAULTS = {
+  layoutMode: 'NONE', layoutSizingHorizontal: 'FIXED', layoutSizingVertical: 'FIXED', primaryAxisAlignItems: 'MIN', counterAxisAlignItems: 'MIN',
+  paddingTop: 0, paddingRight: 0, paddingBottom: 0, paddingLeft: 0, itemSpacing: 0, minWidth: null, maxWidth: null, minHeight: null, maxHeight: null,
+  topLeftRadius: 0, topRightRadius: 0, bottomLeftRadius: 0, bottomRightRadius: 0, strokeWeight: 1, strokeAlign: 'INSIDE', strokes: [], effects: [],
+  opacity: 1, visible: true, textAutoResize: 'NONE',
+};
+const PAINT_LISTS = { strokes: 1, effects: 1 };
+const BINDABLE = new Set(['width', 'height', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'itemSpacing', 'minWidth', 'maxWidth',
+  'minHeight', 'maxHeight', 'topLeftRadius', 'topRightRadius', 'bottomLeftRadius', 'bottomRightRadius', 'strokeWeight', 'opacity']);
 const clone = x => JSON.parse(JSON.stringify(x));
 
 export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) {
@@ -148,8 +158,25 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
       this.id = `${next++}:${next++}`; this.type = type; this._name = name; this.parent = null; this.children = [];
       this._x = x; this._y = y; this.width = width; this.height = height; this._fills = []; this._description = '';
       this._constraints = { horizontal: 'MIN', vertical: 'MIN' };
+      this._p = { ...LAYOUT_DEFAULTS }; this._bound = {};
       nodes.set(this.id, this);
     }
+    get boundVariables() { return clone(this._bound); }
+    // Binds a FLOAT variable to a node field (or unbinds it with null); the field takes the variable's value.
+    setBoundVariable(field, variable) {
+      w('node.setBoundVariable', this.id, field, variable && variable.id);
+      if (!variable) { delete this._bound[field]; return; }
+      if (!BINDABLE.has(field)) throw new Error(`mock: field ${field} is not bindable`);
+      if (variable.resolvedType !== 'FLOAT') throw new Error(`mock: ${field} needs a FLOAT variable`);
+      const value = resolved(variable);
+      if (field === 'width' || field === 'height') this[field] = value; else this._p[field] = value;
+      this._bound[field] = { type: 'VARIABLE_ALIAS', id: variable.id };
+    }
+    // Inside an instance, a hidden node is skipped while figma.skipInvisibleInstanceChildren is true (the default).
+    _kids() { return this.children.filter(c => !(figma.skipInvisibleInstanceChildren && c._inInstance() && !c.visible)); }
+    _inInstance() { for (let p = this.parent; p && p.type; p = p.parent) if (p.type === 'INSTANCE') return true; return false; }
+    findAll(pred = () => true) { const out = []; const walk = n => n._kids().forEach(c => { if (pred(c)) out.push(c); walk(c); }); walk(this); return out; }
+    findOne(pred) { return this.findAll(pred)[0] || null; }
     get name() { return this._name; }
     set name(v) { w('node.name', this.id, v); this._name = v; }
     get x() { return this._x; }
@@ -184,12 +211,81 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
       if (this.parent) this.parent.children = this.parent.children.filter(n => n !== this);
     }
   }
+  for (const [k, v] of Object.entries(LAYOUT_DEFAULTS)) {
+    Object.defineProperty(SceneNode.prototype, k, {
+      get() { return k in PAINT_LISTS ? clone(this._p[k]) : this._p[k]; },
+      set(v) {
+        if (k === 'layoutSizingHorizontal' || k === 'layoutSizingVertical') {
+          if (v === 'HUG' && this._p.layoutMode === 'NONE' && this.type !== 'TEXT') throw new Error(`mock: HUG needs auto layout on ${this.name}`);
+          if (v === 'FILL' && (!this.parent || !this.parent._p || this.parent._p.layoutMode === 'NONE')) throw new Error(`mock: FILL needs an auto layout parent for ${this.name}`);
+        }
+        if (k === 'layoutMode' && !['NONE', 'HORIZONTAL', 'VERTICAL'].includes(v)) throw new Error(`mock: layoutMode ${v}`);
+        w(`node.${k}`, this.id, v);
+        delete this._bound[k];
+        this._p[k] = typeof v === 'number' ? f32(v) : k in PAINT_LISTS ? clone(v) : v;
+      },
+    });
+  }
+  // fills live in _fills (the icons slice's snapshot reads them); strokes and effects in _p.
   class Page extends SceneNode {
     constructor(name) { super('PAGE', name); this.loaded = false; }
     async loadAsync() { this.loaded = true; }
   }
   class Component extends SceneNode {
     constructor(name, box) { super('COMPONENT', name, box); this.key = createKey(this.id); }
+    createInstance() { const i = new Instance(this); w('createInstance', i.id, this.id); figma.currentPage.appendChild(i); return i; }
+  }
+  // An instance holds copies of its main component's children; swapComponent replaces them.
+  class Instance extends SceneNode {
+    constructor(main) { super('INSTANCE', main.name, { width: main.width, height: main.height }); this._main = main; this._copy(); }
+    _copy() {
+      const copy = (src, parent) => {
+        const n = new SceneNode(src.type, src.name, { x: src._x, y: src._y, width: src.width, height: src.height });
+        n._fills = clone(src._fills); n._constraints = { ...src._constraints }; n.parent = parent;
+        n.children = src.children.map(c => copy(c, n));
+        return n;
+      };
+      this.children = this._main.children.map(c => copy(c, this));
+    }
+    get mainComponent() { throw new Error('mock: in dynamic-page mode, use getMainComponentAsync'); }
+    async getMainComponentAsync() { return nodes.has(this._main.id) ? this._main : null; }
+    swapComponent(main) {
+      w('swapComponent', this.id, main.id);
+      const drop = n => { nodes.delete(n.id); n.children.forEach(drop); };
+      this.children.forEach(drop);
+      this._main = main; this._copy();
+    }
+  }
+  // A TEXT node starts in Inter Regular; changing its characters or typography needs the font loaded,
+  // and typography set on the node detaches its Text Style (probed live in #29).
+  class Text extends SceneNode {
+    constructor() {
+      super('TEXT', 'Text', { width: 0, height: 0 });
+      this._fills = [{ type: 'SOLID', color: { r: 0, g: 0, b: 0 } }];
+      this._font = { family: 'Inter', style: 'Regular' }; this._size = 12; this._lh = { unit: 'AUTO' }; this._ls = { unit: 'PERCENT', value: 0 };
+      this._chars = ''; this._style = ''; this._p.textAutoResize = 'NONE';
+    }
+    _need() { if (!fonts.has(`${this._font.family}/${this._font.style}`)) throw new Error(`font not loaded: ${this._font.family} ${this._font.style}`); }
+    get characters() { return this._chars; }
+    set characters(v) { this._need(); w('text.characters', this.id, v); this._chars = v; }
+    get fontName() { return { ...this._font }; }
+    set fontName(v) { this._font = { ...v }; this._need(); w('text.fontName', this.id, v); this._style = ''; }
+    get fontSize() { return this._size; }
+    set fontSize(v) { this._need(); w('text.fontSize', this.id, v); this._size = f32(v); this._style = ''; }
+    get lineHeight() { return { ...this._lh }; }
+    set lineHeight(v) { this._need(); w('text.lineHeight', this.id, v); this._lh = v.unit === 'AUTO' ? { unit: 'AUTO' } : { unit: v.unit, value: f32(v.value) }; this._style = ''; }
+    get letterSpacing() { return { ...this._ls }; }
+    set letterSpacing(v) { this._need(); w('text.letterSpacing', this.id, v); this._ls = { unit: v.unit, value: f32(v.value) }; this._style = ''; }
+    get textStyleId() { return this._style; }
+    set textStyleId(v) { throw new Error('mock: in dynamic-page mode, use setTextStyleIdAsync'); }
+    async setTextStyleIdAsync(id) {
+      w('text.setTextStyleIdAsync', this.id, id);
+      if (!id) { this._style = ''; return; }
+      const s = styles.get(id);
+      if (!s) throw new Error(`unknown text style ${id}`);
+      if (!fonts.has(`${s._font.family}/${s._font.style}`)) throw new Error(`font not loaded: ${s._font.family} ${s._font.style}`);
+      this._font = { ...s._font }; this._size = s._size; this._lh = { ...s._lh }; this._ls = { ...s._ls }; this._style = id;
+    }
   }
   const createKey = id => [...id].reduce((h, ch) => (Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0), 2166136261).toString(16).padStart(8, '0').repeat(5);
 
@@ -260,6 +356,11 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
     async loadFontAsync(font) { w('loadFont', `${font.family}/${font.style}`); fonts.add(`${font.family}/${font.style}`); },
     async getLocalTextStylesAsync() { return [...styles.values()]; },
     async getStyleByIdAsync(id) { return styles.get(id) || null; },
+    mixed: Symbol('mixed'),
+    skipInvisibleInstanceChildren: true,
+    createComponent() { const c = new Component('Component', {}); w('createComponent', c.id); figma.currentPage.appendChild(c); return c; },
+    createFrame() { const f = new SceneNode('FRAME', 'Frame'); f._fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }]; w('createFrame', f.id); figma.currentPage.appendChild(f); return f; },
+    createText() { const t = new Text(); w('createText', t.id); figma.currentPage.appendChild(t); return t; },
     createTextStyle() { const s = new TextStyle(); w('createTextStyle', s.id); styles.set(s.id, s); return s; },
     variables: {
       async getLocalVariableCollectionsAsync() { return [...collections.values()]; },
@@ -272,6 +373,19 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
         const v = new Variable(name, collection, type); w('createVariable', v.id, name); variables.set(v.id, v); return v;
       },
       createVariableAlias(variable) { return { type: 'VARIABLE_ALIAS', id: variable.id }; },
+      // Both return a copy with the variable's value and the binding, as Figma does.
+      setBoundVariableForPaint(paint, field, variable) {
+        if (field !== 'color' || variable.resolvedType !== 'COLOR') throw new Error('mock: paints bind a COLOR variable to color');
+        const c = resolved(variable);
+        return { ...clone(paint), color: { r: c.r, g: c.g, b: c.b }, boundVariables: { color: { type: 'VARIABLE_ALIAS', id: variable.id } } };
+      },
+      setBoundVariableForEffect(effect, field, variable) {
+        const out = clone(effect);
+        const value = resolved(variable);
+        if (field === 'color') out.color = value; else if (field === 'offsetX') out.offset.x = value; else if (field === 'offsetY') out.offset.y = value; else out[field] = value;
+        out.boundVariables = { ...(effect.boundVariables || {}), [field]: { type: 'VARIABLE_ALIAS', id: variable.id } };
+        return out;
+      },
     },
   };
 

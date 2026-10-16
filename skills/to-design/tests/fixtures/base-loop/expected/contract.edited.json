@@ -1,0 +1,1160 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "button",
+    "name": "Button",
+    "description": "Buttons trigger an action. Text button with an optional trailing icon. Icon-only buttons are the separate Icon Button family."
+  },
+  "source": {
+    "codeLibrary": "Carbon React",
+    "adapter": "carbon",
+    "repository": "https://github.com/carbon-design-system/carbon",
+    "tag": "v11.118.0",
+    "commit": "44f90d8d6b24889af06cee1422ceb37f58e40bed",
+    "packages": {
+      "@carbon/react": "1.118.0",
+      "@carbon/styles": "1.117.0",
+      "@carbon/themes": "11.83.0",
+      "@carbon/layout": "11.61.0",
+      "@carbon/type": "11.69.0",
+      "@carbon/colors": "11.60.0",
+      "@carbon/icons": "11.90.0",
+      "@carbon/icons-react": "11.90.0"
+    },
+    "files": {
+      "packages/layout/src/dtcg/layout.json": "sha256:b337e0e6c8ee8be4845f0a8b2fa0320930bd2999ffbd53c83748afb12723e821",
+      "packages/react/src/components/Button/Button.tsx": "sha256:30e184b2ab7ac2138e2bd5c9b08a7c48f24546c58adcbc47fc6b793bf778696a",
+      "packages/react/src/components/Button/ButtonBase.tsx": "sha256:9fb01ebb234617f46e5714e5ad6999ac2659074df45d097eef126d254337fb05",
+      "packages/styles/scss/components/button/_button.scss": "sha256:0107e4b80af22e8640d9b6a104c210bcecdfcd44bb0d16fce653c228705e5e8e",
+      "packages/styles/scss/components/button/_mixins.scss": "sha256:6357f5477ec09540cbf6e087e1a061aac1dec54dcd0848d2089fd6f501fe723d",
+      "packages/styles/scss/components/button/_vars.scss": "sha256:d4e765624450fd96ab6e7f857976f8d2e0068ac1ce63a82b2ecbb338ba854980",
+      "packages/styles/scss/utilities/_layout.scss": "sha256:54afe6ab1aacd966897f105fd90eb3a788b7e07468c6942aaa684f0c37570dcb",
+      "packages/themes/src/dtcg/components/button.json": "sha256:56d85c6538f45449901b98da4358169c7b01a2d5b2e6f6f496ac268a1831ea36",
+      "packages/themes/src/dtcg/themes.json": "sha256:7f1febe786830b88b26db78e3e573b1cfe2ca9af546ecac54708719df1330ac8",
+      "packages/type/src/styles.ts": "sha256:c6a491d1233ad3af8cfc08681a86780f2a1a2b1865cdac5eb9375dcb556fbbdf"
+    },
+    "snapshotId": "sha256:4c82c3cc7f2af6fa24fba39bb5e159c415b5691800130268c9d8903901164152"
+  },
+  "axes": [
+    {
+      "key": "kind",
+      "label": "Kind",
+      "default": "primary",
+      "defaultSource": "ButtonBase.tsx destructured default kind = 'primary'",
+      "values": [
+        {
+          "key": "primary",
+          "label": "Primary",
+          "code": {
+            "kind": "primary"
+          }
+        },
+        {
+          "key": "secondary",
+          "label": "Secondary",
+          "code": {
+            "kind": "secondary"
+          }
+        },
+        {
+          "key": "tertiary",
+          "label": "Tertiary",
+          "code": {
+            "kind": "tertiary"
+          }
+        },
+        {
+          "key": "ghost",
+          "label": "Ghost",
+          "code": {
+            "kind": "ghost"
+          }
+        },
+        {
+          "key": "danger",
+          "label": "Danger",
+          "code": {
+            "kind": "danger"
+          }
+        },
+        {
+          "key": "danger--tertiary",
+          "label": "Danger Tertiary",
+          "code": {
+            "kind": "danger--tertiary"
+          }
+        },
+        {
+          "key": "danger--ghost",
+          "label": "Danger Ghost",
+          "code": {
+            "kind": "danger--ghost"
+          }
+        }
+      ],
+      "dropped": [
+        {
+          "key": "danger--primary",
+          "reason": "Listed in ButtonKinds but no SCSS selector styles it; removed per migrate-to-7.x.",
+          "evidence": [
+            "Button.tsx L20",
+            "_button.scss (only &--tertiary and &--ghost nested under --danger)"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "size",
+      "label": "Size",
+      "default": "lg",
+      "defaultSource": "_button.scss layout.use('size', $default: 'lg'); React has no default",
+      "values": [
+        {
+          "key": "xs",
+          "label": "Extra Small",
+          "code": {
+            "size": "xs"
+          }
+        },
+        {
+          "key": "sm",
+          "label": "Small",
+          "code": {
+            "size": "sm"
+          }
+        },
+        {
+          "key": "md",
+          "label": "Medium",
+          "code": {
+            "size": "md"
+          }
+        },
+        {
+          "key": "lg",
+          "label": "Large",
+          "code": {
+            "size": "lg"
+          }
+        },
+        {
+          "key": "lg-expressive",
+          "label": "Large (Expressive)",
+          "code": {
+            "size": "lg",
+            "isExpressive": true
+          }
+        },
+        {
+          "key": "xl",
+          "label": "Extra Large",
+          "code": {
+            "size": "xl"
+          }
+        },
+        {
+          "key": "2xl",
+          "label": "2XL",
+          "code": {
+            "size": "2xl"
+          }
+        }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        {
+          "key": "enabled",
+          "label": "Enabled",
+          "code": {}
+        },
+        {
+          "key": "hover",
+          "label": "Hover",
+          "code": null,
+          "css": ":hover (inside @media (any-hover: hover))"
+        },
+        {
+          "key": "active",
+          "label": "Active",
+          "code": null,
+          "css": ":active"
+        },
+        {
+          "key": "focus",
+          "label": "Focus",
+          "code": null,
+          "css": ":focus"
+        },
+        {
+          "key": "disabled",
+          "label": "Disabled",
+          "code": {
+            "disabled": true
+          },
+          "css": ":disabled, .cds--btn--disabled"
+        }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 245,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Button",
+    "type": "COMPONENT",
+    "children": [
+      {
+        "name": "Label",
+        "type": "TEXT",
+        "role": "label"
+      },
+      {
+        "name": "Icon",
+        "type": "FRAME",
+        "role": "icon-slot",
+        "children": [
+          {
+            "name": "Glyph",
+            "type": "INSTANCE",
+            "role": "icon",
+            "instanceOf": "icon:default"
+          }
+        ]
+      }
+    ]
+  },
+  "properties": [
+    {
+      "key": "label",
+      "label": "Label",
+      "type": "TEXT",
+      "default": "Button",
+      "binds": [
+        {
+          "node": "Label",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "children"
+      }
+    },
+    {
+      "key": "icon",
+      "label": "Icon",
+      "type": "BOOLEAN",
+      "default": false,
+      "binds": [
+        {
+          "match": {
+            "kind": [
+              "primary",
+              "secondary",
+              "tertiary",
+              "danger",
+              "danger--tertiary"
+            ]
+          },
+          "node": "Glyph",
+          "field": "visible",
+          "why": "Carbon reserves the 64px end padding with or without an icon, so the Icon slot stays and only the glyph hides."
+        },
+        {
+          "match": {
+            "kind": [
+              "ghost",
+              "danger--ghost"
+            ]
+          },
+          "node": "Icon",
+          "field": "visible",
+          "why": "Ghost kinds place the icon in flow; without an icon the button is narrower, so the whole slot hides."
+        }
+      ],
+      "code": {
+        "prop": "renderIcon",
+        "whenFalse": "omit"
+      }
+    },
+    {
+      "key": "swapIcon",
+      "label": "Swap icon",
+      "type": "INSTANCE_SWAP",
+      "default": "icon:default",
+      "preferred": "icon:preferred",
+      "binds": [
+        {
+          "node": "Glyph",
+          "field": "mainComponent"
+        }
+      ],
+      "code": {
+        "prop": "renderIcon",
+        "valueFrom": "icon",
+        "visibleWhen": "icon"
+      }
+    }
+  ],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Button": {
+          "direction": "row",
+          "width": "hug",
+          "height": "hug",
+          "alignMain": "start",
+          "alignCross": "start",
+          "paddingLeft": {
+            "token": "spacing-05"
+          },
+          "paddingRight": {
+            "token": "spacing-05"
+          },
+          "gap": {
+            "token": "spacing-06",
+            "by": "owner (simulated, prototype #8)",
+            "was": {
+              "token": "spacing-07"
+            }
+          },
+          "radius": {
+            "token": "border-radius-00"
+          },
+          "strokeWeight": {
+            "raw": 1,
+            "level": "warning",
+            "reason": "$button-outline-width (1px) is an SCSS constant with no design token."
+          },
+          "strokeAlign": "inside",
+          "maxWidth": {
+            "raw": 320,
+            "level": "warning",
+            "reason": "max-inline-size: to-rem(320px) has no design token."
+          }
+        },
+        "Label": {
+          "textStyle": {
+            "token": "body-compact-01"
+          },
+          "textResize": "width-and-height"
+        },
+        "Icon": {
+          "direction": "row",
+          "width": {
+            "token": "icon-size-01"
+          },
+          "height": {
+            "token": "icon-size-01"
+          }
+        },
+        "Glyph": {
+          "width": "fill",
+          "height": "fill"
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "xs"
+      },
+      "set": {
+        "Button": {
+          "minHeight": {
+            "token": "size-xs"
+          },
+          "paddingTop": {
+            "raw": 3,
+            "level": "info",
+            "reason": "derived (size − 1lh)/2; Carbon xs top is 2.5 (1.5px override + 1px border), rounded to 3"
+          },
+          "paddingBottom": {
+            "raw": 3,
+            "level": "info",
+            "reason": "derived (size − 1lh)/2"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "sm"
+      },
+      "set": {
+        "Button": {
+          "minHeight": {
+            "token": "size-sm"
+          },
+          "paddingTop": {
+            "raw": 7,
+            "level": "info",
+            "reason": "derived (size − 1lh)/2"
+          },
+          "paddingBottom": {
+            "raw": 7,
+            "level": "info",
+            "reason": "derived (size − 1lh)/2"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "md"
+      },
+      "set": {
+        "Button": {
+          "minHeight": {
+            "token": "size-md"
+          },
+          "paddingTop": {
+            "raw": 11,
+            "level": "info",
+            "reason": "derived (size − 1lh)/2"
+          },
+          "paddingBottom": {
+            "raw": 11,
+            "level": "info",
+            "reason": "derived (size − 1lh)/2"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": [
+          "lg",
+          "xl",
+          "2xl"
+        ]
+      },
+      "set": {
+        "Button": {
+          "paddingTop": {
+            "raw": 14,
+            "by": "owner (simulated, prototype #8)",
+            "was": {
+              "raw": 15
+            },
+            "level": "warning",
+            "reason": "owner tweak at Base Component approval; no token"
+          },
+          "paddingBottom": {
+            "raw": 15,
+            "level": "info",
+            "reason": "derived, capped at the lg value"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "lg"
+      },
+      "set": {
+        "Button": {
+          "minHeight": {
+            "token": "size-lg"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "xl"
+      },
+      "set": {
+        "Button": {
+          "minHeight": {
+            "token": "size-xl"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "2xl"
+      },
+      "set": {
+        "Button": {
+          "minHeight": {
+            "token": "size-2xl"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "lg-expressive"
+      },
+      "set": {
+        "Button": {
+          "minHeight": {
+            "token": "size-lg"
+          },
+          "paddingTop": {
+            "raw": 13,
+            "level": "info",
+            "reason": "derived (48 − 22)/2 with body-compact-02"
+          },
+          "paddingBottom": {
+            "raw": 13,
+            "level": "info",
+            "reason": "derived (48 − 22)/2 with body-compact-02"
+          },
+          "gap": {
+            "raw": 28,
+            "level": "info",
+            "reason": "derived: 64px end space − 16px end padding − 20px icon"
+          }
+        },
+        "Label": {
+          "textStyle": {
+            "token": "body-compact-02"
+          }
+        },
+        "Icon": {
+          "width": {
+            "token": "icon-size-02"
+          },
+          "height": {
+            "token": "icon-size-02"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": [
+          "ghost",
+          "danger--ghost"
+        ]
+      },
+      "set": {
+        "Button": {
+          "gap": {
+            "token": "spacing-03"
+          }
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Button": {
+          "fill": "none",
+          "stroke": "none",
+          "effects": []
+        },
+        "Glyph/Vector": {
+          "fill": {
+            "sameAs": "Label.fill",
+            "why": "every kind passes currentColor as the icon colour"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "primary"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-primary"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "text-on-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "primary",
+        "state": "hover"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-primary-hover"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "primary",
+        "state": "active"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-primary-active"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "secondary"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-secondary"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "text-on-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "secondary",
+        "state": "hover"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-secondary-hover"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "secondary",
+        "state": "active"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-secondary-active"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "danger"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-danger-primary"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "text-on-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "danger",
+        "state": "hover"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-danger-hover"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "danger",
+        "state": "active"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-danger-active"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "tertiary"
+      },
+      "set": {
+        "Button": {
+          "stroke": {
+            "token": "button-tertiary"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "button-tertiary"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "tertiary",
+        "state": "hover"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-tertiary-hover"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "text-inverse"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "tertiary",
+        "state": "active"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-tertiary-active"
+          },
+          "stroke": "none"
+        },
+        "Label": {
+          "fill": {
+            "token": "text-inverse"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "tertiary",
+        "state": "focus"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-tertiary"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "text-inverse"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "ghost"
+      },
+      "set": {
+        "Label": {
+          "fill": {
+            "token": "link-primary"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "ghost",
+        "state": "hover"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "background-hover"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "link-primary-hover"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "ghost",
+        "state": "active"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "background-active"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "link-primary-hover"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "danger--tertiary"
+      },
+      "set": {
+        "Button": {
+          "stroke": {
+            "token": "button-danger-secondary"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "button-danger-secondary"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "danger--tertiary",
+        "state": "hover"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-danger-hover"
+          },
+          "stroke": {
+            "token": "button-danger-hover"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "text-on-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "danger--tertiary",
+        "state": "active"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-danger-active"
+          },
+          "stroke": {
+            "token": "button-danger-active"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "text-on-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "danger--tertiary",
+        "state": "focus"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-danger-primary"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "text-on-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "danger--ghost"
+      },
+      "set": {
+        "Label": {
+          "fill": {
+            "token": "button-danger-secondary"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "danger--ghost",
+        "state": "hover"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-danger-hover"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "text-on-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "danger--ghost",
+        "state": "active"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-danger-active"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "text-on-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus"
+      },
+      "set": {
+        "Button": {
+          "stroke": {
+            "token": "focus"
+          },
+          "effects": [
+            {
+              "type": "inner-shadow",
+              "spread": {
+                "raw": 3,
+                "level": "warning",
+                "reason": "gap ring: 1px border + inset 2px $button-border-width; no design token"
+              },
+              "color": {
+                "token": "background"
+              }
+            },
+            {
+              "type": "inner-shadow",
+              "spread": {
+                "raw": 2,
+                "level": "warning",
+                "reason": "focus band: 1px border + inset 1px $button-outline-width; no design token"
+              },
+              "color": {
+                "token": "focus"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "disabled",
+        "kind": [
+          "primary",
+          "secondary",
+          "danger"
+        ]
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-disabled"
+          },
+          "stroke": {
+            "token": "button-disabled"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "text-on-color-disabled"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "disabled",
+        "kind": [
+          "tertiary",
+          "danger--tertiary"
+        ]
+      },
+      "set": {
+        "Button": {
+          "fill": "none",
+          "stroke": {
+            "token": "button-disabled"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "text-disabled"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "disabled",
+        "kind": [
+          "ghost",
+          "danger--ghost"
+        ]
+      },
+      "set": {
+        "Button": {
+          "fill": "none",
+          "stroke": "none"
+        },
+        "Label": {
+          "fill": {
+            "token": "text-disabled"
+          }
+        }
+      }
+    }
+  ],
+  "icons": {
+    "source": {
+      "package": "@carbon/icons",
+      "version": "11.90.0",
+      "path": "svg/16/{key}.svg",
+      "fallback": "svg/32/{key}.svg"
+    },
+    "default": "add",
+    "preferred": [
+      "add",
+      "arrow--right",
+      "launch",
+      "download",
+      "save",
+      "edit",
+      "filter",
+      "trash-can",
+      "close"
+    ]
+  },
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": [
+      {
+        "family": "IBM Plex Sans",
+        "styles": [
+          "Regular"
+        ]
+      }
+    ]
+  },
+  "figma": {
+    "page": "Buttons",
+    "componentSetName": "Button",
+    "description": "Carbon React Button (@carbon/react 1.118.0). Icon-only buttons are the Icon Button family.",
+    "header": {
+      "type": "Component",
+      "title": "Button",
+      "namespace": "@carbon/react"
+    },
+    "grid": {
+      "columns": [
+        "size"
+      ],
+      "rows": [
+        "kind",
+        "state"
+      ]
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@carbon/react",
+    "component": "Button",
+    "import": "import { Button } from '@carbon/react';",
+    "alwaysEmit": [
+      "size"
+    ],
+    "alwaysEmitWhy": "A Button without size inherits the nearest <Layout size>; emit size explicitly so the snippet matches the variant."
+  },
+  "notes": [
+    {
+      "level": "info",
+      "at": "paint[kind=ghost].Glyph/Vector.fill",
+      "message": "Resolved (#20, browser render of @carbon/react 1.118.0): on ghost the svg element computes to icon-primary (.cds--btn--ghost:not([disabled]) svg), but every icon path matches .cds--btn--ghost .cds--btn__icon path:not([data-icon-path]):not([fill=none]) { fill: currentColor }, so the visible fill equals the label colour: link-primary, link-primary-hover on hover and active, text-disabled when disabled. danger--ghost follows its label too. Checked on all 9 preferred icons (single path each, no data-icon-path), White and G100. sameAs Label.fill stands; icon-primary stays out of the closure."
+    },
+    {
+      "level": "info",
+      "at": "layout.Icon",
+      "message": "Carbon centres the 16px icon on the 18px label line (1px lower than the label top for lg/xl/2xl). The Contract top-aligns the Icon slot with the label; ≤1px deviation accepted."
+    },
+    {
+      "level": "info",
+      "at": "layout.Label",
+      "message": "Label wrapping at maxWidth 320 needs a render check against Carbon's max-inline-size behaviour."
+    },
+    {
+      "level": "info",
+      "at": "axes.kind",
+      "message": "Value order follows Carbon docs and the kit (primary, secondary, tertiary, ghost, danger…), not ButtonKinds source order (primary, secondary, danger, ghost, …, tertiary)."
+    },
+    {
+      "level": "info",
+      "at": "properties.icon.binds",
+      "message": "Resolved (#20, Figma): one set-level BOOLEAN can reference Glyph.visible on some variants and Icon.visible on others. Both references survive combineAsVariants whether bound before or after combining, toggling works in each variant, and an instance keeps the value across Kind switches in both directions. Builder: set figma.skipInvisibleInstanceChildren = false to reach a hidden Glyph inside an instance."
+    },
+    {
+      "level": "info",
+      "at": "paint[state=focus].Button.effects",
+      "message": "Adjusted (#20, Figma): effects are listed in Figma array order, where later entries paint above earlier ones (the reverse of CSS box-shadow order), and the stroke paints above inner shadows. With background spread 3 first and focus spread 2 last, under the 1px INSIDE focus stroke, the edge reads focus, focus, background, fill: a 2px focus band plus a 1px background gap, in White and G100. The CSS order rendered a 1px focus line plus a 2px gap."
+    },
+    {
+      "level": "info",
+      "at": "source.commit",
+      "message": "v11.118.0 is an annotated tag: tag object 3169e192 dereferences to commit 44f90d8. The #13 research note calls 3169e192 the commit."
+    },
+    {
+      "level": "warning",
+      "at": "layout.Label.letterSpacing",
+      "message": "Owner tweak at Base Component review not carried: letterSpacing 0.16 -> 0.32 (no Contract field; in Figma it also detached the text style). Not carried; discarded when the Base Component is rebuilt from the Contract. Needs a token or a schema field."
+    },
+    {
+      "level": "verify",
+      "at": "layout[8].Button.gap",
+      "message": "Derived raw 28 (derived: 64px end space − 16px end padding − 20px icon) may be stale: the owner changed layout[0].Button.gap {spacing-07} -> {spacing-06}. Check it; it is not recomputed."
+    },
+    {
+      "level": "verify",
+      "at": "layout[4].Button.paddingBottom",
+      "message": "Derived raw 15 (derived, capped at the lg value) may be stale: the owner changed layout[4].Button.paddingTop raw 15 -> raw 14. Check it; it is not recomputed."
+    }
+  ]
+}

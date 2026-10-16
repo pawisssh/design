@@ -1,0 +1,2 @@
+Kind=Primary, Size=Large, State=Enabled  (18:3)  MATCHES the Contract
+  not in this readback: paint.Button.effects, visible.Label, text.Label, swap.Glyph

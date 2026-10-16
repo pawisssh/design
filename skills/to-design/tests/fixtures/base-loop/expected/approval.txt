@@ -1,0 +1,20 @@
+closure added: spacing-06; removed: spacing-07
+approve while the letterSpacing tweak is open: refused (cannot approve: 1 warning note(s) block approval, first at layout.Label.letterSpacing: Owner tweak at Base Component review not carried: letterSpacing 0.16 -> 0.32 (no Contract field; in Figma it also detached the text style). Not carried; discarded when the Base Component is rebuilt from the Contract. Needs a token or a schema field.)
+after the rebuild without it, discard the note: warning notes 0
+review package after the discard:
+Base Component review: Kind=Primary, Size=Large, State=Enabled
+Figma node: https://www.figma.com/design/PROTOTYPE/?node-id=19-5
+snapshotId: sha256:4c82c3cc7f2af6fa24fba39bb5e159c415b5691800130268c9d8903901164152
+contentHash: sha256:3f8bbb752620c944aa6be1b1e39803cc67ba70d8f2eda25fa6674624be728dd0
+selection: draft, 245 variants
+Readback: 0 difference(s), 4 field(s) not read
+Edits with by/was: 2
+  layout[0].Button.gap = {spacing-06}  by owner (simulated, prototype #8), was {spacing-07}; changes 150/245 variants
+    shielded by layout[8] {"size":"lg-expressive"} = raw 28
+    shielded by layout[9] {"kind":["ghost","danger--ghost"]} = {spacing-03}
+  layout[4].Button.paddingTop = raw 14  by owner (simulated, prototype #8), was raw 15; changes 105/245 variants
+Uncarried tweaks (warning notes, block approval): 0
+Verify notes: 2
+  layout[8].Button.gap: Derived raw 28 (derived: 64px end space − 16px end padding − 20px icon) may be stale: the owner changed layout[0].Button.gap {spacing-07} -> {spacing-06}. Check it; it is not recomputed.
+  layout[4].Button.paddingBottom: Derived raw 15 (derived, capped at the lg value) may be stale: the owner changed layout[4].Button.paddingTop raw 15 -> raw 14. Check it; it is not recomputed.
+Not ready to approve: the readback must be clean and no warning note open.
