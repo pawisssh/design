@@ -27,7 +27,7 @@ One conceptual component, such as Button, covering every variant it supports.
 _Avoid_: Component (when the whole family is meant)
 
 **Property Axis**:
-One dimension along which a Component Family's variants differ, such as Size, State, Hierarchy, Style or Mode.
+One dimension along which a Component Family's variants differ, such as Size, State, Hierarchy or Style. A Mode is never a Property Axis.
 _Avoid_: Prop, variant property, dimension
 
 **Slot axis**:
@@ -75,6 +75,10 @@ _Avoid_: Draft Contract, proposed Contract, custom component
 **Foundations document**:
 The generated description of the Code Library's whole theme (every shared token and mode it defines, used by a Contract or not), which every Contract in that Design System refers to. One per Design System.
 _Avoid_: Tokens file, theme file, variables JSON
+
+**Mode**:
+One of the alternative value sets a Foundations document defines for a group of tokens, such as Carbon's Gray 100 theme or its second Layer level. The page or an enclosing element picks it, never the component's own props.
+_Avoid_: Theme (when a Layer level is meant), context, mode variant
 
 **Synthesized token**:
 A token the Adapter adds to the Foundations document for one Component Family, where the Code Library styles that component with a value none of its own tokens holds in every mode, such as a dark-only override or a token at reduced opacity.
