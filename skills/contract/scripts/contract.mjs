@@ -108,11 +108,22 @@ function walkRefs(value, path, fn, key) {
   }
 }
 
-/** The icon list: the icon keys the builder makes atoms for, `icons.default` then `icons.preferred`, each once. */
+/**
+ * The icon list: the icon keys the builder makes atoms for, `icons.default` then `icons.preferred`, then every
+ * fixed `icon:<key>` an INSTANCE names (a form control's status icons, #93), each once.
+ */
 export function icons(contract) {
   const i = contract.icons;
   if (!i) return [];
-  return [i.default].concat(i.preferred || []).filter((k, n, all) => k && all.indexOf(k) === n);
+  const fixed = [];
+  const walk = n => {
+    const m = /^icon:(.+)$/.exec((n && n.instanceOf) || '');
+    if (m && m[1] !== 'default') fixed.push(m[1]);
+    ((n && n.children) || []).forEach(walk);
+  };
+  walk(contract.anatomy);
+  (contract.subComponents || []).forEach(s => walk(s.anatomy));
+  return [i.default].concat(i.preferred || [], fixed).filter((k, n, all) => k && all.indexOf(k) === n);
 }
 
 /** Kit-style Figma name of an icon key: first letter capitalised, `--` kept (`arrow--right` -> `Arrow--right`). */
@@ -222,13 +233,42 @@ export function validate(contract, foundations) {
   for (const section of SECTIONS)
     c[section].forEach((rule, i) => {
       checkPattern(rule.match, `${section}[${i}].match`);
-      for (const node of Object.keys(rule.set || {}))
+      for (const [node, fields] of Object.entries(rule.set || {})) {
         if (!nodeKnown(node)) err(3, `${section}[${i}].set`, `unknown anatomy node "${node}"`);
+        // `visible` (#93): a layout field that shows or hides an anatomy node below the root.
+        if (!isObj(fields) || !('visible' in fields)) continue;
+        const at = `${section}[${i}].set`;
+        if (section !== 'layout') err(3, at, `"${node}": \`visible\` is a layout field, not a ${section} field`);
+        else if (typeof fields.visible !== 'boolean') err(3, at, `"${node}": \`visible\` is true or false, not ${JSON.stringify(fields.visible)}`);
+        else if (node === c.anatomy.name) err(3, at, `"${node}" is the root, which cannot be hidden`);
+        else if (!anatomy[node]) err(3, at, `"${node}": \`visible\` is set on anatomy nodes only`);
+      }
     });
   c.properties.forEach(p => (p.binds || []).forEach((b, i) => {
     if (b.match) checkPattern(b.match, `properties.${p.key}.binds[${i}].match`);
     if (!anatomy[b.node]) err(3, `properties.${p.key}.binds[${i}]`, `unknown anatomy node "${b.node}"`);
   }));
+  // `code.required` names props nothing else sets; `code.items` names a Repeated child, and a TEXT property
+  // with `code.itemProp` shows one prop of the shown child (#93, ADR 0013).
+  const code = c.code;
+  const setProps = new Set([
+    ...c.axes.flatMap(a => a.values.flatMap(v => Object.keys(isObj(v.code) ? v.code : {}))),
+    ...c.properties.map(p => p.code && p.code.prop).filter(Boolean),
+  ]);
+  if (code.required !== undefined) {
+    if (!Array.isArray(code.required) || code.required.some(r => typeof r !== 'string')) err(3, 'code.required', '`code.required` is a list of prop names');
+    else code.required.filter(r => setProps.has(r)).forEach(r => err(3, 'code.required', `required prop "${r}" is already set by an axis value or a property`));
+  }
+  const items = code.items;
+  if (items !== undefined && (!isObj(items) || typeof items.component !== 'string' || !Array.isArray(items.props) || !items.props.length))
+    err(3, 'code.items', '`code.items` needs `component` and a non-empty `props` list');
+  for (const p of c.properties) {
+    const ip = p.code && p.code.itemProp;
+    if (ip === undefined) continue;
+    const at = `properties.${p.key}.code.itemProp`;
+    if (p.type !== 'TEXT') err(3, at, 'only a TEXT property can show an item prop');
+    else if (!isObj(items) || !Array.isArray(items.props) || !items.props.includes(ip)) err(3, at, `"${ip}" is not one of code.items.props`);
+  }
   if (errors.length) return { ok: false, errors }; // rules 2, 4, 5 and 6 expand, which needs valid patterns
 
   // 2. defaults and the Base Component
@@ -266,9 +306,14 @@ export function validate(contract, foundations) {
           if (v === undefined) gap(at, `${at} is unresolved`, t);
           else if (isObj(v) && 'sameAs' in v) gap(at, `${at} sameAs "${v.sameAs}" does not resolve`, t);
         }
-    for (const p of c.properties)
+    for (const p of c.properties) {
       if (r.binds[p.key].length !== 1)
         gap(`properties.${p.key}.binds`, `property ${p.key} has ${r.binds[p.key].length} binds (needs exactly 1)`, t);
+      // One owner per node's visibility: a `visible` rule or a BOOLEAN property, never both (#93).
+      for (const b of r.binds[p.key])
+        if (b.field === 'visible' && r.layout[b.node] && 'visible' in r.layout[b.node])
+          gap(`properties.${p.key}.binds`, `${b.node}.visible is set by a rule and bound to property ${p.key}`, t);
+    }
   }
   for (const [problem, { at, tuples }] of Object.entries(gaps))
     err(5, at, `${problem} in ${tuples.length} selected variant${tuples.length === 1 ? '' : 's'}, e.g. ${variantName(c, tuples[0])}`);

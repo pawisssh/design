@@ -293,3 +293,100 @@ test('the module runs inlined, without export, in a bare context (no TextEncoder
     bare: ['undefined', 'undefined', 'undefined', 'undefined', 'undefined'],
   });
 });
+
+// ---------- form-control families (#93, ADR 0013), on the TextInput and Select fixtures ----------
+// fixtures/form-controls/: the TextInput (36) and Select (52) draft Contracts from prototype/form-schema @ 85dcfd7,
+// and the Foundations document generated over Button, TextInput and Select there.
+const formFoundations = load('skills/contract/test/fixtures/form-controls/carbon.foundations.json');
+const textInput = () => load('skills/contract/test/fixtures/form-controls/text-input.component.json');
+const select = () => load('skills/contract/test/fixtures/form-controls/select.component.json');
+const formRejects = (c, rule, ...parts) => {
+  const result = contract.validate(c, formFoundations);
+  assert.equal(result.ok, false, 'expected the Contract to be rejected');
+  assert.ok(result.errors.some(e => e.rule === rule && parts.every(p => `${e.at} ${e.message}`.includes(p))),
+    `no rule ${rule} error containing ${JSON.stringify(parts)}; got:\n${result.errors.map(e => `  [${e.rule}] ${e.message}`).join('\n')}`);
+};
+
+test('the TextInput and Select fixtures are valid and expand to 36 and 52 variants', () => {
+  assert.deepEqual(contract.validate(textInput(), formFoundations), { ok: true, errors: [] });
+  assert.deepEqual(contract.validate(select(), formFoundations), { ok: true, errors: [] });
+  assert.equal(contract.expand(textInput()).length, 36);
+  assert.equal(contract.expand(select()).length, 52);
+});
+
+test('a `visible` layout rule on any axis shows one version of the content: the warn icon and text only when warned', () => {
+  const c = textInput();
+  const shown = validation => {
+    const { layout } = contract.resolve(c, { size: 'md', validation, readOnly: 'editable', state: 'enabled' });
+    return ['Helper', 'Invalid icon', 'Invalid text', 'Warn icon', 'Warn text'].filter(n => layout[n].visible);
+  };
+  assert.deepEqual(shown('none'), ['Helper']);
+  assert.deepEqual(shown('invalid'), ['Invalid icon', 'Invalid text']);
+  assert.deepEqual(shown('warn'), ['Warn icon', 'Warn text']);
+});
+
+test('rejects a `visible` that is not true or false, is on the root, or is set by a paint rule', () => {
+  const a = textInput();
+  a.layout[1].set['Invalid icon'].visible = 'yes';
+  formRejects(a, 3, 'layout[1].set', '"Invalid icon"', '`visible` is true or false');
+  const b = textInput();
+  b.layout[0].set[b.anatomy.name] = { ...b.layout[0].set[b.anatomy.name], visible: true };
+  formRejects(b, 3, 'the root', 'cannot be hidden');
+  const d = textInput();
+  d.paint[0].set.Helper = { ...d.paint[0].set.Helper, visible: false };
+  formRejects(d, 3, 'paint[0].set', '`visible` is a layout field');
+});
+
+test('a node a rule shows or hides needs `visible` in every variant (rule 5)', () => {
+  const c = textInput();
+  delete c.layout[0].set['Warn text'].visible;
+  formRejects(c, 5, 'layout Warn text.visible is unresolved');
+});
+
+test('rejects a node whose `visible` is set by a rule and also bound to a BOOLEAN property (rule 5)', () => {
+  const c = textInput();
+  c.properties.push({ key: 'showHelper', label: 'Show helper', type: 'BOOLEAN', default: true, binds: [{ node: 'Helper', field: 'visible' }] });
+  formRejects(c, 5, 'Helper.visible is set by a rule and bound to property showHelper');
+});
+
+test('`code.required` names props no axis value or property sets', () => {
+  assert.deepEqual(textInput().code.required, ['id']);
+  const c = textInput();
+  c.code.required = ['id', 'labelText'];
+  formRejects(c, 3, 'code.required', 'required prop "labelText" is already set by an axis value or a property');
+  const d = textInput();
+  d.code.required = 'id';
+  formRejects(d, 3, '`code.required` is a list of prop names');
+});
+
+test('`code.items` names a Repeated child, and an `itemProp` property shows one of its props', () => {
+  const s = select();
+  assert.deepEqual(s.code.items, { component: 'SelectItem', props: ['value', 'text'] });
+  assert.deepEqual(s.properties.filter(p => p.code && p.code.itemProp).map(p => [p.key, p.type, p.code.itemProp]), [['value', 'TEXT', 'text']]);
+  const a = select();
+  a.code.items = { component: 'SelectItem', props: [] };
+  formRejects(a, 3, '`code.items` needs `component` and a non-empty `props` list');
+  const b = select();
+  b.properties.find(p => p.code && p.code.itemProp).code.itemProp = 'label';
+  formRejects(b, 3, '"label" is not one of code.items.props');
+  const d = textInput();
+  d.properties[0].code = { itemProp: 'text' };
+  formRejects(d, 3, 'properties.label.code.itemProp', '"text" is not one of code.items.props');
+  const e = select();
+  e.properties.push({ key: 'open', label: 'Open', type: 'BOOLEAN', default: false, binds: [{ node: 'Chevron', field: 'visible' }], code: { itemProp: 'text' } });
+  formRejects(e, 3, 'only a TEXT property can show an item prop');
+});
+
+test('the icon list adds every fixed `icon:<key>` an INSTANCE names, after default and preferred, each once', () => {
+  assert.deepEqual(contract.icons(textInput()), ['warning--filled', 'warning--alt--filled']);
+  assert.deepEqual(contract.icons(select()), ['chevron--down', 'warning--filled', 'warning--alt--filled']);
+  const c = button();
+  c.anatomy.children.push({ name: 'Status icon', type: 'INSTANCE', instanceOf: 'icon:warning--filled' }, { name: 'Again', type: 'INSTANCE', instanceOf: 'icon:add' });
+  assert.deepEqual(contract.icons(c).slice(-2), ['close', 'warning--filled']);
+});
+
+test('a family whose icons are all fixed still declares icons.default (rule 7)', () => {
+  const c = textInput();
+  delete c.icons;
+  formRejects(c, 7, 'instance target "icon:warning--filled" is not declared');
+});

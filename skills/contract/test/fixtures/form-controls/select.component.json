@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 1,
+
+  "family": {
+    "key": "select",
+    "name": "Select",
+    "description": "Native single-select dropdown with a label, optional helper text and an invalid or warning message. Its options are SelectItem children the feature supplies. Inline and Fluid variants are out of this draft."
+  },
+
+  "source": {
+    "codeLibrary": "Carbon React",
+    "adapter": "carbon",
+    "repository": "https://github.com/carbon-design-system/carbon",
+    "tag": "v11.118.0",
+    "commit": "44f90d8d6b24889af06cee1422ceb37f58e40bed",
+    "packages": {
+      "@carbon/react": "1.118.0",
+      "@carbon/styles": "1.117.0",
+      "@carbon/themes": "11.83.0",
+      "@carbon/layout": "11.61.0",
+      "@carbon/type": "11.69.0",
+      "@carbon/colors": "11.60.0",
+      "@carbon/icons": "11.90.0",
+      "@carbon/icons-react": "11.90.0"
+    },
+    "files": {
+      "packages/layout/src/dtcg/layout.json": "sha256:b337e0e6c8ee8be4845f0a8b2fa0320930bd2999ffbd53c83748afb12723e821",
+      "packages/react/src/components/Select/Select.tsx": "sha256:c0d8c181cfbf544776c63d0489a5f146a1e1ffbb8bc134755c791cbb5228d088",
+      "packages/react/src/internal/useNormalizedInputProps.tsx": "sha256:dc13ed8486b181d25e14f6a1b3dac54677559a1b38b5867156bd94080a58573c",
+      "packages/styles/scss/_layer.scss": "sha256:dd0b522522b50f473f5de993002046afcdead321d81a8e9a32da53ecb54522df",
+      "packages/styles/scss/components/form/_form.scss": "sha256:fbdd993d1e165e67e71c77109cd10e08bbe623f05be694a259492ec8e2295308",
+      "packages/styles/scss/components/select/_select.scss": "sha256:bb26c97ef0f5df3154759fbc7c2401c34968f591432552b20f31964b602e54d9",
+      "packages/styles/scss/utilities/_focus-outline.scss": "sha256:7a14398aaed4189dbfaf5778450efe17e2da7dff4a17f09a6bd7bbe649a48c78",
+      "packages/themes/src/dtcg/themes.json": "sha256:7f1febe786830b88b26db78e3e573b1cfe2ca9af546ecac54708719df1330ac8",
+      "packages/type/src/styles.ts": "sha256:c6a491d1233ad3af8cfc08681a86780f2a1a2b1865cdac5eb9375dcb556fbbdf"
+    },
+    "snapshotId": "sha256:ee272e9f6722577721baa37d96517972a60bb89ca9fd8631114f78484e98c1b2"
+  },
+
+  "axes": [
+    {
+      "key": "size",
+      "label": "Size",
+      "default": "md",
+      "defaultSource": "_select.scss layout.use('size', $default: 'md', $min: 'xs', $max: 'lg'); React has no default",
+      "values": [
+        { "key": "xs", "label": "Extra Small", "code": { "size": "xs" } },
+        { "key": "sm", "label": "Small",       "code": { "size": "sm" } },
+        { "key": "md", "label": "Medium",      "code": { "size": "md" } },
+        { "key": "lg", "label": "Large",       "code": { "size": "lg" } }
+      ]
+    },
+    {
+      "key": "validation",
+      "label": "Validation",
+      "default": "none",
+      "defaultSource": "Select.tsx: invalid and warn default to false",
+      "values": [
+        { "key": "none",    "label": "None",    "code": {} },
+        { "key": "invalid", "label": "Invalid", "code": { "invalid": true } },
+        { "key": "warn",    "label": "Warning", "code": { "warn": true } }
+      ]
+    },
+    {
+      "key": "readOnly",
+      "label": "Read Only",
+      "default": "editable",
+      "defaultSource": "Select.tsx: readOnly defaults to undefined",
+      "values": [
+        { "key": "editable",  "label": "Editable",  "code": {} },
+        { "key": "read-only", "label": "Read-only", "code": { "readOnly": true } }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        { "key": "enabled",  "label": "Enabled",  "code": {} },
+        { "key": "hover",    "label": "Hover",    "code": null, "css": ":hover" },
+        { "key": "focus",    "label": "Focus",    "code": null, "css": ":focus" },
+        { "key": "disabled", "label": "Disabled", "code": { "disabled": true }, "css": ":disabled" }
+      ]
+    }
+  ],
+
+  "excluded": [
+    { "match": { "readOnly": "read-only", "validation": ["invalid", "warn"] }, "reason": "readOnly overrides invalid and warn", "evidence": ["useNormalizedInputProps.tsx L70-L72: invalid: !readOnly && …, warn: !readOnly && …"] },
+    { "match": { "readOnly": "read-only", "state": "disabled" }, "reason": "readOnly overrides disabled", "evidence": ["useNormalizedInputProps.tsx L69: disabled: !readOnly && disabled"] },
+    { "match": { "state": "disabled", "validation": ["invalid", "warn"] }, "reason": "disabled overrides invalid and warn", "evidence": ["useNormalizedInputProps.tsx L70-L72: invalid: … && !disabled && invalid"] }
+  ],
+
+  "selection": { "status": "draft", "omit": [], "expectedCount": 52, "approval": null },
+
+  "anatomy": {
+    "name": "Select",
+    "type": "COMPONENT",
+    "children": [
+      { "name": "Label", "type": "TEXT", "role": "label" },
+      {
+        "name": "Field group",
+        "type": "FRAME",
+        "children": [
+          {
+            "name": "Field",
+            "type": "FRAME",
+            "role": "input",
+            "children": [
+              {
+                "name": "Box",
+                "type": "FRAME",
+                "children": [
+                  { "name": "Value", "type": "TEXT", "role": "value" },
+                  { "name": "Invalid icon", "type": "INSTANCE", "role": "icon", "instanceOf": "icon:warning--filled" },
+                  { "name": "Warn icon", "type": "INSTANCE", "role": "icon", "instanceOf": "icon:warning--alt--filled" },
+                  { "name": "Chevron", "type": "INSTANCE", "role": "icon", "instanceOf": "icon:chevron--down" }
+                ]
+              },
+              { "name": "Underline", "type": "FRAME" }
+            ]
+          },
+          { "name": "Helper", "type": "TEXT", "role": "helper-text" },
+          { "name": "Invalid text", "type": "TEXT", "role": "validation-message" },
+          { "name": "Warn text", "type": "TEXT", "role": "validation-message" }
+        ]
+      }
+    ]
+  },
+
+  "properties": [
+    { "key": "label", "label": "Label", "type": "TEXT", "default": "Label", "binds": [ { "node": "Label", "field": "characters" } ], "code": { "prop": "labelText" } },
+    { "key": "value", "label": "Value", "type": "TEXT", "default": "Option 1", "binds": [ { "node": "Value", "field": "characters" } ], "code": { "itemProp": "text" } },
+    { "key": "helperText", "label": "Helper text", "type": "TEXT", "default": "Helper text", "binds": [ { "node": "Helper", "field": "characters" } ], "code": { "prop": "helperText" } },
+    { "key": "invalidText", "label": "Invalid text", "type": "TEXT", "default": "Error message", "binds": [ { "node": "Invalid text", "field": "characters" } ], "code": { "prop": "invalidText" } },
+    { "key": "warnText", "label": "Warn text", "type": "TEXT", "default": "Warning message", "binds": [ { "node": "Warn text", "field": "characters" } ], "code": { "prop": "warnText" } }
+  ],
+
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Select": {
+          "direction": "column",
+          "width": "fill",
+          "height": "hug",
+          "alignMain": "start",
+          "alignCross": "start",
+          "paddingTop": { "raw": 0, "level": "info", "reason": "the form item has no padding" },
+          "paddingRight": { "raw": 0, "level": "info", "reason": "the form item has no padding" },
+          "paddingBottom": { "raw": 0, "level": "info", "reason": "the form item has no padding" },
+          "paddingLeft": { "raw": 0, "level": "info", "reason": "the form item has no padding" },
+          "gap": { "token": "spacing-03" }
+        },
+        "Label": { "textStyle": { "token": "label-01" }, "textResize": "width-and-height" },
+        "Field group": { "direction": "column", "width": "fill", "height": "hug", "gap": { "token": "spacing-02" } },
+        "Field": { "direction": "column", "width": "fill", "height": "hug", "strokeWeight": { "raw": 2, "level": "warning", "reason": "outline: 2px with outline-offset: -2px (focus-outline mixin); no design token" }, "strokeAlign": "inside", "gap": { "raw": 0, "level": "info", "reason": "the underline is the select's bottom border, flush with the box" } },
+        "Box": {
+          "direction": "row",
+          "width": "fill",
+          "alignCross": "center",
+          "paddingLeft": { "token": "spacing-05" },
+          "paddingRight": { "token": "spacing-05" },
+          "gap": { "token": "spacing-05" }
+        },
+        "Value": { "textStyle": { "token": "body-compact-01" }, "width": "fill", "textResize": "height" },
+        "Invalid icon": { "width": { "token": "icon-size-01" }, "height": { "token": "icon-size-01" }, "visible": false },
+        "Warn icon": { "width": { "token": "icon-size-01" }, "height": { "token": "icon-size-01" }, "visible": false },
+        "Chevron": { "width": { "token": "icon-size-01" }, "height": { "token": "icon-size-01" } },
+        "Underline": { "width": "fill", "height": { "raw": 1, "level": "warning", "reason": "border-block-end: 1px is a constant with no design token" } },
+        "Helper": { "textStyle": { "token": "helper-text-01" }, "width": "fill", "textResize": "height", "visible": true },
+        "Invalid text": { "textStyle": { "token": "helper-text-01" }, "width": "fill", "textResize": "height", "visible": false },
+        "Warn text": { "textStyle": { "token": "helper-text-01" }, "width": "fill", "textResize": "height", "visible": false }
+      }
+    },
+    { "match": { "validation": "invalid" }, "set": { "Box": { "gap": { "token": "spacing-03" } }, "Invalid icon": { "visible": true }, "Invalid text": { "visible": true }, "Helper": { "visible": false } } },
+    { "match": { "validation": "warn" }, "set": { "Box": { "gap": { "token": "spacing-03" } }, "Warn icon": { "visible": true }, "Warn text": { "visible": true }, "Helper": { "visible": false } } },
+    { "match": { "size": "xs" }, "set": { "Box": { "height": { "raw": 23, "level": "info", "reason": "derived: size-xs (24) − 1px bottom border (box-sizing: border-box)" } } } },
+    { "match": { "size": "sm" }, "set": { "Box": { "height": { "raw": 31, "level": "info", "reason": "derived: size-sm (32) − 1px bottom border" } } } },
+    { "match": { "size": "md" }, "set": { "Box": { "height": { "raw": 39, "level": "info", "reason": "derived: size-md (40) − 1px bottom border" } } } },
+    { "match": { "size": "lg" }, "set": { "Box": { "height": { "raw": 47, "level": "info", "reason": "derived: size-lg (48) − 1px bottom border" } } } }
+  ],
+
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Select": { "fill": "none", "stroke": "none" },
+        "Label": { "fill": { "token": "text-secondary" } },
+        "Field": { "fill": { "token": "field-01" }, "stroke": "none" },
+        "Value": { "fill": { "token": "text-primary" } },
+        "Invalid icon/Vector": { "fill": { "token": "support-error" } },
+        "Warn icon/Vector": { "fill": { "token": "support-warning" } },
+        "Chevron/Vector": { "fill": { "token": "icon-primary" } },
+        "Underline": { "fill": { "token": "border-strong-01" } },
+        "Helper": { "fill": { "token": "text-helper" } },
+        "Invalid text": { "fill": { "token": "text-error" } },
+        "Warn text": { "fill": { "token": "text-primary" } }
+      }
+    },
+    {
+      "match": { "validation": "invalid" },
+      "set": { "Field": { "stroke": { "token": "support-error" } } }
+    },
+    {
+      "match": { "state": "hover" },
+      "set": { "Field": { "fill": { "token": "field-hover-01" } } }
+    },
+    {
+      "match": { "readOnly": "read-only" },
+      "set": { "Field": { "fill": "none" }, "Underline": { "fill": { "token": "border-subtle-00" } }, "Chevron/Vector": { "fill": { "token": "icon-disabled" } } }
+    },
+    {
+      "match": { "state": "focus" },
+      "set": { "Field": { "stroke": { "token": "focus" } } }
+    },
+    {
+      "match": { "state": "disabled" },
+      "set": {
+        "Label": { "fill": { "token": "text-disabled" } },
+        "Value": { "fill": { "token": "text-disabled" } },
+        "Chevron/Vector": { "fill": { "token": "icon-disabled" } },
+        "Underline": { "fill": "none" },
+        "Helper": { "fill": { "token": "text-disabled" } }
+      }
+    }
+  ],
+
+  "icons": {
+    "source": { "package": "@carbon/icons", "version": "11.90.0", "path": "svg/16/{key}.svg", "fallback": "svg/32/{key}.svg" },
+    "default": "chevron--down",
+    "preferred": ["chevron--down"]
+  },
+
+  "subComponents": [],
+
+  "dependencies": {
+    "families": [],
+    "fonts": [ { "family": "IBM Plex Sans", "styles": ["Regular"] } ]
+  },
+
+  "figma": {
+    "page": "Selects",
+    "componentSetName": "Select",
+    "description": "Carbon React Select (@carbon/react 1.118.0). Draft: not yet built or reviewed in Figma.",
+    "header": { "type": "Component", "title": "Select", "namespace": "@carbon/react" },
+    "grid": { "columns": ["size"], "rows": ["validation", "readOnly", "state"] }
+  },
+
+  "code": {
+    "framework": "react",
+    "package": "@carbon/react",
+    "component": "Select",
+    "import": "import { Select, SelectItem } from '@carbon/react';",
+    "required": ["id"],
+    "items": { "component": "SelectItem", "props": ["value", "text"] },
+    "alwaysEmit": ["size"],
+    "alwaysEmitWhy": "A Select without size inherits the nearest <Layout size>; emit size explicitly so the snippet matches the variant."
+  },
+
+  "notes": [
+    { "level": "verify", "at": "anatomy.Warn icon", "message": "WarningAltFilled is two-tone: _select.scss paints its inner path (path[fill]) $black-100 while the outer path takes $support-warning. Icons are one flattened Vector (#13), so the Design Library shows a support-warning triangle with the mark cut out instead of a black mark." },
+    { "level": "info", "at": "properties.value", "message": "The Value text is the selected SelectItem's text. The options are children the feature supplies (code.items, #93); the Contract shows one, and the Handoff lists them." },
+    { "level": "info", "at": "layout.Box.gap", "message": "Carbon positions the chevron (inset-inline-end spacing-05) and the status icon (inset-inline-end spacing-08) absolutely and reserves room with padding-inline-end spacing-09, or spacing-10 with a status icon. In Auto Layout that is right padding spacing-05 plus a spacing-05 gap, closing to spacing-03 when the status icon shows." },
+    { "level": "info", "at": "paint[readOnly=read-only]", "message": "Read-only keeps a transparent field on hover: .cds--select--readonly .cds--select-input sets background after the :hover rule at equal specificity." },
+    { "level": "info", "at": "paint.Field.fill", "message": "Carbon's $field, $field-hover, $border-strong and $border-subtle are contextual Layer tokens. At :root and .cds--layer-one they resolve to field-01, field-hover-01, border-strong-01 and border-subtle-00, which the Contract binds. Inside <Layer level={1|2}> they shift to -02/-03; the Contract does not model Layer." },
+    { "level": "info", "at": "family", "message": "Left out of this draft: inline, hideLabel/noLabel, the decorator/AI label slot, the deprecated light prop, SelectItemGroup, the v12 border-radius and gradient border behind enable-v12-release, and the Fluid variant." }
+  ]
+}
