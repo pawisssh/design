@@ -7,7 +7,7 @@ description: Generic Adapter for shadcn/ui-style Code Libraries, from a consumer
 
 The Adapter for Code Libraries a consumer installs as source and themes with CSS custom properties and Tailwind v4, starting with shadcn/ui (spec [#103](https://github.com/pawisssh/design/issues/103)). It is a sibling of the [Carbon Adapter](../adapter-carbon/SKILL.md) with the same outputs. What a Foundations document must contain is defined in the shared [`contract`](../contract/SKILL.md) skill's [foundations schema](../contract/references/foundations-schema.md); this skill only knows how to read the project.
 
-Today it has the exact tier: the Foundations step ([#118](https://github.com/pawisssh/design/issues/118)) and the component step ([#119](https://github.com/pawisssh/design/issues/119)). Synthesized tokens ([#120](https://github.com/pawisssh/design/issues/120)), the slot axis ([#121](https://github.com/pawisssh/design/issues/121)), the agent tier ([#122](https://github.com/pawisssh/design/issues/122)) and the preview renderer are later tickets.
+Today it has the exact tier: the Foundations step ([#118](https://github.com/pawisssh/design/issues/118)), the component step ([#119](https://github.com/pawisssh/design/issues/119)) and Synthesized tokens ([#120](https://github.com/pawisssh/design/issues/120)). The slot axis ([#121](https://github.com/pawisssh/design/issues/121)), the agent tier ([#122](https://github.com/pawisssh/design/issues/122)) and the preview renderer are later tickets.
 
 ## Inputs
 
@@ -38,14 +38,15 @@ The one thing ever executed is Tailwind's own compiler, over the project's CSS (
 ## 2. Foundations step
 
 ```
-node skills/adapter-generic/scripts/foundations.mjs [--project <dir>] [--tools <dir>] [-o <file>]
+node skills/adapter-generic/scripts/foundations.mjs [--project <dir>] [--tools <dir>] [--family <key>]... [-o <file>]
 ```
 
 It reads the reference project and the fetched tools by default, and writes [`design-systems/shadcn/shadcn.foundations.json`](../../design-systems/shadcn/shadcn.foundations.json).
 
 - Never edit that file by hand. Change the project, the pins or a rule here, and regenerate.
 - A rerun is byte-identical.
-- The seam is `generate({project, drafts})`. `drafts` must be empty until the agent tier (#122) exists.
+- The seam is `generate({project, families, drafts})`. `drafts` must be empty until the agent tier (#122) exists.
+- **Families.** `--family` repeats; by default it is every family with a committed Contract in `design-systems/shadcn/contracts/`. One run writes the Code Library tokens and every family's [Synthesized tokens](#synthesized-tokens) (#70 §1): for each family it reads the component the way the component step does, adds its Synthesized tokens and its component file (so editing the file makes the document stale), and builds its Contract against the result. That Contract fills `closure.contracts`, `closure.tokens`, each token's `usedBy` and `checks.scopes` (`contract.mjs validate`, rule 6, with no errors).
 
 ### Modes
 
@@ -126,9 +127,10 @@ A literal `@theme --color-*` (not `var(…)`) gets a warning note and is not car
 node skills/adapter-generic/scripts/components.mjs --family <key> [--project <dir>] [--foundations <file>] [--tools <dir>] [-o <file>]
 ```
 
-It reads one component family of the project, `<ui alias>/<key>.tsx`, and writes the draft Contract `design-systems/shadcn/contracts/<key>.component.json`. It checks the Contract with [`contract.mjs`](../contract/scripts/contract.mjs) `validate` and writes it with [`io.mjs`](../contract/scripts/io.mjs) `writeJson`. A rerun is byte-identical. The seams are `readFamily({project, family, foundations})` (the exact-tier reading, with what is pending) and `generate({project, family, foundations, drafts})`.
+It reads one component family of the project, `<ui alias>/<key>.tsx`, and writes the draft Contract `design-systems/shadcn/contracts/<key>.component.json`. It checks the Contract with [`contract.mjs`](../contract/scripts/contract.mjs) `validate` and writes it with [`io.mjs`](../contract/scripts/io.mjs) `writeJson`. A rerun is byte-identical. The seams are `readFamily({project, family, foundations})` (the exact-tier reading, with the family's Synthesized tokens) and `generate({project, family, foundations, drafts})`.
 
-- **Snapshot.** The Foundations document must be from this project's snapshot: every file in its `source.files` must hash the same, or the step fails with "another snapshot". The Contract's `source.files` adds the component file.
+- **Snapshot.** The Foundations document must be from this project's snapshot: every file in its `source.files` must hash the same, or the step fails with "another snapshot". The Contract's `source.files` are the document's, minus other families' component files, plus its own.
+- **Synthesized tokens.** The document must hold exactly the family's Synthesized tokens as its source reads now, and a closure entry with the Contract's `snapshotId`. Otherwise the step fails, naming the tokens and the fix: regenerate with `foundations.mjs --family <key>`.
 - **Source** ([`scripts/source.mjs`](scripts/source.mjs)). From the TypeScript AST: every `cva(base, {variants, defaultVariants, compoundVariants})` and every top-level function component, with its element (also through `const Comp = asChild ? Slot.Root : "button"`), `data-slot`, the attributes it sets from props (`data-size={size}`), its destructured defaults and its class lists, each with its line. The root is the export named after the family (`button` → `Button`). A family without a cva, or with `compoundVariants`, fails.
 - **Cascade** ([`scripts/cascade.mjs`](scripts/cascade.mjs)). Every class is compiled with Tailwind in one `build()`. Only the utilities layer is read, and an `@supports` branch replaces the fallback it guards. Each rule is sorted by its compiled selector:
   - a Mode, from `:is(<mode selector> *)`;
@@ -171,16 +173,32 @@ In order: each cva variant axis, then the attribute axes, then the canonical Sta
 | `--tw-ring-shadow` + `--tw-ring-color` | `effects`: one `drop-shadow` with the ring width as `spread` |
 
 - **Lengths.** A length is the Foundations variable whose `codeSyntax.WEB` is the compiled text and whose scopes cover the field. Otherwise it is evaluated to px (`var`, `calc`, `min`, `max`) as an `info` raw that names the utility.
-- **Colours.** `var(--<name>)` is that COLOR variable. A literal goes through [`color.mjs`](../contract/scripts/color.mjs) `convert` and is a `warning` raw.
-- **Rules.** For each field, the step finds the fewest axes its value depends on. The commonest value goes in `{}` (a tie goes to the Base Component's). The other values become rules that are merged while two differ in one axis alone. A self-check confirms `resolve()` gives back every variant.
+- **Colours.** `var(--<name>)` is that COLOR variable. A literal goes through [`color.mjs`](../contract/scripts/color.mjs) `convert` and is a `warning` raw. A colour that differs by Mode, carries an opacity or is a `color-mix` is a [Synthesized token](#synthesized-tokens).
+- **Rules.** For each field, the step finds the fewest axes its value depends on. The Base Component's value goes in `{}`. Rules follow fewest axes first, then in axis order, and a later rule wins. A rule is added where the rules so far give its anchor (that value combination, every other axis at its default) the wrong value, and that value holds for at least half of the anchor and its neighbours one axis away. A rule over every remaining axis is always added when needed. Rules on the same axes are merged while two differ in one axis alone. A self-check confirms `resolve()` gives back every variant.
 - **Fails:**
-  - layout that differs by Mode;
+  - layout, an opacity or an effect's shape (anything but its colour) that differs by Mode, naming the utility;
   - a border with no `border-color` utility, which would take the base layer's colour;
   - a ring with no colour.
 
+### Synthesized tokens
+
+Paint the Foundations tokens cannot bind directly becomes a Synthesized token (#70, #120): a per-mode COLOR in the `theme` collection that the Contract binds as a plain `{token}`. That is paint that differs by Mode (`bg-background dark:bg-input/30`), a token at an opacity (`bg-primary/80`) or a `color-mix` of tokens. A value that is the same plain token in every Mode stays that token.
+
+- **Name.** `<family>-<the rule's match values in axis order, a list joined by "+">[-<node>]-<field>`, with the node left out for the root and the field `fill`, `stroke`, `effect` or `effect-<n>`. The Figma name is `<Family>/<name>`, for example `Button/button-outline-fill`.
+- **Per-mode value.** Each Mode's winning utility is converted through [`color.mjs`](../contract/scripts/color.mjs), `color-mix` included:
+  - `var(--x)` is flattened to that token's own value in the Mode: `{raw, alpha?, resolved, from: {alias: "x"}}` with an `info` reason. This is the #103 fallback: the builder core does not bind an alias within one collection yet (#124). `from.alias` keeps the alias so a later pass can bind it instead.
+  - `x / N` (Tailwind's `color-mix(in oklab, var(--x) N%, transparent)`) is that value with its alpha multiplied by N%: `{raw, alpha, resolved, from: {alias, alpha}}`, because a Figma alias cannot carry alpha. Dark `bg-input/30` over a 15% white `--input` is alpha 0.045.
+  - Any other `color-mix` is evaluated over each token's CSS in that Mode: `{raw, alpha?, resolved, from: {mix}}`.
+  - A literal is the literal form, and `none` is transparent black.
+- **Metadata.** `source` is `synthesized: <file>:<lines> <utilities>`, `codeSyntax.WEB` the utilities in source order, `family` and `usedBy` the family, and `scopes` only the one its use needs (`FRAME_FILL`, `STROKE_COLOR` or `EFFECT_COLOR`).
+- **Order.** In the document a collection's Code Library tokens come first, then the Synthesized ones, each by name.
+- **Fails:**
+  - a name a Code Library token already has, naming both;
+  - a name two families both derive, naming both;
+  - relative colour syntax, which the converter cannot read, naming the utility.
+
 ### Left for later tickets
 
-- **Synthesized tokens (#120).** Paint that differs by Mode (`bg-background` / `dark:bg-input/30`), a token at an opacity (`bg-primary/80`) or a `color-mix` of tokens. `readFamily` lists each one under `pending`: the winning utility per Mode, its source lines and how many variants use it. `generate` fails and lists every one. The CLI prints `FAIL`, exits 1 and writes nothing. That is the fixture Button today.
 - **Notes.** Each of these gets an `info` note, and none is carried:
   - slot conditions such as `has-data-[icon=…]` (#121);
   - ancestor styling such as `in-data-[slot=button-group]` (ADR 0012);

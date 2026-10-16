@@ -126,14 +126,25 @@ ${u.question ? `<p class="note">${esc(question(u.question))}${qflag(u.question)}
 </article>`);
   }
 
-  // ---- states ----
+  // ---- states: the states x breakpoints matrix, then one tab per state ----
+  // A screenshot path is relative to handoff.json; the Rendering sits one folder down, in renderings/.
+  const shotCell = (name, bp, shot) => (typeof shot === 'string'
+    ? `<a href="../${esc(shot)}"><img src="../${esc(shot)}" alt="${esc(name)} at ${esc(bp)}" loading="lazy"></a>`
+    : `<div class="slot">screenshot missing · ${esc((shot && shot.reason) || 'no reason given')}</div>`);
+  const matrixRows = Object.entries(screen.states).map(([name, s]) => `<tr><th>${esc(name)}</th>${s.missing
+    ? `<td class="hatch" colspan="${screen.breakpoints.length || 1}">${flag('missing')} ${esc(question(s.question))}${qflag(s.question)}</td>`
+    : s.na ? `<td colspan="${screen.breakpoints.length || 1}">${flag('na')} Not applicable: ${esc(s.reason)}</td>`
+      : screen.breakpoints.map(bp => `<td>${shotCell(name, bp, (s.screenshots || {})[bp])}</td>`).join('')}</tr>`).join('\n');
+  const matrix = `<div class="table-wrap"><table class="matrix"><tr><th>state</th>${screen.breakpoints.map(bp => `<th>${esc(bp)}</th>`).join('')}</tr>
+${matrixRows}
+</table></div>`;
   const stateTabs = Object.keys(screen.states).map((name, i) => `<button type="button" class="tab" data-state="${esc(name)}" aria-selected="${i === 0}">${esc(name)}${screen.states[name].missing ? ' !' : screen.states[name].na ? ' –' : ''}</button>`).join('');
   const statePanels = Object.entries(screen.states).map(([name, s], i) => {
     const body = s.missing ? `<p>${flag('missing')} ${esc(question(s.question))}${qflag(s.question)}</p>`
       : s.na ? `<p>${flag('na')} Not applicable: ${esc(s.reason)}</p>`
         : `<p>${esc(s.content)}</p>${s.trigger ? `<p>Trigger: ${code(s.trigger)}</p>` : ''}
 ${Object.keys(s.usageStates || {}).length ? `<ul>${Object.entries(s.usageStates).map(([id, us]) => `<li>${code(id)}${us.state ? ` is ${code(us.state)}` : ''}${Object.entries(us.properties || {}).map(([k, ref]) => ` · ${esc(k)} “${esc(text(ref))}”`).join('')}</li>`).join('')}</ul>` : ''}
-<div class="shots">${Object.entries(s.screenshots || { [Object.keys(h.source.modes)[0]]: { missing: true } }).map(([m, shot]) => `<figure class="shot"><figcaption>${esc(m)}</figcaption>${typeof shot === 'string' ? `<img src="${esc(shot)}" alt="${esc(name)} in ${esc(m)}">` : '<div class="slot">screenshot missing (static-only)</div>'}</figure>`).join('')}</div>`;
+<div class="shots">${Object.entries(s.screenshots || {}).map(([bp, shot]) => `<figure class="shot"><figcaption>${esc(bp)}</figcaption>${shotCell(name, bp, shot)}</figure>`).join('')}</div>`;
     return `<div class="panel" data-panel="${esc(name)}"${i === 0 ? '' : ' hidden'}><h3>${esc(name)}</h3>${body}</div>`;
   }).join('\n');
 
@@ -180,7 +191,7 @@ ${Object.keys(s.usageStates || {}).length ? `<ul>${Object.entries(s.usageStates)
 ${(anyRenderer ? anyRenderer.stylesheet : '').replace(/<\/style/gi, '<\\/style')}
 </style>
 <style>
-:root { --ink: #161616; --muted: #525252; --line: #e0e0e0; --bg: #ffffff; --soft: #f4f4f4; --warn: #8a3800; }
+:root { --ink: #161616; --muted: #525252; --line: #e0e0e0; --bg: #ffffff; --soft: #f4f4f4; --warn: #8a3800; --bad: #a2191f; --bad-soft: #fff1f1; --bad-line: #ffd7d9; }
 body.page { margin: 0; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: var(--ink); background: var(--bg); }
 .top { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; padding: 12px 16px; background: var(--bg); border-bottom: 1px solid var(--line); }
 .top h1 { font-size: 20px; margin: 0; } .stamp { margin: 0; color: var(--muted); font-size: 14px; }
@@ -199,7 +210,10 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 .proposal-box, .raw-box { display: flex; gap: 4px; align-items: center; padding: 8px; border: 1px dashed var(--muted); }
 .chip { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--soft); font-size: 10px; }
 .tabs { display: flex; flex-wrap: wrap; gap: 4px; } .tab { padding: 6px 12px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; } .tab[aria-selected="true"] { border-color: var(--ink); }
-.shots { display: flex; flex-wrap: wrap; gap: 12px; } .shot { margin: 0; } .slot { width: 240px; height: 140px; display: grid; place-items: center; border: 1px dashed var(--muted); color: var(--muted); font-size: 13px; }
+.shots { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; } .shot { margin: 0; flex: 0 1 240px; min-width: 0; } .shot figcaption { font-size: 12px; margin-bottom: 4px; }
+.shots img, .matrix img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); } .matrix td { min-width: 96px; max-width: 200px; }
+.slot { min-height: 96px; padding: 8px; display: grid; place-items: center; text-align: center; border: 1px dashed var(--muted); color: var(--muted); font-size: 12px; }
+.hatch { background: repeating-linear-gradient(45deg, var(--bad-soft) 0 6px, var(--bad-line) 6px 12px); color: var(--bad); }
 .swatch { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--line); vertical-align: middle; margin-right: 4px; }
 .not-specified { color: var(--muted); } a.flag { color: inherit; text-decoration: none; } .counts { font-size: 13px; } .note { font-size: 13px; }
 .doc h3 { font-size: 15px; font-weight: 600; margin: 16px 0 4px; } .raw-box code { font-size: 12px; }
@@ -230,6 +244,7 @@ ${look.map(([k, what, why, where]) => `<tr><td>${flag(k)}</td><td>${what}</td><t
 </table></div>
 </section>
 <section class="group" id="states"><h2>States · ${esc(screen.name)}</h2>
+${matrix}
 <div class="tabs" role="tablist">${stateTabs}</div>
 ${statePanels}
 <h3>Acceptance</h3>

@@ -2,28 +2,38 @@
 // The Generic Adapter's foundations step (#118): a shadcn/ui project's Foundations document, read exactly from its
 // global CSS. Never edit its output by hand.
 //
-//   node skills/adapter-generic/scripts/foundations.mjs [--project <dir>] [--tools <dir>] [-o <file>]
+//   node skills/adapter-generic/scripts/foundations.mjs [--project <dir>] [--tools <dir>] [--family <key>]... [-o <file>]
 //
 // Defaults: the committed fixture project (sources.mjs FIXTURE), tools in .scratch/adapter-generic/tools (fetched
-// on first use), output design-systems/shadcn/shadcn.foundations.json. Two runs are byte-identical. The schema is
+// on first use), every family with a committed Contract in design-systems/shadcn/contracts, output
+// design-systems/shadcn/shadcn.foundations.json. Two runs are byte-identical. The schema is
 // skills/contract/references/foundations-schema.md.
+//
+// One run writes both (#70 §1, #120): after the Code Library tokens, each family's Synthesized tokens are re-derived
+// from its source (components.mjs readFamily) and added, its file joins the snapshot, and its Contract is built
+// against the result to fill the closure, usedBy and the scope check.
 //
 // What it reads: `components.json` (which CSS file), that CSS, and `package-lock.json` (which versions the project
 // resolves). In the CSS: the custom properties of each mode selector (MODES), then `@theme` / `@theme inline`,
 // whose keys give each value its role (ROLES). Every colour goes through the shared converter (color.mjs), and
 // every variable's codeSyntax is what Tailwind's own compiler emits for its utility, so the compiled CSS is also
 // the cross-check. Generation throws (the CLI exits 1 and writes nothing) on a colour the converter cannot read,
-// a non-colour value that differs by mode, a reference no mode declares, or a compiled value that disagrees.
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+// a non-colour value that differs by mode, a reference no mode declares, a compiled value that disagrees, anything
+// the component step refuses for a family, a Synthesized name two families both derive, or a Contract that fails
+// validate against the document.
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { convert } from '../../contract/scripts/color.mjs';
+import { closure } from '../../contract/scripts/contract.mjs';
+import { contractFor, readFamily } from './components.mjs';
 import { DEFAULT_DIR, FIXTURE, REPO_ROOT, STYLESHEETS, TOOLS, fetchTools, hasTools, sha256, snapshotId, toolDir } from './sources.mjs';
 import { build, utilityRule } from './tailwind.mjs';
+import { evaluate, isSynthesized, lengthPx, literalForm, round } from './values.mjs';
 
 // Mode selector -> mode. The first is the default; a mode that omits a property inherits the default's value.
 const MODES = [[':root', 'light', 'Light'], ['.dark', 'dark', 'Dark']];
 const COLLECTIONS = ['theme', 'layout'];
+const CONTRACTS = 'design-systems/shadcn/contracts'; // where a family's Contract is committed, for the closure
 // Role table: the `@theme` key prefix gives a token its Figma type, group, scopes and the utility that compiles it.
 // In Tailwind every theme colour feeds bg-, text-, border-, ring- and shadow- utilities, so a colour may fill,
 // stroke or colour an effect.
@@ -36,11 +46,9 @@ const FAMILIES = new Set(['sidebar', 'chart']);
 // Tailwind's classic named spacing scale (#70 §3); a step is `spacing-<n>` with "." written "_".
 const SPACING = ['0', 'px', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '5', '6', '7', '8', '9', '10', '11', '12', '14', '16',
   '20', '24', '28', '32', '36', '40', '44', '48', '52', '56', '60', '64', '72', '80', '96'];
-const CLIPPED = 'outside sRGB, clipped per channel';
 
 const fail = msg => { throw new Error(msg); };
 const byKey = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
-export const round = x => Math.round(x * 1e4) / 1e4; // px to 4 decimals, so 10 x 2.2 is 22, not 22.000000000000004
 const title = s => s.charAt(0).toUpperCase() + s.slice(1);
 const isColour = text => /^(#|(rgba?|hsla?|oklab|oklch|color|color-mix)\(|(transparent|black|white)$)/i.test(text);
 
@@ -67,13 +75,6 @@ function blocks(css) {
   return out;
 }
 
-/** "0.625rem" or "4px" -> px. */
-function lengthPx(text, at) {
-  const m = /^(-?\d*\.?\d+)(rem|px)$/.exec(text.trim());
-  if (!m) fail(`${at}: "${text}" is not a rem or px length`);
-  return round(parseFloat(m[1]) * (m[2] === 'rem' ? 16 : 1));
-}
-
 /** A @theme value over one multiplier: var(--m), calc(var(--m) * k) -> {multiplier, factor}; a length -> {css}. */
 function scaled(text, at) {
   let m = /^var\((--[\w-]+)\)$/.exec(text);
@@ -84,32 +85,18 @@ function scaled(text, at) {
   return { css: text };
 }
 
-/**
- * Evaluate a compiled length (`calc(var(--spacing) * 1.5)`, `var(--radius)`, `min(var(--radius-md), 10px)`, `1px`)
- * to px, given px per property.
- */
-export function evaluate(text, env, at) {
-  const t = text.trim();
-  let m = /^var\((--[\w-]+)\)$/.exec(t);
-  if (m) return m[1] in env ? env[m[1]] : fail(`${at}: compiled ${t} names an unknown property`);
-  m = /^(min|max)\(([^,]+),([^,]+)\)$/.exec(t);
-  if (m) return Math[m[1]](evaluate(m[2], env, at), evaluate(m[3], env, at));
-  m = /^calc\((.+)\*(.+)\)$/.exec(t);
-  if (m) return round(evaluate(m[1], env, at) * evaluate(m[2], env, at));
-  if (/^-?\d*\.?\d+$/.test(t)) return parseFloat(t);
-  return lengthPx(t, at);
-}
-
 // ---------- generate ----------
 
 /**
  * Generate the Foundations document of a shadcn/ui project.
  * @param project  the project folder (components.json at its root).
+ * @param families the Component Family keys with a Contract: each adds its Synthesized tokens (#120), and its
+ *                 Contract gives the closure, usedBy and the scope check (one run writes both, #70 §1).
  * @param drafts   agent-drafted values; read by the agent tier (#122), so it must be empty here.
  * @param tools    the pinned tools folder (sources.mjs).
  * @returns {doc, text, documentHash, summary}. Throws on any failed check (see the header).
  */
-export async function generate({ project, drafts = [], tools = DEFAULT_DIR }) {
+export async function generate({ project, families = [], drafts = [], tools = DEFAULT_DIR }) {
   if (drafts.length) fail('drafts are read by the agent tier (#122), which does not exist yet');
   const readText = rel => readFileSync(join(project, rel), 'utf8');
   const config = JSON.parse(readText('components.json'));
@@ -173,14 +160,8 @@ export async function generate({ project, drafts = [], tools = DEFAULT_DIR }) {
     const values = {};
     MODES.forEach(([, key], i) => {
       const text = value(prop, i);
-      let c;
-      try { c = convert(text); } catch (e) { fail(`${prop} (${MODES[i][0]}): ${e.message}`); }
+      try { values[key] = literalForm(text); } catch (e) { fail(`${prop} (${MODES[i][0]}): ${e.message}`); }
       checks.converted++;
-      const v = c.alpha === 1
-        ? { value: c.hex, resolved: c.hex, from: { css: text } }
-        : { raw: c.hex, alpha: c.alpha, resolved: `rgba(${[1, 3, 5].map(j => parseInt(c.hex.slice(j, j + 2), 16)).join(', ')}, ${c.alpha})`, from: { css: text } };
-      if (c.clipped) Object.assign(v, { level: 'info', reason: CLIPPED });
-      values[key] = v;
     });
     const head = name.split('-')[0];
     const family = FAMILIES.has(head) ? head : undefined;
@@ -256,8 +237,7 @@ export async function generate({ project, drafts = [], tools = DEFAULT_DIR }) {
       { key: 'theme', name: 'Theme', modes: MODES.map(([selector, key, label]) => ({ key, label, selector })) },
       { key: 'layout', name: 'Layout', modes: [{ key: 'default', label: 'Default' }] },
     ],
-    variables: Object.fromEntries(Object.entries(variables).sort(([ka, a], [kb, b]) =>
-      COLLECTIONS.indexOf(a.collection) - COLLECTIONS.indexOf(b.collection) || byKey(ka, kb))),
+    variables: ordered(variables),
     textStyles: {},
     checks: {
       css: { against: cssFile, converted: checks.converted, by: 'skills/contract/scripts/color.mjs convert' },
@@ -268,14 +248,53 @@ export async function generate({ project, drafts = [], tools = DEFAULT_DIR }) {
       { level: 'info', at: `${cssFile} --spacing --radius`, message: 'Multipliers are not variables: each step records its multiplier and factor in `from` (#70 §3).' },
     ],
   };
+
+  // 5. Each family with a Contract: its Synthesized tokens join the Theme after every Code Library token, its file
+  //    joins `source.files`, and its Contract, built against the whole document, gives the closure and usedBy.
+  const read = [];
+  for (const family of [...new Set(families)].sort(byKey)) {
+    const f = await readFamily({ project, family, foundations: doc, tools });
+    for (const [k, v] of Object.entries(f.synthesized)) {
+      if (variables[k]) fail(`the Synthesized token ${k} of ${family} is also synthesized for ${variables[k].family}`);
+      variables[k] = v;
+    }
+    files[f.file] = f.files[f.file];
+    read.push([family, f]);
+  }
+  if (read.length) {
+    doc.source.files = Object.fromEntries(Object.keys(files).sort(byKey).map(f => [f, files[f]]));
+    doc.source.snapshotId = snapshotId(doc.source.files);
+    doc.variables = ordered(variables);
+    const tokens = new Set();
+    for (const [family, f] of read) {
+      const contract = contractFor(f, family, doc);
+      doc.closure.contracts.push({ family, path: `${CONTRACTS}/${family}.component.json`, snapshotId: contract.source.snapshotId });
+      for (const t of closure(contract)) {
+        tokens.add(t);
+        const v = doc.variables[t];
+        if (v && !v.usedBy.includes(family)) v.usedBy.push(family); // a Synthesized token already names its family
+      }
+    }
+    doc.closure.tokens = [...tokens].sort(byKey);
+    // contractFor() throws on any validate error, rule 6 (scopes) among them, so a written document has none.
+    doc.checks.scopes = { by: 'skills/contract/scripts/contract.mjs validate, rule 6', contracts: read.length, errors: 0 };
+  }
+
   const text = JSON.stringify(doc, null, 2) + '\n';
   const counts = {};
   for (const v of Object.values(variables)) counts[v.collection] = (counts[v.collection] || 0) + 1;
   const summary = [
     `variables ${COLLECTIONS.map(c => `${c} ${counts[c] || 0}`).join(', ')}; modes ${MODES.map(m => `${m[1]} (${m[0]})`).join(', ')}`,
     `colours converted ${checks.converted}; utilities compiled and matched ${checks.compiled}`,
+    ...read.map(([family, f]) => `${family}: ${Object.keys(f.synthesized).length} Synthesized tokens; closure ${doc.closure.tokens.length} tokens`),
   ];
   return { doc, text, documentHash: `sha256:${sha256(text)}`, summary };
+}
+
+/** Variables in document order: by collection; in Theme, Code Library tokens before Synthesized ones; then by name. */
+function ordered(variables) {
+  return Object.fromEntries(Object.entries(variables).sort(([ka, a], [kb, b]) =>
+    COLLECTIONS.indexOf(a.collection) - COLLECTIONS.indexOf(b.collection) || isSynthesized(a) - isSynthesized(b) || byKey(ka, kb)));
 }
 
 // ---------- CLI ----------
@@ -286,9 +305,14 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const project = opt('--project', FIXTURE);
   const tools = opt('--tools', DEFAULT_DIR);
   const out = opt('-o', join(REPO_ROOT, 'design-systems/shadcn/shadcn.foundations.json'));
+  // --family <key>, repeatable; by default every family with a committed Contract.
+  const families = args.flatMap((a, i) => (a === '--family' ? [args[i + 1]] : []));
+  if (!args.includes('--family') && existsSync(join(REPO_ROOT, CONTRACTS)))
+    families.push(...readdirSync(join(REPO_ROOT, CONTRACTS)).map(f => /^(.+)\.component\.json$/.exec(f)).filter(Boolean).map(m => m[1]));
   try {
+    if (families.some(f => !f || f.startsWith('-'))) throw new Error('--family needs a family key');
     if (!hasTools(tools)) await fetchTools(tools);
-    const { text, documentHash, summary } = await generate({ project, tools });
+    const { text, documentHash, summary } = await generate({ project, families, tools });
     writeFileSync(out, text);
     console.log([...summary, `wrote ${relative(process.cwd(), out)} (${text.length} chars, documentHash ${documentHash})`, 'OK'].join('\n'));
   } catch (e) {

@@ -10,14 +10,16 @@
 // win over the agent's answers while their key still exists, and are dropped and listed once it is gone.
 // Agent decisions are re-decided every run.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, isAbsolute, join } from 'node:path';
+import { basename, dirname, isAbsolute, join } from 'node:path';
 import { convert, deltaE } from '../../contract/scripts/color.mjs';
 import { contentHash as contractHash, proposalContentHash, resolve } from '../../contract/scripts/contract.mjs';
 import { computed, splitWords } from './css.mjs';
 import { fileHash, handoffContentHash, prototypeFiles, snapshotIdOf, usedHash } from './hash.mjs';
 import { COLOR_ROLES, collectionOf, colorText, followCustom, matchDeclaration, matchText, roleOf, sameHex, valueIn } from './match.mjs';
 import { REPO_ROOT, loadDesignSystem, stateAxisOf } from './system.mjs';
+import { hasRuntime } from './deps.mjs';
 import { readHtml, walk } from './reader.mjs';
+import { STEP_KINDS, run } from './runtime.mjs';
 import {
   STANDARD_STATES, atomIn, atomsOf, candidateOf, evaluate, isPlaceholderText, ownDeclarations, parseCondition, standIns, stateOfAtom,
 } from './recognise.mjs';
@@ -26,6 +28,8 @@ const PROTOTYPE_MODE = 'light';
 const LANDMARKS = { header: 'banner', nav: 'navigation', main: 'main', aside: 'complementary', footer: 'contentinfo' };
 const LANDMARK_ROLES = new Set(['banner', 'navigation', 'main', 'complementary', 'contentinfo', 'region', 'search', 'form']);
 const HEADINGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
+// Without breakpoints from the Adapter, the runtime reader screenshots one desktop width.
+const DEFAULT_BREAKPOINTS = [{ key: 'desktop', width: 1280 }];
 
 export { fileHash, handoffContentHash, snapshotIdOf };
 const kebab = s => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -133,11 +137,13 @@ const hasTernary = el => {
 // ---------- the generator ----------
 
 /**
- * generate({prototype, designSystem, decisions}) -> {requests, handoff, path, wrote, contentHash}.
+ * generate({prototype, designSystem, decisions, runtime}) -> {requests, handoff, path, wrote, contentHash}.
  * `prototype` is the HTML file; `designSystem` the design-systems/<ds> folder. With any request open it
- * returns {requests, handoff: undefined, path: null, wrote: false} and writes nothing.
+ * returns {requests, handoff: undefined, path: null, wrote: false} and writes nothing. With `runtime`, the
+ * runtime reader (#113) renders a scratch copy for screenshots and computed text metrics; when it cannot run,
+ * the Handoff is static-only and says why.
  */
-export async function generate({ prototype, designSystem, decisions = {}, depsDir } = {}) {
+export async function generate({ prototype, designSystem, decisions = {}, depsDir, runtime = false } = {}) {
   const system = await loadDesignSystem(designSystem);
   const { foundations, adapter } = system;
   const rel = basename(prototype);
@@ -201,6 +207,22 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const ins = present.filter(s => el.cond.every(c => evaluate(parseCondition(c.expr), atomsIn(s)) === c.value));
     return ins.length === present.length ? null : ins;
   };
+
+  // ---- the runtime reader (#113): how each state is reached, then screenshots and computed values ----
+  const breakpoints = adapter.breakpoints || DEFAULT_BREAKPOINTS;
+  const reach = s => {
+    if (s === 'default') return { steps: [] };
+    const answer = d.ask(`reach:${screenId}:${s}`, {
+      kind: 'reach', question: `How does ${screenId} reach ${s} from first load? Answer {steps: [{fill, value} | {click} | {clock: ms} | {expect}]} (selectors) or {unreachable: reason}.`, candidates: [],
+    }, checkReach);
+    if (!answer) return { steps: null, reason: `no reach decision for ${s} yet` };
+    return answer.unreachable ? { steps: null, reason: answer.unreachable } : answer;
+  };
+  const expectIn = s => { const out = []; walk(mount, el => { const ins = shownIn(el); if (ins && ins.includes(s) && !ins.includes('default')) out.push(at(el.offset)); }); return out; };
+  const rt = runtime
+    ? await runtimeRead({ prototype, screen: screenId, breakpoints, depsDir, states: present.map(s => ({ state: s, ...reach(s), expect: expectIn(s) })) })
+    : { elements: {}, shots: {}, reason: 'static-only: generated without the runtime reader' };
+  const live = el => rt.elements[at(el.offset)];
 
   // ---- recognition: usage candidates, then each one's decision ----
   const copy = {};
@@ -304,7 +326,8 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     if (cand) {
       const key = `recognise:${cand.sig}`;
       const answer = resolveDraftAnswer(d.ask(key, {
-        kind: 'recognise', question: `What is \`${cand.sig}\` ("${elementText(el, atomsIn('default')).slice(0, 40)}")?`, candidates: families, evidence: { at: [at(el.offset)] },
+        kind: 'recognise', question: `What is \`${cand.sig}\` ("${elementText(el, atomsIn('default')).slice(0, 40)}")?`, candidates: families,
+        evidence: { at: [at(el.offset)], ...(live(el) ? { rendered: `${live(el).rect.width}x${live(el).rect.height}px` } : {}) },
       }, checkRecognise), key);
       recognised.push({ el, cand, answer, key });
       usageOf.set(el, recognised[recognised.length - 1]);
@@ -538,9 +561,8 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     s.value = `value:${id}`;
   }
 
-  function addText(r, el, t) {
-    const text = textOf(t.parts, atomsIn('default'));
-    if (!text) return;
+  // Text metrics from the source alone: a size the cascade does not set reads as 16px.
+  function staticMetrics(el) {
     const c = style(el);
     const num = (prop, fallback) => { const v = c[prop] && c[prop].value; if (!v) return fallback; const m = /^(-?\d*\.?\d+)px$/.exec(v); return m ? Number(m[1]) : fallback; };
     const fontSize = num('font-size', 16);
@@ -549,7 +571,14 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const fw = c['font-weight'] && c['font-weight'].value;
     const fontWeight = fw ? (fw === 'bold' ? 700 : fw === 'normal' ? 400 : Number(fw)) : HEADINGS.has(el.tag) ? 700 : 400;
     const letterSpacing = num('letter-spacing', 0);
-    const raw = { fontSize, lineHeight, fontWeight, letterSpacing };
+    return { fontSize, lineHeight, fontWeight, letterSpacing };
+  }
+
+  function addText(r, el, t) {
+    const text = textOf(t.parts, atomsIn('default'));
+    if (!text) return;
+    const raw = live(el) ? liveMetrics(live(el).style) : staticMetrics(el);
+    const { fontSize, lineHeight, fontWeight, letterSpacing } = raw;
     const result = matchText(raw, ctx);
     const where = at(t.offset);
     const tkey = `textStyle:${fontSize}/${lineHeight === null ? 'normal' : lineHeight}/${fontWeight}/${letterSpacing}`;
@@ -626,7 +655,10 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     if (trigger[s]) entry.trigger = trigger[s];
     else if (s !== 'default') entry.trigger = `${stateAtoms(s).join(' or ')}`;
     if (Object.keys(usageStates[s]).length) entry.usageStates = usageStates[s];
-    entry.screenshots = { [PROTOTYPE_MODE]: { missing: true, reason: 'static-only: the tracer reads the Prototype without running it' } };
+    entry.screenshots = Object.fromEntries(breakpoints.map(b => {
+      const shot = rt.shots[s] && rt.shots[s][b.key];
+      return [b.key, shot && shot.png ? `screens/${shot.name}` : shot || { missing: true, reason: rt.reason }];
+    }));
     screenStates[s] = entry;
   }
   const data = [];
@@ -645,6 +677,15 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     if (from && to) flow.push({ from, trigger: `${f.delay}ms timer`, to, source: 'simulated' });
     if (from && !present.includes('error')) flow.push({ from, trigger: `${f.name}() fails`, to: 'error', source: 'missing' });
   }
+
+  if (rt.error) question({
+    id: 'q-runtime', kind: 'runtime', to: 'owner',
+    text: `The runtime reader could not run the Prototype (${rt.error}), so this Handoff is static-only: no screenshots, and text metrics read from the source alone. Fix it and re-run To-handoff?`,
+  });
+  for (const f of rt.failed || []) question({
+    id: `q-untagged-${kebab(f.file)}`, kind: 'runtime', to: 'developer',
+    text: `${f.file} does not parse (${f.error}), so the runtime copy left it untagged and its elements join to their caller. Is it meant to build?`,
+  });
 
   // ---- feature and acceptance: the owner's words, as decisions ----
   const feature = d.ask('feature', {
@@ -713,7 +754,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       modes: { [PROTOTYPE_MODE]: mode },
       notes,
     },
-    screens: [{ id: screenId, name: title, at: at(mount.offset), breakpoints: [], regions, states: screenStates }],
+    screens: [{ id: screenId, name: title, at: at(mount.offset), breakpoints: breakpoints.map(b => b.key), regions, states: screenStates }],
     copy,
     values,
     acceptance: criteria,
@@ -723,7 +764,68 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     ownerDecisions: Object.fromEntries([...d.used.keys()].sort().map(k => [k, d.used.get(k)])),
   };
   handoff.source.foundations.usedHash = usedHash(handoff, foundations);
-  return { ...store(handoff, dir), dropped: d.dropped };
+  const result = { ...store(handoff, dir), dropped: d.dropped };
+  writeShots(rt.shots, join(dirname(result.path), 'screens'), result.wrote);
+  return result;
+}
+
+// ---------- the runtime reader's results ----------
+
+/**
+ * Run the runtime reader and keep what generate needs: {elements, shots, failed}, with each screenshot read into
+ * memory ({name, png}) and the scratch run removed. When it cannot run: {elements: {}, shots: {}, error, reason}.
+ */
+async function runtimeRead(options) {
+  const fail = error => ({ elements: {}, shots: {}, error, reason: `static-only: the runtime reader failed: ${error}` });
+  if (!hasRuntime(options.depsDir)) return fail('the runtime packages or a browser are missing; run node skills/to-handoff/scripts/deps.mjs');
+  let r;
+  try { r = await run(options); } catch (e) { return fail(e.message); }
+  try {
+    const shots = {};
+    for (const [state, byBp] of Object.entries(r.shots)) {
+      shots[state] = {};
+      for (const [bp, shot] of Object.entries(byBp)) shots[state][bp] = typeof shot === 'string' ? { name: basename(shot), png: readFileSync(shot) } : shot;
+    }
+    return { elements: r.elements, shots, failed: r.failed };
+  } finally {
+    r.cleanup();
+  }
+}
+
+// Computed text metrics, in the matcher's units: px, unitless weight, `normal` line height as null.
+function liveMetrics(cs) {
+  const px = v => (/^-?\d*\.?\d+px$/.test(v) ? Math.round(parseFloat(v) * 100) / 100 : null);
+  return {
+    fontSize: px(cs['font-size']),
+    lineHeight: cs['line-height'] === 'normal' ? null : px(cs['line-height']),
+    fontWeight: Number(cs['font-weight']),
+    letterSpacing: cs['letter-spacing'] === 'normal' ? 0 : px(cs['letter-spacing']) ?? 0,
+  };
+}
+
+// The screenshots next to handoff.json, as screens/<screen>.<state>.<breakpoint>.png: rewritten with the Handoff,
+// else only where one is absent, so an unchanged Handoff keeps its screenshots byte for byte.
+function writeShots(shots, dir, wrote) {
+  for (const byBp of Object.values(shots)) for (const shot of Object.values(byBp)) {
+    if (!shot.png) continue;
+    const file = join(dir, shot.name);
+    if (!wrote && existsSync(file)) continue;
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(file, shot.png);
+  }
+}
+
+function checkReach(answer) {
+  if (!answer || typeof answer !== 'object') return 'an answer is {steps: [..]} or {unreachable: reason}';
+  if (answer.unreachable !== undefined) return typeof answer.unreachable === 'string' && answer.unreachable ? null : 'unreachable needs a reason';
+  if (!Array.isArray(answer.steps)) return 'an answer is {steps: [..]} or {unreachable: reason}';
+  for (const step of answer.steps) {
+    const keys = step && typeof step === 'object' ? Object.keys(step).filter(k => STEP_KINDS.includes(k)) : [];
+    if (keys.length !== 1) return `${JSON.stringify(step)} is not one of {fill, value} | {click} | {clock: ms} | {expect}`;
+    if (keys[0] === 'clock' ? !(Number.isFinite(step.clock) && step.clock >= 0) : typeof step[keys[0]] !== 'string') return `${JSON.stringify(step)} has a bad ${keys[0]}`;
+    if (keys[0] === 'fill' && step.value === undefined) return `${JSON.stringify(step)} needs a value`;
+  }
+  return null;
 }
 
 // ---------- store (#64): handoffs/<feature-key>/handoff.json; a write only when the content changes ----------

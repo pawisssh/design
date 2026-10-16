@@ -14,22 +14,26 @@
 //   State from the CSS pseudo-classes. Every axis is fully selected.
 // - layout and paint of the root node, per variant: the cva classes each variant renders, merged as `cn()` merges
 //   them, then the CSS cascade over their compiled rules (specificity, then output order).
-// What it leaves to later tickets, each in a note: text and anatomy beyond the root (#122), slot conditions (#121),
-// styling set by an ancestor (ADR 0012), and paint that differs by Mode, carries an opacity or mixes tokens (#120).
-// Generation throws (the CLI exits 1 and writes nothing) on the last, listing every value, and on anything it cannot
-// read exactly: compound variants, an attribute state with no known state words, layout that differs by Mode, a
-// border whose colour comes from the base layer, or a Foundations document from another snapshot.
+// - paint that differs by Mode, carries an opacity or mixes tokens (#120): a Synthesized token, a per-mode Theme
+//   component token the Contract binds as a plain {token}. The foundations step re-derives the same tokens through
+//   readFamily() and writes them into the Foundations document, which this step then requires to hold them.
+// What it leaves to later tickets, each in a note: text and anatomy beyond the root (#122), slot conditions (#121)
+// and styling set by an ancestor (ADR 0012).
+// Generation throws (the CLI exits 1 and writes nothing) on anything it cannot read exactly: compound variants, an
+// attribute state with no known state words, layout, an opacity or an effect's shape that differs by Mode, relative
+// colour syntax, a Synthesized name a Code Library token already has, a border whose colour comes from the base
+// layer, or a Foundations document from another snapshot or without the family's Synthesized tokens.
 import { readFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { convert } from '../../contract/scripts/color.mjs';
-import { expand, resolve, validate, variantName } from '../../contract/scripts/contract.mjs';
+import { expand, resolve, scopeFor, validate, variantName } from '../../contract/scripts/contract.mjs';
 import { writeJson } from '../../contract/scripts/io.mjs';
 import { candidateRules, compiledRules, winner } from './cascade.mjs';
-import { evaluate, round } from './foundations.mjs';
 import { readSource } from './source.mjs';
 import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, hasTools, sha256, snapshotId } from './sources.mjs';
 import { build } from './tailwind.mjs';
+import { CLIPPED, evaluate, isSynthesized, literalForm, resolvedText, round } from './values.mjs';
 
 // Attribute states with known state words: the attribute becomes an axis, absent by default (#119).
 const ATTR_AXES = {
@@ -57,6 +61,8 @@ const ALIGN = { normal: 'start', stretch: 'start', start: 'start', 'flex-start':
 const LAYOUT_FIELDS = ['direction', 'width', 'height', 'alignMain', 'alignCross', 'paddingTop', 'paddingRight', 'paddingBottom',
   'paddingLeft', 'gap', 'radius', 'strokeWeight', 'strokeAlign'];
 const PAINT_FIELDS = ['fill', 'stroke', 'opacity', 'effects'];
+// The CSS property behind each colour a Synthesized token can carry.
+const COLOUR_PROP = { fill: 'background-color', stroke: 'border-color', effects: '--tw-ring-color' };
 
 const fail = msg => { throw new Error(msg); };
 const byKey = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -93,9 +99,9 @@ function variantsOf(candidate) {
 }
 
 /**
- * Read one family at the exact tier. Returns {name, file, files, axes, layout, paint, pending, notes, omit, expectedCount}:
- * `pending` lists the paint values #120 owns: [{at, light, dark, lines, reason, variants}], each with the winning
- * utility per Mode, the source lines that name them and how many variants use them. Throws on anything it cannot
+ * Read one family at the exact tier. Returns {name, file, files, axes, layout, paint, synthesized, notes, omit,
+ * expectedCount}: `synthesized` maps each Synthesized token's flat name to its Foundations variable, by name, and
+ * `paint` binds it as {token}. `foundations` need only hold the Code Library tokens. Throws on anything it cannot
  * read exactly (see the header).
  */
 export async function readFamily({ project, family, foundations, tools = DEFAULT_DIR }) {
@@ -107,12 +113,14 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const file = `${ui.slice(2)}/${family}.tsx`;
   const Name = pascal(family);
 
-  // 0. The Foundations document must come from this snapshot of the project.
+  // 0. The Foundations document must come from this snapshot of the project. The Contract pins the project files
+  //    the document read, other than component files (a family it synthesized tokens for), and its own file.
   if (!foundations.source || foundations.source.adapter !== 'generic') fail('the Foundations document was not written by the Generic Adapter');
   const files = {};
   for (const [f, hash] of Object.entries(foundations.source.files)) {
-    files[f] = `sha256:${sha256(readFileSync(join(project, f)))}`;
-    if (files[f] !== hash) fail(`${f} differs from the one the Foundations document was read from: it is from another snapshot; regenerate it (foundations.mjs) first`);
+    const now = `sha256:${sha256(readFileSync(join(project, f)))}`;
+    if (now !== hash) fail(`${f} differs from the one the Foundations document was read from: it is from another snapshot; regenerate it (foundations.mjs) first`);
+    if (!f.startsWith(`${ui.slice(2)}/`)) files[f] = now;
   }
   files[file] = `sha256:${sha256(readFileSync(join(project, file)))}`;
   const sortedFiles = Object.fromEntries(Object.keys(files).sort(byKey).map(f => [f, files[f]]));
@@ -257,8 +265,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     const v = /^var\(--([\w-]+)\)$/.exec(text);
     if (v) return foundations.variables[v[1]] && foundations.variables[v[1]].type === 'COLOR' ? { token: v[1] }
       : fail(`${r.candidate} (${at(r.entry)}): ${text} is not a Foundations colour`);
-    if (/^color-mix\(in \w+, var\(--[\w-]+\) \d*\.?\d+%, transparent\)$/.test(text)) return { pending: 'a token at an opacity' };
-    if (/^color-mix\(/.test(text)) return { pending: 'mixes tokens' };
+    if (/^color-mix\(/.test(text)) return { mix: text }; // a Synthesized token's, whatever the Modes do (step 6)
     if (/^currentcolor$/i.test(text)) fail(`${r.candidate} (${at(r.entry)}): currentcolor is not read yet`);
     let c;
     try { c = convert(text); } catch (e) { fail(`${r.candidate} (${at(r.entry)}): ${e.message}`); }
@@ -333,42 +340,85 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       if (!m) fail(`${ring.candidate} (${at(ring.entry)}): ring ${ring.decls['--tw-ring-shadow']} is not read`);
       const rc = win(['--tw-ring-color']);
       if (!rc) fail(`${ring.candidate} (${at(ring.entry)}): a ring with no ring colour is currentcolor, which is not read yet`);
-      const color = colour(rc.decls['--tw-ring-color'], rc);
-      paint.effects = color.pending ? color : [{ type: 'drop-shadow',
-        spread: { raw: parseFloat(m[1]), level: 'info', reason: `${ring.candidate}: a ${m[1]}px ring (box-shadow 0 0 0 ${m[1]}px); no effect-spread variable` }, color }];
+      paint.effects = [{ type: 'drop-shadow',
+        spread: { raw: parseFloat(m[1]), level: 'info', reason: `${ring.candidate}: a ${m[1]}px ring (box-shadow 0 0 0 ${m[1]}px); no effect-spread variable` },
+        color: colour(rc.decls['--tw-ring-color'], rc) }];
       by.effects = rc;
+      by.ring = ring;
     }
+    if (op) by.opacity = op;
     return { layout, paint, by };
   }
 
-  // 6. Every variant in every Mode. Layout must not differ by Mode; paint that does is #120's.
+  // One Mode's value of a Synthesized token, as a Foundations value form: what the winning rule `r` sets there.
+  // A Theme token is flattened to its value in that Mode, keeping the alias in `from`: the builder core does not bind
+  // an alias within one collection yet, so this is #103's fallback until #124's probe and a core change. An opacity
+  // or a mix is evaluated over each token's own CSS in that Mode, so a token's alpha multiplies (0.15 x 0.3 = 0.045).
+  const FLATTENED = 'a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)';
+  const cssOf = (name, r, mode) => {
+    const v = foundations.variables[name];
+    if (!v || v.type !== 'COLOR') fail(`${r.candidate} (${at(r.entry)}): var(--${name}) is not a Foundations colour`);
+    return v.values[mode].from.css;
+  };
+  const evaluated = (text, r) => {
+    try { return convert(text); } catch (e) { fail(`${r.candidate} (${at(r.entry)}): ${e.message}`); }
+  };
+  function modeForm(value, r, field, mode) {
+    if (value === 'none') return literalForm('transparent');
+    const text = r.decls[COLOUR_PROP[field]];
+    let m = /^var\(--([\w-]+)\)$/.exec(text);
+    if (m) {
+      const t = foundations.variables[m[1]].values[mode];
+      return { raw: t.raw || t.value, ...(t.alpha !== undefined && { alpha: t.alpha }), resolved: t.resolved, from: { alias: m[1] },
+        level: 'info', reason: `${r.candidate}: ${FLATTENED}${t.reason === CLIPPED ? `; ${CLIPPED}` : ''}` };
+    }
+    m = /^color-mix\(in (\w+), var\(--([\w-]+)\) (\d*\.?\d+)%, transparent\)$/.exec(text);
+    const c = evaluated(text.replace(/var\(--([\w-]+)\)/g, (_, name) => cssOf(name, r, mode)), r);
+    const clipped = c.clipped ? `; ${CLIPPED}` : '';
+    if (m) return { raw: c.hex, alpha: c.alpha, resolved: resolvedText(c), from: { alias: m[2], alpha: round(parseFloat(m[3]) / 100) },
+      level: 'info', reason: `${r.candidate}: ${m[2]} at ${m[3]}%, flattened to RGBA since a Figma alias cannot carry alpha${clipped}` };
+    if (/^color-mix\(/.test(text)) return { raw: c.hex, ...(c.alpha !== 1 && { alpha: c.alpha }), resolved: resolvedText(c), from: { mix: text },
+      level: 'info', reason: `${r.candidate}: the mix evaluated in this Mode${clipped}` };
+    return literalForm(text);
+  }
+
+  // 6. Every variant in every Mode. Layout and every non-colour paint field must not differ by Mode. A colour that
+  //    does, or that carries an opacity or mixes tokens, takes a Synthesized token: until the rules are known it is a
+  //    placeholder {synth: {mode: form}}, so two variants share a rule exactly when their values agree in every Mode.
   const values = { layout: {}, paint: {} };
   LAYOUT_FIELDS.forEach(f => { values.layout[f] = []; });
   PAINT_FIELDS.forEach(f => { values.paint[f] = []; });
-  const pendingBy = new Map();
+  const uses = new Map(); // placeholder JSON -> the rules that set it, per Mode
+  const json = v => JSON.stringify(v);
+  const modeDiffers = (field, r, i) =>
+    fail(`${Name}.${field}: ${r ? `${r.candidate} (${at(r.entry)})` : 'a value'} differs by mode (${modes[i].key}); only a colour may differ by Mode`);
+  const colourValue = (field, rendered, get) => {
+    const vals = rendered.map(get);
+    if (!vals.some(v => v && v.mix) && vals.every(v => json(v) === json(vals[0]))) return vals[0];
+    const synth = Object.fromEntries(modes.map((m, i) => [m.key, modeForm(vals[i], rendered[i].by[field], field, m.key)]));
+    const key = json(synth);
+    if (!uses.has(key)) uses.set(key, new Set());
+    rendered.forEach(x => { if (x.by[field]) uses.get(key).add(x.by[field]); });
+    return { synth };
+  };
   for (const t of tuples) {
-    const [light, ...others] = modes.map(m => render(t, m.key));
-    others.forEach((o, i) => {
+    const rendered = modes.map(m => render(t, m.key));
+    const [light] = rendered;
+    rendered.forEach((o, i) => {
       for (const f of LAYOUT_FIELDS)
-        if (JSON.stringify(o.layout[f]) !== JSON.stringify(light.layout[f])) {
+        if (json(o.layout[f]) !== json(light.layout[f])) {
           const r = o.by[f] || light.by[f];
-          fail(`${Name}.${f}: ${r ? `${r.candidate} (${at(r.entry)})` : 'a value'} differs by mode (${modes[i + 1].key}); layout is the same in every Mode`);
+          fail(`${Name}.${f}: ${r ? `${r.candidate} (${at(r.entry)})` : 'a value'} differs by mode (${modes[i].key}); layout is the same in every Mode`);
         }
+      if (o.paint.opacity !== light.paint.opacity) modeDiffers('opacity', o.by.opacity || light.by.opacity, i);
+      const shape = x => json(x.paint.effects.map(({ color, ...e }) => e));
+      if (shape(o) !== shape(light)) modeDiffers('effects', o.by.ring || light.by.ring, i);
     });
     for (const f of LAYOUT_FIELDS) values.layout[f].push(light.layout[f]);
-    for (const f of PAINT_FIELDS) {
-      const dark = others[0] || light;
-      const [lv, dv] = [JSON.stringify(light.paint[f]), JSON.stringify(dark.paint[f])];
-      const reason = lv !== dv ? 'differs by mode' : light.paint[f] && light.paint[f].pending;
-      if (!reason) { values.paint[f].push(light.paint[f]); continue; }
-      values.paint[f].push({ pending: reason });
-      const [lr, dr] = [light.by[f], dark.by[f]];
-      const key = [f, lr && lr.candidate, dr && dr.candidate, reason].join('\0');
-      if (!pendingBy.has(key))
-        pendingBy.set(key, { at: `${Name}.${f}`, light: lr ? lr.candidate : null, dark: dr ? dr.candidate : null,
-          lines: [...new Set([lr, dr].filter(Boolean).map(r => at(r.entry)))], reason, variants: 0 });
-      pendingBy.get(key).variants++;
-    }
+    values.paint.fill.push(colourValue('fill', rendered, x => x.paint.fill));
+    values.paint.stroke.push(colourValue('stroke', rendered, x => x.paint.stroke));
+    values.paint.opacity.push(light.paint.opacity);
+    values.paint.effects.push(light.paint.effects.map((e, n) => ({ ...e, color: colourValue('effects', rendered, x => x.paint.effects[n].color) })));
   }
   for (const f of LAYOUT_FIELDS) if (values.layout[f].every(v => v === undefined)) delete values.layout[f];
 
@@ -380,9 +430,40 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     const r = resolve(check, t);
     for (const [section, fields] of [['layout', values.layout], ['paint', values.paint]])
       for (const [f, list] of Object.entries(fields))
-        if (JSON.stringify(r[section][Name][f]) !== JSON.stringify(list[i]))
+        if (json(r[section][Name][f]) !== json(list[i]))
           fail(`internal: the ${section} rules do not reproduce ${Name}.${f} at ${variantName(check, t)}`);
   });
+
+  // Each placeholder becomes a Synthesized token named by its rule (#70 §1): the family, the match's value keys in
+  // axis order (an array's joined by "+"), the node unless it is the root, and the field.
+  const synthesized = {};
+  const valueOrder = Object.fromEntries(axes.map(a => [a.key, a.values.map(v => v.key)]));
+  const entryOrder = new Map(entries.map((e, i) => [e, i]));
+  const scopeAnatomy = { anatomy: { name: Name, type: 'COMPONENT' } };
+  for (const rule of paint)
+    for (const [node, fields] of Object.entries(rule.set))
+      for (const [field, value] of Object.entries(fields)) {
+        const keys = axes.filter(a => a.key in rule.match)
+          .map(a => [].concat(rule.match[a.key]).sort((x, y) => valueOrder[a.key].indexOf(x) - valueOrder[a.key].indexOf(y)).join('+'));
+        const name = (n, key) => [family, ...keys, ...(node === Name ? [] : [node]), n].join('-');
+        const bind = (v, n, scope) => {
+          if (!v || !v.synth) return v;
+          const flat = name(n);
+          if (synthesized[flat]) fail(`internal: two rules name the Synthesized token ${flat}`);
+          const rules = [...uses.get(json(v.synth))].sort((x, y) => entryOrder.get(x.entry) - entryOrder.get(y.entry));
+          const utilities = [...new Set(rules.map(r => r.candidate))].join(' ');
+          const own = foundations.variables[flat];
+          if (own && !isSynthesized(own))
+            fail(`the Synthesized token ${flat} (${utilities}) collides with the Code Library token ${flat} (${own.source}); rename one`);
+          const lines = [...new Set(rules.map(r => r.entry.line))].sort((x, y) => x - y).join(',');
+          synthesized[flat] = { collection: 'theme', name: `${Name}/${flat}`, type: 'COLOR', source: `synthesized: ${file}:${lines} ${utilities}`,
+            scopes: [scope], codeSyntax: { WEB: utilities }, values: v.synth, usedBy: [family], family };
+          return { token: flat };
+        };
+        if (field === 'effects')
+          fields[field] = value.map((e, n) => ({ ...e, color: bind(e.color, value.length > 1 ? `effect-${n + 1}` : 'effect', scopeFor(scopeAnatomy, node, field, 'color')) }));
+        else fields[field] = bind(value, field, scopeFor(scopeAnatomy, node, field));
+      }
 
   // 8. Notes.
   const expectedCount = expand({ axes, excluded: [], selection: { omit } }).length;
@@ -409,14 +490,23 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     notes.push({ level: 'verify', at: 'selection', message: `${expectedCount} variants: past ADR 0004's ~${VARIANT_LIMIT}. Only attribute twins are omitted and nothing else is cut; probe the build cost before building it, or narrow it with selection.omit.` });
 
   return { name: Name, file, files: sortedFiles, element: root.element, axes, layout, paint,
-    pending: [...pendingBy.values()], notes, omit, expectedCount, alias: `${ui}/${family}` };
+    synthesized: Object.fromEntries(Object.keys(synthesized).sort(byKey).map(k => [k, synthesized[k]])),
+    notes, omit, expectedCount, alias: `${ui}/${family}` };
 }
 
 /**
- * Rules for one section: [{match, set: {node: {field: value}}}], `{}` first. `values` is {field: [value per tuple]}.
- * Per field: drop every axis the value does not depend on; the commonest value (a tie goes to the Base Component's)
- * goes in `{}`, each other value in a rule matching its axes, merged while two rules differ in one axis alone.
- * The rules of one field never overlap, so their order only needs `{}` first.
+ * Rules for one section: [{match, set: {node: {field: value}}}], `{}` first, a later rule winning where two match
+ * (contract.mjs resolve). `values` is {field: [value per tuple]}. Per field:
+ * - drop every axis the value does not depend on;
+ * - `{}` holds the Base Component's value;
+ * - then each match over the remaining axes, fewest axes first (axis order, then value order), takes the value of its
+ *   anchor (the Base Component with the match's values) when the rules so far get the anchor wrong and that value
+ *   also holds at no fewer than half of the anchor's neighbours (the anchor with one other axis changed), so a rule
+ *   names what a value has in common (`{variant: "outline"}`, not one rule per State);
+ * - a match over every remaining axis always takes its value when the rules so far get it wrong, so the rules
+ *   reproduce every tuple;
+ * - the matches over one set of axes that take the same value are merged while two differ in one axis alone.
+ * Rule names depend on this (Synthesized tokens are named by their rule's match, #120).
  */
 function compress(axes, tuples, values, node) {
   const keys = axes.map(a => a.key);
@@ -442,45 +532,70 @@ function compress(axes, tuples, values, node) {
       });
       if (ok) dep = rest;
     }
-    const combos = new Map();
-    tuples.forEach((t, i) => {
-      const key = dep.map(a => t[a]).join('\0');
-      if (!combos.has(key)) combos.set(key, { combo: t, json: json[i] });
-    });
-    const count = new Map();
-    for (const c of combos.values()) count.set(c.json, (count.get(c.json) || 0) + 1);
-    const most = Math.max(...count.values());
-    const baseJson = combos.get(dep.map(a => base[a]).join('\0')).json;
-    const common = count.get(baseJson) === most ? baseJson : [...count.keys()].find(j => count.get(j) === most);
-    rule({})[field] = JSON.parse(common);
-    // Exceptions, one per combination, then merged along each axis in turn while two differ in that axis alone.
-    let rest = [...combos.values()].filter(c => c.json !== common).map(c => ({ match: Object.fromEntries(dep.map(a => [a, [c.combo[a]]])), json: c.json }));
-    for (let merged = true; merged;) {
-      merged = false;
-      for (const axis of dep.slice().reverse()) {
-        const groups = new Map();
-        for (const r of rest) {
-          const k = JSON.stringify([r.json, dep.filter(a => a !== axis).map(a => r.match[a])]);
-          if (!groups.has(k)) groups.set(k, { match: { ...r.match, [axis]: [] }, json: r.json });
-          groups.get(k).match[axis].push(...r.match[axis]);
+    const comboKey = c => dep.map(a => c[a]).join('\0');
+    const actual = new Map();
+    tuples.forEach((t, i) => { if (!actual.has(comboKey(t))) actual.set(comboKey(t), json[i]); });
+    const baseJson = actual.get(comboKey(base));
+    rule({})[field] = JSON.parse(baseJson);
+    const current = new Map([...actual.keys()].map(k => [k, baseJson]));
+    const combos = [...actual.keys()].map(k => Object.fromEntries(k.split('\0').map((v, i) => [dep[i], v])));
+    // Every set of the remaining axes, fewest first, then in axis order.
+    let subsets = [[]];
+    for (const a of dep) subsets = subsets.concat(subsets.map(s => [...s, a]));
+    subsets = subsets.filter(s => s.length).sort((x, y) => x.length - y.length || order(x, y));
+    for (const subset of subsets) {
+      const others = dep.filter(a => !subset.includes(a));
+      let picks = [];
+      for (const c of combos) {
+        if (others.some(a => c[a] !== base[a])) continue; // one anchor per value combination of the subset
+        const anchor = comboKey(c);
+        const want = actual.get(anchor);
+        if (current.get(anchor) === want) continue;
+        if (others.length) {
+          const near = [anchor, ...others.flatMap(a => valueIndex[a].filter(v => v !== c[a]).map(v => comboKey({ ...c, [a]: v })))];
+          if (near.filter(k => actual.get(k) === want).length * 2 < near.length) continue;
         }
-        if (groups.size < rest.length) merged = true;
-        rest = [...groups.values()];
+        picks.push({ match: Object.fromEntries(subset.map(a => [a, [c[a]]])), json: want });
       }
-    }
-    for (const r of rest) {
-      const match = {};
-      for (const a of dep) {
-        const vs = valueIndex[a].filter(v => r.match[a].includes(v));
-        if (vs.length < valueIndex[a].length) match[a] = vs.length === 1 ? vs[0] : vs;
+      // Merge along each axis in turn while two picks differ in that axis alone.
+      for (let merged = true; merged;) {
+        merged = false;
+        for (const axis of subset.slice().reverse()) {
+          const groups = new Map();
+          for (const r of picks) {
+            const k = JSON.stringify([r.json, subset.filter(a => a !== axis).map(a => r.match[a])]);
+            if (!groups.has(k)) groups.set(k, { match: { ...r.match, [axis]: [] }, json: r.json });
+            groups.get(k).match[axis].push(...r.match[axis]);
+          }
+          if (groups.size < picks.length) merged = true;
+          picks = [...groups.values()];
+        }
       }
-      rule(match)[field] = JSON.parse(r.json);
+      for (const r of picks) {
+        const match = {};
+        for (const a of subset) {
+          const vs = valueIndex[a].filter(v => r.match[a].includes(v));
+          match[a] = vs.length === 1 ? vs[0] : vs;
+        }
+        rule(match)[field] = JSON.parse(r.json);
+        for (const c of combos) if (subset.every(a => r.match[a].includes(c[a]))) current.set(comboKey(c), r.json);
+      }
     }
   }
-  const rank = m => [Object.keys(m).length, ...keys.map(k => (k in m ? 1 + valueIndex[k].indexOf([].concat(m[k])[0]) : 0))];
+  // Rules in the order each field's were made in: fewest axes, then axis order, then value order.
+  function order(x, y) {
+    for (const k of keys) if (x.includes(k) !== y.includes(k)) return x.includes(k) ? -1 : 1;
+    return 0;
+  }
   const cmp = (a, b) => {
-    const [ra, rb] = [rank(a.match), rank(b.match)];
-    for (let i = 0; i < ra.length; i++) if (ra[i] !== rb[i]) return ra[i] - rb[i];
+    const [ka, kb] = [Object.keys(a.match), Object.keys(b.match)];
+    if (ka.length !== kb.length) return ka.length - kb.length;
+    const o = order(ka, kb);
+    if (o) return o;
+    for (const k of keys.filter(x => ka.includes(x))) {
+      const d = valueIndex[k].indexOf([].concat(a.match[k])[0]) - valueIndex[k].indexOf([].concat(b.match[k])[0]);
+      if (d) return d;
+    }
     return 0;
   };
   const fieldOrder = Object.keys(values);
@@ -489,16 +604,10 @@ function compress(axes, tuples, values, node) {
 }
 
 /**
- * Generate the draft Contract of one family. Throws when #120 owns a value (listing every one), when `drafts` is
- * not empty (the agent tier, #122), or when the Contract does not validate.
- * @returns {contract, summary}
+ * The draft Contract of a family `readFamily()` read, checked with contract.mjs validate against `foundations`, which
+ * must hold the family's Synthesized tokens. Throws when it does not validate.
  */
-export async function generate({ project, family, foundations, drafts = [], tools = DEFAULT_DIR }) {
-  if (drafts.length) fail('drafts are read by the agent tier (#122), which does not exist yet');
-  const f = await readFamily({ project, family, foundations, tools });
-  if (f.pending.length)
-    fail(`Synthesized tokens (#120) are needed for ${f.pending.length} paint values of ${f.name}; nothing is written:\n${f.pending.map(p =>
-      `  ${p.at} ${p.light || '(none)'} / ${p.dark || '(none)'}: ${p.reason} (${p.variants} variants; ${p.lines.join(', ')})`).join('\n')}`);
+export function contractFor(f, family, foundations) {
   const columns = f.axes.some(a => a.key === 'size') ? ['size'] : [f.axes[0].key];
   const contract = {
     schemaVersion: 1,
@@ -522,9 +631,29 @@ export async function generate({ project, family, foundations, drafts = [], tool
   };
   const { errors } = validate(contract, foundations);
   if (errors.length) fail(`the Contract does not validate:\n${errors.map(e => `  rule ${e.rule} ${e.at}: ${e.message}`).join('\n')}`);
+  return contract;
+}
+
+/**
+ * Generate the draft Contract of one family. `foundations` must be the document foundations.mjs wrote with this
+ * family: it holds the family's Synthesized tokens exactly as this run derives them and the Contract's closure entry.
+ * Throws when it does not, when `drafts` is not empty (the agent tier, #122), or when the Contract does not validate.
+ * @returns {contract, summary}
+ */
+export async function generate({ project, family, foundations, drafts = [], tools = DEFAULT_DIR }) {
+  if (drafts.length) fail('drafts are read by the agent tier (#122), which does not exist yet');
+  const f = await readFamily({ project, family, foundations, tools });
+  const json = v => JSON.stringify(v);
+  const stale = Object.keys(f.synthesized).filter(k => json(foundations.variables[k]) !== json(f.synthesized[k]));
+  for (const [k, v] of Object.entries(foundations.variables))
+    if (v.family === family && isSynthesized(v) && !f.synthesized[k]) stale.push(k);
+  const contract = stale.length ? null : contractFor(f, family, foundations);
+  const listed = contract && (foundations.closure.contracts || []).some(c => c.family === family && c.snapshotId === contract.source.snapshotId);
+  if (stale.length || !listed)
+    fail(`the Foundations document does not hold ${f.name} as its source reads now (${stale.length ? `Synthesized tokens ${stale.sort(byKey).join(', ')}` : 'its closure has no entry for this snapshot'}); regenerate it with foundations.mjs --family ${family}`);
   const summary = [
     `${f.name}: axes ${f.axes.map(a => `${a.key} ${a.values.length}`).join(', ')}; ${f.expectedCount} variants`,
-    `rules layout ${f.layout.length}, paint ${f.paint.length}; notes ${f.notes.length}`,
+    `rules layout ${f.layout.length}, paint ${f.paint.length}; Synthesized tokens ${Object.keys(f.synthesized).length}; notes ${f.notes.length}`,
   ];
   return { contract, summary };
 }

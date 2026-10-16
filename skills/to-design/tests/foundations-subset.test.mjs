@@ -312,13 +312,13 @@ test('a Mode selector, a COLOR value\'s from.css and a component token\'s family
   assert.deepEqual(a.snapshot(), b.snapshot());
 });
 
-test('a document without a default group builds the closure and the default groups it has (shadcn: Spacing only)', () => {
+test('a document without a default group builds the closure and the default groups it has (shadcn: the Button closure and Spacing)', () => {
   const doc = JSON.parse(SHADCN_TEXT);
   const { plan } = foundationsPlan(SHADCN_TEXT, null, { fileKey: FILE_KEY, at: AT });
-  assert.deepEqual(doc.closure.tokens, []);
+  assert.ok(doc.closure.tokens.includes('button-outline-fill'), 'the closure holds the Button\'s Synthesized tokens (#120)');
   const spacing = Object.keys(doc.variables).filter(n => doc.variables[n].name.startsWith('Spacing/'));
   assert.equal(spacing.length, 35);
-  assert.deepEqual(Object.keys(plan.foundations.variables), spacing);
+  assert.deepEqual(Object.keys(plan.foundations.variables).sort(), [...new Set([...doc.closure.tokens, ...spacing])].sort());
   assert.deepEqual(plan.foundations.textStyles, {});
   assert.deepEqual(setGroups(null, FILE_KEY, doc).foundationsGroups, ['Spacing']);
 });
