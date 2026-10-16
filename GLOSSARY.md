@@ -90,6 +90,14 @@ _Avoid_: Mock (when more than data is meant), fake, throwaway code
 One output format's layout of a Handoff, such as HTML, Markdown, a Figma frame or a Confluence page. It never adds or drops a Handoff's content.
 _Avoid_: Export, view, handoff document
 
+**Sign-off**:
+The owner's one explicit approval of a Handoff revision, covering every decision the agent made in it and the pending Component Proposals it uses. Developers read a signed-off Handoff; they never sign it.
+_Avoid_: Approval (when the Handoff's is meant; that is a Contract's or a Component Proposal's), acceptance (that is the Handoff's Given/When/Then criteria), review
+
+**Drift**:
+A change, after Sign-off, to the Prototype or to a part of the Design System that a Handoff uses. A Handoff with Drift keeps its content but no longer counts as signed off until the owner signs it again.
+_Avoid_: Stale (that is a Foundations document that must be regenerated), outdated, out of sync
+
 ## Building
 
 **Orphan**:
