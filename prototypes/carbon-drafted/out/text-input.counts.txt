@@ -1,0 +1,110 @@
+read       40 29%
+computed   14 10%
+constant    6 4%
+rule       18 13%
+drafted    58 43%
+total     136
+
+drafted:
+  axes.size.label = "Size"
+  axes.size.values.xs.label = "Extra Small"
+  axes.size.values.sm.label = "Small"
+  axes.size.values.md.label = "Medium"
+  axes.size.values.lg.label = "Large"
+  axes.validation.label = "Validation"
+  axes.validation.values.none.label = "None"
+  axes.validation.values.invalid.label = "Invalid"
+  axes.validation.values.warn.label = "Warning"
+  axes.validation.order = ["none","invalid","warn"]
+  axes.readOnly.label = "Read Only"
+  axes.readOnly.values.editable.label = "Editable"
+  axes.readOnly.values.read-only.label = "Read-only"
+  axes.readOnly.order = ["editable","read-only"]
+  axes.state.values.focus.code = {"code":null,"css":":focus, :active"}  (two states folded into one: §2 has no fold rule yet)
+  family.description = "Single-line text field with a label, optional helper text and an inva  (prose)
+  anatomy.Label = {"type":"TEXT","role":"label"}
+  anatomy.Field group = {"type":"FRAME"}
+  anatomy.Field = {"type":"FRAME","role":"input"}
+  anatomy.Box = {"type":"FRAME"}
+  anatomy.Value = {"type":"TEXT","role":"value"}
+  anatomy.Underline = {"type":"FRAME"}
+  anatomy.Helper = {"type":"TEXT","role":"helper-text"}
+  anatomy.Requirement = {"type":"TEXT","role":"validation-message"}
+  properties.label = {"type":"TEXT","label":"Label","default":"Label"}
+  properties.placeholder = {"type":"TEXT","label":"Placeholder","default":"Placeholder text"}
+  properties.helperText = {"type":"TEXT","label":"Helper text","default":"Helper text"}
+  properties.message = {"type":"TEXT","label":"Message","default":"Error message"}
+  layout.Text input.direction = "column"  (no declaration checked)
+  layout.Text input.width = "fill"  (no declaration checked)
+  layout.Text input.height = "hug"  (no declaration checked)
+  layout.Text input.alignMain = "start"  (no declaration checked)
+  layout.Text input.alignCross = "start"  (no declaration checked)
+  layout.Label.textResize = "width-and-height"  (no declaration checked)
+  layout.Field group.direction = "column"  (no declaration checked)
+  layout.Field group.width = "fill"  (no declaration checked)
+  layout.Field group.height = "hug"  (no declaration checked)
+  layout.Field.direction = "column"  (no declaration checked)
+  layout.Field.width = "fill"  (no declaration checked)
+  layout.Field.height = "hug"  (no declaration checked)
+  layout.Box.direction = "row"  (no declaration checked)
+  layout.Box.width = "fill"  (no declaration checked)
+  layout.Box.alignCross = "center"  (no declaration checked)
+  layout.Value.width = "fill"  (no declaration checked)
+  layout.Value.textResize = "height"  (no declaration checked)
+  layout.Status icon.direction = "row"  (no declaration checked)
+  layout.Glyph.width = "fill"  (no declaration checked)
+  layout.Glyph.height = "fill"  (no declaration checked)
+  layout.Underline.width = "fill"  (no declaration checked)
+  layout.Helper.width = "fill"  (no declaration checked)
+  layout.Helper.textResize = "height"  (no declaration checked)
+  layout.Requirement.width = "fill"  (no declaration checked)
+  layout.Requirement.textResize = "height"  (no declaration checked)
+  icons.default = "warning--filled"  (§2.9 picked from docs examples)
+  icons.preferred = ["warning--filled"]  (§2.9 picked from docs examples)
+  figma.description = "Carbon React TextInput (@carbon/react 1.118.0). Draft: not yet built   (prose)
+  figma.grid = {"columns":["size"],"rows":["validation","readOnly","state"]}
+  code.alwaysEmit = ["size"]  (A TextInput without size inherits the nearest <Layout size>; emit size explicitly so the snippet matches the variant.)
+
+rule:
+  axes.size.order = ["xs","sm","md","lg"]  (§2.4 size token scale)
+  axes.state.label = "State"  (canonical State axis)
+  axes.state.default = "enabled"  (canonical State axis (#6))
+  axes.state.values.enabled.label = "Enabled"  (canonical)
+  axes.state.values.enabled.code = {}  (§2.5)
+  axes.state.values.focus.label = "Focus"  (canonical)
+  axes.state.values.disabled.label = "Disabled"  (canonical)
+  axes.state.order = ["enabled","focus","disabled"]  (canonical)
+  anatomy.Text input = {"type":"COMPONENT"}  (root is the COMPONENT)
+  anatomy.Status icon = {"type":"FRAME","role":"icon-slot"}  (§2.9 Icon slot FRAME + Glyph INSTANCE)
+  anatomy.Glyph = {"type":"INSTANCE","role":"icon"}  (§2.9 Icon slot FRAME + Glyph INSTANCE)
+  layout.Field.strokeAlign = "inside"  (§2.8 inside stroke)
+  paint.Text input.fill = "none"  (§2.7 transparent)
+  paint.Text input.stroke = "none"  (§2.7 transparent)
+  paint.Field.stroke = "none"  (§2.7 transparent)
+  paint{"readOnly":"read-only"}.Field.fill = "none"  (§2.7 transparent)
+  figma.page = "Text inputs"
+  figma.componentSetName = "Text Input"
+
+constant:
+  layout.Field.strokeWeight = 2
+  layout.Underline.height = 1
+  paint.Status icon.opacity = 0
+  paint.Requirement.opacity = 0
+  paint{"validation":"invalid"}.Helper.opacity = 0
+  paint{"validation":"warn"}.Helper.opacity = 0
+
+computed:
+  layout.Text input.paddingTop = 0
+  layout.Text input.paddingRight = 0
+  layout.Text input.paddingBottom = 0
+  layout.Text input.paddingLeft = 0
+  layout.Field.gap = 0
+  layout{"size":"xs"}.Box.height = 23
+  layout{"size":"sm"}.Box.height = 31
+  layout{"size":"md"}.Box.height = 39
+  layout{"size":"lg"}.Box.height = 47
+  paint.Helper.opacity = 1
+  paint{"validation":"invalid"}.Status icon.opacity = 1
+  paint{"validation":"invalid"}.Requirement.opacity = 1
+  paint{"validation":"warn"}.Status icon.opacity = 1
+  paint{"validation":"warn"}.Requirement.opacity = 1

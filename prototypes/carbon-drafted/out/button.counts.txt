@@ -1,0 +1,86 @@
+read       90 56%
+computed   11 7%
+constant    3 2%
+rule       25 15%
+drafted    33 20%
+total     162
+
+drafted:
+  axes.kind.label = "Kind"
+  axes.kind.values.primary.label = "Primary"
+  axes.kind.values.secondary.label = "Secondary"
+  axes.kind.values.tertiary.label = "Tertiary"
+  axes.kind.values.ghost.label = "Ghost"
+  axes.kind.values.danger.label = "Danger"
+  axes.kind.values.danger--tertiary.label = "Danger Tertiary"
+  axes.kind.values.danger--ghost.label = "Danger Ghost"
+  axes.size.label = "Size"
+  axes.size.values.xs.label = "Extra Small"
+  axes.size.values.sm.label = "Small"
+  axes.size.values.md.label = "Medium"
+  axes.size.values.lg.label = "Large"
+  axes.size.values.lg-expressive.label = "Large (Expressive)"
+  axes.size.values.xl.label = "Extra Large"
+  axes.size.values.2xl.label = "2XL"
+  family.description = "Buttons trigger an action. Text button with an optional trailing icon  (prose)
+  family.split = "Icon-only buttons are the separate Icon Button family"
+  anatomy.Label = {"type":"TEXT","role":"label"}
+  properties.label = {"type":"TEXT","label":"Label","default":"Button"}
+  properties.icon.binds = [[{"kind":["primary","secondary","tertiary","danger","danger--tertiary  (per-value binding judged from SCSS)
+  layout.Button.height = "hug"  (no declaration checked)
+  layout.Button.alignMain = "start"  (no declaration checked)
+  layout.Button.alignCross = "start"  (no declaration checked)
+  layout.Label.textResize = "width-and-height"  (no declaration checked)
+  layout.Icon.direction = "row"  (no declaration checked)
+  layout.Glyph.width = "fill"  (no declaration checked)
+  layout.Glyph.height = "fill"  (no declaration checked)
+  icons.default = "add"  (§2.9 picked from docs examples)
+  icons.preferred = ["add","arrow--right","launch","download","save","edit","filter","tras  (§2.9 picked from docs examples)
+  figma.description = "Carbon React Button (@carbon/react 1.118.0). Icon-only buttons are th  (prose)
+  figma.grid = {"columns":["size"],"rows":["kind","state"]}
+  code.alwaysEmit = ["size"]  (A Button without size inherits the nearest <Layout size>; emit size explicitly so the snippet matches the variant.)
+
+rule:
+  axes.kind.order = ["primary","secondary","tertiary","ghost","danger","danger--tertiary",  (§2.3 Carbon docs order)
+  axes.size.order = ["xs","sm","md","lg","lg-expressive","xl","2xl"]  (§2.4 size token scale)
+  axes.state.label = "State"  (canonical State axis)
+  axes.state.default = "enabled"  (canonical State axis (#6))
+  axes.state.values.enabled.label = "Enabled"  (canonical)
+  axes.state.values.enabled.code = {}  (§2.5)
+  axes.state.values.hover.label = "Hover"  (canonical)
+  axes.state.values.active.label = "Active"  (canonical)
+  axes.state.values.focus.label = "Focus"  (canonical)
+  axes.state.values.disabled.label = "Disabled"  (canonical)
+  axes.state.order = ["enabled","hover","active","focus","disabled"]  (canonical)
+  anatomy.Button = {"type":"COMPONENT"}  (root is the COMPONENT)
+  anatomy.Icon = {"type":"FRAME","role":"icon-slot"}  (§2.9 Icon slot FRAME + Glyph INSTANCE)
+  anatomy.Glyph = {"type":"INSTANCE","role":"icon"}  (§2.9 Icon slot FRAME + Glyph INSTANCE)
+  properties.icon = {"type":"BOOLEAN","label":"Icon","default":false}  (§2.9)
+  properties.swapIcon = {"type":"INSTANCE_SWAP","label":"Swap icon","default":"icon:default"}  (§2.9)
+  layout.Button.strokeAlign = "inside"  (§2.8 inside stroke)
+  paint.Button.fill = "none"  (§2.7 transparent)
+  paint.Button.stroke = "none"  (§2.7 transparent)
+  paint{"kind":"tertiary","state":"active"}.Button.stroke = "none"  (§2.7 transparent)
+  paint{"state":"disabled","kind":["tertiary","danger--tertiary"]}.Button.fill = "none"  (§2.7 transparent)
+  paint{"state":"disabled","kind":["ghost","danger--ghost"]}.Button.fill = "none"  (§2.7 transparent)
+  paint{"state":"disabled","kind":["ghost","danger--ghost"]}.Button.stroke = "none"  (§2.7 transparent)
+  figma.page = "Buttons"
+  figma.componentSetName = "Button"
+
+constant:
+  layout.Button.strokeWeight = 1
+  layout.Button.maxWidth = 320
+  paint{"state":"focus"}.Button.effects = "2 entries"  (§2.8 focus ring)
+
+computed:
+  layout{"size":"xs"}.Button.paddingTop = 3
+  layout{"size":"xs"}.Button.paddingBottom = 3
+  layout{"size":"sm"}.Button.paddingTop = 7
+  layout{"size":"sm"}.Button.paddingBottom = 7
+  layout{"size":"md"}.Button.paddingTop = 11
+  layout{"size":"md"}.Button.paddingBottom = 11
+  layout{"size":["lg","xl","2xl"]}.Button.paddingTop = 15
+  layout{"size":["lg","xl","2xl"]}.Button.paddingBottom = 15
+  layout{"size":"lg-expressive"}.Button.paddingTop = 13
+  layout{"size":"lg-expressive"}.Button.paddingBottom = 13
+  layout{"size":"lg-expressive"}.Button.gap = 28

@@ -1,0 +1,4 @@
+as is: {"ok":true,"errors":[]}
+with drafted: {"ok":false,"errors":[{"rule":8,"at":"selection.approval.contentHash","message":"approval.contentHash sha256:4a9e9f38d7a42ccfd0ea029241862365784bfe49b7f087e48ceee8ee07711bf5 does not match the Contract's sha256:6890708dee05e84dcab12b87953c58f9ca9deae8baf69ca500e1d9409b915cea: the Contract changed since approval"}]}
+hash before sha256:4a9e9f38d7a42ccfd0ea029241862365784bfe49b7f087e48ceee8ee07711bf5 
+hash after  sha256:6890708dee05e84dcab12b87953c58f9ca9deae8baf69ca500e1d9409b915cea
