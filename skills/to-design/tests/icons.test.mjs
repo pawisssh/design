@@ -14,12 +14,13 @@ import { mockFigma, runPackage } from './mock-figma.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const BUTTON = JSON.parse(readFileSync(join(ROOT, 'design-systems/carbon/contracts/button.component.json'), 'utf8'));
-const ICONS_DIR = join(ROOT, '.scratch/adapter-carbon/sources/npm/@carbon/icons@11.90.0/package');
+// The Button icons' SVGs, copied verbatim from the pinned package, so these tests run on a fresh clone.
+const ICONS_DIR = join(ROOT, 'skills/to-design/tests/fixtures/carbon-icons@11.90.0');
+const PINNED_DIR = join(ROOT, '.scratch/adapter-carbon/sources/npm/@carbon/icons@11.90.0/package');
 const CORE = join(ROOT, 'skills/to-design/assets/builder-core.js');
 const PACKAGER = join(ROOT, 'skills/to-design/scripts/package_native_builder.py');
 const FILE_KEY = 'MOCKFILEKEY';
 const AT = '2026-10-16T00:00:00.000Z';
-const skip = existsSync(ICONS_DIR) ? false : '@carbon/icons missing: run node skills/adapter-carbon/scripts/sources.mjs';
 const BUTTON_ICONS = ['Add', 'Arrow--right', 'Launch', 'Download', 'Save', 'Edit', 'Filter', 'Trash-can', 'Close'];
 
 // Packages a plan and state with the real packager; returns the package code and the packager's stdout.
@@ -63,7 +64,7 @@ const withIcons = (keys, def = keys[0]) => ({ ...BUTTON, icons: { ...BUTTON.icon
 
 // ---- plan ----
 
-test('the plan holds exactly the Contract\'s icons, 16 when present else 32, in Contract order', { skip }, () => {
+test('the plan holds exactly the Contract\'s icons, 16 when present else 32, in Contract order', () => {
   const { plan, state } = derive();
   assert.equal(plan.slice, 'icons');
   assert.equal(plan.page, 'Icons');
@@ -78,6 +79,12 @@ test('the plan holds exactly the Contract\'s icons, 16 when present else 32, in 
     assert.match(i.sha256, /^sha256:[0-9a-f]{64}$/);
   }
   assert.deepEqual(state, { schemaVersion: 1, fileKey: FILE_KEY, icons: null }, 'state carries only the icons section');
+});
+
+test('the fixture matches the pinned @carbon/icons package: the same plan, file for file', {
+  skip: existsSync(PINNED_DIR) ? false : 'pinned package missing: run node skills/adapter-carbon/scripts/sources.mjs',
+}, () => {
+  assert.deepEqual(derive({ dir: PINNED_DIR }), derive());
 });
 
 test('a fake package: 16 is preferred, 32 is the fallback, a missing icon or another version is refused', () => {
@@ -110,7 +117,7 @@ test('shapes that paint nothing (fill="none", Carbon\'s inner path and transpare
   assert.equal(plan.icons[0].svg, svg(32, '<path d="M16,2A14,14,0,1,0,30,16Z"/>'));
 });
 
-test('the package is well under the 50,000-char cap; save.svg\'s literal TAB reaches the core intact', { skip }, async () => {
+test('the package is well under the 50,000-char cap; save.svg\'s literal TAB reaches the core intact', async () => {
   const { plan, state } = derive();
   const { code, out } = pack(plan, state);
   assert.ok(out.chars < 50000, `package is ${out.chars} chars`);
@@ -128,7 +135,7 @@ test('the package is well under the 50,000-char cap; save.svg\'s literal TAB rea
 
 // Live finding (#30): use_figma transpiles a script whose strings hold markup-like text, even spelled <,
 // which reformats buildComponentSets.toString() and fails the core hash. The SVGs reach the core intact anyway.
-test('the package never spells "<" before a tag name, yet the core receives every SVG byte for byte', { skip }, async () => {
+test('the package never spells "<" before a tag name, yet the core receives every SVG byte for byte', async () => {
   const { plan, state } = derive();
   const { code } = pack(plan, state);
   assert.doesNotMatch(code, /<[A-Za-z/!?]/);
@@ -146,7 +153,7 @@ test('the package never spells "<" before a tag name, yet the core receives ever
 
 // ---- first run ----
 
-test('a first run creates the Icons page and one 16x16 component per icon, with no fill and one SCALE Vector', { skip }, async () => {
+test('a first run creates the Icons page and one 16x16 component per icon, with no fill and one SCALE Vector', async () => {
   const mock = mockFigma({ fileKey: FILE_KEY });
   const result = await call(mock);
   assert.equal(result.error, undefined, JSON.stringify(result).slice(0, 300));
@@ -172,7 +179,7 @@ test('a first run creates the Icons page and one 16x16 component per icon, with 
   assert.equal(result.created.icons.length, 9);
 });
 
-test('the returned ledger records the page and every component by icon key; recording it keeps foundations', { skip }, async () => {
+test('the returned ledger records the page and every component by icon key; recording it keeps foundations', async () => {
   const mock = mockFigma({ fileKey: FILE_KEY });
   const result = await call(mock);
   const page = iconsPage(mock);
@@ -196,7 +203,7 @@ test('the returned ledger records the page and every component by icon key; reco
   assert.deepEqual(ledger.icons, icons);
 });
 
-test('a rerun with the recorded ledger creates nothing, writes nothing and returns the same ids', { skip }, async () => {
+test('a rerun with the recorded ledger creates nothing, writes nothing and returns the same ids', async () => {
   const mock = mockFigma({ fileKey: FILE_KEY });
   const first = await call(mock);
   const before = mock.snapshot();
@@ -208,7 +215,7 @@ test('a rerun with the recorded ledger creates nothing, writes nothing and retur
   assert.deepEqual(second.ledger, first.ledger);
 });
 
-test('icons go on the Icons page even when another page is current; other pages are left alone', { skip }, async () => {
+test('icons go on the Icons page even when another page is current; other pages are left alone', async () => {
   const mock = mockFigma({ fileKey: FILE_KEY, pages: ['Page 1', 'Buttons'] });
   await mock.figma.setCurrentPageAsync(mock.figma.root.children[1]);
   await call(mock);
@@ -226,7 +233,7 @@ async function built() {
 }
 const node = (mock, id) => mock.figma.getNodeByIdAsync(id);
 
-test('an unrecorded Icons page is a conflict and nothing changes; adopt builds on it', { skip }, async () => {
+test('an unrecorded Icons page is a conflict and nothing changes; adopt builds on it', async () => {
   const mock = mockFigma({ fileKey: FILE_KEY, pages: ['Page 1', 'Icons'] });
   const theirs = mock.figma.root.children[1];
   const result = await call(mock);
@@ -239,7 +246,7 @@ test('an unrecorded Icons page is a conflict and nothing changes; adopt builds o
   assert.deepEqual(adopted.summary.created, 9);
 });
 
-test('after a lost connection, a run without the ledger reports conflicts; adopt reclaims every component by id', { skip }, async () => {
+test('after a lost connection, a run without the ledger reports conflicts; adopt reclaims every component by id', async () => {
   const { mock, first } = await built();
   const lost = await call(mock);
   assert.deepEqual(lost.conflicts.map(c => `${c.kind}:${c.name}`), ['page:Icons']);
@@ -249,7 +256,7 @@ test('after a lost connection, a run without the ledger reports conflicts; adopt
   assert.deepEqual(Object.values(adopted.ledger.icons.components).map(c => c.id), Object.values(first.ledger.icons.components).map(c => c.id));
 });
 
-test('an unrecorded same-name component on the owned page is a conflict unless adopt', { skip }, async () => {
+test('an unrecorded same-name component on the owned page is a conflict unless adopt', async () => {
   const { mock, ledger } = await built();
   const id = ledger.icons.components.close.id;
   delete ledger.icons.components.close;
@@ -261,7 +268,7 @@ test('an unrecorded same-name component on the owned page is a conflict unless a
   assert.equal(adopted.ledger.icons.components.close.id, id);
 });
 
-test('hand edits are reverted in place: name, size, fill, a renamed Vector, a move to another page', { skip }, async () => {
+test('hand edits are reverted in place: name, size, fill, a renamed Vector, a move to another page', async () => {
   const { mock, ledger } = await built();
   const c = ledger.icons.components;
   const editVector = { ...(await node(mock, c.edit.id)).children[0] };
@@ -282,7 +289,7 @@ test('hand edits are reverted in place: name, size, fill, a renamed Vector, a mo
   assert.deepEqual(result.ledger, { icons: ledger.icons }, 'same ids');
 });
 
-test('a changed SVG rebuilds only the Vector: the component keeps its id and key', { skip }, async () => {
+test('a changed SVG rebuilds only the Vector: the component keeps its id and key', async () => {
   const { mock, ledger } = await built();
   const before = await node(mock, ledger.icons.components.add.id);
   const oldVector = before.children[0].id;
@@ -300,7 +307,7 @@ test('a changed SVG rebuilds only the Vector: the component keeps its id and key
   assert.equal(result.ledger.icons.components.add.key, ledger.icons.components.add.key);
 });
 
-test('a dropped icon becomes an orphan that keeps its id and its node; it gets the same id back when it returns', { skip }, async () => {
+test('a dropped icon becomes an orphan that keeps its id and its node; it gets the same id back when it returns', async () => {
   const { mock, ledger } = await built();
   const id = ledger.icons.components.close.id;
   const fewer = withIcons(BUTTON.icons.preferred.filter(k => k !== 'close'), 'add');
@@ -320,7 +327,7 @@ test('a dropped icon becomes an orphan that keeps its id and its node; it gets t
   assert.deepEqual(back.ledger.icons.orphans, {});
 });
 
-test('a recorded component deleted by hand is created again', { skip }, async () => {
+test('a recorded component deleted by hand is created again', async () => {
   const { mock, ledger } = await built();
   (await node(mock, ledger.icons.components.launch.id)).remove();
   const result = await call(mock, { ledger });
@@ -329,7 +336,7 @@ test('a recorded component deleted by hand is created again', { skip }, async ()
   assert.deepEqual(iconsPage(mock).children.map(n => n.name).sort(), [...BUTTON_ICONS].sort());
 });
 
-test('a package for another file changes nothing', { skip }, async () => {
+test('a package for another file changes nothing', async () => {
   const mock = mockFigma({ fileKey: 'SOMEOTHERFILE' });
   const result = await call(mock);
   assert.deepEqual(result, { error: 'wrong-file', expected: FILE_KEY, got: 'SOMEOTHERFILE' });
@@ -338,7 +345,7 @@ test('a package for another file changes nothing', { skip }, async () => {
 
 // ---- CLI ----
 
-test('the icons CLI derives plan.json and state.json from Contracts and an icons directory', { skip }, () => {
+test('the icons CLI derives plan.json and state.json from Contracts and an icons directory', () => {
   const out = realpathSync(mkdtempSync(join(tmpdir(), 'to-design-icons-cli-')));
   const run = spawnSync('node', [join(ROOT, 'skills/to-design/scripts/build-plan.mjs'), 'icons',
     '--contract', join(ROOT, 'design-systems/carbon/contracts/button.component.json'), '--icons-dir', ICONS_DIR,

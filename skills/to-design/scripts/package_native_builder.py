@@ -45,7 +45,7 @@ def embeddable(name, text):
 
 
 # use_figma transpiles a script whose string values hold markup-like text ("<svg", "<p", even spelled
-# as the escape "\\u003csvg"), and that rewrites buildComponentSets.toString(), so the core hash no longer matches (#30).
+# as the escape "\u003csvg"), and that rewrites buildComponentSets.toString(), so the core hash no longer matches (#30).
 # The package therefore never spells "<": a text holding one is emitted as String.raw pieces joined
 # with String.fromCharCode(60), which rebuilds the exact text at run time.
 MARKUP = re.compile(r"<[A-Za-z/!?]|\\u003c|\\x3c|\\u\{0*3c\}", re.IGNORECASE)
