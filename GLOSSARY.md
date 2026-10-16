@@ -30,6 +30,10 @@ _Avoid_: Component (when the whole family is meant)
 One dimension along which a Component Family's variants differ, such as Size, State, Hierarchy, Style or Mode.
 _Avoid_: Prop, variant property, dimension
 
+**Slot axis**:
+A Property Axis whose values say whether one slot of a Component Family is filled. It exists only where filling the slot changes the family's other styling, such as a Button's padding when it holds an icon.
+_Avoid_: Icon axis, presence variant, boolean variant
+
 **Base Component**:
 The single final variant of a Component Family with every Property Axis at its default, such as Button Primary/Large/Enabled. It is built in Figma and approved by the user before the other variants are derived from it.
 _Avoid_: Master, template, first variant
