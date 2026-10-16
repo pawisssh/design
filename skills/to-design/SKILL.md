@@ -19,11 +19,23 @@ Resolve partial-set effective defaults from the selected manifest, preserving th
 
 Read [references/layout-and-token-mapping.md](references/layout-and-token-mapping.md) and [references/figma-workflow.md](references/figma-workflow.md). Load `figma-generate-library` and `figma-use` before authoring native construction code; inspect the connected supported types/APIs. Follow the selected unpublished-component scope: publishing and Code Connect are separate requested work.
 
-Generate a reusable async core `buildComponentSets(figma, plan, state)` from the source-backed build plan. It loops over dependencies/families/selected tuples, creates or updates native nodes, applies tokens and Auto Layout explicitly, binds TEXT/BOOLEAN/INSTANCE_SWAP to real sublayers, and arranges sets plus instance review grids. Use shared standards supported by both MCP and the intended Console/Scripter runtime, rather than MCP-only helpers in the shared core.
+The builder core is fixed: [assets/builder-core.js](assets/builder-core.js), `async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK)`. A run never edits it; a run changes only the build plan and the ledger state. It runs in `use_figma` only (there is no Console/Scripter wrapper). Keep it ASCII, with everything inside that one function, because the integrity gate hashes `buildComponentSets.toString()`. Slices share the gate and dispatch on `plan.slice`:
+
+- **Foundations** (#29, built). [scripts/build-plan.mjs](scripts/build-plan.mjs) derives the plan from `design-systems/<key>/<key>.foundations.json`, stripping the review-only fields, and embeds the ledger section as state. The slice builds the Variable collections, modes, variables and Text Styles, and follows the update semantics in [foundations-schema.md](../contract/references/foundations-schema.md#update-semantics-idempotent): ownership through the ledger, `conflict` before any change, diff-based writes, mode order fixed with `setDefaultMode`, orphans kept until `--prune`. Use `--adopt` only after a lost connection, once a readback shows the objects came from this workflow.
+- **Components** (#30, #31, not built). It loops over dependencies, families and selected tuples, creates or updates native nodes, applies tokens and Auto Layout explicitly, binds TEXT/BOOLEAN/INSTANCE_SWAP to real sublayers, and arranges sets plus instance review grids.
+
+```
+node skills/to-design/scripts/build-plan.mjs foundations --doc design-systems/carbon/carbon.foundations.json --file-key <key> --out .scratch/to-design/<run> [--page <name>] [--adopt] [--prune a,b]
+python3 skills/to-design/scripts/package_native_builder.py skills/to-design/assets/builder-core.js .scratch/to-design/<run>/plan.json .scratch/to-design/<run> --state .scratch/to-design/<run>/state.json
+# send the package to use_figma (see Package delivery), save the returned JSON, then:
+node skills/to-design/scripts/ledger.mjs record .scratch/to-design/<run>/result.json
+```
+
+`build-plan.mjs` reads `.scratch/to-design/<fileKey>.ledger.json` by default. Record every result before deriving the next plan, so the state the package carries is the ledger Figma last returned.
 
 Create or reuse only required foundations/helpers. Keep complete selected tuple coverage despite matrix size. Read stored IDs and update workflow-owned components/variants/properties in place to preserve instances; inspect before repairing missing IDs. Preserve unrelated assets. For deselected previously-owned variants, use the tracked reversible deprecation strategy rather than deleting active instances.
 
-Save `native-builder-core.js`, versioned `build-plan.json`, and run state. Use [scripts/package_native_builder.py](scripts/package_native_builder.py) to emit `build-components.mcp.js` and `build-components.js` from the same core/plan. The MCP wrapper uses top-level return; the Console/Scripter wrapper uses an async function invocation and reports results. Do not promise that a plain browser/Node console provides the `figma` API.
+[scripts/package_native_builder.py](scripts/package_native_builder.py) emits `build-components.mcp.js` from the core, plan and state. It embeds plan and state as `String.raw` text next to a `CHECK` block `{planLen, entries, plan, state, core}` of FNV-1a-32 hashes, and refuses text with a backtick, `${` or non-ASCII (JSON escapes non-ASCII). Before its first change the core recomputes every field; on a mismatch it returns `{error: "package-mismatch", field, expected, got}` and changes nothing. If `figma.fileKey` differs from the plan's, it returns `{error: "wrong-file"}`.
 
 ## Package delivery
 
@@ -37,7 +49,7 @@ Once the hook is registered and its live check (#26) has passed, send exactly th
 
 - **Registering the hook is the owner's step.** The owner pastes [hooks/settings.snippet.json](hooks/settings.snippet.json) into the project's `.claude/settings.json`; agents don't edit settings. `onFailure` needs Claude Code v2.1.295 or later (Claude Code hooks docs).
 - **Project hooks load only at session start.** After registering, start a fresh session. Ticket #26 runs the live check.
-- **If `use_figma` returns `Error: package not injected`**, the hook isn't loaded, and nothing was changed in Figma. Deliver the contents of `build-components.mcp.js` inline instead. The core's integrity gate (spec #22, from #17; not built yet) is meant to catch drift before its first change.
+- **If `use_figma` returns `Error: package not injected`**, the hook isn't loaded, and nothing was changed in Figma. Deliver the contents of `build-components.mcp.js` inline instead. The core's integrity gate (#17) catches drift in an inline paste before its first change.
 
 ## One-call execution and recovery
 
@@ -49,7 +61,7 @@ Return all created/updated IDs, component/property mappings, coverage evidence a
 
 ## Validate and complete
 
-Parse both wrappers without executing, validate plan/selection/source consistency and inspect native APIs/property bindings before delivery. Script generation is complete when artifacts, included selection counts, dependencies and validation are reviewable; mark execution as unperformed. Never claim Figma creation from packaging success.
+Parse the package without executing, validate plan/selection/source consistency and inspect native APIs/property bindings before delivery. Script generation is complete when artifacts, included selection counts, dependencies and validation are reviewable; mark execution as unperformed. Never claim Figma creation from packaging success.
 
 After execution, read back actual selected tuples/types/defaults/property references, Auto Layout/sizing, token/style bindings/mode resolution and nested instances. Use [scripts/check_coverage.py](scripts/check_coverage.py) with [references/component-sheet.md](references/component-sheet.md), supplying the selection manifest for partial scope. Verify all selected themes separately and compare actual review instances with the approved HTML, including label/icon/width changes. Repair scoped defects and recheck.
 
