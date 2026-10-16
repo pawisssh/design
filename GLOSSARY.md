@@ -27,7 +27,7 @@ One conceptual component, such as Button, covering every variant it supports.
 _Avoid_: Component (when the whole family is meant)
 
 **Property Axis**:
-One dimension along which a Component Family's variants differ, such as Size, State, Hierarchy, Style or Mode.
+One dimension along which a Component Family's variants differ, such as Size, State, Hierarchy or Style. A Mode is never a Property Axis.
 _Avoid_: Prop, variant property, dimension
 
 **Slot axis**:
@@ -65,12 +65,12 @@ The Adapter for any Code Library: it reads standard token and prop formats exact
 _Avoid_: Universal adapter, AI adapter
 
 **Drafted value**:
-A value in a Contract that the Generic Adapter's agent chose because no standard format states it, such as a label, a layer, or an icon slot's default, recorded with the evidence it was drafted from. The Contract's one approval covers it, and a re-run keeps it while that evidence is unchanged.
+A value in a Contract that an Adapter's agent chose because neither the source nor the Adapter's own rules state it, such as a label, a layer, or an icon slot's default, recorded with the evidence it was drafted from. A value read from source, including a raw with its reason, is not one. The Contract's one approval covers it, and a re-run keeps it while that evidence is unchanged.
 _Avoid_: Draft Contract (that is a Contract not yet approved), guess, suggestion, AI value
 
 **Dedicated Adapter**:
-An Adapter written for one Code Library that reads it fully without an agent, such as the Carbon Adapter. A Code Library graduates to one when the owner keeps correcting its Drafted values, or its upgrades keep reopening many of them.
-_Avoid_: Custom adapter, scripted adapter
+An Adapter written for one Code Library: a reading procedure with that library's own rules, whose output a validator checks, such as the Carbon Adapter. An agent may carry it out, and what its rules still leave to judgement is recorded as Drafted values. A Code Library graduates to one when the owner keeps correcting its Drafted values, or its upgrades keep reopening many of them.
+_Avoid_: Custom adapter, scripted adapter (an agent may carry one out)
 
 **Component Proposal**:
 The description of a whole new Component Family that does not exist in the Code Library yet, shaped like a Contract but with no code behind it, and stating why no existing Contract fits. A missing value on an existing family is not a Component Proposal. It is retired when a Contract takes its place, read from the built component or chosen by the owner instead; one built in an app rather than the Code Library stays a Proposal that records where it was built.
@@ -79,6 +79,10 @@ _Avoid_: Draft Contract, proposed Contract, custom component
 **Foundations document**:
 The generated description of the Code Library's whole theme (every shared token and mode it defines, used by a Contract or not), which every Contract in that Design System refers to. One per Design System.
 _Avoid_: Tokens file, theme file, variables JSON
+
+**Mode**:
+One of the alternative value sets a Foundations document defines for a group of tokens, such as Carbon's Gray 100 theme or its second Layer level. The page or an enclosing element picks it, never the component's own props.
+_Avoid_: Theme (when a Layer level is meant), context, mode variant
 
 **Synthesized token**:
 A token the Adapter adds to the Foundations document for one Component Family, where the Code Library styles that component with a value none of its own tokens holds in every mode, such as a dark-only override or a token at reduced opacity.
