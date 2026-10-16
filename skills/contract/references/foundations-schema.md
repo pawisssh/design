@@ -35,6 +35,8 @@ Output for Button: 38 closure tokens, 75 variables (20 Primitives, 24 Theme, 22 
 
 ## Collections and modes
 
+The Carbon collections as today's generator emits them (the closure plus full Spacing and Size); the whole-theme generator ([#108](https://github.com/pawisssh/design/issues/108)) fills each collection with the whole theme.
+
 | key | name | modes | Content |
 |---|---|---|---|
 | `primitives` | `Primitives` | `default` | Palette entries that some Theme mode aliases. `hidden: true` (`hiddenFromPublishing`), scopes `[]`. |

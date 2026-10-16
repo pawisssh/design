@@ -256,11 +256,11 @@ test('the base-loop picker offers every document token with the typed value and 
 
   const [gap] = review(contract, typed24, doc, { built }).proposals;
   assert.deepEqual(gap.tokenCandidates, ['fluid-spacing-03', 'spacing-06']);
-  assert.deepEqual(gap.unbuilt, ['fluid-spacing-03']);
+  assert.deepEqual(gap.unbuiltGroups, { 'fluid-spacing-03': 'Fluid spacing' });
   assert.match(formatDiff(contract, typed24, review(contract, typed24, doc, { built })), /token\(s\) fluid-spacing-03 \(not built: add group Fluid spacing\), spacing-06 /);
 
   const [unknown] = review(contract, typed24, doc).proposals;
-  assert.deepEqual(unknown.unbuilt, [], 'without the ledger nothing is marked');
+  assert.deepEqual(unknown.unbuiltGroups, {}, 'without the ledger nothing is marked');
 });
 
 test('binding a token this file has not built cannot be carried until its group is added', () => {

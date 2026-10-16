@@ -170,7 +170,7 @@ export const isOwner = by => by === 'owner' || /^owner \(simulated[^)]*\)$/.test
  * than the Base Component, so the owner is asked first), the later rules that shield variants from it, the
  * derived raws it may make stale, and, for a typed number, the tokens of the field's scope with that value.
  * The document carries the whole theme (#107): given `built` (the ledger's foundations variables), the tokens
- * this file has not built are listed in `unbuilt`, with the group the owner would add in `unbuiltGroups`.
+ * this file has not built are listed in `unbuiltGroups`, each with the group the owner would add.
  */
 export function propose(contract, change, foundations, { by = 'owner', built = null } = {}) {
   if (!isOwner(by)) throw new Error(`an edit is by "owner" (or "owner (simulated, ...)" in a prototype), not "${by}"`);
@@ -207,11 +207,10 @@ export function propose(contract, change, foundations, { by = 'owner', built = n
       .filter(([n]) => { const tv = tokenValue(foundations, n); return near(tv, newValue.raw) || tv === String(newValue.raw).toLowerCase(); })
       .map(([n]) => n).sort()
     : [];
-  const unbuilt = built ? tokenCandidates.filter(n => !(n in built)) : [];
-  const unbuiltGroups = Object.fromEntries(unbuilt.map(n => [n, groupOf(foundations.variables[n])]));
+  const unbuiltGroups = built ? Object.fromEntries(tokenCandidates.filter(n => !(n in built)).map(n => [n, groupOf(foundations.variables[n])])) : {};
   return {
     change, expressible: true, id: `${node}.${field}`, path: `${section}[${ruleIdx}].${node}.${field}`, rule: ruleIdx, ruleMatch: rule.match,
-    newValue, blast, shared: blast.count > 1, shields, stale, tokenCandidates, unbuilt, unbuiltGroups, ...(problem ? { problem } : {}),
+    newValue, blast, shared: blast.count > 1, shields, stale, tokenCandidates, unbuiltGroups, ...(problem ? { problem } : {}),
   };
 }
 
@@ -463,7 +462,7 @@ function main() {
     if (!values['file-key']) throw new Error('review needs --file-key');
     // the file's built variables mark the picker's unbuilt tokens (#107); a review needs no ledger otherwise
     let ledgerPath = values.ledger;
-    try { ledgerPath = ledgerPath || defaultLedgerPath(values['file-key']); } catch { ledgerPath = null; }
+    try { ledgerPath = ledgerPath || defaultLedgerPath(values['file-key']); } catch (e) { ledgerPath = null; console.error(`base-loop: unbuilt tokens not marked: ${e.message}`); }
     const f = ledgerPath && (readLedger(ledgerPath) || {}).foundations;
     return print(formatReview(contract, readback, review(contract, readback, foundations, f ? { built: f.variables } : {}), { fileKey: values['file-key'], contractPath: a, readbackPath: b }));
   }
