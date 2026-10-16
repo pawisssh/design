@@ -24,9 +24,14 @@ def package(core, plan, state):
     families = selection.get("selectedFamilies")
     if not isinstance(families, list) or not families or not all(isinstance(value, str) and value.strip() for value in families) or len(families) != len(set(families)):
         raise ValueError("Selection must contain unique selected families")
+    seen = set()
     for row in selection["entries"]:
         if not isinstance(row, dict) or row.get("familyId") not in families or not isinstance(row.get("properties"), dict):
             raise ValueError("Invalid selected specimen")
+        key = json.dumps(row, sort_keys=True)
+        if key in seen:
+            raise ValueError("Selection entries must be unique")
+        seen.add(key)
     if not isinstance(state, dict):
         raise ValueError("State must be an object")
     if state.get("fileKey") and plan.get("fileKey") and state["fileKey"] != plan["fileKey"]:
@@ -72,9 +77,10 @@ def main():
     except (OSError, ValueError, TypeError) as error:
         print(json.dumps({"status": "invalid-input", "error": str(error)}))
         return 2
+    # chars counts UTF-16 units, as the hook checks use_figma's 50,000 limit.
     # The use_figma package hook swaps this stub for the verified file (see hooks/use-figma-package.mjs).
     stub = f'/*@package {stub_path} sha256={file_sha}*/ throw new Error("package not injected");'
-    print(json.dumps({"status": "packaged", "inputHash": identity, "fileSha256": file_sha, "chars": len(mcp), "output": str(args.output), "execution": "not-run", "stub": stub}))
+    print(json.dumps({"status": "packaged", "inputHash": identity, "fileSha256": file_sha, "chars": len(mcp.encode("utf-16-le")) // 2, "output": str(args.output), "execution": "not-run", "stub": stub}))
     return 0
 
 

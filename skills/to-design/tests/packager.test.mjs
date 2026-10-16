@@ -79,6 +79,23 @@ test('the printed stub, sent to the hook, expands to the package file', () => {
   assert.ok(Buffer.from(JSON.parse(run.stdout).hookSpecificOutput.updatedInput.code, 'utf8').equals(bytes));
 });
 
+test('a selection with the same entry twice is refused', () => {
+  const root = project();
+  const entry = PLAN.selection.entries[0];
+  writeFileSync(join(root, 'plan.json'), JSON.stringify({ ...PLAN, selection: { ...PLAN.selection, entries: [entry, { ...entry }] } }));
+  const run = pack(root);
+  assert.equal(run.status, 2);
+  assert.match(run.json.error, /unique/);
+});
+
+test('chars counts the way the hook does (UTF-16 units), so a non-BMP character counts twice', () => {
+  const root = project();
+  writeFileSync(join(root, 'core.js'), `${CORE}// 🙂\n`);
+  const run = pack(root);
+  const text = readFileSync(join(root, '.scratch/to-design/pkg/build-components.mcp.js'), 'utf8');
+  assert.equal(run.json.chars, text.length);
+});
+
 test('a package written outside the project dir is refused, since the hook could never expand it', () => {
   const root = project();
   const run = pack(root, '../elsewhere');
