@@ -49,17 +49,22 @@ const PAGE_TEMPLATE = {
  */
 export function checkCoverage(contract, readback, ledger = null) {
   const problems = [];
-  // a variant the selection dropped, which the ledger keeps as an orphan until a prune (#67), is listed, not a problem
+  // a variant the selection dropped, which the ledger keeps as an orphan until a prune (#67), is listed under the
+  // name the ledger keeps, not a problem. It is matched by its id (the readback's row ends with it), and by name
+  // only for an orphan the ledger has no id for.
   const orphans = ((ledger && ledger.sets && ledger.sets[contract.family.key]) || {}).orphans || {};
+  const byId = new Map(Object.entries(orphans).filter(([, o]) => o.id).map(([name, o]) => [o.id, name]));
   const orphaned = [];
   const bad = (what, detail) => problems.push({ what, ...detail });
   const tuples = expand(contract);
   const want = new Map(tuples.map(t => [variantName(contract, t), t]));
   const labels = new Map(contract.axes.map(a => [a.label, new Set(a.values.map(v => v.label))]));
   const seen = new Map();
-  for (const [parts, refsIdx, row, col, isComponent] of readback.rows) {
+  for (const [parts, refsIdx, row, col, isComponent, id] of readback.rows) {
     const pairs = parts.map(i => readback.dict[i]);
     const name = pairs.join(', ');
+    if (byId.has(id)) { orphaned.push(byId.get(id)); continue; }
+    if (orphans[name] && !orphans[name].id && !want.has(name)) { orphaned.push(name); continue; }
     for (const pair of pairs) {
       const [k, v] = pair.split('=');
       if (!labels.has(k) || !labels.get(k).has(v)) bad('label', { name, label: pair });
@@ -67,7 +72,7 @@ export function checkCoverage(contract, readback, ledger = null) {
     if (seen.has(name)) { bad('duplicate', { name }); continue; }
     seen.set(name, true);
     const t = want.get(name);
-    if (!t) { if (orphans[name]) orphaned.push(name); else bad('extra', { name }); continue; }
+    if (!t) { bad('extra', { name }); continue; }
     if (!isComponent) bad('not-a-component', { name });
     const cell = cellOf(contract, t);
     if (row !== cell[0] || col !== cell[1]) bad('cell', { name, want: cell, got: [row, col] });

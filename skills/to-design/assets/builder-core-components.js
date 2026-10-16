@@ -448,7 +448,8 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
 
     // prune-preview (read only) and prune (#67): the ledger's orphans by name, each with its instance count in
     // this file. prune deletes only the owner-confirmed list, after checking each name is an orphan whose count
-    // is still the one the preview showed; a refused name stops it before any change.
+    // is still the one the preview showed; a refused name stops it before any change. An orphan a hand moved out
+    // of the set is refused: the next build or reconcile lets it go from the orphans.
     if (mode.indexOf('prune') === 0) {
       const O = (prev && prev.orphans) || {};
       const L = opts.prune || O;
@@ -456,6 +457,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       for (const name of Object.keys(L)) {
         if (!(name in O)) { conflict('prune', name, 'not-orphan'); continue; }
         const n = await get(O[name]);
+        if (n && !(set && n.parent && n.parent.id === set.id)) { conflict('prune', name, 'moved out of the set'); continue; }
         count[name] = n && n.type === 'COMPONENT' ? (await n.getInstancesAsync()).length : null;
         if (opts.prune && count[name] !== null && count[name] !== L[name]) conflict('prune', name, 'stale: ' + count[name] + ' instances, the preview counted ' + L[name]);
       }
@@ -668,13 +670,15 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
         const di = {};
         const D = s => (s in di ? di[s] : (di[s] = dict.push(s) - 1));
         const rows = [];
+        // a ledger orphan's row ends with its id, so the check matches it by id, not by name
+        const oid = Object.values((prev && prev.orphans) || {});
         for (const k of set.children) {
           const refs = {};
           for (const x of k.findAll(() => true)) {
             const r = x.componentPropertyReferences;
             if (r && Object.keys(r).length) { refs[x.name] = {}; for (const f of Object.keys(r)) refs[x.name][f] = String(r[f]).split('#')[0]; }
           }
-          rows.push([k.name.split(', ').map(D), D(JSON.stringify(refs)), k.gridRowAnchorIndex, k.gridColumnAnchorIndex, k.type === 'COMPONENT' ? 1 : 0]);
+          rows.push([k.name.split(', ').map(D), D(JSON.stringify(refs)), k.gridRowAnchorIndex, k.gridColumnAnchorIndex, k.type === 'COMPONENT' ? 1 : 0].concat(oid.indexOf(k.id) === -1 ? [] : [k.id]));
         }
         const defs = set.componentPropertyDefinitions;
         const props = {};

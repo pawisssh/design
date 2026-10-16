@@ -376,8 +376,9 @@ export function setsPlan(contract, docText, ledger, {
     const { orphans = {}, ...kept } = rec;
     for (const i of picked) { const o = orphans[variantName(contract, tuples[i])]; if (o && !ids[i]) ids[i] = o.id; }
     sets[family] = { ...kept, variants: ids };
-    // the prune modes read the orphans, by name, and work only on a set every batch was rebuilt from this Contract
-    if (mode.startsWith('prune')) sets[family].orphans = Object.fromEntries(Object.entries(orphans).map(([n, o]) => [n, o.id]));
+    // the prune modes read the orphans, by name, and work only on a set every batch was rebuilt from this Contract;
+    // coverage reads their ids, to tell an orphan from a node under its name
+    if (mode.startsWith('prune') || mode === 'coverage') sets[family].orphans = Object.fromEntries(Object.entries(orphans).map(([n, o]) => [n, o.id]));
   }
   if (mode.startsWith('prune') && (!rec || rec.contentHash !== plan.contentHash || !(rec.variants || [null]).every(Boolean)))
     throw new Error(`the ${family} set is not built from this Contract yet: rebuild every batch first, then preview or prune its orphans`);
