@@ -17,7 +17,7 @@ node skills/adapter-carbon/scripts/foundations.mjs
 
 It reads every Contract in `design-systems/carbon/contracts/` and the pinned Carbon sources, which `skills/adapter-carbon/scripts/sources.mjs` fetches into gitignored `.scratch/adapter-carbon/sources/` and checks against their pinned hashes. The token closure comes from the shared module's `closure()`, and the scope check is rule 6 of the shared module's `validate()`, run on the generated document. The output does not depend on the order of the Contracts, and two runs produce byte-identical files, so the ledger's `documentHash` is stable.
 
-Output with the Button Contract (#108): 38 closure tokens; 683 variables (244 Primitives, 249 Theme, 44 Layout, 146 Type) and 36 Text Styles. To-design's default subset of it is still 75 variables and 2 Text Styles. 1158 values match the compiled `@carbon/styles` CSS: 996 Theme mode values (all 936 `themes.json` values and the 60 `button-*` ones), 17 layout values, 141 type values and 4 font-family stacks. Two type values differ from `styles.ts` and are listed in `checks.css.differs` (see [Text Styles](#text-styles)). All 27 Sass codeSyntax fallbacks exist in `@carbon/layout`. The Button Contract passes rule 6 against the document, so every Contract use of a token falls inside that variable's scopes.
+Output with the Button Contract (#108): 38 closure tokens; 683 variables (244 Primitives, 249 Theme, 44 Layout, 146 Type) and 36 Text Styles. To-design's default subset of it is still 75 variables and 2 Text Styles. 1158 values match the compiled `@carbon/styles` CSS: 996 Theme mode values (all 936 `themes.json` values and the 60 `button-*` ones), 17 layout values, 141 type values and the 4 per-style `font-family` properties (`code-01`/`02`, `fluid-quotation-01`/`02`). Two type values differ from `styles.ts` and are listed in `checks.css.differs` (see [Text Styles](#text-styles)). All 27 Sass codeSyntax fallbacks exist in `@carbon/layout`. The Button Contract passes rule 6 against the document, so every Contract use of a token falls inside that variable's scopes.
 
 ## Top level
 
@@ -91,7 +91,7 @@ The Carbon collections, each holding the whole theme (#108).
 - `resolved` is present on every COLOR mode value. It is written in the same notation as the compiled CSS (`#0f62fe`, `rgba(141, 141, 141, 0.3)`), so the generator can compare it against each `.cds--<theme>` block, and To-preview can use it without resolving aliases.
 - FLOAT values are px. `from` records the conversion: `spacing-*`, `container-*` and `layout-*` are in miniUnits (×8), `size-*` and most `border-radius-*` are px with a rem converter, `icon-size-*` is a `"1rem"` string (×16), and `border-radius-00` and `border-radius-max` are px strings (`"0px"`, `"999999px"`).
 - `fluid-spacing-*` is viewport-relative (`0`, `2vw`, `5vw`, `10vw`). Figma has no vw unit, so it is a STRING holding the exact CSS text, with scopes `[]` and an info reason. It is there for codeSyntax and for matching, and binds to nothing.
-- Every value the generator cannot read fails generation, naming the token and mode. Nothing is skipped silently.
+- Every value the generator cannot read (a palette hex, a Layout value, a Theme mode value, a Type field) fails generation, naming the token, and the mode where there is one. Nothing is skipped silently.
 - A mode can mix forms. `text-on-color-disabled` is an alias in White and Gray 10, and raw `rgba(255, 255, 255, 0.25)` in Gray 90 and Gray 100.
 - A Contract never sees any of this: a token that is raw in some mode is still `{token}` there (#7).
 

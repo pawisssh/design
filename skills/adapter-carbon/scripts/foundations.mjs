@@ -93,10 +93,14 @@ function flattenLayout(doc) {
 /** colors.json: white, blue > 60, blue > 60Hover -> keys white, blue.60, blue.60Hover. */
 function palette(doc) {
   const out = {};
+  const hex = (key, v) => {
+    if (typeof v !== 'string' || !/^#[0-9a-f]{6}$/i.test(v)) fail(`palette ${key}: cannot read ${JSON.stringify(v)} as a 6-digit hex`);
+    out[key] = v.toLowerCase();
+  };
   for (const [k, v] of Object.entries(doc)) {
     if (k.startsWith('$')) continue;
-    if ('$value' in v) out[k] = v.$value.toLowerCase();
-    else for (const [step, node] of Object.entries(v)) if (!step.startsWith('$')) out[`${k}.${step}`] = node.$value.toLowerCase();
+    if ('$value' in v) hex(k, v.$value);
+    else for (const [step, node] of Object.entries(v)) if (!step.startsWith('$')) hex(`${k}.${step}`, node.$value);
   }
   return out;
 }
@@ -113,16 +117,15 @@ const rgbaCss = (hex, alpha) => {
   return `rgba(${r}, ${gr}, ${b}, ${formatG(alpha)})`;
 };
 
-function layoutPx(node) {
+function layoutPx(name, node) {
   const v = node.$value;
   const conv = ((node.$extensions || {})['carbon.layout'] || {}).converter;
-  let px, how;
-  if (conv === 'miniUnits') [px, how] = [v * 8, `${formatG(v)} miniUnits x 8`];
-  else if (conv === 'rem') [px, how] = [v, `${formatG(v)}px (rem converter)`];
-  else if (typeof v === 'string' && v.endsWith('rem')) [px, how] = [parseFloat(v) * 16, `${v} x 16`];
-  else if (typeof v === 'string' && v.endsWith('px')) [px, how] = [parseFloat(v), v];
-  else fail(`unknown layout unit ${JSON.stringify(node)}`);
-  return [px, how];
+  const unit = typeof v === 'string' && /^(\d+(?:\.\d+)?)(rem|px)$/.exec(v);
+  if (conv === 'miniUnits' && Number.isFinite(v)) return [v * 8, `${formatG(v)} miniUnits x 8`];
+  if (conv === 'rem' && Number.isFinite(v)) return [v, `${formatG(v)}px (rem converter)`];
+  if (!conv && unit && unit[2] === 'rem') return [parseFloat(unit[1]) * 16, `${v} x 16`];
+  if (!conv && unit) return [parseFloat(unit[1]), v];
+  fail(`layout token ${name}: cannot read ${JSON.stringify(v)}${conv ? ` with the ${conv} converter` : ''}`);
 }
 
 // @carbon/type has no DTCG file: read the TypeScript exports. Only these forms are understood: `export const
@@ -256,8 +259,8 @@ export function generate({ sources, contracts }) {
     for (const [k, e] of Object.entries(flattenTheme(JSON.parse(files[file]), file))) comps[k] = { ...e, family };
   }
   const themes = flattenTheme(JSON.parse(files[FILE.themes]), FILE.themes);
-  const both = Object.keys(comps).filter(k => k in themes);
-  if (both.length) fail(`tokens in both themes.json and a component file: ${both.join(', ')}`);
+  const definedTwice = Object.keys(comps).filter(k => k in themes);
+  if (definedTwice.length) fail(`tokens in both themes.json and a component file: ${definedTwice.join(', ')}`);
   const layout = flattenLayout(JSON.parse(files[FILE.layout]));
   const pal = palette(JSON.parse(files[FILE.colors]));
   const type = typeSource(files);
@@ -334,7 +337,7 @@ export function generate({ sources, contracts }) {
         codeSyntax: codeSyntax(name), values: { default: { value: v, from: 'layout.json $value, as CSS', level: 'info', reason: FLUID_REASON } }, usedBy: users(name) };
       continue;
     }
-    const [px, how] = layoutPx(node);
+    const [px, how] = layoutPx(name, node);
     if (emitted !== null) {
       if (!emitted.endsWith('rem') || parseFloat(emitted) * 16 !== px) fail(`CSS mismatch ${name}: document ${px}px, CSS ${emitted}`);
       checks.css++;
@@ -353,14 +356,14 @@ export function generate({ sources, contracts }) {
   const styleNames = Object.keys(type.styles).sort(byKey);
   for (const family of [...new Set(styleNames.map(s => type.styles[s].family))].sort(byKey)) {
     const fam = `font-family-${family}`;
-    const of = styleNames.filter(s => type.styles[s].family === family);
+    const familyStyles = styleNames.filter(s => type.styles[s].family === family);
     variables[fam] = { collection: 'type', name: `Font family/${fam}`, type: 'STRING', source: `${FILE.fontFamily}#${family}`,
       scopes: ['FONT_FAMILY'], codeSyntax: {},
       values: { default: { value: type.firstFamily(family), from: `first family of the ${family} stack` } },
-      usedBy: [...new Set(of.flatMap(users))].sort(byKey) };
+      usedBy: [...new Set(familyStyles.flatMap(users))].sort(byKey) };
     notes.push({ level: 'info', at: `variables.${fam}.codeSyntax`, message: family === 'sans'
       ? 'Carbon emits no font-family custom property for body styles (they inherit); codeSyntax left empty.'
-      : `Carbon emits the family per style (--cds-${of[0]}-font-family), not as one custom property; codeSyntax left empty.` });
+      : `Carbon emits the family per style (--cds-${familyStyles[0]}-font-family), not as one custom property; codeSyntax left empty.` });
   }
   for (const s of styleNames) {
     const t = type.styles[s];

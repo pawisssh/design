@@ -52,11 +52,11 @@ test('every resolved value matches the compiled Carbon CSS, and every Sass fallb
   assert.equal(checks.sass.matched, 27);
 });
 
-test('all 936 themes.json values cross-check against the compiled CSS, the 12 colour-object values included', { skip }, () => {
+test('every themes.json token is emitted in four modes; the 3 colour objects are read from their hex', { skip }, () => {
   const { doc } = run();
   const themes = Object.values(doc.variables).filter(v => v.collection === 'theme' && v.source.startsWith('packages/themes/src/dtcg/themes.json'));
   assert.equal(themes.length, 234);
-  assert.equal(themes.length * 4, 936);
+  for (const v of themes) assert.deepEqual(Object.keys(v.values), ['white', 'g10', 'g90', 'g100'], v.name);
   for (const name of ['ai-popover-caret-bottom-background', 'ai-popover-caret-bottom-background-actions', 'ai-popover-caret-center']) {
     const v = doc.variables[name];
     for (const m of Object.values(v.values)) {
@@ -76,6 +76,25 @@ test('generation fails, naming the token, on a Theme value it cannot read', { sk
   broken.ai.popover.caret.center.$extensions['carbon.themes'].g10 = { colorSpace: 'srgb', components: [0, 0, 0] };
   const bad = { ...sources, files: { ...sources.files, [file]: JSON.stringify(broken) } };
   assert.throws(() => generate({ sources: bad, contracts: [{ path: CONTRACT, contract: button() }] }), /ai-popover-caret-center\/g10/);
+});
+
+const withFile = (file, edit) => {
+  const text = edit(sources.files[file]);
+  assert.notEqual(text, sources.files[file], `${file} edit applied`);
+  return () => generate({ sources: { ...sources, files: { ...sources.files, [file]: text } }, contracts: [{ path: CONTRACT, contract: button() }] });
+};
+const editJson = edit => text => { const json = JSON.parse(text); edit(json); return JSON.stringify(json); };
+
+test('generation fails, naming the token, on a Layout or palette value it cannot read', { skip }, () => {
+  assert.throws(withFile('packages/layout/src/dtcg/layout.json', editJson(j => { j.spacing['spacing-05'].$value = 'two'; })), /spacing-05/);
+  assert.throws(withFile('packages/layout/src/dtcg/layout.json', editJson(j => { j.container['container-01'].$value = '3em'; })), /container-01/);
+  assert.throws(withFile('packages/colors/src/dtcg/colors.json', editJson(j => { j.blue['60'].$value = 42; })), /blue\.60/);
+  assert.throws(withFile('packages/colors/src/dtcg/colors.json', editJson(j => { j.blue['60'].$value = 'blue'; })), /blue\.60/);
+});
+
+test('generation fails when a listed styles.ts/CSS difference no longer holds', { skip }, () => {
+  const fixed = withFile('packages/type/src/styles.ts', t => t.replace(/(export const productiveHeading07 = \{[^}]*lineHeight: )1\.199/, '$11.19'));
+  assert.throws(fixed, /heading-07-line-height: the recorded CSS difference \(1\.19\) no longer holds/);
 });
 
 test('collections: Primitives (hidden), Theme with four modes, Layout and Type', { skip }, () => {
