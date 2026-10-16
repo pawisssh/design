@@ -281,7 +281,12 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
   }
   for (const [k, v] of Object.entries(LAYOUT_DEFAULTS)) {
     Object.defineProperty(SceneNode.prototype, k, {
-      get() { return k in PAINT_LISTS ? clone(this._p[k]) : this._p[k]; },
+      get() {
+        // Probed live (#32): a hidden child of an auto layout reports FILL sizing as FIXED; the fill is still
+        // there, as layoutGrow (main axis) and layoutAlign STRETCH (cross axis).
+        if ((k === 'layoutSizingHorizontal' || k === 'layoutSizingVertical') && this._p[k] === 'FILL' && this._p.visible === false) return 'FIXED';
+        return k in PAINT_LISTS ? clone(this._p[k]) : this._p[k];
+      },
       set(v) {
         if (k === 'layoutSizingHorizontal' || k === 'layoutSizingVertical') {
           if (v === 'HUG' && this._p.layoutMode === 'NONE' && this.type !== 'TEXT') throw new Error(`mock: HUG needs auto layout on ${this.name}`);
@@ -298,6 +303,14 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
       },
     });
   }
+  Object.defineProperty(SceneNode.prototype, 'layoutGrow', { get() {
+    const dir = this.parent && this.parent._p && this.parent._p.layoutMode;
+    return this._p[dir === 'VERTICAL' ? 'layoutSizingVertical' : 'layoutSizingHorizontal'] === 'FILL' ? 1 : 0;
+  } });
+  Object.defineProperty(SceneNode.prototype, 'layoutAlign', { get() {
+    const dir = this.parent && this.parent._p && this.parent._p.layoutMode;
+    return this._p[dir === 'VERTICAL' ? 'layoutSizingHorizontal' : 'layoutSizingVertical'] === 'FILL' ? 'STRETCH' : 'INHERIT';
+  } });
   // fills live in _fills (the icons slice's snapshot reads them); strokes and effects in _p.
   class Page extends SceneNode {
     constructor(name) { super('PAGE', name); this.loaded = false; }

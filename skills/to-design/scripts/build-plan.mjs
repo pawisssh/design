@@ -169,7 +169,7 @@ export function basePlan(contract, docText, ledger, { fileKey, adopt = false, re
  * Variants per build call. Measured live (#32): see SKILL.md "Component Sets" for the slope and why this
  * ceiling keeps each call well under the connection limit and the package under use_figma's 50,000 chars.
  */
-export const PER_CALL = 64;
+export const PER_CALL = 49;
 // The Component Header template every family page's Header is an instance of (one per file):
 // TEXT properties with their font style and size.
 export const TEMPLATES = {

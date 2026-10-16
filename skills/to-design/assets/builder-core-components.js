@@ -74,7 +74,17 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
   }
   function readField(n, f) {
     if (f === 'direction') return keyOf(AXIS, n.layoutMode) || 'none';
-    if (f === 'width' || f === 'height') { const s = f === 'width' ? n.layoutSizingHorizontal : n.layoutSizingVertical; return s === 'FIXED' ? val(n, f) : String(s).toLowerCase(); }
+    if (f === 'width' || f === 'height') {
+      const s = f === 'width' ? n.layoutSizingHorizontal : n.layoutSizingVertical;
+      if (s !== 'FIXED') return String(s).toLowerCase();
+      // A hidden child of an auto layout reports FILL as FIXED; its grow (main axis) or stretch (cross axis) still says fill.
+      const dir = !n.visible && n.parent && n.parent.layoutMode;
+      if (dir === 'HORIZONTAL' || dir === 'VERTICAL') {
+        const main = (f === 'width') === (dir === 'HORIZONTAL');
+        if (main ? n.layoutGrow === 1 : n.layoutAlign === 'STRETCH') return 'fill';
+      }
+      return val(n, f);
+    }
     if (f === 'alignMain') return keyOf(ALIGN, n.primaryAxisAlignItems);
     if (f === 'alignCross') return keyOf(ALIGN, n.counterAxisAlignItems);
     if (NUM[f]) return val(n, NUM[f]);
