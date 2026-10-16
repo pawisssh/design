@@ -3,12 +3,18 @@
 // pick the agent or the owner makes (what an element is, a tied or near token, a plain condition's default,
 // the feature and its acceptance) is a keyed decision. Any unanswered key makes generate return the decision
 // requests and write nothing; an answer outside its request's candidates is refused.
-import { createHash } from 'node:crypto';
+//
+// Owner decisions (#64 §8) are the owner's words, entered only on the owner's say-so in chat as
+// `{"by": "owner", "answer": …}` (or `{"by": "owner", "to": "developer"}` for a question). The Handoff records
+// them in `ownerDecisions` by stable key, and a re-run carries them over from the stored handoff.json: they
+// win over the agent's answers while their key still exists, and are dropped and listed once it is gone.
+// Agent decisions are re-decided every run.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { convert, deltaE } from '../../contract/scripts/color.mjs';
-import { canonical, contentHash as contractHash, proposalContentHash, resolve, sha256 } from '../../contract/scripts/contract.mjs';
+import { contentHash as contractHash, proposalContentHash, resolve } from '../../contract/scripts/contract.mjs';
 import { computed, splitWords } from './css.mjs';
+import { fileHash, handoffContentHash, prototypeFiles, snapshotIdOf, usedHash } from './hash.mjs';
 import { COLOR_ROLES, collectionOf, colorText, followCustom, matchDeclaration, matchText, roleOf, sameHex, valueIn } from './match.mjs';
 import { stateAxisOf } from './system.mjs';
 import { hasRuntime } from './deps.mjs';
@@ -26,42 +32,61 @@ const HEADINGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
 // Without breakpoints from the Adapter, the runtime reader screenshots one desktop width.
 const DEFAULT_BREAKPOINTS = [{ key: 'desktop', width: 1280 }];
 
-export const fileHash = bytes => 'sha256:' + createHash('sha256').update(bytes).digest('hex');
+export { fileHash, handoffContentHash, snapshotIdOf };
 const kebab = s => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-const clone = o => JSON.parse(JSON.stringify(o));
-
-/** A Handoff's content hash: everything but revision, status and approval (#64). */
-export function handoffContentHash(handoff) {
-  const h = clone(handoff);
-  delete h.revision;
-  delete h.status;
-  delete h.approval;
-  return 'sha256:' + sha256(canonical(h));
-}
-
-/**
- * The Prototype's snapshotId: a hash over its sorted file hashes (#64), as for a Code Library snapshot. The same
- * manifest as each Adapter's `snapshotId` in its sources.mjs; To-handoff names no Adapter, so it keeps its own.
- */
-export function snapshotIdOf(files) {
-  return 'sha256:' + sha256(Object.keys(files).sort().map(p => `${files[p].slice(7)}  ${p}\n`).join(''));
-}
 
 // ---------- decisions ----------
 
-function decider(decisions) {
+const isOwnerEntry = v => v !== null && typeof v === 'object' && !Array.isArray(v) && v.by === 'owner';
+const ownerAnswer = (key, v) => {
+  if (key.startsWith('question:')) { const { by, ...rest } = v; return rest; }
+  return v.answer;
+};
+
+/**
+ * `decisions` (decisions.json) over `carried` (the stored Handoff's ownerDecisions). An owner answer wins over
+ * the agent's; a carried one that no longer passes its check is dropped, a fresh one is refused like any answer.
+ */
+function decider(decisions, carried = {}) {
   const requests = [];
   const byKey = new Map();
+  const owner = new Map(Object.entries(carried).map(([k, v]) => [k, { answer: v, fresh: false }]));
+  const agent = {};
+  for (const [k, v] of Object.entries(decisions)) {
+    if (isOwnerEntry(v)) owner.set(k, { answer: ownerAnswer(k, v), fresh: true });
+    else agent[k] = v;
+  }
+  const used = new Map();
+  const dropped = [];
   return {
     requests,
+    dropped,
+    /** The owner's answers this run used, by key. */
+    used,
+    isOwner: key => used.has(key),
+    /** Mark `target` as decided for `key`: `by: "owner"` when the owner's answer settled it, else `by: "agent"`. */
+    mark(target, key) { target.by = used.has(key) ? 'owner' : 'agent'; return target; },
+    /** The owner's answer for a key the pass settles itself (questions, acceptance), or undefined. */
+    ownerOf(key) { const o = owner.get(key); return o && o.answer; },
+    use(key) { used.set(key, owner.get(key).answer); },
+    drop(key, reason) { dropped.push({ key, answer: owner.get(key).answer, reason }); owner.delete(key); },
+    /** Owner keys this run never reached: their key is gone. */
+    unreached() { return [...owner.keys()].filter(k => !used.has(k)).sort(); },
     /**
      * The answer to `key`, checked by `check` (which throws), or undefined after recording a request. A caller
      * may stand in the first candidate for an undefined answer, only so the pass goes on to collect every
      * request: with any request open, generate returns them and writes nothing.
      */
     ask(key, request, check) {
-      if (Object.prototype.hasOwnProperty.call(decisions, key)) {
-        const answer = decisions[key];
+      if (owner.has(key)) {
+        const { answer, fresh } = owner.get(key);
+        const problem = check ? check(answer) : null;
+        if (!problem) { used.set(key, answer); return answer; }
+        if (fresh) throw new Error(`owner decision "${key}": ${problem}`);
+        this.drop(key, problem);
+      }
+      if (Object.prototype.hasOwnProperty.call(agent, key)) {
+        const answer = agent[key];
         if (check) {
           const problem = check(answer);
           if (problem) throw new Error(`decision "${key}": ${problem}`);
@@ -125,11 +150,13 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   const rel = basename(prototype);
   const doc = readHtml(prototype, rel, { depsDir });
   const { at, rules } = doc;
-  const d = decider(decisions);
-  const cache = new Map();
-  const style = el => computed(rules, el, cache);
   const title = doc.title || rel.replace(/\.html?$/, '');
   const screenId = kebab(title);
+  const dir = join(designSystem, 'handoffs', screenId);
+  const stored = existsSync(join(dir, 'handoff.json')) ? JSON.parse(readFileSync(join(dir, 'handoff.json'), 'utf8')) : null;
+  const d = decider(decisions, (stored && stored.ownerDecisions) || {});
+  const cache = new Map();
+  const style = el => computed(rules, el, cache);
   const theme = collectionOf(foundations, Object.values(foundations.collections).find(c => !c.hidden && c.modes.length > 1).modes[0].key);
 
   // Custom properties the Prototype defines on :root, for references such as var(--border).
@@ -239,11 +266,12 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     if (el.type !== 'element' || consumed.has(el)) return;
     const cand = candidateOf(el, rules);
     if (cand) {
-      const answer = d.ask(`recognise:${cand.sig}`, {
+      const key = `recognise:${cand.sig}`;
+      const answer = d.ask(key, {
         kind: 'recognise', question: `What is \`${cand.sig}\` ("${elementText(el, atomsIn('default')).slice(0, 40)}")?`, candidates: families,
         evidence: { at: [at(el.offset)], ...(live(el) ? { rendered: `${live(el).rect.width}x${live(el).rect.height}px` } : {}) },
       }, checkRecognise);
-      recognised.push({ el, cand, answer });
+      recognised.push({ el, cand, answer, key });
       usageOf.set(el, recognised[recognised.length - 1]);
       walk(el, x => { if (x !== el) consumed.add(x); });
       if (answer && answer.contract) {
@@ -259,7 +287,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
 
   const labelFor = id => { let found = null; walk(doc.root, x => { if (!found && x.tag === 'label' && x.attrs.for === id) found = x; }); return found; };
   const usages = new Map();
-  for (const { el, cand, answer } of recognised) {
+  for (const { el, cand, answer, key } of recognised) {
     const base = typeof el.attrs.id === 'string' ? el.attrs.id : el.classes[0] || el.tag;
     const id = uniqueId(usageIds, kebab(base));
     const u = { id };
@@ -271,7 +299,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       else { u.proposal = answer.proposal; usedProposals.add(answer.proposal); }
       u.tuple = { ...answer.tuple };
       Object.assign(u, contentOf(def, el, cand, id, answer));
-      u.match = { by: 'agent', via: answer.via || 'element', ...(answer.candidates ? { candidates: answer.candidates } : {}) };
+      u.match = d.mark({ by: undefined, via: answer.via || 'element', ...(answer.candidates ? { candidates: answer.candidates } : {}) }, key);
       if (answer.contract) {
         const off = offAxis(def, u.tuple, el, id);
         if (off.length) u.offAxis = off;
@@ -358,7 +386,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const tokens = new Set();
     const collect = v => { if (Array.isArray(v)) v.forEach(collect); else if (v && typeof v === 'object') { if (typeof v.token === 'string') tokens.add(v.token); else Object.values(v).forEach(collect); } };
     collect(resolve(contract, full).paint);
-    const hexes = [...tokens].filter(t => foundations.variables[t]).map(t => convert(valueIn(foundations.variables[t], mode)).hex);
+    const hexes = [...tokens].filter(t => foundations.variables[t]).map(t => convert(valueIn(foundations.variables[t], mode, foundations)).hex);
     const out = [];
     for (const decl of ownDeclarations(rules, el)) {
       const role = roleOf(decl.property);
@@ -381,7 +409,6 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   const regionIds = new Set();
   const values = [];
   const fonts = [];
-  const usedTokens = new Set(), usedStyles = new Set();
   const regions = [];
   const kids = mount.children.filter(c => c.type === 'element');
   const groups = [];
@@ -458,10 +485,9 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
           s.token = answer || cands[0];
           if (result.kind === 'near') { s.match = 'near'; s.delta = result.candidates.find(c => c.token === s.token).delta; }
           s.candidates = cands;
-          s.by = 'agent';
+          d.mark(s, key);
         }
       } else offSystemValue(s, role, norm, result, where);
-      if (s.token) usedTokens.add(s.token);
       r.styles.push(s);
     }
   }
@@ -512,24 +538,23 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
         s.textStyle = answer || cands[0];
         if (result.kind === 'near') { s.match = 'near'; s.delta = result.candidates.find(x => x.token === s.textStyle).delta; }
         s.candidates = cands;
-        s.by = 'agent';
+        d.mark(s, tkey);
       }
     } else if (result.kind === 'partial') {
       const m = result.match;
       let token;
       if (m.kind === 'exact') token = { token: m.token };
       else {
-        const answer = d.ask(`token:font-size:${fontSize}px`, {
+        const fkey = `token:font-size:${fontSize}px`;
+        const answer = d.ask(fkey, {
           kind: 'token-tie', question: `Font size ${fontSize}px (no whole Text Style matches) is exactly ${m.candidates.join(', ')}: which one?`,
           candidates: m.candidates, evidence: { at: [where] },
         }, among(m.candidates));
-        token = { token: answer || m.candidates[0], candidates: m.candidates, by: 'agent' };
+        token = d.mark({ token: answer || m.candidates[0], candidates: m.candidates }, fkey);
       }
-      usedTokens.add(token.token);
       s.partial = { fontSize: token };
       s.raw = raw;
     } else s.raw = raw;
-    if (s.textStyle) usedStyles.add(s.textStyle);
     const base = typeof el.attrs.id === 'string' ? el.attrs.id : el.classes[0] || el.tag;
     const entry = { copy: addCopy(kebab(base), text, t.offset).slice(5), at: where };
     const states = shownIn(el);
@@ -613,19 +638,39 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   }, a => (Array.isArray(a) && a.length && a.every(x => x.id && x.screen === screenId && STANDARD_STATES.includes(x.state) && x.given && x.when && x.then) ? null
     : `acceptance is a non-empty list of {id, screen: "${screenId}", state, given, when, then}`));
 
-  if (d.requests.length) return { requests: d.requests, handoff: undefined, path: null, wrote: false };
+  // ---- the owner's answers to questions and own acceptance criteria, by question and acceptance id ----
+  const criteria = acceptance ? acceptance.map(a => ({ id: a.id, screen: a.screen, state: a.state, given: a.given, when: a.when, then: a.then, by: d.isOwner('acceptance') ? 'owner' : 'agent' })) : [];
+  const openQuestions = questions.map(q => ({ ...q, answer: null }));
+  for (const key of d.unreached()) {
+    const answer = d.ownerOf(key);
+    if (key.startsWith('question:')) {
+      const q = openQuestions.find(x => x.id === key.slice(9));
+      if (!q) { d.drop(key, 'no such question in this run'); continue; }
+      const ok = answer && (typeof answer.answer === 'string' && answer.answer.trim() || answer.to === 'developer' || answer.to === 'owner');
+      if (!ok) throw new Error(`owner decision "${key}": an answer is {by: "owner", answer: "<text>"} or {by: "owner", to: "developer"}`);
+      if (answer.answer !== undefined) q.answer = answer.answer;
+      if (answer.to) q.to = answer.to;
+      q.by = 'owner';
+      d.use(key);
+    } else if (key.startsWith('acceptance:')) {
+      const id = key.slice(11);
+      const a = answer || {};
+      if (!(STANDARD_STATES.includes(a.state) && a.given && a.when && a.then)) throw new Error(`owner decision "${key}": an acceptance criterion is {state, given, when, then}`);
+      const item = { id, screen: screenId, state: a.state, given: a.given, when: a.when, then: a.then, by: 'owner' };
+      const i = criteria.findIndex(x => x.id === id);
+      if (i >= 0) criteria[i] = item; else criteria.push(item);
+      d.use(key);
+    } else d.drop(key, 'its key no longer exists');
+  }
+
+  if (d.requests.length) return { requests: d.requests, dropped: d.dropped, handoff: undefined, path: null, wrote: false };
 
   // ---- source pins ----
-  const files = { [rel]: fileHash(readFileSync(prototype)) };
+  const files = prototypeFiles(prototype);
   const contracts = {};
   for (const k of [...usedContracts].sort()) contracts[k] = { snapshotId: system.contracts[k].source.snapshotId, contentHash: contractHash(system.contracts[k]) };
   const proposals = {};
   for (const k of [...usedProposals].sort()) proposals[k] = proposalContentHash(system.proposals[k]);
-  const strip = o => { const c = clone(o); delete c.usedBy; return c; };
-  const used = {
-    variables: Object.fromEntries([...usedTokens].sort().map(k => [k, strip(foundations.variables[k])])),
-    textStyles: Object.fromEntries([...usedStyles].sort().map(k => [k, strip(foundations.textStyles[k])])),
-  };
 
   const handoff = {
     schemaVersion: 1,
@@ -640,19 +685,21 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       designSystem: system.key,
       contracts,
       proposals,
-      foundations: { documentHash: fileHash(system.foundationsText), usedHash: 'sha256:' + sha256(canonical(used)) },
+      foundations: { documentHash: fileHash(system.foundationsText), usedHash: null },
       modes: { [PROTOTYPE_MODE]: mode },
       notes,
     },
     screens: [{ id: screenId, name: title, at: at(mount.offset), breakpoints: breakpoints.map(b => b.key), regions, states: screenStates }],
     copy,
     values,
-    acceptance: acceptance.map(a => ({ id: a.id, screen: a.screen, state: a.state, given: a.given, when: a.when, then: a.then, by: 'agent' })),
-    openQuestions: questions.map(q => ({ ...q, answer: null })),
+    acceptance: criteria,
+    openQuestions,
     flow,
     data,
+    ownerDecisions: Object.fromEntries([...d.used.keys()].sort().map(k => [k, d.used.get(k)])),
   };
-  const result = store(handoff, join(designSystem, 'handoffs', screenId));
+  handoff.source.foundations.usedHash = usedHash(handoff, foundations);
+  const result = { ...store(handoff, dir), dropped: d.dropped };
   writeShots(rt.shots, join(dirname(result.path), 'screens'), result.wrote);
   return result;
 }

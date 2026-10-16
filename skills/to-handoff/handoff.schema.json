@@ -10,11 +10,11 @@
     "revision": { "type": "integer", "description": "Counts content changes: +1 only on a write whose contentHash differs (#64). Not part of contentHash." },
     "status": { "enum": ["pending", "approved"], "description": "Sign-off state (#64); every write resets it to pending. Not part of contentHash." },
     "approval": {
-      "description": "Written by the owner's approve step, never by generate. Not part of contentHash.",
+      "description": "Written by approve on the owner's explicit approve in chat, never by generate (#116). Not part of contentHash. \"test (.scratch)\" marks a test approval: validateHandoff rejects it outside <repo>/.scratch/.",
       "anyOf": [
         { "type": "null" },
         { "type": "object", "required": ["by", "at", "revision", "contentHash"], "properties": {
-          "by": { "const": "owner" }, "at": { "type": "string" }, "revision": { "type": "integer" }, "contentHash": { "$ref": "#/$defs/sha256" } } }
+          "by": { "enum": ["owner", "test (.scratch)"] }, "at": { "type": "string" }, "revision": { "type": "integer" }, "contentHash": { "$ref": "#/$defs/sha256" } } }
       ]
     },
     "feature": {
@@ -72,7 +72,9 @@
       "kind": { "enum": ["font", "mode-map", "breakpoint", "no-contract", "off-axis", "missing-state", "stand-in", "prop", "runtime"] },
       "to": { "enum": ["owner", "developer"] },
       "text": { "type": "string", "minLength": 1 },
-      "answer": { "anyOf": [ { "type": "null" }, { "type": "string" } ] } } } },
+      "answer": { "anyOf": [ { "type": "null" }, { "type": "string" } ] },
+      "by": { "const": "owner", "description": "The owner answered or re-addressed it (#64 §3)." } } } },
+    "ownerDecisions": { "type": "object", "description": "The owner's decisions by stable key (#64 §8): decision keys (token:, textStyle:, recognise:, condition:, feature, acceptance), question:<id> ({answer} and/or {to}) and acceptance:<id>. A re-run carries them over while the key exists.", "additionalProperties": true },
     "flow": { "type": "array", "items": { "type": "object", "required": ["from", "trigger", "to"], "properties": {
       "from": { "type": "string" }, "trigger": { "type": "string" }, "to": { "type": "string" }, "source": { "enum": ["mock", "simulated", "missing"] } } } },
     "interactions": { "type": "object", "description": "Per-usage notes on hover, focus, keyboard and motion, keyed by usage id.", "additionalProperties": { "type": "string" } },
@@ -104,7 +106,7 @@
         "match": { "const": "near" },
         "delta": { "type": "number" },
         "candidates": { "type": "array", "items": { "type": "string" } },
-        "by": { "const": "agent" },
+        "by": { "enum": ["agent", "owner"] },
         "value": { "$ref": "#/$defs/valueRef" },
         "via": { "type": "array", "items": { "type": "string" } }
       }
@@ -117,7 +119,7 @@
         "raw": { "type": "string" },
         "at": { "$ref": "#/$defs/ats" },
         "token": { "type": "string" }, "match": { "const": "near" }, "delta": { "type": "number" },
-        "candidates": { "type": "array", "items": { "type": "string" } }, "by": { "const": "agent" },
+        "candidates": { "type": "array", "items": { "type": "string" } }, "by": { "enum": ["agent", "owner"] },
         "value": { "$ref": "#/$defs/valueRef" }, "via": { "type": "array", "items": { "type": "string" } }
       },
       "anyOf": [ { "required": ["token"] }, { "required": ["value"] } ]
@@ -131,7 +133,7 @@
         "states": { "$ref": "#/$defs/states" },
         "style": { "type": "object", "properties": {
           "textStyle": { "type": "string" }, "match": { "const": "near" }, "delta": { "type": "number" },
-          "candidates": { "type": "array", "items": { "type": "string" } }, "by": { "const": "agent" },
+          "candidates": { "type": "array", "items": { "type": "string" } }, "by": { "enum": ["agent", "owner"] },
           "raw": { "type": "object" }, "value": { "$ref": "#/$defs/valueRef" },
           "partial": { "type": "object", "additionalProperties": { "$ref": "#/$defs/match" } } } }
       }
@@ -149,7 +151,7 @@
         "items": { "type": "array", "description": "A Repeated child per item (#93), mirroring code.itemProp.", "items": { "type": "object", "required": ["properties", "at"], "properties": {
           "properties": { "type": "object", "additionalProperties": { "type": "string" } }, "at": { "$ref": "#/$defs/at" } } } },
         "match": { "type": "object", "required": ["by"], "properties": {
-          "by": { "enum": ["import", "agent", "retired"] }, "via": { "enum": ["library", "element"] },
+          "by": { "enum": ["import", "agent", "owner", "retired"] }, "via": { "enum": ["library", "element"] },
           "candidates": { "type": "array", "items": { "$ref": "#/$defs/tuple" } }, "proposal": { "type": "string" } } },
         "offAxis": { "type": "array", "items": { "type": "object", "required": ["property", "raw", "reason", "question"], "properties": {
           "property": { "type": "string" }, "raw": { "type": "string" }, "reason": { "type": "string" }, "question": { "type": "string" } } } },

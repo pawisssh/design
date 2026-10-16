@@ -2,10 +2,22 @@
 // the Adapter's handoff module, found by convention (skills/adapter-<source.adapter>/scripts/handoff-adapter.mjs).
 // To-handoff never names a Code Library: everything Library-specific comes from that module.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
+
+/**
+ * Who a test approval names (#116). Sign-off is the owner's and is never simulated: approve writes this only
+ * under <repo>/.scratch/, and validateHandoff rejects it anywhere else.
+ */
+export const TEST_APPROVER = 'test (.scratch)';
+
+/** Whether `path` lies under <repo>/.scratch/. */
+export function inScratch(path) {
+  const rel = relative(resolve(REPO_ROOT, '.scratch'), resolve(path));
+  return rel !== '' && !rel.startsWith('..') && !rel.startsWith('/');
+}
 
 /** A Contract's or Proposal's State axis (the canonical one), or undefined. */
 export const stateAxisOf = def => def.axes.find(a => a.canonical || a.key === 'state');

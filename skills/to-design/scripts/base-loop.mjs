@@ -22,6 +22,7 @@ import { foundationsPathFor, readJson, writeJson } from '../../contract/scripts/
 import { anatomyTree, baseProps, expectedBase, expectedVariant, near, norm, normalizeReadback, same } from './readback.mjs';
 import { defaultLedgerPath, readLedger } from './ledger.mjs';
 import { groupOf } from './foundations-subset.mjs';
+import { valueAt } from './foundations-value.mjs';
 
 
 const SECTIONS = ['layout', 'paint'];
@@ -41,14 +42,6 @@ export function show(v) {
   if (isRaw(v)) return `raw ${v.raw}`;
   if (isObj(v)) return JSON.stringify(v);
   return String(v);
-}
-
-// The value a token stands for in the default mode: a number, or a resolved colour "#rrggbb".
-function tokenValue(foundations, token) {
-  const v = foundations.variables[token];
-  if (!v) return undefined;
-  const first = Object.values(v.values)[0];
-  return v.type === 'COLOR' ? String(first.resolved).toLowerCase() : first.value;
 }
 
 // The typography a Text Style sets, as the readback's `extras` reports it.
@@ -108,7 +101,7 @@ export function diff(contract, readback, foundations, props = baseProps(contract
         if (isToken(got) && got.token === null) unmapped('foreign', section, node, field, want, got);
         else if (isToken(got)) changes.push({ kind: 'token-edit', section, node, field, from: want, to: got });
         else if (isRaw(got)) {
-          const tv = isToken(want) ? tokenValue(foundations, want.token) : undefined;
+          const tv = isToken(want) ? valueAt(foundations, want.token) : undefined;
           const kept = tv !== undefined && (near(tv, got.raw) || tv === String(got.raw).toLowerCase());
           changes.push({ kind: kept ? 'detached' : 'raw-edit', section, node, field, from: want, to: got });
         } else if (field === 'textStyle' && got == null && isToken(want)) changes.push({ kind: 'detached', section, node, field, from: want, to: got });
@@ -204,7 +197,7 @@ export function propose(contract, change, foundations, { by = 'owner', built = n
   const tokenCandidates = isRaw(newValue) && need
     ? Object.entries(foundations.variables)
       .filter(([, v]) => coversScope(v.scopes || [], need) && v.collection !== 'primitives')
-      .filter(([n]) => { const tv = tokenValue(foundations, n); return near(tv, newValue.raw) || tv === String(newValue.raw).toLowerCase(); })
+      .filter(([n]) => { const tv = valueAt(foundations, n); return near(tv, newValue.raw) || tv === String(newValue.raw).toLowerCase(); })
       .map(([n]) => n).sort()
     : [];
   const unbuiltGroups = built ? Object.fromEntries(tokenCandidates.filter(n => !(n in built)).map(n => [n, groupOf(foundations.variables[n])])) : {};

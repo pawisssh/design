@@ -30,7 +30,7 @@ Output with the Button Contract (#108): 38 closure tokens; 698 variables (244 Pr
 | `collections` | yes | Ordered list `{key, name, modes: [{key, label, selector?}], hidden?}`. The first mode is the default. `selector` is the CSS that switches to the mode (`.cds--g100`, `.cds--layer-two`, later `.dark`). It is review-only: To-preview reads it, and the build plan strips it. To-preview applies each Mode as one class, so a selector it reads is one class selector (#109). |
 | `variables` | yes | Map from flat name to variable. See [Variables](#variables). The order is collection order, then tokens by name, which is also the creation order (aliases need their targets first). |
 | `textStyles` | yes (may be `{}`) | Map from flat name to Text Style. See [Text Styles](#text-styles). |
-| `checks` | yes | Evidence from generation: a CSS cross-check (`against`, `sha256`, `matched`, `missing`, and `differs`, the sorted flat names whose value the document takes from the CSS over the source), a Sass fallback check (`against`, `matched`) and the scope check (`by`, the validator and rule that ran; `contracts`, how many Contracts it checked; `errors`, always 0, since generation fails otherwise). The Generic Adapter records `css` (`against` the project's CSS file, `converted`: mode values through the shared converter), `compiled` (`against` the pinned Tailwind, `matched`: utilities whose compiled declaration equals the document). It records no `scopes` until it emits its first Contract, since there is nothing to check. |
+| `checks` | yes | Evidence from generation: a CSS cross-check (`against`, `sha256`, `matched`, `missing`, and `differs`, the sorted flat names whose value the document takes from the CSS over the source), a Sass fallback check (`against`, `matched`) and the scope check (`by`, the validator and rule that ran; `contracts`, how many Contracts it checked; `errors`, always 0, since generation fails otherwise). The Generic Adapter records `css` (`against` the project's CSS file, `converted`: mode values through the shared converter), `compiled` (`against` the pinned Tailwind, `matched`: utilities whose compiled declaration equals the document). It records no `scopes` until a Foundations document lists a Contract in its closure, since there is nothing to check. |
 | `notes` | no | `{level: info|warning|verify, at, message}`, as in the Contract. |
 
 ## Collections and modes
@@ -180,7 +180,7 @@ To change a value, change the source pin or an Adapter rule and regenerate. To a
 
 The document is stale, and must be regenerated before any build, when any of these holds:
 
-- `source.commit` differs from the `source.commit` of any Contract in `closure.contracts`. A Design System is pinned to one Code Library version. Contracts at different commits are rejected.
+- `source.commit` differs from the `source.commit` of any Contract in `closure.contracts`. A Design System is pinned to one Code Library version. Contracts at different commits are rejected. This rule holds for libraries pinned by commit. An installed-source library has none, and the same check by `source.packages` is future work.
 - A listed Contract's current `source.snapshotId` differs from the one recorded in `closure.contracts`.
 - The recomputed token union differs from `closure.tokens`, for example after a Contract edit that did not change its snapshot.
 - Contract validation rule 6 ("every token exists in the foundations") fails.
@@ -253,7 +253,7 @@ Identity is the flat name, carried through the ledger id. Figma names and labels
 
 ## Validation (generator)
 
-1. Every Contract in `closure.contracts` pins the same `source.commit`.
+1. Every Contract in `closure.contracts` pins the same `source.commit`. This holds for libraries pinned by commit; installed-source libraries have no commit yet.
 2. Every closure token resolves in the Code Library sources, every source value is readable, and every Theme alias target exists in the palette. Every layer set lists at least three Theme tokens, and every Layer alias targets a Theme token.
 3. Every resolved Theme value equals the compiled CSS in the matching `.cds--white` / `.cds--g10` / `.cds--g90` / `.cds--g100` block. Every Layer value matches its `.cds--layer-one` / `-two` / `-three` block, `var(--cds-<target>, <White fallback>)`, in target and fallback, and every Mode selector has a rule in the CSS. Every emitted layout and type custom property matches in px (`fluid-spacing-*` as exact text), and each family's first font matches the CSS stack, except the listed `checks.css.differs`.
 4. Every Sass codeSyntax fallback exists in `@carbon/layout`.

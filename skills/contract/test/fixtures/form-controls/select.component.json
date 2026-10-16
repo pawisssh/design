@@ -188,12 +188,12 @@
       "set": {
         "Select": { "fill": "none", "stroke": "none" },
         "Label": { "fill": { "token": "text-secondary" } },
-        "Field": { "fill": { "token": "field-01" }, "stroke": "none" },
+        "Field": { "fill": { "token": "field" }, "stroke": "none" },
         "Value": { "fill": { "token": "text-primary" } },
         "Invalid icon/Vector": { "fill": { "token": "support-error" } },
         "Warn icon/Vector": { "fill": { "token": "support-warning" } },
         "Chevron/Vector": { "fill": { "token": "icon-primary" } },
-        "Underline": { "fill": { "token": "border-strong-01" } },
+        "Underline": { "fill": { "token": "border-strong" } },
         "Helper": { "fill": { "token": "text-helper" } },
         "Invalid text": { "fill": { "token": "text-error" } },
         "Warn text": { "fill": { "token": "text-primary" } }
@@ -205,11 +205,11 @@
     },
     {
       "match": { "state": "hover" },
-      "set": { "Field": { "fill": { "token": "field-hover-01" } } }
+      "set": { "Field": { "fill": { "token": "field-hover" } } }
     },
     {
       "match": { "readOnly": "read-only" },
-      "set": { "Field": { "fill": "none" }, "Underline": { "fill": { "token": "border-subtle-00" } }, "Chevron/Vector": { "fill": { "token": "icon-disabled" } } }
+      "set": { "Field": { "fill": "none" }, "Underline": { "fill": { "token": "border-subtle" } }, "Chevron/Vector": { "fill": { "token": "icon-disabled" } } }
     },
     {
       "match": { "state": "focus" },
@@ -264,7 +264,6 @@
     { "level": "info", "at": "properties.value", "message": "The Value text is the selected SelectItem's text. The options are children the feature supplies (code.items, #93); the Contract shows one, and the Handoff lists them." },
     { "level": "info", "at": "layout.Box.gap", "message": "Carbon positions the chevron (inset-inline-end spacing-05) and the status icon (inset-inline-end spacing-08) absolutely and reserves room with padding-inline-end spacing-09, or spacing-10 with a status icon. In Auto Layout that is right padding spacing-05 plus a spacing-05 gap, closing to spacing-03 when the status icon shows." },
     { "level": "info", "at": "paint[readOnly=read-only]", "message": "Read-only keeps a transparent field on hover: .cds--select--readonly .cds--select-input sets background after the :hover rule at equal specificity." },
-    { "level": "info", "at": "paint.Field.fill", "message": "Carbon's $field, $field-hover, $border-strong and $border-subtle are contextual Layer tokens. At :root and .cds--layer-one they resolve to field-01, field-hover-01, border-strong-01 and border-subtle-00, which the Contract binds. Inside <Layer level={1|2}> they shift to -02/-03; the Contract does not model Layer." },
     { "level": "info", "at": "family", "message": "Left out of this draft: inline, hideLabel/noLabel, the decorator/AI label slot, the deprecated light prop, SelectItemGroup, the v12 border-radius and gradient border behind enable-v12-release, and the Fluid variant." }
   ]
 }

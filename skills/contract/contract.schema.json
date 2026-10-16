@@ -18,7 +18,7 @@
     },
     "source": {
       "type": "object",
-      "required": ["codeLibrary", "adapter", "repository", "tag", "commit", "packages", "files", "snapshotId"],
+      "required": ["codeLibrary", "adapter", "packages", "files", "snapshotId"],
       "properties": {
         "codeLibrary": { "type": "string" },
         "adapter": { "type": "string" },

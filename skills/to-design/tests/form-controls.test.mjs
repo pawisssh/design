@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { approve, expand, resolve, variantName } from '../../contract/scripts/contract.mjs';
 import { foundationsPlan, iconsPlan, PER_CALL, setsPlan } from '../scripts/build-plan.mjs';
-import { checkCoverage } from '../scripts/coverage.mjs';
+import { checkCoverage, checkTheme } from '../scripts/coverage.mjs';
 import { recordResult } from '../scripts/ledger.mjs';
 import { defaultProps, expectedVariant } from '../scripts/readback.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
@@ -53,7 +53,11 @@ async function buildBoth() {
     if (result.ledger) ledger = recordResult(ledger, result);
     return result;
   };
-  await call(foundationsPlan(DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT }), CORE);
+  // the default subset of the whole theme can take more than one call (#107)
+  const first = foundationsPlan(DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT });
+  await call(first, CORE);
+  for (let chunk = 2; chunk <= (first.plan.chunk ? first.plan.chunk.of : 1); chunk++)
+    await call(foundationsPlan(DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, chunk }), CORE);
   await call(iconsPlan([TEXT_INPUT, SELECT], ICONS_DIR, ledger, { fileKey: FILE_KEY, at: AT }), CORE);
   const coverage = {};
   for (const c of [TEXT_INPUT, SELECT]) {
@@ -61,7 +65,7 @@ async function buildBoth() {
       await call(setsPlan(c, DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, batch, prototype: true }), COMPONENTS_CORE);
     coverage[c.family.key] = await call(setsPlan(c, DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, mode: 'coverage', prototype: true }), COMPONENTS_CORE);
   }
-  return { mock, ledger, coverage };
+  return { mock, ledger, coverage, call };
 }
 const built = buildBoth();
 built.catch(() => {}); // each test awaits it and reports a failed build itself
@@ -110,3 +114,19 @@ for (const c of [TEXT_INPUT, SELECT])
     }
     assert.deepEqual(wrong, []);
   });
+
+test('Text Input binds the Layer name `field`: the theme check follows each Layer mode to its Theme token (#109)', async () => {
+  const { call, ledger } = await built;
+  const name = variantName(TEXT_INPUT, expand(TEXT_INPUT)[0]);
+  const theme = await call(setsPlan(TEXT_INPUT, DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, mode: 'theme', sample: [0], prototype: true }), COMPONENTS_CORE);
+  // field-01, -02, -03 in White (Carbon's themes.json): the core switches the Layer collection, Theme at its default
+  assert.deepEqual(theme.theme[name]['Field.fill'], { One: '#f4f4f4', Two: '#ffffff', Three: '#f4f4f4' });
+  const doc = JSON.parse(DOC_TEXT);
+  const t = checkTheme(TEXT_INPUT, theme, doc);
+  assert.deepEqual(t.problems, []);
+  assert.ok(t.checked > 0 && t.switching > 0, JSON.stringify(t));
+  // a Layer level aliased to the wrong Theme token is caught in that mode
+  doc.variables.field.values.two = { alias: 'field-01' };
+  assert.deepEqual(checkTheme(TEXT_INPUT, theme, doc).problems.map(p => [p.what, p.at, p.mode, p.want, p.got]),
+    [['colour', 'Field.fill', 'Two', '#f4f4f4', '#ffffff']]);
+});
