@@ -12,11 +12,13 @@
 //   is the default, and export needs only that every checked specimen rendered in it.
 // The foundations document defaults to the single *.foundations.json next to the contracts folder; the page
 // defaults to .scratch/to-preview/<family>/index.html (gitignored).
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { parseArgs } from 'node:util';
 import * as contractModule from '../../contract/scripts/contract.mjs';
+import { foundationsPathFor, readJson } from '../../contract/scripts/io.mjs';
 
 const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const asset = name => readFileSync(new URL(`../assets/${name}`, import.meta.url), 'utf8');
@@ -59,26 +61,25 @@ export function buildCatalog({ contract, foundations, renderer }) {
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const args = process.argv.slice(2);
-  const flag = name => (args.includes(name) ? args[args.indexOf(name) + 1] : null);
-  const contractPath = args.find((a, i) => !a.startsWith('--') && !(i > 0 && args[i - 1].startsWith('--')));
+  const usage = 'usage: catalog.mjs <component.json> [--foundations <file>] [--out <file>]';
+  let args;
+  try {
+    args = parseArgs({ allowPositionals: true, options: { foundations: { type: 'string' }, out: { type: 'string' } } });
+  } catch (e) {
+    console.error(`${e.message}\n${usage}`);
+    process.exit(2);
+  }
+  const { values: { foundations: foundationsFlag, out: outFlag }, positionals: [contractPath] } = args;
   if (!contractPath) {
-    console.error('usage: catalog.mjs <component.json> [--foundations <file>] [--out <file>]');
+    console.error(usage);
     process.exit(2);
   }
   try {
-    let foundationsPath = flag('--foundations');
-    if (!foundationsPath) {
-      const dsDir = resolve(dirname(contractPath), '..');
-      const found = readdirSync(dsDir).filter(f => f.endsWith('.foundations.json'));
-      if (found.length !== 1) throw new Error(`no single *.foundations.json in ${dsDir}; pass --foundations <file>`);
-      foundationsPath = join(dsDir, found[0]);
-    }
-    const contract = JSON.parse(readFileSync(contractPath, 'utf8'));
-    const foundations = JSON.parse(readFileSync(foundationsPath, 'utf8'));
+    const contract = readJson(contractPath);
+    const foundations = readJson(foundationsPathFor(contractPath, foundationsFlag));
     const adapter = join(REPO_ROOT, 'skills', `adapter-${contract.source.adapter}`, 'scripts', 'preview.mjs');
     const renderer = await (await import(pathToFileURL(adapter))).previewRenderer(contract);
-    const out = flag('--out') || join(REPO_ROOT, '.scratch/to-preview', contract.family.key, 'index.html');
+    const out = outFlag || join(REPO_ROOT, '.scratch/to-preview', contract.family.key, 'index.html');
     mkdirSync(dirname(out), { recursive: true });
     writeFileSync(out, buildCatalog({ contract, foundations, renderer }));
     console.log(`${out}: ${contract.family.name}, ${contractModule.expand(contract).length} checked`);

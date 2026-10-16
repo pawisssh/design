@@ -120,6 +120,11 @@ export function iconName(key) {
   return key.charAt(0).toUpperCase() + key.slice(1);
 }
 
+/** A tuple's key: its value keys in axis order, joined by "|" ("primary|lg|enabled"). For comparing tuples only. */
+export function tupleKey(contract, tuple) {
+  return contract.axes.map(a => tuple[a.key]).join('|');
+}
+
 /** Figma variant name, `Prop=Value, …` with axis and value labels. */
 export function variantName(contract, tuple) {
   return contract.axes

@@ -9,22 +9,25 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as contractModule from '../../contract/scripts/contract.mjs';
+import { rewriteJson } from '../../contract/scripts/io.mjs';
 
 const require = createRequire(import.meta.url);
 const Selection = require('../assets/selection-model.js');
 const CLI = fileURLToPath(new URL('../scripts/apply-omit.mjs', import.meta.url));
 const FOUNDATIONS = fileURLToPath(new URL('../../../design-systems/carbon/carbon.foundations.json', import.meta.url));
-const button = JSON.parse(readFileSync(new URL('../../../design-systems/carbon/contracts/button.component.json', import.meta.url)));
+const BUTTON_TEXT = readFileSync(new URL('../../../design-systems/carbon/contracts/button.component.json', import.meta.url), 'utf8');
+const button = JSON.parse(BUTTON_TEXT);
 const key = t => JSON.stringify(t);
 
-// Writes the Contract, the patch and the checked tuples to a temp dir, as the agent finds them after export.
+// Writes the Contract (in the committed file's hand layout), the patch and the checked tuples to a temp dir,
+// as the agent finds them after export.
 function setup(contract, edit) {
   const dir = mkdtempSync(join(tmpdir(), 'apply-omit-'));
   const model = new Selection(contract, contractModule);
   for (const id of model.specimens.keys()) model.verify(id);
   edit(model);
   const files = { contract: join(dir, 'button.component.json'), patch: join(dir, 'patch.json'), checked: join(dir, 'checked.json') };
-  const text = JSON.stringify(contract, null, 2) + '\n';
+  const text = rewriteJson(BUTTON_TEXT, contract);
   writeFileSync(files.contract, text);
   writeFileSync(files.patch, JSON.stringify(model.omitPatch()));
   writeFileSync(files.checked, JSON.stringify({ family: 'button', snapshotId: contract.source.snapshotId, checked: model.checkedTuples() }));
@@ -52,7 +55,10 @@ test('apply writes the omit into the Contract: expansion equals the checked tupl
   });
   const strip = c => ({ ...c, selection: null });
   assert.deepEqual(strip(written), strip(JSON.parse(before)));
-  assert.equal(readFileSync(files.contract, 'utf8'), JSON.stringify(written, null, 2) + '\n');
+  // the write keeps the file's layout: outside the selection block not a byte changed
+  const outside = text => text.replace(/\n  "selection": \{[\s\S]*?\n  \},\n/, '');
+  assert.equal(outside(readFileSync(files.contract, 'utf8')), outside(before));
+  assert.notEqual(outside(before), before);
 });
 
 const runFails = (files, pattern) => {

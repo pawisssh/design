@@ -11,13 +11,14 @@
 //   node skills/to-design/scripts/base-loop.mjs approve  <component.json> <readback.json> --snapshot-id <id> --content-hash <hash> [--at <iso>] [--prototype --out <.scratch path>]
 //   node skills/to-design/scripts/base-loop.mjs regen    <fixtures dir> <out dir>   (the fixtures dir holds button.component.json and readback.*.json)
 // Every command takes [--foundations <file>] (default: the one next to the contracts folder).
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import {
   approve, asDraft, baseTuple, closure, contentHash, coversScope, expand, matches, resolve, scopeFor, validate, variantName,
 } from '../../contract/scripts/contract.mjs';
+import { foundationsPathFor, readJson, writeJson } from '../../contract/scripts/io.mjs';
 import { anatomyTree, baseProps, expectedBase, expectedVariant, near, norm, normalizeReadback, same } from './readback.mjs';
 import { ledgerPath, readLedger } from './ledger.mjs';
 
@@ -363,25 +364,18 @@ export function approveReviewed(contract, readback, foundations, { snapshotId, c
 
 // ---------- CLI ----------
 
-const readJson = p => JSON.parse(readFileSync(p, 'utf8'));
-const writeJson = (p, v) => { mkdirSync(dirname(p), { recursive: true }); writeFileSync(p, JSON.stringify(v, null, 2) + '\n'); };
+// Non-Contract outputs (a normalized readback) are written fresh.
+const writeOutput = (p, v) => { mkdirSync(dirname(p), { recursive: true }); writeFileSync(p, JSON.stringify(v, null, 2) + '\n'); };
 // A saved readback: one object, or the prototype's array of readbacks (the first is the Base Component).
 const readReadback = p => { const r = readJson(p); return Array.isArray(r) ? r[0] : r; };
 
-function foundationsFor(contractPath, given) {
-  if (given) return readJson(given);
-  const dsDir = resolvePath(dirname(contractPath), '..');
-  const found = readdirSync(dsDir).filter(f => f.endsWith('.foundations.json'));
-  if (found.length !== 1) throw new Error(`no single *.foundations.json in ${dsDir}; pass --foundations <file>`);
-  return readJson(join(dsDir, found[0]));
-}
-
 // Validates before writing and refuses an invalid Contract; `allow(error)` names the errors a prototype accepts.
-function writeContract(path, c, foundations, allow = () => false) {
+// The write keeps the hand layout of the Contract it was read from (`from`): only changed values are spliced in.
+function writeContract(path, c, foundations, from, allow = () => false) {
   const v = validate(c, foundations);
   const blocking = v.errors.filter(e => !allow(e));
   if (blocking.length) throw new Error(`refused to write an invalid Contract to ${path}: ${blocking.map(e => `[${e.rule}] ${e.at}: ${e.message}`).join('; ')}`);
-  writeJson(path, c);
+  writeJson(path, c, { from });
   return v;
 }
 
@@ -430,7 +424,7 @@ function main() {
     const result = readJson(a);
     if (result.error || !result.readback) throw new Error(`no readback in ${a}: ${result.error || 'missing'}`);
     const ledger = readLedger(values.ledger || ledgerPath(result.fileKey));
-    writeJson(values.out, normalizeBaseResult(result, ledger));
+    writeOutput(values.out, normalizeBaseResult(result, ledger));
     return print(`wrote ${values.out}\n`);
   }
   if (cmd === 'regen' && a && b) {
@@ -441,7 +435,7 @@ function main() {
   }
   if (!a || !b) { console.error('usage: see the header of base-loop.mjs'); process.exit(2); }
   const contract = readJson(a);
-  const foundations = foundationsFor(a, values.foundations);
+  const foundations = readJson(foundationsPathFor(a, values.foundations));
   const readback = readReadback(b);
   const outPath = values.out || a;
   if (cmd === 'diff') return print(formatDiff(contract, readback, review(contract, readback, foundations)));
@@ -449,12 +443,12 @@ function main() {
     const r = review(contract, readback, foundations, { by: values.by });
     const confirm = values.confirm === 'all' ? 'all' : values.confirm.split(',').map(s => s.trim()).filter(Boolean);
     const res = applyEdits(contract, r.proposals, { confirm });
-    const v = writeContract(outPath, res.contract, foundations);
+    const v = writeContract(outPath, res.contract, foundations, a);
     return print(JSON.stringify({ status: 'applied', out: outPath, applied: res.applied, notes: res.notes.map(n => `${n.level} ${n.at}`), closure: res.closure, valid: v.ok, errors: v.errors }, null, 2) + '\n');
   }
   if (cmd === 'discard') {
     if (!values.note) throw new Error('discard needs --note <at>');
-    writeContract(outPath, discardNote(contract, values.note, readback, foundations), foundations);
+    writeContract(outPath, discardNote(contract, values.note, readback, foundations), foundations, a);
     return print(`discarded the note at ${values.note}; wrote ${outPath}\n`);
   }
   if (cmd === 'review') {
@@ -470,7 +464,7 @@ function main() {
       snapshotId: values['snapshot-id'], contentHash: values['content-hash'], at: values.at || new Date().toISOString(), prototype: values.prototype,
     });
     // a prototype approval fails rule 8 by design: it is never an owner approval
-    const v = writeContract(outPath, c, foundations, e => values.prototype && e.rule === 8 && /only the owner approves/.test(e.message));
+    const v = writeContract(outPath, c, foundations, a, e => values.prototype && e.rule === 8 && /only the owner approves/.test(e.message));
     return print(JSON.stringify({ status: 'approved', out: outPath, approval: c.selection.approval, valid: v.ok, errors: v.errors }, null, 2) + '\n');
   }
   console.error('usage: see the header of base-loop.mjs');
