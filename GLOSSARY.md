@@ -109,7 +109,7 @@ _Avoid_: Stale (that is a Foundations document that must be regenerated), outdat
 ## Building
 
 **Orphan**:
-A token or variant To-design built that the Foundations document or the Contract's selection no longer holds. The ledger keeps tracking it by id and Figma keeps the node, so a token or variant that comes back reuses it; it is deleted only through a Prune list.
+A token or variant To-design built that the Foundations document, the Contract's selection or the Component Proposal's axes no longer hold, including a Proposal's variant that its retirement maps to nothing. The ledger keeps tracking it by id and Figma keeps the node, so a token or variant that comes back reuses it; it is deleted only through a Prune list.
 _Avoid_: Extra (that is a node the ledger never recorded), deprecated variant, stale node
 
 **Prune list**:
@@ -123,7 +123,7 @@ The skill that shows a Contract's combinations, rendered with the real Code Libr
 _Avoid_: component-sheet-html, component sheet, HTML catalog skill
 
 **To-design**:
-The skill that builds a Design Library in Figma from Contracts, where the owner approves each Base Component before its Component Set is built.
+The skill that builds a Design Library in Figma from Contracts, and from the Component Proposals the owner asks for ahead of code, where the owner approves each Base Component before its Component Set is built.
 _Avoid_: code-to-canvas
 
 **To-handoff**:
