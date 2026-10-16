@@ -53,7 +53,11 @@ async function buildBoth() {
     if (result.ledger) ledger = recordResult(ledger, result);
     return result;
   };
-  await call(foundationsPlan(DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT }), CORE);
+  // the default subset of the whole theme can take more than one call (#107)
+  const first = foundationsPlan(DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT });
+  await call(first, CORE);
+  for (let chunk = 2; chunk <= (first.plan.chunk ? first.plan.chunk.of : 1); chunk++)
+    await call(foundationsPlan(DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, chunk }), CORE);
   await call(iconsPlan([TEXT_INPUT, SELECT], ICONS_DIR, ledger, { fileKey: FILE_KEY, at: AT }), CORE);
   const coverage = {};
   for (const c of [TEXT_INPUT, SELECT]) {

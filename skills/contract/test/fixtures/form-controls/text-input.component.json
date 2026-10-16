@@ -186,11 +186,11 @@
       "set": {
         "Text input": { "fill": "none", "stroke": "none" },
         "Label": { "fill": { "token": "text-secondary" } },
-        "Field": { "fill": { "token": "field-01" }, "stroke": "none" },
+        "Field": { "fill": { "token": "field" }, "stroke": "none" },
         "Value": { "fill": { "token": "text-placeholder" } },
         "Invalid icon/Vector": { "fill": { "token": "support-error" } },
         "Warn icon/Vector": { "fill": { "token": "support-warning" } },
-        "Underline": { "fill": { "token": "border-strong-01" } },
+        "Underline": { "fill": { "token": "border-strong" } },
         "Helper": { "fill": { "token": "text-helper" } },
         "Invalid text": { "fill": { "token": "text-error" } },
         "Warn text": { "fill": { "token": "text-primary" } }
@@ -202,7 +202,7 @@
     },
     {
       "match": { "readOnly": "read-only" },
-      "set": { "Field": { "fill": "none" }, "Underline": { "fill": { "token": "border-subtle-00" } } }
+      "set": { "Field": { "fill": "none" }, "Underline": { "fill": { "token": "border-subtle" } } }
     },
     {
       "match": { "state": "focus" },
@@ -252,7 +252,6 @@
   "notes": [
     { "level": "verify", "at": "anatomy.Warn icon", "message": "WarningAltFilled is two-tone: _text-input.scss paints its inner path (path:first-of-type, fill=\"none\" in the SVG) $black-100 while the outer path takes $support-warning. Icons are one flattened Vector (#13), so the Design Library shows a support-warning triangle with the mark cut out instead of a black mark." },
     { "level": "info", "at": "anatomy.Invalid text", "message": "Carbon renders invalidText when invalid and warnText when warn, in the same .cds--form-requirement, and drops helperText for either. The Contract keeps one TEXT node and one property per message, shown by `visible` rules (#93), so each property names one code prop." },
-    { "level": "info", "at": "paint.Field.fill", "message": "Carbon's $field, $border-strong and $border-subtle are contextual Layer tokens. At :root and .cds--layer-one they resolve to field-01, border-strong-01 and border-subtle-00, which the Contract binds. Inside <Layer level={1|2}> they shift to -02/-03; the Contract does not model Layer." },
     { "level": "info", "at": "layout.Box.paddingLeft", "message": "Padding is layout.density('padding-inline') at the default density 'normal', which is $spacing-05 (16px). Density has no DTCG token." },
     { "level": "info", "at": "paint[state=focus]", "message": "Carbon styles :focus and :active the same (focus-outline('outline')); Active is folded into Focus. Carbon has no hover style for the field." },
     { "level": "info", "at": "family", "message": "Left out of this draft: inline (labels beside the field), enableCounter/maxCount, hideLabel, the decorator/AI label slot, the deprecated light prop, the v12 border-radius and gradient border behind enable-v12-release, and the Fluid and Password variants." }

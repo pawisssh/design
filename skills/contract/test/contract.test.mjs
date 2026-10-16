@@ -296,7 +296,8 @@ test('the module runs inlined, without export, in a bare context (no TextEncoder
 
 // ---------- form-control families (#93, ADR 0013), on the TextInput and Select fixtures ----------
 // fixtures/form-controls/: the TextInput (36) and Select (52) draft Contracts from prototype/form-schema @ 85dcfd7,
-// and the Foundations document generated over Button, TextInput and Select there.
+// bound to Carbon's contextual Layer names (`field`, ADR 0012), and the Foundations document the Carbon Adapter
+// generates over Button, TextInput and Select.
 const formFoundations = load('skills/contract/test/fixtures/form-controls/carbon.foundations.json');
 const textInput = () => load('skills/contract/test/fixtures/form-controls/text-input.component.json');
 const select = () => load('skills/contract/test/fixtures/form-controls/select.component.json');
