@@ -14,6 +14,7 @@ const fixtures = {
   'text-input': 'skills/contract/test/fixtures/form-controls/text-input.component.json',
   select: 'skills/contract/test/fixtures/form-controls/select.component.json',
   drafted: 'skills/contract/test/fixtures/button.drafted.component.json',
+  'slot-axis': 'skills/contract/test/fixtures/slot-axis/button.component.json',
 };
 
 // The JSON Schema keywords contract.schema.json uses, and nothing more (the repo takes no dependencies).
@@ -82,6 +83,18 @@ test('the schema rejects a `visible` that is not a boolean and `code.items` with
   assert.ok(errors.some(e => e.startsWith('$.layout[0].set.Helper.visible')), errors.join('\n'));
   assert.ok(errors.some(e => e.startsWith('$.code.items.props')), errors.join('\n'));
   assert.equal(contract.validate(c, formFoundations).ok, false);
+});
+
+test('the schema rejects a Slot axis `slot` that is not a string and a `filled` that is not a boolean, as validate does (#121)', () => {
+  const slotFoundations = load('skills/contract/test/fixtures/slot-axis/shadcn.foundations.json');
+  const c = load(fixtures['slot-axis']);
+  const icon = c.axes.findIndex(a => a.key === 'icon');
+  c.axes[icon].slot = 1;
+  c.axes[icon].values[0].filled = 'no';
+  const errors = check(schema, c);
+  assert.ok(errors.some(e => e.startsWith(`$.axes[${icon}].slot`)), errors.join('\n'));
+  assert.ok(errors.some(e => e.startsWith(`$.axes[${icon}].values[0].filled`)), errors.join('\n'));
+  assert.equal(contract.validate(c, slotFoundations).ok, false);
 });
 
 test('the schema rejects the drafted entry shapes validate rejects; a bad key path is validate rule 9 only', () => {
