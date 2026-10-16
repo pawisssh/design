@@ -348,6 +348,8 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
   class Component extends SceneNode {
     constructor(name, box) { super('COMPONENT', name, box); this.key = createKey(this.id); this._props = {}; }
     createInstance() { const i = new Instance(this); w('createInstance', i.id, this.id); figma.currentPage.appendChild(i); return i; }
+    // every instance of this component in the file, on any page
+    async getInstancesAsync() { return [...nodes.values()].filter(n => n.type === 'INSTANCE' && n._main === this); }
   }
   class ComponentSet extends SceneNode {
     constructor() { super('COMPONENT_SET', 'Component 1'); this.key = createKey(this.id); this._props = {}; }

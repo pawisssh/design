@@ -4,6 +4,7 @@
 // which `record` merges into the file; other sections are kept.
 //
 //   node skills/to-design/scripts/ledger.mjs record <result.json> [--ledger <path>]
+//   node skills/to-design/scripts/ledger.mjs prune-list <prune-preview result.json> --name <variant name> [--name ...] --out <prune.json>
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
@@ -57,30 +58,75 @@ export function recordResult(ledger, result) {
       const keep = old && Array.isArray(old.variants) && old.variants.length === rec.total && old.contentHash === rec.contentHash;
       const variants = keep ? old.variants.slice() : new Array(rec.total).fill(null);
       for (const [i, id] of Object.entries(rec.variants || {})) variants[Number(i)] = id;
-      out.sets[family] = { ...rec, variants };
+      out.sets[family] = { ...rec, variants, orphans: orphansAfter(old, result, variants, rec.builtAt) };
     }
   }
   return out;
 }
 
+/**
+ * A family's orphans after a sets result (#67, ADR 0003): the variants the selection dropped, by variant name,
+ * as {id, key, droppedAt}. A dropped variant becomes an orphan only when the ledger recorded its id (as a
+ * variant or an orphan) before this result; a node it never recorded stays `extra`. An orphan leaves the list
+ * when a rebuild records its id as a variant again, or when a prune deletes it.
+ */
+function orphansAfter(old, result, variants, at) {
+  const orphans = { ...((old && old.orphans) || {}) };
+  const known = new Set([...((old && old.variants) || []), ...Object.values(orphans).map(o => o.id)]);
+  for (const [name, id, key] of result.dropped || []) if (known.has(id) && !orphans[name]) orphans[name] = { id, key, droppedAt: at };
+  for (const name of result.pruned || []) delete orphans[name];
+  for (const [name, o] of Object.entries(orphans)) if (variants.includes(o.id)) delete orphans[name];
+  return orphans;
+}
+
+/**
+ * The prune list for the orphans the owner named in chat, from a `prune-preview` result (#67): {variant name:
+ * instance count the owner saw}. A prune run deletes only these, and refuses any whose count has changed.
+ */
+export function pruneList(preview, names) {
+  if (!preview || preview.slice !== 'sets' || preview.mode !== 'prune-preview' || !preview.orphans) throw new Error('not a prune-preview result');
+  if (!names.length) throw new Error('name at least one orphan the owner confirmed');
+  const prune = {};
+  for (const name of names) {
+    if (!(name in preview.orphans)) throw new Error(`${name} is not an orphan in the preview`);
+    prune[name] = preview.orphans[name];
+  }
+  return { schemaVersion: 1, fileKey: preview.fileKey, family: preview.family, prune };
+}
+
+const USAGE = [
+  'usage: ledger.mjs record <result.json> [--ledger <path>]',
+  '       ledger.mjs prune-list <prune-preview result.json> --name <variant name> [--name ...] --out <prune.json>',
+].join('\n');
+
 function main() {
   let args;
   try {
-    args = parseArgs({ allowPositionals: true, options: { ledger: { type: 'string' } } });
+    args = parseArgs({ allowPositionals: true, options: { ledger: { type: 'string' }, name: { type: 'string', multiple: true }, out: { type: 'string' } } });
   } catch {
     args = { positionals: [], values: {} };
   }
   const [command, resultPath] = args.positionals;
-  if (command !== 'record' || !resultPath) {
-    console.error('usage: ledger.mjs record <result.json> [--ledger <path>]');
+  if (!['record', 'prune-list'].includes(command) || !resultPath || (command === 'prune-list' && !args.values.out)) {
+    console.error(USAGE);
     process.exit(2);
   }
   const result = JSON.parse(readFileSync(resultPath, 'utf8'));
+  if (command === 'prune-list') {
+    const list = pruneList(result, args.values.name || []);
+    writeFileSync(args.values.out, JSON.stringify(list, null, 2) + '\n');
+    console.log(JSON.stringify({ status: 'written', out: args.values.out, ...list }));
+    return;
+  }
   const path = args.values.ledger || defaultLedgerPath(result.fileKey);
   const ledger = recordResult(readLedger(path), result);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(ledger, null, 2) + '\n');
-  console.log(JSON.stringify({ status: 'recorded', ledger: path, slice: result.slice, summary: result.summary }));
+  // a build call's dropped variants: the ones the ledger keeps as orphans, and the ones it never recorded (extra)
+  const orphans = (result.slice === 'sets' && ledger.sets[result.family].orphans) || {};
+  const dropped = (result.dropped || []).map(d => d[0]);
+  const report = dropped.length ? { orphaned: dropped.filter(n => n in orphans), extra: dropped.filter(n => !(n in orphans)) } : {};
+  console.log(JSON.stringify({ status: 'recorded', ledger: path, slice: result.slice, summary: result.summary, ...report }));
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

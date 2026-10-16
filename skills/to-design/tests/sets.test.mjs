@@ -13,7 +13,7 @@ import { applyOmit, approve, asDraft, expand, variantName } from '../../contract
 import { basePlan, decodeEntries, foundationsPlan, iconsPlan, PER_CALL, setsPlan } from '../scripts/build-plan.mjs';
 import { checkCoverage, checkSample, checkTheme } from '../scripts/coverage.mjs';
 import { diff, normalizeBaseResult } from '../scripts/base-loop.mjs';
-import { recordResult } from '../scripts/ledger.mjs';
+import { pruneList, recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -148,22 +148,129 @@ test('a rerun updates nothing and creates nothing', async () => {
 
 // Variant ids are recorded by expansion index, so a Contract that expands differently must not reuse them:
 // before this, the rebuild renamed variants onto other tuples and never finished placing them.
-test('after an omit edit the rebuild finds every kept variant by name and leaves the dropped ones for coverage to report', async () => {
+// The Button without its Focus state: an omit edit that drops 49 variants, approved again.
+const withoutFocus = () => approve(applyOmit(BUTTON, { family: 'button', snapshotId: BUTTON.source.snapshotId, omit: [{ state: 'focus' }], expectedCount: TOTAL - 49 }), AT);
+const LATER = '2026-10-17T00:00:00.000Z';
+
+// #67 (ADR 0003): a dropped variant follows the rule for tokens dropped from the closure.
+test('after an omit edit the rebuild finds every kept variant by name and moves the dropped ones to the ledger orphans, deleting nothing', async () => {
   const env = await setup();
   await buildAll(env);
-  const ids = new Map((await setNode(env)).children.map(k => [k.name, k.id]));
-  const patch = { family: 'button', snapshotId: BUTTON.source.snapshotId, omit: [{ state: 'focus' }], expectedCount: TOTAL - 49 };
-  const omitted = approve(applyOmit(BUTTON, patch), AT);
-  const runs = await buildAll(env, omitted);
-  for (const { result } of runs) assert.deepEqual([result.summary.created, result.summary.updated], [0, 0], JSON.stringify(result.updated));
-  const rec = env.ledger.sets.button;
+  const set = await setNode(env);
+  const ids = new Map(set.children.map(k => [k.name, k.id]));
+  const keys = new Map(set.children.map(k => [k.name, k.key]));
+  const omitted = withoutFocus();
+  const runs = await buildAll(env, omitted, { at: LATER });
+  for (const { result } of runs) {
+    assert.deepEqual([result.summary.created, result.summary.updated, result.summary.dropped], [0, 0, 49], JSON.stringify(result.updated));
+    assert.ok(result.outputBytes < 20000, `${result.outputBytes} bytes out`);
+  }  const rec = env.ledger.sets.button;
   assert.equal(rec.variants.length, TOTAL - 49);
   assert.deepEqual(rec.variants, expand(omitted).map(t => ids.get(variantName(omitted, t))));
-  assert.equal((await setNode(env)).children.length, TOTAL, 'the sets slice never deletes a variant');
-  const report = checkCoverage(omitted, (await sets(env, { mode: 'coverage' }, { contract: omitted })).result);
-  assert.deepEqual([...new Set(report.problems.map(p => p.what))], ['extra']);
-  assert.equal(report.problems.length, 49);
-  assert.ok(report.problems.every(p => p.name.endsWith('State=Focus')));
+  assert.equal(set.children.length, TOTAL, 'the sets slice never deletes a variant');
+  const focus = [...ids.keys()].filter(n => n.endsWith('State=Focus'));
+  assert.equal(focus.length, 49);
+  assert.deepEqual(rec.orphans, Object.fromEntries(focus.map(n => [n, { id: ids.get(n), key: keys.get(n), droppedAt: LATER }])));
+  const report = checkCoverage(omitted, (await sets(env, { mode: 'coverage' }, { contract: omitted })).result, env.ledger);
+  assert.deepEqual(report.problems, [], 'an orphan is tracked, not a problem');
+  assert.deepEqual(report.orphaned.sort(), focus.sort());
+});
+
+test('a node in the set the ledger never recorded stays extra, even under a dropped variant\'s name', async () => {
+  const env = await setup();
+  const omitted = withoutFocus();
+  await buildAll(env, omitted);
+  const stray = env.mock.figma.createComponent();
+  stray.name = 'Kind=Primary, Size=Large, State=Focus';
+  (await setNode(env)).appendChild(stray);
+  await buildAll(env, omitted);
+  assert.deepEqual(env.ledger.sets.button.orphans, {});
+  const report = checkCoverage(omitted, (await sets(env, { mode: 'coverage' }, { contract: omitted })).result, env.ledger);
+  assert.deepEqual(report.problems.map(p => [p.what, p.name]), [['extra', stray.name]]);
+  assert.deepEqual(report.orphaned, []);
+});
+
+test('re-selecting a dropped variant reuses its orphan id and key, even after a hand renamed it, with no duplicate node', async () => {
+  const env = await setup();
+  await buildAll(env);
+  await buildAll(env, withoutFocus(), { at: LATER });
+  const orphans = env.ledger.sets.button.orphans;
+  const name = 'Kind=Secondary, Size=Medium, State=Focus';
+  const node = await env.mock.figma.getNodeByIdAsync(orphans[name].id);
+  node.name = 'Focus (old)';
+  const runs = await buildAll(env);
+  assert.deepEqual(runs.map(r => r.result.summary.created), runs.map(() => 0));
+  const rec = env.ledger.sets.button;
+  assert.deepEqual(rec.orphans, {});
+  assert.equal(rec.variants[expand(BUTTON).findIndex(t => variantName(BUTTON, t) === name)], orphans[name].id);
+  assert.deepEqual([node.name, node.key], [name, orphans[name].key]);
+  const set = await setNode(env);
+  assert.equal(set.children.length, TOTAL);
+  assert.deepEqual(checkCoverage(BUTTON, (await sets(env, { mode: 'coverage' })).result, env.ledger).problems, []);
+});
+
+// A Button set rebuilt without Focus: 49 orphans, two of them used by instances on another page.
+async function orphaned() {
+  const env = await setup();
+  await buildAll(env);
+  const omitted = withoutFocus();
+  await buildAll(env, omitted);
+  const used = 'Kind=Primary, Size=Large, State=Focus';
+  const page = env.mock.figma.createPage();
+  page.name = 'Screens';
+  const main = await env.mock.figma.getNodeByIdAsync(env.ledger.sets.button.orphans[used].id);
+  for (let i = 0; i !== 2; i++) page.appendChild(main.createInstance());
+  return { env, omitted, used, page, main };
+}
+
+const preview = async (env, omitted) => (await sets(env, { mode: 'prune-preview' }, { contract: omitted })).result;
+
+test('a read-only prune preview lists every orphan with its instance count in this file, and says other files are not counted', async () => {
+  const { env, omitted, used } = await orphaned();
+  env.mock.log.length = 0;
+  const result = await preview(env, omitted);
+  assert.deepEqual(writes(env.mock), []);
+  const names = Object.keys(env.ledger.sets.button.orphans);
+  assert.deepEqual(Object.keys(result.orphans).sort(), names.sort());
+  assert.equal(result.orphans[used], 2);
+  assert.equal(result.orphans['Kind=Ghost, Size=Small, State=Focus'], 0);
+  assert.match(result.scope, /other files are not counted/);
+  // the preview needs the rebuild finished: a set still built from another Contract has no settled orphans
+  assert.throws(() => setsPlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, mode: 'prune-preview' }), /rebuild every batch/);
+});
+
+test('prune deletes only the orphans on the owner-confirmed list, and refuses a name that is not an orphan or whose count changed', async () => {
+  const { env, omitted, used, page, main } = await orphaned();
+  const counts = (await preview(env, omitted)).orphans;
+  const quiet = 'Kind=Ghost, Size=Small, State=Focus';
+  const prune = list => sets(env, { mode: 'prune', prune: list }, { contract: omitted });
+
+  const kept = 'Kind=Primary, Size=Large, State=Enabled';
+  env.mock.log.length = 0;
+  const notOrphan = await prune({ [quiet]: counts[quiet], [kept]: 0 });
+  assert.deepEqual(notOrphan.result.conflicts, [{ kind: 'prune', name: kept, reason: 'not-orphan' }]);
+  assert.deepEqual(writes(env.mock), [], 'a refused prune changes nothing');
+  page.appendChild(main.createInstance()); // a third instance since the preview
+  env.mock.log.length = 0;
+  const stale = await prune({ [quiet]: counts[quiet], [used]: counts[used] });
+  assert.deepEqual(stale.result.conflicts, [{ kind: 'prune', name: used, reason: 'stale: 3 instances, the preview counted 2' }]);
+  assert.deepEqual(writes(env.mock), [], 'a refused prune changes nothing');
+
+  // the list the owner confirmed, written from the preview so each count is the one they saw
+  const fresh = await preview(env, omitted);
+  assert.throws(() => pruneList(fresh, [kept]), /not an orphan in the preview/);
+  const list = pruneList(fresh, [quiet]);
+  assert.deepEqual(list, { schemaVersion: 1, fileKey: FILE_KEY, family: 'button', prune: { [quiet]: 0 } });
+  const before = { ...env.ledger.sets.button.orphans };
+  const { result } = await prune(list.prune);
+  assert.deepEqual([result.pruned, result.summary.pruned], [[quiet], 1]);
+  assert.equal(await env.mock.figma.getNodeByIdAsync(before[quiet].id), null);
+  const after = env.ledger.sets.button.orphans;
+  assert.deepEqual(Object.keys(after).sort(), Object.keys(before).filter(n => n !== quiet).sort(), 'only the listed orphan leaves the ledger');
+  for (const n of Object.keys(after)) assert.ok(await env.mock.figma.getNodeByIdAsync(after[n].id), `${n} stays`);
+  assert.equal(env.ledger.sets.button.variants.length, TOTAL - 49, 'the variant ids are kept');
+  for (const { result: r } of await buildAll(env, omitted)) assert.equal(r.summary.created, 0, 'a rebuild does not bring it back');
+  assert.deepEqual(checkCoverage(omitted, (await sets(env, { mode: 'coverage' }, { contract: omitted })).result, env.ledger).problems, []);
 });
 
 // One rule for the Base Component's property values: the review specimen (every BOOLEAN on) while it stands
