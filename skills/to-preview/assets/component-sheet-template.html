@@ -2,138 +2,162 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Component Library Preview</title>
+<title>Component preview</title>
+<!-- library-styles -->
 <style>
-  body > header,.cs-layout,.cs-layout > aside,.cs-layout > main,.cs-family,.cs-toolbar,.cs-cell,.cs-cell-title,.cs-specimen,#search,#filters select,#export,#filters button,#families button{box-sizing:border-box} body{margin:0;font:14px system-ui,sans-serif;color:#18222e;background:#f5f7fa}
-  #export,#search,#filters button,#filters select,#families button,.cs-cell-title > input{font:inherit} #export,#filters button,#families button{cursor:pointer;padding:8px 12px;border:1px solid #ccd4df;border-radius:7px;background:white}
-  #export:focus-visible,#search:focus-visible,#filters button:focus-visible,#filters select:focus-visible,#families button:focus-visible,.cs-cell-title > input:focus-visible{outline:3px solid #91b8ff;outline-offset:2px}
+  body > header,.cs-main,.cs-toolbar,.cs-cell,.cs-cell-title,.cs-specimen,.cs-toolbar select,#export,.cs-toolbar button{box-sizing:border-box} body{margin:0;font:14px system-ui,sans-serif;color:#18222e;background:#f5f7fa}
+  #export,.cs-toolbar button,.cs-toolbar select,.cs-cell-title > input{font:inherit} #export,.cs-toolbar button{cursor:pointer;padding:8px 12px;border:1px solid #ccd4df;border-radius:7px;background:white;color:#18222e}
+  #export:disabled{cursor:default;opacity:.5}
+  #export:focus-visible,.cs-toolbar button:focus-visible,.cs-toolbar select:focus-visible,.cs-cell-title > input:focus-visible{outline:3px solid #91b8ff;outline-offset:2px}
   body > header{padding:20px 24px;background:white;border-bottom:1px solid #dbe1e9;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-  body > header > h1{font-size:20px;margin:0} .cs-layout > main > h2{font-size:18px} .cs-layout{display:grid;grid-template-columns:260px minmax(0,1fr)}
-  .cs-layout > aside{padding:18px;border-right:1px solid #dbe1e9;min-height:80vh;background:white} .cs-layout > main{padding:24px;min-width:0}
-  #search{width:100%;padding:9px;margin-bottom:14px;border:1px solid #ccd4df;border-radius:6px}
-  .cs-family{display:flex;gap:8px;align-items:center;margin:8px 0}.cs-family button{flex:1;text-align:left}.cs-family.cs-current button{background:#eaf1ff}
-  .cs-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0 20px}.cs-toolbar label{display:flex;gap:5px;align-items:center}
-  #filters select{padding:7px;border:1px solid #ccd4df;border-radius:6px;background:white}
+  body > header > h1{font-size:20px;margin:0} .cs-main{padding:24px;min-width:0}
+  .cs-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 20px}.cs-toolbar label{display:flex;gap:5px;align-items:center}
+  .cs-toolbar select{padding:7px;border:1px solid #ccd4df;border-radius:6px;background:white;color:#18222e}
   #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;align-items:start}
-  .cs-cell{background:white;border:1px solid #dbe1e9;border-radius:9px;padding:14px;min-width:0}.cs-cell.cs-excluded{border-style:dashed;background:#f0f2f5}
-  .cs-cell-title{display:flex;gap:7px;align-items:start;font-size:12px;margin-bottom:18px}.cs-specimen{padding:16px;min-height:72px;overflow:visible}
-  .cs-cell[hidden]{display:none} #status{color:#49566a;flex:1} #error{color:#9a2424;white-space:pre-wrap} #dependencies{font-size:12px;color:#49566a}
-  @media(max-width:760px){.cs-layout{grid-template-columns:1fr}.cs-layout > aside{min-height:0;border-right:0;border-bottom:1px solid #dbe1e9}}
+  .cs-cell{background:white;border:1px solid #dbe1e9;border-radius:9px;padding:14px;min-width:0}.cs-cell.cs-omitted{border-style:dashed;background:#f0f2f5}
+  .cs-cell-title{display:flex;gap:7px;align-items:start;font-size:12px;margin-bottom:12px}.cs-specimen{padding:16px;min-height:72px;overflow:visible}
+  .cs-cell[hidden]{display:none} #status{color:#49566a;flex:1} #error{color:#9a2424;white-space:pre-wrap}
+  @media(max-width:760px){.cs-main{padding:16px}}
 </style>
-<header><h1>Component Library Preview</h1><span id="status" aria-live="polite">Connect the project renderer to load its catalog.</span><button id="export" disabled>Export / Apply Selection</button></header>
-<div class="cs-layout"><aside><label for="search">Find a component</label><input id="search" type="search" placeholder="Search families"><div id="families"></div></aside>
-<main><h2 id="family-title">Choose a component</h2><div id="filters" class="cs-toolbar"></div><div id="grid"></div><p id="dependencies"></p><p id="error" role="alert"></p></main></div>
+<header><h1 id="title">Component preview</h1><span id="status" aria-live="polite">Loading the catalog.</span><button id="export" disabled>Export omit patch</button></header>
+<main class="cs-main"><div id="filters" class="cs-toolbar"></div><div id="grid"></div><p id="error" role="alert"></p></main>
+<script src="./contract.js"></script>
 <script src="./selection-model.js"></script>
 <script>
 (() => {
   "use strict";
+  // To-preview shell over one Contract. catalog = {contract, modes, forces, specimens}; see scripts/catalog.mjs.
+  // Checked = kept in the Contract; unchecked = omitted. The Base Component is locked on.
   const $ = id => document.getElementById(id);
-  let model, renderer, activeId, filters = {}, busy = false;
-  const rendered = new Set();
+  let model, catalog, renderer, mode, filters = {}, rendered = false;
   const element = (tag, text) => { const node = document.createElement(tag); if (text !== undefined) node.textContent = text; return node; };
+  const modeClass = key => (catalog.modes.find(m => m.key === key) || {}).className;
+  const defaultMode = () => catalog.modes.length ? catalog.modes[0].key : undefined;
+
   function summary() {
-    $("status").textContent = model.selected.size + " selected specimens · " + model.families.size + " component families";
-    $("export").disabled = busy || !model.selected.size;
-    try {
-      const defaults = [...model.families.values()].filter(family => family.specimens.some(row => model.selected.has(row.id))).map(family => {
-        const selectedRows = family.specimens.filter(row => model.selected.has(row.id));
-        const sourceDefault = family.defaultProperties || family.specimens[0].properties;
-        const effective = selectedRows.find(row => Object.entries(sourceDefault).every(([key,value]) => row.properties[key] === value)) || selectedRows[0];
-        const changed = Object.entries(sourceDefault).some(([key,value]) => effective.properties[key] !== value);
-        return family.name + ": " + Object.entries(effective.properties).map(([key,value]) => key + "=" + value).join(", ") + (changed ? " (changed from " + Object.entries(sourceDefault).map(([key,value]) => key + "=" + value).join(", ") + ")" : "");
-      });
-      $("dependencies").textContent = "Required dependencies: " + (model.dependencyClosure().map(item => item.name || item.id).join(", ") || "none") + (defaults.length ? " · Effective defaults: " + defaults.join("; ") : "");
-    }
-    catch (error) { $("error").textContent = error.message; $("export").disabled = true; }
-    document.querySelectorAll(".cs-family input").forEach(input => {
-      const rows = model.family(input.dataset.family).specimens;
-      const count = rows.filter(row => model.selected.has(row.id)).length;
-      input.checked = rows.length > 0 && count === rows.length; input.indeterminate = count > 0 && count < rows.length;
-    });
+    const total = model.specimens.size, checked = model.selected.size;
+    $("status").textContent = checked + " of " + total + " variants checked · " + (total - checked) + " omitted · the Base Component is locked on";
+    $("export").disabled = !rendered;
     document.querySelectorAll(".cs-cell").forEach(cell => {
-      const selected = model.selected.has(cell.dataset.id); cell.classList.toggle("cs-excluded", !selected); cell.querySelector("input").checked = selected;
+      const on = model.selected.has(cell.dataset.id); cell.classList.toggle("cs-omitted", !on); cell.querySelector("input").checked = on;
     });
-  }
-  function list() {
-    $("families").replaceChildren();
-    const search = $("search").value.toLowerCase();
-    for (const family of model.families.values()) {
-      if (!(family.name || family.id).toLowerCase().includes(search)) continue;
-      const row = element("div"); row.className = "cs-family" + (family.id === activeId ? " cs-current" : "");
-      const checkbox = element("input"); checkbox.type = "checkbox"; checkbox.dataset.family = family.id; checkbox.setAttribute("aria-label", "Select all " + family.name);
-      checkbox.onchange = () => { model.selectFamily(family.id, checkbox.checked); summary(); open(family.id); };
-      const button = element("button", family.name || family.id); button.onclick = () => open(family.id);
-      row.append(checkbox, button); $("families").append(row);
-    }
-    summary();
   }
   function filterGrid() {
-    document.querySelectorAll(".cs-cell").forEach(cell => { cell.hidden = !model.matches(model.specimens.get(cell.dataset.id), filters); });
+    document.querySelectorAll(".cs-cell").forEach(cell => { cell.hidden = !model.matches(model.specimen(cell.dataset.id), filters); });
   }
-  function controls(family) {
+  function controls() {
     $("filters").replaceChildren();
-    const axes = [...new Set(family.specimens.flatMap(row => Object.keys(row.properties))), "$theme"];
-    for (const axis of axes) {
-      const label = element("label", axis === "$theme" ? "Theme" : axis);
-      const select = element("select"); select.append(new Option("All", ""));
-      const values = [...new Set(family.specimens.map(row => axis === "$theme" ? row.themeId : row.properties[axis]).filter(value => value !== undefined))];
-      for (const value of values) select.append(new Option(value, value));
-      select.value = filters[axis] || ""; select.onchange = () => { filters[axis] = select.value; filterGrid(); };
+    for (const axis of catalog.contract.axes) {
+      const label = element("label", axis.label), select = element("select");
+      select.append(new Option("All", ""));
+      for (const value of axis.values) select.append(new Option(value.label, value.key));
+      select.onchange = () => { filters[axis.key] = select.value; filterGrid(); };
       label.append(select); $("filters").append(label);
     }
-    for (const [text, value] of [["Select visible", true], ["Clear visible", false]]) {
-      const button = element("button", text); button.onclick = () => { model.selectMatching(family.id, filters, value); summary(); }; $("filters").append(button);
+    for (const [text, value] of [["Check visible", true], ["Uncheck visible", false]]) {
+      const button = element("button", text); button.onclick = () => { model.selectMatching(filters, value); summary(); }; $("filters").append(button);
+    }
+    if (catalog.modes.length > 1) {
+      // Display only: swaps the theme class on every specimen; nothing re-renders and the selection is untouched.
+      const label = element("label", "Theme"), select = element("select");
+      for (const m of catalog.modes) select.append(new Option(m.label, m.key));
+      select.onchange = () => {
+        const from = modeClass(mode); mode = select.value;
+        document.querySelectorAll(".cs-specimen").forEach(host => { host.classList.remove(from); host.classList.add(modeClass(mode)); });
+      };
+      label.append(select); $("filters").append(label);
     }
   }
-  async function open(familyId) {
-    if (busy) return;
-    busy = true; activeId = familyId; filters = {}; $("error").textContent = ""; list();
-    const family = model.family(familyId); $("family-title").textContent = family.name || family.id;
-    $("grid").replaceChildren(); controls(family);
+
+  // State forcing: copy every style rule that uses a forced pseudo-class (":hover") with the pseudo-class
+  // replaced by a class (".cs-force-hover"), right after the original so the cascade order holds. Copies
+  // from a hover-capability media query (@media (any-hover: hover)) go beside the query, not inside it.
+  function splitSelectors(text) {
+    const out = []; let depth = 0, current = "";
+    for (const ch of text) {
+      if (ch === "(" || ch === "[") depth++; else if (ch === ")" || ch === "]") depth--;
+      if (ch === "," && !depth) { out.push(current); current = ""; } else current += ch;
+    }
+    return out.concat(current).map(s => s.trim());
+  }
+  function forceStates(pseudos) {
+    const patterns = pseudos.map(p => [new RegExp(p + "(?![\\w-])", "g"), ".cs-force-" + p.slice(1)]);
+    const forced = rule => {
+      const selectors = splitSelectors(rule.selectorText).filter(s => patterns.some(([re]) => { re.lastIndex = 0; return re.test(s); }));
+      if (!selectors.length) return null;
+      return selectors.map(s => patterns.reduce((acc, [re, cls]) => acc.replace(re, cls), s)).join(", ") + "{" + rule.style.cssText + "}";
+    };
+    const walk = list => {
+      for (let i = list.cssRules.length - 1; i >= 0; i--) {
+        const rule = list.cssRules[i];
+        if (rule.selectorText !== undefined) { const text = forced(rule); if (text) list.insertRule(text, i + 1); }
+        else if (rule.cssRules && rule.media && /hover/.test(rule.media.mediaText))
+          [...rule.cssRules].map(r => r.selectorText !== undefined ? forced(r) : null).filter(Boolean).reverse().forEach(text => list.insertRule(text, i + 1));
+        else if (rule.cssRules && rule.insertRule) walk(rule);
+      }
+    };
+    for (const sheet of document.styleSheets) { try { walk(sheet); } catch (error) { /* a cross-origin sheet cannot be read */ } }
+  }
+
+  async function render() {
+    $("grid").replaceChildren();
+    const forceFor = specimen => catalog.forces.filter(f => specimen.tuple[f.axis] === f.value).map(f => "cs-force-" + f.pseudo.slice(1));
     try {
-      for (const specimen of family.specimens) {
+      for (const specimen of model.specimens.values()) {
         const cell = element("section"); cell.className = "cs-cell"; cell.dataset.id = specimen.id;
         const title = element("label"); title.className = "cs-cell-title";
-        const checkbox = element("input"); checkbox.type = "checkbox"; checkbox.onchange = () => { model.select(specimen.id, checkbox.checked); summary(); };
-        title.append(checkbox, element("span", Object.entries(specimen.properties).map(([key,value]) => key + "=" + value).join(" · ") + " · " + specimen.themeId));
+        const checkbox = element("input"); checkbox.type = "checkbox";
+        if (specimen.id === model.baseId) { checkbox.disabled = true; checkbox.title = "The Base Component is locked on"; }
+        checkbox.onchange = () => { model.select(specimen.id, checkbox.checked); summary(); };
+        title.append(checkbox, element("span", specimen.name + (specimen.id === model.baseId ? " · Base Component" : "")));
         const host = element("div"); host.className = "cs-specimen"; host.dataset.specimenId = specimen.id;
+        if (modeClass(mode)) host.classList.add(modeClass(mode));
         cell.append(title, host); $("grid").append(cell);
-        await renderer(family, specimen, host);
-        if (!host.childNodes.length) throw new Error("Renderer returned an empty specimen: " + specimen.id);
-        model.verify(specimen.id);
+        const renderedIn = mode;
+        await renderer(specimen, host);
+        if (!host.firstElementChild) throw new Error("The renderer returned an empty specimen: " + specimen.name);
+        host.firstElementChild.classList.add(...forceFor(specimen));
+        if (renderedIn === defaultMode()) model.verify(specimen.id);
       }
       if (document.fonts) await document.fonts.ready;
-      for (const image of $("grid").querySelectorAll("img")) {
-        if (!image.complete) await new Promise((resolve,reject) => { image.onload = resolve; image.onerror = () => reject(new Error("Specimen image failed to load")); });
-        if (!image.naturalWidth) throw new Error("Specimen image failed to load");
-      }
-      rendered.add(familyId);
-    } catch (error) { $("error").textContent = error.message; for (const row of family.specimens) model.verified.delete(row.id); }
-    finally { busy = false; summary(); }
+      rendered = true;
+    } catch (error) { $("error").textContent = error.message; }
+    summary();
   }
-  $("search").oninput = () => { if (model) list(); };
-  $("export").onclick = async () => {
+
+  function download(name, data) {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" })), link = element("a");
+    link.href = url; link.download = name; document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function selection() {
+    const patch = model.omitPatch();
+    return { patch, checked: { family: patch.family, snapshotId: patch.snapshotId, checked: model.checkedTuples() } };
+  }
+  $("export").onclick = () => {
     $("error").textContent = "";
     try {
-      const selectedFamilies = [...model.families.keys()].filter(id => model.family(id).specimens.some(row => model.selected.has(row.id)));
-      for (const id of selectedFamilies) if (!rendered.has(id)) await open(id);
-      const manifest = model.manifest();
-      const blob = new Blob([JSON.stringify(manifest,null,2)], {type:"application/json"});
-      const url = URL.createObjectURL(blob), link = element("a"); link.href = url; link.download = "selection-manifest.json";
-      document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url),1000);
-      window.dispatchEvent(new CustomEvent("component-sheet:selection", {detail:manifest}));
-      $("status").textContent = "Exported " + manifest.entries.length + " approved specimens. Native script execution is a separate step.";
+      const { patch, checked } = selection(), family = patch.family;
+      download(family + ".omit-patch.json", patch);
+      download(family + ".checked.json", checked);
+      window.dispatchEvent(new CustomEvent("component-sheet:selection", { detail: { patch, checked } }));
+      $("status").textContent = "Exported " + family + ".omit-patch.json (" + patch.expectedCount + " variants, " + patch.omit.length + " omit patterns) and " + family + ".checked.json. The agent applies them to the Contract.";
     } catch (error) { $("error").textContent = error.message; }
   };
+
   window.ComponentSheet = {
-    configure({catalog,renderSpecimen}) {
-      if (typeof renderSpecimen !== "function") throw new Error("Provide the project's real specimen renderer");
-      model = new ComponentSheetSelection(catalog); renderer = renderSpecimen; activeId = undefined; busy = false; rendered.clear(); list();
+    configure(options) {
+      if (typeof options.renderSpecimen !== "function") throw new Error("Provide the Adapter's specimen renderer");
+      catalog = options.catalog; renderer = options.renderSpecimen; filters = {}; rendered = false;
+      model = new ComponentSheetSelection(catalog.contract, window.Contract);
+      mode = defaultMode();
+      $("title").textContent = catalog.contract.family.name + " preview";
+      forceStates([...new Set(catalog.forces.map(f => f.pseudo))]);
+      controls(); summary(); render();
       return model;
     },
-    getSelection() { return model.manifest(); }
+    getSelection: selection
   };
 })();
 </script>
-<!-- Mount the project's real-library adapter and call ComponentSheet.configure; no fabricated demo components are included. -->
+<!-- catalog -->
 </html>

@@ -1,0 +1,54 @@
+// The catalog generator (#33): one self-contained HTML page per Contract, with specimens rendered by the
+// Adapter's preview renderer. A stub renderer keeps these tests offline and Code-Library-neutral.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { buildCatalog } from '../scripts/catalog.mjs';
+
+const button = JSON.parse(readFileSync(new URL('../../../design-systems/carbon/contracts/button.component.json', import.meta.url)));
+const foundations = JSON.parse(readFileSync(new URL('../../../design-systems/carbon/carbon.foundations.json', import.meta.url)));
+const stub = {
+  stylesheet: '.lib-button{color:red}',
+  modeClass: mode => `theme-${mode}`,
+  render: tuple => `<button class="lib-button">${Object.values(tuple).join(' ')}</button>`,
+};
+// The page embeds its data as JSON in <script type="application/json" id="catalog">.
+const embedded = html => JSON.parse(html.match(/<script type="application\/json" id="catalog">([\s\S]*?)<\/script>/)[1]);
+
+test('the page carries the Contract, one rendered specimen per tuple and the library stylesheet', () => {
+  const omitted = JSON.parse(JSON.stringify(button));
+  omitted.selection.omit = [{ match: { state: 'focus' } }];
+  omitted.selection.expectedCount = 196;
+  const html = buildCatalog({ contract: omitted, foundations, renderer: stub });
+  const data = embedded(html);
+  assert.deepEqual(data.contract, omitted);
+  assert.equal(Object.keys(data.specimens).length, 245, 'omitted tuples are rendered too, so they can be re-included');
+  assert.equal(data.specimens['danger|sm|focus'], '<button class="lib-button">danger sm focus</button>');
+  assert.ok(html.includes('.lib-button{color:red}'));
+  assert.ok(!/<script src=/.test(html), 'self-contained: opens from file://');
+});
+
+test('the theme toggle offers the foundations Theme modes, first mode the default', () => {
+  const data = embedded(buildCatalog({ contract: button, foundations, renderer: stub }));
+  assert.deepEqual(data.modes, [
+    { key: 'white', label: 'White', className: 'theme-white' },
+    { key: 'g10', label: 'Gray 10', className: 'theme-g10' },
+    { key: 'g90', label: 'Gray 90', className: 'theme-g90' },
+    { key: 'g100', label: 'Gray 100', className: 'theme-g100' },
+  ]);
+});
+
+test('States without code props are forced through their CSS pseudo-class', () => {
+  const data = embedded(buildCatalog({ contract: button, foundations, renderer: stub }));
+  assert.deepEqual(data.forces, [
+    { axis: 'state', value: 'hover', pseudo: ':hover' },
+    { axis: 'state', value: 'active', pseudo: ':active' },
+    { axis: 'state', value: 'focus', pseudo: ':focus' },
+  ]);
+});
+
+test('an invalid Contract gets no catalog', () => {
+  const broken = JSON.parse(JSON.stringify(button));
+  broken.selection.expectedCount = 7;
+  assert.throws(() => buildCatalog({ contract: broken, foundations, renderer: stub }), /rule 4.*expectedCount is 7/);
+});
