@@ -1,0 +1,1943 @@
+{
+ "summary": {
+  "runs": 3,
+  "keyCounts": [
+   141,
+   141,
+   140
+  ],
+  "unionKeys": 141,
+  "keysInAllRuns": 140,
+  "stableKeys": 102,
+  "unstableKeys": 39,
+  "pairwiseChangeRate": 0.217,
+  "byKind": {
+   "anatomy": {
+    "keys": 18,
+    "inAll": 18,
+    "stable": 5,
+    "pairDiffer": 29,
+    "pairs": 54
+   },
+   "axes.axisLabel": {
+    "keys": 4,
+    "inAll": 4,
+    "stable": 4,
+    "pairDiffer": 0,
+    "pairs": 12
+   },
+   "axes.valueLabel": {
+    "keys": 18,
+    "inAll": 18,
+    "stable": 18,
+    "pairDiffer": 0,
+    "pairs": 54
+   },
+   "excluded": {
+    "keys": 3,
+    "inAll": 3,
+    "stable": 3,
+    "pairDiffer": 0,
+    "pairs": 9
+   },
+   "family.description": {
+    "keys": 3,
+    "inAll": 3,
+    "stable": 0,
+    "pairDiffer": 9,
+    "pairs": 9
+   },
+   "family.split": {
+    "keys": 3,
+    "inAll": 3,
+    "stable": 3,
+    "pairDiffer": 0,
+    "pairs": 9
+   },
+   "figma.grid": {
+    "keys": 3,
+    "inAll": 3,
+    "stable": 2,
+    "pairDiffer": 2,
+    "pairs": 9
+   },
+   "icons": {
+    "keys": 3,
+    "inAll": 3,
+    "stable": 1,
+    "pairDiffer": 6,
+    "pairs": 9
+   },
+   "layout": {
+    "keys": 65,
+    "inAll": 65,
+    "stable": 63,
+    "pairDiffer": 4,
+    "pairs": 195
+   },
+   "properties": {
+    "keys": 19,
+    "inAll": 18,
+    "stable": 1,
+    "pairDiffer": 42,
+    "pairs": 57
+   },
+   "axes.attrAxis": {
+    "keys": 2,
+    "inAll": 2,
+    "stable": 2,
+    "pairDiffer": 0,
+    "pairs": 6
+   }
+  },
+  "byConf": {
+   "high": {
+    "n": 187,
+    "unstable": 23
+   },
+   "medium": {
+    "n": 201,
+    "unstable": 75
+   },
+   "low": {
+    "n": 34,
+    "unstable": 18
+   }
+  }
+ },
+ "rows": [
+  {
+   "key": "alert.anatomy.alert",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "alert.anatomy.alert-action",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "medium",
+    "low",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.anatomy.alert-description",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "alert.anatomy.alert-title",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "alert.anatomy.svg",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "medium",
+    "high"
+   ]
+  },
+  {
+   "key": "alert.anatomy.wrap-alert-title",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 3,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.axes.variant.label",
+   "kind": "axes.axisLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "alert.axes.variant.values.default.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "alert.axes.variant.values.destructive.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "alert.excluded",
+   "kind": "excluded",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "alert.family.description",
+   "kind": "family.description",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 3,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.family.split",
+   "kind": "family.split",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "alert.figma.grid",
+   "kind": "figma.grid",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "high"
+   ]
+  },
+  {
+   "key": "alert.icons",
+   "kind": "icons",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 3,
+   "conf": [
+    "low",
+    "low",
+    "low"
+   ]
+  },
+  {
+   "key": "alert.layout.alert-action.alignCross",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "low"
+   ]
+  },
+  {
+   "key": "alert.layout.alert-action.alignMain",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "low"
+   ]
+  },
+  {
+   "key": "alert.layout.alert-action.direction",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "low",
+    "low",
+    "low"
+   ]
+  },
+  {
+   "key": "alert.layout.alert-action.height",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "low"
+   ]
+  },
+  {
+   "key": "alert.layout.alert-action.width",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "low"
+   ]
+  },
+  {
+   "key": "alert.layout.alert-description.height",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.layout.alert-description.textResize",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.layout.alert-description.width",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.layout.alert-title.height",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.layout.alert-title.textResize",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.layout.alert-title.width",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.layout.alert.alignCross",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.layout.alert.alignMain",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.layout.alert.direction",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.layout.alert.height",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.layout.alert.width",
+   "kind": "layout",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "high",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.layout.wrap-alert-title.alignCross",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.layout.wrap-alert-title.alignMain",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.layout.wrap-alert-title.direction",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.layout.wrap-alert-title.height",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.layout.wrap-alert-title.width",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.properties.alert-action.visible",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.properties.alert-description.characters",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "high",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.properties.alert-description.visible",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "medium",
+    "medium",
+    "low"
+   ]
+  },
+  {
+   "key": "alert.properties.alert-title.characters",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "high",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.properties.alert-title.visible",
+   "kind": "properties",
+   "inAll": false,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "medium",
+    "medium",
+    null
+   ]
+  },
+  {
+   "key": "alert.properties.svg.mainComponent",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 3,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "alert.properties.svg.visible",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 3,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "button.anatomy.button",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.anatomy.children",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "medium",
+    "high"
+   ]
+  },
+  {
+   "key": "button.anatomy.inline-end",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "button.anatomy.inline-start",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "button.axes.aria-expanded",
+   "kind": "axes.attrAxis",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "low",
+    "medium"
+   ]
+  },
+  {
+   "key": "button.axes.aria-invalid",
+   "kind": "axes.attrAxis",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "button.axes.size.label",
+   "kind": "axes.axisLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.axes.size.values.default.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.axes.size.values.icon-lg.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "button.axes.size.values.icon-sm.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "button.axes.size.values.icon-xs.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "low"
+   ]
+  },
+  {
+   "key": "button.axes.size.values.icon.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "medium",
+    "high"
+   ]
+  },
+  {
+   "key": "button.axes.size.values.lg.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "button.axes.size.values.sm.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "button.axes.size.values.xs.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "button.axes.variant.label",
+   "kind": "axes.axisLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.axes.variant.values.default.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.axes.variant.values.destructive.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.axes.variant.values.ghost.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.axes.variant.values.link.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.axes.variant.values.outline.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.axes.variant.values.secondary.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.excluded",
+   "kind": "excluded",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "button.family.description",
+   "kind": "family.description",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 3,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "button.family.split",
+   "kind": "family.split",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "low",
+    "medium"
+   ]
+  },
+  {
+   "key": "button.figma.grid",
+   "kind": "figma.grid",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "low",
+    "low",
+    "low"
+   ]
+  },
+  {
+   "key": "button.icons",
+   "kind": "icons",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 3,
+   "conf": [
+    "low",
+    "low",
+    "low"
+   ]
+  },
+  {
+   "key": "button.layout.button.alignCross",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.layout.button.alignMain",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.layout.button.direction",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.layout.button.height",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.layout.button.width",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.layout.children.height",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.layout.children.textResize",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.layout.children.width",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "button.properties.children.characters",
+   "kind": "properties",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "medium",
+    "high"
+   ]
+  },
+  {
+   "key": "button.properties.inline-end.mainComponent",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 3,
+   "conf": [
+    "medium",
+    "medium",
+    "low"
+   ]
+  },
+  {
+   "key": "button.properties.inline-end.visible",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 3,
+   "conf": [
+    "medium",
+    "medium",
+    "low"
+   ]
+  },
+  {
+   "key": "button.properties.inline-start.mainComponent",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 3,
+   "conf": [
+    "medium",
+    "medium",
+    "low"
+   ]
+  },
+  {
+   "key": "button.properties.inline-start.visible",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 3,
+   "conf": [
+    "medium",
+    "medium",
+    "low"
+   ]
+  },
+  {
+   "key": "card.anatomy.card",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "card.anatomy.card-action",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.anatomy.card-content",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "high",
+    "medium",
+    "high"
+   ]
+  },
+  {
+   "key": "card.anatomy.card-description",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "card.anatomy.card-footer",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 3,
+   "conf": [
+    "medium",
+    "medium",
+    "high"
+   ]
+  },
+  {
+   "key": "card.anatomy.card-header",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "card.anatomy.card-title",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "card.anatomy.wrap-card-title",
+   "kind": "anatomy",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 3,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.axes.size.label",
+   "kind": "axes.axisLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "card.axes.size.values.default.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "card.axes.size.values.sm.label",
+   "kind": "axes.valueLabel",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.excluded",
+   "kind": "excluded",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "card.family.description",
+   "kind": "family.description",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 3,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.family.split",
+   "kind": "family.split",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "card.figma.grid",
+   "kind": "figma.grid",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "high"
+   ]
+  },
+  {
+   "key": "card.icons",
+   "kind": "icons",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "high"
+   ]
+  },
+  {
+   "key": "card.layout.card-action.alignCross",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "low"
+   ]
+  },
+  {
+   "key": "card.layout.card-action.alignMain",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "low"
+   ]
+  },
+  {
+   "key": "card.layout.card-action.direction",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "low",
+    "medium",
+    "low"
+   ]
+  },
+  {
+   "key": "card.layout.card-action.height",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "low"
+   ]
+  },
+  {
+   "key": "card.layout.card-action.width",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "low"
+   ]
+  },
+  {
+   "key": "card.layout.card-content.alignCross",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-content.alignMain",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-content.direction",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-content.height",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-content.width",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-description.height",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-description.textResize",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-description.width",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-footer.alignCross",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-footer.alignMain",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-footer.direction",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-footer.height",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-footer.width",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-header.alignCross",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-header.alignMain",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-header.direction",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-header.height",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-header.width",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-title.height",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-title.textResize",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card-title.width",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card.alignCross",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card.alignMain",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card.direction",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card.height",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "high",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.card.width",
+   "kind": "layout",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.wrap-card-title.alignCross",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.wrap-card-title.alignMain",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.wrap-card-title.direction",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.wrap-card-title.height",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.layout.wrap-card-title.width",
+   "kind": "layout",
+   "inAll": true,
+   "stable": true,
+   "pairs": 3,
+   "differ": 0,
+   "conf": [
+    "medium",
+    "high",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.properties.card-action.visible",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.properties.card-content.visible",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "medium",
+    "medium",
+    "low"
+   ]
+  },
+  {
+   "key": "card.properties.card-description.characters",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "high",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.properties.card-description.visible",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "medium",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.properties.card-footer.visible",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "low",
+    "medium",
+    "medium"
+   ]
+  },
+  {
+   "key": "card.properties.card-header.visible",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "medium",
+    "medium",
+    "low"
+   ]
+  },
+  {
+   "key": "card.properties.card-title.characters",
+   "kind": "properties",
+   "inAll": true,
+   "stable": false,
+   "pairs": 3,
+   "differ": 2,
+   "conf": [
+    "high",
+    "medium",
+    "medium"
+   ]
+  }
+ ]
+}

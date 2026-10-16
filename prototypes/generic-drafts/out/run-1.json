@@ -1,0 +1,1444 @@
+{
+  "alert.anatomy.alert": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/alert.tsx:L28 data-slot=\"alert\"",
+      "components/ui/alert.tsx:L29 role=\"alert\""
+    ],
+    "value": {
+      "name": "Alert",
+      "order": 0,
+      "parent": null,
+      "role": "root",
+      "type": "COMPONENT"
+    }
+  },
+  "alert.anatomy.alert-action": {
+    "confidence": "low",
+    "evidence": [
+      "components/ui/alert.tsx:L68 data-slot=\"alert-action\"",
+      "components/ui/alert.tsx:L69 absolute top-2 right-2 (absolute overlay; kept in flow as last child, root reserves pr-18)"
+    ],
+    "value": {
+      "name": "Action",
+      "order": 2,
+      "parent": "alert",
+      "role": "action",
+      "type": "FRAME"
+    }
+  },
+  "alert.anatomy.alert-description": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L55 data-slot=\"alert-description\"",
+      "components/ui/alert.tsx:L57 text-sm text-muted-foreground"
+    ],
+    "value": {
+      "name": "Description",
+      "order": 1,
+      "parent": "alert-text",
+      "role": "description",
+      "type": "TEXT"
+    }
+  },
+  "alert.anatomy.alert-text": {
+    "confidence": "low",
+    "evidence": [
+      "components/ui/alert.tsx:L6 grid gap-0.5 has-[>svg]:grid-cols-[auto_1fr]: title and description stack in column 2",
+      "components/ui/alert.tsx:L41 group-has-[>svg]/alert:col-start-2 (wrapper added to express the grid as Auto Layout)"
+    ],
+    "value": {
+      "name": "Text",
+      "order": 1,
+      "parent": "alert",
+      "role": "content",
+      "type": "FRAME"
+    }
+  },
+  "alert.anatomy.alert-title": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L39 data-slot=\"alert-title\"",
+      "components/ui/alert.tsx:L41 font-medium"
+    ],
+    "value": {
+      "name": "Title",
+      "order": 0,
+      "parent": "alert-text",
+      "role": "title",
+      "type": "TEXT"
+    }
+  },
+  "alert.anatomy.icon": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L6 has-[>svg]:grid-cols-[auto_1fr] *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg:not([class*='size-'])]:size-4 (direct svg child in column 1; slot-dependent)"
+    ],
+    "value": {
+      "name": "Icon",
+      "order": 0,
+      "parent": "alert",
+      "role": "icon",
+      "type": "INSTANCE"
+    }
+  },
+  "alert.axes.state.values": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/alert.tsx:L6-12 no hover:, focus-visible:, active: or disabled: on the root",
+      "components/ui/alert.tsx:L41,57 [&_a]:hover:text-foreground styles a nested link, not the Alert"
+    ],
+    "value": [
+      "enabled"
+    ]
+  },
+  "alert.axes.variant.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/alert.tsx:L9 variants.variant",
+      "components/ui/alert.tsx:L15-17 defaultVariants.variant default"
+    ],
+    "value": "Variant"
+  },
+  "alert.axes.variant.values.default.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/alert.tsx:L10 \"default\""
+    ],
+    "value": "Default"
+  },
+  "alert.axes.variant.values.destructive.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/alert.tsx:L11-12 \"destructive\""
+    ],
+    "value": "Destructive"
+  },
+  "alert.excluded": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/alert.tsx:L9-14 variant is the only axis; both values combine with every slot"
+    ],
+    "value": []
+  },
+  "alert.family.description": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L29 role=\"alert\"",
+      "components/ui/alert.tsx:L75 exports Alert, AlertTitle, AlertDescription, AlertAction",
+      "components/ui/alert.tsx:L9-14 variants default|destructive"
+    ],
+    "value": "A callout that shows a short message with an optional icon, title, description and action, in a default or destructive tone."
+  },
+  "alert.family.name": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/alert.tsx:L21 function Alert",
+      "components/ui/alert.tsx:L28 data-slot=\"alert\""
+    ],
+    "value": "Alert"
+  },
+  "alert.family.split": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/alert.tsx:L41 AlertTitle group-has-[>svg]/alert:col-start-2",
+      "components/ui/alert.tsx:L12 destructive: *:data-[slot=alert-description]:text-destructive/90",
+      "components/ui/alert.tsx:L6 has-data-[slot=alert-action]:pr-18 (slot-dependent)"
+    ],
+    "value": {
+      "families": [
+        "alert"
+      ],
+      "reason": "AlertTitle, AlertDescription and AlertAction are anatomy of one Alert: the root lays them out and styles them by presence and variant."
+    }
+  },
+  "alert.figma.componentSetName": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/alert.tsx:L21 Alert"
+    ],
+    "value": "Alert"
+  },
+  "alert.figma.grid": {
+    "confidence": "low",
+    "evidence": [
+      "components/ui/alert.tsx:L9-14 variant is the only code axis",
+      "components/ui/alert.tsx:L6-69 no hover/focus/active/disabled classes on the alert: state holds only enabled"
+    ],
+    "value": {
+      "columns": "variant",
+      "rows": "state"
+    }
+  },
+  "alert.figma.page": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/alert.tsx:L21 Alert"
+    ],
+    "value": "Alerts"
+  },
+  "alert.icons": {
+    "confidence": "low",
+    "evidence": [
+      "components.json:L13 \"iconLibrary\": \"lucide\"",
+      "components/ui/alert.tsx:L6 *:[svg] icon slot",
+      "components/ui/alert.tsx:L12 destructive *:[svg]:text-current"
+    ],
+    "value": {
+      "default": "circle-alert",
+      "package": "lucide-react",
+      "preferred": [
+        "circle-alert",
+        "info",
+        "circle-check",
+        "triangle-alert"
+      ]
+    }
+  },
+  "alert.layout.alert-action.height": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L69 absolute: shrink-to-fit"
+    ],
+    "value": "hug"
+  },
+  "alert.layout.alert-action.width": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L69 absolute: shrink-to-fit"
+    ],
+    "value": "hug"
+  },
+  "alert.layout.alert-description.textResize": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/alert.tsx:L57 text-balance md:text-pretty: multi-line wrapping"
+    ],
+    "value": "height"
+  },
+  "alert.layout.alert-description.width": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L6 grid column 1fr"
+    ],
+    "value": "fill"
+  },
+  "alert.layout.alert-text.direction": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L6 grid gap-0.5: title row over description row"
+    ],
+    "value": "column"
+  },
+  "alert.layout.alert-text.height": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L6 no row height"
+    ],
+    "value": "hug"
+  },
+  "alert.layout.alert-text.width": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L6 grid-cols-[auto_1fr]: text column is 1fr"
+    ],
+    "value": "fill"
+  },
+  "alert.layout.alert-title.textResize": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L41 no whitespace-nowrap: wraps"
+    ],
+    "value": "height"
+  },
+  "alert.layout.alert-title.width": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L6 grid column 1fr"
+    ],
+    "value": "fill"
+  },
+  "alert.layout.alert.alignCross": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L6 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 (icon sits at the top of the text block)"
+    ],
+    "value": "start"
+  },
+  "alert.layout.alert.direction": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L6 has-[>svg]:grid-cols-[auto_1fr]: icon column then text column"
+    ],
+    "value": "row"
+  },
+  "alert.layout.alert.height": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/alert.tsx:L6 no height class; py-2 around content"
+    ],
+    "value": "hug"
+  },
+  "alert.layout.alert.width": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/alert.tsx:L6 w-full"
+    ],
+    "value": "fill"
+  },
+  "alert.layout.icon.height": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/alert.tsx:L6 *:[svg:not([class*='size-'])]:size-4"
+    ],
+    "value": "fixed"
+  },
+  "alert.layout.icon.width": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/alert.tsx:L6 *:[svg:not([class*='size-'])]:size-4"
+    ],
+    "value": "fixed"
+  },
+  "alert.properties.description": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L49-63 AlertDescription renders children"
+    ],
+    "value": {
+      "binds": [
+        "alert-description"
+      ],
+      "code": {
+        "component": "AlertDescription",
+        "prop": "children"
+      },
+      "default": "Alert Description",
+      "label": "Description",
+      "type": "TEXT"
+    }
+  },
+  "alert.properties.icon": {
+    "confidence": "medium",
+    "evidence": [
+      "components.json:L13 iconLibrary lucide",
+      "components/ui/alert.tsx:L6 *:[svg] styles the direct svg child"
+    ],
+    "value": {
+      "binds": [
+        "icon"
+      ],
+      "code": {
+        "prop": "children",
+        "valueFrom": "lucide-react icon component"
+      },
+      "default": "icon:default",
+      "label": "Icon",
+      "type": "INSTANCE_SWAP"
+    }
+  },
+  "alert.properties.show-action": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L6 has-data-[slot=alert-action]:pr-18 (root adapts to its presence; slot-dependent)"
+    ],
+    "value": {
+      "binds": [
+        "alert-action"
+      ],
+      "code": {
+        "component": "AlertAction",
+        "prop": "children",
+        "whenFalse": "omit <AlertAction>"
+      },
+      "default": false,
+      "label": "Show Action",
+      "type": "BOOLEAN"
+    }
+  },
+  "alert.properties.show-description": {
+    "confidence": "low",
+    "evidence": [
+      "components/ui/alert.tsx:L49-63 AlertDescription is a separate optional export"
+    ],
+    "value": {
+      "binds": [
+        "alert-description"
+      ],
+      "code": {
+        "component": "AlertDescription",
+        "prop": "children",
+        "whenFalse": "omit <AlertDescription>"
+      },
+      "default": true,
+      "label": "Show Description",
+      "type": "BOOLEAN"
+    }
+  },
+  "alert.properties.show-icon": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L6 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2 (layout adapts to icon presence; slot-dependent)"
+    ],
+    "value": {
+      "binds": [
+        "icon"
+      ],
+      "code": {
+        "prop": "children",
+        "whenFalse": "omit the leading <Icon />"
+      },
+      "default": true,
+      "label": "Show Icon",
+      "type": "BOOLEAN"
+    }
+  },
+  "alert.properties.title": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L36-47 AlertTitle renders children"
+    ],
+    "value": {
+      "binds": [
+        "alert-title"
+      ],
+      "code": {
+        "component": "AlertTitle",
+        "prop": "children"
+      },
+      "default": "Alert Title",
+      "label": "Title",
+      "type": "TEXT"
+    }
+  },
+  "alert.textStyles.alert-description": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L57 text-sm text-balance text-muted-foreground (no weight class: inherited normal)",
+      "app/globals.css:L128 html @apply font-sans"
+    ],
+    "value": {
+      "fontFamily": "font-sans",
+      "fontSize": "text-sm",
+      "fontWeight": "font-weight-normal",
+      "lineHeight": "text-sm--line-height",
+      "name": "text-sm"
+    }
+  },
+  "alert.textStyles.alert-title": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/alert.tsx:L41 font-medium",
+      "components/ui/alert.tsx:L6 root text-sm (inherited size and line height)",
+      "app/globals.css:L128 html @apply font-sans"
+    ],
+    "value": {
+      "fontFamily": "font-sans",
+      "fontSize": "text-sm",
+      "fontWeight": "font-weight-medium",
+      "lineHeight": "text-sm--line-height",
+      "name": "text-sm-medium"
+    }
+  },
+  "button.anatomy.button": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L57 data-slot=\"button\"",
+      "components/ui/button.tsx:L53 Comp = button or Slot.Root"
+    ],
+    "value": {
+      "name": "Button",
+      "order": 0,
+      "parent": null,
+      "role": "root",
+      "type": "COMPONENT"
+    }
+  },
+  "button.anatomy.icon-end": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L24 has-data-[icon=inline-end]:pr-2 (trailing icon child marked data-icon=inline-end)"
+    ],
+    "value": {
+      "name": "Icon End",
+      "order": 2,
+      "parent": "button",
+      "role": "icon",
+      "type": "INSTANCE"
+    }
+  },
+  "button.anatomy.icon-start": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L24 has-data-[icon=inline-start]:pl-2 (leading icon child marked data-icon=inline-start)",
+      "components/ui/button.tsx:L7 [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+    ],
+    "value": {
+      "name": "Icon Start",
+      "order": 0,
+      "parent": "button",
+      "role": "icon",
+      "type": "INSTANCE"
+    }
+  },
+  "button.anatomy.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L7 text-sm font-medium whitespace-nowrap (text children)"
+    ],
+    "value": {
+      "name": "Label",
+      "order": 1,
+      "parent": "button",
+      "role": "label",
+      "type": "TEXT"
+    }
+  },
+  "button.axes.aria-expanded": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L13 outline: aria-expanded:bg-muted aria-expanded:text-foreground",
+      "components/ui/button.tsx:L15 secondary: aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+      "components/ui/button.tsx:L17 ghost: aria-expanded:bg-muted aria-expanded:text-foreground",
+      "components/ui/button.tsx:L11,19,20 default/destructive/link have no aria-expanded style (renders as false; not impossible)",
+      "components/ui/button.tsx:L7 aria-[haspopup] only gates the active translate, not an axis"
+    ],
+    "value": {
+      "default": "false",
+      "label": "Expanded",
+      "values": [
+        {
+          "code": {},
+          "key": "false",
+          "label": "False"
+        },
+        {
+          "code": {
+            "aria-expanded": true
+          },
+          "key": "true",
+          "label": "True"
+        }
+      ]
+    }
+  },
+  "button.axes.aria-invalid": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L7 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 (+ dark: variants)",
+      "components/ui/button.tsx:L49 React.ComponentProps<\"button\"> passes aria-invalid through ...props"
+    ],
+    "value": {
+      "default": "false",
+      "label": "Invalid",
+      "values": [
+        {
+          "code": {},
+          "key": "false",
+          "label": "False"
+        },
+        {
+          "code": {
+            "aria-invalid": true
+          },
+          "key": "true",
+          "label": "True"
+        }
+      ]
+    }
+  },
+  "button.axes.size.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L22 variants.size",
+      "components/ui/button.tsx:L46 size = \"default\""
+    ],
+    "value": "Size"
+  },
+  "button.axes.size.values.default.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L24 size key \"default\": h-8 (between sm h-7 and lg h-9); key is 'default'"
+    ],
+    "value": "Default"
+  },
+  "button.axes.size.values.icon-lg.label": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L33 size key \"icon-lg\": size-9, icon-only counterpart of lg"
+    ],
+    "value": "Icon Large"
+  },
+  "button.axes.size.values.icon-sm.label": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L32 size key \"icon-sm\": size-7, icon-only counterpart of sm"
+    ],
+    "value": "Icon Small"
+  },
+  "button.axes.size.values.icon-xs.label": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L30 size key \"icon-xs\": size-6, icon-only counterpart of xs"
+    ],
+    "value": "Icon Extra Small"
+  },
+  "button.axes.size.values.icon.label": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L28 size key \"icon\": size-8, icon-only counterpart of default"
+    ],
+    "value": "Icon"
+  },
+  "button.axes.size.values.lg.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L27 size key \"lg\": h-9"
+    ],
+    "value": "Large"
+  },
+  "button.axes.size.values.sm.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L26 size key \"sm\": h-7"
+    ],
+    "value": "Small"
+  },
+  "button.axes.size.values.xs.label": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L25 size key \"xs\": h-6 text-xs"
+    ],
+    "value": "Extra Small"
+  },
+  "button.axes.state.values": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L11-20 hover:bg-*/hover:text-*/hover:underline on every variant",
+      "components/ui/button.tsx:L7 active:not-aria-[haspopup]:translate-y-px (active is a 1px translate only)",
+      "components/ui/button.tsx:L7 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+      "components/ui/button.tsx:L7 disabled:pointer-events-none disabled:opacity-50"
+    ],
+    "value": [
+      "enabled",
+      "hover",
+      "active",
+      "focus",
+      "disabled"
+    ]
+  },
+  "button.axes.variant.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L10 variants.variant",
+      "components/ui/button.tsx:L45 variant = \"default\""
+    ],
+    "value": "Variant"
+  },
+  "button.axes.variant.values.default.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L11 variant key \"default\""
+    ],
+    "value": "Default"
+  },
+  "button.axes.variant.values.destructive.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L19 variant key \"destructive\""
+    ],
+    "value": "Destructive"
+  },
+  "button.axes.variant.values.ghost.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L17 variant key \"ghost\""
+    ],
+    "value": "Ghost"
+  },
+  "button.axes.variant.values.link.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L20 variant key \"link\""
+    ],
+    "value": "Link"
+  },
+  "button.axes.variant.values.outline.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L13 variant key \"outline\""
+    ],
+    "value": "Outline"
+  },
+  "button.axes.variant.values.secondary.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L15 variant key \"secondary\""
+    ],
+    "value": "Secondary"
+  },
+  "button.excluded": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L7 disabled:pointer-events-none blocks hover/active while disabled, but those are values of the one State axis, so no cross-axis combination is impossible",
+      "components/ui/button.tsx:L11,19,20 aria-expanded=true is unstyled on default/destructive/link: redundant, not impossible"
+    ],
+    "value": []
+  },
+  "button.family.description": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L10-21 variants default|outline|secondary|ghost|destructive|link",
+      "components/ui/button.tsx:L22-34 sizes incl. icon*"
+    ],
+    "value": "A labelled control that triggers an action, in six visual variants and four text sizes."
+  },
+  "button.family.name": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L43 function Button",
+      "components/ui/button.tsx:L57 data-slot=\"button\""
+    ],
+    "value": "Button"
+  },
+  "button.family.split": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L24-27 text sizes: h-8/h-6/h-7/h-9 + gap + px (width hugs label)",
+      "components/ui/button.tsx:L28-33 icon sizes: size-8/size-6/size-7/size-9 (fixed square, no px)",
+      "components/ui/button.tsx:L7 [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 (icon is the only content at icon sizes)",
+      "components/ui/button.tsx:L43-63 one function and one cva serve both (single source file)"
+    ],
+    "value": {
+      "families": [
+        "button",
+        "icon-button"
+      ],
+      "reason": "The icon* sizes are a structure change: they set a fixed square (size-N) with no padding and no label, while the text sizes hug a label with h-N px-N. One Component Set has one anatomy and one width rule per node, so icon-only renders form a separate Icon Button family sharing the same variant and state styles."
+    }
+  },
+  "button.figma.componentSetName": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L43 Button"
+    ],
+    "value": "Button"
+  },
+  "button.figma.grid": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L10-21 variant axis (6 values)",
+      "components/ui/button.tsx:L7 state styles"
+    ],
+    "value": {
+      "columns": "state",
+      "rows": "variant"
+    }
+  },
+  "button.figma.page": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L43 Button"
+    ],
+    "value": "Buttons"
+  },
+  "button.icons": {
+    "confidence": "low",
+    "evidence": [
+      "components.json:L13 \"iconLibrary\": \"lucide\"",
+      "components/ui/button.tsx:L7 [&_svg] icon slot styling"
+    ],
+    "value": {
+      "default": "plus",
+      "package": "lucide-react",
+      "preferred": [
+        "plus",
+        "arrow-right",
+        "chevron-down",
+        "download",
+        "loader-circle",
+        "trash-2"
+      ]
+    }
+  },
+  "button.layout.button.alignCross": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L7 items-center"
+    ],
+    "value": "center"
+  },
+  "button.layout.button.alignMain": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L7 justify-center"
+    ],
+    "value": "center"
+  },
+  "button.layout.button.direction": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L7 inline-flex (default flex-direction row)"
+    ],
+    "value": "row"
+  },
+  "button.layout.button.height": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L24-27 h-8/h-6/h-7/h-9 definite height"
+    ],
+    "value": "fixed"
+  },
+  "button.layout.button.width": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L7 inline-flex shrink-0, no width class on text sizes",
+      "components/ui/button.tsx:L24-27 h-N px-N only"
+    ],
+    "value": "hug"
+  },
+  "button.layout.icon-end.height": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L7 [&_svg:not([class*='size-'])]:size-4"
+    ],
+    "value": "fixed"
+  },
+  "button.layout.icon-end.width": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L7 [&_svg:not([class*='size-'])]:size-4",
+      "components/ui/button.tsx:L7 [&_svg]:shrink-0"
+    ],
+    "value": "fixed"
+  },
+  "button.layout.icon-start.height": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L7 [&_svg:not([class*='size-'])]:size-4"
+    ],
+    "value": "fixed"
+  },
+  "button.layout.icon-start.width": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L7 [&_svg:not([class*='size-'])]:size-4",
+      "components/ui/button.tsx:L7 [&_svg]:shrink-0"
+    ],
+    "value": "fixed"
+  },
+  "button.layout.label.textResize": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L7 whitespace-nowrap (single-line label hugs)"
+    ],
+    "value": "width-and-height"
+  },
+  "button.properties.icon-end": {
+    "confidence": "medium",
+    "evidence": [
+      "components.json:L13 iconLibrary lucide"
+    ],
+    "value": {
+      "binds": [
+        "icon-end"
+      ],
+      "code": {
+        "prop": "children",
+        "valueFrom": "lucide-react icon component"
+      },
+      "default": "icon:default",
+      "label": "Icon End",
+      "type": "INSTANCE_SWAP"
+    }
+  },
+  "button.properties.icon-start": {
+    "confidence": "medium",
+    "evidence": [
+      "components.json:L13 iconLibrary lucide",
+      "components/ui/button.tsx:L7 [&_svg] styles any svg child"
+    ],
+    "value": {
+      "binds": [
+        "icon-start"
+      ],
+      "code": {
+        "prop": "children",
+        "valueFrom": "lucide-react icon component"
+      },
+      "default": "icon:default",
+      "label": "Icon Start",
+      "type": "INSTANCE_SWAP"
+    }
+  },
+  "button.properties.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/button.tsx:L49 React.ComponentProps<\"button\"> children rendered inside Comp"
+    ],
+    "value": {
+      "binds": [
+        "label"
+      ],
+      "code": {
+        "prop": "children"
+      },
+      "default": "Button",
+      "label": "Label",
+      "type": "TEXT"
+    }
+  },
+  "button.properties.show-icon-end": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L24-27 has-data-[icon=inline-end]:pr-* (padding adapts when present; slot-dependent)"
+    ],
+    "value": {
+      "binds": [
+        "icon-end"
+      ],
+      "code": {
+        "prop": "children",
+        "whenFalse": "omit the <Icon data-icon=\"inline-end\" /> after the label"
+      },
+      "default": false,
+      "label": "Show Icon End",
+      "type": "BOOLEAN"
+    }
+  },
+  "button.properties.show-icon-start": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L24-27 has-data-[icon=inline-start]:pl-* (padding adapts when present; slot-dependent)"
+    ],
+    "value": {
+      "binds": [
+        "icon-start"
+      ],
+      "code": {
+        "prop": "children",
+        "whenFalse": "omit the <Icon data-icon=\"inline-start\" /> before the label"
+      },
+      "default": false,
+      "label": "Show Icon Start",
+      "type": "BOOLEAN"
+    }
+  },
+  "button.textStyles.label": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/button.tsx:L7 text-sm font-medium (compiled: font-size var(--text-sm), line-height var(--text-sm--line-height), font-weight var(--font-weight-medium))",
+      "app/globals.css:L128 html @apply font-sans (inherited family)",
+      "components/ui/button.tsx:L25 xs overrides text-xs; components/ui/button.tsx:L26 sm overrides raw text-[0.8rem] with inherited line-height (not in this single entry)"
+    ],
+    "value": {
+      "fontFamily": "font-sans",
+      "fontSize": "text-sm",
+      "fontWeight": "font-weight-medium",
+      "lineHeight": "text-sm--line-height",
+      "name": "text-sm-medium"
+    }
+  },
+  "card.anatomy.card": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L11 data-slot=\"card\"",
+      "components/ui/card.tsx:L14 flex flex-col"
+    ],
+    "value": {
+      "name": "Card",
+      "order": 0,
+      "parent": null,
+      "role": "root",
+      "type": "COMPONENT"
+    }
+  },
+  "card.anatomy.card-action": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L61 data-slot=\"card-action\"",
+      "components/ui/card.tsx:L63 col-start-2 row-span-2 row-start-1 self-start justify-self-end"
+    ],
+    "value": {
+      "name": "Action",
+      "order": 1,
+      "parent": "card-header",
+      "role": "action",
+      "type": "FRAME"
+    }
+  },
+  "card.anatomy.card-content": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L74 data-slot=\"card-content\"",
+      "components/ui/card.tsx:L75 px-(--card-spacing)"
+    ],
+    "value": {
+      "name": "Content",
+      "order": 1,
+      "parent": "card",
+      "role": "content",
+      "type": "FRAME"
+    }
+  },
+  "card.anatomy.card-description": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L51 data-slot=\"card-description\"",
+      "components/ui/card.tsx:L52 text-sm text-muted-foreground"
+    ],
+    "value": {
+      "name": "Description",
+      "order": 1,
+      "parent": "card-header-text",
+      "role": "description",
+      "type": "TEXT"
+    }
+  },
+  "card.anatomy.card-footer": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L84 data-slot=\"card-footer\"",
+      "components/ui/card.tsx:L86 flex items-center rounded-b-xl border-t bg-muted/50"
+    ],
+    "value": {
+      "name": "Footer",
+      "order": 2,
+      "parent": "card",
+      "role": "footer",
+      "type": "FRAME"
+    }
+  },
+  "card.anatomy.card-header": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L25 data-slot=\"card-header\""
+    ],
+    "value": {
+      "name": "Header",
+      "order": 0,
+      "parent": "card",
+      "role": "header",
+      "type": "FRAME"
+    }
+  },
+  "card.anatomy.card-header-text": {
+    "confidence": "low",
+    "evidence": [
+      "components/ui/card.tsx:L27 grid has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto]: title and description stack in column 1",
+      "components/ui/card.tsx:L63 CardAction col-start-2 row-span-2 row-start-1: action spans both rows in column 2 (wrapper added to express the grid as Auto Layout)"
+    ],
+    "value": {
+      "name": "Header Text",
+      "order": 0,
+      "parent": "card-header",
+      "role": "title-group",
+      "type": "FRAME"
+    }
+  },
+  "card.anatomy.card-title": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L38 data-slot=\"card-title\"",
+      "components/ui/card.tsx:L40 font-heading text-base leading-snug font-medium"
+    ],
+    "value": {
+      "name": "Title",
+      "order": 0,
+      "parent": "card-header-text",
+      "role": "title",
+      "type": "TEXT"
+    }
+  },
+  "card.axes.size.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L6 size = \"default\"",
+      "components/ui/card.tsx:L8 size?: \"default\" | \"sm\""
+    ],
+    "value": "Size"
+  },
+  "card.axes.size.values.default.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L8 \"default\" (--card-spacing: spacing(4))"
+    ],
+    "value": "Default"
+  },
+  "card.axes.size.values.sm.label": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L8 \"sm\" (--card-spacing: spacing(3), title text-sm)"
+    ],
+    "value": "Small"
+  },
+  "card.axes.state.values": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L14-86 no hover:, focus-visible:, active: or disabled: classes on any card slot"
+    ],
+    "value": [
+      "enabled"
+    ]
+  },
+  "card.excluded": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L8 size is the only axis; both values combine with every slot"
+    ],
+    "value": []
+  },
+  "card.family.description": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L94-102 exports Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent"
+    ],
+    "value": "A bordered container that groups related content with an optional header, title, description, action, body and footer."
+  },
+  "card.family.name": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L4 function Card",
+      "components/ui/card.tsx:L11 data-slot=\"card\""
+    ],
+    "value": "Card"
+  },
+  "card.family.split": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L14 group/card [--card-spacing:--spacing(4)] data-[size=sm]:[--card-spacing:--spacing(3)]",
+      "components/ui/card.tsx:L27,75,86 children pad with px-(--card-spacing)/p-(--card-spacing)",
+      "components/ui/card.tsx:L40 CardTitle group-data-[size=sm]/card:text-sm",
+      "components/ui/card.tsx:L14 has-data-[slot=card-footer]:pb-0 (slot-dependent)"
+    ],
+    "value": {
+      "families": [
+        "card"
+      ],
+      "reason": "CardHeader, CardTitle, CardDescription, CardAction, CardContent and CardFooter are anatomy of one Card: they read the parent's --card-spacing and group/card size, and the Card styles itself on their presence."
+    }
+  },
+  "card.figma.componentSetName": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L4 Card"
+    ],
+    "value": "Card"
+  },
+  "card.figma.grid": {
+    "confidence": "low",
+    "evidence": [
+      "components/ui/card.tsx:L8 size is the only code axis",
+      "components/ui/card.tsx:L14-86 no hover/focus/active/disabled classes: state holds only enabled"
+    ],
+    "value": {
+      "columns": "size",
+      "rows": "state"
+    }
+  },
+  "card.figma.page": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L4 Card"
+    ],
+    "value": "Cards"
+  },
+  "card.icons": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L4-92 no svg or icon styling in any card slot"
+    ],
+    "value": null
+  },
+  "card.layout.card-action.height": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L63 self-start (does not stretch)"
+    ],
+    "value": "hug"
+  },
+  "card.layout.card-action.width": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L27 grid-cols-[1fr_auto]: action column is auto"
+    ],
+    "value": "hug"
+  },
+  "card.layout.card-content.direction": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L75 block div, children stack"
+    ],
+    "value": "column"
+  },
+  "card.layout.card-content.height": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L75 no height class"
+    ],
+    "value": "hug"
+  },
+  "card.layout.card-content.width": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L14 parent flex-col with default stretch"
+    ],
+    "value": "fill"
+  },
+  "card.layout.card-description.textResize": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L52 no whitespace-nowrap: wraps"
+    ],
+    "value": "height"
+  },
+  "card.layout.card-description.width": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L27 grid column 1fr"
+    ],
+    "value": "fill"
+  },
+  "card.layout.card-footer.alignCross": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L86 items-center"
+    ],
+    "value": "center"
+  },
+  "card.layout.card-footer.alignMain": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L86 no justify-* class (flex-start)"
+    ],
+    "value": "start"
+  },
+  "card.layout.card-footer.direction": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L86 flex (row)"
+    ],
+    "value": "row"
+  },
+  "card.layout.card-footer.height": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L86 no height class"
+    ],
+    "value": "hug"
+  },
+  "card.layout.card-footer.width": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L14 parent flex-col with default stretch"
+    ],
+    "value": "fill"
+  },
+  "card.layout.card-header-text.direction": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L27 grid-rows-[auto_auto] stacks title over description"
+    ],
+    "value": "column"
+  },
+  "card.layout.card-header-text.height": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L27 auto-rows-min"
+    ],
+    "value": "hug"
+  },
+  "card.layout.card-header-text.width": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L27 grid-cols-[1fr_auto]: column 1 is 1fr"
+    ],
+    "value": "fill"
+  },
+  "card.layout.card-header.alignCross": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L27 items-start",
+      "components/ui/card.tsx:L63 self-start"
+    ],
+    "value": "start"
+  },
+  "card.layout.card-header.direction": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L27 grid has-data-[slot=card-action]:grid-cols-[1fr_auto] (two columns when an action is present)"
+    ],
+    "value": "row"
+  },
+  "card.layout.card-header.height": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L27 auto-rows-min"
+    ],
+    "value": "hug"
+  },
+  "card.layout.card-header.width": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L14 parent flex-col with default align-items stretch"
+    ],
+    "value": "fill"
+  },
+  "card.layout.card-title.textResize": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L40 no whitespace-nowrap: title wraps in a constrained width"
+    ],
+    "value": "height"
+  },
+  "card.layout.card-title.width": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L27 grid column 1fr"
+    ],
+    "value": "fill"
+  },
+  "card.layout.card.direction": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L14 flex flex-col"
+    ],
+    "value": "column"
+  },
+  "card.layout.card.height": {
+    "confidence": "high",
+    "evidence": [
+      "components/ui/card.tsx:L14 no height class; py-(--card-spacing) around content"
+    ],
+    "value": "hug"
+  },
+  "card.layout.card.width": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L14 flex (block-level, no width class: stretches to its container)"
+    ],
+    "value": "fill"
+  },
+  "card.properties.description": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L48-56 CardDescription renders children"
+    ],
+    "value": {
+      "binds": [
+        "card-description"
+      ],
+      "code": {
+        "component": "CardDescription",
+        "prop": "children"
+      },
+      "default": "Card Description",
+      "label": "Description",
+      "type": "TEXT"
+    }
+  },
+  "card.properties.show-action": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L27 has-data-[slot=card-action]:grid-cols-[1fr_auto] (header adapts to its presence; slot-dependent)"
+    ],
+    "value": {
+      "binds": [
+        "card-action"
+      ],
+      "code": {
+        "component": "CardAction",
+        "prop": "children",
+        "whenFalse": "omit <CardAction>"
+      },
+      "default": false,
+      "label": "Show Action",
+      "type": "BOOLEAN"
+    }
+  },
+  "card.properties.show-description": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L27 has-data-[slot=card-description]:grid-rows-[auto_auto] (header adapts to its presence; slot-dependent)"
+    ],
+    "value": {
+      "binds": [
+        "card-description"
+      ],
+      "code": {
+        "component": "CardDescription",
+        "prop": "children",
+        "whenFalse": "omit <CardDescription>"
+      },
+      "default": true,
+      "label": "Show Description",
+      "type": "BOOLEAN"
+    }
+  },
+  "card.properties.show-footer": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L14 has-data-[slot=card-footer]:pb-0 (card adapts to its presence; slot-dependent)"
+    ],
+    "value": {
+      "binds": [
+        "card-footer"
+      ],
+      "code": {
+        "component": "CardFooter",
+        "prop": "children",
+        "whenFalse": "omit <CardFooter>"
+      },
+      "default": true,
+      "label": "Show Footer",
+      "type": "BOOLEAN"
+    }
+  },
+  "card.properties.title": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L35-46 CardTitle renders children"
+    ],
+    "value": {
+      "binds": [
+        "card-title"
+      ],
+      "code": {
+        "component": "CardTitle",
+        "prop": "children"
+      },
+      "default": "Card Title",
+      "label": "Title",
+      "type": "TEXT"
+    }
+  },
+  "card.textStyles.card-description": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L52 text-sm text-muted-foreground (no weight class: inherited normal)",
+      "app/globals.css:L128 html @apply font-sans"
+    ],
+    "value": {
+      "fontFamily": "font-sans",
+      "fontSize": "text-sm",
+      "fontWeight": "font-weight-normal",
+      "lineHeight": "text-sm--line-height",
+      "name": "text-sm"
+    }
+  },
+  "card.textStyles.card-title": {
+    "confidence": "medium",
+    "evidence": [
+      "components/ui/card.tsx:L40 font-heading text-base leading-snug font-medium",
+      "app/globals.css:L12 --font-heading: var(--font-sans)",
+      "components/ui/card.tsx:L40 group-data-[size=sm]/card:text-sm overrides fontSize on size=sm (not in this single entry)"
+    ],
+    "value": {
+      "fontFamily": "font-heading",
+      "fontSize": "text-base",
+      "fontWeight": "font-weight-medium",
+      "lineHeight": "leading-snug",
+      "name": "heading-base-medium"
+    }
+  }
+}

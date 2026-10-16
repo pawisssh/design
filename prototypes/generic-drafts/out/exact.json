@@ -1,0 +1,699 @@
+{
+ "source": {
+  "codeLibrary": "shadcn/ui (radix-nova, installed copy)",
+  "adapter": "generic",
+  "files": {
+   "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
+   "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
+   "components/ui/alert.tsx": "sha256:f253568242c1c69b343f12474002fdbe229f603158171c59e21c491ab79f2e6e",
+   "components/ui/button.tsx": "sha256:08e5f87833c5db8436e89337ebde0f776bcdbf649d3de69fb89be6441ca2e366",
+   "components/ui/card.tsx": "sha256:8ad3a18d36bda0598dc0e9aa96ea22854944d5443ee4946f1d173815e115375f"
+  },
+  "snapshotId": "sha256:b45a820359d91bb8863df031c97334979db533dcc1bcb9d682d2ccba2107999e",
+  "packages": {
+   "tailwindcss": "4.3.3",
+   "typescript": "6.0.3"
+  }
+ },
+ "modes": {
+  "light": ":root",
+  "dark": ".dark"
+ },
+ "tokens": {
+  "accent": {
+   "light": "oklch(0.97 0 0)",
+   "dark": "oklch(0.269 0 0)",
+   "codeSyntax": "var(--accent)"
+  },
+  "accent-foreground": {
+   "light": "oklch(0.205 0 0)",
+   "dark": "oklch(0.985 0 0)",
+   "codeSyntax": "var(--accent-foreground)"
+  },
+  "background": {
+   "light": "oklch(1 0 0)",
+   "dark": "oklch(0.145 0 0)",
+   "codeSyntax": "var(--background)"
+  },
+  "border": {
+   "light": "oklch(0.922 0 0)",
+   "dark": "oklch(1 0 0 / 10%)",
+   "codeSyntax": "var(--border)"
+  },
+  "card": {
+   "light": "oklch(1 0 0)",
+   "dark": "oklch(0.205 0 0)",
+   "codeSyntax": "var(--card)"
+  },
+  "card-foreground": {
+   "light": "oklch(0.145 0 0)",
+   "dark": "oklch(0.985 0 0)",
+   "codeSyntax": "var(--card-foreground)"
+  },
+  "chart-1": {
+   "light": "oklch(0.87 0 0)",
+   "dark": "oklch(0.87 0 0)",
+   "codeSyntax": "var(--chart-1)"
+  },
+  "chart-2": {
+   "light": "oklch(0.556 0 0)",
+   "dark": "oklch(0.556 0 0)",
+   "codeSyntax": "var(--chart-2)"
+  },
+  "chart-3": {
+   "light": "oklch(0.439 0 0)",
+   "dark": "oklch(0.439 0 0)",
+   "codeSyntax": "var(--chart-3)"
+  },
+  "chart-4": {
+   "light": "oklch(0.371 0 0)",
+   "dark": "oklch(0.371 0 0)",
+   "codeSyntax": "var(--chart-4)"
+  },
+  "chart-5": {
+   "light": "oklch(0.269 0 0)",
+   "dark": "oklch(0.269 0 0)",
+   "codeSyntax": "var(--chart-5)"
+  },
+  "destructive": {
+   "light": "oklch(0.577 0.245 27.325)",
+   "dark": "oklch(0.704 0.191 22.216)",
+   "codeSyntax": "var(--destructive)"
+  },
+  "foreground": {
+   "light": "oklch(0.145 0 0)",
+   "dark": "oklch(0.985 0 0)",
+   "codeSyntax": "var(--foreground)"
+  },
+  "input": {
+   "light": "oklch(0.922 0 0)",
+   "dark": "oklch(1 0 0 / 15%)",
+   "codeSyntax": "var(--input)"
+  },
+  "muted": {
+   "light": "oklch(0.97 0 0)",
+   "dark": "oklch(0.269 0 0)",
+   "codeSyntax": "var(--muted)"
+  },
+  "muted-foreground": {
+   "light": "oklch(0.556 0 0)",
+   "dark": "oklch(0.708 0 0)",
+   "codeSyntax": "var(--muted-foreground)"
+  },
+  "popover": {
+   "light": "oklch(1 0 0)",
+   "dark": "oklch(0.205 0 0)",
+   "codeSyntax": "var(--popover)"
+  },
+  "popover-foreground": {
+   "light": "oklch(0.145 0 0)",
+   "dark": "oklch(0.985 0 0)",
+   "codeSyntax": "var(--popover-foreground)"
+  },
+  "primary": {
+   "light": "oklch(0.205 0 0)",
+   "dark": "oklch(0.922 0 0)",
+   "codeSyntax": "var(--primary)"
+  },
+  "primary-foreground": {
+   "light": "oklch(0.985 0 0)",
+   "dark": "oklch(0.205 0 0)",
+   "codeSyntax": "var(--primary-foreground)"
+  },
+  "radius": {
+   "light": "0.625rem",
+   "dark": null,
+   "codeSyntax": "var(--radius)"
+  },
+  "ring": {
+   "light": "oklch(0.708 0 0)",
+   "dark": "oklch(0.556 0 0)",
+   "codeSyntax": "var(--ring)"
+  },
+  "secondary": {
+   "light": "oklch(0.97 0 0)",
+   "dark": "oklch(0.269 0 0)",
+   "codeSyntax": "var(--secondary)"
+  },
+  "secondary-foreground": {
+   "light": "oklch(0.205 0 0)",
+   "dark": "oklch(0.985 0 0)",
+   "codeSyntax": "var(--secondary-foreground)"
+  },
+  "sidebar": {
+   "light": "oklch(0.985 0 0)",
+   "dark": "oklch(0.205 0 0)",
+   "codeSyntax": "var(--sidebar)"
+  },
+  "sidebar-accent": {
+   "light": "oklch(0.97 0 0)",
+   "dark": "oklch(0.269 0 0)",
+   "codeSyntax": "var(--sidebar-accent)"
+  },
+  "sidebar-accent-foreground": {
+   "light": "oklch(0.205 0 0)",
+   "dark": "oklch(0.985 0 0)",
+   "codeSyntax": "var(--sidebar-accent-foreground)"
+  },
+  "sidebar-border": {
+   "light": "oklch(0.922 0 0)",
+   "dark": "oklch(1 0 0 / 10%)",
+   "codeSyntax": "var(--sidebar-border)"
+  },
+  "sidebar-foreground": {
+   "light": "oklch(0.145 0 0)",
+   "dark": "oklch(0.985 0 0)",
+   "codeSyntax": "var(--sidebar-foreground)"
+  },
+  "sidebar-primary": {
+   "light": "oklch(0.205 0 0)",
+   "dark": "oklch(0.488 0.243 264.376)",
+   "codeSyntax": "var(--sidebar-primary)"
+  },
+  "sidebar-primary-foreground": {
+   "light": "oklch(0.985 0 0)",
+   "dark": "oklch(0.985 0 0)",
+   "codeSyntax": "var(--sidebar-primary-foreground)"
+  },
+  "sidebar-ring": {
+   "light": "oklch(0.708 0 0)",
+   "dark": "oklch(0.556 0 0)",
+   "codeSyntax": "var(--sidebar-ring)"
+  }
+ },
+ "themeInline": {
+  "color-background": "var(--background)",
+  "color-foreground": "var(--foreground)",
+  "font-sans": "var(--font-sans)",
+  "font-mono": "var(--font-geist-mono)",
+  "font-heading": "var(--font-sans)",
+  "color-sidebar-ring": "var(--sidebar-ring)",
+  "color-sidebar-border": "var(--sidebar-border)",
+  "color-sidebar-accent-foreground": "var(--sidebar-accent-foreground)",
+  "color-sidebar-accent": "var(--sidebar-accent)",
+  "color-sidebar-primary-foreground": "var(--sidebar-primary-foreground)",
+  "color-sidebar-primary": "var(--sidebar-primary)",
+  "color-sidebar-foreground": "var(--sidebar-foreground)",
+  "color-sidebar": "var(--sidebar)",
+  "color-chart-5": "var(--chart-5)",
+  "color-chart-4": "var(--chart-4)",
+  "color-chart-3": "var(--chart-3)",
+  "color-chart-2": "var(--chart-2)",
+  "color-chart-1": "var(--chart-1)",
+  "color-ring": "var(--ring)",
+  "color-input": "var(--input)",
+  "color-border": "var(--border)",
+  "color-destructive": "var(--destructive)",
+  "color-accent-foreground": "var(--accent-foreground)",
+  "color-accent": "var(--accent)",
+  "color-muted-foreground": "var(--muted-foreground)",
+  "color-muted": "var(--muted)",
+  "color-secondary-foreground": "var(--secondary-foreground)",
+  "color-secondary": "var(--secondary)",
+  "color-primary-foreground": "var(--primary-foreground)",
+  "color-primary": "var(--primary)",
+  "color-popover-foreground": "var(--popover-foreground)",
+  "color-popover": "var(--popover)",
+  "color-card-foreground": "var(--card-foreground)",
+  "color-card": "var(--card)",
+  "radius-sm": "calc(var(--radius) * 0.6)",
+  "radius-md": "calc(var(--radius) * 0.8)",
+  "radius-lg": "var(--radius)",
+  "radius-xl": "calc(var(--radius) * 1.4)",
+  "radius-2xl": "calc(var(--radius) * 1.8)",
+  "radius-3xl": "calc(var(--radius) * 2.2)",
+  "radius-4xl": "calc(var(--radius) * 2.6)"
+ },
+ "components": {
+  "alert": {
+   "file": "components/ui/alert.tsx",
+   "cvas": {
+    "alertVariants": {
+     "base": "group/alert relative grid w-full gap-0.5 rounded-lg border px-2.5 py-2 text-left text-sm has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current *:[svg:not([class*='size-'])]:size-4",
+     "baseLine": 6,
+     "variants": {
+      "variant": {
+       "default": {
+        "classes": "bg-card text-card-foreground",
+        "line": 10
+       },
+       "destructive": {
+        "classes": "bg-card text-destructive *:data-[slot=alert-description]:text-destructive/90 *:[svg]:text-current",
+        "line": 12
+       }
+      }
+     },
+     "defaultVariants": {
+      "variant": "default"
+     },
+     "compoundVariants": null
+    }
+   },
+   "slots": [
+    {
+     "name": "Alert",
+     "line": 21,
+     "props": {},
+     "defaults": {
+      "className": null,
+      "variant": null
+     },
+     "element": "div",
+     "dataSlot": "alert",
+     "attrs": {
+      "role": "alert"
+     },
+     "classes": [],
+     "cva": "alertVariants"
+    },
+    {
+     "name": "AlertTitle",
+     "line": 36,
+     "props": {},
+     "defaults": {
+      "className": null
+     },
+     "element": "div",
+     "dataSlot": "alert-title",
+     "attrs": {},
+     "classes": [
+      "font-medium group-has-[>svg]/alert:col-start-2 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground"
+     ],
+     "cva": null
+    },
+    {
+     "name": "AlertDescription",
+     "line": 49,
+     "props": {},
+     "defaults": {
+      "className": null
+     },
+     "element": "div",
+     "dataSlot": "alert-description",
+     "attrs": {},
+     "classes": [
+      "text-sm text-balance text-muted-foreground md:text-pretty [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4"
+     ],
+     "cva": null
+    },
+    {
+     "name": "AlertAction",
+     "line": 65,
+     "props": {},
+     "defaults": {
+      "className": null
+     },
+     "element": "div",
+     "dataSlot": "alert-action",
+     "attrs": {},
+     "classes": [
+      "absolute top-2 right-2"
+     ],
+     "cva": null
+    }
+   ]
+  },
+  "button": {
+   "file": "components/ui/button.tsx",
+   "cvas": {
+    "buttonVariants": {
+     "base": "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+     "baseLine": 7,
+     "variants": {
+      "variant": {
+       "default": {
+        "classes": "bg-primary text-primary-foreground hover:bg-primary/80",
+        "line": 11
+       },
+       "outline": {
+        "classes": "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+        "line": 13
+       },
+       "secondary": {
+        "classes": "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+        "line": 15
+       },
+       "ghost": {
+        "classes": "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+        "line": 17
+       },
+       "destructive": {
+        "classes": "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+        "line": 19
+       },
+       "link": {
+        "classes": "text-primary underline-offset-4 hover:underline",
+        "line": 20
+       }
+      },
+      "size": {
+       "default": {
+        "classes": "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        "line": 24
+       },
+       "xs": {
+        "classes": "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
+        "line": 25
+       },
+       "sm": {
+        "classes": "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+        "line": 26
+       },
+       "lg": {
+        "classes": "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        "line": 27
+       },
+       "icon": {
+        "classes": "size-8",
+        "line": 28
+       },
+       "icon-xs": {
+        "classes": "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
+        "line": 30
+       },
+       "icon-sm": {
+        "classes": "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
+        "line": 32
+       },
+       "icon-lg": {
+        "classes": "size-9",
+        "line": 33
+       }
+      }
+     },
+     "defaultVariants": {
+      "variant": "default",
+      "size": "default"
+     },
+     "compoundVariants": null
+    }
+   },
+   "slots": [
+    {
+     "name": "Button",
+     "line": 43,
+     "props": {
+      "asChild": "boolean"
+     },
+     "defaults": {
+      "className": null,
+      "variant": "default",
+      "size": "default",
+      "asChild": "false"
+     },
+     "element": "Comp",
+     "dataSlot": "button",
+     "attrs": {
+      "data-variant": "{variant}",
+      "data-size": "{size}"
+     },
+     "classes": [],
+     "cva": "buttonVariants"
+    }
+   ]
+  },
+  "card": {
+   "file": "components/ui/card.tsx",
+   "cvas": {},
+   "slots": [
+    {
+     "name": "Card",
+     "line": 4,
+     "props": {
+      "size": [
+       "default",
+       "sm"
+      ]
+     },
+     "defaults": {
+      "className": null,
+      "size": "default"
+     },
+     "element": "div",
+     "dataSlot": "card",
+     "attrs": {
+      "data-size": "{size}"
+     },
+     "classes": [
+      "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl"
+     ],
+     "cva": null
+    },
+    {
+     "name": "CardHeader",
+     "line": 22,
+     "props": {},
+     "defaults": {
+      "className": null
+     },
+     "element": "div",
+     "dataSlot": "card-header",
+     "attrs": {},
+     "classes": [
+      "group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)"
+     ],
+     "cva": null
+    },
+    {
+     "name": "CardTitle",
+     "line": 35,
+     "props": {},
+     "defaults": {
+      "className": null
+     },
+     "element": "div",
+     "dataSlot": "card-title",
+     "attrs": {},
+     "classes": [
+      "font-heading text-base leading-snug font-medium group-data-[size=sm]/card:text-sm"
+     ],
+     "cva": null
+    },
+    {
+     "name": "CardDescription",
+     "line": 48,
+     "props": {},
+     "defaults": {
+      "className": null
+     },
+     "element": "div",
+     "dataSlot": "card-description",
+     "attrs": {},
+     "classes": [
+      "text-sm text-muted-foreground"
+     ],
+     "cva": null
+    },
+    {
+     "name": "CardAction",
+     "line": 58,
+     "props": {},
+     "defaults": {
+      "className": null
+     },
+     "element": "div",
+     "dataSlot": "card-action",
+     "attrs": {},
+     "classes": [
+      "col-start-2 row-span-2 row-start-1 self-start justify-self-end"
+     ],
+     "cva": null
+    },
+    {
+     "name": "CardContent",
+     "line": 71,
+     "props": {},
+     "defaults": {
+      "className": null
+     },
+     "element": "div",
+     "dataSlot": "card-content",
+     "attrs": {},
+     "classes": [
+      "px-(--card-spacing)"
+     ],
+     "cva": null
+    },
+    {
+     "name": "CardFooter",
+     "line": 81,
+     "props": {},
+     "defaults": {
+      "className": null
+     },
+     "element": "div",
+     "dataSlot": "card-footer",
+     "attrs": {},
+     "classes": [
+      "flex items-center rounded-b-xl border-t bg-muted/50 p-(--card-spacing)"
+     ],
+     "cva": null
+    }
+   ]
+  }
+ },
+ "compiled": {
+  "*:[img:first-child]:rounded-t-xl": "@layer utilities { :is(.\\*\\:\\[img\\:first-child\\]\\:rounded-t-xl > *):is(img:first-child) { border-top-left-radius: calc(var(--radius) * 1.4); border-top-right-radius: calc(var(--radius) * 1.4); } }",
+  "*:[img:last-child]:rounded-b-xl": "@layer utilities { :is(.\\*\\:\\[img\\:last-child\\]\\:rounded-b-xl > *):is(img:last-child) { border-bottom-right-radius: calc(var(--radius) * 1.4); border-bottom-left-radius: calc(var(--radius) * 1.4); } }",
+  "*:[svg:not([class*='size-'])]:size-4": "@layer utilities { :is(.\\*\\:\\[svg\\:not\\(\\[class\\*\\=\\'size-\\'\\]\\)\\]\\:size-4 > *):is(svg:not([class*='size-'])) { width: calc(var(--spacing) * 4); height: calc(var(--spacing) * 4); } }",
+  "*:[svg]:row-span-2": "@layer utilities { :is(.\\*\\:\\[svg\\]\\:row-span-2 > *):is(svg) { grid-row: span 2 / span 2; } }",
+  "*:[svg]:text-current": "@layer utilities { :is(.\\*\\:\\[svg\\]\\:text-current > *):is(svg) { color: currentcolor; } }",
+  "*:[svg]:translate-y-0.5": "@layer utilities { :is(.\\*\\:\\[svg\\]\\:translate-y-0\\.5 > *):is(svg) { --tw-translate-y: calc(var(--spacing) * 0.5); translate: var(--tw-translate-x) var(--tw-translate-y); } }",
+  "*:data-[slot=alert-description]:text-destructive/90": "@layer utilities { :is(.\\*\\:data-\\[slot\\=alert-description\\]\\:text-destructive\\/90 > *)[data-slot=\"alert-description\"] { color: var(--destructive); @supports (color: color-mix(in lab, red, red)) { color: color-mix(in oklab, var(--destructive) 90%, transparent); } } }",
+  "@container/card-header": "@layer utilities { .\\@container\\/card-header { container-type: inline-size; container-name: card-header; } }",
+  "[&_a]:hover:text-foreground": "@layer utilities { @media (hover: hover) { .\\[\\&_a\\]\\:hover\\:text-foreground a:hover { color: var(--foreground); } } }",
+  "[&_a]:underline": "@layer utilities { .\\[\\&_a\\]\\:underline a { text-decoration-line: underline; } }",
+  "[&_a]:underline-offset-3": "@layer utilities { .\\[\\&_a\\]\\:underline-offset-3 a { text-underline-offset: 3px; } }",
+  "[&_p:not(:last-child)]:mb-4": "@layer utilities { .\\[\\&_p\\:not\\(\\:last-child\\)\\]\\:mb-4 p:not(:last-child) { margin-bottom: calc(var(--spacing) * 4); } }",
+  "[&_svg:not([class*='size-'])]:size-3": "@layer utilities { .\\[\\&_svg\\:not\\(\\[class\\*\\=\\'size-\\'\\]\\)\\]\\:size-3 svg:not([class*='size-']) { width: calc(var(--spacing) * 3); height: calc(var(--spacing) * 3); } }",
+  "[&_svg:not([class*='size-'])]:size-3.5": "@layer utilities { .\\[\\&_svg\\:not\\(\\[class\\*\\=\\'size-\\'\\]\\)\\]\\:size-3\\.5 svg:not([class*='size-']) { width: calc(var(--spacing) * 3.5); height: calc(var(--spacing) * 3.5); } }",
+  "[&_svg:not([class*='size-'])]:size-4": "@layer utilities { .\\[\\&_svg\\:not\\(\\[class\\*\\=\\'size-\\'\\]\\)\\]\\:size-4 svg:not([class*='size-']) { width: calc(var(--spacing) * 4); height: calc(var(--spacing) * 4); } }",
+  "[&_svg]:pointer-events-none": "@layer utilities { .\\[\\&_svg\\]\\:pointer-events-none svg { pointer-events: none; } }",
+  "[&_svg]:shrink-0": "@layer utilities { .\\[\\&_svg\\]\\:shrink-0 svg { flex-shrink: 0; } }",
+  "[--card-spacing:--spacing(4)]": "@layer utilities { .\\[--card-spacing\\:--spacing\\(4\\)\\] { --card-spacing: calc(var(--spacing) * 4); } }",
+  "[.border-b]:pb-(--card-spacing)": "@layer utilities { .\\[\\.border-b\\]\\:pb-\\(--card-spacing\\):is(.border-b) { padding-bottom: var(--card-spacing); } }",
+  "absolute": "@layer utilities { .absolute { position: absolute; } }",
+  "active:not-aria-[haspopup]:translate-y-px": "@layer utilities { .active\\:not-aria-\\[haspopup\\]\\:translate-y-px:active:not([aria-haspopup]) { --tw-translate-y: 1px; translate: var(--tw-translate-x) var(--tw-translate-y); } }",
+  "aria-expanded:bg-muted": "@layer utilities { .aria-expanded\\:bg-muted[aria-expanded=\"true\"] { background-color: var(--muted); } }",
+  "aria-expanded:bg-secondary": "@layer utilities { .aria-expanded\\:bg-secondary[aria-expanded=\"true\"] { background-color: var(--secondary); } }",
+  "aria-expanded:text-foreground": "@layer utilities { .aria-expanded\\:text-foreground[aria-expanded=\"true\"] { color: var(--foreground); } }",
+  "aria-expanded:text-secondary-foreground": "@layer utilities { .aria-expanded\\:text-secondary-foreground[aria-expanded=\"true\"] { color: var(--secondary-foreground); } }",
+  "aria-invalid:border-destructive": "@layer utilities { .aria-invalid\\:border-destructive[aria-invalid=\"true\"] { border-color: var(--destructive); } }",
+  "aria-invalid:ring-3": "@layer utilities { .aria-invalid\\:ring-3[aria-invalid=\"true\"] { --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); } }",
+  "aria-invalid:ring-destructive/20": "@layer utilities { .aria-invalid\\:ring-destructive\\/20[aria-invalid=\"true\"] { --tw-ring-color: var(--destructive); @supports (color: color-mix(in lab, red, red)) { --tw-ring-color: color-mix(in oklab, var(--destructive) 20%, transparent); } } }",
+  "auto-rows-min": "@layer utilities { .auto-rows-min { grid-auto-rows: min-content; } }",
+  "bg-background": "@layer utilities { .bg-background { background-color: var(--background); } }",
+  "bg-card": "@layer utilities { .bg-card { background-color: var(--card); } }",
+  "bg-clip-padding": "@layer utilities { .bg-clip-padding { background-clip: padding-box; } }",
+  "bg-destructive/10": "@layer utilities { .bg-destructive\\/10 { background-color: var(--destructive); @supports (color: color-mix(in lab, red, red)) { background-color: color-mix(in oklab, var(--destructive) 10%, transparent); } } }",
+  "bg-muted/50": "@layer utilities { .bg-muted\\/50 { background-color: var(--muted); @supports (color: color-mix(in lab, red, red)) { background-color: color-mix(in oklab, var(--muted) 50%, transparent); } } }",
+  "bg-primary": "@layer utilities { .bg-primary { background-color: var(--primary); } }",
+  "bg-secondary": "@layer utilities { .bg-secondary { background-color: var(--secondary); } }",
+  "border": "@layer utilities { .border { border-style: var(--tw-border-style); border-width: 1px; } }",
+  "border-border": "@layer utilities { .border-border { border-color: var(--border); } }",
+  "border-t": "@layer utilities { .border-t { border-top-style: var(--tw-border-style); border-top-width: 1px; } }",
+  "border-transparent": "@layer utilities { .border-transparent { border-color: transparent; } }",
+  "col-start-2": "@layer utilities { .col-start-2 { grid-column-start: 2; } }",
+  "dark:aria-invalid:border-destructive/50": "@layer utilities { .dark\\:aria-invalid\\:border-destructive\\/50:is(.dark *)[aria-invalid=\"true\"] { border-color: var(--destructive); @supports (color: color-mix(in lab, red, red)) { border-color: color-mix(in oklab, var(--destructive) 50%, transparent); } } }",
+  "dark:aria-invalid:ring-destructive/40": "@layer utilities { .dark\\:aria-invalid\\:ring-destructive\\/40:is(.dark *)[aria-invalid=\"true\"] { --tw-ring-color: var(--destructive); @supports (color: color-mix(in lab, red, red)) { --tw-ring-color: color-mix(in oklab, var(--destructive) 40%, transparent); } } }",
+  "dark:bg-destructive/20": "@layer utilities { .dark\\:bg-destructive\\/20:is(.dark *) { background-color: var(--destructive); @supports (color: color-mix(in lab, red, red)) { background-color: color-mix(in oklab, var(--destructive) 20%, transparent); } } }",
+  "dark:bg-input/30": "@layer utilities { .dark\\:bg-input\\/30:is(.dark *) { background-color: var(--input); @supports (color: color-mix(in lab, red, red)) { background-color: color-mix(in oklab, var(--input) 30%, transparent); } } }",
+  "dark:border-input": "@layer utilities { .dark\\:border-input:is(.dark *) { border-color: var(--input); } }",
+  "dark:focus-visible:ring-destructive/40": "@layer utilities { .dark\\:focus-visible\\:ring-destructive\\/40:is(.dark *):focus-visible { --tw-ring-color: var(--destructive); @supports (color: color-mix(in lab, red, red)) { --tw-ring-color: color-mix(in oklab, var(--destructive) 40%, transparent); } } }",
+  "dark:hover:bg-destructive/30": "@layer utilities { @media (hover: hover) { .dark\\:hover\\:bg-destructive\\/30:is(.dark *):hover { background-color: var(--destructive); } @supports (color: color-mix(in lab, red, red)) { .dark\\:hover\\:bg-destructive\\/30:is(.dark *):hover { background-color: color-mix(in oklab, var(--destructive) 30%, transparent); } } } }",
+  "dark:hover:bg-input/50": "@layer utilities { @media (hover: hover) { .dark\\:hover\\:bg-input\\/50:is(.dark *):hover { background-color: var(--input); } @supports (color: color-mix(in lab, red, red)) { .dark\\:hover\\:bg-input\\/50:is(.dark *):hover { background-color: color-mix(in oklab, var(--input) 50%, transparent); } } } }",
+  "dark:hover:bg-muted/50": "@layer utilities { @media (hover: hover) { .dark\\:hover\\:bg-muted\\/50:is(.dark *):hover { background-color: var(--muted); } @supports (color: color-mix(in lab, red, red)) { .dark\\:hover\\:bg-muted\\/50:is(.dark *):hover { background-color: color-mix(in oklab, var(--muted) 50%, transparent); } } } }",
+  "data-[size=sm]:[--card-spacing:--spacing(3)]": "@layer utilities { .data-\\[size\\=sm\\]\\:\\[--card-spacing\\:--spacing\\(3\\)\\][data-size=\"sm\"] { --card-spacing: calc(var(--spacing) * 3); } }",
+  "data-[size=sm]:has-data-[slot=card-footer]:pb-0": "@layer utilities { .data-\\[size\\=sm\\]\\:has-data-\\[slot\\=card-footer\\]\\:pb-0[data-size=\"sm\"]:has([data-slot=\"card-footer\"]) { padding-bottom: 0px; } }",
+  "disabled:opacity-50": "@layer utilities { .disabled\\:opacity-50:disabled { opacity: 50%; } }",
+  "disabled:pointer-events-none": "@layer utilities { .disabled\\:pointer-events-none:disabled { pointer-events: none; } }",
+  "flex": "@layer utilities { .flex { display: flex; } }",
+  "flex-col": "@layer utilities { .flex-col { flex-direction: column; } }",
+  "focus-visible:border-destructive/40": "@layer utilities { .focus-visible\\:border-destructive\\/40:focus-visible { border-color: var(--destructive); @supports (color: color-mix(in lab, red, red)) { border-color: color-mix(in oklab, var(--destructive) 40%, transparent); } } }",
+  "focus-visible:border-ring": "@layer utilities { .focus-visible\\:border-ring:focus-visible { border-color: var(--ring); } }",
+  "focus-visible:ring-3": "@layer utilities { .focus-visible\\:ring-3:focus-visible { --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); } }",
+  "focus-visible:ring-destructive/20": "@layer utilities { .focus-visible\\:ring-destructive\\/20:focus-visible { --tw-ring-color: var(--destructive); @supports (color: color-mix(in lab, red, red)) { --tw-ring-color: color-mix(in oklab, var(--destructive) 20%, transparent); } } }",
+  "focus-visible:ring-ring/50": "@layer utilities { .focus-visible\\:ring-ring\\/50:focus-visible { --tw-ring-color: var(--ring); @supports (color: color-mix(in lab, red, red)) { --tw-ring-color: color-mix(in oklab, var(--ring) 50%, transparent); } } }",
+  "font-heading": "@layer utilities { .font-heading { font-family: var(--font-sans); } }",
+  "font-medium": "@layer utilities { .font-medium { --tw-font-weight: var(--font-weight-medium); font-weight: var(--font-weight-medium); } }",
+  "gap-(--card-spacing)": "@layer utilities { .gap-\\(--card-spacing\\) { gap: var(--card-spacing); } }",
+  "gap-0.5": "@layer utilities { .gap-0\\.5 { gap: calc(var(--spacing) * 0.5); } }",
+  "gap-1": "@layer utilities { .gap-1 { gap: var(--spacing); } }",
+  "gap-1.5": "@layer utilities { .gap-1\\.5 { gap: calc(var(--spacing) * 1.5); } }",
+  "grid": "@layer utilities { .grid { display: grid; } }",
+  "group-data-[size=sm]/card:text-sm": "@layer utilities { .group-data-\\[size\\=sm\\]\\/card\\:text-sm:is(:where(.group\\/card)[data-size=\"sm\"] *) { font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); } }",
+  "group-has-[>svg]/alert:col-start-2": "@layer utilities { .group-has-\\[\\>svg\\]\\/alert\\:col-start-2:is(:where(.group\\/alert):has( > svg) *) { grid-column-start: 2; } }",
+  "group/alert": "@layer utilities;",
+  "group/button": "@layer utilities;",
+  "group/card": "@layer utilities;",
+  "group/card-header": "@layer utilities;",
+  "h-6": "@layer utilities { .h-6 { height: calc(var(--spacing) * 6); } }",
+  "h-7": "@layer utilities { .h-7 { height: calc(var(--spacing) * 7); } }",
+  "h-8": "@layer utilities { .h-8 { height: calc(var(--spacing) * 8); } }",
+  "h-9": "@layer utilities { .h-9 { height: calc(var(--spacing) * 9); } }",
+  "has-[>img:first-child]:pt-0": "@layer utilities { .has-\\[\\>img\\:first-child\\]\\:pt-0:has( > img:first-child) { padding-top: 0px; } }",
+  "has-[>svg]:gap-x-2": "@layer utilities { .has-\\[\\>svg\\]\\:gap-x-2:has( > svg) { column-gap: calc(var(--spacing) * 2); } }",
+  "has-[>svg]:grid-cols-[auto_1fr]": "@layer utilities { .has-\\[\\>svg\\]\\:grid-cols-\\[auto_1fr\\]:has( > svg) { grid-template-columns: auto 1fr; } }",
+  "has-data-[icon=inline-end]:pr-1.5": "@layer utilities { .has-data-\\[icon\\=inline-end\\]\\:pr-1\\.5:has([data-icon=\"inline-end\"]) { padding-right: calc(var(--spacing) * 1.5); } }",
+  "has-data-[icon=inline-end]:pr-2": "@layer utilities { .has-data-\\[icon\\=inline-end\\]\\:pr-2:has([data-icon=\"inline-end\"]) { padding-right: calc(var(--spacing) * 2); } }",
+  "has-data-[icon=inline-start]:pl-1.5": "@layer utilities { .has-data-\\[icon\\=inline-start\\]\\:pl-1\\.5:has([data-icon=\"inline-start\"]) { padding-left: calc(var(--spacing) * 1.5); } }",
+  "has-data-[icon=inline-start]:pl-2": "@layer utilities { .has-data-\\[icon\\=inline-start\\]\\:pl-2:has([data-icon=\"inline-start\"]) { padding-left: calc(var(--spacing) * 2); } }",
+  "has-data-[slot=alert-action]:pr-18": "@layer utilities { .has-data-\\[slot\\=alert-action\\]\\:pr-18:has([data-slot=\"alert-action\"]) { padding-right: calc(var(--spacing) * 18); } }",
+  "has-data-[slot=alert-action]:relative": "@layer utilities { .has-data-\\[slot\\=alert-action\\]\\:relative:has([data-slot=\"alert-action\"]) { position: relative; } }",
+  "has-data-[slot=card-action]:grid-cols-[1fr_auto]": "@layer utilities { .has-data-\\[slot\\=card-action\\]\\:grid-cols-\\[1fr_auto\\]:has([data-slot=\"card-action\"]) { grid-template-columns: 1fr auto; } }",
+  "has-data-[slot=card-description]:grid-rows-[auto_auto]": "@layer utilities { .has-data-\\[slot\\=card-description\\]\\:grid-rows-\\[auto_auto\\]:has([data-slot=\"card-description\"]) { grid-template-rows: auto auto; } }",
+  "has-data-[slot=card-footer]:pb-0": "@layer utilities { .has-data-\\[slot\\=card-footer\\]\\:pb-0:has([data-slot=\"card-footer\"]) { padding-bottom: 0px; } }",
+  "hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]": "@layer utilities { @media (hover: hover) { .hover\\:bg-\\[color-mix\\(in_oklch\\,var\\(--secondary\\)\\,var\\(--foreground\\)_5\\%\\)\\]:hover { background-color: var(--secondary); } @supports (color: color-mix(in lab, red, red)) { .hover\\:bg-\\[color-mix\\(in_oklch\\,var\\(--secondary\\)\\,var\\(--foreground\\)_5\\%\\)\\]:hover { background-color: color-mix(in oklch,var(--secondary),var(--foreground) 5%); } } } }",
+  "hover:bg-destructive/20": "@layer utilities { @media (hover: hover) { .hover\\:bg-destructive\\/20:hover { background-color: var(--destructive); } @supports (color: color-mix(in lab, red, red)) { .hover\\:bg-destructive\\/20:hover { background-color: color-mix(in oklab, var(--destructive) 20%, transparent); } } } }",
+  "hover:bg-muted": "@layer utilities { @media (hover: hover) { .hover\\:bg-muted:hover { background-color: var(--muted); } } }",
+  "hover:bg-primary/80": "@layer utilities { @media (hover: hover) { .hover\\:bg-primary\\/80:hover { background-color: var(--primary); } @supports (color: color-mix(in lab, red, red)) { .hover\\:bg-primary\\/80:hover { background-color: color-mix(in oklab, var(--primary) 80%, transparent); } } } }",
+  "hover:text-foreground": "@layer utilities { @media (hover: hover) { .hover\\:text-foreground:hover { color: var(--foreground); } } }",
+  "hover:underline": "@layer utilities { @media (hover: hover) { .hover\\:underline:hover { text-decoration-line: underline; } } }",
+  "in-data-[slot=button-group]:rounded-lg": "@layer utilities { :where([data-slot=\"button-group\"]) .in-data-\\[slot\\=button-group\\]\\:rounded-lg { border-radius: var(--radius); } }",
+  "inline-flex": "@layer utilities { .inline-flex { display: inline-flex; } }",
+  "items-center": "@layer utilities { .items-center { align-items: center; } }",
+  "items-start": "@layer utilities { .items-start { align-items: flex-start; } }",
+  "justify-center": "@layer utilities { .justify-center { justify-content: center; } }",
+  "justify-self-end": "@layer utilities { .justify-self-end { justify-self: flex-end; } }",
+  "leading-snug": "@layer utilities { .leading-snug { --tw-leading: var(--leading-snug); line-height: var(--leading-snug); } }",
+  "md:text-pretty": "@layer utilities { @media (width >= 48rem) { .md\\:text-pretty { text-wrap: pretty; } } }",
+  "outline-none": "@layer utilities { .outline-none { --tw-outline-style: none; outline-style: none; } }",
+  "overflow-hidden": "@layer utilities { .overflow-hidden { overflow: hidden; } }",
+  "p-(--card-spacing)": "@layer utilities { .p-\\(--card-spacing\\) { padding: var(--card-spacing); } }",
+  "px-(--card-spacing)": "@layer utilities { .px-\\(--card-spacing\\) { padding-inline: var(--card-spacing); } }",
+  "px-2": "@layer utilities { .px-2 { padding-inline: calc(var(--spacing) * 2); } }",
+  "px-2.5": "@layer utilities { .px-2\\.5 { padding-inline: calc(var(--spacing) * 2.5); } }",
+  "py-(--card-spacing)": "@layer utilities { .py-\\(--card-spacing\\) { padding-block: var(--card-spacing); } }",
+  "py-2": "@layer utilities { .py-2 { padding-block: calc(var(--spacing) * 2); } }",
+  "relative": "@layer utilities { .relative { position: relative; } }",
+  "right-2": "@layer utilities { .right-2 { right: calc(var(--spacing) * 2); } }",
+  "ring-1": "@layer utilities { .ring-1 { --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); } }",
+  "ring-foreground/10": "@layer utilities { .ring-foreground\\/10 { --tw-ring-color: var(--foreground); @supports (color: color-mix(in lab, red, red)) { --tw-ring-color: color-mix(in oklab, var(--foreground) 10%, transparent); } } }",
+  "rounded-[min(var(--radius-md),10px)]": "@layer utilities { .rounded-\\[min\\(var\\(--radius-md\\)\\,10px\\)\\] { border-radius: min(var(--radius-md), 10px); } }",
+  "rounded-[min(var(--radius-md),12px)]": "@layer utilities { .rounded-\\[min\\(var\\(--radius-md\\)\\,12px\\)\\] { border-radius: min(var(--radius-md), 12px); } }",
+  "rounded-b-xl": "@layer utilities { .rounded-b-xl { border-bottom-right-radius: calc(var(--radius) * 1.4); border-bottom-left-radius: calc(var(--radius) * 1.4); } }",
+  "rounded-lg": "@layer utilities { .rounded-lg { border-radius: var(--radius); } }",
+  "rounded-t-xl": "@layer utilities { .rounded-t-xl { border-top-left-radius: calc(var(--radius) * 1.4); border-top-right-radius: calc(var(--radius) * 1.4); } }",
+  "rounded-xl": "@layer utilities { .rounded-xl { border-radius: calc(var(--radius) * 1.4); } }",
+  "row-span-2": "@layer utilities { .row-span-2 { grid-row: span 2 / span 2; } }",
+  "row-start-1": "@layer utilities { .row-start-1 { grid-row-start: 1; } }",
+  "select-none": "@layer utilities { .select-none { -webkit-user-select: none; user-select: none; } }",
+  "self-start": "@layer utilities { .self-start { align-self: flex-start; } }",
+  "shrink-0": "@layer utilities { .shrink-0 { flex-shrink: 0; } }",
+  "size-6": "@layer utilities { .size-6 { width: calc(var(--spacing) * 6); height: calc(var(--spacing) * 6); } }",
+  "size-7": "@layer utilities { .size-7 { width: calc(var(--spacing) * 7); height: calc(var(--spacing) * 7); } }",
+  "size-8": "@layer utilities { .size-8 { width: calc(var(--spacing) * 8); height: calc(var(--spacing) * 8); } }",
+  "size-9": "@layer utilities { .size-9 { width: calc(var(--spacing) * 9); height: calc(var(--spacing) * 9); } }",
+  "text-[0.8rem]": "@layer utilities { .text-\\[0\\.8rem\\] { font-size: 0.8rem; } }",
+  "text-balance": "@layer utilities { .text-balance { text-wrap: balance; } }",
+  "text-base": "@layer utilities { .text-base { font-size: var(--text-base); line-height: var(--tw-leading, var(--text-base--line-height)); } }",
+  "text-card-foreground": "@layer utilities { .text-card-foreground { color: var(--card-foreground); } }",
+  "text-destructive": "@layer utilities { .text-destructive { color: var(--destructive); } }",
+  "text-left": "@layer utilities { .text-left { text-align: left; } }",
+  "text-muted-foreground": "@layer utilities { .text-muted-foreground { color: var(--muted-foreground); } }",
+  "text-primary": "@layer utilities { .text-primary { color: var(--primary); } }",
+  "text-primary-foreground": "@layer utilities { .text-primary-foreground { color: var(--primary-foreground); } }",
+  "text-secondary-foreground": "@layer utilities { .text-secondary-foreground { color: var(--secondary-foreground); } }",
+  "text-sm": "@layer utilities { .text-sm { font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); } }",
+  "text-xs": "@layer utilities { .text-xs { font-size: var(--text-xs); line-height: var(--tw-leading, var(--text-xs--line-height)); } }",
+  "top-2": "@layer utilities { .top-2 { top: calc(var(--spacing) * 2); } }",
+  "transition-all": "@layer utilities { .transition-all { transition-property: all; transition-timing-function: var(--tw-ease, var(--default-transition-timing-function)); transition-duration: var(--tw-duration, var(--default-transition-duration)); } }",
+  "underline-offset-4": "@layer utilities { .underline-offset-4 { text-underline-offset: 4px; } }",
+  "w-full": "@layer utilities { .w-full { width: 100%; } }",
+  "whitespace-nowrap": "@layer utilities { .whitespace-nowrap { white-space: nowrap; } }"
+ },
+ "uncompiled": [
+  "*:[img:first-child]:rounded-t-xl",
+  "*:[img:last-child]:rounded-b-xl",
+  "*:[svg:not([class*='size-'])]:size-4",
+  "*:[svg]:row-span-2",
+  "*:[svg]:text-current",
+  "*:[svg]:translate-y-0.5",
+  "*:data-[slot=alert-description]:text-destructive/90",
+  "group/alert",
+  "group/button",
+  "group/card",
+  "group/card-header",
+  "in-data-[slot=button-group]:rounded-lg"
+ ]
+}

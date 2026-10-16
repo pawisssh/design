@@ -1,0 +1,652 @@
+{
+  "alert.anatomy.alert": {
+    "value": {
+      "name": "Alert",
+      "type": "COMPONENT",
+      "role": "root",
+      "parent": null,
+      "order": 0
+    },
+    "evidence": [
+      "alert.tsx:L29 data-slot=alert, role=alert"
+    ],
+    "confidence": "high"
+  },
+  "alert.anatomy.svg": {
+    "value": {
+      "name": "Icon",
+      "type": "INSTANCE",
+      "role": "icon",
+      "parent": "alert",
+      "order": 0
+    },
+    "evidence": [
+      "alert.tsx:L6 has-[>svg]:grid-cols-[auto_1fr] *:[svg]:row-span-2 (icon is a direct child before text)"
+    ],
+    "confidence": "medium"
+  },
+  "alert.anatomy.wrap-alert-title": {
+    "value": {
+      "name": "Content",
+      "type": "FRAME",
+      "role": "container",
+      "parent": "alert",
+      "order": 1
+    },
+    "evidence": [
+      "alert.tsx:L6 svg spans two grid rows, title and description stack in column 2",
+      "alert.tsx:L42 group-has-[>svg]/alert:col-start-2",
+      "wrapper added only for Auto Layout"
+    ],
+    "confidence": "medium"
+  },
+  "alert.axes.variant.label": {
+    "value": "Variant",
+    "evidence": [
+      "alert.tsx:L9 cva axis key variant"
+    ],
+    "confidence": "high"
+  },
+  "alert.axes.variant.values.default.label": {
+    "value": "Default",
+    "evidence": [
+      "alert.tsx:L10 default"
+    ],
+    "confidence": "high"
+  },
+  "alert.axes.variant.values.destructive.label": {
+    "value": "Destructive",
+    "evidence": [
+      "alert.tsx:L12-13 destructive"
+    ],
+    "confidence": "high"
+  },
+  "alert.axes.variant.values.warning.label": {
+    "value": "Warning",
+    "evidence": [
+      "alert.tsx:L11 warning: bg-card text-amber-700 (new in v2)"
+    ],
+    "confidence": "high"
+  },
+  "alert.excluded": {
+    "value": [],
+    "evidence": [
+      "alert.tsx:L5-20 single axis, no compoundVariants"
+    ],
+    "confidence": "high"
+  },
+  "alert.family.description": {
+    "value": "A callout that shows a short message with an optional leading icon, title, description and action, in default, warning and destructive variants.",
+    "evidence": [
+      "alert.tsx:L5 alertVariants cva",
+      "alert.tsx:L10-13 default, warning, destructive variants",
+      "alert.tsx:L37,50,66 AlertTitle, AlertDescription, AlertAction"
+    ],
+    "confidence": "medium"
+  },
+  "alert.family.split": {
+    "value": [
+      "alert"
+    ],
+    "evidence": [
+      "alert.tsx:L76 subparts are compound pieces of one Alert"
+    ],
+    "confidence": "high"
+  },
+  "alert.figma.grid": {
+    "value": {
+      "columns": "variant",
+      "rows": null
+    },
+    "evidence": [
+      "alert.tsx:L9 single cva axis variant"
+    ],
+    "confidence": "high"
+  },
+  "alert.icons": {
+    "value": {
+      "package": "lucide-react",
+      "default": "circle-alert",
+      "preferred": [
+        "circle-alert",
+        "circle-check",
+        "info",
+        "triangle-alert"
+      ]
+    },
+    "evidence": [
+      "components.json iconLibrary lucide",
+      "alert.tsx:L6 *:[svg] icon slot",
+      "alert.tsx:L11 warning variant suits triangle-alert"
+    ],
+    "confidence": "low"
+  },
+  "alert.layout.alert.alignCross": {
+    "value": "start",
+    "evidence": [
+      "alert.tsx:L6 *:[svg]:translate-y-0.5 icon aligned to top line"
+    ],
+    "confidence": "medium"
+  },
+  "alert.layout.alert.alignMain": {
+    "value": "start",
+    "evidence": [
+      "alert.tsx:L6 text-left, grid columns start"
+    ],
+    "confidence": "medium"
+  },
+  "alert.layout.alert.direction": {
+    "value": "row",
+    "evidence": [
+      "alert.tsx:L6 has-[>svg]:grid-cols-[auto_1fr] icon beside text"
+    ],
+    "confidence": "medium"
+  },
+  "alert.layout.alert.height": {
+    "value": "hug",
+    "evidence": [
+      "alert.tsx:L6 no height class"
+    ],
+    "confidence": "high"
+  },
+  "alert.layout.alert.width": {
+    "value": "fill",
+    "evidence": [
+      "alert.tsx:L6 w-full"
+    ],
+    "confidence": "medium"
+  },
+  "alert.layout.wrap-alert-title.alignCross": {
+    "value": "start",
+    "evidence": [
+      "alert.tsx:L6 text-left"
+    ],
+    "confidence": "medium"
+  },
+  "alert.layout.wrap-alert-title.alignMain": {
+    "value": "start",
+    "evidence": [
+      "alert.tsx:L6 grid default start"
+    ],
+    "confidence": "high"
+  },
+  "alert.layout.wrap-alert-title.direction": {
+    "value": "column",
+    "evidence": [
+      "alert.tsx:L6 gap-0.5 grid rows: title above description"
+    ],
+    "confidence": "high"
+  },
+  "alert.layout.wrap-alert-title.height": {
+    "value": "hug",
+    "evidence": [
+      "alert.tsx:L6 grid rows auto"
+    ],
+    "confidence": "high"
+  },
+  "alert.layout.wrap-alert-title.width": {
+    "value": "fill",
+    "evidence": [
+      "alert.tsx:L6 1fr column"
+    ],
+    "confidence": "high"
+  },
+  "alert.properties.alert-action.visible": {
+    "value": {
+      "type": "BOOLEAN",
+      "label": "Action",
+      "default": false,
+      "binds": [
+        "alert-action"
+      ],
+      "code": {
+        "component": "AlertAction",
+        "render": "conditional"
+      }
+    },
+    "evidence": [
+      "alert.tsx:L66-74 AlertAction absolute top-2 right-2",
+      "alert.tsx:L6 has-data-[slot=alert-action]:pr-18 (slot-dependent styling, open question)"
+    ],
+    "confidence": "medium"
+  },
+  "alert.properties.alert-description.characters": {
+    "value": {
+      "type": "TEXT",
+      "label": "Description",
+      "default": "You can add components to your app using the cli.",
+      "binds": [
+        "alert-description"
+      ],
+      "code": {
+        "component": "AlertDescription",
+        "prop": "children"
+      }
+    },
+    "evidence": [
+      "alert.tsx:L50-64 AlertDescription data-slot=alert-description"
+    ],
+    "confidence": "medium"
+  },
+  "alert.properties.alert-description.visible": {
+    "value": {
+      "type": "BOOLEAN",
+      "label": "Description",
+      "default": true,
+      "binds": [
+        "alert-description"
+      ],
+      "code": {
+        "component": "AlertDescription",
+        "render": "conditional"
+      }
+    },
+    "evidence": [
+      "alert.tsx:L50 AlertDescription is an optional subcomponent"
+    ],
+    "confidence": "medium"
+  },
+  "alert.properties.alert-title.characters": {
+    "value": {
+      "type": "TEXT",
+      "label": "Title",
+      "default": "Heads up!",
+      "binds": [
+        "alert-title"
+      ],
+      "code": {
+        "component": "AlertTitle",
+        "prop": "children"
+      }
+    },
+    "evidence": [
+      "alert.tsx:L37-48 AlertTitle data-slot=alert-title"
+    ],
+    "confidence": "medium"
+  },
+  "alert.properties.alert-title.visible": {
+    "value": {
+      "type": "BOOLEAN",
+      "label": "Title",
+      "default": true,
+      "binds": [
+        "alert-title"
+      ],
+      "code": {
+        "component": "AlertTitle",
+        "render": "conditional"
+      }
+    },
+    "evidence": [
+      "alert.tsx:L37 AlertTitle is an optional subcomponent"
+    ],
+    "confidence": "medium"
+  },
+  "alert.properties.svg.mainComponent": {
+    "value": {
+      "type": "INSTANCE_SWAP",
+      "label": "Icon Swap",
+      "default": "circle-alert",
+      "binds": [
+        "svg"
+      ],
+      "code": {
+        "child": "svg"
+      }
+    },
+    "evidence": [
+      "alert.tsx:L6 *:[svg] direct child icon",
+      "components.json iconLibrary lucide"
+    ],
+    "confidence": "low"
+  },
+  "alert.properties.svg.visible": {
+    "value": {
+      "type": "BOOLEAN",
+      "label": "Icon",
+      "default": true,
+      "binds": [
+        "svg"
+      ],
+      "code": {
+        "child": "svg",
+        "render": "conditional"
+      }
+    },
+    "evidence": [
+      "alert.tsx:L6 has-[>svg] layout only when an icon is present (slot-dependent styling, open question)"
+    ],
+    "confidence": "medium"
+  },
+  "button.anatomy.button": {
+    "value": {
+      "name": "Button",
+      "type": "COMPONENT",
+      "role": "root",
+      "parent": null,
+      "order": 0
+    },
+    "evidence": [
+      "button.tsx:L57 data-slot=button on the root Comp"
+    ],
+    "confidence": "high"
+  },
+  "button.anatomy.children": {
+    "value": {
+      "name": "Label",
+      "type": "TEXT",
+      "role": "text",
+      "parent": "button",
+      "order": 1
+    },
+    "evidence": [
+      "button.tsx:L7 text-sm font-medium whitespace-nowrap styles the root's text children",
+      "button.tsx:L48 ...props passes children"
+    ],
+    "confidence": "medium"
+  },
+  "button.anatomy.inline-end": {
+    "value": {
+      "name": "Icon End",
+      "type": "INSTANCE",
+      "role": "icon",
+      "parent": "button",
+      "order": 2
+    },
+    "evidence": [
+      "button.tsx:L24 has-data-[icon=inline-end]:pr-2 addresses a trailing icon child"
+    ],
+    "confidence": "medium"
+  },
+  "button.anatomy.inline-start": {
+    "value": {
+      "name": "Icon Start",
+      "type": "INSTANCE",
+      "role": "icon",
+      "parent": "button",
+      "order": 0
+    },
+    "evidence": [
+      "button.tsx:L24 has-data-[icon=inline-start]:pl-2 addresses a leading icon child",
+      "button.tsx:L7 [&_svg]:shrink-0 size-4 icon styling"
+    ],
+    "confidence": "medium"
+  },
+  "button.axes.size.label": {
+    "value": "Size",
+    "evidence": [
+      "button.tsx:L22 cva axis key size"
+    ],
+    "confidence": "high"
+  },
+  "button.axes.size.values.default.label": {
+    "value": "Default",
+    "evidence": [
+      "button.tsx:L24 size value default"
+    ],
+    "confidence": "high"
+  },
+  "button.axes.size.values.icon-lg.label": {
+    "value": "Icon Large",
+    "evidence": [
+      "button.tsx:L33 size value icon-lg"
+    ],
+    "confidence": "medium"
+  },
+  "button.axes.size.values.icon-sm.label": {
+    "value": "Icon Small",
+    "evidence": [
+      "button.tsx:L32 size value icon-sm"
+    ],
+    "confidence": "medium"
+  },
+  "button.axes.size.values.icon-xs.label": {
+    "value": "Icon Extra Small",
+    "evidence": [
+      "button.tsx:L30 size value icon-xs"
+    ],
+    "confidence": "medium"
+  },
+  "button.axes.size.values.icon.label": {
+    "value": "Icon",
+    "evidence": [
+      "button.tsx:L28 size value icon"
+    ],
+    "confidence": "high"
+  },
+  "button.axes.size.values.lg.label": {
+    "value": "Large",
+    "evidence": [
+      "button.tsx:L27 size value lg"
+    ],
+    "confidence": "medium"
+  },
+  "button.axes.size.values.sm.label": {
+    "value": "Small",
+    "evidence": [
+      "button.tsx:L26 size value sm"
+    ],
+    "confidence": "medium"
+  },
+  "button.axes.size.values.xs.label": {
+    "value": "Extra Small",
+    "evidence": [
+      "button.tsx:L25 size value xs"
+    ],
+    "confidence": "medium"
+  },
+  "button.excluded": {
+    "value": [],
+    "evidence": [
+      "button.tsx:L6-41 no compoundVariants; every variant x size combination renders"
+    ],
+    "confidence": "medium"
+  },
+  "button.family.description": {
+    "value": "A clickable control that triggers an action, offered in six visual variants and eight sizes, including icon-only sizes, with optional leading and trailing icons.",
+    "evidence": [
+      "button.tsx:L6 buttonVariants cva with variant and size axes",
+      "button.tsx:L28 icon sizes (icon, icon-xs, icon-sm, icon-lg) for icon-only buttons",
+      "button.tsx:L24 has-data-[icon=inline-start|inline-end] padding for leading/trailing icons"
+    ],
+    "confidence": "medium"
+  },
+  "button.family.split": {
+    "value": [
+      "button"
+    ],
+    "evidence": [
+      "button.tsx:L43 single exported component function Button",
+      "button.tsx:L28-33 icon sizes live on the same size axis, not a separate component",
+      "an icon-button split is plausible but the source keeps one cva"
+    ],
+    "confidence": "medium"
+  },
+  "button.figma.grid": {
+    "value": {
+      "columns": "variant",
+      "rows": "size"
+    },
+    "evidence": [
+      "button.tsx:L10 variant axis (6 values)",
+      "button.tsx:L22 size axis (8 values)"
+    ],
+    "confidence": "low"
+  },
+  "button.icons": {
+    "value": {
+      "package": "lucide-react",
+      "default": "plus",
+      "preferred": [
+        "plus",
+        "arrow-right",
+        "chevron-down",
+        "download",
+        "loader-circle",
+        "trash-2"
+      ]
+    },
+    "evidence": [
+      "components.json iconLibrary lucide",
+      "button.tsx:L7 [&_svg] size-4 icon styling"
+    ],
+    "confidence": "low"
+  },
+  "button.layout.button.alignCross": {
+    "value": "center",
+    "evidence": [
+      "button.tsx:L7 items-center"
+    ],
+    "confidence": "high"
+  },
+  "button.layout.button.alignMain": {
+    "value": "center",
+    "evidence": [
+      "button.tsx:L7 justify-center"
+    ],
+    "confidence": "high"
+  },
+  "button.layout.button.direction": {
+    "value": "row",
+    "evidence": [
+      "button.tsx:L7 inline-flex (default row)"
+    ],
+    "confidence": "high"
+  },
+  "button.layout.button.height": {
+    "value": "fixed",
+    "evidence": [
+      "button.tsx:L24 h-8",
+      "button.tsx:L25-27 h-6 h-7 h-10"
+    ],
+    "confidence": "high"
+  },
+  "button.layout.button.width": {
+    "value": "hug",
+    "evidence": [
+      "button.tsx:L7 inline-flex shrink-0, no width class on text sizes",
+      "button.tsx:L28 icon sizes use size-8 (fixed), noted"
+    ],
+    "confidence": "medium"
+  },
+  "button.layout.children.height": {
+    "value": "hug",
+    "evidence": [
+      "button.tsx:L7 text-sm line height"
+    ],
+    "confidence": "high"
+  },
+  "button.layout.children.textResize": {
+    "value": "width-and-height",
+    "evidence": [
+      "button.tsx:L7 whitespace-nowrap, single line"
+    ],
+    "confidence": "high"
+  },
+  "button.layout.children.width": {
+    "value": "hug",
+    "evidence": [
+      "button.tsx:L7 whitespace-nowrap"
+    ],
+    "confidence": "high"
+  },
+  "button.properties.children.characters": {
+    "value": {
+      "type": "TEXT",
+      "label": "Label",
+      "default": "Button",
+      "binds": [
+        "children"
+      ],
+      "code": {
+        "prop": "children"
+      }
+    },
+    "evidence": [
+      "button.tsx:L48 children passed through props"
+    ],
+    "confidence": "medium"
+  },
+  "button.properties.inline-end.mainComponent": {
+    "value": {
+      "type": "INSTANCE_SWAP",
+      "label": "Icon End Swap",
+      "default": "arrow-right",
+      "binds": [
+        "inline-end"
+      ],
+      "code": {
+        "child": "svg",
+        "attrs": {
+          "data-icon": "inline-end"
+        }
+      }
+    },
+    "evidence": [
+      "button.tsx:L24 trailing icon slot",
+      "components.json iconLibrary lucide"
+    ],
+    "confidence": "low"
+  },
+  "button.properties.inline-end.visible": {
+    "value": {
+      "type": "BOOLEAN",
+      "label": "Icon End",
+      "default": false,
+      "binds": [
+        "inline-end"
+      ],
+      "code": {
+        "child": "svg",
+        "attrs": {
+          "data-icon": "inline-end"
+        }
+      }
+    },
+    "evidence": [
+      "button.tsx:L24 has-data-[icon=inline-end] (slot-dependent styling, open question)"
+    ],
+    "confidence": "medium"
+  },
+  "button.properties.inline-start.mainComponent": {
+    "value": {
+      "type": "INSTANCE_SWAP",
+      "label": "Icon Start Swap",
+      "default": "plus",
+      "binds": [
+        "inline-start"
+      ],
+      "code": {
+        "child": "svg",
+        "attrs": {
+          "data-icon": "inline-start"
+        }
+      }
+    },
+    "evidence": [
+      "button.tsx:L24 leading icon slot",
+      "components.json iconLibrary lucide"
+    ],
+    "confidence": "low"
+  },
+  "button.properties.inline-start.visible": {
+    "value": {
+      "type": "BOOLEAN",
+      "label": "Icon Start",
+      "default": false,
+      "binds": [
+        "inline-start"
+      ],
+      "code": {
+        "child": "svg",
+        "attrs": {
+          "data-icon": "inline-start"
+        }
+      }
+    },
+    "evidence": [
+      "button.tsx:L24 has-data-[icon=inline-start] (slot-dependent styling, open question)"
+    ],
+    "confidence": "medium"
+  }
+}
