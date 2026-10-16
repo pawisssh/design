@@ -6,6 +6,7 @@
 //
 //   node skills/to-design/scripts/ledger.mjs record <result.json> [--ledger <path>]
 //   node skills/to-design/scripts/ledger.mjs prune-list <prune-preview result.json> --name <variant name> [--name ...] --out <prune.json>
+//   node skills/to-design/scripts/ledger.mjs groups --doc <foundations.json> --file-key <key> [--add <group>] [--remove <group>] [--ledger <path>]
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
@@ -132,16 +133,30 @@ export function setGroups(ledger, fileKey, doc, { add = [], remove = [] } = {}) 
 const USAGE = [
   'usage: ledger.mjs record <result.json> [--ledger <path>]',
   '       ledger.mjs prune-list <prune-preview result.json> --name <variant name> [--name ...] --out <prune.json>',
+  '       ledger.mjs groups --doc <foundations.json> --file-key <key> [--add <group>] [--remove <group>] [--ledger <path>]',
 ].join('\n');
 
 function main() {
   let args;
   try {
-    args = parseArgs({ allowPositionals: true, options: { ledger: { type: 'string' }, name: { type: 'string', multiple: true }, out: { type: 'string' } } });
+    args = parseArgs({ allowPositionals: true, options: {
+      ledger: { type: 'string' }, name: { type: 'string', multiple: true }, out: { type: 'string' },
+      doc: { type: 'string' }, 'file-key': { type: 'string' }, add: { type: 'string', multiple: true }, remove: { type: 'string', multiple: true },
+    } });
   } catch {
     args = { positionals: [], values: {} };
   }
   const [command, resultPath] = args.positionals;
+  if (command === 'groups') {
+    const { doc, 'file-key': fileKey } = args.values;
+    if (!doc || !fileKey) { console.error(USAGE); process.exit(2); }
+    const path = args.values.ledger || defaultLedgerPath(fileKey);
+    const ledger = setGroups(readLedger(path), fileKey, JSON.parse(readFileSync(doc, 'utf8')), { add: args.values.add || [], remove: args.values.remove || [] });
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, JSON.stringify(ledger, null, 2) + '\n');
+    console.log(JSON.stringify({ status: 'written', ledger: path, groups: ledger.foundationsGroups }));
+    return;
+  }
   if (!['record', 'prune-list'].includes(command) || !resultPath || (command === 'prune-list' && !args.values.out)) {
     console.error(USAGE);
     process.exit(2);

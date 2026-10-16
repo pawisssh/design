@@ -4,7 +4,7 @@
 // and writes plan.json and state.json for the packager. The plan is disposable: re-derive it for every call.
 //
 //   node skills/to-design/scripts/build-plan.mjs foundations --doc <foundations.json> --file-key <key> --out <dir>
-//        [--adopt] [--prune name,name] [--page "Page 1"] [--ledger <path>]
+//        [--adopt] [--prune name,name] [--page "Page 1"] [--chunk N] [--ledger <path>]
 //   node skills/to-design/scripts/build-plan.mjs icons --contract <component.json> [--contract ...]
 //        --icons-dir <unpacked icon package> --file-key <key> --out <dir> [--adopt] [--page Icons] [--ledger <path>]
 //   node skills/to-design/scripts/build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir>
@@ -401,7 +401,7 @@ export function setsPlan(contract, docText, ledger, {
 }
 
 const USAGE = [
-  'usage: build-plan.mjs foundations --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--prune a,b] [--page <name>] [--ledger <path>]',
+  'usage: build-plan.mjs foundations --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--prune a,b] [--page <name>] [--chunk N] [--ledger <path>]',
   '       build-plan.mjs icons --contract <component.json> [--contract ...] --icons-dir <package dir> --file-key <key> --out <dir> [--adopt] [--page <name>] [--ledger <path>]',
   '       build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--read-only] [--page <name>] [--ledger <path>]',
   '       build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--mode build|reconcile|coverage|sample|theme|prune-preview|prune]',
@@ -416,7 +416,7 @@ function main() {
       adopt: { type: 'boolean', default: false }, prune: { type: 'string', default: '' }, page: { type: 'string' },
       contract: { type: 'string', multiple: true }, 'icons-dir': { type: 'string' }, 'read-only': { type: 'boolean', default: false },
       mode: { type: 'string', default: 'build' }, batch: { type: 'string', default: '0' }, 'per-call': { type: 'string' }, sample: { type: 'string', default: '' },
-      prototype: { type: 'boolean', default: false }, 'prune-list': { type: 'string' },
+      prototype: { type: 'boolean', default: false }, 'prune-list': { type: 'string' }, chunk: { type: 'string', default: '1' },
     },
   });
   const slice = positionals[0];
@@ -452,7 +452,7 @@ function main() {
     })
     : slice === 'foundations'
     ? foundationsPlan(readFileSync(values.doc, 'utf8'), readLedger(path), {
-      fileKey, adopt: values.adopt, prune: values.prune ? values.prune.split(',').map(s => s.trim()).filter(Boolean) : [], page: values.page ?? null,
+      fileKey, adopt: values.adopt, prune: values.prune ? values.prune.split(',').map(s => s.trim()).filter(Boolean) : [], page: values.page ?? null, chunk: Number(values.chunk),
     })
     : iconsPlan(values.contract.map(p => JSON.parse(readFileSync(p, 'utf8'))), values['icons-dir'], readLedger(path), {
       fileKey, adopt: values.adopt, ...(values.page ? { page: values.page } : {}),
@@ -460,7 +460,7 @@ function main() {
   mkdirSync(values.out, { recursive: true });
   writeFileSync(join(values.out, 'plan.json'), JSON.stringify(plan, null, 2) + '\n');
   writeFileSync(join(values.out, 'state.json'), JSON.stringify(state, null, 2) + '\n');
-  const detail = slice === 'foundations' ? { documentHash: plan.documentHash }
+  const detail = slice === 'foundations' ? { documentHash: plan.documentHash, chunk: { index: plan.chunk ? plan.chunk.index : 1, of: plan.chunk ? plan.chunk.of : 1 } }
     : slice === 'base' ? { base: plan.base.name, contentHash: plan.contentHash }
     : slice === 'sets' ? { family: plan.family, entries: plan.selection.entries.length, total: plan.total, contentHash: plan.contentHash }
     : { icons: plan.icons.length };

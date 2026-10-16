@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { foundationsPlan, stripReviewFields } from '../scripts/build-plan.mjs';
 import { recordResult, setGroups } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
@@ -215,4 +216,29 @@ test('every chunk of a Carbon-sized selection packages under the 50,000-char cap
 
 test('a group too large for one call is refused by name', () => {
   assert.throws(() => foundationsPlan(DOC_TEXT, null, { fileKey: FILE_KEY, budget: 9000 }), /group Button .* does not fit one call/);
+});
+
+// ---- CLIs ----
+
+test('ledger.mjs groups adds and removes the owner\'s groups in the given ledger, and build-plan derives from them', () => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'subset-cli-')));
+  const docPath = join(dir, 'whole.foundations.json');
+  writeFileSync(docPath, wholeTheme());
+  const at = join(dir, `${FILE_KEY}.ledger.json`);
+  const ledgerCli = fileURLToPath(new URL('../scripts/ledger.mjs', import.meta.url));
+  const planCli = fileURLToPath(new URL('../scripts/build-plan.mjs', import.meta.url));
+  const groups = (...args) => spawnSync('node', [ledgerCli, 'groups', '--doc', docPath, '--file-key', FILE_KEY, '--ledger', at, ...args], { cwd: dir, encoding: 'utf8' });
+
+  const added = groups('--add', 'Layer', '--add', 'Fluid spacing');
+  assert.equal(added.status, 0, added.stderr);
+  assert.deepEqual(JSON.parse(added.stdout).groups, ['Fluid spacing', 'Layer', 'Size', 'Spacing']);
+  assert.deepEqual(JSON.parse(readFileSync(at, 'utf8')).foundationsGroups, ['Fluid spacing', 'Layer', 'Size', 'Spacing']);
+  const removed = groups('--remove', 'Fluid spacing');
+  assert.deepEqual(JSON.parse(removed.stdout).groups, ['Layer', 'Size', 'Spacing']);
+  assert.equal(groups('--add', 'Nope').status, 1);
+
+  const plan = spawnSync('node', [planCli, 'foundations', '--doc', docPath, '--file-key', FILE_KEY, '--ledger', at, '--out', join(dir, 'run'), '--chunk', '1'], { cwd: dir, encoding: 'utf8' });
+  assert.equal(plan.status, 0, plan.stderr);
+  assert.deepEqual(JSON.parse(plan.stdout).chunk, { index: 1, of: 1 });
+  assert.ok(JSON.parse(readFileSync(join(dir, 'run', 'plan.json'), 'utf8')).foundations.variables.field);
 });
