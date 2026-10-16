@@ -235,14 +235,22 @@
           "usages": [
             {
               "id": "email-input",
-              "raw": {
-                "element": "input[type=email]"
+              "contract": "text-input",
+              "tuple": {
+                "size": "md"
               },
-              "reason": "No Contract for a text input in this Design System. Carbon's TextInput would fit once the Adapter reads it.",
-              "question": "q-no-contract",
               "properties": {
                 "label": "copy:email-label",
                 "placeholder": "copy:email-placeholder"
+              },
+              "match": {
+                "by": "agent",
+                "via": "element",
+                "candidates": [
+                  {
+                    "size": "lg"
+                  }
+                ]
               },
               "at": "index.html:62"
             },
@@ -668,7 +676,7 @@
     {
       "id": "q-no-contract",
       "kind": "no-contract",
-      "text": "The email input, the role select and the toast have no Contract in this Design System. Carbon has TextInput, Select and ToastNotification. Read them with the Adapter before building?"
+      "text": "The role select and the toast have no Contract in this Design System yet. The Adapter is drafting Select and ToastNotification; until then they stay raw."
     },
     {
       "id": "q-success-kind",

@@ -144,6 +144,9 @@ function typeSource(files) {
       return [s.slice(0, i).trim(), s.slice(i + 1).trim()];
     }));
     const known = ['fontSize', 'fontWeight', 'lineHeight', 'letterSpacing'];
+    // PROTOTYPE (#90): helperText01/02 set no fontWeight and inherit the form item's regular (400).
+    const inherited = !('fontWeight' in fields);
+    if (inherited) fields.fontWeight = 'regular';
     if (Object.keys(fields).sort().join() !== [...known].sort().join()) fail(`${at}: fields ${Object.keys(fields)} are not ${known}`);
     const size = /^rem\((scale\d+)\)$/.exec(fields.fontSize);
     if (!size || !scale[size[1]]) fail(`${at}: fontSize "${fields.fontSize}" is not rem(scaleNN)`);
@@ -153,7 +156,7 @@ function typeSource(files) {
       source: `${at}${target === id ? '' : ` (${id} = ${target})`}`,
       fontFamily: fam[1],
       fontSize: num(scale[size[1]], at), fontSizeFrom: `rem(${size[1]}), ${size[1]} = ${scale[size[1]]}`,
-      fontWeight: num(weight[fields.fontWeight], at), fontWeightFrom: `fontWeight.ts ${fields.fontWeight}`,
+      fontWeight: num(weight[fields.fontWeight], at), fontWeightFrom: inherited ? 'not set; inherits regular from the form item' : `fontWeight.ts ${fields.fontWeight}`, inherited,
       lineHeight: num(fields.lineHeight, at),
       letterSpacing: ls ? num(ls[1], at) : num(fields.letterSpacing, at),
     };
@@ -314,6 +317,7 @@ export function generate({ sources, contracts }) {
     const binds = { fontFamily: fam };
     const group = title(s.split('-')[0]);
     for (const [suffix, field, value, from, scopes, cssExpect] of fields) {
+      if (field === 'fontWeight' && t.inherited) continue; // PROTOTYPE (#90): Carbon emits no variable for it
       const vname = `${s}-${suffix}`;
       const emitted = css.first(vname);
       if (emitted !== cssExpect) fail(`CSS mismatch ${vname}: expected ${cssExpect}, CSS ${emitted}`);

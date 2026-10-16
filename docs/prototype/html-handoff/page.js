@@ -70,7 +70,7 @@ function usageCard(u, stateKey, { compact } = {}) {
     const c = D.contracts[u.contract];
     return `<div class="usage" id="u-${esc(u.id)}"><div class="usage-h"><span class="id">${esc(u.id)}</span><b>${esc(c.name)}</b> ${tupleHtml(u)} ${st?.state ? `<span class="tok">State: ${esc(st.state)}</span>` : ''} ${matchFlag(u)}<span style="flex:1"></span>${at(u.at)}</div>
       <div class="specimen">${D.renders[key]}</div>
-      <div class="frame-cap">Real render · ${esc(c.package)}${u.properties?.label ? ` · label ${esc(u.properties.label)}` : ''}</div>
+      <div class="frame-cap">Real render · ${esc(c.package)}${c.status === "draft" ? " · Contract draft, not approved" : ""}${u.properties?.label ? ` · label ${esc(u.properties.label)}` : ''}</div>
       ${(u.offAxis || []).map(o => `<div class="offaxis">${F.offaxis()} <code>${esc(o.property)}</code> ${sw(o.raw)} <code>${esc(o.raw)}</code>: ${esc(o.reason)} ${F.q(o.question)}</div>`).join('')}
       ${compact ? '' : `<pre>${esc(D.snippets[key])}</pre>`}</div>`;
   }

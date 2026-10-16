@@ -12,7 +12,7 @@
 //    render(tuple) needs every axis, uses the Contract's default label and always sets the icon.
 // 3. The Rendering: one self-contained page laying out out/handoff.json, with three layout variants
 //    (?variant=A|B|C). It adds no content the Handoff does not hold.
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,7 +23,10 @@ const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const read = p => readFileSync(join(HERE, p), 'utf8');
 const handoff = JSON.parse(read('handoff.sample.json'));
 const proposals = { 'avatar-stack': JSON.parse(read('proposals/avatar-stack.proposal.json')) };
-const contract = JSON.parse(readFileSync(join(REPO, 'design-systems/carbon/contracts/button.component.json'), 'utf8'));
+// #90: every Contract in the Design System, including Adapter drafts (text-input).
+const contracts = Object.fromEntries(readdirSync(join(REPO, 'design-systems/carbon/contracts')).filter(f => f.endsWith('.component.json'))
+  .map(f => JSON.parse(readFileSync(join(REPO, 'design-systems/carbon/contracts', f), 'utf8'))).map(c => [c.family.key, c]));
+const contract = contracts.button;
 const require = createRequire(join(PREVIEW_DIR, 'package.json'));
 const themes = require('@carbon/themes'), layout = require('@carbon/layout'), type = require('@carbon/type'), colors = require('@carbon/colors');
 
@@ -158,10 +161,12 @@ console.log(report.join('\n'));
 const renderer = await previewRenderer(contract); // package guard + stylesheet
 const React = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
-const { [contract.code.component]: Component } = require(contract.code.package);
 const copyText = ref => (typeof ref === 'string' && ref.startsWith('copy:') ? handoff.copy[ref.slice(5)].text : ref);
+// #90 finding: TextInput requires `id`, a prop no Contract axis or property carries; the usage id stands in.
+const REQUIRED = { 'text-input': u => ({ id: u.id }) };
 function propsFor(usage, override = {}) {
-  const props = {};
+  const contract = contracts[usage.contract];
+  const props = { ...(REQUIRED[usage.contract]?.(usage) || {}) };
   const tuple = { ...usage.tuple, ...(override.state && { state: override.state }) };
   for (const axis of contract.axes) {
     const key = tuple[axis.key] ?? axis.default;
@@ -174,25 +179,31 @@ function propsFor(usage, override = {}) {
   for (const p of contract.properties) {
     if (properties[p.key] === undefined) continue;
     if (p.code?.prop === 'children') children = copyText(properties[p.key]);
+    else if (p.type === 'TEXT' && p.code?.prop) props[p.code.prop] = copyText(properties[p.key]);
   }
   return { props, children };
 }
 function snippet(usage, override) {
+  const contract = contracts[usage.contract];
   const { props, children } = propsFor(usage, override);
   const emit = Object.entries(props).filter(([k, v]) => {
+    if (!contract.axes.some(a => a.values.some(x => x.code && k in x.code))) return true; // property or required prop
     const axis = contract.axes.find(a => a.values.some(x => x.code && k in x.code));
     if (contract.code.alwaysEmit.includes(axis?.key)) return true;
     const def = axis?.values.find(x => x.key === axis.default)?.code || {};
     return def[k] !== v;
   });
   const attrs = emit.map(([k, v]) => (v === true ? k : `${k}="${v}"`)).join(' ');
-  return `${contract.code.import}\n\n<${contract.code.component}${attrs ? ' ' + attrs : ''}>${children ?? ''}</${contract.code.component}>`;
+  const tag = contract.code.component;
+  return `${contract.code.import}\n\n<${tag}${attrs ? ' ' + attrs : ''}${children === undefined ? ' />' : `>${children}</${tag}>`}`;
 }
 const renders = {}, snippets = {};
 for (const screen of handoff.screens)
   for (const region of screen.regions)
     for (const u of region.usages || []) {
-      if (u.contract !== 'button') continue;
+      if (!u.contract) continue;
+      const c = contracts[u.contract];
+      const { [c.code.component]: Component } = require(c.code.package);
       const variants = [['', {}], ...Object.entries(screen.states).filter(([, s]) => s.usageStates?.[u.id]).map(([k, s]) => [`@${k}`, s.usageStates[u.id]])];
       for (const [suffix, ov] of variants) {
         const { props, children } = propsFor(u, ov);
@@ -213,7 +224,7 @@ for (const [k, v] of Object.entries(themes.white)) if (typeof v === 'string' && 
 
 const data = {
   handoff, proposals, renders, snippets, protoByState, swatches, textStyles,
-  contracts: { button: { name: contract.family.name, axes: contract.axes.map(a => ({ key: a.key, label: a.label, default: a.default, values: a.values.map(v => ({ key: v.key, label: v.label })) })), package: `${contract.code.package} ${contract.source.packages[contract.code.package]}`, snapshotId: contract.source.snapshotId, status: contract.selection.status } },
+  contracts: Object.fromEntries(Object.entries(contracts).map(([k, c]) => [k, { name: c.family.name, axes: c.axes.map(a => ({ key: a.key, label: a.label, default: a.default, values: a.values.map(v => ({ key: v.key, label: v.label })) })), package: `${c.code.package} ${c.source.packages[c.code.package]}`, snapshotId: c.source.snapshotId, status: c.selection.status }])),
   spacing, radius,
 };
 const page = read('page.html')
