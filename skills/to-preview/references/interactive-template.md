@@ -32,7 +32,7 @@ It should refuse to render when the installed packages differ from `contract.sou
 - the specimen host, centred; an unchecked card's specimen is dimmed to 40%;
 - the footer, `Source` and `sourceLabel`, or `Base Component` on the base card.
 
-The chrome uses Carbon `--cds-*` tokens from the library stylesheet, never raw hex: page `--cds-background`, card `--cds-layer-01`, border `--cds-border-subtle-01`, text `--cds-text-primary` and `--cds-text-secondary`. The Theme toggle puts the mode class (`modeClass`) on `<body>`, so the specimens and the chrome switch together.
+The chrome uses Carbon `--cds-*` tokens from the library stylesheet, never raw hex: page `--cds-layer-01` (gray in White, as in the reference), card `--cds-background` (the surface Carbon designs components on), border `--cds-border-subtle-01`, text `--cds-text-primary` and `--cds-text-secondary`. The Theme toggle puts the mode class (`modeClass`) on `<body>`, so the specimens and the chrome switch together.
 
 **Forcing a State.** Every style rule whose selector uses a forced pseudo-class gets a copy with the pseudo-class replaced by a class (`:hover` becomes `.tp-force-hover`), inserted right after the original. Copies from a hover-capability media query (`@media (any-hover: hover)`) go beside the query, so they apply in any browser. The rendered component's root element gets the class.
 

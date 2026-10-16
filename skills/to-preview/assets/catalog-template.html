@@ -7,17 +7,17 @@
 <style>
   /* Chrome colours are Carbon tokens (--cds-*) from the library stylesheet; the Theme toggle puts the mode class on <body>. */
   body > header,.tp-main,.tp-toolbar,.tp-cell,.tp-specimen,.tp-toolbar select,#export,.tp-toolbar button{box-sizing:border-box}
-  body.tp-page{margin:0;font:14px/1.4 system-ui,sans-serif;color:var(--cds-text-primary);background:var(--cds-background)}
-  #export,.tp-toolbar button,.tp-toolbar select{font:inherit} #export,.tp-toolbar button{cursor:pointer;padding:8px 12px;border:1px solid var(--cds-border-strong-01);background:var(--cds-field-01);color:var(--cds-text-primary)}
+  body.tp-page{margin:0;font:14px/1.4 system-ui,sans-serif;color:var(--cds-text-primary);background:var(--cds-layer-01)}
+  #export,.tp-toolbar button,.tp-toolbar select{font:inherit} #export,.tp-toolbar button{cursor:pointer;padding:8px 12px;border:1px solid var(--cds-border-strong-01);background:var(--cds-field-02);color:var(--cds-text-primary)}
   #export:disabled{cursor:default;opacity:.5}
   #export:focus-visible,.tp-toolbar button:focus-visible,.tp-toolbar select:focus-visible,.tp-card-head > input:focus-visible{outline:2px solid var(--cds-focus);outline-offset:2px}
-  body > header{padding:20px 24px;border-bottom:1px solid var(--cds-border-subtle-01);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  body > header{padding:20px 24px;background:var(--cds-background);border-bottom:1px solid var(--cds-border-subtle-01);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
   body > header > h1{font-size:20px;margin:0} .tp-main{padding:24px;min-width:0}
   .tp-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 20px}.tp-toolbar label{display:flex;gap:5px;align-items:center}
-  .tp-toolbar select{padding:7px;border:1px solid var(--cds-border-strong-01);background:var(--cds-field-01);color:var(--cds-text-primary)}
+  .tp-toolbar select{padding:7px;border:1px solid var(--cds-border-strong-01);background:var(--cds-field-02);color:var(--cds-text-primary)}
   /* Cards butt together with shared 1px borders: each card overlaps the one before it by its border. */
   #grid{display:grid;grid-template-columns:repeat(auto-fill,200px);max-width:1200px;box-sizing:content-box;padding:1px 0 0 1px}
-  .tp-cell{width:200px;height:200px;margin:-1px 0 0 -1px;padding:16px;display:grid;grid-template-rows:auto 1fr auto;row-gap:8px;border:1px solid var(--cds-border-subtle-01);background:var(--cds-layer-01)}
+  .tp-cell{width:200px;height:200px;margin:-1px 0 0 -1px;padding:16px;display:grid;grid-template-rows:auto 1fr auto;row-gap:8px;border:1px solid var(--cds-border-subtle-01);background:var(--cds-background)}
   .tp-card-head{display:flex;gap:8px;align-items:start;justify-content:space-between}.tp-card-head > input{margin:0;flex:none;accent-color:var(--cds-icon-primary)}
   .tp-card-name{font-size:12px;line-height:16px;overflow-wrap:anywhere}
   .tp-specimen{display:flex;align-items:center;justify-content:center;min-height:0;min-width:0}
