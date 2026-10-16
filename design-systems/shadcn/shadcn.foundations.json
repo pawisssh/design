@@ -15,13 +15,52 @@
     "files": {
       "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
       "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
+      "components/ui/button.tsx": "sha256:08e5f87833c5db8436e89337ebde0f776bcdbf649d3de69fb89be6441ca2e366",
       "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
     },
-    "snapshotId": "sha256:5f3bbeca13d59af1786e0e53050426eb89d1bd0d445d60aae0889e40bb059b4e"
+    "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6"
   },
   "closure": {
-    "contracts": [],
-    "tokens": []
+    "contracts": [
+      {
+        "family": "button",
+        "path": "design-systems/shadcn/contracts/button.component.json",
+        "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6"
+      }
+    ],
+    "tokens": [
+      "button-default-hover-fill",
+      "button-destructive-fill",
+      "button-destructive-focus-effect",
+      "button-destructive-focus-stroke",
+      "button-destructive-hover-fill",
+      "button-focus-effect",
+      "button-ghost-expanded-hover-fill",
+      "button-ghost-hover-fill",
+      "button-invalid-effect",
+      "button-invalid-focus-effect",
+      "button-invalid-focus-stroke",
+      "button-invalid-stroke",
+      "button-outline-expanded-fill",
+      "button-outline-expanded-hover-fill",
+      "button-outline-fill",
+      "button-outline-focus-stroke",
+      "button-outline-hover-fill",
+      "button-outline-stroke",
+      "button-secondary-hover-fill",
+      "muted",
+      "primary",
+      "radius-lg",
+      "ring",
+      "secondary",
+      "spacing-0",
+      "spacing-1",
+      "spacing-1_5",
+      "spacing-6",
+      "spacing-7",
+      "spacing-8",
+      "spacing-9"
+    ]
   },
   "collections": [
     {
@@ -526,7 +565,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "muted-foreground": {
       "collection": "theme",
@@ -650,7 +691,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "primary-foreground": {
       "collection": "theme",
@@ -712,7 +755,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "secondary": {
       "collection": "theme",
@@ -743,7 +788,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "secondary-foreground": {
       "collection": "theme",
@@ -1033,6 +1080,740 @@
       "usedBy": [],
       "family": "sidebar"
     },
+    "button-default-hover-fill": {
+      "collection": "theme",
+      "name": "Button/button-default-hover-fill",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:11 hover:bg-primary/80",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "hover:bg-primary/80"
+      },
+      "values": {
+        "light": {
+          "raw": "#171717",
+          "alpha": 0.8,
+          "resolved": "rgba(23, 23, 23, 0.8)",
+          "from": {
+            "alias": "primary",
+            "alpha": 0.8
+          },
+          "level": "info",
+          "reason": "hover:bg-primary/80: primary at 80%, flattened to RGBA since a Figma alias cannot carry alpha"
+        },
+        "dark": {
+          "raw": "#e5e5e5",
+          "alpha": 0.8,
+          "resolved": "rgba(229, 229, 229, 0.8)",
+          "from": {
+            "alias": "primary",
+            "alpha": 0.8
+          },
+          "level": "info",
+          "reason": "hover:bg-primary/80: primary at 80%, flattened to RGBA since a Figma alias cannot carry alpha"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-destructive-fill": {
+      "collection": "theme",
+      "name": "Button/button-destructive-fill",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:19 bg-destructive/10 dark:bg-destructive/20",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "bg-destructive/10 dark:bg-destructive/20"
+      },
+      "values": {
+        "light": {
+          "raw": "#e7000b",
+          "alpha": 0.1,
+          "resolved": "rgba(231, 0, 11, 0.1)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.1
+          },
+          "level": "info",
+          "reason": "bg-destructive/10: destructive at 10%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.2,
+          "resolved": "rgba(255, 100, 103, 0.2)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.2
+          },
+          "level": "info",
+          "reason": "dark:bg-destructive/20: destructive at 20%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-destructive-focus-effect": {
+      "collection": "theme",
+      "name": "Button/button-destructive-focus-effect",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:19 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
+      "scopes": [
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40"
+      },
+      "values": {
+        "light": {
+          "raw": "#e7000b",
+          "alpha": 0.2,
+          "resolved": "rgba(231, 0, 11, 0.2)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.2
+          },
+          "level": "info",
+          "reason": "focus-visible:ring-destructive/20: destructive at 20%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.4,
+          "resolved": "rgba(255, 100, 103, 0.4)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.4
+          },
+          "level": "info",
+          "reason": "dark:focus-visible:ring-destructive/40: destructive at 40%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-destructive-focus-stroke": {
+      "collection": "theme",
+      "name": "Button/button-destructive-focus-stroke",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:19 focus-visible:border-destructive/40",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "focus-visible:border-destructive/40"
+      },
+      "values": {
+        "light": {
+          "raw": "#e7000b",
+          "alpha": 0.4,
+          "resolved": "rgba(231, 0, 11, 0.4)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.4
+          },
+          "level": "info",
+          "reason": "focus-visible:border-destructive/40: destructive at 40%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.4,
+          "resolved": "rgba(255, 100, 103, 0.4)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.4
+          },
+          "level": "info",
+          "reason": "focus-visible:border-destructive/40: destructive at 40%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-destructive-hover-fill": {
+      "collection": "theme",
+      "name": "Button/button-destructive-hover-fill",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:19 hover:bg-destructive/20 dark:hover:bg-destructive/30",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "hover:bg-destructive/20 dark:hover:bg-destructive/30"
+      },
+      "values": {
+        "light": {
+          "raw": "#e7000b",
+          "alpha": 0.2,
+          "resolved": "rgba(231, 0, 11, 0.2)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.2
+          },
+          "level": "info",
+          "reason": "hover:bg-destructive/20: destructive at 20%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.3,
+          "resolved": "rgba(255, 100, 103, 0.3)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.3
+          },
+          "level": "info",
+          "reason": "dark:hover:bg-destructive/30: destructive at 30%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-focus-effect": {
+      "collection": "theme",
+      "name": "Button/button-focus-effect",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:7 focus-visible:ring-ring/50",
+      "scopes": [
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "focus-visible:ring-ring/50"
+      },
+      "values": {
+        "light": {
+          "raw": "#a1a1a1",
+          "alpha": 0.5,
+          "resolved": "rgba(161, 161, 161, 0.5)",
+          "from": {
+            "alias": "ring",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "focus-visible:ring-ring/50: ring at 50%, flattened to RGBA since a Figma alias cannot carry alpha"
+        },
+        "dark": {
+          "raw": "#737373",
+          "alpha": 0.5,
+          "resolved": "rgba(115, 115, 115, 0.5)",
+          "from": {
+            "alias": "ring",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "focus-visible:ring-ring/50: ring at 50%, flattened to RGBA since a Figma alias cannot carry alpha"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-ghost-expanded-hover-fill": {
+      "collection": "theme",
+      "name": "Button/button-ghost-expanded-hover-fill",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:17 aria-expanded:bg-muted dark:hover:bg-muted/50",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "aria-expanded:bg-muted dark:hover:bg-muted/50"
+      },
+      "values": {
+        "light": {
+          "raw": "#f5f5f5",
+          "resolved": "#f5f5f5",
+          "from": {
+            "alias": "muted"
+          },
+          "level": "info",
+          "reason": "aria-expanded:bg-muted: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+        },
+        "dark": {
+          "raw": "#262626",
+          "alpha": 0.5,
+          "resolved": "rgba(38, 38, 38, 0.5)",
+          "from": {
+            "alias": "muted",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "dark:hover:bg-muted/50: muted at 50%, flattened to RGBA since a Figma alias cannot carry alpha"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-ghost-hover-fill": {
+      "collection": "theme",
+      "name": "Button/button-ghost-hover-fill",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:17 hover:bg-muted dark:hover:bg-muted/50",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "hover:bg-muted dark:hover:bg-muted/50"
+      },
+      "values": {
+        "light": {
+          "raw": "#f5f5f5",
+          "resolved": "#f5f5f5",
+          "from": {
+            "alias": "muted"
+          },
+          "level": "info",
+          "reason": "hover:bg-muted: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+        },
+        "dark": {
+          "raw": "#262626",
+          "alpha": 0.5,
+          "resolved": "rgba(38, 38, 38, 0.5)",
+          "from": {
+            "alias": "muted",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "dark:hover:bg-muted/50: muted at 50%, flattened to RGBA since a Figma alias cannot carry alpha"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-invalid-effect": {
+      "collection": "theme",
+      "name": "Button/button-invalid-effect",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:7 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
+      "scopes": [
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40"
+      },
+      "values": {
+        "light": {
+          "raw": "#e7000b",
+          "alpha": 0.2,
+          "resolved": "rgba(231, 0, 11, 0.2)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.2
+          },
+          "level": "info",
+          "reason": "aria-invalid:ring-destructive/20: destructive at 20%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.4,
+          "resolved": "rgba(255, 100, 103, 0.4)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.4
+          },
+          "level": "info",
+          "reason": "dark:aria-invalid:ring-destructive/40: destructive at 40%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-invalid-focus-effect": {
+      "collection": "theme",
+      "name": "Button/button-invalid-focus-effect",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:7 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
+      "scopes": [
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40"
+      },
+      "values": {
+        "light": {
+          "raw": "#e7000b",
+          "alpha": 0.2,
+          "resolved": "rgba(231, 0, 11, 0.2)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.2
+          },
+          "level": "info",
+          "reason": "aria-invalid:ring-destructive/20: destructive at 20%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.4,
+          "resolved": "rgba(255, 100, 103, 0.4)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.4
+          },
+          "level": "info",
+          "reason": "dark:aria-invalid:ring-destructive/40: destructive at 40%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-invalid-focus-stroke": {
+      "collection": "theme",
+      "name": "Button/button-invalid-focus-stroke",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:7 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "aria-invalid:border-destructive dark:aria-invalid:border-destructive/50"
+      },
+      "values": {
+        "light": {
+          "raw": "#e7000b",
+          "resolved": "#e7000b",
+          "from": {
+            "alias": "destructive"
+          },
+          "level": "info",
+          "reason": "aria-invalid:border-destructive: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.5,
+          "resolved": "rgba(255, 100, 103, 0.5)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "dark:aria-invalid:border-destructive/50: destructive at 50%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-invalid-stroke": {
+      "collection": "theme",
+      "name": "Button/button-invalid-stroke",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:7 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "aria-invalid:border-destructive dark:aria-invalid:border-destructive/50"
+      },
+      "values": {
+        "light": {
+          "raw": "#e7000b",
+          "resolved": "#e7000b",
+          "from": {
+            "alias": "destructive"
+          },
+          "level": "info",
+          "reason": "aria-invalid:border-destructive: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.5,
+          "resolved": "rgba(255, 100, 103, 0.5)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "dark:aria-invalid:border-destructive/50: destructive at 50%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-outline-expanded-fill": {
+      "collection": "theme",
+      "name": "Button/button-outline-expanded-fill",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:13 aria-expanded:bg-muted dark:bg-input/30",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "aria-expanded:bg-muted dark:bg-input/30"
+      },
+      "values": {
+        "light": {
+          "raw": "#f5f5f5",
+          "resolved": "#f5f5f5",
+          "from": {
+            "alias": "muted"
+          },
+          "level": "info",
+          "reason": "aria-expanded:bg-muted: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+        },
+        "dark": {
+          "raw": "#ffffff",
+          "alpha": 0.045,
+          "resolved": "rgba(255, 255, 255, 0.045)",
+          "from": {
+            "alias": "input",
+            "alpha": 0.3
+          },
+          "level": "info",
+          "reason": "dark:bg-input/30: input at 30%, flattened to RGBA since a Figma alias cannot carry alpha"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-outline-expanded-hover-fill": {
+      "collection": "theme",
+      "name": "Button/button-outline-expanded-hover-fill",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:13 aria-expanded:bg-muted dark:hover:bg-input/50",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "aria-expanded:bg-muted dark:hover:bg-input/50"
+      },
+      "values": {
+        "light": {
+          "raw": "#f5f5f5",
+          "resolved": "#f5f5f5",
+          "from": {
+            "alias": "muted"
+          },
+          "level": "info",
+          "reason": "aria-expanded:bg-muted: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+        },
+        "dark": {
+          "raw": "#ffffff",
+          "alpha": 0.075,
+          "resolved": "rgba(255, 255, 255, 0.075)",
+          "from": {
+            "alias": "input",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "dark:hover:bg-input/50: input at 50%, flattened to RGBA since a Figma alias cannot carry alpha"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-outline-fill": {
+      "collection": "theme",
+      "name": "Button/button-outline-fill",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:13 bg-background dark:bg-input/30",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "bg-background dark:bg-input/30"
+      },
+      "values": {
+        "light": {
+          "raw": "#ffffff",
+          "resolved": "#ffffff",
+          "from": {
+            "alias": "background"
+          },
+          "level": "info",
+          "reason": "bg-background: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+        },
+        "dark": {
+          "raw": "#ffffff",
+          "alpha": 0.045,
+          "resolved": "rgba(255, 255, 255, 0.045)",
+          "from": {
+            "alias": "input",
+            "alpha": 0.3
+          },
+          "level": "info",
+          "reason": "dark:bg-input/30: input at 30%, flattened to RGBA since a Figma alias cannot carry alpha"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-outline-focus-stroke": {
+      "collection": "theme",
+      "name": "Button/button-outline-focus-stroke",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:7,13 focus-visible:border-ring dark:border-input",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "focus-visible:border-ring dark:border-input"
+      },
+      "values": {
+        "light": {
+          "raw": "#a1a1a1",
+          "resolved": "#a1a1a1",
+          "from": {
+            "alias": "ring"
+          },
+          "level": "info",
+          "reason": "focus-visible:border-ring: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+        },
+        "dark": {
+          "raw": "#ffffff",
+          "alpha": 0.15,
+          "resolved": "rgba(255, 255, 255, 0.15)",
+          "from": {
+            "alias": "input"
+          },
+          "level": "info",
+          "reason": "dark:border-input: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-outline-hover-fill": {
+      "collection": "theme",
+      "name": "Button/button-outline-hover-fill",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:13 hover:bg-muted dark:hover:bg-input/50",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "hover:bg-muted dark:hover:bg-input/50"
+      },
+      "values": {
+        "light": {
+          "raw": "#f5f5f5",
+          "resolved": "#f5f5f5",
+          "from": {
+            "alias": "muted"
+          },
+          "level": "info",
+          "reason": "hover:bg-muted: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+        },
+        "dark": {
+          "raw": "#ffffff",
+          "alpha": 0.075,
+          "resolved": "rgba(255, 255, 255, 0.075)",
+          "from": {
+            "alias": "input",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "dark:hover:bg-input/50: input at 50%, flattened to RGBA since a Figma alias cannot carry alpha"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-outline-stroke": {
+      "collection": "theme",
+      "name": "Button/button-outline-stroke",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:13 border-border dark:border-input",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "border-border dark:border-input"
+      },
+      "values": {
+        "light": {
+          "raw": "#e5e5e5",
+          "resolved": "#e5e5e5",
+          "from": {
+            "alias": "border"
+          },
+          "level": "info",
+          "reason": "border-border: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+        },
+        "dark": {
+          "raw": "#ffffff",
+          "alpha": 0.15,
+          "resolved": "rgba(255, 255, 255, 0.15)",
+          "from": {
+            "alias": "input"
+          },
+          "level": "info",
+          "reason": "dark:border-input: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
+    "button-secondary-hover-fill": {
+      "collection": "theme",
+      "name": "Button/button-secondary-hover-fill",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/button.tsx:15 hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]"
+      },
+      "values": {
+        "light": {
+          "raw": "#e7e7e7",
+          "resolved": "#e7e7e7",
+          "from": {
+            "mix": "color-mix(in oklch,var(--secondary),var(--foreground) 5%)"
+          },
+          "level": "info",
+          "reason": "hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]: the mix evaluated in this Mode"
+        },
+        "dark": {
+          "raw": "#2f2f2f",
+          "resolved": "#2f2f2f",
+          "from": {
+            "mix": "color-mix(in oklch,var(--secondary),var(--foreground) 5%)"
+          },
+          "level": "info",
+          "reason": "hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]: the mix evaluated in this Mode"
+        }
+      },
+      "usedBy": [
+        "button"
+      ],
+      "family": "button"
+    },
     "radius-2xl": {
       "collection": "layout",
       "name": "Radius/radius-2xl",
@@ -1119,7 +1900,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "radius-md": {
       "collection": "layout",
@@ -1208,7 +1991,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "spacing-0_5": {
       "collection": "layout",
@@ -1254,7 +2039,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "spacing-10": {
       "collection": "layout",
@@ -1392,7 +2179,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "spacing-2": {
       "collection": "layout",
@@ -1783,7 +2572,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "spacing-60": {
       "collection": "layout",
@@ -1852,7 +2643,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "spacing-72": {
       "collection": "layout",
@@ -1898,7 +2691,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "spacing-80": {
       "collection": "layout",
@@ -1944,7 +2739,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "spacing-96": {
       "collection": "layout",
@@ -2002,6 +2799,11 @@
     "compiled": {
       "against": "tailwindcss@4.3.3 compile() over app/globals.css",
       "matched": 73
+    },
+    "scopes": {
+      "by": "skills/contract/scripts/contract.mjs validate, rule 6",
+      "contracts": 1,
+      "errors": 0
     }
   },
   "notes": [

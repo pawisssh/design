@@ -1,5 +1,6 @@
 // The Generic Adapter's component step (#119), through its public entry points: `readFamily()` (the exact tier),
 // `generate()` (the draft Contract) and the CLI, driven by the committed shadcn fixture project or a copy of it.
+// Synthesized tokens (#120) have their own tests in synthesized.test.mjs.
 // They need the pinned tools (node skills/adapter-generic/scripts/sources.mjs); without them every test is skipped.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -8,15 +9,20 @@ import { cpSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { generate, readFamily } from '../scripts/components.mjs';
+import { generate as library } from '../scripts/foundations.mjs';
 import { FIXTURE, hasTools } from '../scripts/sources.mjs';
 import { expand, resolve, validate } from '../../contract/scripts/contract.mjs';
 
 const root = new URL('../../../', import.meta.url);
-const foundations = JSON.parse(readFileSync(new URL('design-systems/shadcn/shadcn.foundations.json', root), 'utf8'));
+const COMMITTED = new URL('design-systems/shadcn/shadcn.foundations.json', root);
+const committed = JSON.parse(readFileSync(COMMITTED, 'utf8'));
 const CLI = new URL('../scripts/components.mjs', import.meta.url).pathname;
 const BUTTON = 'components/ui/button.tsx';
 const skip = hasTools() ? false : 'Generic Adapter tools missing: run node skills/adapter-generic/scripts/sources.mjs';
 
+// The Code Library tokens alone, as the foundations step reads them before a family adds its Synthesized tokens:
+// a copy of the fixture with button.tsx edited still matches it.
+const foundations = skip ? null : (await library({ project: FIXTURE })).doc;
 let fixtureRun;
 const button = () => (fixtureRun = fixtureRun || readFamily({ project: FIXTURE, family: 'button', foundations }));
 
@@ -27,11 +33,6 @@ function variant(edit) {
   writeFileSync(join(dir, BUTTON), edit(readFileSync(join(dir, BUTTON), 'utf8')));
   return dir;
 }
-// Each class string in button.tsx keeps only the classes `keep` accepts.
-const filterClasses = keep => text => text.replace(/"([^"]*)"/g, (m, s) => `"${s.split(/\s+/).filter(keep).join(' ')}"`);
-// The Button with every utility #120 owns removed: opacities (`/n`), `color-mix`, `dark:` and rings
-// (`ring-*`, not `border-ring`).
-const withoutSynthesized = () => variant(filterClasses(c => !/\/\d|color-mix|dark:|(^|:)ring-/.test(c)));
 
 const byKey = axes => Object.fromEntries(axes.map(a => [a.key, a]));
 const tok = token => ({ token });
@@ -124,65 +125,44 @@ test('layout is the same in every State, attribute and variant value: the rules 
   assert.ok(layout.every(r => Object.keys(r.match).every(k => k === 'size')), JSON.stringify(layout.map(r => r.match)));
 });
 
-test('paint that differs by mode, carries an opacity or mixes tokens is left for #120, listed with its utilities', { skip }, async () => {
-  const { pending } = await button();
-  const find = (field, pred) => pending.find(p => p.at === field && pred(p));
-  const outline = find('Button.fill', p => p.light === 'bg-background' && p.dark === 'dark:bg-input/30');
-  assert.ok(outline, 'outline fill differs by mode');
-  assert.equal(outline.reason, 'differs by mode');
-  assert.ok(find('Button.fill', p => p.light === 'hover:bg-muted' && p.dark === 'dark:hover:bg-input/50'), 'outline dark hover: dark:hover: beats hover: on specificity');
-  assert.ok(find('Button.fill', p => p.light === 'hover:bg-primary/80' && p.reason === 'a token at an opacity'));
-  assert.ok(find('Button.fill', p => /color-mix/.test(p.light) && p.reason === 'mixes tokens'));
-  assert.ok(find('Button.effects', p => p.light === 'focus-visible:ring-ring/50'));
-  assert.ok(pending.every(p => p.lines.length && p.lines.every(l => /^components\/ui\/button\.tsx:\d+$/.test(l)) && p.variants > 0));
-});
-
-test('generate fails clearly on the fixture Button: every value #120 owns is named', { skip }, async () => {
-  await assert.rejects(generate({ project: FIXTURE, family: 'button', foundations }), e => {
-    assert.match(e.message, /Synthesized tokens \(#120/);
-    assert.match(e.message, /Button\.fill .*bg-background .*dark:bg-input\/30/);
-    return true;
-  });
-});
-
-test('without #120\'s utilities, generate writes a draft Contract that validates and keeps every plain token', { skip }, async () => {
-  const { contract } = await generate({ project: withoutSynthesized(), family: 'button', foundations });
-  const v = validate(contract, foundations);
-  assert.deepEqual(v.errors, []);
-  assert.equal(contract.selection.status, 'draft');
+test('generate writes the draft Contract against the Foundations document of the same run: it validates', { skip }, async () => {
+  const { contract } = await generate({ project: FIXTURE, family: 'button', foundations: committed });
+  assert.deepEqual(validate(contract, committed).errors, []);
+  assert.deepEqual([contract.selection.status, contract.selection.approval], ['draft', null]);
   assert.equal(expand(contract).length, contract.selection.expectedCount);
   assert.deepEqual(contract.anatomy, { name: 'Button', type: 'COMPONENT' });
   assert.equal(contract.source.adapter, 'generic');
-  assert.ok(contract.source.files[BUTTON]);
+  assert.deepEqual(Object.keys(contract.source.files), ['app/globals.css', 'components.json', BUTTON, 'package-lock.json']);
   const at = (variantKey, state, invalid = 'valid', expanded = 'collapsed') =>
     resolve(contract, { variant: variantKey, size: 'default', invalid, expanded, state }).paint.Button;
   assert.deepEqual(at('default', 'enabled').fill, tok('primary'));
   assert.equal(at('ghost', 'enabled').fill, 'none');
-  assert.deepEqual(at('ghost', 'hover').fill, tok('muted'));
-  assert.deepEqual(at('outline', 'enabled', 'valid', 'expanded').fill, tok('muted'));
+  assert.deepEqual(at('ghost', 'enabled', 'valid', 'expanded').fill, tok('muted'));
   assert.equal(at('default', 'enabled').stroke, 'none', 'border-transparent');
   assert.deepEqual(at('default', 'focus').stroke, tok('ring'));
-  assert.deepEqual(at('default', 'enabled', 'invalid').stroke, tok('destructive'));
+  assert.deepEqual(at('default', 'enabled', 'invalid').stroke, tok('button-invalid-stroke'));
   assert.equal(at('default', 'disabled').opacity, 0.5);
 });
 
 test('two CLI runs write byte-identical Contracts through writeJson', { skip }, () => {
-  const project = withoutSynthesized();
   const dir = mkdtempSync(join(tmpdir(), 'generic-contract-'));
   const out = join(dir, 'button.component.json');
   const runs = [1, 2].map(() => {
-    execFileSync('node', [CLI, '--project', project, '--family', 'button', '-o', out]);
+    execFileSync('node', [CLI, '--family', 'button', '-o', out]);
     return readFileSync(out, 'utf8');
   });
   assert.equal(runs[0], runs[1]);
-  assert.deepEqual(validate(JSON.parse(runs[0]), foundations).errors, []);
+  assert.equal(runs[0], readFileSync(new URL('design-systems/shadcn/contracts/button.component.json', root), 'utf8'), 'the committed Contract');
 });
 
-test('the CLI fails, writing nothing, when #120 owns a value', { skip }, () => {
-  const out = join(mkdtempSync(join(tmpdir(), 'generic-contract-')), 'button.component.json');
-  const r = spawnSync('node', [CLI, '--family', 'button', '-o', out], { encoding: 'utf8' });
+test('the CLI fails, writing nothing, when the Foundations document lacks the family\'s Synthesized tokens', { skip }, () => {
+  const dir = mkdtempSync(join(tmpdir(), 'generic-contract-'));
+  const stale = join(dir, 'library.json');
+  writeFileSync(stale, JSON.stringify(foundations));
+  const out = join(dir, 'button.component.json');
+  const r = spawnSync('node', [CLI, '--family', 'button', '--foundations', stale, '-o', out], { encoding: 'utf8' });
   assert.equal(r.status, 1);
-  assert.match(r.stderr, /FAIL: .*#120/);
+  assert.match(r.stderr, /FAIL: .*regenerate it with foundations\.mjs --family button/);
   assert.throws(() => readFileSync(out));
 });
 

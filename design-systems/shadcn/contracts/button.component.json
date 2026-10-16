@@ -1,0 +1,859 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "button",
+    "name": "Button",
+    "description": "shadcn/ui Button (components/ui/button.tsx), read from its source and compiled CSS."
+  },
+  "source": {
+    "codeLibrary": "shadcn/ui",
+    "adapter": "generic",
+    "packages": {
+      "shadcn": "4.22.0",
+      "tailwindcss": "4.3.3",
+      "tw-animate-css": "1.4.0"
+    },
+    "files": {
+      "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
+      "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
+      "components/ui/button.tsx": "sha256:08e5f87833c5db8436e89337ebde0f776bcdbf649d3de69fb89be6441ca2e366",
+      "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
+    },
+    "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6"
+  },
+  "axes": [
+    {
+      "key": "variant",
+      "label": "Variant",
+      "default": "default",
+      "defaultSource": "components/ui/button.tsx defaultVariants.variant",
+      "values": [
+        {
+          "key": "default",
+          "label": "Default",
+          "code": {
+            "variant": "default"
+          }
+        },
+        {
+          "key": "outline",
+          "label": "Outline",
+          "code": {
+            "variant": "outline"
+          }
+        },
+        {
+          "key": "secondary",
+          "label": "Secondary",
+          "code": {
+            "variant": "secondary"
+          }
+        },
+        {
+          "key": "ghost",
+          "label": "Ghost",
+          "code": {
+            "variant": "ghost"
+          }
+        },
+        {
+          "key": "destructive",
+          "label": "Destructive",
+          "code": {
+            "variant": "destructive"
+          }
+        },
+        {
+          "key": "link",
+          "label": "Link",
+          "code": {
+            "variant": "link"
+          }
+        }
+      ]
+    },
+    {
+      "key": "size",
+      "label": "Size",
+      "default": "default",
+      "defaultSource": "components/ui/button.tsx defaultVariants.size",
+      "values": [
+        {
+          "key": "default",
+          "label": "Default",
+          "code": {
+            "size": "default"
+          }
+        },
+        {
+          "key": "xs",
+          "label": "Xs",
+          "code": {
+            "size": "xs"
+          }
+        },
+        {
+          "key": "sm",
+          "label": "Sm",
+          "code": {
+            "size": "sm"
+          }
+        },
+        {
+          "key": "lg",
+          "label": "Lg",
+          "code": {
+            "size": "lg"
+          }
+        },
+        {
+          "key": "icon",
+          "label": "Icon",
+          "code": {
+            "size": "icon"
+          }
+        },
+        {
+          "key": "icon-xs",
+          "label": "Icon Xs",
+          "code": {
+            "size": "icon-xs"
+          }
+        },
+        {
+          "key": "icon-sm",
+          "label": "Icon Sm",
+          "code": {
+            "size": "icon-sm"
+          }
+        },
+        {
+          "key": "icon-lg",
+          "label": "Icon Lg",
+          "code": {
+            "size": "icon-lg"
+          }
+        }
+      ]
+    },
+    {
+      "key": "invalid",
+      "label": "Invalid",
+      "default": "valid",
+      "defaultSource": "aria-invalid absent: Button renders without it",
+      "values": [
+        {
+          "key": "valid",
+          "label": "Valid",
+          "code": {},
+          "css": ":not([aria-invalid=\"true\"])"
+        },
+        {
+          "key": "invalid",
+          "label": "Invalid",
+          "code": {
+            "aria-invalid": true
+          },
+          "css": "[aria-invalid=\"true\"]"
+        }
+      ]
+    },
+    {
+      "key": "expanded",
+      "label": "Expanded",
+      "default": "collapsed",
+      "defaultSource": "aria-expanded absent: Button renders without it",
+      "values": [
+        {
+          "key": "collapsed",
+          "label": "Collapsed",
+          "code": {},
+          "css": ":not([aria-expanded=\"true\"])"
+        },
+        {
+          "key": "expanded",
+          "label": "Expanded",
+          "code": {
+            "aria-expanded": true
+          },
+          "css": "[aria-expanded=\"true\"]"
+        }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        {
+          "key": "enabled",
+          "label": "Enabled",
+          "code": {}
+        },
+        {
+          "key": "hover",
+          "label": "Hover",
+          "code": null,
+          "css": ":hover"
+        },
+        {
+          "key": "focus",
+          "label": "Focus",
+          "code": null,
+          "css": ":focus-visible"
+        },
+        {
+          "key": "disabled",
+          "label": "Disabled",
+          "code": {
+            "disabled": true
+          },
+          "css": ":disabled"
+        }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [
+      {
+        "match": {
+          "variant": [
+            "default",
+            "destructive",
+            "link"
+          ],
+          "expanded": "expanded"
+        },
+        "reason": "expanded is the twin of collapsed: no aria-expanded utility in variant default, destructive, link"
+      }
+    ],
+    "expectedCount": 576,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Button",
+    "type": "COMPONENT"
+  },
+  "properties": [],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Button": {
+          "direction": "row",
+          "width": "hug",
+          "height": {
+            "token": "spacing-8"
+          },
+          "alignMain": "center",
+          "alignCross": "center",
+          "paddingTop": {
+            "raw": 1,
+            "level": "info",
+            "reason": "derived: no padding + 1px border (an inside stroke takes no layout space)"
+          },
+          "paddingRight": {
+            "raw": 11,
+            "level": "info",
+            "reason": "derived: px-2.5 padding-inline calc(var(--spacing) * 2.5) = 10px + 1px border (an inside stroke takes no layout space)"
+          },
+          "paddingBottom": {
+            "raw": 1,
+            "level": "info",
+            "reason": "derived: no padding + 1px border (an inside stroke takes no layout space)"
+          },
+          "paddingLeft": {
+            "raw": 11,
+            "level": "info",
+            "reason": "derived: px-2.5 padding-inline calc(var(--spacing) * 2.5) = 10px + 1px border (an inside stroke takes no layout space)"
+          },
+          "gap": {
+            "token": "spacing-1_5"
+          },
+          "radius": {
+            "token": "radius-lg"
+          },
+          "strokeWeight": {
+            "raw": 1,
+            "level": "info",
+            "reason": "border: border-width 1px; the Foundations document has no stroke-width variable"
+          },
+          "strokeAlign": "inside"
+        }
+      }
+    },
+    {
+      "match": {
+        "size": [
+          "xs",
+          "icon-xs"
+        ]
+      },
+      "set": {
+        "Button": {
+          "height": {
+            "token": "spacing-6"
+          },
+          "radius": {
+            "raw": 8,
+            "level": "info",
+            "reason": "rounded-[min(var(--radius-md),10px)]: min(var(--radius-md), 10px) = 8px; no Foundations variable compiles to it"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "xs"
+      },
+      "set": {
+        "Button": {
+          "paddingRight": {
+            "raw": 9,
+            "level": "info",
+            "reason": "derived: px-2 padding-inline calc(var(--spacing) * 2) = 8px + 1px border (an inside stroke takes no layout space)"
+          },
+          "paddingLeft": {
+            "raw": 9,
+            "level": "info",
+            "reason": "derived: px-2 padding-inline calc(var(--spacing) * 2) = 8px + 1px border (an inside stroke takes no layout space)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": [
+          "xs",
+          "sm"
+        ]
+      },
+      "set": {
+        "Button": {
+          "gap": {
+            "token": "spacing-1"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": [
+          "sm",
+          "icon-sm"
+        ]
+      },
+      "set": {
+        "Button": {
+          "height": {
+            "token": "spacing-7"
+          },
+          "radius": {
+            "raw": 8,
+            "level": "info",
+            "reason": "rounded-[min(var(--radius-md),12px)]: min(var(--radius-md), 12px) = 8px; no Foundations variable compiles to it"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": [
+          "lg",
+          "icon-lg"
+        ]
+      },
+      "set": {
+        "Button": {
+          "height": {
+            "token": "spacing-9"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "icon"
+      },
+      "set": {
+        "Button": {
+          "width": {
+            "token": "spacing-8"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": [
+          "icon",
+          "icon-xs",
+          "icon-sm",
+          "icon-lg"
+        ]
+      },
+      "set": {
+        "Button": {
+          "paddingRight": {
+            "raw": 1,
+            "level": "info",
+            "reason": "derived: no padding + 1px border (an inside stroke takes no layout space)"
+          },
+          "paddingLeft": {
+            "raw": 1,
+            "level": "info",
+            "reason": "derived: no padding + 1px border (an inside stroke takes no layout space)"
+          },
+          "gap": {
+            "token": "spacing-0"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "icon-xs"
+      },
+      "set": {
+        "Button": {
+          "width": {
+            "token": "spacing-6"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "icon-sm"
+      },
+      "set": {
+        "Button": {
+          "width": {
+            "token": "spacing-7"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "icon-lg"
+      },
+      "set": {
+        "Button": {
+          "width": {
+            "token": "spacing-9"
+          }
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "primary"
+          },
+          "stroke": "none",
+          "opacity": 1,
+          "effects": []
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "outline"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-outline-fill"
+          },
+          "stroke": {
+            "token": "button-outline-stroke"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "secondary"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "secondary"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": [
+          "ghost",
+          "link"
+        ]
+      },
+      "set": {
+        "Button": {
+          "fill": "none"
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "destructive"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-destructive-fill"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "invalid": "invalid"
+      },
+      "set": {
+        "Button": {
+          "stroke": {
+            "token": "button-invalid-stroke"
+          },
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "spread": {
+                "raw": 3,
+                "level": "info",
+                "reason": "aria-invalid:ring-3: a 3px ring (box-shadow 0 0 0 3px); no effect-spread variable"
+              },
+              "color": {
+                "token": "button-invalid-effect"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus"
+      },
+      "set": {
+        "Button": {
+          "stroke": {
+            "token": "ring"
+          },
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "spread": {
+                "raw": 3,
+                "level": "info",
+                "reason": "focus-visible:ring-3: a 3px ring (box-shadow 0 0 0 3px); no effect-spread variable"
+              },
+              "color": {
+                "token": "button-focus-effect"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "disabled"
+      },
+      "set": {
+        "Button": {
+          "opacity": 0.5
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "outline",
+        "expanded": "expanded"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-outline-expanded-fill"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "ghost",
+        "expanded": "expanded"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "muted"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "default",
+        "state": "hover"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-default-hover-fill"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "outline",
+        "state": "hover"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-outline-hover-fill"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "outline",
+        "state": "focus"
+      },
+      "set": {
+        "Button": {
+          "stroke": {
+            "token": "button-outline-focus-stroke"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "secondary",
+        "state": "hover"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-secondary-hover-fill"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "ghost",
+        "state": "hover"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-ghost-hover-fill"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "destructive",
+        "state": "hover"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-destructive-hover-fill"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "destructive",
+        "state": "focus"
+      },
+      "set": {
+        "Button": {
+          "stroke": {
+            "token": "button-destructive-focus-stroke"
+          },
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "spread": {
+                "raw": 3,
+                "level": "info",
+                "reason": "focus-visible:ring-3: a 3px ring (box-shadow 0 0 0 3px); no effect-spread variable"
+              },
+              "color": {
+                "token": "button-destructive-focus-effect"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "invalid": "invalid",
+        "state": "focus"
+      },
+      "set": {
+        "Button": {
+          "stroke": {
+            "token": "button-invalid-focus-stroke"
+          },
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "spread": {
+                "raw": 3,
+                "level": "info",
+                "reason": "aria-invalid:ring-3: a 3px ring (box-shadow 0 0 0 3px); no effect-spread variable"
+              },
+              "color": {
+                "token": "button-invalid-focus-effect"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "outline",
+        "expanded": "expanded",
+        "state": "hover"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-outline-expanded-hover-fill"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "secondary",
+        "expanded": "expanded",
+        "state": "hover"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "secondary"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "ghost",
+        "expanded": "expanded",
+        "state": "hover"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-ghost-expanded-hover-fill"
+          }
+        }
+      }
+    }
+  ],
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": []
+  },
+  "figma": {
+    "page": "Button",
+    "componentSetName": "Button",
+    "description": "shadcn/ui Button (components/ui/button.tsx).",
+    "header": {
+      "type": "Component",
+      "title": "Button",
+      "namespace": "@/components/ui/button"
+    },
+    "grid": {
+      "columns": [
+        "size"
+      ],
+      "rows": [
+        "variant",
+        "invalid",
+        "expanded",
+        "state"
+      ]
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@/components/ui/button",
+    "component": "Button",
+    "import": "import { Button } from \"@/components/ui/button\"",
+    "alwaysEmit": []
+  },
+  "notes": [
+    {
+      "level": "info",
+      "at": "components/ui/button.tsx buttonVariants",
+      "message": "Each variant's classes are merged as cn() merges them, modelled (no package code runs): a later class drops an earlier one with the same variants whose CSS properties it covers, or that also sets font-size. Here: [&_svg:not([class*='size-'])]:size-3 drops [&_svg:not([class*='size-'])]:size-4, [&_svg:not([class*='size-'])]:size-3.5 drops [&_svg:not([class*='size-'])]:size-4, border-border drops border-transparent, focus-visible:border-destructive/40 drops focus-visible:border-ring, focus-visible:ring-destructive/20 drops focus-visible:ring-ring/50, rounded-[min(var(--radius-md),10px)] drops rounded-lg, rounded-[min(var(--radius-md),12px)] drops rounded-lg, text-[0.8rem] drops text-sm, text-xs drops text-sm."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/button.tsx",
+      "message": "has-data-[icon=inline-end]:pr-1.5, has-data-[icon=inline-end]:pr-2, has-data-[icon=inline-start]:pl-1.5, has-data-[icon=inline-start]:pl-2: Styled by what the component holds (:has); the slot axis is #121. Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/button.tsx",
+      "message": "in-data-[slot=button-group]:rounded-lg: Styled by an ancestor; that is a Mode or the parent's Contract (ADR 0012). Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/button.tsx",
+      "message": "[&_svg:not([class*='size-'])]:size-3, [&_svg:not([class*='size-'])]:size-3.5, [&_svg:not([class*='size-'])]:size-4, [&_svg]:pointer-events-none, [&_svg]:shrink-0: Styles a descendant; anatomy beyond the root is the agent tier (#122). Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/button.tsx",
+      "message": "active:not-aria-[haspopup]:translate-y-px: Under a condition no tuple decides (a negation, or two states at once). Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/button.tsx",
+      "message": "aria-expanded:text-foreground, aria-expanded:text-secondary-foreground, font-medium, hover:text-foreground, hover:underline, text-[0.8rem], text-destructive, text-primary, text-primary-foreground, text-secondary-foreground, text-sm, text-xs, underline-offset-4, whitespace-nowrap: Text utilities; text styles, the label and the anatomy beyond the root are the agent tier (#122). Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/button.tsx",
+      "message": "bg-clip-padding, disabled:pointer-events-none, outline-none, select-none, shrink-0, transition-all: No Contract field carries these properties. Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/button.tsx",
+      "message": "group/button: Compiles to no CSS (a group or peer marker)."
+    },
+    {
+      "level": "info",
+      "at": "figma.grid",
+      "message": "A placeholder layout (size across, every other axis down); the agent tier (#122) lays the grid out."
+    }
+  ]
+}
