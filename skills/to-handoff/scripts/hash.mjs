@@ -2,8 +2,8 @@
 // is computed one way only: the content hash, the Prototype's files and snapshotId, and the Foundations
 // usedHash. No parse5 here: validate and check load without the reader's package.
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { basename } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { basename, join } from 'node:path';
 import { canonical, sha256 } from '../../contract/scripts/contract.mjs';
 
 export const fileHash = bytes => 'sha256:' + createHash('sha256').update(bytes).digest('hex');
@@ -29,9 +29,16 @@ export function snapshotIdOf(files) {
   return 'sha256:' + sha256(Object.keys(files).sort().map(p => `${files[p].slice(7)}  ${p}\n`).join(''));
 }
 
-/** Every file the reader reads, as {path relative to the Prototype root: hash}. A single HTML file is one entry. */
-export function prototypeFiles(prototype) {
-  return { [basename(prototype)]: fileHash(readFileSync(prototype)) };
+/**
+ * Every file the reader reads, as {path relative to the Prototype root: hash}. A single HTML file is one entry; a
+ * React Prototype folder pins `files`, the reader's read set, and Drift re-hashes that list, so a missing one drops
+ * out (a file the app newly imports shows only on a re-generate).
+ */
+export function prototypeFiles(prototype, files) {
+  if (/\.html?$/i.test(prototype)) return { [basename(prototype)]: fileHash(readFileSync(prototype)) };
+  const out = {};
+  for (const rel of [...files].sort()) if (existsSync(join(prototype, rel))) out[rel] = fileHash(readFileSync(join(prototype, rel)));
+  return out;
 }
 
 /** The tokens and Text Styles a Handoff's regions bind: {tokens, textStyles}, each sorted. */

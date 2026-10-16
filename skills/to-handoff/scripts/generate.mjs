@@ -1,4 +1,4 @@
-// To-handoff generate (#102): one single-HTML-file Prototype + a Design System + decisions -> a Handoff.
+// To-handoff generate (#102): a Prototype (one HTML file, or a React app folder, #114) + a Design System + decisions -> a Handoff.
 // Generation is pure over (Prototype files, Design System, decisions): no clock, no network, no guess. Every
 // pick the agent or the owner makes (what an element is, a tied or near token, a plain condition's default,
 // the feature and its acceptance) is a keyed decision. Any unanswered key makes generate return the decision
@@ -19,9 +19,10 @@ import { COLOR_ROLES, collectionOf, colorText, followCustom, matchDeclaration, m
 import { stateAxisOf } from './system.mjs';
 import { hasRuntime } from './deps.mjs';
 import { readHtml, walk } from './reader.mjs';
+import { readReact } from './react.mjs';
 import { STEP_KINDS, run } from './runtime.mjs';
 import {
-  STANDARD_STATES, atomIn, atomsOf, candidateOf, evaluate, isPlaceholderText, ownDeclarations, parseCondition, standIns, stateOfAtom,
+  STANDARD_STATES, atomIn, atomsOf, candidateOf, evaluate, isPlaceholderText, librarySignature, ownDeclarations, parseCondition, standIns, stateOfAtom,
 } from './recognise.mjs';
 import { loadDesignSystem } from './system.mjs';
 
@@ -31,6 +32,8 @@ const LANDMARK_ROLES = new Set(['banner', 'navigation', 'main', 'complementary',
 const HEADINGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
 // Without breakpoints from the Adapter, the runtime reader screenshots one desktop width.
 const DEFAULT_BREAKPOINTS = [{ key: 'desktop', width: 1280 }];
+// Above this many routes, To-handoff asks whether to split the Prototype (#62).
+const MAX_SCREENS = 6;
 
 export { fileHash, handoffContentHash, snapshotIdOf };
 const kebab = s => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -139,20 +142,22 @@ const hasTernary = el => {
 
 /**
  * generate({prototype, designSystem, decisions, runtime}) -> {requests, handoff, path, wrote, contentHash}.
- * `prototype` is the HTML file; `designSystem` the design-systems/<ds> folder. With any request open it
- * returns {requests, handoff: undefined, path: null, wrote: false} and writes nothing. With `runtime`, the
- * runtime reader (#113) renders a scratch copy for screenshots and computed text metrics; when it cannot run,
- * the Handoff is static-only and says why.
+ * `prototype` is the HTML file or a React Prototype folder (Next.js App Router or Vite + react-router, #114);
+ * `designSystem` the design-systems/<ds> folder. With any request open it returns {requests, handoff:
+ * undefined, path: null, wrote: false} and writes nothing. With `runtime`, the runtime reader (#113) renders a
+ * scratch copy for screenshots and computed text metrics; when it cannot run, the Handoff is static-only and says why.
  */
 export async function generate({ prototype, designSystem, decisions = {}, depsDir, runtime = false } = {}) {
   const system = await loadDesignSystem(designSystem);
   const { foundations, adapter } = system;
-  const rel = basename(prototype);
-  const doc = readHtml(prototype, rel, { depsDir });
-  const { at, rules } = doc;
-  const title = doc.title || rel.replace(/\.html?$/, '');
-  const screenId = kebab(title);
-  const dir = join(designSystem, 'handoffs', screenId);
+  // A Design System package import is recognised by import (#62 tier 1): the packages its Contracts name.
+  const packages = [...new Set(Object.values(system.contracts).map(c => c.code && c.code.package).filter(Boolean))].sort();
+  const doc = readPrototype(prototype, { depsDir, packages });
+  const { at, rules, title } = doc;
+  const featureKey = kebab(title);
+  const screenIds = doc.screens.map(s => s.id);
+  const multi = doc.screens.length > 1;
+  const dir = join(designSystem, 'handoffs', featureKey);
   const stored = existsSync(join(dir, 'handoff.json')) ? JSON.parse(readFileSync(join(dir, 'handoff.json'), 'utf8')) : null;
   const d = decider(decisions, (stored && stored.ownerDecisions) || {});
   const cache = new Map();
@@ -164,8 +169,8 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   for (const r of rules) if (!r.media && /^(:root|html)$/.test(r.selector)) for (const x of r.decls) if (x.property.startsWith('--')) custom[x.property] = x.value;
 
   // ---- the mode map (#61): page and first container surfaces against the Adapter's surface tokens ----
-  const body = findTag(doc.root, 'body');
-  const mount = doc.mounts[0] || body;
+  const body = findTag(doc.screens[0].root, 'body');
+  const mount = doc.screens[0].mount || body;
   const bg = el => { const v = style(el)['background-color']; if (!v || !v.own) return null; try { const c = convert(followCustom(v.value, custom)); return c.alpha > 0 ? c.hex : null; } catch { return null; } };
   let container = null;
   walk(mount, el => { if (!container && el !== mount && el.children.filter(c => c.type === 'element').length >= 2 && bg(el)) container = el; });
@@ -184,48 +189,8 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       + `(${scores.map(s => `${s.mode.label} ΔE ${s.score}`).join(', ')}). The other ${theme.name} modes render unverified.`,
   }];
 
-  // ---- conditions and the standard states (#62) ----
-  const conds = [];
-  walk(doc.root, el => {
-    for (const c of el.cond) conds.push(c.expr);
-    for (const h of el.attrHoles) if (h.ternary) conds.push(h.ternary.cond);
-    for (const t of textNodes(el)) for (const p of t.parts) if (p && p.ternary) conds.push(p.ternary.cond);
-  });
-  const atoms = [];
-  for (const c of conds) atomsOf(parseCondition(c), atoms);
-  const defaults = {};
-  for (const atom of atoms.filter(a => !stateOfAtom(a))) {
-    const answer = d.ask(`condition:${atom}`, {
-      kind: 'condition', question: `Is \`${atom}\` true or false when the screen first shows?`, candidates: [false, true],
-    }, a => (typeof a === 'boolean' ? null : `${JSON.stringify(a)} is not true or false`));
-    defaults[atom] = Boolean(answer);
-  }
-  const stateAtoms = s => atoms.filter(a => stateOfAtom(a) === s);
-  const present = STANDARD_STATES.filter(s => s === 'default' || stateAtoms(s).length);
-  const atomsIn = s => atomIn(s, defaults);
-  const shownIn = el => {
-    if (!el.cond.length) return null;
-    const ins = present.filter(s => el.cond.every(c => evaluate(parseCondition(c.expr), atomsIn(s)) === c.value));
-    return ins.length === present.length ? null : ins;
-  };
-
-  // ---- the runtime reader (#113): how each state is reached, then screenshots and computed values ----
+  // ---- feature-level: copy, Off-system values, fonts and questions are shared by every screen ----
   const breakpoints = adapter.breakpoints || DEFAULT_BREAKPOINTS;
-  const reach = s => {
-    if (s === 'default') return { steps: [] };
-    const answer = d.ask(`reach:${screenId}:${s}`, {
-      kind: 'reach', question: `How does ${screenId} reach ${s} from first load? Answer {steps: [{fill, value} | {click} | {clock: ms} | {expect}]} (selectors) or {unreachable: reason}.`, candidates: [],
-    }, checkReach);
-    if (!answer) return { steps: null, reason: `no reach decision for ${s} yet` };
-    return answer.unreachable ? { steps: null, reason: answer.unreachable } : answer;
-  };
-  const expectIn = s => { const out = []; walk(mount, el => { const ins = shownIn(el); if (ins && ins.includes(s) && !ins.includes('default')) out.push(at(el.offset)); }); return out; };
-  const rt = runtime
-    ? await runtimeRead({ prototype, screen: screenId, breakpoints, depsDir, states: present.map(s => ({ state: s, ...reach(s), expect: expectIn(s) })) })
-    : { elements: {}, shots: {}, reason: 'static-only: generated without the runtime reader' };
-  const live = el => rt.elements[at(el.offset)];
-
-  // ---- recognition: usage candidates, then each one's decision ----
   const copy = {};
   const copyIds = new Set();
   const addCopy = (id, text, offset) => {
@@ -237,13 +202,16 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   };
   const usageIds = new Set();
   const uniqueId = (set, id) => { let key = id, n = 2; while (set.has(key)) key = `${id}-${n++}`; set.add(key); return key; };
-  const consumed = new Set();
-  const usageOf = new Map();
   const questions = [];
   const question = q => { if (!questions.some(x => x.id === q.id)) questions.push(q); return q.id; };
   const usedContracts = new Set(), usedProposals = new Set();
-  const usageStates = Object.fromEntries(present.map(s => [s, {}]));
   const families = [...Object.keys(system.contracts).map(k => `contract:${k}`), ...Object.keys(system.proposals).map(k => `proposal:${k}`)];
+  const values = [];
+  const fonts = [];
+  const sim = doc.standIns;
+  const flow = [];
+  const runtimeFailed = [];
+  let runtimeError = null;
 
   const checkRecognise = answer => {
     if (!answer || typeof answer !== 'object') return 'an answer is {contract, tuple, via} | {proposal, tuple, via} | {raw: true, reason} | {noContract, reason}';
@@ -261,200 +229,362 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     return 'an answer names a contract, a proposal, raw or noContract';
   };
 
-  const recognised = [];
-  const visit = el => {
-    if (el.type !== 'element' || consumed.has(el)) return;
-    const cand = candidateOf(el, rules);
-    if (cand) {
-      const key = `recognise:${cand.sig}`;
-      const answer = d.ask(key, {
-        kind: 'recognise', question: `What is \`${cand.sig}\` ("${elementText(el, atomsIn('default')).slice(0, 40)}")?`, candidates: families,
-        evidence: { at: [at(el.offset)], ...(live(el) ? { rendered: `${live(el).rect.width}x${live(el).rect.height}px` } : {}) },
-      }, checkRecognise);
-      recognised.push({ el, cand, answer, key });
+  // The Contract a Design System package import names (#62 tier 1): its module and export are the Contract's code.
+  const contractOfImport = c => Object.keys(system.contracts).sort().find(k => {
+    const code = system.contracts[k].code || {};
+    return code.package === c.module && code.component === c.export;
+  });
+
+  const screens = [];
+  const allPresent = new Set();
+  const writeShotsLater = [];
+  for (const screen of doc.screens) screens.push(await screenPass(screen));
+
+  async function screenPass(screen) {
+    const screenId = screen.id;
+    const mount = screen.mount || findTag(screen.root, 'body');
+
+    // ---- conditions and the standard states (#62) ----
+    const conds = [];
+    walk(screen.root, el => {
+      for (const c of el.cond) conds.push(c.expr);
+      for (const h of el.attrHoles) if (h.ternary) conds.push(h.ternary.cond);
+      for (const t of textNodes(el)) for (const p of t.parts) if (p && p.ternary) conds.push(p.ternary.cond);
+    });
+    const atoms = [];
+    for (const c of conds) atomsOf(parseCondition(c), atoms);
+    const defaults = {};
+    for (const atom of atoms.filter(a => !stateOfAtom(a))) {
+      const answer = d.ask(`condition:${atom}`, {
+        kind: 'condition', question: `Is \`${atom}\` true or false when the screen first shows?`, candidates: [false, true],
+      }, a => (typeof a === 'boolean' ? null : `${JSON.stringify(a)} is not true or false`));
+      defaults[atom] = Boolean(answer);
+    }
+    const stateAtoms = s => atoms.filter(a => stateOfAtom(a) === s);
+    const present = STANDARD_STATES.filter(s => s === 'default' || stateAtoms(s).length);
+    for (const s of present) allPresent.add(s);
+    const atomsIn = s => atomIn(s, defaults);
+    const shownIn = el => {
+      if (!el.cond.length) return null;
+      const ins = present.filter(s => el.cond.every(c => evaluate(parseCondition(c.expr), atomsIn(s)) === c.value));
+      return ins.length === present.length ? null : ins;
+    };
+
+    // ---- the runtime reader (#113): how each state is reached, then screenshots and computed values ----
+    const reach = s => {
+      if (s === 'default') return { steps: [] };
+      const answer = d.ask(`reach:${screenId}:${s}`, {
+        kind: 'reach', question: `How does ${screenId} reach ${s} from first load? Answer {steps: [{fill, value} | {click} | {clock: ms} | {expect}]} (selectors) or {unreachable: reason}.`, candidates: [],
+      }, checkReach);
+      if (!answer) return { steps: null, reason: `no reach decision for ${s} yet` };
+      return answer.unreachable ? { steps: null, reason: answer.unreachable } : answer;
+    };
+    const expectIn = s => { const out = []; walk(mount, el => { const ins = shownIn(el); if (ins && ins.includes(s) && !ins.includes('default')) out.push(at(el.offset)); }); return out; };
+    const rt = runtime
+      ? await runtimeRead({ prototype, screen: screenId, breakpoints, depsDir, states: present.map(s => ({ state: s, ...reach(s), expect: expectIn(s) })) })
+      : { elements: {}, shots: {}, reason: 'static-only: generated without the runtime reader' };
+    if (rt.error) runtimeError = rt.error;
+    runtimeFailed.push(...(rt.failed || []));
+    const live = el => rt.elements[at(el.offset)];
+
+    // ---- recognition: usage candidates, then each one's decision ----
+    const consumed = new Set();
+    const usageOf = new Map();
+    const usageStates = Object.fromEntries(present.map(s => [s, {}]));
+
+    const recognised = [];
+    const visit = el => {
+      if (el.type !== 'element' || consumed.has(el)) return;
+      const contract = el.component && el.component.kind === 'ds' && contractOfImport(el.component);
+      // A Design System import is its Contract by import (#62 tier 1): the tuple is its props through each axis value's code.
+      if (contract) {
+        const { tuple, unmapped } = importTuple(system.contracts[contract], el);
+        recognised.push({ el, cand: { kind: 'element', sig: el.tag }, answer: { contract, tuple }, key: null, byImport: true, unmapped });
+      } else {
+        // Another library component (tier 2) is decided once per signature; a plain element by its own.
+        const cand = el.component ? { kind: 'element', sig: librarySignature(el), library: true } : candidateOf(el, rules);
+        if (!cand) { for (const c of el.children) visit(c); return; }
+        const key = `recognise:${cand.sig}`;
+        const answer = d.ask(key, {
+          kind: 'recognise', question: `What is \`${cand.sig}\` ("${elementText(el, atomsIn('default')).slice(0, 40)}")?`, candidates: families,
+          evidence: { at: [at(el.offset)], ...(live(el) ? { rendered: `${live(el).rect.width}x${live(el).rect.height}px` } : {}) },
+        }, checkRecognise);
+        recognised.push({ el, cand, answer, key });
+      }
+      const { answer } = recognised[recognised.length - 1];
       usageOf.set(el, recognised[recognised.length - 1]);
       walk(el, x => { if (x !== el) consumed.add(x); });
       if (answer && answer.contract) {
         // A label element names the control (<label for>): its text is the Contract's label property.
         const id = typeof el.attrs.id === 'string' ? el.attrs.id : null;
-        if (id) walk(doc.root, x => { if (x.tag === 'label' && x.attrs.for === id) consumed.add(x); });
+        if (id) walk(screen.root, x => { if (x.tag === 'label' && x.attrs.for === id) consumed.add(x); });
       }
-      return;
-    }
-    for (const c of el.children) visit(c);
-  };
-  visit(doc.root);
+    };
+    visit(screen.root);
 
-  const labelFor = id => { let found = null; walk(doc.root, x => { if (!found && x.tag === 'label' && x.attrs.for === id) found = x; }); return found; };
-  const usages = new Map();
-  for (const { el, cand, answer, key } of recognised) {
-    const base = typeof el.attrs.id === 'string' ? el.attrs.id : el.classes[0] || el.tag;
-    const id = uniqueId(usageIds, kebab(base));
-    const u = { id };
-    const states = shownIn(el);
-    if (!answer) { usages.set(el, u); continue; }
-    if (answer.contract || answer.proposal) {
-      const def = answer.contract ? system.contracts[answer.contract] : system.proposals[answer.proposal];
-      if (answer.contract) { u.contract = answer.contract; usedContracts.add(answer.contract); }
-      else { u.proposal = answer.proposal; usedProposals.add(answer.proposal); }
-      u.tuple = { ...answer.tuple };
-      Object.assign(u, contentOf(def, el, cand, id, answer));
-      u.match = d.mark({ by: undefined, via: answer.via || 'element', ...(answer.candidates ? { candidates: answer.candidates } : {}) }, key);
-      if (answer.contract) {
-        const off = offAxis(def, u.tuple, el, id);
-        if (off.length) u.offAxis = off;
-        recordUsageStates(def, el, u);
-      }
-    } else {
-      u.raw = { element: cand.sig };
-      u.reason = answer.reason;
-      const text = elementText(el, atomsIn(states ? states[0] : 'default'));
-      if (text) u.properties = { text: addCopy(`${id}-text`, text, (textNodes(el)[0] || el).offset) };
-      if (answer.noContract) {
-        u.question = question({
-          id: `q-no-contract-${id}`, kind: 'no-contract', to: 'owner',
-          text: `\`${cand.sig}\` is a ${answer.noContract} with no Contract in ${system.key} yet. ${adapter.contractProcedure}, then re-run To-handoff.`,
+    const labelFor = id => { let found = null; walk(screen.root, x => { if (!found && x.tag === 'label' && x.attrs.for === id) found = x; }); return found; };
+    const usages = new Map();
+    for (const { el, cand, answer, key, byImport, unmapped } of recognised) {
+      const base = typeof el.attrs.id === 'string' ? el.attrs.id : el.classes[0] || el.tag;
+      const id = uniqueId(usageIds, kebab(base));
+      const u = { id };
+      const states = shownIn(el);
+      if (!answer) { usages.set(el, u); continue; }
+      if (answer.contract || answer.proposal) {
+        const def = answer.contract ? system.contracts[answer.contract] : system.proposals[answer.proposal];
+        if (answer.contract) { u.contract = answer.contract; usedContracts.add(answer.contract); }
+        else { u.proposal = answer.proposal; usedProposals.add(answer.proposal); }
+        u.tuple = { ...answer.tuple };
+        Object.assign(u, contentOf(def, el, cand, id, answer));
+        u.match = byImport ? { by: 'import' }
+          : d.mark({ by: undefined, via: answer.via || (cand.library ? 'library' : 'element'), ...(answer.candidates ? { candidates: answer.candidates } : {}) }, key);
+        if (answer.contract) {
+          const off = offAxis(def, u.tuple, el, id);
+          if (off.length) u.offAxis = off;
+          recordUsageStates(def, el, u);
+        }
+        if (unmapped && unmapped.length) u.question = question({
+          id: `q-prop-${id}`, kind: 'prop', to: 'owner',
+          text: `\`${el.tag}\` at ${at(el.offset)} sets ${unmapped.map(p => `${p}=${propText(el.attrs[p])}`).join(', ')}, which maps to no ${answer.contract} axis value. Which value is it?`,
         });
+      } else {
+        u.raw = { element: cand.sig };
+        u.reason = answer.reason;
+        const text = elementText(el, atomsIn(states ? states[0] : 'default'));
+        if (text) u.properties = { text: addCopy(`${id}-text`, text, (textNodes(el)[0] || el).offset) };
+        if (answer.noContract) {
+          u.question = question({
+            id: `q-no-contract-${id}`, kind: 'no-contract', to: 'owner',
+            text: `\`${cand.sig}\` is a ${answer.noContract} with no Contract in ${system.key} yet. ${adapter.contractProcedure}, then re-run To-handoff.`,
+          });
+        }
       }
+      if (states) u.states = states;
+      u.at = at(el.offset);
+      usages.set(el, u);
     }
-    if (states) u.states = states;
-    u.at = at(el.offset);
-    usages.set(el, u);
-  }
 
-  function contentOf(def, el, cand, id, answer) {
-    const out = {};
-    const props = {};
-    const code = def.code || {};
-    const roleOfNode = name => { let r = null; const v = n => { if (n.name === name) r = n.role; (n.children || []).forEach(v); }; v(def.anatomy); return r; };
-    const elId = typeof el.attrs.id === 'string' ? el.attrs.id : null;
-    if (cand.kind === 'group') {
-      const text = (def.properties || []).find(p => p.type === 'TEXT');
-      const kids = el.children.filter(c => c.type === 'element');
-      if (text) out.items = kids.map((k, n) => ({ properties: { [text.key]: addCopy(`${id}-${kebab(text.key)}-${n + 1}`, elementText(k, atomsIn('default')), k.offset) }, at: at(k.offset) }));
+    function contentOf(def, el, cand, id, answer) {
+      const out = {};
+      const props = {};
+      const code = def.code || {};
+      const roleOfNode = name => { let r = null; const v = n => { if (n.name === name) r = n.role; (n.children || []).forEach(v); }; v(def.anatomy); return r; };
+      const elId = typeof el.attrs.id === 'string' ? el.attrs.id : null;
+      if (cand.kind === 'group') {
+        const text = (def.properties || []).find(p => p.type === 'TEXT');
+        const kids = el.children.filter(c => c.type === 'element');
+        if (text) out.items = kids.map((k, n) => ({ properties: { [text.key]: addCopy(`${id}-${kebab(text.key)}-${n + 1}`, elementText(k, atomsIn('default')), k.offset) }, at: at(k.offset) }));
+        return out;
+      }
+      for (const p of def.properties || []) {
+        if (p.type !== 'TEXT') continue;
+        const c = p.code || {};
+        const node = (p.binds || [])[0] && p.binds[0].node;
+        if (c.prop === 'children') {
+          const t = textNodes(el)[0];
+          if (t) props[p.key] = addCopy(`${id}-${kebab(p.key)}`, elementText(el, atomsIn('default')), t.offset);
+        } else if (c.prop && typeof el.attrs[c.prop] === 'string') {
+          props[p.key] = addCopy(`${id}-${kebab(p.key)}`, el.attrs[c.prop], el.offset);
+        } else if (c.itemProp) {
+          const options = el.children.filter(x => x.type === 'element' && x.tag === 'option');
+          if (options.length) out.items = options.map((o, n) => ({ properties: { [p.key]: addCopy(`${id}-${kebab(p.key)}-${n + 1}`, elementText(o, atomsIn('default')), o.offset) }, at: at(o.offset) }));
+        } else if (node && roleOfNode(node) === 'label' && elId) {
+          const label = labelFor(elId);
+          if (label) props[p.key] = addCopy(`${id}-${kebab(p.key)}`, elementText(label, atomsIn('default')), label.offset);
+        }
+      }
+      for (const prop of code.required || []) if (!(prop in props) && el.attrs[prop] !== undefined && typeof el.attrs[prop] === 'string') props[prop] = el.attrs[prop];
+      if (Object.keys(props).length) out.properties = props;
       return out;
     }
-    for (const p of def.properties || []) {
-      if (p.type !== 'TEXT') continue;
-      const c = p.code || {};
-      const node = (p.binds || [])[0] && p.binds[0].node;
-      if (c.prop === 'children') {
-        const t = textNodes(el)[0];
-        if (t) props[p.key] = addCopy(`${id}-${kebab(p.key)}`, elementText(el, atomsIn('default')), t.offset);
-      } else if (c.prop && typeof el.attrs[c.prop] === 'string') {
-        props[p.key] = addCopy(`${id}-${kebab(p.key)}`, el.attrs[c.prop], el.offset);
-      } else if (c.itemProp) {
-        const options = el.children.filter(x => x.type === 'element' && x.tag === 'option');
-        if (options.length) out.items = options.map((o, n) => ({ properties: { [p.key]: addCopy(`${id}-${kebab(p.key)}-${n + 1}`, elementText(o, atomsIn('default')), o.offset) }, at: at(o.offset) }));
-      } else if (node && roleOfNode(node) === 'label' && elId) {
-        const label = labelFor(elId);
-        if (label) props[p.key] = addCopy(`${id}-${kebab(p.key)}`, elementText(label, atomsIn('default')), label.offset);
+
+    // A State value (its code non-null) an attribute hole sets, and a TEXT property a text ternary varies, per state.
+    function recordUsageStates(def, el, u) {
+      const stateAxis = stateAxisOf(def);
+      const byAttr = {};
+      if (stateAxis) for (const v of stateAxis.values) if (v.code) for (const k of Object.keys(v.code)) byAttr[k] = v.key;
+      const childrenProp = (def.properties || []).find(p => p.type === 'TEXT' && p.code && p.code.prop === 'children');
+      for (const s of present) {
+        const entry = {};
+        for (const h of el.attrHoles) {
+          if (!h.ternary) continue;
+          const branch = evaluate(parseCondition(h.ternary.cond), atomsIn(s)) ? h.ternary.then : h.ternary.else;
+          const word = branch.text !== undefined ? branch.text.trim() : '';
+          if (byAttr[word]) entry.state = byAttr[word];
+        }
+        if (childrenProp && hasTernary(el) && s !== 'default') {
+          const text = elementText(el, atomsIn(s));
+          if (text !== elementText(el, atomsIn('default')))
+            entry.properties = { [childrenProp.key]: addCopy(`${u.id}-${kebab(childrenProp.key)}-${s}`, text, textNodes(el)[0].offset) };
+        }
+        if (Object.keys(entry).length) usageStates[s][u.id] = entry;
       }
+      for (const [k, v] of Object.entries(byAttr)) if (typeof el.attrs[k] === 'string') u.state = v;
     }
-    for (const prop of code.required || []) if (!(prop in props) && el.attrs[prop] !== undefined && typeof el.attrs[prop] === 'string') props[prop] = el.attrs[prop];
-    if (Object.keys(props).length) out.properties = props;
-    return out;
-  }
 
-  // A State value (its code non-null) an attribute hole sets, and a TEXT property a text ternary varies, per state.
-  function recordUsageStates(def, el, u) {
-    const stateAxis = stateAxisOf(def);
-    const byAttr = {};
-    if (stateAxis) for (const v of stateAxis.values) if (v.code) for (const k of Object.keys(v.code)) byAttr[k] = v.key;
-    const childrenProp = (def.properties || []).find(p => p.type === 'TEXT' && p.code && p.code.prop === 'children');
-    for (const s of present) {
-      const entry = {};
-      for (const h of el.attrHoles) {
-        if (!h.ternary) continue;
-        const branch = evaluate(parseCondition(h.ternary.cond), atomsIn(s)) ? h.ternary.then : h.ternary.else;
-        const word = branch.text !== undefined ? branch.text.trim() : '';
-        if (byAttr[word]) entry.state = byAttr[word];
+    // Off-axis (#62): a usage's own colour no paint token of its tuple has, in the mapped mode.
+    function offAxis(contract, tuple, el, id) {
+      const full = { ...Object.fromEntries(contract.axes.map(a => [a.key, a.default])), ...tuple };
+      const tokens = new Set();
+      const collect = v => { if (Array.isArray(v)) v.forEach(collect); else if (v && typeof v === 'object') { if (typeof v.token === 'string') tokens.add(v.token); else Object.values(v).forEach(collect); } };
+      collect(resolve(contract, full).paint);
+      const hexes = [...tokens].filter(t => foundations.variables[t]).map(t => convert(valueIn(foundations.variables[t], mode, foundations)).hex);
+      const out = [];
+      for (const decl of ownDeclarations(rules, el)) {
+        const role = roleOf(decl.property);
+        if (!COLOR_ROLES.has(role)) continue;
+        let c;
+        try { c = convert(followCustom(decl.value, custom)); } catch { continue; }
+        if (c.alpha === 0 || hexes.some(h => sameHex(h, c.hex))) continue;
+        const raw = colorText(followCustom(decl.value, custom));
+        if (out.some(o => o.property === decl.property && o.raw === raw)) continue;
+        out.push({ property: decl.property, raw, reason: `\`${contract.family.key}\` ${Object.values(full).join(' ')} paints no ${raw} in ${best.label}`, question: `q-off-axis-${id}` });
       }
-      if (childrenProp && hasTernary(el) && s !== 'default') {
-        const text = elementText(el, atomsIn(s));
-        if (text !== elementText(el, atomsIn('default')))
-          entry.properties = { [childrenProp.key]: addCopy(`${u.id}-${kebab(childrenProp.key)}-${s}`, text, textNodes(el)[0].offset) };
+      if (out.length) question({
+        id: `q-off-axis-${id}`, kind: 'off-axis', to: 'owner',
+        text: `\`${id}\` (${contract.family.key}) sets ${out.map(o => `${o.property} ${o.raw}`).join(', ')}, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?`,
+      });
+      return out;
+    }
+
+    // ---- regions: the mount's children; leading headings and paragraphs merge into "header" ----
+    const regionIds = new Set();
+    const regions = [];
+    const kids = mount.children.filter(c => c.type === 'element');
+    const groups = [];
+    let i = 0;
+    const lead = [];
+    while (i < kids.length && (HEADINGS.has(kids[i].tag) || kids[i].tag === 'p') && !usages.has(kids[i])) lead.push(kids[i++]);
+    if (lead.length) groups.push({ id: 'header', els: lead, landmark: null });
+    for (; i < kids.length; i++) groups.push({ id: kebab(typeof kids[i].attrs.id === 'string' ? kids[i].attrs.id : kids[i].classes[0] || kids[i].tag), els: [kids[i]] });
+
+    // The shell: html, body and the mount element.
+    const shellEls = [];
+    for (let p = mount; p; p = p.parent) shellEls.unshift(p);
+    regions.push(regionOf({ id: 'shell', els: shellEls, shell: true }, true));
+    for (const g of groups) regions.push(regionOf(g, false));
+
+    function regionOf(g, shell) {
+      const r = { id: uniqueId(regionIds, g.id) };
+      const first = g.els[0];
+      r.landmark = shell ? landmarkOf(mount) : g.landmark !== undefined && g.els.length > 1 ? g.landmark : landmarkOf(first);
+      if (shell) r.shell = true;
+      if (!shell && /^(fixed|absolute)$/.test((style(first).position || {}).value || '')) r.overlay = true;
+      const states = shell ? null : shownIn(first);
+      if (states) r.states = states;
+      r.at = at(first.offset);
+      r.styles = [];
+      r.text = [];
+      r.usages = [];
+      const elements = [];
+      if (shell) elements.push(...g.els);
+      else for (const root of g.els) walk(root, el => { if (!consumed.has(el)) elements.push(el); });
+      for (const el of elements) {
+        const u = usages.get(el);
+        if (u) {
+          r.usages.push(u);
+          // A raw usage has no Contract to carry its look: its own styles stay in the region, matched like any other.
+          if (u.raw) walk(el, x => { for (const decl of ownDeclarations(rules, x)) addStyle(r, decl); });
+          continue;
+        }
+        if (insideUsage(el)) continue;
+        for (const decl of ownDeclarations(rules, el)) addStyle(r, decl);
+        if (!shell) for (const t of textNodes(el)) addText(r, el, t);
       }
-      if (Object.keys(entry).length) usageStates[s][u.id] = entry;
+      return r;
     }
-    for (const [k, v] of Object.entries(byAttr)) if (typeof el.attrs[k] === 'string') u.state = v;
-  }
 
-  // Off-axis (#62): a usage's own colour no paint token of its tuple has, in the mapped mode.
-  function offAxis(contract, tuple, el, id) {
-    const full = { ...Object.fromEntries(contract.axes.map(a => [a.key, a.default])), ...tuple };
-    const tokens = new Set();
-    const collect = v => { if (Array.isArray(v)) v.forEach(collect); else if (v && typeof v === 'object') { if (typeof v.token === 'string') tokens.add(v.token); else Object.values(v).forEach(collect); } };
-    collect(resolve(contract, full).paint);
-    const hexes = [...tokens].filter(t => foundations.variables[t]).map(t => convert(valueIn(foundations.variables[t], mode, foundations)).hex);
-    const out = [];
-    for (const decl of ownDeclarations(rules, el)) {
-      const role = roleOf(decl.property);
-      if (!COLOR_ROLES.has(role)) continue;
-      let c;
-      try { c = convert(followCustom(decl.value, custom)); } catch { continue; }
-      if (c.alpha === 0 || hexes.some(h => sameHex(h, c.hex))) continue;
-      const raw = colorText(followCustom(decl.value, custom));
-      if (out.some(o => o.property === decl.property && o.raw === raw)) continue;
-      out.push({ property: decl.property, raw, reason: `\`${contract.family.key}\` ${Object.values(full).join(' ')} paints no ${raw} in ${best.label}`, question: `q-off-axis-${id}` });
+    function insideUsage(el) { for (let p = el.parent; p; p = p.parent) if (usages.has(p)) return true; return false; }
+
+    function addText(r, el, t) {
+      const text = textOf(t.parts, atomsIn('default'));
+      if (!text) return;
+      const raw = live(el) ? liveMetrics(live(el).style) : staticMetrics(el);
+      const { fontSize, lineHeight, fontWeight, letterSpacing } = raw;
+      const result = matchText(raw, ctx);
+      const where = at(t.offset);
+      const tkey = `textStyle:${fontSize}/${lineHeight === null ? 'normal' : lineHeight}/${fontWeight}/${letterSpacing}`;
+      const s = {};
+      if (result.kind === 'exact') s.textStyle = result.token;
+      else if (result.kind === 'tie' || result.kind === 'near') {
+        const cands = result.kind === 'tie' ? result.candidates : result.candidates.map(x => x.token);
+        const answer = d.ask(tkey, {
+          kind: result.kind === 'tie' ? 'text-tie' : 'text-near',
+          question: `Text ${fontSize}px / ${lineHeight ?? 'normal'} / ${fontWeight} / ${letterSpacing}px is ${result.kind === 'tie' ? 'exactly' : 'near'} ${cands.join(', ')}: which Text Style?`,
+          candidates: cands, evidence: { at: [where] },
+        }, among(cands, ['value']));
+        if (answer === 'value') s.raw = raw;
+        else {
+          s.textStyle = answer || cands[0];
+          if (result.kind === 'near') { s.match = 'near'; s.delta = result.candidates.find(x => x.token === s.textStyle).delta; }
+          s.candidates = cands;
+          d.mark(s, tkey);
+        }
+      } else if (result.kind === 'partial') {
+        const m = result.match;
+        let token;
+        if (m.kind === 'exact') token = { token: m.token };
+        else {
+          const fkey = `token:font-size:${fontSize}px`;
+          const answer = d.ask(fkey, {
+            kind: 'token-tie', question: `Font size ${fontSize}px (no whole Text Style matches) is exactly ${m.candidates.join(', ')}: which one?`,
+            candidates: m.candidates, evidence: { at: [where] },
+          }, among(m.candidates));
+          token = d.mark({ token: answer || m.candidates[0], candidates: m.candidates }, fkey);
+        }
+        s.partial = { fontSize: token };
+        s.raw = raw;
+      } else s.raw = raw;
+      const base = typeof el.attrs.id === 'string' ? el.attrs.id : el.classes[0] || el.tag;
+      const entry = { copy: addCopy(kebab(base), text, t.offset).slice(5), at: where };
+      const states = shownIn(el);
+      if (states) entry.states = states;
+      entry.style = s;
+      r.text.push(entry);
     }
-    if (out.length) question({
-      id: `q-off-axis-${id}`, kind: 'off-axis', to: 'owner',
-      text: `\`${id}\` (${contract.family.key}) sets ${out.map(o => `${o.property} ${o.raw}`).join(', ')}, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?`,
-    });
-    return out;
-  }
 
-  // ---- regions: the mount's children; leading headings and paragraphs merge into "header" ----
-  const regionIds = new Set();
-  const values = [];
-  const fonts = [];
-  const regions = [];
-  const kids = mount.children.filter(c => c.type === 'element');
-  const groups = [];
-  let i = 0;
-  const lead = [];
-  while (i < kids.length && (HEADINGS.has(kids[i].tag) || kids[i].tag === 'p') && !usages.has(kids[i])) lead.push(kids[i++]);
-  if (lead.length) groups.push({ id: 'header', els: lead, landmark: null });
-  for (; i < kids.length; i++) groups.push({ id: kebab(typeof kids[i].attrs.id === 'string' ? kids[i].attrs.id : kids[i].classes[0] || kids[i].tag), els: [kids[i]] });
-
-  // The shell: html, body and the mount element.
-  const shellEls = [];
-  for (let p = mount; p; p = p.parent) shellEls.unshift(p);
-  regions.push(regionOf({ id: 'shell', els: shellEls, shell: true }, true));
-  for (const g of groups) regions.push(regionOf(g, false));
-
-  function regionOf(g, shell) {
-    const r = { id: uniqueId(regionIds, g.id) };
-    const first = g.els[0];
-    r.landmark = shell ? landmarkOf(mount) : g.landmark !== undefined && g.els.length > 1 ? g.landmark : landmarkOf(first);
-    if (shell) r.shell = true;
-    if (!shell && /^(fixed|absolute)$/.test((style(first).position || {}).value || '')) r.overlay = true;
-    const states = shell ? null : shownIn(first);
-    if (states) r.states = states;
-    r.at = at(first.offset);
-    r.styles = [];
-    r.text = [];
-    r.usages = [];
-    const elements = [];
-    if (shell) elements.push(...g.els);
-    else for (const root of g.els) walk(root, el => { if (!consumed.has(el)) elements.push(el); });
-    for (const el of elements) {
-      const u = usages.get(el);
-      if (u) {
-        r.usages.push(u);
-        // A raw usage has no Contract to carry its look: its own styles stay in the region, matched like any other.
-        if (u.raw) walk(el, x => { for (const decl of ownDeclarations(rules, x)) addStyle(r, decl); });
+    // ---- the screen's states: missing ones are owner questions; Stand-ins name their triggers ----
+    const screenStates = {};
+    const trigger = {};
+    // A simulated function belongs to the screen whose conditions read the state it sets.
+    const mine = sim.simulated.filter(f => !multi || [...f.before, ...f.after].some(a => atoms.includes(a)));
+    for (const f of mine) {
+      for (const a of f.before) if (stateOfAtom(a)) trigger[stateOfAtom(a)] = `${f.name}() sets ${a} (simulated)`;
+      for (const a of f.after) if (stateOfAtom(a)) trigger[stateOfAtom(a)] = `${f.name}() sets ${a} after a ${f.delay}ms timer (simulated)`;
+    }
+    for (const s of STANDARD_STATES) {
+      if (!present.includes(s)) {
+        screenStates[s] = { missing: true, question: question({
+          id: `q-state-${s}${multi ? `-${screenId}` : ''}`, kind: 'missing-state', to: 'owner',
+          text: `${multi ? `The ${screen.name} screen (${screen.route})` : 'The Prototype'} has no ${s} state: no condition reads like ${s}. What should the screen show?`,
+        }) };
         continue;
       }
-      if (insideUsage(el)) continue;
-      for (const decl of ownDeclarations(rules, el)) addStyle(r, decl);
-      if (!shell) for (const t of textNodes(el)) addText(r, el, t);
+      const shows = [];
+      walk(mount, el => { if (el.cond.length && !insideUsage(el) && (shownIn(el) || present).includes(s) && !(el.parent && el.parent.cond.length && el.parent.cond.length === el.cond.length)) shows.push(usages.get(el)?.id || firstClass(el)); });
+      const on = s === 'default' ? 'every state condition is false' : stateAtoms(s).map(a => `\`${a}\``).join(' or ') + ' is true';
+      const entry = { content: `${on}; conditional content shown: ${shows.length ? [...new Set(shows)].join(', ') : 'none'}` };
+      if (trigger[s]) entry.trigger = trigger[s];
+      else if (s !== 'default') entry.trigger = `${stateAtoms(s).join(' or ')}`;
+      if (Object.keys(usageStates[s]).length) entry.usageStates = usageStates[s];
+      entry.screenshots = Object.fromEntries(breakpoints.map(b => {
+        const shot = rt.shots[s] && rt.shots[s][b.key];
+        return [b.key, shot && shot.png ? `screens/${shot.name}` : shot || { missing: true, reason: rt.reason }];
+      }));
+      screenStates[s] = entry;
     }
-    return r;
-  }
+    // With more than one screen, a flow names its states as <screen>/<state>.
+    const stateRef = s => (multi ? `${screenId}/${s}` : s);
+    for (const f of mine) {
+      const from = f.before.map(stateOfAtom).find(Boolean), to = f.after.map(stateOfAtom).find(Boolean);
+      if (from) flow.push({ from: stateRef('default'), trigger: `${f.name}()`, to: stateRef(from), source: 'simulated' });
+      if (from && to) flow.push({ from: stateRef(from), trigger: `${f.delay}ms timer`, to: stateRef(to), source: 'simulated' });
+      if (from && !present.includes('error')) flow.push({ from: stateRef(from), trigger: `${f.name}() fails`, to: stateRef('error'), source: 'missing' });
+    }
 
-  function insideUsage(el) { for (let p = el.parent; p; p = p.parent) if (usages.has(p)) return true; return false; }
+    writeShotsLater.push(rt.shots);
+    return { id: screenId, name: screen.name, at: at(screen.offset), breakpoints: breakpoints.map(b => b.key), regions, states: screenStates };
+  }
 
   function addStyle(r, decl) {
     if (decl.property === 'font-family') { fonts.push({ value: decl.value, at: at(decl.offset) }); return; }
@@ -516,61 +646,18 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     return { fontSize, lineHeight, fontWeight, letterSpacing };
   }
 
-  function addText(r, el, t) {
-    const text = textOf(t.parts, atomsIn('default'));
-    if (!text) return;
-    const raw = live(el) ? liveMetrics(live(el).style) : staticMetrics(el);
-    const { fontSize, lineHeight, fontWeight, letterSpacing } = raw;
-    const result = matchText(raw, ctx);
-    const where = at(t.offset);
-    const tkey = `textStyle:${fontSize}/${lineHeight === null ? 'normal' : lineHeight}/${fontWeight}/${letterSpacing}`;
-    const s = {};
-    if (result.kind === 'exact') s.textStyle = result.token;
-    else if (result.kind === 'tie' || result.kind === 'near') {
-      const cands = result.kind === 'tie' ? result.candidates : result.candidates.map(x => x.token);
-      const answer = d.ask(tkey, {
-        kind: result.kind === 'tie' ? 'text-tie' : 'text-near',
-        question: `Text ${fontSize}px / ${lineHeight ?? 'normal'} / ${fontWeight} / ${letterSpacing}px is ${result.kind === 'tie' ? 'exactly' : 'near'} ${cands.join(', ')}: which Text Style?`,
-        candidates: cands, evidence: { at: [where] },
-      }, among(cands, ['value']));
-      if (answer === 'value') s.raw = raw;
-      else {
-        s.textStyle = answer || cands[0];
-        if (result.kind === 'near') { s.match = 'near'; s.delta = result.candidates.find(x => x.token === s.textStyle).delta; }
-        s.candidates = cands;
-        d.mark(s, tkey);
-      }
-    } else if (result.kind === 'partial') {
-      const m = result.match;
-      let token;
-      if (m.kind === 'exact') token = { token: m.token };
-      else {
-        const fkey = `token:font-size:${fontSize}px`;
-        const answer = d.ask(fkey, {
-          kind: 'token-tie', question: `Font size ${fontSize}px (no whole Text Style matches) is exactly ${m.candidates.join(', ')}: which one?`,
-          candidates: m.candidates, evidence: { at: [where] },
-        }, among(m.candidates));
-        token = d.mark({ token: answer || m.candidates[0], candidates: m.candidates }, fkey);
-      }
-      s.partial = { fontSize: token };
-      s.raw = raw;
-    } else s.raw = raw;
-    const base = typeof el.attrs.id === 'string' ? el.attrs.id : el.classes[0] || el.tag;
-    const entry = { copy: addCopy(kebab(base), text, t.offset).slice(5), at: where };
-    const states = shownIn(el);
-    if (states) entry.states = states;
-    entry.style = s;
-    r.text.push(entry);
-  }
-
-  // ---- questions the reader raises: font, breakpoints, missing states, Stand-ins ----
-  if (fonts.length) {
+  // ---- questions the reader raises: font, breakpoints, Stand-ins, routes ----
+  if (fonts.length || doc.fonts.length) {
     const families = Object.values(foundations.textStyles).map(s => s.fontFamily);
     const common = families.sort((a, b) => families.filter(x => x === b).length - families.filter(x => x === a).length || (a < b ? -1 : 1))[0];
     const bind = Object.values(foundations.textStyles).find(s => s.fontFamily === common)?.binds?.fontFamily;
+    const sets = [
+      ...(fonts.length ? [`sets font-family ${[...new Set(fonts.map(f => f.value))].join('; ')} (${fonts.map(f => f.at).join(', ')})`] : []),
+      ...(doc.fonts.length ? [`loads ${doc.fonts.map(f => `${f.name} from ${f.module} (${at(f.offset)})`).join(', ')}`] : []),
+    ];
     question({
       id: 'q-font', kind: 'font', to: 'owner',
-      text: `The Prototype sets font-family ${[...new Set(fonts.map(f => f.value))].join('; ')} (${fonts.map(f => f.at).join(', ')}); the Text Styles use ${common}${bind ? ` (${bind})` : ''}. Use ${common}?`,
+      text: `The Prototype ${sets.join(' and ')}; the Text Styles use ${common}${bind ? ` (${bind})` : ''}. Use ${common}?`,
     });
   }
   const medias = [...new Set(rules.filter(r => r.media).map(r => r.media))];
@@ -578,53 +665,28 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const sel = rules.filter(r => r.media === m).map(r => r.selector);
     question({ id: `q-breakpoint-${kebab(m)}`, kind: 'breakpoint', to: 'owner', text: `@media ${m} changes ${sel.join(', ')}; the static reader has no viewport. Which Design System breakpoint is it, and what should change there?` });
   }
-  const screenStates = {};
-  const trigger = {};
-  const sim = standIns(doc.scripts);
-  for (const f of sim.simulated) {
-    for (const a of f.before) if (stateOfAtom(a)) trigger[stateOfAtom(a)] = `${f.name}() sets ${a} (simulated)`;
-    for (const a of f.after) if (stateOfAtom(a)) trigger[stateOfAtom(a)] = `${f.name}() sets ${a} after a ${f.delay}ms timer (simulated)`;
-  }
-  for (const s of STANDARD_STATES) {
-    if (!present.includes(s)) {
-      screenStates[s] = { missing: true, question: question({ id: `q-state-${s}`, kind: 'missing-state', to: 'owner', text: `The Prototype has no ${s} state: no condition reads like ${s}. What should the screen show?` }) };
-      continue;
-    }
-    const shows = [];
-    walk(mount, el => { if (el.cond.length && !insideUsage(el) && (shownIn(el) || present).includes(s) && !(el.parent && el.parent.cond.length && el.parent.cond.length === el.cond.length)) shows.push(usages.get(el)?.id || firstClass(el)); });
-    const on = s === 'default' ? 'every state condition is false' : stateAtoms(s).map(a => `\`${a}\``).join(' or ') + ' is true';
-    const entry = { content: `${on}; conditional content shown: ${shows.length ? [...new Set(shows)].join(', ') : 'none'}` };
-    if (trigger[s]) entry.trigger = trigger[s];
-    else if (s !== 'default') entry.trigger = `${stateAtoms(s).join(' or ')}`;
-    if (Object.keys(usageStates[s]).length) entry.usageStates = usageStates[s];
-    entry.screenshots = Object.fromEntries(breakpoints.map(b => {
-      const shot = rt.shots[s] && rt.shots[s][b.key];
-      return [b.key, shot && shot.png ? `screens/${shot.name}` : shot || { missing: true, reason: rt.reason }];
-    }));
-    screenStates[s] = entry;
-  }
   const data = [];
   for (const m of sim.mocks) {
     const id = kebab(m.name.replace(/^mock/, ''));
     data.push({ id, source: 'mock', note: `\`${m.name}\` is mock data standing in for the ${id.replace(/-/g, ' ')}`, at: at(m.offset),
       question: question({ id: `q-data-${id}`, kind: 'stand-in', to: 'developer', text: `Where do the ${id.replace(/-/g, ' ')} come from? \`${m.name}\` stands in for them.` }) });
   }
-  const flow = [];
   for (const f of sim.simulated) {
     const id = kebab(f.name);
     data.push({ id, source: 'simulated', note: `\`${f.name}()\` simulates its work with a ${f.delay}ms setTimeout`, at: at(f.offset),
       question: question({ id: `q-data-${id}`, kind: 'stand-in', to: 'developer', text: `What does \`${f.name}()\` call, and how does it fail? The Prototype simulates it with a timer.` }) });
-    const from = f.before.map(stateOfAtom).find(Boolean), to = f.after.map(stateOfAtom).find(Boolean);
-    if (from) flow.push({ from: 'default', trigger: `${f.name}()`, to: from, source: 'simulated' });
-    if (from && to) flow.push({ from, trigger: `${f.delay}ms timer`, to, source: 'simulated' });
-    if (from && !present.includes('error')) flow.push({ from, trigger: `${f.name}() fails`, to: 'error', source: 'missing' });
   }
-
-  if (rt.error) question({
-    id: 'q-runtime', kind: 'runtime', to: 'owner',
-    text: `The runtime reader could not run the Prototype (${rt.error}), so this Handoff is static-only: no screenshots, and text metrics read from the source alone. Fix it and re-run To-handoff?`,
+  // Above six routes, a Handoff is hard to review in one sitting (#62).
+  if (doc.screens.length > MAX_SCREENS) question({
+    id: 'q-split', kind: 'split', to: 'owner',
+    text: `The Prototype has ${doc.screens.length} routes (${doc.screens.map(s => s.route).join(', ')}). Split it into smaller Handoffs, or keep one?`,
   });
-  for (const f of rt.failed || []) question({
+
+  if (runtimeError) question({
+    id: 'q-runtime', kind: 'runtime', to: 'owner',
+    text: `The runtime reader could not run the Prototype (${runtimeError}), so this Handoff is static-only: no screenshots, and text metrics read from the source alone. Fix it and re-run To-handoff?`,
+  });
+  for (const f of runtimeFailed) question({
     id: `q-untagged-${kebab(f.file)}`, kind: 'runtime', to: 'developer',
     text: `${f.file} does not parse (${f.error}), so the runtime copy left it untagged and its elements join to their caller. Is it meant to build?`,
   });
@@ -633,10 +695,11 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   const feature = d.ask('feature', {
     kind: 'feature', question: `What is "${title}" for? Answer {owner, goal, scope: [..], nonGoals: [..]}.`, candidates: [],
   }, a => (a && typeof a.goal === 'string' && a.goal ? null : 'a feature answer needs a goal'));
+  const screenList = screenIds.map(s => `"${s}"`).join(' | ');
   const acceptance = d.ask('acceptance', {
-    kind: 'acceptance', question: `Acceptance criteria for ${screenId}: [{id, screen, state, given, when, then}], one per state at least.`, candidates: present,
-  }, a => (Array.isArray(a) && a.length && a.every(x => x.id && x.screen === screenId && STANDARD_STATES.includes(x.state) && x.given && x.when && x.then) ? null
-    : `acceptance is a non-empty list of {id, screen: "${screenId}", state, given, when, then}`));
+    kind: 'acceptance', question: `Acceptance criteria for ${screenIds.join(', ')}: [{id, screen, state, given, when, then}], one per state at least.`, candidates: STANDARD_STATES.filter(s => allPresent.has(s)),
+  }, a => (Array.isArray(a) && a.length && a.every(x => x.id && screenIds.includes(x.screen) && STANDARD_STATES.includes(x.state) && x.given && x.when && x.then) ? null
+    : `acceptance is a non-empty list of {id, screen: ${screenList}, state, given, when, then}`));
 
   // ---- the owner's answers to questions and own acceptance criteria, by question and acceptance id ----
   const criteria = acceptance ? acceptance.map(a => ({ id: a.id, screen: a.screen, state: a.state, given: a.given, when: a.when, then: a.then, by: d.isOwner('acceptance') ? 'owner' : 'agent' })) : [];
@@ -655,8 +718,9 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     } else if (key.startsWith('acceptance:')) {
       const id = key.slice(11);
       const a = answer || {};
-      if (!(STANDARD_STATES.includes(a.state) && a.given && a.when && a.then)) throw new Error(`owner decision "${key}": an acceptance criterion is {state, given, when, then}`);
-      const item = { id, screen: screenId, state: a.state, given: a.given, when: a.when, then: a.then, by: 'owner' };
+      const screen = a.screen === undefined && !multi ? screenIds[0] : a.screen;
+      if (!(STANDARD_STATES.includes(a.state) && screenIds.includes(screen) && a.given && a.when && a.then)) throw new Error(`owner decision "${key}": an acceptance criterion is {${multi ? 'screen, ' : ''}state, given, when, then}`);
+      const item = { id, screen, state: a.state, given: a.given, when: a.when, then: a.then, by: 'owner' };
       const i = criteria.findIndex(x => x.id === id);
       if (i >= 0) criteria[i] = item; else criteria.push(item);
       d.use(key);
@@ -666,7 +730,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   if (d.requests.length) return { requests: d.requests, dropped: d.dropped, handoff: undefined, path: null, wrote: false };
 
   // ---- source pins ----
-  const files = prototypeFiles(prototype);
+  const files = prototypeFiles(prototype, doc.files);
   const contracts = {};
   for (const k of [...usedContracts].sort()) contracts[k] = { snapshotId: system.contracts[k].source.snapshotId, contentHash: contractHash(system.contracts[k]) };
   const proposals = {};
@@ -677,10 +741,10 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     revision: 1,
     status: 'pending',
     approval: null,
-    feature: { key: screenId, name: title, ...(feature.owner ? { owner: feature.owner } : {}), goal: feature.goal, ...(feature.scope ? { scope: feature.scope } : {}), ...(feature.nonGoals ? { nonGoals: feature.nonGoals } : {}) },
+    feature: { key: featureKey, name: title, ...(feature.owner ? { owner: feature.owner } : {}), goal: feature.goal, ...(feature.scope ? { scope: feature.scope } : {}), ...(feature.nonGoals ? { nonGoals: feature.nonGoals } : {}) },
     source: {
       input: 'prototype',
-      kind: 'html-file',
+      kind: doc.kind,
       prototype: { files, snapshotId: snapshotIdOf(files) },
       designSystem: system.key,
       contracts,
@@ -688,8 +752,9 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       foundations: { documentHash: fileHash(system.foundationsText), usedHash: null },
       modes: { [PROTOTYPE_MODE]: mode },
       notes,
+      ...(doc.ignored.length ? { ignored: doc.ignored } : {}),
     },
-    screens: [{ id: screenId, name: title, at: at(mount.offset), breakpoints: breakpoints.map(b => b.key), regions, states: screenStates }],
+    screens,
     copy,
     values,
     acceptance: criteria,
@@ -700,9 +765,45 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   };
   handoff.source.foundations.usedHash = usedHash(handoff, foundations);
   const result = { ...store(handoff, dir), dropped: d.dropped };
-  writeShots(rt.shots, join(dirname(result.path), 'screens'), result.wrote);
+  for (const shots of writeShotsLater) writeShots(shots, join(dirname(result.path), 'screens'), result.wrote);
   return result;
 }
+
+/**
+ * The Prototype as one shape for either reader: {kind, title, files, at, rules, standIns, fonts, ignored,
+ * screens: [{id, name, route, offset, root, mount}]}. A single HTML file is one screen named by its title.
+ */
+function readPrototype(prototype, { depsDir, packages }) {
+  if (!/\.html?$/i.test(prototype)) return readReact(prototype, { depsDir, packages });
+  const rel = basename(prototype);
+  const doc = readHtml(prototype, rel, { depsDir });
+  const title = doc.title || rel.replace(/\.html?$/, '');
+  const mount = doc.mounts[0] || findTag(doc.root, 'body');
+  return {
+    kind: 'html-file', title, files: [rel], at: doc.at, rules: doc.rules, standIns: standIns(doc.scripts), fonts: [], ignored: [],
+    screens: [{ id: kebab(title), name: title, route: '/', offset: mount.offset, root: doc.root, mount }],
+  };
+}
+
+/**
+ * A Design System import's tuple (#62 tier 1): per axis but State, the value whose `code` its props carry, most
+ * keys winning (`size="lg" isExpressive` is lg-expressive). An axis prop that maps to no value is `unmapped`.
+ */
+function importTuple(def, el) {
+  const tuple = {}, unmapped = [];
+  const stateAxis = stateAxisOf(def);
+  const given = k => (el.attrs[k] === '' ? true : el.attrs[k]);
+  for (const axis of def.axes) {
+    if (axis === stateAxis) continue;
+    const fits = axis.values.filter(v => v.code && Object.keys(v.code).length && Object.entries(v.code).every(([k, x]) => given(k) === x));
+    const pick = fits.sort((a, b) => Object.keys(b.code).length - Object.keys(a.code).length)[0];
+    if (pick) { tuple[axis.key] = pick.key; continue; }
+    for (const k of new Set(axis.values.flatMap(v => Object.keys(v.code || {})))) if (el.attrs[k] !== undefined && !unmapped.includes(k)) unmapped.push(k);
+  }
+  return { tuple, unmapped };
+}
+
+const propText = v => (typeof v === 'string' ? JSON.stringify(v) : `{${(v.parts || []).map(p => p.expr || p).join('')}}`);
 
 // ---------- the runtime reader's results ----------
 

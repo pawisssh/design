@@ -44,8 +44,13 @@ export function evaluate(ast, value) {
   return ast.or ? ast.or.some(x => evaluate(x, value)) : ast.and.every(x => evaluate(x, value));
 }
 
+// Next.js boundary files (#62): the React reader names their condition by file.
+const FRAMEWORK_STATES = { loading: 'loading', error: 'error', 'not-found': 'empty' };
+
 /** The standard state a state-shaped atom stands for (#62), or null for a plain condition. */
 export function stateOfAtom(atom) {
+  const file = /(?:^|\/)(loading|error|not-found)\.[jt]sx?$/.exec(atom);
+  if (file) return FRAMEWORK_STATES[file[1]];
   if (/(\.length\s*===?\s*0\b|^!\s*[\w.]+\.length$|\bisEmpty\b)/.test(atom)) return 'empty';
   if (/\b(is)?(Loading|Sending|Submitting|Fetching|Pending|Saving)\b|\b(loading|sending|submitting|fetching|pending|saving)\b/.test(atom)) return 'loading';
   if (/\b(is)?(Error|Failed)\b|\b(error|failed|hasError)\b/.test(atom)) return 'error';
@@ -70,6 +75,15 @@ export function signature(el) {
   const type = el.tag === 'input' && typeof el.attrs.type === 'string' ? `[type=${el.attrs.type}]` : '';
   const role = typeof el.attrs.role === 'string' ? `[role=${el.attrs.role}]` : '';
   return `${el.tag}${classes}${type}${role}`;
+}
+
+// Props that carry content or behaviour, not a variant: left out of a library component's signature.
+const CONTENT_PROPS = /^(class|id|href|src|alt|title|name|value|placeholder|for|type|role|target|rel|tabIndex|aria-.*|data-.*)$/;
+
+/** A library component's signature (#62 tier 2): its name, then its sorted literal variant props, `Button[size=sm]`. */
+export function librarySignature(el) {
+  const props = Object.keys(el.attrs).filter(k => typeof el.attrs[k] === 'string' && !CONTENT_PROPS.test(k)).sort();
+  return `${el.tag}${props.map(k => (el.attrs[k] === '' ? `[${k}]` : `[${k}=${el.attrs[k]}]`)).join('')}`;
 }
 
 /**
