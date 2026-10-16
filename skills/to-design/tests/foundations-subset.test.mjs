@@ -276,14 +276,15 @@ test('binding a token this file has not built cannot be carried until its group 
   assert.equal(edit.problem, undefined);
 });
 
-test('a Mode selector and a COLOR value\'s from.css stay out of the package; the core needs neither', async () => {
+test('a Mode selector, a COLOR value\'s from.css and a component token\'s family stay out of the package; the core needs none', async () => {
   const doc = JSON.parse(DOC_TEXT);
   doc.collections.find(c => c.key === 'theme').modes.forEach(m => { m.selector = `.cds--${m.key}`; });
   doc.variables.background.values.white.from = { css: 'var(--cds-background, #ffffff)' };
+  doc.variables['button-primary'].family = 'button';
   const docText = JSON.stringify(doc, null, 2) + '\n';
   const { plan } = pack({ docText });
   const text = JSON.stringify(plan.foundations);
-  assert.ok(!text.includes('"selector":') && !text.includes('"css":'));
+  assert.ok(!text.includes('"selector":') && !text.includes('"css":') && !text.includes('"family":'));
   const a = mockFigma({ fileKey: FILE_KEY });
   const b = mockFigma({ fileKey: FILE_KEY });
   await call(a, { docText });

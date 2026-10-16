@@ -77,6 +77,7 @@ The Carbon collections as today's generator emits them (the closure plus full Sp
 | `hidden` | `true` → `hiddenFromPublishing`. Set on Primitives. |
 | `values` | One entry per mode key of the collection. See the value forms below. |
 | `usedBy` | Component Family keys whose Contracts reference this token. Derived. It is used for review and for orphan reports. |
+| `family` | Optional. The Component Family key that marks this variable as a component token (`button-primary` → `button`), whether or not a Contract uses it yet. `validateProposal` reads it (#111). Review-only: the build plan strips it. |
 
 ### Value forms (per mode)
 
@@ -190,7 +191,7 @@ The foundations ledger is one section of the single authoritative ledger per Des
 
 - Keys are flat names in both `variables` and `textStyles`, and mode keys in `collections.*.modes`. These are the same strings the Contract and the document use, so the builder binds with `ledger.variables[token]` and `ledger.textStyles[token]`.
 - The slice returns this section uncompacted. It is about 3 KB for Button, far under the 20 KB output cap, so #18's ID-array compaction is not needed here.
-- The foundations slice package carries the selected subset of the document (or one chunk of it) without the review-only fields (`source`, `closure`, `from`, `reason`, `level`, `usedBy`, `resolved`, `notes`, `checks`, and each mode's `selector`). That is about 17.8 K characters of compact JSON for Button, under the 50 K code cap with room for the core (the whole package was 34.1 K characters on the first live run and 37.6 K with a full ledger). `skills/to-design/scripts/build-plan.mjs` strips these fields when it derives the build plan, and a to-design test asserts that the stripped and the full document build the same objects (#29).
+- The foundations slice package carries the selected subset of the document (or one chunk of it) without the review-only fields (`source`, `closure`, `from`, `reason`, `level`, `usedBy`, `family`, `resolved`, `notes`, `checks`, and each mode's `selector`). That is about 17.8 K characters of compact JSON for Button, under the 50 K code cap with room for the core (the whole package was 34.1 K characters on the first live run and 37.6 K with a full ledger). `skills/to-design/scripts/build-plan.mjs` strips these fields when it derives the build plan, and a to-design test asserts that the stripped and the full document build the same objects (#29).
 
 ## To-design builds a subset
 
