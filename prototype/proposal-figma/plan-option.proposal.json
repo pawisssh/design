@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "plan-option",
+    "name": "Plan option",
+    "description": "A selectable pill for one pricing plan, with an optional trailing icon."
+  },
+  "proposal": {
+    "by": "agent",
+    "reason": "Carbon has no single-select pill that keeps a selected look; a Button toggles nothing and a Tag is not interactive.",
+    "considered": [
+      { "contract": "button", "whyNot": "Button has no selected value and no persistent selected paint." }
+    ],
+    "origin": { "input": "description", "ref": "prototype #79", "at": "2026-10-17T00:00:00Z" },
+    "home": { "where": "app", "path": "src/components/plan-option.tsx" }
+  },
+  "axes": [
+    { "key": "selected", "label": "Selected", "default": "false", "defaultSource": "agent",
+      "values": [ { "key": "false", "label": "False" }, { "key": "true", "label": "True" } ] },
+    { "key": "state", "label": "State", "canonical": true, "default": "enabled", "defaultSource": "canonical State axis",
+      "values": [
+        { "key": "enabled", "label": "Enabled" },
+        { "key": "hover", "label": "Hover" },
+        { "key": "focus", "label": "Focus" },
+        { "key": "disabled", "label": "Disabled" }
+      ] }
+  ],
+  "anatomy": { "name": "Plan option", "type": "COMPONENT", "children": [
+    { "name": "Label", "type": "TEXT", "role": "label" },
+    { "name": "Icon", "type": "FRAME", "role": "icon-slot", "children": [
+      { "name": "Glyph", "type": "INSTANCE", "role": "icon", "instanceOf": "icon:default" } ] } ] },
+  "properties": [
+    { "key": "label", "label": "Label", "type": "TEXT", "default": "Plan", "binds": [ { "node": "Label", "field": "characters" } ] },
+    { "key": "swapIcon", "label": "Swap icon", "type": "INSTANCE_SWAP", "default": "icon:default", "preferred": "icon:preferred",
+      "binds": [ { "node": "Glyph", "field": "mainComponent" } ] }
+  ],
+  "layout": [
+    { "match": {}, "set": {
+      "Plan option": { "direction": "row", "width": "hug", "height": "hug", "alignMain": "start", "alignCross": "center",
+        "paddingTop": { "token": "spacing-03" }, "paddingBottom": { "token": "spacing-03" },
+        "paddingLeft": { "token": "spacing-05" }, "paddingRight": { "token": "spacing-05" },
+        "gap": { "token": "spacing-03" }, "radius": { "token": "border-radius-00" },
+        "strokeWeight": { "raw": 1, "level": "warning", "reason": "1px outline, no stroke-width token" }, "strokeAlign": "inside",
+        "minHeight": { "token": "size-md" } },
+      "Label": { "textStyle": { "token": "body-compact-01" }, "textResize": "width-and-height" },
+      "Icon": { "direction": "row", "width": { "token": "icon-size-01" }, "height": { "token": "icon-size-01" } },
+      "Glyph": { "width": "fill", "height": "fill" } } }
+  ],
+  "paint": [
+    { "match": {}, "set": {
+      "Plan option": { "fill": { "token": "background" }, "stroke": { "token": "link-primary" }, "effects": [] },
+      "Label": { "fill": { "token": "link-primary" } },
+      "Glyph/Vector": { "fill": { "sameAs": "Label.fill" } } } },
+    { "match": { "selected": "true" }, "set": {
+      "Plan option": { "fill": { "token": "link-primary" } },
+      "Label": { "fill": { "token": "text-on-color" } } } },
+    { "match": { "selected": "false", "state": "hover" }, "set": { "Plan option": { "fill": { "token": "background-hover" } } } },
+    { "match": { "selected": "true", "state": "hover" }, "set": { "Plan option": { "fill": { "token": "link-primary-hover" } } } },
+    { "match": { "state": "focus" }, "set": { "Plan option": { "stroke": { "token": "focus" } } } },
+    { "match": { "state": "disabled" }, "set": {
+      "Plan option": { "fill": { "token": "background" }, "stroke": { "token": "background-active" } },
+      "Label": { "fill": { "token": "text-disabled" } } } }
+  ],
+  "icons": { "source": { "package": "@carbon/icons", "version": "11.90.0", "path": "svg/16/{key}.svg", "fallback": "svg/32/{key}.svg" },
+             "default": "arrow--right", "preferred": ["arrow--right", "launch"] },
+  "subComponents": [],
+  "dependencies": { "families": [], "fonts": [ { "family": "IBM Plex Sans", "styles": ["Regular"] } ] },
+  "status": "pending",
+  "approval": null
+}

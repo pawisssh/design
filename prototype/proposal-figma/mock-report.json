@@ -1,0 +1,134 @@
+{
+  "gate": {
+    "descriptionOnly": [
+      "layout: required for a Figma build",
+      "paint: required for a Figma build"
+    ],
+    "full": {
+      "ok": true,
+      "errors": []
+    },
+    "sameKeyContract": [
+      "family.key: a Contract \"plan-option\" exists: ready to retire (#80), not to build"
+    ]
+  },
+  "proposalSet": {
+    "ledgerKeys": {
+      "bases": [
+        "proposal:plan-option"
+      ],
+      "sets": [
+        "proposal:plan-option"
+      ]
+    },
+    "derivedFigma": {
+      "page": "Plan option (Proposal)",
+      "componentSetName": "Plan option",
+      "description": "Component Proposal: not in Carbon React yet. A selectable pill for one pricing plan, with an optional trailing icon.",
+      "header": {
+        "type": "Component Proposal",
+        "title": "Plan option",
+        "namespace": "src/components/plan-option.tsx"
+      },
+      "grid": {
+        "columns": [
+          "selected"
+        ],
+        "rows": [
+          "state"
+        ]
+      }
+    },
+    "baseLoop": {
+      "review": [
+        "token-edit Plan option.gap"
+      ],
+      "hashMoved": true,
+      "cleanAfterRebuild": true,
+      "setsGate": true
+    },
+    "variants": 8,
+    "built": [
+      {
+        "summary": {
+          "created": 7,
+          "updated": 230,
+          "variants": 8,
+          "missing": 0,
+          "dropped": 0,
+          "conflicts": 0
+        },
+        "chars": 38385
+      }
+    ],
+    "coverage": {
+      "ok": true,
+      "problems": []
+    },
+    "snapshotIdInLedger": "sha256:bfbf3a522b0f85637306654f4900cf3cae88bb1f963ba6216ea06c7625604005"
+  },
+  "noRetirement": {
+    "setsNamedPlanOption": [
+      {
+        "page": "Plan option (Proposal)",
+        "id": "204:205",
+        "children": 8,
+        "description": "Component Proposal: not in Carbon React yet. A selectable pill for one pricing plan, with an optional trailing icon."
+      },
+      {
+        "page": "Plan options",
+        "id": "302:303",
+        "children": 10,
+        "description": "PlanOption (app)."
+      }
+    ],
+    "ledgerKeys": [
+      "proposal:plan-option",
+      "plan-option"
+    ]
+  },
+  "adoptInPlace": {
+    "sameSetNode": true,
+    "variantsKeptById": "8/8",
+    "variantsNow": "10 (Contract expects 10)",
+    "created": [
+      {
+        "created": 2,
+        "updated": 71,
+        "variants": 10,
+        "missing": 0,
+        "dropped": 0,
+        "conflicts": 0
+      }
+    ],
+    "setsNamedPlanOption": [
+      {
+        "page": "Plan option (Proposal)",
+        "id": "204:205",
+        "children": 10,
+        "description": "PlanOption (app)."
+      }
+    ],
+    "headerType": "Component",
+    "pageName": "Plan option (Proposal)",
+    "ledgerKeys": {
+      "bases": [
+        "plan-option"
+      ],
+      "sets": [
+        "plan-option"
+      ]
+    },
+    "orphans": {},
+    "sampleIds": [
+      [
+        "Selected=False, State=Enabled",
+        "169:170"
+      ],
+      [
+        "Selected=False, State=Hover",
+        "208:209"
+      ]
+    ]
+  }
+}
