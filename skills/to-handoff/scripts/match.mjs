@@ -32,9 +32,15 @@ export function roleOf(property) {
   return ROLE_SCOPE[property] ? property : null;
 }
 
-/** A variable's value in `mode` (its resolved colour, or its single-mode number). */
-export function valueIn(variable, mode) {
+/**
+ * A variable's value in `mode` (its resolved colour, or its single-mode number). Given `foundations`, a value
+ * that is only an alias is followed in `mode`: a Layer token (`field`) at its first level is that level's Theme
+ * token in the Theme mode (#109).
+ */
+export function valueIn(variable, mode, foundations = null) {
   const v = variable.values[mode] || variable.values.default || Object.values(variable.values)[0];
+  if (v && !('resolved' in v) && !('value' in v) && v.alias && foundations && foundations.variables[v.alias])
+    return valueIn(foundations.variables[v.alias], mode, foundations);
   return v && ('resolved' in v ? v.resolved : v.value);
 }
 
