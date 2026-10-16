@@ -219,6 +219,23 @@ test('an uncarried owner tweak (a warning note) blocks approval', () => {
   rejects(forced, 8, 'warning note', 'layout.Label.letterSpacing', 'blocks approval');
 });
 
+test('a prototype approval names the orchestrator and never validates (rule 8)', () => {
+  const p = contract.approve(button(), '2026-10-16T09:00:00Z', { prototype: true });
+  assert.equal(p.selection.approval.by, contract.PROTOTYPE_APPROVER);
+  assert.equal(p.selection.approval.contentHash, contract.contentHash(button()));
+  rejects(p, 8, 'only the owner approves');
+  assert.equal(contract.approve(button(), '2026-10-16T09:00:00Z').selection.approval.by, 'owner');
+});
+
+test('scopeFor names the scope a field binds under, and coversScope reads ALL_SCOPES and ALL_FILLS', () => {
+  const c = button();
+  assert.equal(contract.scopeFor(c, 'Button', 'gap'), 'GAP');
+  assert.equal(contract.scopeFor(c, 'Button', 'direction'), undefined);
+  assert.ok(contract.coversScope(['ALL_FILLS'], 'FRAME_FILL'));
+  assert.ok(contract.coversScope(['ALL_SCOPES'], 'GAP'));
+  assert.ok(!contract.coversScope(['ALL_FILLS'], 'GAP'));
+});
+
 test('applyOmit keeps the reason of an omit pattern the patch carries again', () => {
   const c = button();
   c.selection.omit = [{ match: { size: '2xl', kind: 'danger--ghost' }, reason: 'owner: not used' }];
