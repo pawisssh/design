@@ -71,7 +71,9 @@
           "usages": [
             { "id": "email-input", "contract": "text-input", "tuple": { "size": "md" }, "properties": { "label": "copy:email-label", "placeholder": "copy:email-placeholder" },
               "match": { "by": "agent", "via": "element", "candidates": [ { "size": "lg" } ] }, "at": "index.html:62" },
-            { "id": "role-select", "raw": { "element": "select" }, "reason": "No Contract for a select in this Design System. Carbon's Select would fit once the Adapter reads it.", "question": "q-no-contract", "properties": { "label": "copy:role-label" }, "at": "index.html:63" },
+            { "id": "role-select", "contract": "select", "tuple": { "size": "md" }, "properties": { "label": "copy:role-label" },
+              "items": [ { "value": "viewer", "text": "copy:role-viewer" }, { "value": "editor", "text": "copy:role-editor" }, { "value": "admin", "text": "copy:role-admin" } ],
+              "match": { "by": "agent", "via": "element", "candidates": [ { "size": "lg" } ] }, "at": "index.html:63" },
             { "id": "seat-avatars", "proposal": "avatar-stack", "tuple": { "size": "sm" }, "at": "index.html:65" },
             { "id": "remove-invite", "contract": "button", "tuple": { "kind": "danger--ghost", "size": "sm" }, "properties": { "label": "copy:remove" },
               "match": { "by": "agent", "via": "element", "candidates": [ { "kind": "ghost" }, { "kind": "danger--tertiary" } ] }, "at": "index.html:66" },
@@ -108,6 +110,9 @@
     "email-label": { "text": "Email" },
     "email-placeholder": { "text": "jane@example.com", "placeholder": true },
     "role-label": { "text": "Role" },
+    "role-viewer": { "text": "Viewer" },
+    "role-editor": { "text": "Editor" },
+    "role-admin": { "text": "Admin" },
     "seats": { "text": "{used} of {total} seats used" },
     "remove": { "text": "Remove" },
     "remove-aria": { "text": "Remove invite for {email}" },
@@ -146,7 +151,7 @@
   "openQuestions": [
     { "id": "q-font", "kind": "font", "text": "The Prototype uses Inter. Use the Design System's font-family-sans (IBM Plex Sans)?" },
     { "id": "q-error-state", "kind": "missing-state", "text": "What happens when sending fails? The Prototype's simulated send never fails, so the error state has no branch." },
-    { "id": "q-no-contract", "kind": "no-contract", "text": "The role select and the toast have no Contract in this Design System yet. The Adapter is drafting Select and ToastNotification; until then they stay raw." },
+    { "id": "q-no-contract", "kind": "no-contract", "text": "The toast has no Contract in this Design System yet. The Adapter is drafting ToastNotification; until then it stays raw." },
     { "id": "q-success-kind", "kind": "off-axis", "text": "Copy invite link is green, but Carbon Button has no success kind. Use primary, secondary or another kind?" },
     { "id": "q-breakpoint", "kind": "breakpoint", "text": "The Prototype stacks the actions below 640px; Carbon's md starts at 672px. Stack below md?" },
     { "id": "q-invites-source", "kind": "stand-in", "text": "Where do pending invites really come from (endpoint, paging)?" }

@@ -113,19 +113,16 @@
                 "type": "FRAME",
                 "children": [
                   { "name": "Value", "type": "TEXT", "role": "value" },
-                  {
-                    "name": "Status icon",
-                    "type": "FRAME",
-                    "role": "icon-slot",
-                    "children": [ { "name": "Glyph", "type": "INSTANCE", "role": "icon", "instanceOf": "icon:default" } ]
-                  }
+                  { "name": "Invalid icon", "type": "INSTANCE", "role": "icon", "instanceOf": "icon:warning--filled" },
+                  { "name": "Warn icon", "type": "INSTANCE", "role": "icon", "instanceOf": "icon:warning--alt--filled" }
                 ]
               },
               { "name": "Underline", "type": "FRAME" }
             ]
           },
           { "name": "Helper", "type": "TEXT", "role": "helper-text" },
-          { "name": "Requirement", "type": "TEXT", "role": "validation-message" }
+          { "name": "Invalid text", "type": "TEXT", "role": "validation-message" },
+          { "name": "Warn text", "type": "TEXT", "role": "validation-message" }
         ]
       }
     ]
@@ -135,7 +132,8 @@
     { "key": "label", "label": "Label", "type": "TEXT", "default": "Label", "binds": [ { "node": "Label", "field": "characters" } ], "code": { "prop": "labelText" } },
     { "key": "placeholder", "label": "Placeholder", "type": "TEXT", "default": "Placeholder text", "binds": [ { "node": "Value", "field": "characters" } ], "code": { "prop": "placeholder" } },
     { "key": "helperText", "label": "Helper text", "type": "TEXT", "default": "Helper text", "binds": [ { "node": "Helper", "field": "characters" } ], "code": { "prop": "helperText" } },
-    { "key": "message", "label": "Message", "type": "TEXT", "default": "Error message", "binds": [ { "node": "Requirement", "field": "characters" } ], "code": { "prop": "invalidText" } }
+    { "key": "invalidText", "label": "Invalid text", "type": "TEXT", "default": "Error message", "binds": [ { "node": "Invalid text", "field": "characters" } ], "code": { "prop": "invalidText" } },
+    { "key": "warnText", "label": "Warn text", "type": "TEXT", "default": "Warning message", "binds": [ { "node": "Warn text", "field": "characters" } ], "code": { "prop": "warnText" } }
   ],
 
   "layout": [
@@ -166,13 +164,16 @@
           "gap": { "token": "spacing-03" }
         },
         "Value": { "textStyle": { "token": "body-compact-01" }, "width": "fill", "textResize": "height" },
-        "Status icon": { "direction": "row", "width": { "token": "icon-size-01" }, "height": { "token": "icon-size-01" } },
-        "Glyph": { "width": "fill", "height": "fill" },
+        "Invalid icon": { "width": { "token": "icon-size-01" }, "height": { "token": "icon-size-01" }, "visible": false },
+        "Warn icon": { "width": { "token": "icon-size-01" }, "height": { "token": "icon-size-01" }, "visible": false },
         "Underline": { "width": "fill", "height": { "raw": 1, "level": "warning", "reason": "border-block-end: 1px is a constant with no design token" } },
-        "Helper": { "textStyle": { "token": "helper-text-01" }, "width": "fill", "textResize": "height" },
-        "Requirement": { "textStyle": { "token": "helper-text-01" }, "width": "fill", "textResize": "height" }
+        "Helper": { "textStyle": { "token": "helper-text-01" }, "width": "fill", "textResize": "height", "visible": true },
+        "Invalid text": { "textStyle": { "token": "helper-text-01" }, "width": "fill", "textResize": "height", "visible": false },
+        "Warn text": { "textStyle": { "token": "helper-text-01" }, "width": "fill", "textResize": "height", "visible": false }
       }
     },
+    { "match": { "validation": "invalid" }, "set": { "Invalid icon": { "visible": true }, "Invalid text": { "visible": true }, "Helper": { "visible": false } } },
+    { "match": { "validation": "warn" }, "set": { "Warn icon": { "visible": true }, "Warn text": { "visible": true }, "Helper": { "visible": false } } },
     { "match": { "size": "xs" }, "set": { "Box": { "height": { "raw": 23, "level": "info", "reason": "derived: size-xs (24) − 1px bottom border (box-sizing: border-box)" } } } },
     { "match": { "size": "sm" }, "set": { "Box": { "height": { "raw": 31, "level": "info", "reason": "derived: size-sm (32) − 1px bottom border" } } } },
     { "match": { "size": "md" }, "set": { "Box": { "height": { "raw": 39, "level": "info", "reason": "derived: size-md (40) − 1px bottom border" } } } },
@@ -187,30 +188,17 @@
         "Label": { "fill": { "token": "text-secondary" } },
         "Field": { "fill": { "token": "field-01" }, "stroke": "none" },
         "Value": { "fill": { "token": "text-placeholder" } },
-        "Status icon": { "opacity": { "raw": 0, "level": "warning", "reason": "no status icon without invalid or warn; the schema has no rule-driven visibility, so the slot is transparent and keeps its 24px" } },
-        "Glyph/Vector": { "fill": { "token": "support-error" } },
+        "Invalid icon/Vector": { "fill": { "token": "support-error" } },
+        "Warn icon/Vector": { "fill": { "token": "support-warning" } },
         "Underline": { "fill": { "token": "border-strong-01" } },
-        "Helper": { "fill": { "token": "text-helper" }, "opacity": { "raw": 1, "level": "info", "reason": "helper text shows when there is no validation message" } },
-        "Requirement": { "fill": { "token": "text-error" }, "opacity": { "raw": 0, "level": "warning", "reason": "no message without invalid or warn; no rule-driven visibility in the schema" } }
+        "Helper": { "fill": { "token": "text-helper" } },
+        "Invalid text": { "fill": { "token": "text-error" } },
+        "Warn text": { "fill": { "token": "text-primary" } }
       }
     },
     {
       "match": { "validation": "invalid" },
-      "set": {
-        "Field": { "stroke": { "token": "support-error" } },
-        "Status icon": { "opacity": { "raw": 1, "level": "info", "reason": "WarningFilled icon shows when invalid" } },
-        "Helper": { "opacity": { "raw": 0, "level": "warning", "reason": "Carbon replaces the helper text with the message; no rule-driven visibility" } },
-        "Requirement": { "opacity": { "raw": 1, "level": "info", "reason": "invalidText shows when invalid" } }
-      }
-    },
-    {
-      "match": { "validation": "warn" },
-      "set": {
-        "Status icon": { "opacity": { "raw": 1, "level": "info", "reason": "WarningAltFilled icon shows when warn" } },
-        "Glyph/Vector": { "fill": { "token": "support-warning" } },
-        "Helper": { "opacity": { "raw": 0, "level": "warning", "reason": "Carbon replaces the helper text with the message; no rule-driven visibility" } },
-        "Requirement": { "fill": { "token": "text-primary" }, "opacity": { "raw": 1, "level": "info", "reason": "warnText shows when warn" } }
-      }
+      "set": { "Field": { "stroke": { "token": "support-error" } } }
     },
     {
       "match": { "readOnly": "read-only" },
@@ -256,14 +244,14 @@
     "package": "@carbon/react",
     "component": "TextInput",
     "import": "import { TextInput } from '@carbon/react';",
+    "required": ["id"],
     "alwaysEmit": ["size"],
     "alwaysEmitWhy": "A TextInput without size inherits the nearest <Layout size>; emit size explicitly so the snippet matches the variant."
   },
 
   "notes": [
-    { "level": "verify", "at": "anatomy.Status icon", "message": "Warn shows WarningAltFilled, invalid shows WarningFilled. The schema binds one icon per slot, not one per rule, so warn variants show warning--filled tinted support-warning. warning--alt--filled is also two paths (the inner mark is black via path:first-of-type), which breaks the single-Vector icon rule (#13)." },
-    { "level": "verify", "at": "paint.*.opacity", "message": "Status icon, Helper and Requirement hide by opacity 0, so hidden layers still take their space in Auto Layout. Carbon removes them from the DOM. A rule-driven `visible` field would fix this; it is a schema change." },
-    { "level": "verify", "at": "properties.message.code", "message": "The message is invalidText when invalid and warnText when warn. A property has one code prop, so snippets for warn variants name the wrong prop." },
+    { "level": "verify", "at": "anatomy.Warn icon", "message": "WarningAltFilled is two-tone: _text-input.scss paints its inner path (path:first-of-type, fill=\"none\" in the SVG) $black-100 while the outer path takes $support-warning. Icons are one flattened Vector (#13), so the Design Library shows a support-warning triangle with the mark cut out instead of a black mark." },
+    { "level": "info", "at": "anatomy.Invalid text", "message": "Carbon renders invalidText when invalid and warnText when warn, in the same .cds--form-requirement, and drops helperText for either. The Contract keeps one TEXT node and one property per message, shown by `visible` rules (#93), so each property names one code prop." },
     { "level": "info", "at": "paint.Field.fill", "message": "Carbon's $field, $border-strong and $border-subtle are contextual Layer tokens. At :root and .cds--layer-one they resolve to field-01, border-strong-01 and border-subtle-00, which the Contract binds. Inside <Layer level={1|2}> they shift to -02/-03; the Contract does not model Layer." },
     { "level": "info", "at": "layout.Box.paddingLeft", "message": "Padding is layout.density('padding-inline') at the default density 'normal', which is $spacing-05 (16px). Density has no DTCG token." },
     { "level": "info", "at": "paint[state=focus]", "message": "Carbon styles :focus and :active the same (focus-outline('outline')); Active is folded into Focus. Carbon has no hover style for the field." },

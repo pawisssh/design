@@ -339,3 +339,30 @@ test('rejects a BOOLEAN bound to a slot the Slot axis already shows and hides', 
   c.properties.push({ key: 'showIcon', label: 'Show icon', type: 'BOOLEAN', default: true, binds: [{ node: 'Icon', field: 'visible' }] });
   slotRejects(c, 5, 'Icon.visible is set by a rule and bound to property showIcon');
 });
+
+// ---------- form-control code fields (#93) ----------
+test('rejects a code.required prop that an axis value or a property already sets', () => {
+  const c = button();
+  c.code.required = ['id', 'kind'];
+  rejects(c, 3, 'required prop "kind" is already set');
+});
+
+test('rejects code.items without a component and props, and an itemProp that is not one of its props', () => {
+  const c = button();
+  c.code.items = { component: 'SelectItem', props: [] };
+  rejects(c, 3, '`code.items` needs `component` and a non-empty `props` list');
+  const d = button();
+  d.code.items = { component: 'SelectItem', props: ['value', 'text'] };
+  d.properties.find(p => p.type === 'TEXT').code = { itemProp: 'label' };
+  rejects(d, 3, '"label" is not one of code.items.props');
+  const e = button();
+  e.code.items = { component: 'SelectItem', props: ['value', 'text'] };
+  e.properties.find(p => p.type !== 'TEXT').code = { itemProp: 'text' };
+  rejects(e, 3, 'only a TEXT property can show an item prop');
+});
+
+test('the icon list adds the fixed icons an INSTANCE names, after default and preferred', () => {
+  const c = button();
+  c.anatomy.children.push({ name: 'Status icon', type: 'INSTANCE', instanceOf: 'icon:warning--filled' }, { name: 'Again', type: 'INSTANCE', instanceOf: 'icon:add' });
+  assert.deepEqual(contract.icons(c).slice(-2), ['close', 'warning--filled']);
+});

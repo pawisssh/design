@@ -117,6 +117,14 @@ test('shapes that paint nothing (fill="none", Carbon\'s inner path and transpare
   assert.equal(plan.icons[0].svg, svg(32, '<path d="M16,2A14,14,0,1,0,30,16Z"/>'));
 });
 
+test('a 16px status icon\'s inner path marked opacity="0" is dropped too, so it does not flatten into the solid shape (#93)', () => {
+  const dir = fakeIcons({
+    'svg/16/warning--filled.svg': svg(16, '<path d="M8,1C4.2,1,1,4.2,1,8s3.2,7,7,7,7-3.1,7-7S11.9,1,8,1z"/><path d="M7.5,4h1v5h-1z" data-icon-path="inner-path" opacity="0"/>'),
+  });
+  const { plan } = derive({ contracts: [withIcons(['warning--filled'])], dir });
+  assert.equal(plan.icons[0].svg, svg(16, '<path d="M8,1C4.2,1,1,4.2,1,8s3.2,7,7,7,7-3.1,7-7S11.9,1,8,1z"/>'));
+});
+
 test('the package is well under the 50,000-char cap; save.svg\'s literal TAB reaches the core intact', async () => {
   const { plan, state } = derive();
   const { code, out } = pack(plan, state);

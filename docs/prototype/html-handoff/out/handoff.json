@@ -256,13 +256,35 @@
             },
             {
               "id": "role-select",
-              "raw": {
-                "element": "select"
+              "contract": "select",
+              "tuple": {
+                "size": "md"
               },
-              "reason": "No Contract for a select in this Design System. Carbon's Select would fit once the Adapter reads it.",
-              "question": "q-no-contract",
               "properties": {
                 "label": "copy:role-label"
+              },
+              "items": [
+                {
+                  "value": "viewer",
+                  "text": "copy:role-viewer"
+                },
+                {
+                  "value": "editor",
+                  "text": "copy:role-editor"
+                },
+                {
+                  "value": "admin",
+                  "text": "copy:role-admin"
+                }
+              ],
+              "match": {
+                "by": "agent",
+                "via": "element",
+                "candidates": [
+                  {
+                    "size": "lg"
+                  }
+                ]
               },
               "at": "index.html:63"
             },
@@ -470,6 +492,15 @@
     "role-label": {
       "text": "Role"
     },
+    "role-viewer": {
+      "text": "Viewer"
+    },
+    "role-editor": {
+      "text": "Editor"
+    },
+    "role-admin": {
+      "text": "Admin"
+    },
     "seats": {
       "text": "{used} of {total} seats used"
     },
@@ -676,7 +707,7 @@
     {
       "id": "q-no-contract",
       "kind": "no-contract",
-      "text": "The role select and the toast have no Contract in this Design System yet. The Adapter is drafting Select and ToastNotification; until then they stay raw."
+      "text": "The toast has no Contract in this Design System yet. The Adapter is drafting ToastNotification; until then it stays raw."
     },
     {
       "id": "q-success-kind",

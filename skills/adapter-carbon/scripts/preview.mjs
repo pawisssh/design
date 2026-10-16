@@ -61,12 +61,16 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
   if (!Component) throw new Error(`${contract.code.package} has no export ${contract.code.component}`);
 
   // Content properties: TEXT at its default; an icon swap shows the Contract's default icon (non-default
-  // BOOLEANs on, as in the base-loop review specimen), so the icon slot is reviewed too.
+  // BOOLEANs on, as in the base-loop review specimen), so the icon slot is reviewed too. Repeated children
+  // (`code.items`, #93) render as one item whose `itemProp` props take their property's default; an item prop
+  // no property shows repeats the first one's text.
   const content = {};
   let children;
+  const item = {};
   for (const p of contract.properties) {
     const code = p.code || {};
-    if (p.type === 'TEXT' && code.prop === 'children') children = p.default;
+    if (p.type === 'TEXT' && code.itemProp) item[code.itemProp] = p.default;
+    else if (p.type === 'TEXT' && code.prop === 'children') children = p.default;
     else if (p.type === 'TEXT' && code.prop) content[code.prop] = p.default;
     else if (p.type === 'INSTANCE_SWAP' && code.prop && code.valueFrom === 'icon') {
       const Icon = icons[iconExport(contract.icons.default)];
@@ -74,12 +78,21 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
       content[code.prop] = Icon;
     }
   }
+  if (contract.code.items) {
+    const Item = library[contract.code.items.component];
+    if (!Item) throw new Error(`${contract.code.package} has no export ${contract.code.items.component}`);
+    const text = Object.values(item)[0] || 'Item';
+    children = React.createElement(Item, Object.fromEntries(contract.code.items.props.map(k => [k, item[k] ?? text])));
+  }
 
   return {
     stylesheet: readFileSync(join(dir, 'node_modules/@carbon/styles/css/styles.css'), 'utf8'),
     modeClass: mode => `cds--${mode}`,
     render(tuple) {
-      const props = { ...content };
+      // A required prop nothing sets (`code.required`, #93), such as id, gets a placeholder unique per tuple.
+      const tupleId = [contract.family.key, ...contract.axes.map(a => tuple[a.key])].join('-');
+      const props = Object.fromEntries((contract.code.required || []).map(k => [k, tupleId]));
+      Object.assign(props, content);
       for (const axis of contract.axes) {
         const value = axis.values.find(v => v.key === tuple[axis.key]);
         if (!value) throw new Error(`unknown ${axis.key} value ${tuple[axis.key]}`);

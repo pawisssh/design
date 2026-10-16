@@ -37,6 +37,11 @@
         "snapshotId": "sha256:4c82c3cc7f2af6fa24fba39bb5e159c415b5691800130268c9d8903901164152"
       },
       {
+        "family": "select",
+        "path": "design-systems/carbon/contracts/select.component.json",
+        "snapshotId": "sha256:ee272e9f6722577721baa37d96517972a60bb89ca9fd8631114f78484e98c1b2"
+      },
+      {
         "family": "text-input",
         "path": "design-systems/carbon/contracts/text-input.component.json",
         "snapshotId": "sha256:8b616b073a192fc74a5cb965257c3be4d8de4b06f106a5e01a78ed25d590ef56"
@@ -66,8 +71,11 @@
       "button-tertiary-active",
       "button-tertiary-hover",
       "field-01",
+      "field-hover-01",
       "focus",
       "helper-text-01",
+      "icon-disabled",
+      "icon-primary",
       "icon-size-01",
       "icon-size-02",
       "label-01",
@@ -260,6 +268,19 @@
         }
       }
     },
+    "gray.10Hover": {
+      "collection": "primitives",
+      "name": "Gray/10Hover",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/10Hover",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#e8e8e8"
+        }
+      }
+    },
     "gray.20": {
       "collection": "primitives",
       "name": "Gray/20",
@@ -387,6 +408,19 @@
       "values": {
         "default": {
           "value": "#262626"
+        }
+      }
+    },
+    "gray.90Hover": {
+      "collection": "primitives",
+      "name": "Gray/90Hover",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/90Hover",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#333333"
         }
       }
     },
@@ -671,6 +705,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -705,6 +740,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -1237,7 +1273,42 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
+      ]
+    },
+    "field-hover-01": {
+      "collection": "theme",
+      "name": "Field/field-hover-01",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/field/hover/01",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-field-hover-01)"
+      },
+      "values": {
+        "white": {
+          "alias": "gray.10Hover",
+          "resolved": "#e8e8e8"
+        },
+        "g10": {
+          "alias": "gray.10Hover",
+          "resolved": "#e8e8e8"
+        },
+        "g90": {
+          "alias": "gray.80Hover",
+          "resolved": "#474747"
+        },
+        "g100": {
+          "alias": "gray.90Hover",
+          "resolved": "#333333"
+        }
+      },
+      "usedBy": [
+        "select"
       ]
     },
     "focus": {
@@ -1272,7 +1343,104 @@
       },
       "usedBy": [
         "button",
+        "select",
         "text-input"
+      ]
+    },
+    "icon-disabled": {
+      "collection": "theme",
+      "name": "Icon/icon-disabled",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/icon/disabled",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-icon-disabled)"
+      },
+      "values": {
+        "white": {
+          "raw": "#161616",
+          "alpha": 0.25,
+          "resolved": "rgba(22, 22, 22, 0.25)",
+          "from": {
+            "alias": "gray.100",
+            "alpha": 0.25
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g10": {
+          "raw": "#161616",
+          "alpha": 0.25,
+          "resolved": "rgba(22, 22, 22, 0.25)",
+          "from": {
+            "alias": "gray.100",
+            "alpha": 0.25
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g90": {
+          "raw": "#f4f4f4",
+          "alpha": 0.25,
+          "resolved": "rgba(244, 244, 244, 0.25)",
+          "from": {
+            "alias": "gray.10",
+            "alpha": 0.25
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g100": {
+          "raw": "#f4f4f4",
+          "alpha": 0.25,
+          "resolved": "rgba(244, 244, 244, 0.25)",
+          "from": {
+            "alias": "gray.10",
+            "alpha": 0.25
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        }
+      },
+      "usedBy": [
+        "select"
+      ]
+    },
+    "icon-primary": {
+      "collection": "theme",
+      "name": "Icon/icon-primary",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/icon/primary",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-icon-primary)"
+      },
+      "values": {
+        "white": {
+          "alias": "gray.100",
+          "resolved": "#161616"
+        },
+        "g10": {
+          "alias": "gray.100",
+          "resolved": "#161616"
+        },
+        "g90": {
+          "alias": "gray.10",
+          "resolved": "#f4f4f4"
+        },
+        "g100": {
+          "alias": "gray.10",
+          "resolved": "#f4f4f4"
+        }
+      },
+      "usedBy": [
+        "select"
       ]
     },
     "link-primary": {
@@ -1374,6 +1542,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -1408,6 +1577,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -1471,6 +1641,7 @@
       },
       "usedBy": [
         "button",
+        "select",
         "text-input"
       ]
     },
@@ -1505,6 +1676,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -1539,6 +1711,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -1751,6 +1924,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -1785,6 +1959,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -1828,6 +2003,7 @@
       },
       "usedBy": [
         "button",
+        "select",
         "text-input"
       ]
     },
@@ -2015,6 +2191,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -2037,6 +2214,7 @@
       },
       "usedBy": [
         "button",
+        "select",
         "text-input"
       ]
     },
@@ -2078,6 +2256,7 @@
       },
       "usedBy": [
         "button",
+        "select",
         "text-input"
       ]
     },
@@ -2254,6 +2433,7 @@
       },
       "usedBy": [
         "button",
+        "select",
         "text-input"
       ]
     },
@@ -2276,6 +2456,7 @@
       },
       "usedBy": [
         "button",
+        "select",
         "text-input"
       ]
     },
@@ -2298,6 +2479,7 @@
       },
       "usedBy": [
         "button",
+        "select",
         "text-input"
       ]
     },
@@ -2320,6 +2502,7 @@
       },
       "usedBy": [
         "button",
+        "select",
         "text-input"
       ]
     },
@@ -2424,6 +2607,7 @@
       },
       "usedBy": [
         "button",
+        "select",
         "text-input"
       ]
     },
@@ -2445,6 +2629,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -2466,6 +2651,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -2487,6 +2673,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -2508,6 +2695,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -2529,6 +2717,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -2550,6 +2739,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -2571,6 +2761,7 @@
         }
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     }
@@ -2600,6 +2791,7 @@
       },
       "usedBy": [
         "button",
+        "select",
         "text-input"
       ]
     },
@@ -2651,6 +2843,7 @@
         "letterSpacing": "helper-text-01-letter-spacing"
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     },
@@ -2677,6 +2870,7 @@
         "letterSpacing": "label-01-letter-spacing"
       },
       "usedBy": [
+        "select",
         "text-input"
       ]
     }
@@ -2685,7 +2879,7 @@
     "css": {
       "against": "@carbon/styles@1.117.0 css/styles.css",
       "sha256": "sha256:13f00ebee3715ac407ba7960ea1e51f6307ba0ddfb147604f06fec1bc94bf9db",
-      "matched": 164,
+      "matched": 176,
       "missing": []
     },
     "sass": {
@@ -2694,7 +2888,7 @@
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
-      "contracts": 2,
+      "contracts": 3,
       "errors": 0
     }
   },

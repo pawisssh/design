@@ -17,6 +17,7 @@ import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { previewRenderer, PREVIEW_DIR } from '../../../skills/adapter-carbon/scripts/preview.mjs';
+import { resolve as resolveTuple } from '../../../skills/contract/scripts/contract.mjs';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
@@ -162,30 +163,37 @@ const renderer = await previewRenderer(contract); // package guard + stylesheet
 const React = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
 const copyText = ref => (typeof ref === 'string' && ref.startsWith('copy:') ? handoff.copy[ref.slice(5)].text : ref);
-// #90 finding: TextInput requires `id`, a prop no Contract axis or property carries; the usage id stands in.
-const REQUIRED = { 'text-input': u => ({ id: u.id }) };
+// #93: a prop the component requires that nothing else sets is named in `code.required`; the usage id fills it.
+// Repeated children (`code.items`) come from the usage's `items`. A TEXT property whose node the tuple hides
+// (a `visible: false` rule, such as helperText while invalid) is left out [assumption].
 function propsFor(usage, override = {}) {
   const contract = contracts[usage.contract];
-  const props = { ...(REQUIRED[usage.contract]?.(usage) || {}) };
+  const props = Object.fromEntries((contract.code.required || []).map(k => [k, usage.id]));
   const tuple = { ...usage.tuple, ...(override.state && { state: override.state }) };
   for (const axis of contract.axes) {
     const key = tuple[axis.key] ?? axis.default;
+    tuple[axis.key] = key;
     const value = axis.values.find(v => v.key === key);
     if (!value) throw new Error(`${usage.id}: unknown ${axis.key} ${key}`);
     Object.assign(props, value.code || {});
   }
+  const layout = resolveTuple(contract, tuple).layout;
+  const hidden = p => p.binds.some(b => layout[b.node]?.visible === false);
   const properties = { ...usage.properties, ...override.properties };
   let children;
   for (const p of contract.properties) {
-    if (properties[p.key] === undefined) continue;
+    if (properties[p.key] === undefined || hidden(p)) continue;
     if (p.code?.prop === 'children') children = copyText(properties[p.key]);
     else if (p.type === 'TEXT' && p.code?.prop) props[p.code.prop] = copyText(properties[p.key]);
   }
-  return { props, children };
+  const items = contract.code.items && (usage.items || []).map(item =>
+    Object.fromEntries(contract.code.items.props.filter(k => item[k] !== undefined).map(k => [k, copyText(item[k])])));
+  if (contract.code.items && !items.length) throw new Error(`${usage.id}: ${contract.code.component} needs its items`);
+  return { props, children, items };
 }
 function snippet(usage, override) {
   const contract = contracts[usage.contract];
-  const { props, children } = propsFor(usage, override);
+  const { props, children, items } = propsFor(usage, override);
   const emit = Object.entries(props).filter(([k, v]) => {
     if (!contract.axes.some(a => a.values.some(x => x.code && k in x.code))) return true; // property or required prop
     const axis = contract.axes.find(a => a.values.some(x => x.code && k in x.code));
@@ -195,7 +203,8 @@ function snippet(usage, override) {
   });
   const attrs = emit.map(([k, v]) => (v === true ? k : `${k}="${v}"`)).join(' ');
   const tag = contract.code.component;
-  return `${contract.code.import}\n\n<${tag}${attrs ? ' ' + attrs : ''}${children === undefined ? ' />' : `>${children}</${tag}>`}`;
+  const inner = items ? items.map(i => `\n  <${contract.code.items.component} ${Object.entries(i).map(([k, v]) => `${k}="${v}"`).join(' ')} />`).join('') + '\n' : children;
+  return `${contract.code.import}\n\n<${tag}${attrs ? ' ' + attrs : ''}${inner === undefined ? ' />' : `>${inner}</${tag}>`}`;
 }
 const renders = {}, snippets = {};
 for (const screen of handoff.screens)
@@ -203,11 +212,12 @@ for (const screen of handoff.screens)
     for (const u of region.usages || []) {
       if (!u.contract) continue;
       const c = contracts[u.contract];
-      const { [c.code.component]: Component } = require(c.code.package);
+      const { [c.code.component]: Component, [c.code.items?.component]: Item } = require(c.code.package);
       const variants = [['', {}], ...Object.entries(screen.states).filter(([, s]) => s.usageStates?.[u.id]).map(([k, s]) => [`@${k}`, s.usageStates[u.id]])];
       for (const [suffix, ov] of variants) {
-        const { props, children } = propsFor(u, ov);
-        renders[u.id + suffix] = renderToStaticMarkup(React.createElement(Component, props, children));
+        const { props, children, items } = propsFor(u, ov);
+        const kids = items ? items.map((i, n) => React.createElement(Item, { key: n, ...i })) : children;
+        renders[u.id + suffix] = renderToStaticMarkup(React.createElement(Component, props, kids));
         snippets[u.id + suffix] = snippet(u, ov);
       }
     }

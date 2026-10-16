@@ -108,11 +108,22 @@ function walkRefs(value, path, fn, key) {
   }
 }
 
-/** The icon list: the icon keys the builder makes atoms for, `icons.default` then `icons.preferred`, each once. */
+/**
+ * The icon list: the icon keys the builder makes atoms for, `icons.default` then `icons.preferred`, then every
+ * fixed `icon:<key>` an INSTANCE names (#93: a status icon per validation value), each once.
+ */
 export function icons(contract) {
   const i = contract.icons;
   if (!i) return [];
-  return [i.default].concat(i.preferred || []).filter((k, n, all) => k && all.indexOf(k) === n);
+  const fixed = [];
+  const walk = n => {
+    const m = /^icon:(.+)$/.exec((n && n.instanceOf) || '');
+    if (m && m[1] !== 'default' && m[1] !== 'preferred') fixed.push(m[1]);
+    ((n && n.children) || []).forEach(walk);
+  };
+  walk(contract.anatomy);
+  (contract.subComponents || []).forEach(s => walk(s.anatomy));
+  return [i.default].concat(i.preferred || [], fixed).filter((k, n, all) => k && all.indexOf(k) === n);
 }
 
 /** Kit-style Figma name of an icon key: first letter capitalised, `--` kept (`arrow--right` -> `Arrow--right`). */
@@ -235,6 +246,25 @@ export function validate(contract, foundations) {
     if (!anatomy[a.slot] || a.slot === c.anatomy.name) err(3, `axes.${a.key}.slot`, `slot "${a.slot}" is not a non-root anatomy node`);
     if (a.values.some(v => typeof v.filled !== 'boolean')) err(3, `axes.${a.key}`, 'every value of a slot axis needs `filled: true|false`');
     else if (!a.values.some(v => v.filled) || a.values.every(v => v.filled)) err(3, `axes.${a.key}`, 'a slot axis needs a filled and an empty value');
+  }
+  // #93: `code.required` names props nothing else sets; `code.items` describes repeated children, and an
+  // `itemProp` property shows one prop of the shown item.
+  const code = isObj(c.code) ? c.code : {};
+  const setProps = new Set([
+    ...c.axes.flatMap(a => a.values.flatMap(v => Object.keys(isObj(v.code) ? v.code : {}))),
+    ...c.properties.map(p => p.code && p.code.prop).filter(Boolean),
+  ]);
+  if (code.required !== undefined) {
+    if (!Array.isArray(code.required) || code.required.some(r => typeof r !== 'string')) err(3, 'code.required', '`code.required` is a list of prop names');
+    else code.required.filter(r => setProps.has(r)).forEach(r => err(3, 'code.required', `required prop "${r}" is already set by an axis value or a property`));
+  }
+  if (code.items !== undefined && (!isObj(code.items) || typeof code.items.component !== 'string' || !Array.isArray(code.items.props) || !code.items.props.length))
+    err(3, 'code.items', '`code.items` needs `component` and a non-empty `props` list');
+  for (const p of c.properties) {
+    const ip = p.code && p.code.itemProp;
+    if (ip === undefined) continue;
+    if (p.type !== 'TEXT') err(3, `properties.${p.key}.code.itemProp`, 'only a TEXT property can show an item prop');
+    else if (!isObj(code.items) || !(code.items.props || []).includes(ip)) err(3, `properties.${p.key}.code.itemProp`, `"${ip}" is not one of code.items.props`);
   }
   if (errors.length) return { ok: false, errors }; // rules 2, 4, 5 and 6 expand, which needs valid patterns
 
