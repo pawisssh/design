@@ -4,36 +4,18 @@
 // under design-systems/. Assertions are properties, not byte goldens: the Foundations document grows (#109).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { contentHash, validate } from '../../contract/scripts/contract.mjs';
 import { hasDeps } from '../scripts/deps.mjs';
 import { generate, loadDesignSystem, render, renderHtml, validateHandoff } from '../scripts/handoff.mjs';
 import { parseInline } from '../scripts/css.mjs';
 import { matchDeclaration, matchText } from '../scripts/match.mjs';
 import { innerHtmlTemplates } from '../scripts/reader.mjs';
+import { BUTTON, DECISIONS, PROTOTYPE, designSystem, fixture, repo } from './helpers.mjs';
 
-const repo = p => fileURLToPath(new URL(`../../../${p}`, import.meta.url));
-const fixture = p => fileURLToPath(new URL(`fixtures/invite-teammates/${p}`, import.meta.url));
-const PROTOTYPE = fixture('index.html');
-const DECISIONS = JSON.parse(readFileSync(fixture('decisions.json'), 'utf8'));
-const BUTTON = repo('design-systems/carbon/contracts/button.component.json');
 const BUTTON_BYTES = readFileSync(BUTTON, 'utf8');
 const noDeps = !hasDeps() && 'parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
-
-function designSystem() {
-  const dir = mkdtempSync(join(tmpdir(), 'to-handoff-ds-'));
-  mkdirSync(join(dir, 'contracts'));
-  mkdirSync(join(dir, 'proposals'));
-  copyFileSync(repo('design-systems/carbon/carbon.foundations.json'), join(dir, 'carbon.foundations.json'));
-  copyFileSync(BUTTON, join(dir, 'contracts/button.component.json'));
-  for (const f of ['text-input', 'select'])
-    copyFileSync(repo(`skills/contract/test/fixtures/form-controls/${f}.component.json`), join(dir, `contracts/${f}.component.json`));
-  copyFileSync(fixture('proposals/avatar-stack.proposal.json'), join(dir, 'proposals/avatar-stack.proposal.json'));
-  return dir;
-}
 
 let shared;
 async function run() {
@@ -244,7 +226,7 @@ test('render writes the static HTML Rendering: real renders, flags, mode toggle,
   assert.match(html, /<li id="q-state-error">/, 'a "? q-…" flag links to its question');
   assert.match(html, /<p class="counts">.*≠ Off-system<\/span> \d+/, 'Needs a look counts its flags per kind');
   assert.match(html, />Needs a look \(\d+\)<\/a>/);
-  assert.match(html, /missing \(static-only\)/);
+  assert.match(html, /screenshot missing · static-only: generated without the runtime reader/);
   const themeModes = system.foundations.collections.find(c => c.key === 'theme').modes;
   for (const m of themeModes) {
     assert.ok(html.includes(`>${m.label}</option>`), m.label);
@@ -270,7 +252,7 @@ test('the CLI refuses with decision requests and exit code 2 when decisions are 
   const empty = join(ds, 'decisions.json');
   writeFileSync(empty, '{}');
   let code = 0, out = '';
-  try { execFileSync(process.execPath, [repo('skills/to-handoff/scripts/handoff.mjs'), 'generate', PROTOTYPE, '--ds', ds, '--decisions', empty], { encoding: 'utf8', stdio: 'pipe' }); }
+  try { execFileSync(process.execPath, [repo('skills/to-handoff/scripts/handoff.mjs'), 'generate', PROTOTYPE, '--ds', ds, '--decisions', empty, '--static'], { encoding: 'utf8', stdio: 'pipe' }); }
   catch (e) { code = e.status; out = e.stdout; }
   assert.equal(code, 2);
   assert.ok(JSON.parse(out).requests.length > 0);

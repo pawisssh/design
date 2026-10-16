@@ -16,6 +16,9 @@
   "token:font-size:14px": "body-compact-01-font-size",
   "token:background-color:#f4f4f4": "layer-01",
   "token:color:#ffffff": "text-on-color",
+  "reach:invite-teammates:loading": { "steps": [{ "fill": "#email", "value": "sam@example.com" }, { "click": "#send" }] },
+  "reach:invite-teammates:success": { "steps": [{ "fill": "#email", "value": "sam@example.com" }, { "click": "#send" }, { "clock": 800 }] },
+  "reach:invite-teammates:empty": { "steps": [{ "click": ".link-danger" }, { "click": ".link-danger" }] },
   "feature": {
     "owner": "growth",
     "goal": "Let a workspace member invite teammates by email and pick their role.",

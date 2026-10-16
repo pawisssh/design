@@ -14,9 +14,8 @@ import { loadParse5 } from './deps.mjs';
 // A private-use character (U+E000) that stands in for a template hole while the HTML is parsed.
 const MASK = '\uE000';
 
-/** Read one HTML file. `rel` is its path relative to the Prototype root (the `at` prefix). */
-export function readHtml(path, rel, { depsDir } = {}) {
-  const text = readFileSync(path, 'utf8');
+/** Read one HTML file (or `text` in its place). `rel` is its path relative to the Prototype root (the `at` prefix). */
+export function readHtml(path, rel, { depsDir, text = readFileSync(path, 'utf8') } = {}) {
   const parse5 = loadParse5(depsDir);
   const lines = lineStarts(text);
   const at = offset => { const l = lineOf(lines, offset); return `${rel}:${l + 1}:${offset - lines[l] + 1}`; };
