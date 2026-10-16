@@ -13,7 +13,7 @@ A Figma library file produced from a Code Library.
 _Avoid_: Figma library, design kit
 
 **Linked Library**:
-A published Figma library the owner already has for the same Code Library, made outside To-design, whose variables and Text Styles a Design Library binds to instead of having its own. To-design reads it and never changes it.
+One or more published Figma library files the owner already has for the same Code Library, made outside To-design, whose variables and Text Styles a Design Library binds to instead of having its own. To-design reads it and never changes it.
 _Avoid_: Existing library, team library, kit, external library, adopted library
 
 **Design System**:
