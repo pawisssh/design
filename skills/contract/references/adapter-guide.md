@@ -91,7 +91,7 @@ Generate it with a script, from the pinned token sources and the Contracts' clos
 
 ## 7. Hand over
 
-1. `node skills/contract/scripts/check.mjs design-systems/<ds>/contracts/<family>.component.json` ends with `OK` (it finds the foundations document next to `contracts/`; before the first foundations run, regenerate it first).
+1. `node skills/contract/scripts/check.mjs design-systems/<ds>/contracts/<family>.component.json` prints `OK` (it finds the foundations document next to `contracts/`; before the first foundations run, regenerate it first).
 2. Regenerate the foundations document; it reports no error.
 3. Render the default variant and a few others with the preview renderer and compare them with the Code Library's own render.
 4. Hand the draft Contract to To-preview to narrow the selection (optional), then to To-design, whose base loop ends with the owner's approval.

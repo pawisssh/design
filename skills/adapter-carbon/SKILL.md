@@ -67,7 +67,7 @@ node skills/adapter-carbon/scripts/foundations.mjs
 node skills/contract/scripts/check.mjs design-systems/carbon/contracts/<family>.component.json --table
 ```
 
-`check.mjs` ends with `OK` and prints the variant count, Base Component and token closure. A token outside the foundations document fails until `foundations.mjs` adds it. `--table` prints the resolved paint per grid row: compare it with the compiled CSS. Next: [To-preview](../to-preview/SKILL.md) to narrow the selection (optional), then [To-design](../to-design/SKILL.md).
+`check.mjs` prints the variant count, Base Component and token closure, then `OK`. A token outside the foundations document fails until `foundations.mjs` adds it. `--table` prints the resolved paint per grid row: compare it with the compiled CSS. Next: [To-preview](../to-preview/SKILL.md) to narrow the selection (optional), then [To-design](../to-design/SKILL.md).
 
 ## 3. Foundations step
 
