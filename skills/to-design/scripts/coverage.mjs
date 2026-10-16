@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { baseTuple, expand, resolve, variantName } from '../../contract/scripts/contract.mjs';
 import { diff } from './base-loop.mjs';
 import { defaultProps, iconRef, normalizeReadback } from './readback.mjs';
-import { ledgerPath, readLedger } from './ledger.mjs';
+import { defaultLedgerPath, readLedger } from './ledger.mjs';
 
 // The grid cell [row, column] a tuple sits in: figma.grid lists the axes that make the rows and the columns;
 // along each axis the default value comes first, then the others in Contract order.
@@ -183,9 +183,11 @@ function main() {
   let report;
   if (what === 'coverage') report = checkCoverage(contract, result);
   else if (what === 'theme') report = checkTheme(contract, result, foundations);
-  else report = checkSample(contract, result, readLedger(ledgerArg || ledgerPath(result.fileKey)), foundations);
+  else report = checkSample(contract, result, readLedger(ledgerArg || defaultLedgerPath(result.fileKey)), foundations);
   console.log(JSON.stringify(report, null, 2));
   process.exit(report.ok ? 0 : 1);
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  try { main(); } catch (e) { console.error(`coverage: ${e.message}`); process.exit(1); }
+}

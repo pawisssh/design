@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { baseTuple, contentHash, expand, icons as iconKeys, iconName, PROTOTYPE_APPROVER, resolve, validate, variantName } from '../../contract/scripts/contract.mjs';
 import { anatomyTree, baseProps, defaultProps, expectedBase, expectedVariant, iconRef as iconRefKey, norm } from './readback.mjs';
-import { emptyLedger, ledgerPath, readLedger } from './ledger.mjs';
+import { defaultLedgerPath, emptyLedger, readLedger } from './ledger.mjs';
 
 // Fields only a reviewer reads. The core never needs them, so the package leaves them out.
 const REVIEW_ONLY = { document: ['source', 'closure', 'checks', 'notes'], entry: ['source', 'usedBy'], value: ['from', 'reason', 'level', 'resolved'] };
@@ -396,7 +396,7 @@ function main() {
     process.exit(2);
   }
   const fileKey = values['file-key'];
-  const path = values.ledger || ledgerPath(fileKey);
+  const path = values.ledger || defaultLedgerPath(fileKey);
   // A prototype approval never reaches a committed Contract: --prototype takes a Contract under .scratch only.
   if (values.prototype && (slice !== 'sets' || !resolvePath(values.contract[0]).split(sep).includes('.scratch'))) {
     console.error('--prototype takes a Contract under .scratch only (a prototype approval is never committed)');
@@ -429,4 +429,6 @@ function main() {
   console.log(JSON.stringify({ status: 'derived', slice, fileKey, ledger: path, ...detail, options: plan.options, out: values.out }));
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  try { main(); } catch (e) { console.error(`build-plan: ${e.message}`); process.exit(1); }
+}
