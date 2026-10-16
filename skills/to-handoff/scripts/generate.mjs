@@ -13,7 +13,7 @@ import { COLOR_ROLES, collectionOf, colorText, followCustom, matchDeclaration, m
 import { stateAxisOf } from './system.mjs';
 import { hasRuntime } from './deps.mjs';
 import { readHtml, walk } from './reader.mjs';
-import { run } from './runtime.mjs';
+import { STEP_KINDS, run } from './runtime.mjs';
 import {
   STANDARD_STATES, atomIn, atomsOf, candidateOf, evaluate, isPlaceholderText, ownDeclarations, parseCondition, standIns, stateOfAtom,
 } from './recognise.mjs';
@@ -24,8 +24,7 @@ const LANDMARKS = { header: 'banner', nav: 'navigation', main: 'main', aside: 'c
 const LANDMARK_ROLES = new Set(['banner', 'navigation', 'main', 'complementary', 'contentinfo', 'region', 'search', 'form']);
 const HEADINGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
 // Without breakpoints from the Adapter, the runtime reader screenshots one desktop width.
-const DEFAULT_BREAKPOINTS = [{ key: 'default', width: 1280 }];
-const STEP_KEYS = ['fill', 'click', 'clock', 'expect'];
+const DEFAULT_BREAKPOINTS = [{ key: 'desktop', width: 1280 }];
 
 export const fileHash = bytes => 'sha256:' + createHash('sha256').update(bytes).digest('hex');
 const kebab = s => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -600,7 +599,10 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     id: 'q-runtime', kind: 'runtime', to: 'owner',
     text: `The runtime reader could not run the Prototype (${rt.error}), so this Handoff is static-only: no screenshots, and text metrics read from the source alone. Fix it and re-run To-handoff?`,
   });
-  for (const f of rt.failed || []) notes.push({ level: 'warning', text: `${f.file} stayed untagged in the runtime copy (${f.error}); its elements join to their caller.` });
+  for (const f of rt.failed || []) question({
+    id: `q-untagged-${kebab(f.file)}`, kind: 'runtime', to: 'developer',
+    text: `${f.file} does not parse (${f.error}), so the runtime copy left it untagged and its elements join to their caller. Is it meant to build?`,
+  });
 
   // ---- feature and acceptance: the owner's words, as decisions ----
   const feature = d.ask('feature', {
@@ -706,7 +708,7 @@ function checkReach(answer) {
   if (answer.unreachable !== undefined) return typeof answer.unreachable === 'string' && answer.unreachable ? null : 'unreachable needs a reason';
   if (!Array.isArray(answer.steps)) return 'an answer is {steps: [..]} or {unreachable: reason}';
   for (const step of answer.steps) {
-    const keys = step && typeof step === 'object' ? Object.keys(step).filter(k => STEP_KEYS.includes(k)) : [];
+    const keys = step && typeof step === 'object' ? Object.keys(step).filter(k => STEP_KINDS.includes(k)) : [];
     if (keys.length !== 1) return `${JSON.stringify(step)} is not one of {fill, value} | {click} | {clock: ms} | {expect}`;
     if (keys[0] === 'clock' ? !(Number.isFinite(step.clock) && step.clock >= 0) : typeof step[keys[0]] !== 'string') return `${JSON.stringify(step)} has a bad ${keys[0]}`;
     if (keys[0] === 'fill' && step.value === undefined) return `${JSON.stringify(step)} needs a value`;

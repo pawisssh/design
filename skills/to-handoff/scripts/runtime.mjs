@@ -22,24 +22,20 @@ import { ATTR, tagHtml, tagJsx } from './tag.mjs';
 const SKIP_DIRS = new Set(['node_modules', '.git', '.next', 'dist', 'build', 'out']);
 const VIEWPORT_HEIGHT = 900;
 const STEP_TIMEOUT = 5000;
-// The computed properties the matcher reads, and the reason for each group (#61, #62).
-const PROPS = [
-  'color', 'background-color', 'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color', 'outline-color',
-  'font-family', 'font-size', 'line-height', 'font-weight', 'letter-spacing',
-  'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
-  'row-gap', 'column-gap', 'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius', 'position',
-];
+// The computed properties the matcher reads: the text metrics. Colours and spacing still match from the source
+// declarations, which keep their var() references.
+const PROPS = ['font-size', 'line-height', 'font-weight', 'letter-spacing'];
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon', '.woff2': 'font/woff2' };
 
 /**
- * run({prototype, screen, states, breakpoints, uiDir, depsDir}) -> {elements, shots, browser, dir}.
+ * run({prototype, screen, states, breakpoints, depsDir}) -> {elements, shots, failed, cleanup}.
  * `prototype` is the HTML file (its folder is the Prototype root); `states` is [{state, steps, expect}], where
  * `steps` is null for a state with no way to reach it (its `reason` says why) and `expect` lists the `at`s that
  * must be on the page once it is reached. `elements` maps an `at` to {style, rect} for the first host element
  * that joins to it; `shots` maps state -> breakpoint -> a PNG path inside `dir` or {missing, reason}. The caller
  * copies the PNGs it keeps and calls cleanup().
  */
-export async function run({ prototype, screen, states, breakpoints, uiDir = 'components/ui/', depsDir = DEPS_DIR }) {
+export async function run({ prototype, screen, states, breakpoints, depsDir = DEPS_DIR }) {
   const root = dirname(prototype);
   const runs = join(depsDir, 'runs');
   mkdirSync(runs, { recursive: true });
@@ -48,6 +44,8 @@ export async function run({ prototype, screen, states, breakpoints, uiDir = 'com
   const out = join(dir, 'screens');
   const cleanup = () => rmSync(dir, { recursive: true, force: true });
   let server, browser;
+  // A reason goes into the Handoff: name the copy and the server the same way on every run.
+  const scrub = message => { let m = firstLine(message).split(copy).join('<copy>').split(dir).join('<run>'); if (server) m = m.split(server.url).join('<server>'); return m; };
   try {
     cpSync(root, copy, { recursive: true, filter: src => !SKIP_DIRS.has(basename(src)) || src === root });
     mkdirSync(out);
@@ -55,9 +53,11 @@ export async function run({ prototype, screen, states, breakpoints, uiDir = 'com
     const rel = relative(root, prototype).split(sep).join('/');
     writeFileSync(entry, tagHtml(readHtml(entry, rel, { depsDir })));
     const failed = tagTree(copy, loadTypescript(depsDir));
+    const uiDir = codeLibraryDir(copy);
     server = existsSync(join(copy, 'package.json')) ? await buildAndServe(copy) : await serveStatic(copy);
-    const url = server.url + (existsSync(join(copy, 'package.json')) ? '' : '/' + rel);
-    const { chromium, launchOptions, name } = loadChromium(depsDir);
+    // A Next or Vite server serves the app at its root; files are served as they are, so the HTML file by path.
+    const url = server.url + (server.app ? '' : '/' + rel);
+    const { chromium, launchOptions } = loadChromium(depsDir);
     browser = await chromium.launch(launchOptions);
     const elements = {};
     const shots = {};
@@ -72,7 +72,8 @@ export async function run({ prototype, screen, states, breakpoints, uiDir = 'com
         page.setDefaultTimeout(STEP_TIMEOUT);
         try {
           await page.clock.install();
-          await page.goto(url, { waitUntil: 'load' });
+          const response = await page.goto(url, { waitUntil: 'load' });
+          if (!response.ok()) throw new Error(`GET ${url} returned ${response.status()}`);
           for (const step of s.steps) await perform(page, step);
           const absent = [];
           for (const at of s.expect || []) if (!(await page.$(`[${ATTR}="${at}"], [${ATTR}$=" ${at}"]`))) absent.push(at);
@@ -80,23 +81,26 @@ export async function run({ prototype, screen, states, breakpoints, uiDir = 'com
           const file = join(out, `${screen}.${s.state}.${b.key}.png`);
           await page.screenshot({ path: file, fullPage: true, animations: 'disabled' });
           shots[s.state][b.key] = file;
-          if (b === widest) for (const r of await page.evaluate(snapshot, { ATTR, PROPS, uiDir, shell: rel })) if (!elements[r.at]) elements[r.at] = { how: r.how, style: r.style, rect: r.rect };
+          if (b === widest) for (const r of await page.evaluate(snapshot, { ATTR, PROPS, uiDir, shell: rel })) if (!elements[r.at]) elements[r.at] = { style: r.style, rect: r.rect };
         } catch (e) {
-          shots[s.state][b.key] = { missing: true, reason: `the steps for ${s.state} failed: ${firstLine(e.message)}` };
+          shots[s.state][b.key] = { missing: true, reason: `the steps for ${s.state} failed: ${scrub(e.message)}` };
         } finally {
           await page.close();
         }
       }
     }
-    return { elements, shots, browser: name, failed, cleanup };
+    return { elements, shots, failed, cleanup };
   } catch (e) {
     cleanup();
-    throw new Error(firstLine(e.message));
+    throw new Error(scrub(e.message));
   } finally {
     if (browser) await browser.close();
     if (server) await server.close();
   }
 }
+
+/** The step kinds a `reach` decision may use; perform() runs each. */
+export const STEP_KINDS = ['fill', 'click', 'clock', 'expect'];
 
 /** One step of a state's way in: {fill, value} | {click} | {clock: ms} | {expect}. */
 async function perform(page, step) {
@@ -123,15 +127,23 @@ function snapshot({ ATTR, PROPS, uiDir, shell }) {
   const out = [];
   for (const el of [document.documentElement, ...document.documentElement.querySelectorAll('*')]) {
     if (['SCRIPT', 'STYLE', 'LINK', 'META', 'NOSCRIPT', 'TEMPLATE', 'TITLE', 'HEAD'].includes(el.tagName)) continue;
-    let at = app(el.getAttribute(ATTR)), how = 'own';
-    if (!at) { at = fibre(el); how = 'fibre'; }
-    if (!at) { at = ancestor(el); how = 'ancestor'; }
-    if (!at) { at = shell; how = 'shell'; }
+    const at = app(el.getAttribute(ATTR)) || fibre(el) || ancestor(el) || shell;
     const cs = getComputedStyle(el);
     const r = el.getBoundingClientRect();
-    out.push({ at, how, style: Object.fromEntries(PROPS.map(p => [p, cs.getPropertyValue(p)])), rect: { width: Math.round(r.width * 100) / 100, height: Math.round(r.height * 100) / 100 } });
+    out.push({ at, style: Object.fromEntries(PROPS.map(p => [p, cs.getPropertyValue(p)])), rect: { width: Math.round(r.width * 100) / 100, height: Math.round(r.height * 100) / 100 } });
   }
   return out;
+}
+
+// The Code Library folder an element's own site must be outside of (#84, #102): components.json `aliases.ui`
+// with its `@/` alias resolved (the root, or src/ on Vite), else components/ui/.
+function codeLibraryDir(copy) {
+  const file = join(copy, 'components.json');
+  const ui = existsSync(file) && JSON.parse(readFileSync(file, 'utf8')).aliases?.ui;
+  if (!ui) return 'components/ui/';
+  const pkg = existsSync(join(copy, 'package.json')) ? JSON.parse(readFileSync(join(copy, 'package.json'), 'utf8')) : {};
+  const vite = Boolean({ ...pkg.dependencies, ...pkg.devDependencies }.vite);
+  return ui.replace(/^@\//, vite ? 'src/' : '').replace(/\/?$/, '/');
 }
 
 // Every .tsx/.jsx under the copy, tagged. A file TypeScript cannot parse stays untagged: its elements join
@@ -178,8 +190,8 @@ async function buildAndServe(copy) {
   };
   sh('npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund']);
   const port = await freePort();
-  if (deps.next) { sh('npx', ['--no-install', 'next', 'build', '--no-lint']); return serveCommand(copy, 'npx', ['--no-install', 'next', 'start', '-p', port, '-H', '127.0.0.1'], port); }
-  if (deps.vite) { sh('npx', ['--no-install', 'vite', 'build']); return serveCommand(copy, 'npx', ['--no-install', 'vite', 'preview', '--port', port, '--host', '127.0.0.1', '--strictPort'], port); }
+  if (deps.next) { sh('npx', ['--no-install', 'next', 'build', '--no-lint']); return { ...(await serveCommand(copy, 'npx', ['--no-install', 'next', 'start', '-p', port, '-H', '127.0.0.1'], port)), app: true }; }
+  if (deps.vite) { sh('npx', ['--no-install', 'vite', 'build']); return { ...(await serveCommand(copy, 'npx', ['--no-install', 'vite', 'preview', '--port', port, '--host', '127.0.0.1', '--strictPort'], port)), app: true }; }
   if (pkg.scripts && pkg.scripts.build) sh('npm', ['run', 'build']);
   return serveStatic(copy);
 }

@@ -183,7 +183,7 @@ ${Object.keys(s.usageStates || {}).length ? `<ul>${Object.entries(s.usageStates)
 ${(anyRenderer ? anyRenderer.stylesheet : '').replace(/<\/style/gi, '<\\/style')}
 </style>
 <style>
-:root { --ink: #161616; --muted: #525252; --line: #e0e0e0; --bg: #ffffff; --soft: #f4f4f4; --warn: #8a3800; }
+:root { --ink: #161616; --muted: #525252; --line: #e0e0e0; --bg: #ffffff; --soft: #f4f4f4; --warn: #8a3800; --bad: #a2191f; --bad-soft: #fff1f1; --bad-line: #ffd7d9; }
 body.page { margin: 0; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: var(--ink); background: var(--bg); }
 .top { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; padding: 12px 16px; background: var(--bg); border-bottom: 1px solid var(--line); }
 .top h1 { font-size: 20px; margin: 0; } .stamp { margin: 0; color: var(--muted); font-size: 14px; }
@@ -205,7 +205,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 .shots { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; } .shot { margin: 0; flex: 0 1 240px; min-width: 0; } .shot figcaption { font-size: 12px; margin-bottom: 4px; }
 .shots img, .matrix img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); } .matrix td { min-width: 96px; max-width: 200px; }
 .slot { min-height: 96px; padding: 8px; display: grid; place-items: center; text-align: center; border: 1px dashed var(--muted); color: var(--muted); font-size: 12px; }
-.hatch { background: repeating-linear-gradient(45deg, #fff1f1 0 6px, #ffd7d9 6px 12px); color: #a2191f; }
+.hatch { background: repeating-linear-gradient(45deg, var(--bad-soft) 0 6px, var(--bad-line) 6px 12px); color: var(--bad); }
 .swatch { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--line); vertical-align: middle; margin-right: 4px; }
 .not-specified { color: var(--muted); } a.flag { color: inherit; text-decoration: none; } .counts { font-size: 13px; } .note { font-size: 13px; }
 .doc h3 { font-size: 15px; font-weight: 600; margin: 16px 0 4px; } .raw-box code { font-size: 12px; }

@@ -89,6 +89,17 @@ test('runtime: a screenshot per reached state x Carbon breakpoint, the error sta
   assert.ok(!handoff.openQuestions.some(q => q.kind === 'runtime'));
 });
 
+test('runtime: a re-run on the same inputs writes nothing and leaves the screenshots byte for byte', { skip: noRuntime }, async () => {
+  const ds = designSystem();
+  const first = await generate({ prototype: PROTOTYPE, designSystem: ds, decisions: DECISIONS, runtime: true });
+  const shot = join(dirname(first.path), first.handoff.screens[0].states.success.screenshots.md);
+  const bytes = readFileSync(shot);
+  const again = await generate({ prototype: PROTOTYPE, designSystem: ds, decisions: DECISIONS, runtime: true });
+  assert.equal(again.wrote, false);
+  assert.equal(again.contentHash, first.contentHash);
+  assert.ok(readFileSync(shot).equals(bytes));
+});
+
 test('runtime: a state with no reach answer is a decision request; answered unreachable, its screenshots are missing with the reason', { skip: noRuntime }, async () => {
   const ds = designSystem();
   const { 'reach:invite-teammates:empty': _, ...rest } = DECISIONS;
@@ -108,6 +119,11 @@ function prototypeCopy(edit = t => t, extra = {}) {
   for (const [f, text] of Object.entries(extra)) writeFileSync(join(dir, f), text);
   return join(dir, 'index.html');
 }
+// A package.json with only a build script, and its lockfile, so `npm ci` installs nothing.
+const packageFiles = build => ({
+  'package.json': JSON.stringify({ name: 'prototype', private: true, scripts: { build } }),
+  'package-lock.json': JSON.stringify({ name: 'prototype', lockfileVersion: 3, requires: true, packages: { '': { name: 'prototype' } } }),
+});
 const leadStyle = handoff => {
   for (const r of handoff.screens[0].regions) for (const t of r.text) if (handoff.copy[t.copy].text.startsWith('Teammates get an email')) return t.style;
   return undefined;
@@ -130,10 +146,7 @@ test('runtime: computed text metrics feed the matcher; a style a script adds at 
 });
 
 test('runtime: a build that fails gives a valid static-only Handoff with the reason in every screenshot and a runtime question', { skip: noRuntime }, async () => {
-  const prototype = prototypeCopy(t => t, {
-    'package.json': JSON.stringify({ name: 'broken-prototype', private: true, scripts: { build: 'echo the build is broken >&2 && exit 1' } }),
-    'package-lock.json': JSON.stringify({ name: 'broken-prototype', lockfileVersion: 3, requires: true, packages: { '': { name: 'broken-prototype' } } }),
-  });
+  const prototype = prototypeCopy(t => t, packageFiles('echo the build is broken >&2 && exit 1'));
   const before = treeHash(dirname(prototype));
   const ds = designSystem();
   const { requests, handoff, path } = await generate({ prototype, designSystem: ds, decisions: DECISIONS, runtime: true });
@@ -170,11 +183,15 @@ test('render: the states x breakpoints matrix and the state tabs show the screen
   for (const bp of Object.keys(CARBON_BREAKPOINTS)) assert.ok(panel.includes(`<img src="../screens/invite-teammates.success.${bp}.png"`), `the success tab shows ${bp}`);
 });
 
+test('runtime: a package.json with neither Next nor Vite is installed, built and its files served', { skip: noRuntime }, async () => {
+  const prototype = prototypeCopy(t => t, packageFiles('node -e ""'));
+  const { requests, handoff } = await generate({ prototype, designSystem: designSystem(), decisions: DECISIONS, runtime: true });
+  assert.deepEqual(requests, []);
+  assert.equal(handoff.screens[0].states.default.screenshots.max, 'screens/invite-teammates.default.max.png');
+});
+
 test('render: a failed runtime shows its reason in the Rendering', { skip: await noRender() }, async () => {
-  const prototype = prototypeCopy(t => t, {
-    'package.json': JSON.stringify({ name: 'broken-prototype', private: true, scripts: { build: 'echo the build is broken >&2 && exit 1' } }),
-    'package-lock.json': JSON.stringify({ name: 'broken-prototype', lockfileVersion: 3, requires: true, packages: { '': { name: 'broken-prototype' } } }),
-  });
+  const prototype = prototypeCopy(t => t, packageFiles('echo the build is broken >&2 && exit 1'));
   const ds = designSystem();
   const { path } = await generate({ prototype, designSystem: ds, decisions: DECISIONS, runtime: true });
   const html = readFileSync(await render({ handoffPath: path, designSystem: ds }), 'utf8');
