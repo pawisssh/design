@@ -219,6 +219,22 @@ test('a family without a Base Component (the 539-variant slope set) builds besid
   assert.ok(pages.includes('TEMP slope'));
 });
 
+test('every token-backed value is bound: a fill typed raw by hand fails the theme check, and the rerun rebinds it alone', async () => {
+  const env = await setup();
+  await buildAll(env);
+  const set = await setNode(env);
+  const victim = set.children.find(k => k.name === 'Kind=Tertiary, Size=Medium, State=Hover');
+  const index = expand(BUTTON).findIndex(t => variantName(BUTTON, t) === victim.name);
+  const colour = victim.fills[0].color;
+  victim.fills = [{ type: 'SOLID', color: { ...colour } }]; // same colour, no variable
+  const t = checkTheme(BUTTON, (await sets(env, { mode: 'theme', sample: [index] })).result, DOC);
+  assert.deepEqual(t.problems.map(p => [p.what, p.at]), [['unbound', 'Button.fill']]);
+  const runs = await buildAll(env);
+  assert.deepEqual(runs.map(r => r.result.summary.updated), runs.map((r, i) => (i === Math.floor(index / PER_CALL) ? 1 : 0)));
+  assert.deepEqual((await buildAll(env)).map(r => r.result.summary.updated), runs.map(() => 0));
+  assert.deepEqual(checkTheme(BUTTON, (await sets(env, { mode: 'theme', sample: [index] })).result, DOC).problems, []);
+});
+
 test('the coverage check catches a renamed, a moved and a deleted variant, and a rerun repairs them', async () => {
   const env = await setup();
   await buildAll(env);

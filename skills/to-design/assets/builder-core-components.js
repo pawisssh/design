@@ -655,6 +655,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       await loadRefs(specs, conflict);
       if (conflicts.length) return { summary: { conflicts: conflicts.length }, conflicts };
       const out = {};
+      const jobs = [];
       for (let i = 0; i !== E.length; i++) {
         const name = nameOf(E[i].slice(1));
         const node = kids[name];
@@ -667,28 +668,39 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
           out[name] = r;
           continue;
         }
-        // theme: each bound colour resolved with the section switched to every mode of its collection
-        const o = out[name] = {};
+        // theme: the bound colours (fill, stroke, each effect); an unbound one is left out, which the check reports
+        out[name] = {};
         for (const path of Object.keys(specs[i].paint)) {
           const n = at(specs[i], node, path);
           for (const f of Object.keys(specs[i].paint[path])) {
-            const list = n && (f === 'fill' ? n.fills : n.strokes);
-            const b = list && list.length && list[0].boundVariables && list[0].boundVariables.color;
-            if (!b) continue;
-            const v = await figma.variables.getVariableByIdAsync(b.id);
-            const col = await figma.variables.getVariableCollectionByIdAsync(v.variableCollectionId);
-            const host = section || set;
-            const before = (host.explicitVariableModes || {})[col.id];
-            const per = o[path + '.' + f] = {};
-            for (const m of col.modes) {
-              host.setExplicitVariableModeForCollection(col, m.modeId);
-              const r = v.resolveForConsumer(n);
-              const c = r && r.value;
-              per[m.name] = c && typeof c === 'object' ? hex(c) + (c.a != null && c.a < 1 ? '/' + Math.round(c.a * 1000) / 1000 : '') : c;
-            }
-            if (before) host.setExplicitVariableModeForCollection(col, before); else host.clearExplicitVariableModeForCollection(col);
+            const list = !n ? [] : f === 'fill' ? n.fills : f === 'stroke' ? n.strokes : f === 'effects' ? n.effects : [];
+            (list === figma.mixed ? [] : list).forEach((p, j) => {
+              const b = p.boundVariables && p.boundVariables.color;
+              if (b && (f === 'effects' || j === 0)) jobs.push([out[name], path + '.' + f + (f === 'effects' ? '.' + j : ''), b.id, n]);
+            });
           }
         }
+      }
+      // each colour resolved with the section switched to every mode of its collection, then the mode restored
+      const host = section || set;
+      const cols = {};
+      for (const job of jobs) {
+        const v = job[4] = await figma.variables.getVariableByIdAsync(job[2]);
+        cols[v.variableCollectionId] = cols[v.variableCollectionId] || await figma.variables.getVariableCollectionByIdAsync(v.variableCollectionId);
+      }
+      for (const id of Object.keys(cols)) {
+        const col = cols[id];
+        const before = (host.explicitVariableModes || {})[id];
+        for (const m of col.modes) {
+          host.setExplicitVariableModeForCollection(col, m.modeId);
+          for (const job of jobs) {
+            if (job[4].variableCollectionId !== id) continue;
+            const r = job[4].resolveForConsumer(job[3]);
+            const c = r && r.value;
+            (job[0][job[1]] = job[0][job[1]] || {})[m.name] = c && typeof c === 'object' ? hex(c) + (c.a != null && c.a < 1 ? '/' + Math.round(c.a * 1000) / 1000 : '') : c;
+          }
+        }
+        if (before) host.setExplicitVariableModeForCollection(col, before); else host.clearExplicitVariableModeForCollection(col);
       }
       return { summary: { variants: E.length, conflicts: 0 }, [what]: out };
     }

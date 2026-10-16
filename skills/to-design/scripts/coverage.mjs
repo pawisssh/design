@@ -132,16 +132,24 @@ export function checkTheme(contract, readback, foundations) {
   for (const [name, colours] of Object.entries(readback.theme || {})) {
     const t = byName.get(name);
     if (!colours || !t) { problems.push({ what: colours ? 'extra' : 'missing', name }); continue; }
-    const paint = resolve(contract, t).paint;
-    for (const [where, perMode] of Object.entries(colours)) {
-      const dot = where.lastIndexOf('.');
-      const want = (paint[where.slice(0, dot)] || {})[where.slice(dot + 1)];
-      const v = want && want.token && foundations.variables[want.token];
-      if (!v) { problems.push({ what: 'unbound', name, at: where }); continue; }
+    // every colour the Contract gives a token: a fill or stroke, or an effect's colour
+    const want = {};
+    for (const [node, fields] of Object.entries(resolve(contract, t).paint))
+      for (const [field, value] of Object.entries(fields)) {
+        if (field === 'effects' && Array.isArray(value)) value.forEach((e, j) => { if (e.color && e.color.token) want[`${node}.effects.${j}`] = e.color.token; });
+        else if (value && value.token && foundations.variables[value.token] && foundations.variables[value.token].type === 'COLOR') want[`${node}.${field}`] = value.token;
+      }
+    for (const where of Object.keys(colours)) if (!(where in want)) problems.push({ what: 'unexpected', name, at: where });
+    for (const [where, token] of Object.entries(want)) {
+      const perMode = colours[where];
+      if (!perMode) { problems.push({ what: 'unbound', name, at: where, token }); continue; }
+      const v = foundations.variables[token];
+      const modes = (foundations.collections.find(c => c.key === v.collection) || { modes: [] }).modes;
+      if (Object.keys(perMode).length !== modes.length) problems.push({ what: 'modes', name, at: where, want: modes.map(m => m.key), got: Object.keys(perMode) });
       for (const [mode, got] of Object.entries(perMode)) {
         const exp = v.values[modeKey[mode]];
         checked++;
-        if (!exp || colourKey(exp.resolved) !== got) problems.push({ what: 'colour', name, at: where, token: want.token, mode, want: exp && colourKey(exp.resolved), got });
+        if (!exp || colourKey(exp.resolved) !== got) problems.push({ what: 'colour', name, at: where, token, mode, want: exp && colourKey(exp.resolved), got });
       }
       if (new Set(Object.values(perMode)).size > 1) switching++;
     }
