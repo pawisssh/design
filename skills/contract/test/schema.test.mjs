@@ -11,6 +11,7 @@ const foundations = load('design-systems/carbon/carbon.foundations.json');
 const fixtures = {
   button: 'design-systems/carbon/contracts/button.component.json',
   'owner-edits': 'skills/contract/test/fixtures/button.owner-edits.component.json',
+  drafted: 'skills/contract/test/fixtures/button.drafted.component.json',
 };
 
 // The JSON Schema keywords contract.schema.json uses, and nothing more (the repo takes no dependencies).
@@ -68,4 +69,19 @@ test('every key the schema requires at the top level and in selection is require
     const { ok, errors } = contract.validate(c, foundations);
     assert.ok(!ok && errors.some(e => e.at === key), `validate accepts a Contract without ${key}`);
   }
+});
+
+test('the schema rejects the drafted entry shapes validate rejects; a bad key path is validate rule 9 only', () => {
+  const key = 'axes.size.values.lg.label';
+  for (const entry of [{ by: 'agent', evidence: [], fingerprint: 'sha256:' + '0'.repeat(64) }, { by: 'agent', evidence: ['x'], fingerprint: 'sha256:abc' },
+    { by: 'owner' }, { by: 'designer', was: 'Big' }]) {
+    const c = load(fixtures.drafted);
+    c.drafted[key] = entry;
+    assert.ok(check(schema, c).some(e => e.startsWith(`$.drafted.${key}`)), `schema accepts ${JSON.stringify(entry)}`);
+    assert.ok(contract.validate(c, foundations).errors.some(e => e.rule === 9 && e.at === `drafted.${key}`));
+  }
+  const c = load(fixtures.drafted);
+  c.drafted['anatomy.Footer'] = { by: 'owner', was: null };
+  assert.deepEqual(check(schema, c), []);
+  assert.ok(contract.validate(c, foundations).errors.some(e => e.rule === 9 && e.at === 'drafted.anatomy.Footer'));
 });

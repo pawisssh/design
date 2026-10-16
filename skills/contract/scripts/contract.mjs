@@ -246,6 +246,9 @@ export function validate(contract, foundations) {
   // 8. selection status and approval
   checkApproval(c, err);
 
+  // 9. the drafted side table
+  checkDrafted(c, err);
+
   return { ok: errors.length === 0, errors };
 }
 
@@ -674,6 +677,86 @@ export function approve(contract, at, { prototype = false } = {}) {
   c.selection.status = 'approved';
   c.selection.approval = { by: prototype ? PROTOTYPE_APPROVER : 'owner', at, snapshotId: c.source.snapshotId, contentHash: contentHash(c) };
   return c;
+}
+
+// ---------- Drafted values (ADR 0010) ----------
+
+// The parts of a Contract that hold values an Adapter's agent drafts. `excluded` has no key form yet.
+const DRAFTABLE = ['family', 'axes', 'anatomy', 'properties', 'layout', 'paint', 'icons', 'figma', 'code'];
+const BIND_FIELDS = ['characters', 'visible', 'mainComponent'];
+const OWNER_BY = /^owner( \(simulated[^)]*\))?$/;
+const noMatch = o => !isObj(o) || Object.keys(o).length === 0;
+
+/** The `drafted` key of a value set by a layout or paint rule: `layout.Button.width`, or `layout{"size":"sm"}.Box.height` under a non-empty match. */
+export function draftedKey(section, match, node, field) {
+  return `${section}${noMatch(match) ? '' : canonical(match)}.${node}.${field}`;
+}
+
+/**
+ * The value a `drafted` key names, as {found: true, value} or {found: false, why}. Keys follow ADR 0010:
+ * `axes.<axis>.values.<value>.label`, `anatomy.<node>`, `properties.<key>.<field>`, `properties.<node>.<characters|visible|mainComponent>`,
+ * `layout.<node>.<field>` for the base rule and `layout<match as canonical JSON>.<node>.<field>` for any other; other keys walk the
+ * Contract, picking list items by `key` or `name`.
+ */
+export function draftedValue(contract, key) {
+  const miss = why => ({ found: false, why });
+  const root = String(key).split(/[.{]/)[0];
+  if (DRAFTABLE.indexOf(root) < 0) return miss(`"${root}" holds no Drafted values`);
+  const path = String(key).slice(root.length);
+  if (root === 'layout' || root === 'paint') {
+    const m = /^(\{.*\})?\.([^.]+)\.([^.]+)$/.exec(path);
+    if (!m) return miss(`a ${root} key is ${root}[<match>].<node>.<field>`);
+    const [, match, node, field] = m;
+    if (match === '{}') return miss('a value in the base rule has no match in its key');
+    let value;
+    let found = false;
+    for (const rule of contract[root] || []) {
+      const same = match === undefined ? noMatch(rule.match) : !noMatch(rule.match) && canonical(rule.match) === match;
+      if (same && isObj(rule.set) && isObj(rule.set[node]) && Object.prototype.hasOwnProperty.call(rule.set[node], field)) {
+        found = true;
+        value = rule.set[node][field];
+      }
+    }
+    return found ? { found, value } : miss(`no ${root} rule with ${match === undefined ? 'the base match' : `match ${match}`} sets ${node}.${field}`);
+  }
+  const parts = path.split('.').slice(1);
+  if (root === 'anatomy') {
+    const n = anatomyIndex(contract)[parts[0]];
+    if (!n || parts.length > 1) return miss(`no anatomy node "${parts.join('.')}"`);
+    return { found: true, value: { name: n.name, type: n.type } };
+  }
+  if (root === 'properties' && parts.length === 2 && BIND_FIELDS.indexOf(parts[1]) >= 0 && !(contract.properties || []).some(p => p.key === parts[0])) {
+    const p = (contract.properties || []).find(q => (q.binds || []).some(b => b.node === parts[0] && b.field === parts[1]));
+    return p ? { found: true, value: { key: p.key, label: p.label, type: p.type, default: p.default } } : miss(`no property binds ${parts[0]}.${parts[1]}`);
+  }
+  let cur = contract[root];
+  if (!parts.length) return miss(`a key names a value inside "${root}"`);
+  for (const part of parts) {
+    if (Array.isArray(cur)) cur = cur.find(e => isObj(e) && (e.key === part || e.name === part));
+    else if (isObj(cur) && Object.prototype.hasOwnProperty.call(cur, part)) cur = cur[part];
+    else cur = undefined;
+    if (cur === undefined) return miss(`no value at ${key}`);
+  }
+  return { found: true, value: cur };
+}
+
+function checkDrafted(c, err) {
+  if (c.drafted === undefined) return;
+  if (!isObj(c.drafted)) return err(9, 'drafted', '`drafted` must be an object keyed by value path');
+  for (const [key, e] of Object.entries(c.drafted)) {
+    const at = `drafted.${key}`;
+    const r = draftedValue(c, key);
+    if (!r.found) err(9, at, `${key} is not a value in this Contract: ${r.why}`);
+    if (!isObj(e)) { err(9, at, `${key}: an entry is an object, {by: "agent", evidence, fingerprint} or {by: "owner", was}`); continue; }
+    if (e.by === 'agent') {
+      if (!Array.isArray(e.evidence) || !e.evidence.length || e.evidence.some(x => typeof x !== 'string' || !x))
+        err(9, at, `${key}: an agent entry needs evidence, a non-empty list of "file:Lnn what it shows" strings`);
+      if (typeof e.fingerprint !== 'string' || !/^sha256:[0-9a-f]{64}$/.test(e.fingerprint))
+        err(9, at, `${key}: an agent entry needs a fingerprint "sha256:<64 hex>"`);
+    } else if (OWNER_BY.test(String(e.by))) {
+      if (!('was' in e)) err(9, at, `${key}: an owner entry needs was, the value before the owner's correction`);
+    } else err(9, at, `${key}: by must be "agent" or "owner", not ${JSON.stringify(e.by)}`);
+  }
 }
 
 // ---------- contentHash (pure-JS sha256 so it runs in node, the browser and the Figma sandbox) ----------

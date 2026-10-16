@@ -66,3 +66,19 @@ test('the card chrome uses Carbon tokens, never raw hex; the grid is 200px cards
   assert.match(css, /\.tp-specimen\{[^}]*align-items:center;justify-content:center/);
   assert.match(css, /\.tp-omitted \.tp-specimen\{opacity:\.4\}/);
 });
+
+test('a drafted label is flagged as drafted on the card; an owner-corrected one is not (#105)', () => {
+  const c = JSON.parse(readFileSync(new URL('../../contract/test/fixtures/button.drafted.component.json', import.meta.url)));
+  c.drafted['axes.state.values.disabled.label'] = { by: 'owner', was: 'Inactive' };
+  const m = new Selection(c, contractModule);
+  const name = id => catalogCard(m.specimen(id), { contract: c, baseId: m.baseId, sourceLabel: '', h }).card.children[0].children[0];
+  const lg = name('danger|lg|disabled');
+  assert.equal(text(lg), 'Danger / Large / Disabled', 'the label text is unchanged');
+  const marked = lg.children.filter(n => typeof n !== 'string' && n.props.className === 'tp-drafted');
+  assert.deepEqual(marked.map(text), ['Large'], 'only the agent-drafted label is marked');
+  assert.match(marked[0].props.title, /^Drafted label/);
+  assert.match(lg.props.title, /\(drafted: Size\)$/, 'the tooltip names the drafted axis');
+  assert.deepEqual(name('danger|md|disabled').children, ['Danger / Medium / Disabled'], 'a card with no drafted label is unchanged');
+  const template = readFileSync(new URL('../assets/catalog-template.html', import.meta.url), 'utf8');
+  assert.match(template.match(/<style>([\s\S]*?)<\/style>/)[1], /\.tp-drafted\{[^}]*\}/);
+});
