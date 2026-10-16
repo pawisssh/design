@@ -41,9 +41,18 @@ export async function renderHtml(handoff, system) {
   const renderers = {};
   for (const key of Object.keys(h.source.contracts).sort()) renderers[key] = await system.adapter.renderer(contracts[key]);
   const anyRenderer = Object.values(renderers)[0];
-  const theme = foundations.collections.find(c => !c.hidden && c.modes.length > 1);
   const mapped = Object.values(h.source.modes)[0];
-  const modeClass = m => (anyRenderer ? anyRenderer.modeClass(m) : `mode-${m}`);
+  // The toggle covers the collection of the mapped mode (the Theme). A Mode applies as the one class its
+  // `selector` names (#109); a Mode with none takes the Adapter renderer's class for its key, as in To-preview.
+  const theme = foundations.collections.find(c => c.modes.length > 1 && c.modes.some(m => m.key === mapped));
+  const modeClass = key => {
+    const m = theme && theme.modes.find(x => x.key === key);
+    if (m && m.selector !== undefined) {
+      if (!/^\.[A-Za-z_][\w-]*$/.test(m.selector)) throw new Error(`${theme.key}/${key}: selector "${m.selector}" is not one class, and the Rendering applies a Mode as one class`);
+      return m.selector.slice(1);
+    }
+    return anyRenderer ? anyRenderer.modeClass(key) : `mode-${key}`;
+  };
   const hash = handoffContentHash(h);
   const screen = h.screens[0];
   const regions = h.screens.flatMap(s => s.regions);

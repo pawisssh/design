@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { contentHash, validate } from '../../contract/scripts/contract.mjs';
 import { hasDeps } from '../scripts/deps.mjs';
-import { generate, loadDesignSystem, render, validateHandoff } from '../scripts/handoff.mjs';
+import { generate, loadDesignSystem, render, renderHtml, validateHandoff } from '../scripts/handoff.mjs';
 import { parseInline } from '../scripts/css.mjs';
 import { matchDeclaration, matchText } from '../scripts/match.mjs';
 import { innerHtmlTemplates } from '../scripts/reader.mjs';
@@ -91,6 +91,9 @@ test('Button usages are Contract usages with tuples, recognised by the agent; th
   const toast = usage(handoff, 'toast');
   assert.ok(toast.raw && toast.reason);
   assert.ok(handoff.openQuestions.some(q => q.id === toast.question && q.kind === 'no-contract'));
+  // Support tokens are in for regions: the toast's #24a148 is exactly support-success, not Off-system.
+  assert.equal(styles(handoff).find(s => s.raw === '#24a148').token, 'support-success');
+  assert.ok(!handoff.values.some(v => Object.values(v.raw).includes('#24a148')));
 });
 
 test('#edf5ff is Off-system with nearest and its Primitive; a near match and a tied pick are flagged', { skip: noDeps }, async () => {
@@ -242,7 +245,16 @@ test('render writes the static HTML Rendering: real renders, flags, mode toggle,
   assert.match(html, /<p class="counts">.*≠ Off-system<\/span> \d+/, 'Needs a look counts its flags per kind');
   assert.match(html, />Needs a look \(\d+\)<\/a>/);
   assert.match(html, /missing \(static-only\)/);
-  for (const m of system.foundations.collections.find(c => c.key === 'theme').modes) assert.ok(html.includes(`>${m.label}</option>`), m.label);
+  const themeModes = system.foundations.collections.find(c => c.key === 'theme').modes;
+  for (const m of themeModes) {
+    assert.ok(html.includes(`>${m.label}</option>`), m.label);
+    assert.ok(m.selector && html.includes(`data-class="${m.selector.slice(1)}"`), `${m.key} applies as its selector's class`);
+  }
+  // A Mode with no selector falls back to the Adapter renderer's class.
+  const bare = { ...system, foundations: { ...system.foundations, collections: system.foundations.collections.map(c => (c.key === 'theme' ? { ...c, modes: c.modes.map(({ selector, ...m }) => m) } : c)) } };
+  const fallback = await renderHtml(handoff, bare);
+  const renderer = await system.adapter.renderer(system.contracts.button);
+  for (const m of themeModes) assert.ok(fallback.includes(`data-class="${renderer.modeClass(m.key)}"`), `${m.key} falls back to modeClass`);
   assert.ok(html.includes(handoff.revision ? `r${handoff.revision}` : 'r?'));
   assert.ok(html.includes(result.contentHash.slice(7, 19)));
   assert.match(html, /pending sign-off/);

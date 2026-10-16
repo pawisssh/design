@@ -69,7 +69,7 @@ node skills/to-handoff/scripts/handoff.mjs render design-systems/<ds>/handoffs/<
 - Tokens & values;
 - Copy & questions.
 
-A mode toggle covers every Theme mode, and the stamp reads `r<revision> · <contentHash> · pending sign-off`.
+A mode toggle covers every Theme mode, each applied as the one class its Mode `selector` names (the Adapter renderer's mode class when a Mode has none), and the stamp reads `r<revision> · <contentHash> · pending sign-off`.
 
 ## Tests
 

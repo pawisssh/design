@@ -6,7 +6,7 @@ import { hasPreviewPackages, previewRenderer } from './preview.mjs';
 // The token groups (the Foundations variable name before "/") a value may match for each CSS role (#61).
 // A hard filter: a page background never matches an AI aura or a Button token, whatever its value.
 export const roleGroups = {
-  'background-color': ['Background', 'Layer', 'Field'],
+  'background-color': ['Background', 'Layer', 'Field', 'Support'],
   color: ['Text', 'Link', 'Icon'],
   'border-color': ['Border'],
   'outline-color': ['Focus', 'Border'],

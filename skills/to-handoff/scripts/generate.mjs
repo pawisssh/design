@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { convert, deltaE } from '../../contract/scripts/color.mjs';
-import { contentHash as contractHash, proposalContentHash, resolve, sha256 } from '../../contract/scripts/contract.mjs';
+import { canonical, contentHash as contractHash, proposalContentHash, resolve, sha256 } from '../../contract/scripts/contract.mjs';
 import { computed, splitWords } from './css.mjs';
 import { COLOR_ROLES, collectionOf, colorText, followCustom, matchDeclaration, matchText, roleOf, sameHex, valueIn } from './match.mjs';
 import { stateAxisOf } from './system.mjs';
@@ -26,13 +26,6 @@ export const fileHash = bytes => 'sha256:' + createHash('sha256').update(bytes).
 const kebab = s => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 const clone = o => JSON.parse(JSON.stringify(o));
 
-/** JSON text with object keys sorted at every level: the canonical form hashes are taken over. */
-export function canonical(v) {
-  if (Array.isArray(v)) return `[${v.map(canonical).join(',')}]`;
-  if (v && typeof v === 'object') return `{${Object.keys(v).sort().map(k => `${JSON.stringify(k)}:${canonical(v[k])}`).join(',')}}`;
-  return JSON.stringify(v);
-}
-
 /** A Handoff's content hash: everything but revision, status and approval (#64). */
 export function handoffContentHash(handoff) {
   const h = clone(handoff);
@@ -42,7 +35,10 @@ export function handoffContentHash(handoff) {
   return 'sha256:' + sha256(canonical(h));
 }
 
-/** The Prototype's snapshotId: a hash over its sorted file hashes (#64), as for a Code Library snapshot. */
+/**
+ * The Prototype's snapshotId: a hash over its sorted file hashes (#64), as for a Code Library snapshot. The same
+ * manifest as each Adapter's `snapshotId` in its sources.mjs; To-handoff names no Adapter, so it keeps its own.
+ */
 export function snapshotIdOf(files) {
   return 'sha256:' + sha256(Object.keys(files).sort().map(p => `${files[p].slice(7)}  ${p}\n`).join(''));
 }
