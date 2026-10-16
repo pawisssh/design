@@ -4,4 +4,4 @@ When a new selection drops variants, they follow the same rule as tokens that dr
 
 ## Status
 
-Decided, not built. #67 builds it. Until then To-design reports a dropped variant as `extra` (see `skills/to-design/SKILL.md`, "After a Contract edit").
+Built in #67. The rebuild and prune flow is in `skills/to-design/SKILL.md`, "Dropped variants: orphans and prune". A node in the set that the ledger never recorded is still reported as `extra`.

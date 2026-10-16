@@ -51,3 +51,16 @@ test('ledger record in a worktree writes only with --ledger, and never to the wo
   assert.equal(JSON.parse(readFileSync(shared, 'utf8')).fileKey, FILE_KEY);
   assert.equal(record(main).status, 0, 'the main checkout keeps its default');
 });
+
+test('ledger prune-list writes the owner-named orphans with their preview counts, and refuses a name the preview does not hold', () => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'to-design-prune-')));
+  const preview = { slice: 'sets', mode: 'prune-preview', fileKey: FILE_KEY, family: 'button', orphans: { 'Kind=Primary, State=Focus': 2, 'Kind=Ghost, State=Focus': 0 } };
+  writeFileSync(join(dir, 'result.json'), JSON.stringify(preview));
+  const run = (...names) => spawnSync('node', [SCRIPT, 'prune-list', 'result.json', ...names.flatMap(n => ['--name', n]), '--out', join('run', 'prune.json')], { cwd: dir, encoding: 'utf8' });
+  const ok = run('Kind=Primary, State=Focus');
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.deepEqual(JSON.parse(readFileSync(join(dir, 'run', 'prune.json'), 'utf8')), { schemaVersion: 1, fileKey: FILE_KEY, family: 'button', prune: { 'Kind=Primary, State=Focus': 2 } });
+  const refused = run('Kind=Primary, State=Enabled');
+  assert.notEqual(refused.status, 0);
+  assert.match(refused.stderr, /not an orphan in the preview/);
+});

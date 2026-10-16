@@ -47,8 +47,11 @@ const PAGE_TEMPLATE = {
  * value label), no missing, extra or duplicate variant, every one a component in its grid cell with the
  * default variant top-left, its property wiring, the set's properties, and the set's page, frame and header.
  */
-export function checkCoverage(contract, readback) {
+export function checkCoverage(contract, readback, ledger = null) {
   const problems = [];
+  // a variant the selection dropped, which the ledger keeps as an orphan until a prune (#67), is listed, not a problem
+  const orphans = ((ledger && ledger.sets && ledger.sets[contract.family.key]) || {}).orphans || {};
+  const orphaned = [];
   const bad = (what, detail) => problems.push({ what, ...detail });
   const tuples = expand(contract);
   const want = new Map(tuples.map(t => [variantName(contract, t), t]));
@@ -64,7 +67,7 @@ export function checkCoverage(contract, readback) {
     if (seen.has(name)) { bad('duplicate', { name }); continue; }
     seen.set(name, true);
     const t = want.get(name);
-    if (!t) { bad('extra', { name }); continue; }
+    if (!t) { if (orphans[name]) orphaned.push(name); else bad('extra', { name }); continue; }
     if (!isComponent) bad('not-a-component', { name });
     const cell = cellOf(contract, t);
     if (row !== cell[0] || col !== cell[1]) bad('cell', { name, want: cell, got: [row, col] });
@@ -97,7 +100,7 @@ export function checkCoverage(contract, readback) {
   }
   const extraProps = Object.keys(readback.props || {}).filter(k => !contract.properties.some(p => p.label === k));
   for (const name of extraProps) bad('property', { name, reason: 'extra' });
-  return { ok: problems.length === 0, expected: tuples.length, read: readback.rows.length, problems };
+  return { ok: problems.length === 0, expected: tuples.length, read: readback.rows.length, orphaned, problems };
 }
 
 /** A `sample` readback: each variant diffed against what the Contract resolves for it, at the property defaults. */
@@ -181,7 +184,7 @@ function main() {
   const root = fileURLToPath(new URL('../../../', import.meta.url));
   const foundations = JSON.parse(readFileSync(foundationsArg || join(root, 'design-systems', contract.source.adapter, `${contract.source.adapter}.foundations.json`), 'utf8'));
   let report;
-  if (what === 'coverage') report = checkCoverage(contract, result);
+  if (what === 'coverage') report = checkCoverage(contract, result, readLedger(ledgerArg || defaultLedgerPath(result.fileKey)));
   else if (what === 'theme') report = checkTheme(contract, result, foundations);
   else report = checkSample(contract, result, readLedger(ledgerArg || defaultLedgerPath(result.fileKey)), foundations);
   console.log(JSON.stringify(report, null, 2));

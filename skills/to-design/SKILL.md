@@ -124,8 +124,8 @@ Core: `builder-core-components.js`. `sets` takes an approved Contract only: it r
 - **Base first.** When the ledger has `bases[family]`, the Base Component is moved into the set and rebuilt in place (same id and key) at the property defaults, and batch 0 holds it. No tweaked scratch copy stays behind.
 - **Diffs only.** Writes happen only where the readback differs, so a rerun creates and updates nothing.
 - **Batch ids only.** A call carries and returns only its batch's variant ids. `ledger.mjs record` merges them into `sets[family].variants` (one id per expansion index) and keeps the other families.
-- **Lost connection.** A call whose result was lost may still have committed. Before retrying, run `--mode reconcile` (read only: it finds the set's variants by name), record its result, and only then re-derive and retry the batch.
-- **After a Contract edit** (a new omit, a re-approval), rebuild every batch. The rebuild finds the kept variants by name. A variant the new selection drops is not deleted: it stays in the set, leaves the ledger, and the coverage check reports it as `extra`. Removing it is the owner's step in Figma, after checking its instances; there is no prune for variants.
+- **Lost connection.** A call whose result was lost may still have committed. Before retrying, run `--mode reconcile` (read only: it finds the set's variants by name, and reports the ones the selection dropped), record its result, and only then re-derive and retry the batch.
+- **After a Contract edit** (a new omit, a re-approval), rebuild every batch, then see [Dropped variants](#dropped-variants-orphans-and-prune) below.
 
 **The Figma structure** (checked by `coverage.mjs`):
 
@@ -139,7 +139,26 @@ Core: `builder-core-components.js`. `sets` takes an approved Contract only: it r
 - **Package size.** Packages run 40-47K chars, so 64 per call left too little room under 50,000.
 - **Output.** Build output is at most 2.3KB. A coverage read is about 1.5KB plus 23 bytes per variant (6.6KB at 245, 13.1KB at 539); `use_figma` output must stay under 20KB, so one coverage read holds about 800 variants. A sample read is about 1.6KB per variant (keep it to 12 or fewer); a theme read is about 0.35KB per variant.
 - **Time.** A creating call costs about 1.6 ms × variants created × set size: 5.1s at 49, 18.6s at 245, 41.8s at 539, so building a family is quadratic (539 variants took 263s over 11 calls). An update-free rerun call takes 0.4-1.1s, and a coverage read 0.3s at 539.
-- **Ceiling: 49 per call.** At 49 the largest package was 47,190 chars, and 64 per call at 539 variants would take about 55s, beyond the longest call measured. For a family above about 600 variants, lower `--per-call` so that 1.6 ms × per-call × set size stays under about 45s.
+- **Ceiling: 49 per call.** At 49 the largest package was 47,190 chars (the orphan flow of #67 later added about 1,300 chars to the core, so expect about 48.5K until a live run measures it again), and 64 per call at 539 variants would take about 55s, beyond the longest call measured. For a family above about 600 variants, lower `--per-call` so that 1.6 ms × per-call × set size stays under about 45s.
+
+### Dropped variants: orphans and prune
+
+A variant the new selection drops follows the rule for tokens that drop out of the foundations (ADR 0003): it becomes an **orphan** in the ledger and is deleted only through a prune list the owner confirms, after an instance count.
+
+1. **Rebuild.** Every build call reports the set's children that the whole new selection no longer holds as `dropped` (`[name, id, key]`). `ledger.mjs record` moves each one whose id the ledger recorded from `sets[family].variants` to `sets[family].orphans` (`{<variant name>: {id, key, droppedAt}}`) and prints them as `orphaned`. A node the ledger never recorded is printed as `extra` and not tracked. Nothing is deleted. An orphan keeps the name it was dropped under; a dropped node a hand renamed before the rebuild is kept under the name it has. An orphan whose node a hand deleted leaves the list at the next build call. Finish a rebuild before the next Contract edit: the ledger keeps variant ids only for the current Contract, so a variant that a second edit drops before the first rebuild reached it is printed as `extra`, not tracked. Every build call lists every dropped node still in the set, orphans from earlier edits included, at about 100 bytes each (6.7KB of output in all with the 49 Focus variants dropped). A call stays under `use_figma`'s 20KB output up to about 180 of them, so prune before a set holds more. A child whose name no longer parses counts too, so an axis relabel or an added axis on a large set lists every old variant, and on a set of more than about 180 variants it can push a build call past the limit.
+2. **Re-select.** When a later Contract selects a dropped variant again, the plan carries its orphan id, so the rebuild reuses that node (same id and key, renamed back if a hand renamed it). Recording the result removes it from the orphans.
+3. **Coverage.** `coverage.mjs coverage` reads the ledger (pass `--ledger` from a worktree). It lists orphans under `orphaned` and does not count them as problems. A variant name it cannot find in the Contract or in the orphans is still `extra`.
+4. **Preview** (read only, no `record`), once every batch is rebuilt from the current Contract:
+   ```
+   node skills/to-design/scripts/build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out .scratch/to-design/<run> --mode prune-preview
+   ```
+   The result's `orphans` maps each orphan to its instance count in this file, or `null` if its node is gone. Instances in other files (a published library's consumers) are not counted, and the result's `scope` says so. Show the owner the list.
+5. **Prune list: the owner's decision.** Write it only after the owner names, in chat, the orphans to delete. This is the same as an approval:
+   ```
+   node skills/to-design/scripts/ledger.mjs prune-list .scratch/to-design/<preview-run>/result.json --name "Kind=Primary, Size=Large, State=Focus" [--name ...] --out .scratch/to-design/<run>/prune.json
+   ```
+   The list carries each count from the preview. It refuses a name that is not an orphan in the preview.
+6. **Prune.** Derive with `--mode prune --prune-list .scratch/to-design/<run>/prune.json`, package, call, and record. The core refuses, before any change, a name that is not a ledger orphan (`not-orphan`) and a name whose instance count differs from the list (`stale`). If a name is refused, preview again and ask the owner again. Otherwise it deletes only the listed nodes, and `record` drops them from the orphans. A prune call whose result was lost can be sent again with the same list: an orphan it already deleted counts `null` and is not `stale`.
 
 ## 5. Verify
 
@@ -147,13 +166,13 @@ Three read-only `sets` calls, each checked against the Contract by [scripts/cove
 
 ```
 node skills/to-design/scripts/build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out .scratch/to-design/<run> --mode coverage
-node skills/to-design/scripts/coverage.mjs coverage <component.json> .scratch/to-design/<run>/result.json
+node skills/to-design/scripts/coverage.mjs coverage <component.json> .scratch/to-design/<run>/result.json [--ledger <path>]
 # likewise --mode sample --sample 0,17,42 (expansion indexes; keep to 12 or fewer) and --mode theme --sample ...
 node skills/to-design/scripts/coverage.mjs sample <component.json> .scratch/to-design/<run>/result.json
 node skills/to-design/scripts/coverage.mjs theme <component.json> .scratch/to-design/<run>/result.json
 ```
 
-- `coverage`: every expanded variant exactly once, as a COMPONENT in its grid cell, with the default top-left; no missing, extra or duplicate variant; property wiring, the set's property definitions, and the page, frame and Header above.
+- `coverage`: every expanded variant exactly once, as a COMPONENT in its grid cell, with the default top-left; no missing, extra or duplicate variant (ledger orphans are listed under `orphaned`, not counted); property wiring, the set's property definitions, and the page, frame and Header above.
 - `sample`: the chosen variants in full, diffed like the base (layout, paint, bindings, effects in order). Pick the base, one per kind and the extreme sizes and states.
 - `theme`: each bound colour resolved in every mode of its collection, against the foundations document; the call restores the explicit modes.
 

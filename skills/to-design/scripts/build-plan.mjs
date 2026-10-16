@@ -10,7 +10,8 @@
 //   node skills/to-design/scripts/build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir>
 //        [--adopt] [--read-only] [--page <name>] [--ledger <path>]
 //   node skills/to-design/scripts/build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir>
-//        [--mode build|reconcile|coverage|sample|theme] [--batch N] [--per-call N] [--sample i,j] [--adopt] [--prototype] [--page <name>] [--ledger <path>]
+//        [--mode build|reconcile|coverage|sample|theme|prune-preview|prune] [--batch N] [--per-call N] [--sample i,j] [--prune-list <prune.json>]
+//        [--adopt] [--prototype] [--page <name>] [--ledger <path>]
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve as resolvePath, sep } from 'node:path';
@@ -177,7 +178,7 @@ export const TEMPLATES = {
   page: 'Templates',
   header: { name: 'Component Header', fields: [['Type', 'Regular', 14], ['Title', 'SemiBold', 42], ['Namespace', 'Regular', 14]] },
 };
-const SET_MODES = ['build', 'reconcile', 'coverage', 'sample', 'theme'];
+const SET_MODES = ['build', 'reconcile', 'coverage', 'sample', 'theme', 'prune-preview', 'prune'];
 
 // The approval gate: an approved Contract that validates. `prototype` also lets through the one error a
 // prototype approval raises (rule 8, by: PROTOTYPE_APPROVER), and nothing else.
@@ -236,16 +237,19 @@ export function entrySpec(plan, entry) {
  * Modes: `build` (batch `batch` of `perCall` variants, in expansion order), `reconcile` (read only: the
  * ledger section rebuilt from what the file holds, after a lost connection), `coverage` (read only: every
  * variant's name, grid cell and property wiring), `sample` and `theme` (read only: full values, or the
- * resolved colours per mode, of the variants at the expansion indexes `sample`).
+ * resolved colours per mode, of the variants at the expansion indexes `sample`), `prune-preview` (read only:
+ * every ledger orphan with its instance count in the file) and `prune` (deletes the orphans on `prune`, the
+ * owner-confirmed list {variant name: instance count from the preview}; #67).
  * Entries are axis-ordered tuples [index, value positions..., wiring, fragments...]. The plan asserts they
  * decode back to the expansion and resolve to what the Contract resolves; the core never matches rules.
- * Options: fileKey (required), mode, batch, perCall, sample, adopt, prototype, page, at.
+ * Options: fileKey (required), mode, batch, perCall, sample, prune, adopt, prototype, page, at.
  */
 export function setsPlan(contract, docText, ledger, {
-  fileKey, mode = 'build', batch = 0, perCall = PER_CALL, sample = [], adopt = false, prototype = false, page = null, at = new Date().toISOString(),
+  fileKey, mode = 'build', batch = 0, perCall = PER_CALL, sample = [], prune = null, adopt = false, prototype = false, page = null, at = new Date().toISOString(),
 } = {}) {
   if (!fileKey) throw new Error('fileKey is required');
   if (!SET_MODES.includes(mode)) throw new Error(`mode must be one of ${SET_MODES.join(', ')}`);
+  if ((mode === 'prune') !== !!prune) throw new Error('prune takes a prune list (--prune-list), and only the prune mode does');
   if (!ledger || ledger.fileKey !== fileKey) throw new Error(`no ledger for ${fileKey}: build foundations and icons first`);
   const doc = JSON.parse(docText);
   checkApproved(contract, doc, prototype);
@@ -264,7 +268,7 @@ export function setsPlan(contract, docText, ledger, {
     if (!Number.isInteger(batch) || batch < 0 || batch >= of) throw new Error(`batch must be 0..${of - 1} (${tuples.length} variants, ${perCall} per call)`);
     picked = tuples.map((_, i) => i).slice(batch * perCall, (batch + 1) * perCall);
   } else if (mode === 'reconcile') picked = tuples.map((_, i) => i);
-  else if (mode === 'coverage') picked = [];
+  else if (mode === 'coverage' || mode.startsWith('prune')) picked = [];
   else {
     if (!sample.length || sample.some(i => !Number.isInteger(i) || i < 0 || i >= tuples.length)) throw new Error(`sample must list expansion indexes 0..${tuples.length - 1}`);
     picked = [...new Set(sample)];
@@ -307,13 +311,17 @@ export function setsPlan(contract, docText, ledger, {
     icons[key] = { id: comps[key].id, key: comps[key].key };
   }
   const ax = k => contract.axes.findIndex(a => a.key === k);
+  // The whole selection, for a build or reconcile call to tell the variants it dropped (#67): bit i (hex, 4 per digit) is
+  // tuple i of the axis-value product, in Contract order.
+  const bits = new Array(Math.ceil(contract.axes.reduce((m, a) => m * a.values.length, 1) / 4)).fill(0);
+  for (const t of tuples) { const i = contract.axes.reduce((m, a) => m * a.values.length + a.values.findIndex(v => v.key === t[a.key]), 0); bits[i >> 2] |= 1 << (i & 3); }
   const plan = {
     schemaVersion: 1,
     slice: 'sets',
     fileKey,
     page: page || contract.figma.page,
     at,
-    options: { mode, adopt: !!adopt, ...(mode === 'build' ? { batch, of, perCall } : {}) },
+    options: { mode, adopt: !!adopt, ...(mode === 'build' ? { batch, of, perCall } : {}), ...(prune ? { prune } : {}) },
     family,
     designSystem: doc.designSystem.key,
     snapshotId: contract.source.snapshotId,
@@ -338,7 +346,7 @@ export function setsPlan(contract, docText, ledger, {
     props,
     P,
     frags: usedFrags,
-    selection: { schemaVersion: 1, axes, entries },
+    selection: { schemaVersion: 1, axes, entries, ...(mode === 'build' || mode === 'reconcile' ? { member: bits.map(b => b.toString(16)).join('') } : {}) },
   };
   // The entries decode back to the expansion, and each resolves to what the Contract resolves.
   const decoded = decodeEntries(plan, contract);
@@ -363,8 +371,16 @@ export function setsPlan(contract, docText, ledger, {
     // variant by name in the set.
     const ids = {};
     if (rec.contentHash === plan.contentHash) for (const i of picked) if (rec.variants && rec.variants[i]) ids[i] = rec.variants[i];
-    sets[family] = { ...rec, variants: ids };
+    // A tuple the selection takes back reuses its orphan's id (#67). The other orphans stay in the ledger:
+    // a build package carries none of them.
+    const { orphans = {}, ...kept } = rec;
+    for (const i of picked) { const o = orphans[variantName(contract, tuples[i])]; if (o && !ids[i]) ids[i] = o.id; }
+    sets[family] = { ...kept, variants: ids };
+    // the prune modes read the orphans, by name, and work only on a set every batch was rebuilt from this Contract
+    if (mode.startsWith('prune')) sets[family].orphans = Object.fromEntries(Object.entries(orphans).map(([n, o]) => [n, o.id]));
   }
+  if (mode.startsWith('prune') && (!rec || rec.contentHash !== plan.contentHash || !(rec.variants || [null]).every(Boolean)))
+    throw new Error(`the ${family} set is not built from this Contract yet: rebuild every batch first, then preview or prune its orphans`);
   return { plan, state: { schemaVersion: 1, fileKey, variables, textStyles, icons, bases, sets, templates: ledger.templates || null } };
 }
 
@@ -372,8 +388,8 @@ const USAGE = [
   'usage: build-plan.mjs foundations --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--prune a,b] [--page <name>] [--ledger <path>]',
   '       build-plan.mjs icons --contract <component.json> [--contract ...] --icons-dir <package dir> --file-key <key> --out <dir> [--adopt] [--page <name>] [--ledger <path>]',
   '       build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--read-only] [--page <name>] [--ledger <path>]',
-  '       build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--mode build|reconcile|coverage|sample|theme]',
-  '                      [--batch N] [--per-call N] [--sample i,j] [--adopt] [--prototype (a Contract under .scratch only)] [--page <name>] [--ledger <path>]',
+  '       build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--mode build|reconcile|coverage|sample|theme|prune-preview|prune]',
+  '                      [--batch N] [--per-call N] [--sample i,j] [--prune-list <prune.json> (mode prune)] [--adopt] [--prototype (a Contract under .scratch only)] [--page <name>] [--ledger <path>]',
 ].join('\n');
 
 function main() {
@@ -384,7 +400,7 @@ function main() {
       adopt: { type: 'boolean', default: false }, prune: { type: 'string', default: '' }, page: { type: 'string' },
       contract: { type: 'string', multiple: true }, 'icons-dir': { type: 'string' }, 'read-only': { type: 'boolean', default: false },
       mode: { type: 'string', default: 'build' }, batch: { type: 'string', default: '0' }, 'per-call': { type: 'string' }, sample: { type: 'string', default: '' },
-      prototype: { type: 'boolean', default: false },
+      prototype: { type: 'boolean', default: false }, 'prune-list': { type: 'string' },
     },
   });
   const slice = positionals[0];
@@ -402,9 +418,15 @@ function main() {
     console.error('--prototype takes a Contract under .scratch only (a prototype approval is never committed)');
     process.exit(2);
   }
+  // the owner-confirmed prune list (ledger.mjs prune-list), for this file and family only
+  const pruneFile = values['prune-list'] ? JSON.parse(readFileSync(values['prune-list'], 'utf8')) : null;
+  if (pruneFile && (slice !== 'sets' || pruneFile.fileKey !== fileKey || pruneFile.family !== JSON.parse(readFileSync(values.contract[0], 'utf8')).family.key)) {
+    console.error(`--prune-list is for ${pruneFile.family} in ${pruneFile.fileKey}: a sets prune of that family and file only`);
+    process.exit(2);
+  }
   const { plan, state } = slice === 'sets'
     ? setsPlan(JSON.parse(readFileSync(values.contract[0], 'utf8')), readFileSync(values.doc, 'utf8'), readLedger(path), {
-      fileKey, mode: values.mode, batch: Number(values.batch), adopt: values.adopt, prototype: values.prototype,
+      fileKey, mode: values.mode, batch: Number(values.batch), adopt: values.adopt, prototype: values.prototype, prune: pruneFile && pruneFile.prune,
       sample: values.sample ? values.sample.split(',').map(Number) : [],
       ...(values['per-call'] ? { perCall: Number(values['per-call']) } : {}), ...(values.page ? { page: values.page } : {}),
     })
