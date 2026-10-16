@@ -177,6 +177,32 @@ test('after an omit edit the rebuild finds every kept variant by name and moves 
   assert.deepEqual(report.orphaned.sort(), focus.sort());
 });
 
+// selection.member, the bitset of the whole selection: build-plan writes it, the core decodes it to tell the
+// variants dropped. Kind and Size have 7 values; tuples 3|4 and 39|40 sit either side of a hex digit, 244 in the
+// last, partial one.
+test('the selection bitset a reconcile carries decodes in the core to exactly the selected tuples', async () => {
+  const env = await setup();
+  await buildAll(env);
+  const omit = [
+    { kind: 'primary', size: 'xs', state: 'focus' },
+    { kind: 'primary', size: 'xs', state: 'disabled' },
+    { kind: 'secondary', size: 'xs', state: 'disabled' },
+    { kind: 'secondary', size: 'sm', state: 'enabled' },
+    { kind: 'danger--ghost', size: '2xl', state: 'disabled' },
+  ];
+  const picked = approve(applyOmit(BUTTON, { family: 'button', snapshotId: BUTTON.source.snapshotId, omit, expectedCount: TOTAL - 5 }), AT);
+  const { plan, result } = await sets(env, { mode: 'reconcile' }, { contract: picked, drop: true });
+  assert.equal(plan.selection.member.length, 62);
+  assert.deepEqual(result.dropped.map(d => d[0]).sort(), [
+    'Kind=Danger Ghost, Size=2XL, State=Disabled',
+    'Kind=Primary, Size=Extra Small, State=Disabled',
+    'Kind=Primary, Size=Extra Small, State=Focus',
+    'Kind=Secondary, Size=Extra Small, State=Disabled',
+    'Kind=Secondary, Size=Small, State=Enabled',
+  ]);
+  assert.deepEqual([result.summary.found, result.summary.absent], [TOTAL - 5, 0]);
+});
+
 test('a rebuild whose first call was lost and reconciled still keeps the dropped variants as orphans', async () => {
   const env = await setup();
   await buildAll(env);
@@ -202,6 +228,26 @@ test('a node in the set the ledger never recorded stays extra, even under a drop
   const report = checkCoverage(omitted, (await sets(env, { mode: 'coverage' }, { contract: omitted })).result, env.ledger);
   assert.deepEqual(report.problems.map(p => [p.what, p.name]), [['extra', stray.name]]);
   assert.deepEqual(report.orphaned, []);
+});
+
+test('coverage matches an orphan by its ledger id: renamed by hand it is still orphaned, and a stray under its name after a hand deleted it is extra', async () => {
+  const env = await setup();
+  await buildAll(env);
+  const omitted = withoutFocus();
+  await buildAll(env, omitted);
+  const orphans = env.ledger.sets.button.orphans;
+  const renamed = 'Kind=Secondary, Size=Medium, State=Focus';
+  (await env.mock.figma.getNodeByIdAsync(orphans[renamed].id)).name = 'Focus (old)';
+  const replaced = 'Kind=Ghost, Size=Small, State=Focus';
+  (await env.mock.figma.getNodeByIdAsync(orphans[replaced].id)).remove();
+  const stray = env.mock.figma.createComponent();
+  stray.name = replaced;
+  (await setNode(env)).appendChild(stray);
+  const report = checkCoverage(omitted, (await sets(env, { mode: 'coverage' }, { contract: omitted })).result, env.ledger);
+  assert.deepEqual(report.problems.map(p => [p.what, p.name]), [['extra', replaced]]);
+  assert.equal(report.orphaned.length, 48);
+  assert.ok(report.orphaned.includes(renamed), 'listed under the name the ledger keeps');
+  assert.ok(!report.orphaned.includes(replaced));
 });
 
 test('re-selecting a dropped variant reuses its orphan id and key, even after a hand renamed it, with no duplicate node', async () => {
@@ -321,6 +367,25 @@ test('a prune whose result was lost can be sent again: an orphan it already dele
   const { result } = await sets(env, { mode: 'prune', prune: list.prune }, { contract: omitted });
   assert.deepEqual([result.summary.conflicts, result.pruned], [0, [quiet]]);
   assert.ok(!(quiet in env.ledger.sets.button.orphans));
+});
+
+test('an orphan a hand moved out of the set is refused by the preview and the prune, which delete nothing; a reconcile lets it go', async () => {
+  const { env, omitted, page } = await orphaned();
+  const moved = 'Kind=Ghost, Size=Small, State=Focus';
+  const node = await env.mock.figma.getNodeByIdAsync(env.ledger.sets.button.orphans[moved].id);
+  page.appendChild(node);
+  env.mock.log.length = 0;
+  const shown = await preview(env, omitted);
+  assert.deepEqual(shown.conflicts, [{ kind: 'prune', name: moved, reason: 'moved out of the set' }]);
+  assert.equal(shown.orphans, undefined);
+  const { result } = await sets(env, { mode: 'prune', prune: { [moved]: 0 } }, { contract: omitted });
+  assert.deepEqual(result.conflicts, [{ kind: 'prune', name: moved, reason: 'moved out of the set' }]);
+  assert.deepEqual(writes(env.mock), [], 'a refused prune changes nothing');
+  assert.equal(await env.mock.figma.getNodeByIdAsync(node.id), node);
+  // the node is no longer the set's, so the next reconcile drops it from the orphans and the preview runs again
+  await sets(env, { mode: 'reconcile' }, { contract: omitted });
+  assert.ok(!(moved in env.ledger.sets.button.orphans));
+  assert.equal((await preview(env, omitted)).summary.orphans, 48);
 });
 
 // One rule for the Base Component's property values: the review specimen (every BOOLEAN on) while it stands

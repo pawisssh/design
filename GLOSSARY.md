@@ -74,6 +74,16 @@ _Avoid_: Handoff doc, spec, feature spec, brief, blueprint
 One output format's layout of a Handoff, such as HTML, Markdown, a Figma frame or a Confluence page. It never adds or drops a Handoff's content.
 _Avoid_: Export, view, handoff document
 
+## Building
+
+**Orphan**:
+A token or variant To-design built that the Foundations document or the Contract's selection no longer holds. The ledger keeps tracking it by id and Figma keeps the node, so a token or variant that comes back reuses it; it is deleted only through a Prune list.
+_Avoid_: Extra (that is a node the ledger never recorded), deprecated variant, stale node
+
+**Prune list**:
+The Orphans the owner confirmed, by name, for To-design to delete; for variants, each with the instance count the owner was shown. A prune refuses any name whose count has changed since.
+_Avoid_: prune.json (that is the file, not the concept), delete list, cleanup
+
 ## Skills
 
 **To-preview**:
