@@ -1,17 +1,23 @@
 #!/usr/bin/env node
-// To-handoff (#102, tracer #112): a single-HTML-file Prototype -> a validated Handoff -> its HTML Rendering.
+// To-handoff (#102): a single-HTML-file Prototype -> a validated Handoff -> its HTML Rendering, and its Sign-off.
 //   node skills/to-handoff/scripts/handoff.mjs generate <index.html> --ds <design-systems/ds> --decisions <decisions.json>
 //   node skills/to-handoff/scripts/handoff.mjs validate <handoff.json> --ds <design-systems/ds>
 //   node skills/to-handoff/scripts/handoff.mjs render <handoff.json> --ds <design-systems/ds>
+//   node skills/to-handoff/scripts/handoff.mjs review <handoff.json> --ds <design-systems/ds>
+//   node skills/to-handoff/scripts/handoff.mjs approve <handoff.json> --ds <design-systems/ds> --content-hash <h> [--proposal <key>=<hash> …]
+//   node skills/to-handoff/scripts/handoff.mjs check <handoff.json> --ds <design-systems/ds> --prototype <index.html>
 //
-// generate exits 2 and prints {requests} when any decision is unanswered; it writes nothing then. Sign-off
-// (review, approve) is the owner's and is not here: a generated Handoff is always pending.
+// generate exits 2 and prints {requests} when any decision is unanswered; it writes nothing then. A generated
+// Handoff is always pending. approve is the owner's sign-off: run it only after the owner types "approve" in
+// chat, with the hashes review printed (#116). It exits 1 with its reasons when it refuses; check exits 1 on Drift.
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 
-export { generate, handoffContentHash, snapshotIdOf } from './generate.mjs';
-export { loadDesignSystem } from './system.mjs';
+export { generate } from './generate.mjs';
+export { handoffContentHash, snapshotIdOf } from './hash.mjs';
+export { TEST_APPROVER, loadDesignSystem } from './system.mjs';
+export { approve, check, diffJson, driftOf, review } from './signoff.mjs';
 export { validateHandoff } from './validate.mjs';
 export { render, renderHtml } from './render-html.mjs';
 
@@ -19,17 +25,24 @@ import { generate } from './generate.mjs';
 import { loadDesignSystem } from './system.mjs';
 import { validateHandoff } from './validate.mjs';
 import { render } from './render-html.mjs';
+import { approve, check, review } from './signoff.mjs';
+
+const printDropped = dropped => { for (const x of dropped || []) console.error(`dropped owner decision ${x.key}: ${x.reason}`); };
 
 async function main(argv) {
-  const { positionals, values } = parseArgs({ args: argv, allowPositionals: true, options: { ds: { type: 'string' }, decisions: { type: 'string' } } });
+  const { positionals, values } = parseArgs({ args: argv, allowPositionals: true, options: {
+    ds: { type: 'string' }, decisions: { type: 'string' }, 'content-hash': { type: 'string' }, proposal: { type: 'string', multiple: true }, prototype: { type: 'string' },
+  } });
   const [command, input] = positionals;
   if (!command || !input || !values.ds) {
-    console.error('usage: handoff.mjs generate <index.html> --ds <dir> --decisions <file> | validate <handoff.json> --ds <dir> | render <handoff.json> --ds <dir>');
+    console.error('usage: handoff.mjs generate <index.html> --ds <dir> --decisions <file> | validate|render|review <handoff.json> --ds <dir>'
+      + ' | approve <handoff.json> --ds <dir> --content-hash <h> [--proposal <key>=<hash> …] | check <handoff.json> --ds <dir> --prototype <index.html>');
     return 1;
   }
   if (command === 'generate') {
     const decisions = values.decisions ? JSON.parse(readFileSync(values.decisions, 'utf8')) : {};
     const result = await generate({ prototype: input, designSystem: values.ds, decisions });
+    printDropped(result.dropped);
     if (result.requests.length) { console.log(JSON.stringify({ requests: result.requests }, null, 2)); return 2; }
     const check = validateHandoff(result.handoff, await loadDesignSystem(values.ds));
     if (!check.ok) { for (const e of check.errors) console.error(`[${e.rule}] ${e.message}`); return 1; }
@@ -45,6 +58,29 @@ async function main(argv) {
   if (command === 'render') {
     console.log(await render({ handoffPath: input, designSystem: values.ds }));
     return 0;
+  }
+  if (command === 'review') {
+    const r = await review({ handoffPath: input, designSystem: values.ds });
+    process.stdout.write(r.text);
+    return 0;
+  }
+  if (command === 'approve') {
+    if (!values['content-hash']) { console.error('approve needs --content-hash <h>, as review printed it'); return 1; }
+    const proposals = {};
+    for (const x of values.proposal || []) { const i = x.indexOf('='); if (i < 1) { console.error(`--proposal ${x}: expected <key>=<hash>`); return 1; } proposals[x.slice(0, i)] = x.slice(i + 1); }
+    try {
+      const r = await approve({ handoffPath: input, designSystem: values.ds, contentHash: values['content-hash'], proposals });
+      console.log(`signed off ${input} (r${r.handoff.revision}, ${r.handoff.approval.contentHash})${r.approved.length ? `; approved ${r.approved.join(', ')}` : ''}; wrote ${r.signedPath}`);
+      return 0;
+    } catch (e) { console.error(e.message); return 1; }
+  }
+  if (command === 'check') {
+    if (!values.prototype) { console.error('check needs --prototype <index.html>: the Handoff pins its files, not where they live'); return 1; }
+    const r = await check({ handoffPath: input, designSystem: values.ds, prototype: values.prototype });
+    console.log(r.verdict);
+    for (const d of r.drift) console.log(`  ${d.kind} ${d.key}: ${d.change}`);
+    for (const e of r.errors) console.log(`  [${e.rule}] ${e.message}`);
+    return r.ok ? 0 : 1;
   }
   console.error(`unknown command ${command}`);
   return 1;

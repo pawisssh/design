@@ -1,13 +1,13 @@
 ---
 name: to-handoff
-description: Turns a single-HTML-file Prototype into a validated Handoff (handoff.json) against a Design System's Foundations, Contracts and Proposals, plus a static HTML Rendering where Contract usages render as the real Code Library. Use when a vibe-coded prototype should become a developer handoff. Tracer scope (#112); sign-off stays the owner's.
+description: Turns a single-HTML-file Prototype into a validated Handoff (handoff.json) against a Design System's Foundations, Contracts and Proposals, plus a static HTML Rendering where Contract usages render as the real Code Library. Use when a vibe-coded prototype should become a developer handoff, and to review, sign off or check a Handoff for Drift. Sign-off is the owner's.
 ---
 
 # To-handoff
 
 Reads one Prototype file statically and writes `design-systems/<ds>/handoffs/<feature-key>/handoff.json` and `renderings/index.html`. Every pick that could be a guess is a **decision** the agent answers in a `decisions.json`; with any decision open, generate writes nothing and returns the requests. To-handoff knows no Code Library: the Adapter named by the Foundations document's `source.adapter` supplies the role groups, the mode-map surfaces, the Contract-writing procedure and the renderer, in `skills/adapter-<adapter>/scripts/handoff-adapter.mjs`.
 
-Out of scope in the tracer: multi-file or React Prototypes, screenshots (the Rendering says `missing (static-only)`), review, approve and check. The owner signs a Handoff off; To-handoff never does.
+Out of scope so far: multi-file or React Prototypes, and screenshots (the Rendering says `missing (static-only)`). The owner signs a Handoff off; the agent runs `approve` only on the owner's explicit "approve" in chat (§4).
 
 ## 1. Fetch the reader's package
 
@@ -34,6 +34,16 @@ With an empty `{}` it exits 2 and prints `{requests: [{key, kind, question, cand
 | `condition:<expr>` | `true` or `false`: a plain condition's value when the screen first shows. |
 | `feature` | `{owner, goal, scope, nonGoals}`. |
 | `acceptance` | `[{id, screen, state, given, when, then}]`. |
+
+**Owner decisions.** Only on the owner's words in chat, an entry is `{"by": "owner", "answer": …}`:
+
+| key | owner answer |
+| --- | --- |
+| any key above | the owner's pick. It wins over the agent's, and its mark reads `by: "owner"`. |
+| `question:<id>` | `{"by": "owner", "answer": "<text>"}`, or `{"by": "owner", "to": "developer"}` to re-address it. |
+| `acceptance:<id>` | `{"by": "owner", "answer": {state, given, when, then}}`. It replaces the agent's criterion with that id, or adds one. |
+
+The Handoff records the owner's decisions in `ownerDecisions` by stable key. A re-run carries them over from the stored `handoff.json`, so the agent's `decisions.json` never needs to repeat them. They are kept while their key still exists. A key that is gone, or a carried answer that no longer fits its candidates, is dropped and printed (`dropped owner decision …`). Agent decisions are re-decided every run. Never write `by: "owner"` for anything the owner did not say.
 
 What generate does without asking:
 
@@ -71,6 +81,62 @@ node skills/to-handoff/scripts/handoff.mjs render design-systems/<ds>/handoffs/<
 
 A mode toggle covers every Theme mode, each applied as the one class its Mode `selector` names (the Adapter renderer's mode class when a Mode has none), and the stamp reads `r<revision> · <contentHash> · pending sign-off`.
 
+## 4. Sign-off: review, approve, check
+
+```
+node skills/to-handoff/scripts/handoff.mjs review design-systems/<ds>/handoffs/<key>/handoff.json --ds design-systems/<ds>
+```
+
+`review` prints the package the owner signs off:
+
+- the revision, the content hash and every pin;
+- the diff against `signed.json`, or "First sign-off". When only `source` changed it says "only pins moved";
+- agent marks by kind, with their candidates;
+- open questions by addressee, missing states and missing screenshots;
+- the Contracts used, with their status (a draft Contract doesn't block);
+- each pending Proposal in full, with its hash;
+- signed Handoffs these Proposals put into Drift;
+- what blocks sign-off;
+- the approve command.
+
+Show it to the owner. Only after the owner types "approve" in chat, run the printed command:
+
+```
+node skills/to-handoff/scripts/handoff.mjs approve <handoff.json> --ds design-systems/<ds> --content-hash <h> --proposal <key>=<hash>
+```
+
+It refuses, writes nothing and exits 1 with every reason when:
+
+- validation fails;
+- a question to the owner is unanswered;
+- a pending Proposal the Handoff uses wasn't passed;
+- a hash moved since the review;
+- a Design System pin moved (re-run To-handoff);
+- the Handoff is already signed off.
+
+Otherwise it writes, in order:
+
+1. each shown pending Proposal's `approval: {by: "owner", at, contentHash}`, in that Proposal's own file;
+2. the Handoff's `status: "approved"` and `approval: {by: "owner", at, revision, contentHash}`;
+3. `signed.json`, a byte copy of `handoff.json`.
+
+Any later content change from a re-run resets the Handoff to `pending`. A re-run that changes nothing leaves it signed.
+
+```
+node skills/to-handoff/scripts/handoff.mjs check <handoff.json> --ds design-systems/<ds> --prototype <index.html>
+```
+
+`check` computes Drift and never stores it. Drift is any of:
+
+- a Prototype file changed, added or removed;
+- a used Contract edited, its source moved, or gone;
+- a used Proposal changed, back to `pending` after sign-off, or gone;
+- the Foundations `usedHash` moved.
+
+Adding another family's Contract moves only the informational `documentHash`, which is not Drift. `check` re-validates and prints "no drift", "drifted, still valid" or "drifted, broken", and exits 1 on Drift or a failed validation.
+
+**Tests never sign off.** `approve({…, test: true})` writes `approval.by: "test (.scratch)"` and only under `.scratch/`. `validateHandoff` rejects that approver anywhere else.
+
 ## Tests
 
-`node --test skills/to-handoff/test/handoff.test.mjs` runs generate → validate → render on [test/fixtures/invite-teammates](test/fixtures/invite-teammates) with its fixed `decisions.json`. The Design System is assembled in a temp folder, so the test writes nothing under `design-systems/`.
+`node --test skills/to-handoff/test/handoff.test.mjs` runs generate → validate → render on [test/fixtures/invite-teammates](test/fixtures/invite-teammates) with its fixed `decisions.json`. `test/signoff.test.mjs` runs the Sign-off lifecycle: owner answers as test inputs, refusals, a test approval, a re-run against `signed.json`, and Drift. Its Design Systems live under `.scratch/to-handoff-tests/` and are removed afterwards. Neither test writes anything under `design-systems/`.
