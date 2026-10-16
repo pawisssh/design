@@ -125,7 +125,12 @@
         }
       }
     },
-    "notes": { "type": "array", "items": { "$ref": "#/$defs/note" } }
+    "notes": { "type": "array", "items": { "$ref": "#/$defs/note" } },
+    "drafted": {
+      "description": "Drafted values (ADR 0010), keyed by value path such as axes.size.values.lg.label or layout.Button.width. A value with no entry is exact. validate() rule 9 checks that every key names a value in the Contract.",
+      "type": "object",
+      "additionalProperties": { "anyOf": [{ "$ref": "#/$defs/draftedByAgent" }, { "$ref": "#/$defs/draftedByOwner" }] }
+    }
   },
   "$defs": {
     "sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
@@ -258,6 +263,20 @@
         "y": { "$ref": "#/$defs/fieldValue" },
         "color": { "$ref": "#/$defs/fieldValue" }
       }
+    },
+    "draftedByAgent": {
+      "type": "object",
+      "required": ["by", "evidence", "fingerprint"],
+      "properties": {
+        "by": { "const": "agent" },
+        "evidence": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "fingerprint": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "draftedByOwner": {
+      "type": "object",
+      "required": ["by", "was"],
+      "properties": { "by": { "type": "string", "pattern": "^owner( \\(simulated[^)]*\\))?$" } }
     },
     "note": {
       "type": "object",

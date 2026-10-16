@@ -16,7 +16,7 @@ import { dirname, join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import {
-  approve, asDraft, baseTuple, closure, contentHash, coversScope, expand, matches, resolve, scopeFor, validate, variantName,
+  approve, asDraft, baseTuple, closure, contentHash, coversScope, draftedKey, draftedValue, expand, matches, resolve, scopeFor, validate, variantName,
 } from '../../contract/scripts/contract.mjs';
 import { foundationsPathFor, readJson, writeJson } from '../../contract/scripts/io.mjs';
 import { anatomyTree, baseProps, expectedBase, expectedVariant, near, norm, normalizeReadback, same } from './readback.mjs';
@@ -240,6 +240,9 @@ export function applyEdits(contract, proposals, { confirm = [] } = {}) {
   for (const p of proposals.filter(q => q.expressible)) {
     c[p.change.section][p.rule].set[p.change.node][p.change.field] = clone(p.newValue);
     applied.push(p.path);
+    // a Drafted value the owner corrected: its entry becomes the owner's, and an owner entry keeps its first was
+    const key = draftedKey(p.change.section, p.ruleMatch, p.change.node, p.change.field);
+    if (c.drafted && c.drafted[key] && c.drafted[key].by === 'agent') c.drafted[key] = { by: p.newValue.by, was: clone(p.newValue.was) };
   }
   const notes = [];
   for (const p of proposals.filter(q => !q.expressible && q.change.kind === 'unmapped'))
@@ -296,6 +299,28 @@ export function ownerEdits(contract) {
   return out;
 }
 
+// The kinds of Drafted values in the order the owner reviews them, the most taste-prone first (#105).
+const DRAFTED_KINDS = [
+  ['Icons', k => /^icons\./.test(k) || /\.mainComponent$/.test(k)],
+  ['Property labels and defaults', k => /^properties\./.test(k)],
+  ['Grid', k => /^figma\.grid(\.|$)/.test(k)],
+  ['Layout width', k => /^layout(\{.*\})?\.[^.]+\.width$/.test(k)],
+  ['Axis and value labels', k => /^axes\./.test(k)],
+  ['Anatomy', k => /^anatomy\./.test(k)],
+  ['Other layout and paint', k => /^(layout|paint)[.{]/.test(k)],
+  ['Other', () => true],
+];
+
+/** The Contract's `drafted` entries grouped by kind, taste-prone kinds first: [{kind, entries: [{key, entry, value, found}]}]. */
+export function draftedByKind(contract) {
+  const groups = DRAFTED_KINDS.map(([kind]) => ({ kind, entries: [] }));
+  for (const [key, entry] of Object.entries(contract.drafted || {})) {
+    const r = draftedValue(contract, key);
+    groups[DRAFTED_KINDS.findIndex(([, test]) => test(key))].entries.push({ key, entry, value: r.value, found: r.found });
+  }
+  return groups.filter(g => g.entries.length);
+}
+
 // ---------- reports ----------
 
 /** The diff and its proposals as text, one line per change. */
@@ -317,7 +342,17 @@ export function formatDiff(contract, readback, result) {
   return lines.join('\n') + '\n';
 }
 
-/** The owner's review package: node link, snapshotId, contentHash, readback diff, owner edits, notes, approve command. */
+// The Drafted values section of the review package; none for a Contract without a `drafted` table.
+function draftedLines(contract) {
+  const all = Object.values(contract.drafted || {});
+  if (!all.length) return [];
+  const agent = all.filter(e => e && e.by === 'agent').length;
+  return [`Drafted values: ${all.length} (${agent} by the agent, ${all.length - agent} corrected by the owner)`,
+    ...draftedByKind(contract).flatMap(g => [`  ${g.kind}`, ...g.entries.map(({ key, entry, value, found }) =>
+      `    ${key} = ${found ? show(value) : '(not in the Contract)'}  ${entry.by === 'agent' ? `drafted: ${entry.evidence.join(' | ')}` : `corrected by ${entry.by}, was ${show(entry.was)}`}`)])];
+}
+
+/** The owner's review package: node link, snapshotId, contentHash, readback diff, owner edits, Drafted values by kind, notes, approve command. */
 export function formatReview(contract, readback, result, { fileKey, contractPath, readbackPath }) {
   const nodeId = String(readback.id || '').replace(/:/g, '-');
   const edits = ownerEdits(contract);
@@ -336,6 +371,7 @@ export function formatReview(contract, readback, result, { fileKey, contractPath
     `Edits with by/was: ${edits.length}`,
     ...edits.flatMap(e => [`  ${e.path} = ${show(e.value)}  by ${e.by}, was ${show(e.was)}; changes ${e.blast.count}/${e.blast.of} variants`,
       ...e.shields.map(x => `    shielded by ${e.path.split('[')[0]}[${x.rule}] ${JSON.stringify(x.match)} = ${show(x.value)}`)]),
+    ...draftedLines(contract),
     `Uncarried tweaks (warning notes, block approval): ${warnings.length}`,
     ...warnings.map(n => `  ${n.at}: ${n.message}`),
     `Verify notes: ${verify.length}`,

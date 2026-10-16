@@ -8,7 +8,7 @@ Read when writing an Adapter's preview renderer or changing the page.
 
 | Field | What |
 |---|---|
-| `render(tuple)` | HTML text of the real Code Library component for one tuple `{axisKey: valueKey}`. Map axis values through their Contract `code` props. A value with `code: null` renders like the default; the page forces it through its CSS pseudo-class. |
+| `render(tuple, properties)` | HTML text of the real Code Library component for one tuple `{axisKey: valueKey}`. Map axis values through their Contract `code` props, and fill a missing axis with its `default`. A value with `code: null` renders like the default; the page forces it through its CSS pseudo-class. Without `properties` it renders the specimen: TEXT properties at their defaults, and the default icon shown. To-handoff passes a usage's `properties`, keyed by Contract property key (`{label: "Save", icon: false}`); a missing key takes its Contract default. Each `code.required` prop comes from `properties[<prop>]`, else from a per-tuple placeholder (`<family>-<values>`). |
 | `stylesheet` | The Code Library's compiled CSS, inlined into the page. |
 | `modeClass(modeKey)` | The class that applies one foundations Theme mode to the page, and so to every specimen and the card chrome. |
 
@@ -27,7 +27,7 @@ It should refuse to render when the installed packages differ from `contract.sou
 
 **Cards.** The grid follows the IBM UI Icon Library (Community) grid: 200×200 cards with shared 1px borders and no gap, at most 6 columns, in Contract axis order with no group headings. `catalogCard(specimen, {contract, baseId, sourceLabel, h})` builds one card through the node factory `h(tag, props, ...children)`:
 
-- top-left, the axis values only (`Primary / Extra Small / Enabled`), with the full variant name as the tooltip;
+- top-left, the axis values only (`Primary / Extra Small / Enabled`), with the full variant name as the tooltip. A value label the agent drafted (an `axes.<axis>.values.<value>.label` entry `by: "agent"` in the Contract's [`drafted`](../../contract/references/contract-schema.md#drafted-values) table) is marked `.tp-drafted`, in italics with a dotted underline and an asterisk, and the tooltip ends `(drafted: Size)`. An owner-corrected label is not marked. To-preview only flags it; the owner approves it with the Contract;
 - top-right, the selection checkbox, labelled with the full variant name and locked on the Base Component; the name and checkbox share one `<label>`, so clicking the name toggles it;
 - the specimen host, centred; an unchecked card's specimen is dimmed to 40%;
 - the footer, `Source` and `sourceLabel`, or `Base Component` on the base card.

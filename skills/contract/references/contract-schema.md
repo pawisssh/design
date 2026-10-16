@@ -26,6 +26,7 @@ Worked example: [`button.component.json`](../../../design-systems/carbon/contrac
 | `figma` | yes | Figma-only presentation: `page` (plural), `componentSetName`, `description`, `header` (Type, Title, Namespace for the `Component Header` instance), and `grid` (`columns` and `rows` as axis keys). |
 | `code` | yes | Code Connect: `framework`, `package`, `component`, `import`, `alwaysEmit`, and optionally `required` and `items` (#93, see [Code](#code)). Per-value and per-property code mappings sit next to the value or property they describe. |
 | `notes` | no | Report entries `{level: info|warning|verify, at, message}` for decisions and render checks that are not tied to a single raw value. When a probe settles a `verify` note, it becomes `info` and its message starts with `Resolved (#N)` or `Adjusted (#N)`. |
+| `drafted` | no | [Drafted values](#drafted-values): a map from value path to `{by: "agent", evidence, fingerprint}` or `{by: "owner", was}`. |
 
 ## Axes
 
@@ -198,6 +199,28 @@ These are computed from the Contract, never written into it:
 
 A TEXT property whose node a variant hides (`visible: false`) is not emitted for that variant, so a warn snippet carries `warnText` and not `invalidText` [assumption, #93].
 
+## Drafted values
+
+`drafted` lists the values an Adapter's agent chose because neither the source nor the Adapter's own rules state them ([ADR 0010](../../../docs/adr/0010-drafted-values-carry-over-by-evidence-fingerprint.md)). The value itself stays in its usual place, so readers that ignore `drafted` read the Contract unchanged. A value with no entry is exact.
+
+```json
+"drafted": {
+  "axes.size.values.lg.label": { "by": "agent", "evidence": ["Button.tsx:L40 size union \"lg\""], "fingerprint": "sha256:…" },
+  "layout.Button.gap": { "by": "owner", "was": { "token": "spacing-07" } }
+}
+```
+
+- **Agent entry:** `by: "agent"`, `evidence` (one or more `"file:Lnn what it shows"` strings) and `fingerprint` (`sha256:` of the exact-tier facts its key kind is drafted from).
+- **Owner entry:** `by: "owner"` (or `"owner (simulated, …)"` in a prototype) and `was`, the value before the owner's correction. The base loop writes it when an owner tweak lands on a drafted value; an entry already the owner's keeps its first `was`.
+- **Keys** are fixed by rule ([ADR 0010](../../../docs/adr/0010-drafted-values-carry-over-by-evidence-fingerprint.md)), and `draftedValue(contract, key)` resolves one:
+  - `axes.<axis>.label`, `axes.<axis>.values.<value>.label`, `family.<field>`, `icons.<field>`, `figma.<field>`, `code.<field>`: the path, with list items picked by `key` or `name`.
+  - `anatomy.<node>`: a layer and its name.
+  - `properties.<key>.<field>`, such as `properties.label.default`, or `properties.<node>.<characters|visible|mainComponent>` for the property that binds that node field.
+  - `layout.<node>.<field>` for a value in the base rule (`match: {}`), `layout<match>.<node>.<field>` for any other rule, with the match as canonical JSON (keys sorted, no spaces): `layout{"size":"sm"}.Box.height`. `draftedKey(section, match, node, field)` writes it. The same holds for `paint`.
+  - Not yet: excluded combinations have no key form.
+- `drafted` is inside `contentHash`, so one approval covers every entry, and adding a table to an approved Contract voids its approval. An approved Contract gains its table at its next re-approval.
+- The base loop's review package lists the entries by kind, the most taste-prone first, and To-preview marks a drafted axis value label on each card (a drafted axis label shows only in the tooltip).
+
 ## Validation
 
 `validate(contract, foundations)` checks these rules and returns `{ok, errors: [{rule, at, message}]}`. It first checks the structure that the rules rely on (rule `"schema"`); [`contract.schema.json`](../contract.schema.json) is the full formal structure.
@@ -210,6 +233,42 @@ A TEXT property whose node a variant hides (`visible: false`) is not emitted for
 6. Every `raw` value has `level` (`info` or `warning`) and `reason`. Every token a selected variant uses exists in the foundations document (`textStyle` in `textStyles`, every other field in `variables`) and is used inside that variable's `scopes`. The scope a field needs: `padding*` and `gap` → `GAP` (Figma has no padding scope, #27); `width`, `height`, `min*`, `max*` → `WIDTH_HEIGHT`; `radius` → `CORNER_RADIUS`; `strokeWeight` → `STROKE_FLOAT`; `stroke` → `STROKE_COLOR`; effect `color` → `EFFECT_COLOR`; `fill` → `TEXT_FILL` on a TEXT node, `SHAPE_FILL` on an `<instance>/<layer>` path, `FRAME_FILL` otherwise (`ALL_FILLS` covers all three). Uses are checked after `sameAs`, so `Glyph/Vector` checks the label colour as `SHAPE_FILL`. `was` is skipped.
 7. Every `instanceOf` target is declared: `icon:*` needs `icons` (whose `default` is in `preferred`), `family:<key>` needs `dependencies.families`, `sub:<name>` needs `subComponents`. That each target is built first is enforced by the builder's build order, not by `validate`.
 8. `status` is `draft` with `approval: null`, or `approved` with an [approval](#approval) by the owner whose `snapshotId` and `contentHash` both match, and no `warning` note (an uncarried owner tweak) is open.
+9. Every [`drafted`](#drafted-values) key names a value in the Contract, and every entry is `{by: "agent", evidence, fingerprint}`, with at least one evidence string and a `sha256:<64 hex>` fingerprint, or `{by: "owner", was}`.
+
+## Component Proposal
+
+A Component Proposal records a Component Family the Code Library does not ship ([#60](https://github.com/pawisssh/design/issues/60), [#80](https://github.com/pawisssh/design/issues/80), ADR 0005). It is stored at `design-systems/<ds>/proposals/<key>.proposal.json`, one per family, and shared by every Handoff that uses it. Worked example: [`promo-banner.proposal.json`](../test/fixtures/promo-banner.proposal.json). Formal schema: [`proposal.schema.json`](../proposal.schema.json). It has its own `schemaVersion` (1), counted separately from the Contract's.
+
+- **Required:** `schemaVersion`, `family`, `proposal`, `axes` (may be `[]`), `anatomy`, `status` and `approval`.
+  - `proposal` is `{by: "agent", reason, considered: [{contract, whyNot}], origin: {input, repo?, commit?, url?, at?}, home: {where: "code-library" | "app", package?, path?}}`.
+- **Optional:** `properties`, `layout`, `paint`, `icons`, `subComponents`, `dependencies` and `notes`, written as in a Contract. Anything present must validate.
+  - `dependencies.families` entries are `{key, contract}` or `{key, proposal}`.
+- **Never present:** `source`, `code`, `selection`, `excluded` and `figma`, and no `code` mapping on an axis value or a property. Axis, value and property keys double as the suggested prop names.
+- **Theme tokens only.** A component token (a Foundations variable with `family`) or a hidden Primitive fails rule 6. A mode-specific paint is an Off-system value in the Handoff.
+- **Approval.** `status: "pending"` with `approval: null`, or `status: "approved"` with `approval: {by: "owner", at, contentHash}`. There is no `snapshotId`, since there is no code.
+  - `proposalContentHash()` hashes the canonical Proposal without `status`, `approval`, `retirement` and `built`.
+  - Every write goes through `asPending()`, except one that only adds `retirement` or `built`.
+- **`retirement`** (optional) is `{contract, how: "built" | "replaced", map, by: "owner", at}`. It is written when the owner confirms a Contract takes the Proposal's place. The file then becomes a read-only tombstone.
+  - `map` is `{values: {"<axis>.<value>": {axis, value} | {property, value} | null}, properties: {"<property>": "<contract property>" | null}}` **[assumption, #111]**.
+- **`built`** (optional) is `{ref: "repo@commit:path", export, by: "owner", at}`, for a `home.where: "app"` Proposal.
+
+`validateProposal(proposal, foundations, {contracts, proposals})` returns `{ok, errors, readyToRetire}`. An array as the third argument is read as `contracts`. The checks that need those lists are skipped when they are not given.
+
+- **Applied from the Contract:**
+  - rule 1;
+  - rule 2's defaults (there is no selection);
+  - rule 3;
+  - rule 6, plus theme tokens only;
+  - rule 7, where `family:<key>` must be declared and name a Contract or a Proposal.
+- **Not applied:** rule 4, rule 5 (a description-only input could never meet it) and rule 8's `snapshotId` part.
+- **Added:**
+  - `"schema"`: required, optional and forbidden blocks;
+  - `"cycle"`: Proposals never compose in a cycle;
+  - `"considered"`: every `considered[].contract` exists;
+  - `8`: status and approval with `contentHash`;
+  - `"retirement"`: the Contract exists and the map names real keys;
+  - `"built"`: home is the app.
+- **Key collision.** A Contract whose `family.key` equals the Proposal's is not an error. `readyToRetire` names it, and the owner confirms retirement in chat. A retired Proposal skips this check.
 
 ## Versioning
 

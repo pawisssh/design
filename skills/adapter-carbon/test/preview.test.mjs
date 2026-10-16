@@ -63,3 +63,37 @@ test('a Repeated child renders as one SelectItem whose text is the `itemProp` pr
   assert.equal((html.match(/<option /g) || []).length, 1);
   assert.match(html, new RegExp(`<option[^>]* value="${text}"[^>]*>${text}</option>`));
 });
+
+test('every To-preview specimen renders exactly as before render took properties', { skip }, async () => {
+  const { expand } = await import('../../contract/scripts/contract.mjs');
+  const { createHash } = await import('node:crypto');
+  const { render } = await previewRenderer(button);
+  const all = expand(button).map(t => render(t)).join('\n');
+  assert.equal(createHash('sha256').update(all).digest('hex'), '169c50d42d922fb3ca88492c0e47e9412e1519cb023a7a0f300a8989a6c69dea');
+});
+
+test('a partial tuple renders with each missing axis at its default', { skip }, async () => {
+  const { render } = await previewRenderer(button);
+  assert.equal(render({ size: 'sm' }), render({ kind: 'primary', size: 'sm', state: 'enabled' }));
+  assert.equal(render({}), render({ kind: 'primary', size: 'lg', state: 'enabled' }));
+  assert.throws(() => render({ kind: 'success' }), /unknown kind value success/);
+});
+
+test('a usage renders its own label and icon; missing properties take their Contract defaults', { skip }, async () => {
+  const { render } = await previewRenderer(button);
+  assert.equal(render({ kind: 'secondary' }, { label: 'Save' }), '<button class="cds--btn cds--btn--lg cds--layout--size-lg cds--btn--secondary" type="button">Save</button>');
+  assert.equal(render({ kind: 'secondary' }, { label: 'Save', icon: false, swapIcon: 'save' }), render({ kind: 'secondary' }, { label: 'Save' }));
+  const withIcon = render({}, { label: 'Save', icon: true, swapIcon: 'save' });
+  assert.match(withIcon, /type="button">Save<svg[^>]*class="cds--btn__icon"/);
+  assert.notEqual(withIcon, render({}, { label: 'Save', icon: true }), 'the save icon differs from the default add icon');
+  assert.equal(render({}, { label: 'Save', icon: true, swapIcon: 'icon:save' }), withIcon);
+});
+
+test('code.required props come from the usage, else a per-tuple placeholder', { skip }, async () => {
+  const required = JSON.parse(JSON.stringify(button));
+  required.code.required = ['id'];
+  const { render } = await previewRenderer(required);
+  assert.match(render({ kind: 'ghost' }, { label: 'Go' }), /^<button id="button-ghost-lg-enabled" /);
+  assert.match(render({}, { label: 'Go', id: 'cta-1' }), /^<button id="cta-1" /);
+  assert.match(render({ kind: 'ghost' }), /^<button id="button-ghost-lg-enabled" /);
+});

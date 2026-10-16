@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { approve, contentHash, PROTOTYPE_APPROVER, validate } from '../../contract/scripts/contract.mjs';
 import {
-  applyEdits, approveReviewed, diff, discardNote, ownerEdits, regenerate, review, RAW_REASON,
+  applyEdits, approveReviewed, diff, discardNote, draftedByKind, formatReview, ownerEdits, regenerate, review, RAW_REASON,
 } from '../scripts/base-loop.mjs';
 import { expectedBase, normalizeReadback } from '../scripts/readback.mjs';
 
@@ -21,6 +21,8 @@ const read = p => JSON.parse(readFileSync(p, 'utf8'));
 const CONTRACT = read(join(FIX, 'button.component.json'));
 const FOUNDATIONS = read(join(ROOT, 'design-systems/carbon/carbon.foundations.json'));
 const OWNER_EDITS = read(join(ROOT, 'skills/contract/test/fixtures/button.owner-edits.component.json'));
+// The pinned Button as a draft with a `drafted` table (#105); its evidence and fingerprints are illustrative.
+const DRAFTED = read(join(ROOT, 'skills/contract/test/fixtures/button.drafted.component.json'));
 const rb = name => read(join(FIX, `readback.${name}.json`))[0];
 const AT = '2026-10-16T00:00:00.000Z';
 
@@ -225,4 +227,61 @@ test('regenerating from the saved readbacks reproduces the committed outputs byt
   assert.deepEqual(Object.keys(out).sort(), expected);
   for (const name of expected) assert.equal(out[name], readFileSync(join(FIX, 'expected', name), 'utf8'), name);
   assert.deepEqual(regenerate(FIX, CONTRACT, FOUNDATIONS), out);
+});
+
+test('the review package lists Drafted values by kind, the most taste-prone first (#105)', () => {
+  assert.deepEqual(draftedByKind(DRAFTED).map(g => [g.kind, g.entries.map(e => e.key)]), [
+    ['Icons', ['properties.Glyph.mainComponent', 'icons.default']],
+    ['Property labels and defaults', ['properties.label.default']],
+    ['Grid', ['figma.grid']],
+    ['Layout width', ['layout.Button.width']],
+    ['Axis and value labels', ['axes.size.values.lg.label']],
+    ['Anatomy', ['anatomy.Label']],
+    ['Other layout and paint', ['layout.Button.gap', 'layout{"kind":["ghost","danger--ghost"]}.Button.gap']],
+  ]);
+  const text = formatReview(DRAFTED, rb('v0'), review(DRAFTED, complete(rb('v0'), DRAFTED), FOUNDATIONS), { fileKey: 'F', contractPath: 'c.json', readbackPath: 'r.json' });
+  const block = text.slice(text.indexOf('Drafted values'), text.indexOf('Uncarried tweaks'));
+  assert.equal(block, [
+    'Drafted values: 9 (9 by the agent, 0 corrected by the owner)',
+    '  Icons',
+    '    properties.Glyph.mainComponent = {"key":"swapIcon","label":"Swap icon","type":"INSTANCE_SWAP","default":"icon:default"}  drafted: ButtonBase.tsx:L190 renderIcon takes any Carbon icon',
+    '    icons.default = add  drafted: Carbon Button docs show "add" in icon buttons',
+    '  Property labels and defaults',
+    '    properties.label.default = Button  drafted: ButtonBase.tsx:L182 children has no default; "Button" is the Figma convention',
+    '  Grid',
+    '    figma.grid = {"columns":["size"],"rows":["kind","state"]}  drafted: axes: size has 7 values, kind 7 and state 5; size reads best across',
+    '  Layout width',
+    '    layout.Button.width = hug  drafted: _button.scss:L35 inline-size: max-content',
+    '  Axis and value labels',
+    '    axes.size.values.lg.label = Large  drafted: Button.tsx:L40 size union "lg"; Carbon docs name it Large',
+    '  Anatomy',
+    '    anatomy.Label = {"name":"Label","type":"TEXT"}  drafted: ButtonBase.tsx:L182 children render as the button text',
+    '  Other layout and paint',
+    '    layout.Button.gap = {spacing-07}  drafted: _button.scss:L60 column-gap between label and icon',
+    '    layout{"kind":["ghost","danger--ghost"]}.Button.gap = {spacing-03}  drafted: _button.scss:L80 ghost kinds tighten the label-to-icon gap',
+    '',
+  ].join('\n'));
+  assert.doesNotMatch(formatReview(CONTRACT, rb('v0'), review(CONTRACT, rb('v0'), FOUNDATIONS), { fileKey: 'F', contractPath: 'c', readbackPath: 'r' }), /Drafted values/,
+    'a Contract without a drafted table prints no section, so the committed review outputs are unchanged');
+});
+
+test('an owner tweak to a drafted value turns its entry into {by: "owner", was} (#105)', () => {
+  // paddingTop under the size rule is a derived raw, not a Drafted value; it is marked here only to exercise the match-keyed form.
+  const c = { ...DRAFTED, drafted: { ...DRAFTED.drafted, 'layout{"size":["lg","xl","2xl"]}.Button.paddingTop': DRAFTED.drafted['layout.Button.gap'] } };
+  const r = review(c, rb('tweaked'), FOUNDATIONS);
+  const { contract } = applyEdits(c, r.proposals, { confirm: 'all' });
+  assert.deepEqual(contract.drafted['layout.Button.gap'], { by: 'owner', was: { token: 'spacing-07' } });
+  assert.deepEqual(contract.drafted['layout{"size":["lg","xl","2xl"]}.Button.paddingTop'], { by: 'owner', was: { raw: 15 } });
+  assert.deepEqual(contract.drafted['layout.Button.width'], DRAFTED.drafted['layout.Button.width'], 'untouched entries stay the agent\'s');
+  assert.deepEqual(contract.drafted['layout{"kind":["ghost","danger--ghost"]}.Button.gap'], DRAFTED.drafted['layout{"kind":["ghost","danger--ghost"]}.Button.gap'],
+    'the ghost rule\'s gap is another value');
+  assert.equal(contract.selection.status, 'draft');
+  assert.deepEqual(validate(contract, FOUNDATIONS).errors.filter(e => e.rule === 9), []);
+  const t = rb('tweaked');
+  const second = { ...t, layout: { ...t.layout, Button: { ...t.layout.Button, gap: { token: 'spacing-05' } } } };
+  const proposals = review(contract, second, FOUNDATIONS).proposals.filter(p => p.expressible && p.change.field === 'gap');
+  assert.equal(proposals.length, 1);
+  const again = applyEdits(contract, proposals, { confirm: 'all' });
+  assert.deepEqual(again.contract.drafted['layout.Button.gap'], { by: 'owner', was: { token: 'spacing-07' } }, 'an owner entry keeps its first was');
+  assert.equal(applyEdits(CONTRACT, r.proposals, { confirm: 'all' }).contract.drafted, undefined, 'no table is added to a Contract without one');
 });

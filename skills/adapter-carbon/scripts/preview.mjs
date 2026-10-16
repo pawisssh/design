@@ -4,7 +4,11 @@
 //
 // To-preview finds this module by convention (skills/adapter-<source.adapter>/scripts/preview.mjs) and calls
 // previewRenderer(contract), which returns:
-//   render(tuple)      the real @carbon/react component, rendered with react-dom/server to static HTML;
+//   render(tuple, properties)  the real @carbon/react component, rendered with react-dom/server to static HTML;
+//                      a partial tuple takes each missing axis's default. Without `properties` it is the
+//                      To-preview specimen (TEXT defaults, the default icon shown); with them it is a usage
+//                      (To-handoff): Contract property keys give the content, each missing key takes its
+//                      Contract default, and `code.required` props come from `properties[prop]` or a placeholder;
 //   stylesheet         the compiled @carbon/styles CSS;
 //   modeClass(modeKey) the Carbon theme class for a foundations Theme mode (white -> cds--white).
 // A State whose Contract `code` is null (Hover, Active, Focus) renders like Enabled: To-preview forces it
@@ -60,44 +64,63 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
   const Component = library[contract.code.component];
   if (!Component) throw new Error(`${contract.code.package} has no export ${contract.code.component}`);
 
-  // Content properties: TEXT at its default; an icon swap shows the Contract's default icon (non-default
-  // BOOLEANs on, as in the base-loop review specimen), so the icon slot is reviewed too. A Repeated child
-  // (`code.items`, #93) renders once: each `itemProp` takes its property's default, and a child prop no property
+  const iconFor = value => {
+    const key = value === 'icon:default' ? contract.icons.default : String(value).replace(/^icon:/, '');
+    const Icon = icons[iconExport(key)];
+    if (!Icon) throw new Error(`@carbon/icons-react has no icon ${iconExport(key)}`);
+    return Icon;
+  };
+  // Content props for one render. The specimen (no `properties`) shows TEXT defaults and the Contract's default
+  // icon (non-default BOOLEANs on, as in the base-loop review specimen), so the icon slot is reviewed too.
+  // A usage takes each property from `properties` by key, else its Contract default: a BOOLEAN that gates a
+  // swap (`visibleWhen`) hides it when false, and `whenFalse: "omit"` drops the prop. A Repeated child
+  // (`code.items`, #93) renders once: each `itemProp` takes its property's value, and a child prop no property
   // shows repeats that text (SelectItem's value).
-  const content = {};
-  const childProps = {};
-  let children;
-  for (const p of contract.properties) {
-    const code = p.code || {};
-    if (p.type === 'TEXT' && code.itemProp) childProps[code.itemProp] = p.default;
-    else if (p.type === 'TEXT' && code.prop === 'children') children = p.default;
-    else if (p.type === 'TEXT' && code.prop) content[code.prop] = p.default;
-    else if (p.type === 'INSTANCE_SWAP' && code.prop && code.valueFrom === 'icon') {
-      const Icon = icons[iconExport(contract.icons.default)];
-      if (!Icon) throw new Error(`@carbon/icons-react has no icon ${iconExport(contract.icons.default)}`);
-      content[code.prop] = Icon;
-    }
-  }
-
   const repeated = contract.code.items;
-  if (repeated) {
-    const Child = library[repeated.component];
-    if (!Child) throw new Error(`${contract.code.package} has no export ${repeated.component}`);
-    const text = Object.values(childProps)[0];
-    children = React.createElement(Child, Object.fromEntries(repeated.props.map(k => [k, k in childProps ? childProps[k] : text])));
-  }
+  const Child = repeated && library[repeated.component];
+  if (repeated && !Child) throw new Error(`${contract.code.package} has no export ${repeated.component}`);
+  const contentFor = (properties, tuple) => {
+    const specimen = properties === undefined;
+    const value = p => (specimen ? (p.type === 'BOOLEAN' ? !p.default : p.default) : p.key in properties ? properties[p.key] : p.default);
+    const props = {};
+    const childProps = {};
+    let children;
+    const swapProps = contract.properties.filter(p => p.type === 'INSTANCE_SWAP' && p.code && p.code.prop).map(p => p.code.prop);
+    for (const p of contract.properties) {
+      const code = p.code || {};
+      if (p.type === 'TEXT' && code.itemProp) childProps[code.itemProp] = value(p);
+      if (!code.prop) continue;
+      const v = value(p);
+      if (p.type === 'TEXT') {
+        if (code.prop === 'children') children = v;
+        else props[code.prop] = v;
+      } else if (p.type === 'INSTANCE_SWAP' && code.valueFrom === 'icon') {
+        const gate = code.visibleWhen && contract.properties.find(x => x.key === code.visibleWhen);
+        if ((specimen || !gate || value(gate)) && v) props[code.prop] = iconFor(v);
+      } else if (p.type === 'BOOLEAN' && swapProps.indexOf(code.prop) < 0) {
+        if (v || code.whenFalse !== 'omit') props[code.prop] = v;
+      }
+    }
+    if (repeated) {
+      const text = Object.values(childProps)[0];
+      children = React.createElement(Child, Object.fromEntries(repeated.props.map(k => [k, k in childProps ? childProps[k] : text])));
+    }
+    for (const prop of (contract.code && contract.code.required) || [])
+      if (!(prop in props) && !(prop === 'children' && children !== undefined))
+        props[prop] = !specimen && prop in properties ? properties[prop] : `${contract.family.key}-${contract.axes.map(a => tuple[a.key]).join('-')}`;
+    return { props, children };
+  };
 
   return {
     stylesheet: readFileSync(join(dir, 'node_modules/@carbon/styles/css/styles.css'), 'utf8'),
     modeClass: mode => `cds--${mode}`,
-    render(tuple) {
-      // A required prop no axis or property sets (`code.required`, #93), such as id, gets a placeholder unique per tuple.
-      const placeholder = [contract.family.key, ...contract.axes.map(a => tuple[a.key])].join('-');
-      const props = Object.fromEntries((contract.code.required || []).map(k => [k, placeholder]));
-      Object.assign(props, content);
+    render(tuple, properties) {
+      const full = {};
+      for (const axis of contract.axes) full[axis.key] = tuple[axis.key] === undefined ? axis.default : tuple[axis.key];
+      const { props, children } = contentFor(properties, full);
       for (const axis of contract.axes) {
-        const value = axis.values.find(v => v.key === tuple[axis.key]);
-        if (!value) throw new Error(`unknown ${axis.key} value ${tuple[axis.key]}`);
+        const value = axis.values.find(v => v.key === full[axis.key]);
+        if (!value) throw new Error(`unknown ${axis.key} value ${full[axis.key]}`);
         Object.assign(props, value.code || {});
       }
       return renderToStaticMarkup(React.createElement(Component, props, children));

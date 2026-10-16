@@ -390,3 +390,84 @@ test('a family whose icons are all fixed still declares icons.default (rule 7)',
   delete c.icons;
   formRejects(c, 7, 'instance target "icon:warning--filled" is not declared');
 });
+
+// ---------- the `drafted` side table (#105, ADR 0010) ----------
+// button.drafted.component.json is the committed Button as a draft plus a `drafted` table. Its evidence lines
+// and fingerprints are illustrative: validate checks their shape, not their content.
+const drafted = () => load('skills/contract/test/fixtures/button.drafted.component.json');
+const agentEntry = { by: 'agent', evidence: ['ButtonBase.tsx:L1 what it shows'], fingerprint: `sha256:${'0'.repeat(64)}` };
+
+test('a Contract with a good drafted table is valid, and the table is inside contentHash', () => {
+  const c = drafted();
+  assert.deepEqual(contract.validate(c, foundations), { ok: true, errors: [] });
+  const without = drafted();
+  delete without.drafted;
+  assert.notEqual(contract.contentHash(c), contract.contentHash(without));
+  c.drafted['figma.grid'] = { by: 'owner', was: { columns: ['kind'], rows: ['size', 'state'] } };
+  assert.notEqual(contract.contentHash(c), contract.contentHash(drafted()), 'an owner correction changes the hash');
+  assert.deepEqual(contract.validate(c, foundations).errors, []);
+});
+
+test('the approved Button carries no drafted table, and gaining one voids its approval (rule 8)', () => {
+  const c = button();
+  assert.equal(c.drafted, undefined);
+  c.drafted = { 'icons.default': agentEntry };
+  rejects(c, 8, 'contentHash');
+});
+
+test('every drafted key resolves to a value in the Contract (rule 9)', () => {
+  const resolves = key => contract.draftedValue(drafted(), key).found;
+  for (const key of ['axes.size.values.lg.label', 'axes.kind.label', 'family.description', 'anatomy.Label', 'properties.label.default',
+    'properties.Label.characters', 'properties.Glyph.mainComponent', 'properties.Icon.visible', 'icons.default', 'icons.preferred', 'figma.grid',
+    'code.alwaysEmit', 'layout.Button.width', 'paint.Button.fill', 'layout{"size":["lg","xl","2xl"]}.Button.paddingTop', 'layout{"size":"lg"}.Button.minHeight'])
+    assert.ok(resolves(key), `${key} should resolve`);
+  assert.equal(contract.draftedValue(drafted(), 'axes.size.values.lg.label').value, 'Large');
+  assert.equal(contract.draftedValue(drafted(), 'layout{"kind":["ghost","danger--ghost"]}.Button.gap').value.token, 'spacing-03');
+  for (const key of [
+    'axes.size.values.huge.label', // no such value
+    'anatomy.Footer', // no such node
+    'properties.Label.visible', // no property binds Label.visible
+    'layout.Button.minHeight', // the base rule does not set it; a size rule does, keyed with its match
+    'layout{}.Button.width', // the base rule has no match in its key
+    'layout{"size":"sm"}.Button.gap', // no rule with exactly that match sets it
+    'layout{ "size": "lg" }.Button.minHeight', // the match is canonical JSON
+    'layout.Button', // a layout key names node and field
+    'selection.status', 'source.tag', 'notes', 'schemaVersion', // not values an Adapter's agent drafts
+    'excluded', // no key form for excluded combinations yet
+  ]) {
+    const c = drafted();
+    c.drafted[key] = agentEntry;
+    rejects(c, 9, key);
+  }
+});
+
+test('a drafted entry is {by: "agent", evidence, fingerprint} or {by: "owner", was} (rule 9)', () => {
+  const bad = [
+    [{ by: 'agent', fingerprint: agentEntry.fingerprint }, 'evidence'],
+    [{ by: 'agent', evidence: [], fingerprint: agentEntry.fingerprint }, 'evidence'],
+    [{ by: 'agent', evidence: [3], fingerprint: agentEntry.fingerprint }, 'evidence'],
+    [{ by: 'agent', evidence: agentEntry.evidence }, 'fingerprint'],
+    [{ by: 'agent', evidence: agentEntry.evidence, fingerprint: 'sha256:abc' }, 'fingerprint'],
+    [{ by: 'owner' }, 'was'],
+    [{ by: 'designer', was: 'Big' }, 'by'],
+    ['agent', 'object'],
+  ];
+  for (const [entry, word] of bad) {
+    const c = drafted();
+    c.drafted['axes.size.values.lg.label'] = entry;
+    rejects(c, 9, 'axes.size.values.lg.label', word);
+  }
+  const c = drafted();
+  c.drafted = [];
+  rejects(c, 9, 'object');
+  const ok = drafted();
+  ok.drafted['axes.size.values.lg.label'] = { by: 'owner', was: 'Lg' };
+  ok.drafted['icons.default'] = { by: 'owner (simulated, prototype)', was: 'add' };
+  assert.deepEqual(contract.validate(ok, foundations).errors, []);
+});
+
+test('draftedKey writes the key a value at section, match, node and field is drafted under', () => {
+  assert.equal(contract.draftedKey('layout', {}, 'Button', 'width'), 'layout.Button.width');
+  assert.equal(contract.draftedKey('layout', { size: ['lg', 'xl', '2xl'] }, 'Button', 'paddingTop'), 'layout{"size":["lg","xl","2xl"]}.Button.paddingTop');
+  assert.equal(contract.draftedKey('paint', { state: 'hover', kind: 'ghost' }, 'Button', 'fill'), 'paint{"kind":"ghost","state":"hover"}.Button.fill');
+});
