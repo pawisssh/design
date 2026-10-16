@@ -61,6 +61,11 @@ test('a token at an opacity multiplies its own alpha per Mode; a plain token is 
   assert.match(dr, /^dark:bg-input\/30: input at 30%/);
 });
 
+test('a flattened token that was clipped keeps the clip note', { skip }, async () => {
+  const { values } = (await button()).synthesized['button-invalid-stroke'];
+  assert.match(values.light.reason, /flattened.*; outside sRGB, clipped per channel$/);
+});
+
 test('a mix of tokens is evaluated per Mode over each token\'s own CSS', { skip }, async () => {
   const { values } = (await button()).synthesized['button-secondary-hover-fill'];
   assert.equal(values.light.resolved, '#e7e7e7');

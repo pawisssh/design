@@ -76,11 +76,11 @@ The shadcn collections, from the Generic Adapter ([`adapter-generic`](../../adap
 
 | Field | Content |
 |---|---|
-| map key | The **flat name**: the Code Library's own name for Theme, Layout and Type (`button-primary`, `spacing-05`, `body-compact-01-font-size`), the same string a Contract writes. Primitives use the palette path (`blue.60Hover`, `white`). The dot cannot occur in a Carbon flat name, so the two namespaces cannot collide. |
+| map key | The **flat name**: the Code Library's own name for Theme, Layout and Type (`button-primary`, `spacing-05`, `body-compact-01-font-size`), the same string a Contract writes. Primitives use the palette path (`blue.60Hover`, `white`). The dot cannot occur in a Carbon flat name, so the two namespaces cannot collide. A Synthesized token's name is the Adapter's, derived from its Contract rule (#70 §1), and generation fails if a Code Library token already has it. |
 | `collection` | A collection `key`. |
 | `name` | The Figma variable name, `<Group>/<flat-name>` (#9). Group is the DTCG top-level key in sentence case: first word capitalised, the rest lowercase (`Button`, `Text`, `Background`, `Spacing`, `Size`, `Icon size`, `Border radius`, `Font family`). Owner-confirmed 2026-10-16. Axis value labels in a Contract stay Title Case; groups are variable folders, not property values. Primitives use `<Hue>/<step>` (`Blue/60Hover`), and single-level palette entries use `Neutral/<Name>`. |
 | `type` | `COLOR`, `FLOAT` or `STRING`. Figma cannot change a variable's type after creation. |
-| `source` | The DTCG file and JSON pointer, or the `@carbon/type` export. The Adapter stores the flat name explicitly, because no single rule derives it: `themes.json` joins the path (`text` › `on` › `color` → `text-on-color`), while in `layout.json` the leaf key is already the full name (`spacing` › `spacing-05`). |
+| `source` | The DTCG file and JSON pointer, or the `@carbon/type` export. The Generic Adapter writes the CSS file and property, or for a Synthesized token `synthesized: <component file>:<lines> <utilities>` (#120). The Adapter stores the flat name explicitly, because no single rule derives it: `themes.json` joins the path (`text` › `on` › `color` → `text-on-color`), while in `layout.json` the leaf key is already the full name (`spacing` › `spacing-05`). |
 | `scopes` | The Figma `VariableScope` list, stored per variable (see [Scopes](#scopes)). |
 | `codeSyntax` | `{WEB: …}` per variable, or `{}` (see [codeSyntax](#codesyntax)). |
 | `hidden` | `true` → `hiddenFromPublishing`. Set on Primitives. |

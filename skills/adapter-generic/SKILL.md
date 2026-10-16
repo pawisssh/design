@@ -194,6 +194,7 @@ Paint the Foundations tokens cannot bind directly becomes a Synthesized token (#
 - **Order.** In the document a collection's Code Library tokens come first, then the Synthesized ones, each by name.
 - **Fails:**
   - a name a Code Library token already has, naming both;
+  - a name two families both derive, naming both;
   - relative colour syntax, which the converter cannot read, naming the utility.
 
 ### Left for later tickets

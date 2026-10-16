@@ -18,7 +18,9 @@
 // whose keys give each value its role (ROLES). Every colour goes through the shared converter (color.mjs), and
 // every variable's codeSyntax is what Tailwind's own compiler emits for its utility, so the compiled CSS is also
 // the cross-check. Generation throws (the CLI exits 1 and writes nothing) on a colour the converter cannot read,
-// a non-colour value that differs by mode, a reference no mode declares, or a compiled value that disagrees.
+// a non-colour value that differs by mode, a reference no mode declares, a compiled value that disagrees, anything
+// the component step refuses for a family, a Synthesized name two families both derive, or a Contract that fails
+// validate against the document.
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,7 +28,7 @@ import { closure } from '../../contract/scripts/contract.mjs';
 import { contractFor, readFamily } from './components.mjs';
 import { DEFAULT_DIR, FIXTURE, REPO_ROOT, STYLESHEETS, TOOLS, fetchTools, hasTools, sha256, snapshotId, toolDir } from './sources.mjs';
 import { build, utilityRule } from './tailwind.mjs';
-import { evaluate, lengthPx, literalForm, round } from './values.mjs';
+import { evaluate, isSynthesized, lengthPx, literalForm, round } from './values.mjs';
 
 // Mode selector -> mode. The first is the default; a mode that omits a property inherits the default's value.
 const MODES = [[':root', 'light', 'Light'], ['.dark', 'dark', 'Dark']];
@@ -48,7 +50,6 @@ const SPACING = ['0', 'px', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '5',
 const fail = msg => { throw new Error(msg); };
 const byKey = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const title = s => s.charAt(0).toUpperCase() + s.slice(1);
-const synthesized = v => /^synthesized: /.test(v.source);
 const isColour = text => /^(#|(rgba?|hsla?|oklab|oklch|color|color-mix)\(|(transparent|black|white)$)/i.test(text);
 
 // ---------- reading CSS ----------
@@ -293,7 +294,7 @@ export async function generate({ project, families = [], drafts = [], tools = DE
 /** Variables in document order: by collection; in Theme, Code Library tokens before Synthesized ones; then by name. */
 function ordered(variables) {
   return Object.fromEntries(Object.entries(variables).sort(([ka, a], [kb, b]) =>
-    COLLECTIONS.indexOf(a.collection) - COLLECTIONS.indexOf(b.collection) || synthesized(a) - synthesized(b) || byKey(ka, kb)));
+    COLLECTIONS.indexOf(a.collection) - COLLECTIONS.indexOf(b.collection) || isSynthesized(a) - isSynthesized(b) || byKey(ka, kb)));
 }
 
 // ---------- CLI ----------
@@ -309,6 +310,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   if (!args.includes('--family') && existsSync(join(REPO_ROOT, CONTRACTS)))
     families.push(...readdirSync(join(REPO_ROOT, CONTRACTS)).map(f => /^(.+)\.component\.json$/.exec(f)).filter(Boolean).map(m => m[1]));
   try {
+    if (families.some(f => !f || f.startsWith('-'))) throw new Error('--family needs a family key');
     if (!hasTools(tools)) await fetchTools(tools);
     const { text, documentHash, summary } = await generate({ project, families, tools });
     writeFileSync(out, text);

@@ -33,7 +33,7 @@ import { candidateRules, compiledRules, winner } from './cascade.mjs';
 import { readSource } from './source.mjs';
 import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, hasTools, sha256, snapshotId } from './sources.mjs';
 import { build } from './tailwind.mjs';
-import { CLIPPED, evaluate, literalForm, resolvedText, round } from './values.mjs';
+import { CLIPPED, evaluate, isSynthesized, literalForm, resolvedText, round } from './values.mjs';
 
 // Attribute states with known state words: the attribute becomes an axis, absent by default (#119).
 const ATTR_AXES = {
@@ -370,7 +370,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     if (m) {
       const t = foundations.variables[m[1]].values[mode];
       return { raw: t.raw || t.value, ...(t.alpha !== undefined && { alpha: t.alpha }), resolved: t.resolved, from: { alias: m[1] },
-        level: 'info', reason: `${r.candidate}: ${FLATTENED}` };
+        level: 'info', reason: `${r.candidate}: ${FLATTENED}${t.reason === CLIPPED ? `; ${CLIPPED}` : ''}` };
     }
     m = /^color-mix\(in (\w+), var\(--([\w-]+)\) (\d*\.?\d+)%, transparent\)$/.exec(text);
     const c = evaluated(text.replace(/var\(--([\w-]+)\)/g, (_, name) => cssOf(name, r, mode)), r);
@@ -453,7 +453,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
           const rules = [...uses.get(json(v.synth))].sort((x, y) => entryOrder.get(x.entry) - entryOrder.get(y.entry));
           const utilities = [...new Set(rules.map(r => r.candidate))].join(' ');
           const own = foundations.variables[flat];
-          if (own && !/^synthesized: /.test(own.source))
+          if (own && !isSynthesized(own))
             fail(`the Synthesized token ${flat} (${utilities}) collides with the Code Library token ${flat} (${own.source}); rename one`);
           const lines = [...new Set(rules.map(r => r.entry.line))].sort((x, y) => x - y).join(',');
           synthesized[flat] = { collection: 'theme', name: `${Name}/${flat}`, type: 'COLOR', source: `synthesized: ${file}:${lines} ${utilities}`,
@@ -646,7 +646,7 @@ export async function generate({ project, family, foundations, drafts = [], tool
   const json = v => JSON.stringify(v);
   const stale = Object.keys(f.synthesized).filter(k => json(foundations.variables[k]) !== json(f.synthesized[k]));
   for (const [k, v] of Object.entries(foundations.variables))
-    if (v.family === family && /^synthesized: /.test(v.source) && !f.synthesized[k]) stale.push(k);
+    if (v.family === family && isSynthesized(v) && !f.synthesized[k]) stale.push(k);
   const contract = stale.length ? null : contractFor(f, family, foundations);
   const listed = contract && (foundations.closure.contracts || []).some(c => c.family === family && c.snapshotId === contract.source.snapshotId);
   if (stale.length || !listed)

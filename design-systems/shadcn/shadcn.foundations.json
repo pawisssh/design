@@ -1495,7 +1495,7 @@
             "alias": "destructive"
           },
           "level": "info",
-          "reason": "aria-invalid:border-destructive: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+          "reason": "aria-invalid:border-destructive: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124); outside sRGB, clipped per channel"
         },
         "dark": {
           "raw": "#ff6467",
@@ -1533,7 +1533,7 @@
             "alias": "destructive"
           },
           "level": "info",
-          "reason": "aria-invalid:border-destructive: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+          "reason": "aria-invalid:border-destructive: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124); outside sRGB, clipped per channel"
         },
         "dark": {
           "raw": "#ff6467",
