@@ -126,6 +126,24 @@ test('the package is well under the 50,000-char cap; save.svg\'s literal TAB rea
   assert.ok(seen.includes(save.svg));
 });
 
+// Live finding (#30): use_figma transpiles a script whose strings hold markup-like text, even spelled <,
+// which reformats buildComponentSets.toString() and fails the core hash. The SVGs reach the core intact anyway.
+test('the package never spells "<" before a tag name, yet the core receives every SVG byte for byte', { skip }, async () => {
+  const { plan, state } = derive();
+  const { code } = pack(plan, state);
+  assert.doesNotMatch(code, /<[A-Za-z/!?]/);
+  assert.doesNotMatch(code, /\\u003c|\\x3c/i);
+  assert.match(code, /\.join\(String\.fromCharCode\(60\)\)/);
+  const mock = mockFigma({ fileKey: FILE_KEY });
+  const seen = [];
+  const create = mock.figma.createNodeFromSvg;
+  mock.figma.createNodeFromSvg = text => { seen.push(text); return create(text); };
+  const result = await runPackage(code, mock.figma);
+  assert.equal(result.error, undefined, JSON.stringify(result).slice(0, 300));
+  assert.equal(result.summary.created, 10);
+  assert.deepEqual(seen, plan.icons.map(i => i.svg));
+});
+
 // ---- first run ----
 
 test('a first run creates the Icons page and one 16x16 component per icon, with no fill and one SCALE Vector', { skip }, async () => {
