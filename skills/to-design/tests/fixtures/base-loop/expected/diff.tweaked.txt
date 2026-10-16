@@ -1,0 +1,18 @@
+Kind=Primary, Size=Large, State=Enabled  (18:31)  4 difference(s)
+  [token-edit] layout.Button.gap: {spacing-07} -> {spacing-06}
+  [raw-edit] layout.Button.paddingTop: raw 15 -> raw 14
+  [detached] layout.Label.textStyle: {body-compact-01} -> ∅
+  [unmapped] layout.Label.letterSpacing: 0.16 -> 0.32  (no Contract field)
+  not in this readback: paint.Button.effects, visible.Label, text.Label, swap.Glyph
+
+Proposed Contract edits:
+  + layout[0].Button.gap match={} := {"token":"spacing-06","by":"owner","was":{"token":"spacing-07"}}
+      blast radius 150/245  (shared rule: ask the owner first; narrowing means splitting the rule)
+      shielded by layout[8] {"size":"lg-expressive"} = raw 28  reason: derived: 64px end space − 16px end padding − 20px icon
+      shielded by layout[9] {"kind":["ghost","danger--ghost"]} = {spacing-03}
+      verify: derived layout[8].Button.gap = raw 28 may be stale
+  + layout[4].Button.paddingTop match={"size":["lg","xl","2xl"]} := {"raw":14,"by":"owner","was":{"raw":15},"level":"warning","reason":"owner tweak at Base Component approval; no token"}
+      blast radius 105/245  (shared rule: ask the owner first; narrowing means splitting the rule)
+      verify: derived layout[4].Button.paddingBottom = raw 15 may be stale
+  x Label.textStyle: NOT carried (binding lost in Figma; the Contract keeps the token and a rebuild restores it)
+  x Label.letterSpacing: NOT carried (no Contract field)

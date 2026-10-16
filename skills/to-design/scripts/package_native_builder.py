@@ -57,7 +57,9 @@ def literal(text):
 
 
 def plan_entries(plan):
-    """The CHECK entry count: the objects the foundations slice builds, the icons, or the selected variants."""
+    """The CHECK entry count: the objects the foundations slice builds, the icons, one Base Component, or the selected variants."""
+    if plan.get("slice") == "base":
+        return 1
     if plan.get("slice") == "foundations":
         return len(plan["foundations"]["variables"]) + len(plan["foundations"]["textStyles"])
     if plan.get("slice") == "icons":
@@ -106,6 +108,17 @@ def check_icons(plan):
             raise ValueError(f"Icon {icon.get('key')} needs key, name, file, svg and sha256")
 
 
+def check_base(plan):
+    base = plan.get("base")
+    if not plan.get("fileKey") or not plan.get("page") or not plan.get("family") or not isinstance(base, dict):
+        raise ValueError("Base plan must name its fileKey, page and family and carry a base spec")
+    for field in ("name", "tree", "layout", "paint", "visible", "text", "swap", "fonts"):
+        if field not in base:
+            raise ValueError(f"Base spec needs {field}")
+    if not plan.get("snapshotId") or not str(plan.get("contentHash", "")).startswith("sha256:"):
+        raise ValueError("Base plan must carry the Contract's snapshotId and contentHash")
+
+
 def package(core, plan, state):
     if not re.search(r"async\s+function\s+buildComponentSets\s*\(", core):
         raise ValueError("Core must declare async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK)")
@@ -115,6 +128,8 @@ def package(core, plan, state):
         check_foundations(plan)
     elif plan.get("slice") == "icons":
         check_icons(plan)
+    elif plan.get("slice") == "base":
+        check_base(plan)
     else:
         check_selection(plan)
     if not isinstance(state, dict):

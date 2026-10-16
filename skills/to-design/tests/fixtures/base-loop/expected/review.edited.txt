@@ -1,0 +1,15 @@
+Base Component review: Kind=Primary, Size=Large, State=Enabled
+Figma node: https://www.figma.com/design/PROTOTYPE/?node-id=19-5
+snapshotId: sha256:4c82c3cc7f2af6fa24fba39bb5e159c415b5691800130268c9d8903901164152
+contentHash: sha256:4277f00fb2335f167fab4b0572143f47615907ce4d55c7b89d4de7a281b1daac
+selection: draft, 245 variants
+Readback: 0 difference(s), 4 field(s) not read
+Edits with by/was: 2
+  layout[0].Button.gap = {spacing-06}  by owner (simulated, prototype #8), was {spacing-07}; changes 150/245 variants
+  layout[4].Button.paddingTop = raw 14  by owner (simulated, prototype #8), was raw 15; changes 105/245 variants
+Uncarried tweaks (warning notes, block approval): 1
+  layout.Label.letterSpacing: Owner tweak at Base Component review not carried: letterSpacing 0.16 -> 0.32 (no Contract field; in Figma it also detached the text style). Not carried; discarded when the Base Component is rebuilt from the Contract. Needs a token or a schema field.
+Verify notes: 2
+  layout[8].Button.gap: Derived raw 28 (derived: 64px end space − 16px end padding − 20px icon) may be stale: the owner changed layout[0].Button.gap {spacing-07} -> {spacing-06}. Check it; it is not recomputed.
+  layout[4].Button.paddingBottom: Derived raw 15 (derived, capped at the lg value) may be stale: the owner changed layout[4].Button.paddingTop raw 15 -> raw 14. Check it; it is not recomputed.
+Not ready to approve: the readback must be clean and no warning note open.
