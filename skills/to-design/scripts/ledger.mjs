@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // The ledger: one per Design Library file, in gitignored .scratch/to-design/<fileKey>.ledger.json.
 // It maps flat names to Figma ids. Each slice returns its own section (`{ledger: {foundations}}`),
-// which `record` merges into the file; other sections are kept.
+// which `record` merges into the file; other sections are kept. `foundationsGroups` is the owner's
+// selection (`groups`), which no slice returns.
 //
 //   node skills/to-design/scripts/ledger.mjs record <result.json> [--ledger <path>]
 //   node skills/to-design/scripts/ledger.mjs prune-list <prune-preview result.json> --name <variant name> [--name ...] --out <prune.json>
@@ -41,7 +42,8 @@ export const readLedger = path => (existsSync(path) ? JSON.parse(readFileSync(pa
 
 /**
  * The ledger after a slice result. Refuses an error result; a result with conflicts carries the old section back
- * unchanged. Sections replace whole, except `sets` (#32): a sets call returns its one family, with the variant ids
+ * unchanged. Sections replace whole, except `foundations`, whose names a chunked build returns a chunk at a time
+ * (#107), and `sets` (#32): a sets call returns its one family, with the variant ids
  * of its own entries as {expansion index: id or null}. The other families are kept, and the ids are merged into
  * the family's list of `total` ids, so a call carries no ids beyond its batch.
  */
@@ -51,6 +53,14 @@ export function recordResult(ledger, result) {
   if (ledger && ledger.fileKey !== result.fileKey) throw new Error(`ledger is for ${ledger.fileKey}, result for ${result.fileKey}`);
   const before = ledger || emptyLedger(result.fileKey);
   const out = { ...before, ...result.ledger };
+  // a chunk's state holds only its own names (#107), so names the result neither holds nor orphaned are kept;
+  // a single call's state holds every name, so this is its result unchanged
+  const f = result.slice === 'foundations' && result.ledger.foundations;
+  if (f && before.foundations) {
+    const keep = kind => Object.fromEntries(Object.entries(before.foundations[kind] || {})
+      .filter(([n]) => !(n in (f[kind] || {})) && !((f.orphans || {})[kind] || {})[n]));
+    out.foundations = { ...f, variables: { ...f.variables, ...keep('variables') }, textStyles: { ...f.textStyles, ...keep('textStyles') } };
+  }
   if (result.slice === 'sets' && result.ledger.sets) {
     out.sets = { ...(before.sets || {}) };
     for (const [family, rec] of Object.entries(result.ledger.sets)) {

@@ -316,7 +316,7 @@ test('a package for another file changes nothing', async () => {
   assert.deepEqual(mock.log, []);
 });
 
-test('recording a result replaces the foundations section, keeps other sections and refuses a failed call', async () => {
+test('recording a single-call result records its foundations section as returned, keeps other sections and refuses a failed call', async () => {
   const mock = mockFigma({ fileKey: FILE_KEY });
   const result = await call(mock);
   const ledger = recordResult({ schemaVersion: 1, fileKey: FILE_KEY, foundations: null, sets: { button: { id: '1:2' } } }, result);

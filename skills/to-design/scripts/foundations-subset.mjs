@@ -50,3 +50,63 @@ export function subsetDocument(doc, names) {
   const used = new Set(Object.values(variables).map(v => v.collection));
   return { ...doc, collections: doc.collections.filter(c => used.has(c.key)), variables, textStyles: pick(doc.textStyles, names.textStyles) };
 }
+
+// use_figma takes 50,000 chars of code. The packaged core and its wrapper take 16.8K of them (measured on the
+// foundations package), so a call's plan and state get the rest, less a margin.
+export const CALL_BUDGET = 50000 - 18000;
+// Per call, outside the entries: the plan's header and collections, the state's collections and orphans.
+const FIXED = 3000;
+
+const union = (a, b) => ({ variables: new Set([...a.variables, ...b.variables]), textStyles: new Set([...a.textStyles, ...b.textStyles]) });
+
+/**
+ * The selection `names` split into calls of at most `budget` chars (#107): whole groups in document order, so
+ * Primitives come first, each call carrying the alias and bind targets its groups reach. `sizeOf(kind, name)` is
+ * an entry's chars in the plan and the state. The split depends only on the document and the selection, so a
+ * chunk names the same groups before and after the one before it is recorded. A group that cannot fit one call
+ * is refused by name. Returns [{groups, owned, names}], `owned` holding the chunk's own groups' entries.
+ */
+export function chunks(doc, names, sizeOf, budget = CALL_BUDGET) {
+  const units = new Map();
+  for (const kind of ['variables', 'textStyles'])
+    for (const [name, entry] of Object.entries(doc[kind])) {
+      if (!names[kind].has(name)) continue;
+      const g = groupOf(entry);
+      if (!units.has(g)) units.set(g, { variables: new Set(), textStyles: new Set() });
+      units.get(g)[kind].add(name);
+    }
+  const size = set => ['variables', 'textStyles'].reduce((n, kind) => n + [...set[kind]].reduce((m, name) => m + sizeOf(kind, name), 0), 0);
+  const room = budget - FIXED;
+  const out = [];
+  let cur = null;
+  for (const [group, owned] of units) {
+    const need = reach(doc, [...owned.variables, ...owned.textStyles]);
+    const own = size(need);
+    if (own > room) throw new Error(`group ${group} (${own} chars with its alias and bind targets) does not fit one call (${room} chars)`);
+    if (cur && size(union(cur.names, need)) > room) { out.push(cur); cur = null; }
+    cur = cur ? { groups: [...cur.groups, group], owned: union(cur.owned, owned), names: union(cur.names, need) } : { groups: [group], owned, names: need };
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+
+/**
+ * The state for one chunk of a chunked build: the ledger with its foundations variables and Text Styles cut to the
+ * chunk's names, so the unchanged core orphans none of the other chunks' names. Chunk 1 also carries the recorded
+ * names that left the selection (`selected` given), so they are orphaned once. Collections and orphans stay whole.
+ */
+export function chunkState(ledger, part, selected = null) {
+  const f = ledger.foundations;
+  if (!f) return ledger;
+  const cut = kind => Object.fromEntries(Object.entries(f[kind] || {}).filter(([n]) => part.names[kind].has(n) || (selected && !selected[kind].has(n))));
+  return { ...ledger, foundations: { ...f, variables: cut('variables'), textStyles: cut('textStyles') } };
+}
+
+/** Refuses chunk `k` (1-based) of `parts` until every earlier chunk's groups are recorded from this document. */
+export function assertRecorded(ledger, parts, k, documentHash) {
+  const f = ledger && ledger.foundations;
+  for (let j = 0; j < k - 1; j++) {
+    const missing = ['variables', 'textStyles'].some(kind => [...parts[j].owned[kind]].some(n => !f || f.documentHash !== documentHash || !(f[kind] || {})[n]));
+    if (missing) throw new Error(`chunk ${j + 1} is not recorded yet: build and record it first`);
+  }
+}

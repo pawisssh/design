@@ -20,7 +20,7 @@ import { parseArgs } from 'node:util';
 import { baseTuple, contentHash, expand, icons as iconKeys, iconName, PROTOTYPE_APPROVER, resolve, validate, variantName } from '../../contract/scripts/contract.mjs';
 import { anatomyTree, baseProps, defaultProps, expectedBase, expectedVariant, iconRef as iconRefKey, norm } from './readback.mjs';
 import { defaultLedgerPath, emptyLedger, readLedger } from './ledger.mjs';
-import { selectedGroups, selection, subsetDocument } from './foundations-subset.mjs';
+import { assertRecorded, CALL_BUDGET, chunks, chunkState, selectedGroups, selection, subsetDocument } from './foundations-subset.mjs';
 
 // Fields only a reviewer reads. The core never needs them, so the package leaves them out.
 const REVIEW_ONLY = { document: ['source', 'closure', 'checks', 'notes'], entry: ['source', 'usedBy'], value: ['from', 'reason', 'level', 'resolved'] };
@@ -42,15 +42,23 @@ export const documentHash = docText => `sha256:${createHash('sha256').update(doc
 /**
  * The foundations slice's plan and state.
  * `docText` is the document file's text (its bytes are the documentHash); `ledger` is the file's ledger or null.
- * Options: fileKey (required), adopt, prune (orphan names the owner confirmed for deletion), page, at, strip.
+ * Options: fileKey (required), adopt, prune (orphan names the owner confirmed for deletion), page, at, strip,
+ * chunk (1-based, when the selection needs several calls: `plan.chunk` says how many) and budget (chars per call).
  */
-export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune = [], page = null, at = new Date().toISOString(), strip = true } = {}) {
+export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune = [], page = null, at = new Date().toISOString(), strip = true, chunk = 1, budget = CALL_BUDGET } = {}) {
   if (!fileKey) throw new Error('fileKey is required');
   if (ledger && ledger.fileKey !== fileKey) throw new Error(`ledger is for ${ledger.fileKey}, not ${fileKey}`);
   const doc = JSON.parse(docText);
   if (doc.schemaVersion !== 1) throw new Error('foundations document schemaVersion must be 1');
-  // the selected subset of the whole theme (#107); documentHash stays the whole document's, as later slices check it
-  const sub = subsetDocument(doc, selection(doc, selectedGroups(ledger)));
+  // the selected subset of the whole theme (#107), split by group when it needs several calls;
+  // documentHash stays the whole document's, as later slices check it
+  const names = selection(doc, selectedGroups(ledger));
+  const stripped = stripReviewFields(doc);
+  const parts = chunks(doc, names, (kind, n) => JSON.stringify(stripped[kind][n]).length + 2 * n.length + 36, budget);
+  if (!(chunk >= 1 && chunk <= parts.length)) throw new Error(`there is no chunk ${chunk} of ${parts.length}`);
+  if (chunk > 1 && prune.length) throw new Error('prune runs with chunk 1, which carries the whole selection\'s orphans');
+  assertRecorded(ledger, parts, chunk, documentHash(docText));
+  const sub = subsetDocument(doc, parts.length > 1 ? parts[chunk - 1].names : names);
   const plan = {
     schemaVersion: 1,
     slice: 'foundations',
@@ -62,8 +70,12 @@ export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune
     snapshotId: doc.source.snapshotId,
     documentHash: documentHash(docText),
     foundations: strip ? stripReviewFields(sub) : sub,
+    ...(parts.length > 1 ? { chunk: { index: chunk, of: parts.length, groups: parts[chunk - 1].groups } } : {}),
   };
-  return { plan, state: ledger || emptyLedger(fileKey) };
+  const state = !ledger ? emptyLedger(fileKey) : parts.length > 1 ? chunkState(ledger, parts[chunk - 1], chunk === 1 ? names : null) : ledger;
+  const chars = JSON.stringify(plan).length + JSON.stringify(state).length;
+  if (strip && chars > budget) throw new Error(`the foundations plan and state are ${chars} chars, over the ${budget} a call takes`);
+  return { plan, state };
 }
 
 // Shapes that paint nothing: Carbon's two-tone inner path (fill="none", data-icon-path) and its

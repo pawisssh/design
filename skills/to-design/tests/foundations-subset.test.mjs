@@ -112,3 +112,107 @@ test('removing a group makes its variables Orphans that keep their nodes; a targ
   for (const name of ['Layer/field', 'Support/support-success', 'Green/50']) assert.ok(names(mock).includes(name), `${name} is never deleted by a run`);
   assert.deepEqual(mock.log.filter(([op]) => !['setCurrentPage', 'loadFont'].includes(op)), []);
 });
+
+// ---- a selection over the use_figma cap ----
+
+// Builds every chunk in order, recording each result before deriving the next. Returns the ledger and the results.
+async function buildInChunks(mock, docText, ledger, options = {}) {
+  const of = foundationsPlan(docText, ledger, { fileKey: FILE_KEY, at: AT, ...options }).plan.chunk?.of || 1;
+  const results = [];
+  const plans = [];
+  for (let chunk = 1; chunk <= of; chunk++) {
+    const { code, plan } = pack({ docText, ledger, options: { ...options, chunk } });
+    const result = await runPackage(code, mock.figma);
+    assert.equal(result.summary.conflicts, 0, `chunk ${chunk}: ${JSON.stringify(result.conflicts)}`);
+    ledger = recordResult(ledger, result);
+    results.push(result);
+    plans.push(plan);
+  }
+  return { ledger, results, plans };
+}
+
+test('today\'s default subset fits one call', () => {
+  const { plan, out } = pack();
+  assert.equal(plan.chunk, undefined);
+  assert.ok(out.chars < 50000);
+});
+
+test('a selection over the budget is chunked by group, Primitives first, each chunk recorded before the next', async () => {
+  const budget = 14000;
+  const mock = mockFigma({ fileKey: FILE_KEY });
+  const { ledger, results, plans } = await buildInChunks(mock, DOC_TEXT, null, { budget });
+  const chunks = plans.map(p => p.chunk);
+  assert.ok(chunks.length > 1, 'chunked');
+  assert.deepEqual(chunks.map(c => c.index), chunks.map((_, i) => i + 1));
+  assert.deepEqual(chunks[0].groups.slice(0, 4), ['Blue', 'Gray', 'Red', 'Neutral'], 'Primitives first, in document order');
+  const groups = chunks.flatMap(c => c.groups);
+  assert.equal(new Set(groups).size, groups.length, 'each group in one chunk');
+  assert.deepEqual([...groups].sort(), ['Background', 'Blue', 'Body', 'Border radius', 'Button', 'Focus', 'Font family', 'Gray', 'Icon size', 'Link', 'Neutral', 'Red', 'Size', 'Spacing', 'Text']);
+
+  assert.throws(() => foundationsPlan(DOC_TEXT, null, { fileKey: FILE_KEY, budget, chunk: 2 }), /chunk 1 is not recorded yet: build and record it first/);
+  assert.throws(() => foundationsPlan(DOC_TEXT, null, { fileKey: FILE_KEY, budget, chunk: chunks.length + 1 }), /chunk \d+ of \d+/);
+  assert.throws(() => foundationsPlan(DOC_TEXT, null, { fileKey: FILE_KEY, budget, chunk: 2, prune: ['spacing-13'] }), /prune runs with chunk 1/);
+
+  for (const r of results) assert.deepEqual(r.orphaned, { variables: [], textStyles: [] });
+  const single = mockFigma({ fileKey: FILE_KEY });
+  const whole = await call(single);
+  assert.deepEqual(names(mock).sort(), names(single).sort());
+  assert.deepEqual(Object.keys(ledger.foundations.variables).sort(), Object.keys(whole.ledger.foundations.variables).sort());
+  assert.deepEqual(Object.keys(ledger.foundations.textStyles), ['body-compact-01', 'body-compact-02']);
+  assert.equal(ledger.foundations.documentHash, whole.ledger.foundations.documentHash);
+
+  mock.log.length = 0;
+  const again = await buildInChunks(mock, DOC_TEXT, ledger, { budget });
+  assert.equal(again.results.reduce((n, r) => n + r.summary.created + r.summary.orphaned, 0), 0);
+  assert.deepEqual(again.ledger.foundations.variables, ledger.foundations.variables);
+});
+
+test('a chunked build orphans a dropped group once, in chunk 1', async () => {
+  const docText = wholeTheme();
+  const doc = JSON.parse(docText);
+  const budget = 14000;
+  const mock = mockFigma({ fileKey: FILE_KEY });
+  const { ledger } = await buildInChunks(mock, docText, setGroups(null, FILE_KEY, doc, { add: ['Layer'] }), { budget });
+  assert.ok(ledger.foundations.variables.field);
+  const { ledger: after, results } = await buildInChunks(mock, docText, setGroups(ledger, FILE_KEY, doc, { remove: ['Layer'] }), { budget });
+  assert.deepEqual(results[0].orphaned.variables.sort(), ['field', 'green.50', 'support-success']);
+  assert.deepEqual(results.slice(1).flatMap(r => r.orphaned.variables), []);
+  assert.deepEqual(Object.keys(after.foundations.orphans.variables).sort(), ['field', 'green.50', 'support-success']);
+  assert.equal(after.foundations.variables.field, undefined);
+  assert.equal(Object.keys(after.foundations.variables).length, 75);
+});
+
+// A whole theme the size of Carbon's: 300 Primitives in 15 hue groups, 240 Theme tokens in 20 groups, all selected.
+function carbonSized() {
+  const doc = JSON.parse(DOC_TEXT);
+  const hues = Array.from({ length: 15 }, (_, i) => `Hue${String(i).padStart(2, '0')}`);
+  for (const h of hues) for (let s = 0; s < 20; s++)
+    doc.variables[`${h.toLowerCase()}.${s}`] = { collection: 'primitives', name: `${h}/${s}`, type: 'COLOR', scopes: [], codeSyntax: {}, hidden: true, values: { default: { value: '#0f62fe', resolved: '#0f62fe' } }, usedBy: [] };
+  for (let g = 0; g < 20; g++) for (let t = 0; t < 12; t++) {
+    const p = `${hues[(g + t) % 15].toLowerCase()}.${t}`;
+    doc.variables[`group${g}-token-${t}`] = { collection: 'theme', name: `Group${String(g).padStart(2, '0')}/group${g}-token-${t}`, type: 'COLOR', scopes: ['ALL_FILLS', 'STROKE_COLOR'],
+      codeSyntax: { WEB: `var(--cds-group${g}-token-${t})` }, values: Object.fromEntries(['white', 'g10', 'g90', 'g100'].map(m => [m, { alias: p, resolved: '#0f62fe' }])), usedBy: [] };
+  }
+  const order = ['primitives', 'theme', 'layout', 'type'];
+  doc.variables = Object.fromEntries(Object.entries(doc.variables).sort(([ka, a], [kb, b]) => order.indexOf(a.collection) - order.indexOf(b.collection) || (ka < kb ? -1 : ka > kb ? 1 : 0)));
+  return { docText: JSON.stringify(doc, null, 2) + '\n', groups: [...hues, ...Array.from({ length: 20 }, (_, g) => `Group${String(g).padStart(2, '0')}`)] };
+}
+
+test('every chunk of a Carbon-sized selection packages under the 50,000-char cap with its full ledger state', async () => {
+  const { docText, groups } = carbonSized();
+  const ledger = setGroups(null, FILE_KEY, JSON.parse(docText), { add: groups });
+  const mock = mockFigma({ fileKey: FILE_KEY });
+  const { ledger: built, results } = await buildInChunks(mock, docText, ledger);
+  assert.ok(results.length > 1, `${results.length} chunks`);
+  assert.equal(Object.keys(built.foundations.variables).length, 75 + 300 + 240);
+  // the package of each chunk again, now with every id recorded in its state
+  const of = results.length;
+  for (let chunk = 1; chunk <= of; chunk++) {
+    const { out } = pack({ docText, ledger: built, options: { chunk } });
+    assert.ok(out.chars < 50000, `chunk ${chunk} is ${out.chars} chars`);
+  }
+});
+
+test('a group too large for one call is refused by name', () => {
+  assert.throws(() => foundationsPlan(DOC_TEXT, null, { fileKey: FILE_KEY, budget: 9000 }), /group Button .* does not fit one call/);
+});
