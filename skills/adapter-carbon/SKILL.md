@@ -10,7 +10,7 @@ The Adapter for the Carbon React Code Library. There is one Adapter skill per Co
 ## Outputs
 
 - A draft Contract per Component Family, read from Carbon source at the pinned tag and commit.
-- The Carbon foundations document, generated from the pinned Carbon token sources plus the union of all Contracts' token references. It is never edited by hand.
+- The Carbon foundations document, generated from the pinned Carbon token sources. It carries Carbon's whole theme (every Theme token, the whole palette, every Layout group and every Type style) plus the component tokens of each family that has a Contract, and records the union of all Contracts' token references as `closure`. It is never edited by hand.
 - The Carbon React preview renderer that `to-preview` uses to render specimens.
 
 The committed outputs for the pilot (Carbon `v11.118.0`, commit `44f90d8`) are in [`design-systems/carbon/`](../../design-systems/carbon/). The Button Contract there was written by an agent and is the reference output: read it next to this guide.
@@ -79,7 +79,7 @@ node skills/adapter-carbon/scripts/foundations.mjs
 
 - It reads every `design-systems/carbon/contracts/*.component.json` and writes `design-systems/carbon/carbon.foundations.json`. Never edit that file by hand; change a Contract, the pin or a rule here, and regenerate. A rerun with the same inputs is byte-identical, so `git diff` shows nothing.
 - The step fetches its sources on first use (step 1).
-- The token closure comes from the shared module's `closure()`. After generating, it runs the shared module's `validate()` on every Contract against the new document and keeps the rule 6 errors. Generation fails, and writes nothing, on any rule 6 error (a token used outside its variable's scopes), a token Carbon does not define, a Contract pinning another Carbon commit or package version, a resolved value that differs from the compiled CSS, or a missing Sass fallback.
+- The token closure comes from the shared module's `closure()`. After generating, it runs the shared module's `validate()` on every Contract against the new document and keeps the rule 6 errors. Generation fails, and writes nothing, on any rule 6 error (a token used outside its variable's scopes), a token Carbon does not define, a source value or Type field it cannot read, a Contract pinning another Carbon commit or package version, a resolved value that differs from the compiled CSS (other than the two listed Type line heights, where the document takes the CSS), or a missing Sass fallback.
 - The rules it applies (collections, modes, naming, scopes, codeSyntax, raw exceptions) are in the [foundations schema](../contract/references/foundations-schema.md).
 - Tests: `node --test skills/adapter-carbon/test/*.test.mjs`. They skip, saying so, until the sources are fetched.
 
