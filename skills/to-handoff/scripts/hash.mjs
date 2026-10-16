@@ -9,14 +9,17 @@ import { canonical, sha256 } from '../../contract/scripts/contract.mjs';
 export const fileHash = bytes => 'sha256:' + createHash('sha256').update(bytes).digest('hex');
 const clone = o => JSON.parse(JSON.stringify(o));
 
-/** A Handoff's content hash: everything but revision, status and approval (#64). */
-export function handoffContentHash(handoff) {
+/** A copy of the Handoff without revision, status and approval: its content, as hashed and diffed (#64). */
+export function contentOf(handoff) {
   const h = clone(handoff);
   delete h.revision;
   delete h.status;
   delete h.approval;
-  return 'sha256:' + sha256(canonical(h));
+  return h;
 }
+
+/** A Handoff's content hash: everything but revision, status and approval (#64). */
+export const handoffContentHash = handoff => 'sha256:' + sha256(canonical(contentOf(handoff)));
 
 /**
  * The Prototype's snapshotId: a hash over its sorted file hashes (#64), as for a Code Library snapshot. The same

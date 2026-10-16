@@ -60,6 +60,8 @@ function decider(decisions, carried = {}) {
     /** The owner's answers this run used, by key. */
     used,
     isOwner: key => used.has(key),
+    /** Mark `target` as decided for `key`: `by: "owner"` when the owner's answer settled it, else `by: "agent"`. */
+    mark(target, key) { target.by = used.has(key) ? 'owner' : 'agent'; return target; },
     /** The owner's answer for a key the pass settles itself (questions, acceptance), or undefined. */
     ownerOf(key) { const o = owner.get(key); return o && o.answer; },
     use(key) { used.set(key, owner.get(key).answer); },
@@ -274,7 +276,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       else { u.proposal = answer.proposal; usedProposals.add(answer.proposal); }
       u.tuple = { ...answer.tuple };
       Object.assign(u, contentOf(def, el, cand, id, answer));
-      u.match = { by: d.isOwner(key) ? 'owner' : 'agent', via: answer.via || 'element', ...(answer.candidates ? { candidates: answer.candidates } : {}) };
+      u.match = d.mark({ by: undefined, via: answer.via || 'element', ...(answer.candidates ? { candidates: answer.candidates } : {}) }, key);
       if (answer.contract) {
         const off = offAxis(def, u.tuple, el, id);
         if (off.length) u.offAxis = off;
@@ -460,7 +462,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
           s.token = answer || cands[0];
           if (result.kind === 'near') { s.match = 'near'; s.delta = result.candidates.find(c => c.token === s.token).delta; }
           s.candidates = cands;
-          s.by = d.isOwner(key) ? 'owner' : 'agent';
+          d.mark(s, key);
         }
       } else offSystemValue(s, role, norm, result, where);
       r.styles.push(s);
@@ -507,7 +509,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
         s.textStyle = answer || cands[0];
         if (result.kind === 'near') { s.match = 'near'; s.delta = result.candidates.find(x => x.token === s.textStyle).delta; }
         s.candidates = cands;
-        s.by = d.isOwner(tkey) ? 'owner' : 'agent';
+        d.mark(s, tkey);
       }
     } else if (result.kind === 'partial') {
       const m = result.match;
@@ -519,7 +521,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
           kind: 'token-tie', question: `Font size ${fontSize}px (no whole Text Style matches) is exactly ${m.candidates.join(', ')}: which one?`,
           candidates: m.candidates, evidence: { at: [where] },
         }, among(m.candidates));
-        token = { token: answer || m.candidates[0], candidates: m.candidates, by: d.isOwner(fkey) ? 'owner' : 'agent' };
+        token = d.mark({ token: answer || m.candidates[0], candidates: m.candidates }, fkey);
       }
       s.partial = { fontSize: token };
       s.raw = raw;

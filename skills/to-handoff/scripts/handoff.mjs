@@ -14,7 +14,8 @@ import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 
-export { generate, handoffContentHash, snapshotIdOf } from './generate.mjs';
+export { generate } from './generate.mjs';
+export { handoffContentHash, snapshotIdOf } from './hash.mjs';
 export { TEST_APPROVER, loadDesignSystem } from './system.mjs';
 export { approve, check, diffJson, driftOf, review } from './signoff.mjs';
 export { validateHandoff } from './validate.mjs';
@@ -74,11 +75,11 @@ async function main(argv) {
     } catch (e) { console.error(e.message); return 1; }
   }
   if (command === 'check') {
+    if (!values.prototype) { console.error('check needs --prototype <index.html>: the Handoff pins its files, not where they live'); return 1; }
     const r = await check({ handoffPath: input, designSystem: values.ds, prototype: values.prototype });
     console.log(r.verdict);
     for (const d of r.drift) console.log(`  ${d.kind} ${d.key}: ${d.change}`);
     for (const e of r.errors) console.log(`  [${e.rule}] ${e.message}`);
-    if (!r.prototypeChecked) console.log('  (Prototype files not checked: pass --prototype <index.html>)');
     return r.ok ? 0 : 1;
   }
   console.error(`unknown command ${command}`);

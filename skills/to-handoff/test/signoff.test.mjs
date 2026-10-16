@@ -70,7 +70,7 @@ const read = p => JSON.parse(readFileSync(p, 'utf8'));
 const styles = h => h.screens.flatMap(s => s.regions.flatMap(r => r.styles || []));
 
 test('owner decisions: questions answered or re-addressed, an owner pick marked by:"owner", all recorded by stable key', { skip: noDeps }, async () => {
-  const { result } = await generated({ ...DECISIONS, ...OWNER, 'token:background-color:#f4f4f4': { by: 'owner', answer: 'field-01' } });
+  const { result } = await generated({ ...DECISIONS, ...OWNER, 'token:background-color:#f4f4f4': { by: 'owner', answer: 'field-01' }, 'recognise:button.btn.btn-outline-secondary': { by: 'owner', answer: { contract: 'button', tuple: { kind: 'secondary', size: 'md' }, via: 'library' } } });
   const h = result.handoff;
   const q = id => h.openQuestions.find(x => x.id === id);
   assert.deepEqual(q('q-font'), { ...q('q-font'), answer: 'Use IBM Plex Sans.', by: 'owner' });
@@ -80,6 +80,10 @@ test('owner decisions: questions answered or re-addressed, an owner pick marked 
   const card = styles(h).find(s => s.raw === '#f4f4f4');
   assert.equal(card.token, 'field-01');
   assert.equal(card.by, 'owner');
+  const cancel = h.screens[0].regions.flatMap(r => r.usages).find(u => u.id === 'cancel');
+  assert.deepEqual(cancel.tuple, { kind: 'secondary', size: 'md' });
+  assert.equal(cancel.match.by, 'owner');
+  assert.equal(styles(h).find(s => s.raw === '#161616').by, 'agent');
   assert.equal(h.ownerDecisions['token:background-color:#f4f4f4'], 'field-01');
   assert.deepEqual(h.ownerDecisions['question:q-state-error'], { to: 'developer' });
   assert.deepEqual(result.dropped, []);
@@ -256,7 +260,8 @@ test('the CLI: approve refuses with exit 1 and its reasons; check exits 1 on Dri
   const open = await generated(DECISIONS);
   const refused = cli(['approve', open.handoffPath, '--ds', open.ds, '--content-hash', 'sha256:' + '0'.repeat(64)]);
   assert.equal(refused.status, 1);
-  assert.match(refused.stderr, /cannot approve/);
+  assert.match(refused.stderr, /cannot sign off/);
+  assert.equal(cli(['check', handoffPath, '--ds', ds]).status, 1);
   assert.match(refused.stderr, /q-font/);
   assert.equal(read(open.handoffPath).status, 'pending');
   const r = cli(['review', open.handoffPath, '--ds', open.ds]);

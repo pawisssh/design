@@ -7,22 +7,12 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { contentHash as contractHash, proposalContentHash } from '../../contract/scripts/contract.mjs';
-import { handoffContentHash, prototypeFiles, usedHash } from './hash.mjs';
+import { contentOf, handoffContentHash, prototypeFiles, usedHash } from './hash.mjs';
 import { REPO_ROOT, TEST_APPROVER, inScratch, loadDesignSystem } from './system.mjs';
 import { validateHandoff } from './validate.mjs';
 
 const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
-const clone = o => JSON.parse(JSON.stringify(o));
 const toJson = o => JSON.stringify(o, null, 2) + '\n';
-
-/** The Handoff without revision, status and approval: what a diff compares. */
-function contentOf(handoff) {
-  const h = clone(handoff);
-  delete h.revision;
-  delete h.status;
-  delete h.approval;
-  return h;
-}
 
 /**
  * Leaf changes from `a` to `b`: [{path, change: "added" | "removed" | "changed", before?, after?}]. Arrays whose
@@ -178,7 +168,7 @@ export async function review({ handoffPath, designSystem }) {
   for (const x of drifts) L.push(`  ${x.handoff}: pinned another ${x.proposal}`);
   L.push('');
   if (blocks.length) { L.push('Blocks sign-off'); for (const b of blocks) L.push(`  ${b}`); L.push(''); }
-  L.push('Approve, only after the owner types "approve" in chat:', `  ${approveCommand}`);
+  L.push('Sign off, only after the owner types "approve" in chat:', `  ${approveCommand}`);
   return { text: L.join('\n') + '\n', diff, signed: Boolean(signed), blocks, drifts, approveCommand };
 }
 
@@ -209,7 +199,7 @@ export async function approve({ handoffPath, designSystem, contentHash, proposal
     else if (system.proposals[k] && proposalContentHash(system.proposals[k]) !== given) reasons.push(`Proposal ${k}'s hash moved since the review: ${given} given, ${proposalContentHash(system.proposals[k])} now`);
   }
   for (const k of pendingProposals(h, system)) if (!(k in proposals)) reasons.push(`pending Proposal ${k} was not shown in the review (pass --proposal ${k}=<hash>)`);
-  if (reasons.length) throw new Error(`cannot approve ${handoffPath}:\n- ${reasons.join('\n- ')}`);
+  if (reasons.length) throw new Error(`cannot sign off ${handoffPath}:\n- ${reasons.join('\n- ')}`);
 
   const by = test ? TEST_APPROVER : 'owner';
   const approved = [];
