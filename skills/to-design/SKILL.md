@@ -169,4 +169,4 @@ Code Connect needs published components, so it runs only after step 6. The mappi
 
 ## Tests
 
-`node --test skills/to-design/tests/*.test.mjs` runs every slice against a mock Figma (`tests/mock-figma.mjs`), the packager, the hook, the base loop and the coverage checks. The full suite, from the project root: `node skills/adapter-carbon/scripts/sources.mjs`, then `node --test skills/*/test/*.test.mjs skills/*/tests/*.test.mjs`.
+`node --test skills/to-design/tests/*.test.mjs` runs every slice against a mock Figma (`tests/mock-figma.mjs`), the packager, the hook, the base loop and the coverage checks. The full suite, from the project root: `node skills/adapter-carbon/scripts/sources.mjs`, then `npm test`.
