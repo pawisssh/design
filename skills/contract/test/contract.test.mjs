@@ -1,5 +1,5 @@
 // Tests for the shared Contract module, through its public functions only, against the committed
-// Button Contract and Carbon foundations document. Run: node --test skills/contract/test/
+// Button Contract and Carbon foundations document. Run: node --test skills/contract/test/*.test.mjs
 //
 // Fixtures:
 // - button.kind-state-paint.lg.json: the research expander's Kind x State table (see its _source).
@@ -9,6 +9,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import vm from 'node:vm';
 import * as contract from '../scripts/contract.mjs';
 
 const root = new URL('../../../', import.meta.url);
@@ -246,4 +247,22 @@ test('resolve reports the rule that last set each field', () => {
   assert.equal(r.from['layout.Button.paddingLeft'], 0);
   assert.deepEqual(r.binds.icon, [{ node: 'Icon', field: 'visible' }]);
   assert.deepEqual(r.binds.label, [{ node: 'Label', field: 'characters' }]);
+});
+
+test('the module runs inlined, without export, in a bare context (no TextEncoder, crypto, structuredClone)', () => {
+  const src = readFileSync(new URL('skills/contract/scripts/contract.mjs', root), 'utf8').replace(/^export /gm, '');
+  const out = vm.runInNewContext(`${src}
+    ;(function () {
+      var c = JSON.parse(C), f = JSON.parse(F);
+      return JSON.stringify({ ok: validate(c, f).ok, variants: expand(c).length, tokens: closure(c).length,
+        hash: contentHash(c), bare: [typeof TextEncoder, typeof crypto, typeof structuredClone, typeof require, typeof process] });
+    })()`, {
+    C: JSON.stringify(button()),
+    F: JSON.stringify(foundations),
+  });
+  assert.deepEqual(JSON.parse(out), {
+    ok: true, variants: 245, tokens: 38,
+    hash: contract.contentHash(button()),
+    bare: ['undefined', 'undefined', 'undefined', 'undefined', 'undefined'],
+  });
 });

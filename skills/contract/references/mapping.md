@@ -29,7 +29,7 @@ To-preview's HTML `catalog` (its specimens) is also derived from the Contract.
 | `families[].effectiveDefaultProperties` | same as the source default | The default tuple must be selected (Base Component). A different default is an explicit owner edit. |
 | `families[].selectedThemes` | dropped | See `themeId`. |
 | `selectedCount`, `fullCount`, `scope` | `selection.expectedCount`; derived | `scope` is `complete` when `omit` is empty. |
-| `approval.{action, approvedAt}` | `selection.status` + `selection.approval {by, at, snapshotId}` | |
+| `approval.{action, approvedAt}` | `selection.status` + `selection.approval {by, at, snapshotId, contentHash}` | |
 | `approval.executionAuthorized` | dropped | Not inferred from the content, as today. |
 
 ## `<Family>.expected.json` (sheet-contract, input to `check_coverage.py`)
@@ -43,7 +43,7 @@ To-preview's HTML `catalog` (its specimens) is also derived from the Contract.
 | `excluded` (full tuples) | `excluded` (patterns); the checker expands them |
 | `specimens` | derived |
 
-`check_coverage.py` should take the Contract directly: expand the selection and compare it with the readback by labels. Until then, `expected.json` can be generated from the Contract.
+`check_coverage.py` should take the Contract directly: expand the selection with `expand()` from [`contract.mjs`](../scripts/contract.mjs) and compare it with the readback by labels. Until then, `expected.json` can be generated from the Contract.
 
 ## `build-plan.json` (To-design) and the smoke-test core
 
