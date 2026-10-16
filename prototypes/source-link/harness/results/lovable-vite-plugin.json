@@ -1,8 +1,8 @@
 {
   "app": "lovable",
   "variant": "vite-plugin",
-  "installMs": 4833,
-  "buildMs": 4419,
+  "installMs": 5701,
+  "buildMs": 5223,
   "tagStats": null,
   "consoleErrors": [],
   "states": {

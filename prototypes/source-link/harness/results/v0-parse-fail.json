@@ -1,0 +1,639 @@
+{
+  "app": "v0",
+  "variant": "parse-fail",
+  "installMs": 29115,
+  "buildMs": 63240,
+  "tagStats": {
+    "files": 11,
+    "elements": 61,
+    "failed": [
+      {
+        "file": "app/request-access-form.tsx",
+        "error": "skipped (simulated parse failure)"
+      }
+    ]
+  },
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "states": {
+    "default": {
+      "hosts": 37,
+      "direct": 13,
+      "libAnc": 10,
+      "untAnc": 14,
+      "none": 0,
+      "untaggedTags": {
+        "div": 5,
+        "path": 3,
+        "form": 1,
+        "select": 1,
+        "option": 3,
+        "section": 1
+      },
+      "fiberNone": [
+        "default:div:null:app/layout.tsx:28:7"
+      ],
+      "fiber_none": 1,
+      "fiber_untagged-ancestor": 13,
+      "fiber_library-ancestor": 10,
+      "labels": 21,
+      "raw": 9,
+      "joined": 10,
+      "fiberJoined": 10
+    },
+    "select-open": {
+      "hosts": 54,
+      "direct": 13,
+      "libAnc": 23,
+      "untAnc": 18,
+      "none": 0,
+      "untaggedTags": {
+        "span": 2,
+        "div": 6,
+        "path": 4,
+        "form": 1,
+        "select": 1,
+        "option": 3,
+        "section": 1
+      },
+      "fiberNone": [
+        "select-open:span:null:app/layout.tsx:28:7",
+        "select-open:div:null:app/layout.tsx:28:7",
+        "select-open:span:null:app/layout.tsx:28:7"
+      ],
+      "fiber_none": 3,
+      "fiber_untagged-ancestor": 15,
+      "fiber_library-ancestor": 23,
+      "labels": 5,
+      "raw": 0,
+      "joined": 0
+    },
+    "loading": {
+      "hosts": 39,
+      "direct": 14,
+      "libAnc": 10,
+      "untAnc": 15,
+      "none": 0,
+      "untaggedTags": {
+        "div": 5,
+        "path": 4,
+        "form": 1,
+        "select": 1,
+        "option": 3,
+        "section": 1
+      },
+      "fiberNone": [
+        "loading:div:null:app/layout.tsx:28:7"
+      ],
+      "fiber_none": 1,
+      "fiber_untagged-ancestor": 14,
+      "fiber_library-ancestor": 10,
+      "labels": 2,
+      "raw": 2,
+      "joined": 2,
+      "fiberJoined": 2
+    },
+    "error": {
+      "hosts": 44,
+      "direct": 13,
+      "libAnc": 13,
+      "untAnc": 18,
+      "none": 0,
+      "untaggedTags": {
+        "div": 5,
+        "path": 3,
+        "form": 1,
+        "svg": 1,
+        "circle": 1,
+        "line": 2,
+        "select": 1,
+        "option": 3,
+        "section": 1
+      },
+      "fiberNone": [
+        "error:div:null:app/layout.tsx:28:7"
+      ],
+      "fiber_none": 1,
+      "fiber_untagged-ancestor": 17,
+      "fiber_library-ancestor": 13,
+      "labels": 4,
+      "raw": 0,
+      "joined": 0
+    },
+    "success": {
+      "hosts": 31,
+      "direct": 12,
+      "libAnc": 2,
+      "untAnc": 17,
+      "none": 0,
+      "untaggedTags": {
+        "div": 6,
+        "path": 4,
+        "svg": 1,
+        "circle": 2,
+        "p": 1,
+        "section": 1,
+        "ol": 1,
+        "li": 1
+      },
+      "fiberNone": [
+        "success:div:null:app/layout.tsx:28:7"
+      ],
+      "fiber_none": 1,
+      "fiber_untagged-ancestor": 16,
+      "fiber_library-ancestor": 2,
+      "labels": 4,
+      "raw": 0,
+      "joined": 0,
+      "fiberJoined": 1
+    }
+  },
+  "total": {
+    "hosts": 205,
+    "direct": 65,
+    "libAnc": 58,
+    "untAnc": 82,
+    "none": 0,
+    "labels": 36,
+    "raw": 11,
+    "joined": 12,
+    "instance": 0,
+    "instanceTotal": 3,
+    "fiberJoined": 13,
+    "fiber_library-ancestor": 58,
+    "fiber_untagged-ancestor": 75,
+    "fiber_none": 7
+  },
+  "misses": [
+    {
+      "state": "default",
+      "sel": "a[href='/signin']",
+      "nth": 0,
+      "kind": "asChild",
+      "expect": "app/page.tsx:33",
+      "got": "app/page.tsx:34:13",
+      "how": "direct",
+      "chain": "app/page.tsx:34:13",
+      "joined": true
+    },
+    {
+      "state": "default",
+      "sel": "form",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:56",
+      "got": "app/page.tsx:29:11",
+      "how": "untagged-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "form",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:56",
+      "got": "app/page.tsx:28:9",
+      "how": "untagged-ancestor",
+      "chain": null,
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "label[for=name]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:65",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "label[for=name]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:65",
+      "got": "app/page.tsx:28:9",
+      "how": "library-ancestor",
+      "chain": "components/ui/label.tsx:12:5",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "#name",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:66",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "#name",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:66",
+      "got": "app/page.tsx:28:9",
+      "how": "library-ancestor",
+      "chain": "components/ui/input.tsx:6:5",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "label[for=email]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:69",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "label[for=email]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:69",
+      "got": "app/page.tsx:28:9",
+      "how": "library-ancestor",
+      "chain": "components/ui/label.tsx:12:5",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "#email",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:70",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "#email",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:70",
+      "got": "app/page.tsx:28:9",
+      "how": "library-ancestor",
+      "chain": "components/ui/input.tsx:6:5",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "label[for=team]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:73",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "label[for=team]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:73",
+      "got": "app/page.tsx:28:9",
+      "how": "library-ancestor",
+      "chain": "components/ui/label.tsx:12:5",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "#team",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:75",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "#team",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:75",
+      "got": "app/page.tsx:28:9",
+      "how": "library-ancestor",
+      "chain": "components/ui/select.tsx:42:5",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "#team [data-slot=select-value]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:76",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "#team [data-slot=select-value]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:76",
+      "got": "app/page.tsx:28:9",
+      "how": "library-ancestor",
+      "chain": "components/ui/select.tsx:30:10",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "#team > svg",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:75",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "#team > svg",
+      "nth": 0,
+      "kind": "inside-library",
+      "expect": "app/request-access-form.tsx:75",
+      "got": "app/page.tsx:28:9",
+      "how": "library-ancestor",
+      "chain": "components/ui/select.tsx:53:9",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "label[for=reason]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:86",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "label[for=reason]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:86",
+      "got": "app/page.tsx:28:9",
+      "how": "library-ancestor",
+      "chain": "components/ui/label.tsx:12:5",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "#reason",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:87",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "#reason",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:87",
+      "got": "app/page.tsx:28:9",
+      "how": "library-ancestor",
+      "chain": "components/ui/textarea.tsx:6:5",
+      "joined": false
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-content]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:78",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-content]",
+      "nth": 0,
+      "kind": "portal",
+      "expect": "app/request-access-form.tsx:78",
+      "got": "app/layout.tsx:28:7",
+      "how": "library-ancestor",
+      "chain": "components/ui/select.tsx:68:7",
+      "joined": false
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:79",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 0,
+      "kind": "portal",
+      "expect": "app/request-access-form.tsx:79",
+      "got": "app/layout.tsx:28:7",
+      "how": "library-ancestor",
+      "chain": "components/ui/select.tsx:111:5",
+      "joined": false
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 1,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:80",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 1,
+      "kind": "portal",
+      "expect": "app/request-access-form.tsx:80",
+      "got": "app/layout.tsx:28:7",
+      "how": "library-ancestor",
+      "chain": "components/ui/select.tsx:111:5",
+      "joined": false
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 2,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:81",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 2,
+      "kind": "portal",
+      "expect": "app/request-access-form.tsx:81",
+      "got": "app/layout.tsx:28:7",
+      "how": "library-ancestor",
+      "chain": "components/ui/select.tsx:111:5",
+      "joined": false
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item] svg",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:79",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item] svg",
+      "nth": 0,
+      "kind": "inside-library",
+      "expect": "app/request-access-form.tsx:79",
+      "got": "app/layout.tsx:28:7",
+      "how": "library-ancestor",
+      "chain": "components/ui/select.tsx:121:11",
+      "joined": false
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:58",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:58",
+      "got": "app/page.tsx:28:9",
+      "how": "library-ancestor",
+      "chain": "components/ui/alert.tsx:27:5",
+      "joined": false
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert] > svg",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:59",
+      "got": "app/page.tsx:29:11",
+      "how": "untagged-ancestor"
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert] > svg",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:59",
+      "got": "app/page.tsx:28:9",
+      "how": "untagged-ancestor",
+      "chain": null,
+      "joined": false
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert-title]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:60",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert-title]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:60",
+      "got": "app/page.tsx:28:9",
+      "how": "library-ancestor",
+      "chain": "components/ui/alert.tsx:38:5",
+      "joined": false
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert-description]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:61",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert-description]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:61",
+      "got": "app/page.tsx:28:9",
+      "how": "library-ancestor",
+      "chain": "components/ui/alert.tsx:54:5",
+      "joined": false
+    },
+    {
+      "state": "success",
+      "sel": "svg.text-emerald-600",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:46",
+      "got": "app/page.tsx:29:11",
+      "how": "untagged-ancestor"
+    },
+    {
+      "state": "success",
+      "sel": "svg.text-emerald-600",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:46",
+      "got": "app/page.tsx:28:9",
+      "how": "untagged-ancestor",
+      "chain": null,
+      "joined": false
+    },
+    {
+      "state": "success",
+      "sel": "p.font-medium",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:47",
+      "got": "app/page.tsx:29:11",
+      "how": "untagged-ancestor"
+    },
+    {
+      "state": "success",
+      "sel": "p.font-medium",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:47",
+      "got": "app/page.tsx:28:9",
+      "how": "untagged-ancestor",
+      "chain": null,
+      "joined": false
+    },
+    {
+      "state": "success",
+      "sel": "button[data-variant=outline]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "app/request-access-form.tsx:48",
+      "got": "app/page.tsx:29:11",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "success",
+      "sel": "button[data-variant=outline]",
+      "nth": 0,
+      "expect": "app/request-access-form.tsx:48",
+      "got": "app/page.tsx:28:9",
+      "how": "library-ancestor",
+      "chain": "components/ui/button.tsx:56:5",
+      "joined": false
+    },
+    {
+      "state": "success",
+      "sel": "[data-sonner-toast]",
+      "nth": 0,
+      "kind": "node_modules",
+      "expect": "app/layout.tsx:32",
+      "got": "app/layout.tsx:28:7",
+      "how": "untagged-ancestor",
+      "chain": null,
+      "joined": false
+    }
+  ]
+}

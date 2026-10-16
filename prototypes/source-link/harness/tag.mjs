@@ -63,7 +63,7 @@ export function tagSource(text, relPath) {
   return { out, count }
 }
 
-export function tagTree(root) {
+export function tagTree(root, skip = []) {
   const stats = { files: 0, elements: 0, failed: [] }
   function walk(dir) {
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -72,6 +72,10 @@ export function tagTree(root) {
       if (ent.isDirectory()) walk(abs)
       else if (/\.(tsx|jsx)$/.test(ent.name)) {
         const rel = path.relative(root, abs)
+        if (skip.includes(rel)) {
+          stats.failed.push({ file: rel, error: "skipped (simulated parse failure)" })
+          continue
+        }
         try {
           const { out, count } = tagSource(fs.readFileSync(abs, "utf8"), rel)
           fs.writeFileSync(abs, out)

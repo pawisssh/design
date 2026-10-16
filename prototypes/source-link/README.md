@@ -33,6 +33,13 @@ node measure.mjs v0 rewrite
 node measure.mjs v0 rewrite-turbopack
 node measure.mjs lovable rewrite
 node measure.mjs lovable vite-plugin
+node measure.mjs v0 none
+node measure.mjs v0 parse-fail
+node measure.mjs lovable none
+node measure.mjs lovable parse-fail
 node owner.mjs lovable
 node owner.mjs v0
+node summary.mjs
 ```
+
+`none` builds the copy with no tagging, which is the baseline. `parse-fail` leaves one page file untagged to measure the fallback. `summary.mjs` prints the per-state tables used in #84.

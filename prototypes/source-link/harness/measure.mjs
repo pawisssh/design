@@ -22,7 +22,9 @@ const APPS = {
   v0: {
     src: "v0-app",
     ui: "components/ui/",
-    build: variant === "rewrite-turbopack" ? "npx next build --turbopack" : "npx next build",
+    // --no-lint: v0 output often fails Next's build-time lint; types are still checked.
+    build: variant === "rewrite-turbopack" ? "npx next build --turbopack --no-lint" : "npx next build --no-lint",
+    parseFail: "app/request-access-form.tsx",
     start: (port) => ["npx", ["next", "start", "-p", String(port)]],
     port: 3101,
     trigger: "#team",
@@ -35,6 +37,7 @@ const APPS = {
     start: (port) => ["npx", ["vite", "preview", "--port", String(port), "--strictPort"]],
     port: 3102,
     trigger: "#size",
+    parseFail: "src/pages/Index.tsx",
     email: "#email",
   },
 }
@@ -54,6 +57,7 @@ const installMs = Date.now() - t
 // 2. Tag.
 let tagStats = null
 if (variant.startsWith("rewrite")) tagStats = tagTree(work)
+if (variant === "parse-fail") tagStats = tagTree(work, [cfg.parseFail])
 if (variant === "vite-plugin") {
   fs.copyFileSync(path.join(here, "tag.mjs"), path.join(work, "handoff-tag.mjs"))
   fs.writeFileSync(

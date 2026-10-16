@@ -1,0 +1,695 @@
+{
+  "app": "lovable",
+  "variant": "parse-fail",
+  "installMs": 5636,
+  "buildMs": 3656,
+  "tagStats": {
+    "files": 12,
+    "elements": 60,
+    "failed": [
+      {
+        "file": "src/pages/Index.tsx",
+        "error": "skipped (simulated parse failure)"
+      }
+    ]
+  },
+  "consoleErrors": [],
+  "states": {
+    "default": {
+      "hosts": 45,
+      "direct": 13,
+      "libAnc": 0,
+      "untAnc": 1,
+      "none": 31,
+      "untaggedTags": {
+        "body": 1,
+        "div": 9,
+        "section": 1,
+        "header": 1,
+        "h1": 1,
+        "p": 1,
+        "path": 2,
+        "form": 1,
+        "select": 1,
+        "option": 3
+      },
+      "fiberNone": [
+        "default:body:null:undefined",
+        "default:div:null:undefined"
+      ],
+      "fiber_none": 2,
+      "fiber_untagged-ancestor": 19,
+      "fiber_library-ancestor": 11,
+      "labels": 20,
+      "raw": 7,
+      "joined": 7,
+      "fiberJoined": 7
+    },
+    "select-open": {
+      "hosts": 62,
+      "direct": 13,
+      "libAnc": 0,
+      "untAnc": 1,
+      "none": 48,
+      "untaggedTags": {
+        "body": 1,
+        "span": 2,
+        "div": 10,
+        "section": 1,
+        "header": 1,
+        "h1": 1,
+        "p": 1,
+        "path": 3,
+        "form": 1,
+        "select": 1,
+        "option": 3
+      },
+      "fiberNone": [
+        "select-open:body:null:undefined",
+        "select-open:span:null:undefined",
+        "select-open:div:null:undefined",
+        "select-open:span:null:undefined"
+      ],
+      "fiber_none": 4,
+      "fiber_untagged-ancestor": 21,
+      "fiber_library-ancestor": 24,
+      "labels": 5,
+      "raw": 0,
+      "joined": 0
+    },
+    "loading": {
+      "hosts": 47,
+      "direct": 13,
+      "libAnc": 0,
+      "untAnc": 1,
+      "none": 33,
+      "untaggedTags": {
+        "body": 1,
+        "div": 9,
+        "section": 1,
+        "header": 1,
+        "h1": 1,
+        "p": 1,
+        "path": 3,
+        "form": 1,
+        "select": 1,
+        "option": 3,
+        "svg": 1
+      },
+      "fiberNone": [
+        "loading:body:null:undefined",
+        "loading:div:null:undefined"
+      ],
+      "fiber_none": 2,
+      "fiber_untagged-ancestor": 21,
+      "fiber_library-ancestor": 11,
+      "labels": 2,
+      "raw": 0,
+      "joined": 0
+    },
+    "error": {
+      "hosts": 52,
+      "direct": 13,
+      "libAnc": 0,
+      "untAnc": 1,
+      "none": 38,
+      "untaggedTags": {
+        "body": 1,
+        "div": 9,
+        "section": 1,
+        "header": 1,
+        "h1": 1,
+        "p": 1,
+        "path": 2,
+        "form": 1,
+        "svg": 1,
+        "circle": 1,
+        "line": 2,
+        "select": 1,
+        "option": 3
+      },
+      "fiberNone": [
+        "error:body:null:undefined",
+        "error:div:null:undefined"
+      ],
+      "fiber_none": 2,
+      "fiber_untagged-ancestor": 23,
+      "fiber_library-ancestor": 14,
+      "labels": 4,
+      "raw": 0,
+      "joined": 0
+    },
+    "success": {
+      "hosts": 41,
+      "direct": 13,
+      "libAnc": 0,
+      "untAnc": 1,
+      "none": 27,
+      "untaggedTags": {
+        "body": 1,
+        "div": 9,
+        "section": 1,
+        "ol": 1,
+        "li": 1,
+        "circle": 1,
+        "path": 6,
+        "header": 1,
+        "h1": 1,
+        "p": 2,
+        "svg": 1,
+        "rect": 1
+      },
+      "fiberNone": [
+        "success:body:null:undefined",
+        "success:div:null:undefined"
+      ],
+      "fiber_none": 2,
+      "fiber_untagged-ancestor": 24,
+      "fiber_library-ancestor": 2,
+      "labels": 4,
+      "raw": 0,
+      "joined": 0,
+      "fiberJoined": 1
+    }
+  },
+  "total": {
+    "hosts": 247,
+    "direct": 65,
+    "libAnc": 0,
+    "untAnc": 5,
+    "none": 177,
+    "labels": 35,
+    "raw": 7,
+    "joined": 7,
+    "instance": 0,
+    "instanceTotal": 3,
+    "fiberJoined": 8,
+    "fiber_library-ancestor": 62,
+    "fiber_untagged-ancestor": 108,
+    "fiber_none": 12
+  },
+  "misses": [
+    {
+      "state": "default",
+      "sel": "h1",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:47",
+      "got": "src/App.tsx:12:34",
+      "how": "untagged-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "h1",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:47",
+      "how": "none",
+      "chain": null,
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "header p",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:48",
+      "got": "src/App.tsx:12:34",
+      "how": "untagged-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "header p",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:48",
+      "how": "none",
+      "chain": null,
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "label[for=name]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:76",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "label[for=name]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:76",
+      "how": "none",
+      "chain": "src/components/ui/label.tsx:10:5",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "#name",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:77",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "#name",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:77",
+      "how": "none",
+      "chain": "src/components/ui/input.tsx:6:5",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "label[for=email]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:80",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "label[for=email]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:80",
+      "how": "none",
+      "chain": "src/components/ui/label.tsx:10:5",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "#email",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:81",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "#email",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:81",
+      "how": "none",
+      "chain": "src/components/ui/input.tsx:6:5",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "label[for=size]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:85",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "label[for=size]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:85",
+      "how": "none",
+      "chain": "src/components/ui/label.tsx:10:5",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "#size",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:87",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "#size",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:87",
+      "how": "none",
+      "chain": "src/components/ui/select.tsx:40:5",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "#size [data-slot=select-value]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:88",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "#size [data-slot=select-value]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:88",
+      "how": "none",
+      "chain": "src/components/ui/select.tsx:28:10",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "#size > svg",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:87",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "#size > svg",
+      "nth": 0,
+      "kind": "inside-library",
+      "expect": "src/pages/Index.tsx:87",
+      "how": "none",
+      "chain": "src/components/ui/select.tsx:51:9",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "label[for=notes]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:98",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "label[for=notes]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:98",
+      "how": "none",
+      "chain": "src/components/ui/label.tsx:10:5",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "#notes",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:99",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "#notes",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:99",
+      "how": "none",
+      "chain": "src/components/ui/textarea.tsx:6:5",
+      "joined": false
+    },
+    {
+      "state": "default",
+      "sel": "button[type=submit]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:101",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "default",
+      "sel": "button[type=submit]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:101",
+      "how": "none",
+      "chain": "src/components/ui/button.tsx:56:5",
+      "joined": false
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-content]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:90",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-content]",
+      "nth": 0,
+      "kind": "portal",
+      "expect": "src/pages/Index.tsx:90",
+      "how": "none",
+      "chain": "src/components/ui/select.tsx:66:7",
+      "joined": false
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:91",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 0,
+      "kind": "portal",
+      "expect": "src/pages/Index.tsx:91",
+      "how": "none",
+      "chain": "src/components/ui/select.tsx:109:5",
+      "joined": false
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 1,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:92",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 1,
+      "kind": "portal",
+      "expect": "src/pages/Index.tsx:92",
+      "how": "none",
+      "chain": "src/components/ui/select.tsx:109:5",
+      "joined": false
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 2,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:93",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item]",
+      "nth": 2,
+      "kind": "portal",
+      "expect": "src/pages/Index.tsx:93",
+      "how": "none",
+      "chain": "src/components/ui/select.tsx:109:5",
+      "joined": false
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item] svg",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:92",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "select-open",
+      "sel": "[data-slot=select-item] svg",
+      "nth": 0,
+      "kind": "inside-library",
+      "expect": "src/pages/Index.tsx:92",
+      "how": "none",
+      "chain": "src/components/ui/select.tsx:119:11",
+      "joined": false
+    },
+    {
+      "state": "loading",
+      "sel": "button[type=submit]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:101",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "loading",
+      "sel": "button[type=submit]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:101",
+      "how": "none",
+      "chain": "src/components/ui/button.tsx:56:5",
+      "joined": false
+    },
+    {
+      "state": "loading",
+      "sel": "button[type=submit] svg",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:102",
+      "got": "src/App.tsx:12:34",
+      "how": "untagged-ancestor"
+    },
+    {
+      "state": "loading",
+      "sel": "button[type=submit] svg",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:102",
+      "how": "none",
+      "chain": null,
+      "joined": false
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:68",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:68",
+      "how": "none",
+      "chain": "src/components/ui/alert.tsx:27:5",
+      "joined": false
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert] > svg",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:69",
+      "got": "src/App.tsx:12:34",
+      "how": "untagged-ancestor"
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert] > svg",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:69",
+      "how": "none",
+      "chain": null,
+      "joined": false
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert-title]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:70",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert-title]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:70",
+      "how": "none",
+      "chain": "src/components/ui/alert.tsx:38:5",
+      "joined": false
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert-description]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:71",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "error",
+      "sel": "[data-slot=alert-description]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:71",
+      "how": "none",
+      "chain": "src/components/ui/alert.tsx:54:5",
+      "joined": false
+    },
+    {
+      "state": "success",
+      "sel": "svg.text-emerald-600",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:59",
+      "got": "src/App.tsx:12:34",
+      "how": "untagged-ancestor"
+    },
+    {
+      "state": "success",
+      "sel": "svg.text-emerald-600",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:59",
+      "how": "none",
+      "chain": null,
+      "joined": false
+    },
+    {
+      "state": "success",
+      "sel": "p.font-medium",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:60",
+      "got": "src/App.tsx:12:34",
+      "how": "untagged-ancestor"
+    },
+    {
+      "state": "success",
+      "sel": "p.font-medium",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:60",
+      "how": "none",
+      "chain": null,
+      "joined": false
+    },
+    {
+      "state": "success",
+      "sel": "button[data-variant=outline]",
+      "nth": 0,
+      "mode": "fiber",
+      "expect": "src/pages/Index.tsx:61",
+      "got": "src/App.tsx:12:34",
+      "how": "library-ancestor"
+    },
+    {
+      "state": "success",
+      "sel": "button[data-variant=outline]",
+      "nth": 0,
+      "expect": "src/pages/Index.tsx:61",
+      "how": "none",
+      "chain": "src/components/ui/button.tsx:56:5",
+      "joined": false
+    },
+    {
+      "state": "success",
+      "sel": "[data-sonner-toast]",
+      "nth": 0,
+      "kind": "node_modules",
+      "expect": "src/App.tsx:9",
+      "how": "none",
+      "chain": null,
+      "joined": false
+    }
+  ]
+}

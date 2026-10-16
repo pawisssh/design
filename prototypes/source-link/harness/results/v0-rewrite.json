@@ -1,8 +1,8 @@
 {
   "app": "v0",
   "variant": "rewrite",
-  "installMs": 9147,
-  "buildMs": 25327,
+  "installMs": 8171,
+  "buildMs": 24862,
   "tagStats": {
     "files": 12,
     "elements": 89,

@@ -1,8 +1,8 @@
 {
   "app": "lovable",
   "variant": "rewrite",
-  "installMs": 8181,
-  "buildMs": 5673,
+  "installMs": 7817,
+  "buildMs": 6635,
   "tagStats": {
     "files": 13,
     "elements": 97,

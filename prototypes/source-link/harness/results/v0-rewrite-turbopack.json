@@ -1,8 +1,8 @@
 {
   "app": "v0",
   "variant": "rewrite-turbopack",
-  "installMs": 13022,
-  "buildMs": 16330,
+  "installMs": 11167,
+  "buildMs": 19248,
   "tagStats": {
     "files": 12,
     "elements": 89,
