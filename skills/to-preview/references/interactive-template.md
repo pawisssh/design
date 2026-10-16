@@ -8,7 +8,7 @@ Read when writing an Adapter's preview renderer or changing the page.
 
 | Field | What |
 |---|---|
-| `render(tuple)` | HTML text of the real Code Library component for one tuple `{axisKey: valueKey}`. Map axis values through their Contract `code` props. A value with `code: null` renders like the default; the page forces it through its CSS pseudo-class. |
+| `render(tuple, properties)` | HTML text of the real Code Library component for one tuple `{axisKey: valueKey}`. Map axis values through their Contract `code` props, and fill a missing axis with its `default`. A value with `code: null` renders like the default; the page forces it through its CSS pseudo-class. Without `properties` it renders the specimen: TEXT properties at their defaults, and the default icon shown. To-handoff passes a usage's `properties`, keyed by Contract property key (`{label: "Save", icon: false}`); a missing key takes its Contract default. Each `code.required` prop comes from `properties[<prop>]`, else from a per-tuple placeholder (`<family>-<values>`). |
 | `stylesheet` | The Code Library's compiled CSS, inlined into the page. |
 | `modeClass(modeKey)` | The class that applies one foundations Theme mode to the page, and so to every specimen and the card chrome. |
 
