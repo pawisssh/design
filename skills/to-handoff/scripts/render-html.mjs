@@ -10,12 +10,15 @@ import { loadDesignSystem, stateAxisOf } from './system.mjs';
 
 const OPTIONAL = ['flow', 'interactions', 'data', 'a11y', 'tokensToAdd'];
 const FLAGS = {
+  exact: ['=', 'exact'], import: ['✓', 'import'], na: ['–', 'n/a'],
   off: ['≠', 'Off-system'], near: ['≈', 'near match'], pick: ['◇', 'agent pick'], proposal: ['+', 'Proposal'],
   raw: ['∅', 'no Contract'], axis: ['↯', 'off-axis'], missing: ['!', 'missing state'], mock: ['◌', 'mock'],
   simulated: ['◌', 'simulated'], placeholder: ['◌', 'placeholder copy'],
 };
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const flag = k => `<span class="flag" data-g="${FLAGS[k][0]}">${FLAGS[k][0]} ${FLAGS[k][1]}</span>`;
+// "? q-…": a link to the open question that settles the item.
+const qflag = id => (id ? ` <a class="flag" data-g="?" href="#${esc(id)}">? ${esc(id)}</a>` : '');
 const code = s => `<code>${esc(s)}</code>`;
 
 /** Render the Handoff at `handoffPath` against `designSystem`; returns the written path. */
@@ -48,32 +51,34 @@ export async function renderHtml(handoff, system) {
 
   // ---- Needs a look ----
   const look = [];
-  for (const v of h.values) look.push([flag('off'), `${code(v.raw[Object.keys(v.raw)[0]])} as ${esc(v.role)}`, esc(v.reason), v.at.join(', ')]);
+  for (const v of h.values) look.push(['off', `${code(v.raw[Object.keys(v.raw)[0]])} as ${esc(v.role)}`, esc(v.reason), v.at.join(', ')]);
   for (const r of regions) for (const s of r.styles) {
-    if (s.match === 'near') look.push([flag('near'), `${code(`${s.property}: ${s.raw}`)} → ${code(s.token)} (ΔE ${s.delta})`, `among ${s.candidates.map(esc).join(', ')}`, s.at.join(', ')]);
-    else if (s.by === 'agent') look.push([flag('pick'), `${code(`${s.property}: ${s.raw}`)} → ${code(s.token)}`, `tied with ${s.candidates.filter(c => c !== s.token).map(esc).join(', ')}`, s.at.join(', ')]);
+    if (s.match === 'near') look.push(['near', `${code(`${s.property}: ${s.raw}`)} → ${code(s.token)} (ΔE ${s.delta})`, `among ${s.candidates.map(esc).join(', ')}`, s.at.join(', ')]);
+    else if (s.by === 'agent') look.push(['pick', `${code(`${s.property}: ${s.raw}`)} → ${code(s.token)}`, `tied with ${s.candidates.filter(c => c !== s.token).map(esc).join(', ')}`, s.at.join(', ')]);
   }
   for (const r of regions) for (const t of r.text) {
     const s = t.style || {};
     const what = `“${esc(h.copy[t.copy].text)}”`;
-    if (s.match === 'near') look.push([flag('near'), `${what} → ${code(s.textStyle)}`, `among ${s.candidates.map(esc).join(', ')}`, t.at]);
-    else if (s.by === 'agent') look.push([flag('pick'), `${what} → ${code(s.textStyle)}`, `tied with ${s.candidates.filter(c => c !== s.textStyle).map(esc).join(', ')}`, t.at]);
+    if (s.match === 'near') look.push(['near', `${what} → ${code(s.textStyle)}`, `among ${s.candidates.map(esc).join(', ')}`, t.at]);
+    else if (s.by === 'agent') look.push(['pick', `${what} → ${code(s.textStyle)}`, `tied with ${s.candidates.filter(c => c !== s.textStyle).map(esc).join(', ')}`, t.at]);
+    else if (s.partial && s.partial.fontSize.by === 'agent') look.push(['pick', `${what} → font size ${code(s.partial.fontSize.token)}`, `no whole Text Style matches; tied with ${s.partial.fontSize.candidates.filter(c => c !== s.partial.fontSize.token).map(esc).join(', ')}`, t.at]);
   }
   for (const u of usages) {
-    if (u.proposal) look.push([flag('proposal'), `${code(u.id)} is Proposal ${code(u.proposal)}`, 'not in the Code Library yet; build it in the app', u.at]);
-    if (u.raw) look.push([flag('raw'), `${code(u.id)} (${code(u.raw.element)})`, esc(u.reason), u.at]);
-    if (u.contract && u.match && u.match.by === 'agent') look.push([flag('pick'), `${code(u.id)} → ${code(u.contract)} ${esc(Object.values(u.tuple).join(' '))}`, `recognised by the agent (${esc(u.match.via)})`, u.at]);
-    for (const o of u.offAxis || []) look.push([flag('axis'), `${code(u.id)} ${code(`${o.property}: ${o.raw}`)}`, esc(o.reason), u.at]);
+    if (u.proposal) look.push(['proposal', `${code(u.id)} is Proposal ${code(u.proposal)}`, 'not in the Code Library yet; build it in the app', u.at]);
+    if (u.raw) look.push(['raw', `${code(u.id)} (${code(u.raw.element)})`, esc(u.reason) + qflag(u.question), u.at]);
+    if (u.contract && u.match && u.match.by === 'agent') look.push(['pick', `${code(u.id)} → ${code(u.contract)} ${esc(Object.values(u.tuple).join(' '))}`, `recognised by the agent (${esc(u.match.via)})`, u.at]);
+    for (const o of u.offAxis || []) look.push(['axis', `${code(u.id)} ${code(`${o.property}: ${o.raw}`)}`, esc(o.reason) + qflag(o.question), u.at]);
   }
-  for (const [name, s] of Object.entries(screen.states)) if (s.missing) look.push([flag('missing'), `${esc(name)} state`, esc(question(s.question)), screen.at || '']);
-  for (const x of h.data || []) look.push([flag(x.source === 'mock' ? 'mock' : 'simulated'), code(x.id), esc(x.note || ''), x.at || '']);
-  for (const [id, c] of Object.entries(h.copy)) if (c.placeholder) look.push([flag('placeholder'), `${code(id)} “${esc(c.text)}”`, 'Stand-in copy: replace before release', c.at || '']);
+  for (const [name, s] of Object.entries(screen.states)) if (s.missing) look.push(['missing', `${esc(name)} state`, esc(question(s.question)) + qflag(s.question), screen.at || '']);
+  for (const x of h.data || []) look.push([x.source === 'mock' ? 'mock' : 'simulated', code(x.id), esc(x.note || ''), x.at || '']);
+  for (const [id, c] of Object.entries(h.copy)) if (c.placeholder) look.push(['placeholder', `${code(id)} “${esc(c.text)}”`, 'Stand-in copy: replace before release', c.at || '']);
+  const lookCounts = Object.keys(FLAGS).map(k => [k, look.filter(r => r[0] === k).length]).filter(([, n]) => n);
   function question(id) { const q = h.openQuestions.find(x => x.id === id); return q ? q.text : id; }
 
   // ---- usage cards ----
   const cards = [];
   for (const u of usages) {
-    const flags = [u.proposal && flag('proposal'), u.raw && flag('raw'), u.match && u.match.by === 'agent' && flag('pick'), (u.offAxis || []).length && flag('axis')].filter(Boolean).join(' ');
+    const flags = [u.contract && flag('import'), u.proposal && flag('proposal'), u.raw && flag('raw'), u.match && u.match.by === 'agent' && flag('pick'), (u.offAxis || []).length && flag('axis')].filter(Boolean).join(' ');
     let specimen = '', snippet = '';
     const perState = [];
     if (u.contract) {
@@ -99,16 +104,16 @@ export async function renderHtml(handoff, system) {
 <div class="specimen mode-root ${esc(modeClass(mapped))}" data-mode-root>${specimen}</div>
 ${perState.length ? `<div class="states-row mode-root ${esc(modeClass(mapped))}" data-mode-root>${perState.join('')}</div>` : ''}
 ${snippet ? `<textarea class="snippet" readonly wrap="off" rows="${snippet.split('\n').length}">${snippet.replace(/&/g, '&amp;').replace(/<\/textarea/gi, '&lt;/textarea')}</textarea>` : ''}
-${(u.offAxis || []).map(o => `<p class="note">${flag('axis')} ${esc(o.reason)} (${esc(question(o.question))})</p>`).join('')}
-${u.question ? `<p class="note">${esc(question(u.question))}</p>` : ''}
+${(u.offAxis || []).map(o => `<p class="note">${flag('axis')} ${esc(o.reason)} (${esc(question(o.question))})${qflag(o.question)}</p>`).join('')}
+${u.question ? `<p class="note">${esc(question(u.question))}${qflag(u.question)}</p>` : ''}
 </article>`);
   }
 
   // ---- states ----
-  const stateTabs = Object.keys(screen.states).map((name, i) => `<button type="button" class="tab" data-state="${esc(name)}" aria-selected="${i === 0}">${esc(name)}${screen.states[name].missing ? ' !' : ''}</button>`).join('');
+  const stateTabs = Object.keys(screen.states).map((name, i) => `<button type="button" class="tab" data-state="${esc(name)}" aria-selected="${i === 0}">${esc(name)}${screen.states[name].missing ? ' !' : screen.states[name].na ? ' –' : ''}</button>`).join('');
   const statePanels = Object.entries(screen.states).map(([name, s], i) => {
-    const body = s.missing ? `<p>${flag('missing')} ${esc(question(s.question))}</p>`
-      : s.na ? `<p>Not applicable: ${esc(s.reason)}</p>`
+    const body = s.missing ? `<p>${flag('missing')} ${esc(question(s.question))}${qflag(s.question)}</p>`
+      : s.na ? `<p>${flag('na')} Not applicable: ${esc(s.reason)}</p>`
         : `<p>${esc(s.content)}</p>${s.trigger ? `<p>Trigger: ${code(s.trigger)}</p>` : ''}
 ${Object.keys(s.usageStates || {}).length ? `<ul>${Object.entries(s.usageStates).map(([id, us]) => `<li>${code(id)}${us.state ? ` is ${code(us.state)}` : ''}${Object.entries(us.properties || {}).map(([k, ref]) => ` · ${esc(k)} “${esc(text(ref))}”`).join('')}</li>`).join('')}</ul>` : ''}
 <div class="shots">${Object.entries(s.screenshots || { [Object.keys(h.source.modes)[0]]: { missing: true } }).map(([m, shot]) => `<figure class="shot"><figcaption>${esc(m)}</figcaption>${typeof shot === 'string' ? `<img src="${esc(shot)}" alt="${esc(name)} in ${esc(m)}">` : '<div class="slot">screenshot missing (static-only)</div>'}</figure>`).join('')}</div>`;
@@ -118,13 +123,13 @@ ${Object.keys(s.usageStates || {}).length ? `<ul>${Object.entries(s.usageStates)
   // ---- regions, styles and values ----
   const styleRows = regions.flatMap(r => r.styles.map(s => {
     const target = s.token ? code(s.token) + (s.via ? ` via ${s.via.map(code).join(', ')}` : '') : code(s.value);
-    const f = s.value ? flag('off') : s.match === 'near' ? flag('near') : s.by === 'agent' ? flag('pick') : '';
+    const f = s.value ? flag('off') : s.match === 'near' ? flag('near') : s.by === 'agent' ? flag('pick') : flag('exact');
     return `<tr><td>${esc(r.id)}</td><td>${code(s.property)}</td><td>${code(s.raw)}</td><td>${target}</td><td>${f}</td><td>${esc(s.at.join(', '))}</td></tr>`;
   })).join('\n');
   const textRows = regions.flatMap(r => r.text.map(t => {
     const s = t.style || {};
     const target = s.textStyle ? code(s.textStyle) : s.partial ? `font size ${code(s.partial.fontSize.token)}` : 'Off-system';
-    const f = s.match === 'near' ? flag('near') : s.by === 'agent' || (s.partial && s.partial.fontSize.by) ? flag('pick') : s.textStyle ? '' : flag('off');
+    const f = s.match === 'near' ? flag('near') : s.by === 'agent' || (s.partial && s.partial.fontSize.by) ? flag('pick') : s.textStyle ? flag('exact') : flag('off');
     return `<tr><td>${esc(r.id)}</td><td>“${esc(h.copy[t.copy].text)}”</td><td>${target}</td><td>${f}</td><td>${esc(t.at)}${t.states ? ` · ${esc(t.states.join(', '))}` : ''}</td></tr>`;
   })).join('\n');
   const valueRows = h.values.map(v => `<tr><td>${code(v.id)}</td><td><span class="swatch" style="background:${/color/.test(v.role) ? esc(Object.values(v.raw)[0]) : 'transparent'}"></span>${code(Object.values(v.raw)[0])}</td><td>${esc(v.role)}</td><td>${esc(v.reason)}</td><td>${v.nearest.map(n => code(n.token)).join(', ')}${v.primitive ? ` · Primitive ${code(v.primitive)}` : ''}</td></tr>`).join('\n');
@@ -144,7 +149,7 @@ ${Object.keys(s.usageStates || {}).length ? `<ul>${Object.entries(s.usageStates)
     return `<section class="optional"><h3>${esc(k)}</h3><pre>${esc(JSON.stringify(h[k], null, 2))}</pre></section>`;
   }).join('\n');
 
-  const nav = [['overview', 'Overview'], ['look', 'Needs a look'], ['states', 'States'], ['usages', 'Components'], ['tokens', 'Tokens & values'], ['copy', 'Copy & questions']];
+  const nav = [['overview', 'Overview'], ['look', `Needs a look (${look.length})`], ['states', 'States'], ['usages', 'Components'], ['tokens', 'Tokens & values'], ['copy', 'Copy & questions']];
   const options = theme ? theme.modes.map(m => `<option value="${esc(m.key)}" data-class="${esc(modeClass(m.key))}"${m.key === mapped ? ' selected' : ''}>${esc(m.label)}</option>`).join('') : '';
   const mappedLabel = theme ? theme.modes.find(m => m.key === mapped).label : mapped;
 
@@ -179,7 +184,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 .tabs { display: flex; flex-wrap: wrap; gap: 4px; } .tab { padding: 6px 12px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; } .tab[aria-selected="true"] { border-color: var(--ink); }
 .shots { display: flex; flex-wrap: wrap; gap: 12px; } .shot { margin: 0; } .slot { width: 240px; height: 140px; display: grid; place-items: center; border: 1px dashed var(--muted); color: var(--muted); font-size: 13px; }
 .swatch { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--line); vertical-align: middle; margin-right: 4px; }
-.not-specified { color: var(--muted); } .note { font-size: 13px; }
+.not-specified { color: var(--muted); } a.flag { color: inherit; text-decoration: none; } .counts { font-size: 13px; } .note { font-size: 13px; }
 .doc h3 { font-size: 15px; font-weight: 600; margin: 16px 0 4px; } .raw-box code { font-size: 12px; }
 </style>
 </head>
@@ -202,8 +207,9 @@ ${(h.source.notes || []).map(n => `<p class="note">${esc(n.level)}: ${esc(n.text
 ${optional}
 </section>
 <section class="group" id="look"><h2>Needs a look</h2>
+<p class="counts">${lookCounts.map(([k, n]) => `${flag(k)} ${n}`).join(' · ')}</p>
 <div class="table-wrap"><table><tr><th>flag</th><th>what</th><th>why</th><th>where</th></tr>
-${look.map(r => `<tr>${r.map((c, i) => `<td>${i === 3 ? esc(c) : c}</td>`).join('')}</tr>`).join('\n')}
+${look.map(([k, what, why, where]) => `<tr><td>${flag(k)}</td><td>${what}</td><td>${why}</td><td>${esc(where)}</td></tr>`).join('\n')}
 </table></div>
 </section>
 <section class="group" id="states"><h2>States · ${esc(screen.name)}</h2>
@@ -236,7 +242,7 @@ ${valueRows}
 ${Object.entries(h.copy).map(([id, c]) => `<tr><td>${code(id)}</td><td>${esc(c.text)}${c.placeholder ? ` ${flag('placeholder')}` : ''}</td><td>${esc(c.at || '')}</td></tr>`).join('\n')}
 </table></div>
 <h3>Open questions</h3>
-<ul>${h.openQuestions.map(q => `<li>${code(q.id)} · ${esc(q.kind)} · to ${esc(q.to)}: ${esc(q.text)}${q.answer ? ` <strong>${esc(q.answer)}</strong>` : ''}</li>`).join('\n')}</ul>
+<ul>${h.openQuestions.map(q => `<li id="${esc(q.id)}">${code(q.id)} · ${esc(q.kind)} · to ${esc(q.to)}: ${esc(q.text)}${q.answer ? ` <strong>${esc(q.answer)}</strong>` : ''}</li>`).join('\n')}</ul>
 </section>
 </main>
 <script>

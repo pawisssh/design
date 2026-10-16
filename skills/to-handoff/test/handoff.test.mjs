@@ -236,8 +236,11 @@ test('render writes the static HTML Rendering: real renders, flags, mode toggle,
   assert.match(html, /cds--text-input/);
   assert.match(html, /<SelectItem value="Viewer" text="Viewer" \/>/);
   assert.match(html, /<Button kind="danger--ghost" size="sm">Remove<\/Button>/);
-  for (const [g, word] of [['≠', 'Off-system'], ['≈', 'near'], ['◇', 'agent pick'], ['+', 'Proposal'], ['∅', 'no Contract'], ['↯', 'off-axis'], ['!', 'missing'], ['◌', 'mock']])
+  for (const [g, word] of [['≠', 'Off-system'], ['≈', 'near'], ['◇', 'agent pick'], ['+', 'Proposal'], ['∅', 'no Contract'], ['↯', 'off-axis'], ['!', 'missing'], ['◌', 'mock'], ['=', 'exact'], ['✓', 'import'], ['?', 'q-state-error']])
     assert.ok(html.includes(`data-g="${g}"`) && html.includes(word), `${g} ${word}`);
+  assert.match(html, /<li id="q-state-error">/, 'a "? q-…" flag links to its question');
+  assert.match(html, /<p class="counts">.*≠ Off-system<\/span> \d+/, 'Needs a look counts its flags per kind');
+  assert.match(html, />Needs a look \(\d+\)<\/a>/);
   assert.match(html, /missing \(static-only\)/);
   for (const m of system.foundations.collections.find(c => c.key === 'theme').modes) assert.ok(html.includes(`>${m.label}</option>`), m.label);
   assert.ok(html.includes(handoff.revision ? `r${handoff.revision}` : 'r?'));

@@ -63,7 +63,7 @@ node skills/to-handoff/scripts/handoff.mjs render design-systems/<ds>/handoffs/<
 `render` writes `renderings/index.html`, one static page with these sections:
 
 - Overview, which says *Not specified* for each optional section the Handoff lacks;
-- Needs a look, with flags ≠ Off-system, ≈ near, ◇ agent pick, + Proposal, ∅ no Contract, ↯ off-axis, ! missing and ◌ Stand-in;
+- Needs a look, counted per flag: ≠ Off-system, ≈ near, ◇ agent pick, + Proposal, ∅ no Contract, ↯ off-axis, ! missing, ◌ Stand-in, and `? q-…` linking to the question that settles it. Elsewhere, = exact, ✓ import (a Contract usage) and – n/a;
 - States, with one tab per state and screenshot slots;
 - Components, with real renders inside the mapped mode's class, per-state renders and code snippets from each Contract's `code`;
 - Tokens & values;

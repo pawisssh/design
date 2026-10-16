@@ -54,7 +54,11 @@ function decider(decisions) {
   const byKey = new Map();
   return {
     requests,
-    /** The answer to `key`, checked by `check` (which throws), or undefined after recording a request. */
+    /**
+     * The answer to `key`, checked by `check` (which throws), or undefined after recording a request. A caller
+     * may stand in the first candidate for an undefined answer, only so the pass goes on to collect every
+     * request: with any request open, generate returns them and writes nothing.
+     */
     ask(key, request, check) {
       if (Object.prototype.hasOwnProperty.call(decisions, key)) {
         const answer = decisions[key];
