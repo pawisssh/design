@@ -1,0 +1,54 @@
+body {
+  margin: 0;
+  background-color: #ffffff;
+  color: #161616;
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+.topbar {
+  padding: 16px 32px;
+  background-color: #f4f4f4;
+}
+
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.title {
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 400;
+}
+
+.release {
+  padding: 16px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.summary {
+  color: #525252;
+}
+
+.button {
+  display: inline-flex;
+  padding: 0 16px;
+  background-color: #0f62fe;
+  color: #ffffff;
+}
+
+.subscribe {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field {
+  background-color: #f4f4f4;
+  border-bottom: 1px solid #8d8d8d;
+}
+
+.problem {
+  color: #da1e28;
+}

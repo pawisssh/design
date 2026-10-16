@@ -12,6 +12,7 @@ import { readReact } from '../scripts/react.mjs';
 import { walk } from '../scripts/reader.mjs';
 
 const VITE = fileURLToPath(new URL('fixtures/vite-app', import.meta.url));
+const NEXT = fileURLToPath(new URL('fixtures/next-app', import.meta.url));
 const noTs = !hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
 const PACKAGES = ['@carbon/react'];
 const project = files => {
@@ -81,4 +82,41 @@ createRoot(document.getElementById('app')!).render(<RouterProvider router={route
   assert.equal(home.mount.attrs.id, 'app');
   assert.deepEqual(elements(home.mount, el => el !== home.mount).map(el => el.classes[0] || el.tag), ['frame', 'nav', 'home']);
   assert.deepEqual(elements(cart.mount, el => el !== cart.mount).map(el => el.classes[0] || el.tag), ['frame', 'nav', 'cart']);
+});
+
+test('Next: one screen per app/**/page.tsx inside its layouts; loading.tsx is a framework state; API routes are ignored', { skip: noTs }, () => {
+  const doc = readReact(NEXT, { packages: PACKAGES });
+  assert.equal(doc.kind, 'react-next');
+  assert.equal(doc.title, 'Release notes');
+  assert.deepEqual(doc.screens.map(s => ({ id: s.id, route: s.route, at: doc.at(s.offset), root: s.root.tag, mount: s.mount.tag })), [
+    { id: 'index', route: '/', at: 'app/page.tsx:8:5', root: 'html', mount: 'body' },
+    { id: 'subscribe', route: '/subscribe', at: 'app/subscribe/page.tsx:5:5', root: 'html', mount: 'body' },
+  ]);
+  assert.deepEqual(doc.ignored, ['app/api/subscribe/route.ts (API route)']);
+  const [index, subscribe] = doc.screens;
+  assert.deepEqual(index.mount.children.map(c => [c.classes[0], c.cond]), [
+    ['topbar', []],
+    ['loading', [{ expr: 'app/loading.tsx', value: true }]],
+    ['page', [{ expr: 'app/loading.tsx', value: false }]],
+  ]);
+  const problem = elements(subscribe.root, el => el.classes.includes('problem'))[0];
+  assert.deepEqual(problem.cond, [{ expr: 'app/loading.tsx', value: false }, { expr: 'hasError', value: true }]);
+  assert.deepEqual(doc.fonts.map(f => ({ module: f.module, name: f.name, at: doc.at(f.offset) })), [{ module: 'geist/font/sans', name: 'GeistSans', at: 'app/layout.tsx:2:10' }]);
+  assert.ok(doc.files.includes('lib/releases.ts') && doc.files.includes('app/globals.css') && !doc.files.includes('app/api/subscribe/route.ts'));
+  assert.deepEqual(doc.standIns.mocks.map(m => m.name), ['mockReleases']);
+  assert.deepEqual(doc.standIns.simulated.map(f => [f.name, f.delay]), [['getReleases', 300]]);
+});
+
+test('Next: a Code Library component from components.json aliases.ui is a leaf; asChild lifts its only child', { skip: noTs }, () => {
+  const doc = readReact(NEXT, { packages: PACKAGES });
+  assert.equal(doc.uiDir, 'components/ui/');
+  const [index, subscribe] = doc.screens;
+  const [cta] = elements(index.root, el => el.component);
+  assert.deepEqual({ component: cta.component, attrs: cta.attrs, asChild: cta.asChild.tag, text: cta.children[0].parts, at: doc.at(cta.offset) }, {
+    component: { module: '@/components/ui/button', export: 'Button', kind: 'ui', file: 'components/ui/button.tsx' },
+    attrs: { size: 'sm', href: '/subscribe' }, asChild: 'a', text: ['Get updates'], at: 'app/page.tsx:16:7',
+  });
+  const [submit] = elements(subscribe.root, el => el.component);
+  assert.deepEqual({ attrs: submit.attrs, holes: submit.attrHoles.map(h => h.ternary.cond), at: doc.at(submit.offset) },
+    { attrs: { type: 'submit' }, holes: ['isSubmitting'], at: 'app/subscribe/subscribe-form.tsx:22:7' });
 });

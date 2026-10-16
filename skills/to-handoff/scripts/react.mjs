@@ -53,9 +53,11 @@ export function codeLibraryDir(root, kind = reactKind(root), paths = compilerPat
 }
 
 /**
- * readReact(root, {depsDir, packages}) -> {kind, title, files, at, rules, standIns, screens, uiDir, ignored}.
+ * readReact(root, {depsDir, packages}) -> {kind, title, files, at, rules, standIns, fonts, screens, uiDir, ignored}.
  * `packages` are the Design System's code packages (each Contract's `code.package`): their components are
- * leaves. `screens` is [{id, name, route, offset, root, mount}], `files` the files read (relative paths).
+ * leaves. `screens` is [{id, name, route, offset, root, mount}], `files` the files read (relative paths), `fonts`
+ * the next/font and geist/font imports [{module, name, offset}]. On Next, a loading.tsx, error.tsx or not-found.tsx
+ * boundary is a condition named by its file, true for the boundary's tree and false for what it wraps.
  */
 export function readReact(root, { depsDir, packages = [] } = {}) {
   const ts = loadTypescript(depsDir);
@@ -67,6 +69,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
   const rules = [];
   const sources = new Map();
   const ignored = [];
+  const fonts = [];
   const text = (s, node) => node.getText(s.sf).replace(/\s+/g, ' ').trim();
 
   // ---------- files ----------
@@ -97,6 +100,10 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
         const spec = st.moduleSpecifier.text;
         const clause = st.importClause;
         if (/\.css$/.test(spec)) { css(resolveFile(rel, spec)); continue; }
+        if (/^(next\/font\/|geist\/font\/)/.test(spec) && clause) {
+          const names = [clause.name, ...(clause.namedBindings && ts.isNamedImports(clause.namedBindings) ? clause.namedBindings.elements.map(e => e.name) : [])].filter(Boolean);
+          for (const n of names) fonts.push({ module: spec, name: n.text, offset: f.base + n.getStart(sf) });
+        }
         const file = resolveFile(rel, spec);
         if (file && EXTS.some(e => file.endsWith(e))) imported.push(file);
         if (!clause) continue;
@@ -364,11 +371,15 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
 
   // An app component, inlined: its returns in its own file, the caller's children where it renders {children}.
   const inline = (ref, props, kids, ctx) => {
-    const key = `${ref.file}#${ref.local || ref.export}`;
-    const c = ctx.stack.includes(key) ? null : componentOf(ref);
-    if (!c) return children(kids, ctx);
     const given = Object.fromEntries(props.filter(p => typeof p.value === 'string').map(p => [p.name, p.value]));
     const slot = kids.length ? at => children(kids, { ...ctx, parent: at.parent, cond: at.cond, repeat: at.repeat || ctx.repeat }) : null;
+    return renderComponent(ref, given, slot, ctx) || children(kids, ctx);
+  };
+  // What a component renders, given literal props and a {children} slot; null when its function is not found.
+  const renderComponent = (ref, given, slot, ctx) => {
+    const key = `${ref.file}#${ref.local || ref.export}`;
+    const c = ctx.stack.includes(key) ? null : componentOf(ref);
+    if (!c) return null;
     const inner = { ...ctx, s: c.s, props: propsIn(c.fn, given), children: slot, stack: [...ctx.stack, key] };
     return returnsOf(c.s, c.fn).flatMap(r => nodes(r.expr, { ...inner, cond: [...ctx.cond, ...r.cond] }));
   };
@@ -469,11 +480,82 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
     return { title: firstShell.title, screens };
   };
 
-  const read = kind === 'react-vite' ? readVite() : (() => { throw new Error('Next.js App Router reading is not implemented yet'); })();
+  // ---------- Next.js App Router ----------
+
+  const special = (dir, name) => EXTS.map(e => posix.join(dir, name + e)).find(isFile) || null;
+  // `export const metadata = {title}` in a layout or page: the title string, or its `default`.
+  const metadataTitle = file => {
+    const d = file && source(file).exports.get('metadata');
+    const o = d && d.initializer && unwrap(d.initializer);
+    if (!o || !ts.isObjectLiteralExpression(o)) return null;
+    const p = o.properties.find(x => ts.isPropertyAssignment(x) && x.name.getText(source(file).sf) === 'title');
+    const v = p && unwrap(p.initializer);
+    if (v && ts.isStringLiteral(v)) return v.text;
+    const def = v && ts.isObjectLiteralExpression(v) && v.properties.find(x => ts.isPropertyAssignment(x) && /^(default|absolute)$/.test(x.name.getText(source(file).sf)));
+    return def && ts.isStringLiteral(def.initializer) ? def.initializer.text : null;
+  };
+  const readNext = () => {
+    const app = ['app', 'src/app'].find(d => existsSync(join(root, d)) && statSync(join(root, d)).isDirectory());
+    if (!app) throw new Error(`${root} has no app/ folder: only the App Router is read`);
+    const rootLayout = special(app, 'layout');
+    if (!rootLayout) throw new Error(`${app}/ has no root layout`);
+    for (const dir of ['.', 'src']) { const m = special(dir, 'middleware'); if (m) ignored.push(`${m} (middleware)`); }
+    // Pages, by sorted folder walk: route groups drop out of the path; private and parallel-route folders are ignored.
+    const pages = [];
+    const visit = (dir, segs) => {
+      const page = special(dir, 'page');
+      if (page) pages.push({ dir, page, route: '/' + segs.join('/') });
+      const handler = special(dir, 'route');
+      if (handler) ignored.push(`${handler} (API route)`);
+      for (const ent of readdirSync(join(root, dir), { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
+        if (!ent.isDirectory()) continue;
+        const sub = posix.join(dir, ent.name);
+        if (ent.name.startsWith('_')) { ignored.push(`${sub}/ (private folder)`); continue; }
+        if (ent.name.startsWith('@')) { ignored.push(`${sub}/ (parallel route)`); continue; }
+        visit(sub, /^\(.*\)$/.test(ent.name) ? segs : [...segs, ent.name]);
+      }
+    };
+    visit(app, []);
+    const def = file => ({ file, export: 'default' });
+    const screens = pages.map(({ dir, page, route }) => {
+      const levels = [];
+      for (let d = dir; ; d = posix.dirname(d)) { levels.unshift(d); if (d === app) break; }
+      let pageAt = null, mount = null;
+      // Inside out, as Next nests them: page, then per level not-found, loading and error boundaries, then the layout.
+      let content = ctx => {
+        const out = renderComponent(def(page), {}, null, ctx) || [];
+        const first = out.find(n => n.type === 'element');
+        if (pageAt === null && first) pageAt = first.offset;
+        return out;
+      };
+      levels.slice().reverse().forEach(d => {
+        for (const name of ['not-found', 'loading', 'error']) {
+          const f = special(d, name);
+          if (!f) continue;
+          const inner = content;
+          content = ctx => [...(renderComponent(def(f), {}, null, withCond(ctx, f, true)) || []), ...inner(withCond(ctx, f, false))];
+        }
+        const layout = special(d, 'layout');
+        if (!layout) return;
+        const inner = content;
+        content = ctx => renderComponent(def(layout), {}, at => {
+          if (layout === rootLayout) mount = at.parent;
+          return inner({ ...ctx, parent: at.parent, cond: at.cond, repeat: at.repeat });
+        }, ctx) || [];
+      });
+      const top = content({ s: null, parent: null, cond: [], repeat: null, stack: [], props: null, children: null });
+      const rootEl = top.find(n => n.type === 'element' && n.tag === 'html');
+      if (!rootEl) throw new Error(`${rootLayout} renders no <html>`);
+      return { id: screenIdOf(route), name: metadataTitle(page) || route, route, offset: pageAt, root: rootEl, mount: mount || findEl(rootEl, e => e.tag === 'body') };
+    });
+    return { title: metadataTitle(rootLayout), screens };
+  };
+
+  const read = kind === 'react-vite' ? readVite() : readNext();
   rules.forEach((r, i) => { r.order = i; });
   return {
     kind, title: read.title || packageOf(root).name || posix.basename(root), files: space.files.map(f => f.rel).sort(), at: space.at, rules,
-    standIns: standInsOf(ts, [...sources.values()]), screens: read.screens, uiDir, ignored: [...new Set(ignored)].sort(),
+    standIns: standInsOf(ts, [...sources.values()]), fonts, screens: read.screens, uiDir, ignored: [...new Set(ignored)].sort(),
   };
 }
 
