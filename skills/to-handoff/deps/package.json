@@ -1,0 +1,8 @@
+{
+  "name": "to-handoff-deps",
+  "private": true,
+  "description": "Pinned packages for To-handoff's static reader. Installed into .scratch/to-handoff by scripts/deps.mjs with npm ci --ignore-scripts; never installed here.",
+  "dependencies": {
+    "parse5": "7.3.0"
+  }
+}
