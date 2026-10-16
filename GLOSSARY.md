@@ -70,6 +70,10 @@ _Avoid_: Tokens file, theme file, variables JSON
 The library-bound description of one feature (one user goal, across its screens and states) for developers to build, referring to a Design System's Contracts and Component Proposals by key.
 _Avoid_: Handoff doc, spec, feature spec, brief, blueprint
 
+**Off-system value**:
+A colour, spacing, size, radius or type value in a feature's input that matches no token in the Foundations document, exactly or nearly, and is kept as written in the Handoff with a reason.
+_Avoid_: Raw value (when the unmatched kind is meant), hard-coded value, magic number
+
 **Rendering**:
 One output format's layout of a Handoff, such as HTML, Markdown, a Figma frame or a Confluence page. It never adds or drops a Handoff's content.
 _Avoid_: Export, view, handoff document
