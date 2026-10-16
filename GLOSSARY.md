@@ -13,7 +13,7 @@ A Figma library file produced from a Code Library.
 _Avoid_: Figma library, design kit
 
 **Design System**:
-One Foundations document and the Contracts planned with it, for one Code Library; Design Libraries are built from it, and handoffs refer to it.
+One Foundations document and the Contracts and Component Proposals planned with it, for one Code Library; Design Libraries are built from it, and handoffs refer to it.
 _Avoid_: DS, system
 
 ## Components
@@ -57,7 +57,7 @@ An Adapter written for one Code Library that reads it fully without an agent, su
 _Avoid_: Custom adapter, scripted adapter
 
 **Component Proposal**:
-The description of a Component Family that does not exist in the Code Library yet, shaped like a Contract but with no code behind it. It is retired when the Adapter reads the built component into a real Contract.
+The description of a whole new Component Family that does not exist in the Code Library yet, shaped like a Contract but with no code behind it, and stating why no existing Contract fits. A missing value on an existing family is not a Component Proposal. It is retired when the Adapter reads the built component into a real Contract.
 _Avoid_: Draft Contract, proposed Contract, custom component
 
 **Foundations document**:
