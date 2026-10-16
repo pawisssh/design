@@ -20,7 +20,7 @@ import {
 } from '../../contract/scripts/contract.mjs';
 import { foundationsPathFor, readJson, writeJson } from '../../contract/scripts/io.mjs';
 import { anatomyTree, baseProps, expectedBase, expectedVariant, near, norm, normalizeReadback, same } from './readback.mjs';
-import { ledgerPath, readLedger } from './ledger.mjs';
+import { defaultLedgerPath, readLedger } from './ledger.mjs';
 
 
 const SECTIONS = ['layout', 'paint'];
@@ -423,7 +423,7 @@ function main() {
   if (cmd === 'readback' && a && values.out) {
     const result = readJson(a);
     if (result.error || !result.readback) throw new Error(`no readback in ${a}: ${result.error || 'missing'}`);
-    const ledger = readLedger(values.ledger || ledgerPath(result.fileKey));
+    const ledger = readLedger(values.ledger || defaultLedgerPath(result.fileKey));
     writeOutput(values.out, normalizeBaseResult(result, ledger));
     return print(`wrote ${values.out}\n`);
   }

@@ -129,3 +129,42 @@ test('a package of exactly 50,000 chars is allowed', () => {
   assert.equal(run.status, 0, run.stderr);
   assert.equal(JSON.parse(run.stdout).hookSpecificOutput.updatedInput.code.length, 50000);
 });
+
+// The project as a git checkout tracking a branch that has `ahead` commits, each writing `file`.
+function checkout(file, ahead = 1) {
+  const p = project();
+  const git = (...args) => assert.equal(spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { cwd: p.root }).status, 0);
+  git('init', '-q', '-b', 'main');
+  git('commit', '-q', '--allow-empty', '-m', 'init');
+  git('checkout', '-q', '-b', 'up');
+  for (let i = 0; i < ahead; i++) {
+    mkdirSync(join(p.root, file, '..'), { recursive: true });
+    writeFileSync(join(p.root, file), String(i));
+    git('add', file);
+    git('commit', '-q', '-m', `edit ${i}`);
+  }
+  git('checkout', '-q', 'main');
+  git('branch', '-q', '--set-upstream-to=up');
+  return p;
+}
+
+test('a checkout behind its upstream on the hook or settings still swaps, and warns the agent and the owner to pull', () => {
+  for (const file of ['skills/to-design/hooks/use-figma-package.mjs', '.claude/settings.json']) {
+    const { root, bytes, sha } = checkout(file);
+    const run = runHook(root, stubFor(PKG, sha));
+    assert.equal(run.status, 0, run.stderr);
+    const out = JSON.parse(run.stdout);
+    assert.equal(out.hookSpecificOutput.permissionDecision, 'allow');
+    assert.ok(Buffer.from(out.hookSpecificOutput.updatedInput.code, 'utf8').equals(bytes));
+    assert.match(out.systemMessage, /1 commit.* pull/);
+    assert.match(out.hookSpecificOutput.additionalContext, /stale/);
+  }
+});
+
+test('a checkout behind only on other files, or outside git, swaps with no warning', () => {
+  for (const { root, sha } of [checkout('docs/notes.md', 3), project()]) {
+    const out = JSON.parse(runHook(root, stubFor(PKG, sha)).stdout);
+    assert.equal(out.systemMessage, undefined);
+    assert.equal(out.hookSpecificOutput.additionalContext, undefined);
+  }
+});
