@@ -42,9 +42,40 @@ test('the committed foundations document is exactly what this step generates', {
 test('every resolved value matches the compiled Carbon CSS, and every Sass fallback exists', { skip }, () => {
   const { checks } = run().doc;
   assert.equal(checks.css.sha256, `sha256:${sources.css.sha256}`);
-  assert.equal(checks.css.matched, 117); // 24 Theme tokens x 4 modes + 13 spacing + 8 type
+  // Theme (234 themes.json + 15 button.json) x 4 modes = 996; Layout 13 spacing + 4 fluid-spacing = 17;
+  // Type 36 styles x 4 properties, less helper-text-01's absent font-weight and the 2 differing line heights = 141,
+  // plus the font-family of code-01/02 and fluid-quotation-01/02 = 4.
+  assert.equal(checks.css.matched, 996 + 17 + 141 + 4);
   assert.deepEqual(checks.css.missing, []);
-  assert.equal(checks.sass.matched, 9);
+  assert.deepEqual(checks.css.differs, ['expressive-heading-01-line-height', 'heading-07-line-height']);
+  // size 6 + icon-size 2 + border-radius 7 + container 5 + layout 7
+  assert.equal(checks.sass.matched, 27);
+});
+
+test('all 936 themes.json values cross-check against the compiled CSS, the 12 colour-object values included', { skip }, () => {
+  const { doc } = run();
+  const themes = Object.values(doc.variables).filter(v => v.collection === 'theme' && v.source.startsWith('packages/themes/src/dtcg/themes.json'));
+  assert.equal(themes.length, 234);
+  assert.equal(themes.length * 4, 936);
+  for (const name of ['ai-popover-caret-bottom-background', 'ai-popover-caret-bottom-background-actions', 'ai-popover-caret-center']) {
+    const v = doc.variables[name];
+    for (const m of Object.values(v.values)) {
+      assert.match(m.value, /^#[0-9a-f]{6}$/, `${name} reads the colour object's hex`);
+      assert.equal(m.resolved, m.value);
+      assert.equal(m.level, 'info');
+      assert.match(m.reason, /colour object/);
+    }
+  }
+  assert.equal(doc.variables['ai-popover-caret-center'].values.white.value, '#a0c3ff');
+  assert.equal(doc.variables['ai-popover-caret-center'].values.g100.value, '#4870b5');
+});
+
+test('generation fails, naming the token, on a Theme value it cannot read', { skip }, () => {
+  const file = 'packages/themes/src/dtcg/themes.json';
+  const broken = JSON.parse(sources.files[file]);
+  broken.ai.popover.caret.center.$extensions['carbon.themes'].g10 = { colorSpace: 'srgb', components: [0, 0, 0] };
+  const bad = { ...sources, files: { ...sources.files, [file]: JSON.stringify(broken) } };
+  assert.throws(() => generate({ sources: bad, contracts: [{ path: CONTRACT, contract: button() }] }), /ai-popover-caret-center\/g10/);
 });
 
 test('collections: Primitives (hidden), Theme with four modes, Layout and Type', { skip }, () => {
@@ -58,11 +89,13 @@ test('collections: Primitives (hidden), Theme with four modes, Layout and Type',
   for (const c of [collections[0], collections[2], collections[3]]) assert.deepEqual(c.modes, [{ key: 'default', label: 'Default' }]);
 });
 
-test('Primitives hold only the palette entries some Theme mode aliases', { skip }, () => {
+test('Primitives hold the whole palette, hidden, and every Theme alias targets one', { skip }, () => {
   const { variables } = run().doc;
   const aliased = new Set(Object.values(variables).flatMap(v => Object.values(v.values).map(m => m.alias).filter(Boolean)));
   const primitives = Object.entries(variables).filter(([, v]) => v.collection === 'primitives');
-  assert.deepEqual(primitives.map(([k]) => k).sort(), [...aliased].sort());
+  assert.equal(primitives.length, 244);
+  for (const a of aliased) assert.equal(variables[a].collection, 'primitives', `${a} is a Primitive`);
+  assert.ok(primitives.length > aliased.size, 'palette entries no Theme mode aliases are emitted too');
   for (const [, v] of primitives) {
     assert.deepEqual(v.scopes, []);
     assert.equal(v.hidden, true);
@@ -72,20 +105,67 @@ test('Primitives hold only the palette entries some Theme mode aliases', { skip 
   assert.equal(variables.white.name, 'Neutral/White');
 });
 
-test('Theme holds exactly the closure colour tokens; Layout adds the full spacing and size scales', { skip }, () => {
+test('Theme holds every themes.json token and the button tokens; the closure is only a record', { skip }, () => {
   const { doc } = run();
   const tokens = closure(button());
-  const inCollection = key => Object.keys(doc.variables).filter(k => doc.variables[k].collection === key).sort();
+  const inCollection = key => Object.keys(doc.variables).filter(k => doc.variables[k].collection === key);
   assert.deepEqual(doc.closure.tokens, tokens);
   assert.deepEqual(Object.keys(doc.closure), ['contracts', 'tokens'], 'closure is a record of what Contracts use; fullScales is dropped (#107)');
-  const spacing = Array.from({ length: 13 }, (_, i) => `spacing-${String(i + 1).padStart(2, '0')}`);
-  const size = ['size-xs', 'size-sm', 'size-md', 'size-lg', 'size-xl', 'size-2xl'];
-  assert.deepEqual(inCollection('layout'), [...new Set([...spacing, ...size, ...tokens.filter(t => /^(icon-size|border-radius|spacing|size)-/.test(t))])].sort());
-  assert.ok(inCollection('layout').includes('icon-size-01') && inCollection('layout').includes('border-radius-00'));
-  assert.deepEqual(doc.variables['spacing-01'].usedBy, []);
-  assert.deepEqual(inCollection('theme'), tokens.filter(t => doc.variables[t] && doc.variables[t].type === 'COLOR'));
+  assert.equal(inCollection('theme').length, 234 + 15);
+  for (const t of tokens) assert.ok(doc.variables[t] || doc.textStyles[t], `closure token ${t} is emitted`);
+  assert.deepEqual(doc.variables['layer-01'].usedBy, [], 'a token no Contract uses is emitted with an empty usedBy');
+  assert.deepEqual(doc.variables['button-primary'].usedBy, ['button']);
   assert.equal(doc.closure.contracts.length, 1);
   assert.deepEqual(doc.closure.contracts[0], { family: 'button', path: CONTRACT, snapshotId: button().source.snapshotId });
+});
+
+test('component tokens carry their family, theme tokens do not, and button-separator is emitted though no Contract uses it', { skip }, () => {
+  const { variables } = run().doc;
+  const families = Object.entries(variables).filter(([, v]) => v.family).map(([k, v]) => [k, v.family]);
+  assert.equal(families.length, 15);
+  for (const [k, f] of families) {
+    assert.equal(f, 'button');
+    assert.match(k, /^button-/);
+  }
+  assert.equal(variables['button-primary'].family, 'button');
+  assert.deepEqual(variables['button-separator'].usedBy, []);
+  assert.equal(variables['button-separator'].family, 'button');
+  for (const name of ['background', 'text-on-color', 'focus', 'layer-01']) assert.equal(variables[name].family, undefined, name);
+});
+
+test('Layout holds every layout.json group: spacing, fluid spacing, container, size, icon size, border radius, layout', { skip }, () => {
+  const { variables } = run().doc;
+  const layout = Object.entries(variables).filter(([, v]) => v.collection === 'layout');
+  const groups = {};
+  for (const [, v] of layout) groups[v.name.split('/')[0]] = (groups[v.name.split('/')[0]] || 0) + 1;
+  assert.deepEqual(groups, { 'Border radius': 7, Container: 5, 'Fluid spacing': 4, 'Icon size': 2, Layout: 7, Size: 6, Spacing: 13 });
+  assert.deepEqual(variables['container-01'].values.default, { value: 24, from: '3 miniUnits x 8' });
+  assert.deepEqual(variables['container-01'].scopes, ['WIDTH_HEIGHT']);
+  assert.equal(variables['border-radius-max'].values.default.value, 999999);
+});
+
+test('fluid spacing is a STRING holding the exact CSS text, scoped to no picker', { skip }, () => {
+  const { variables } = run().doc;
+  const values = ['01', '02', '03', '04'].map(n => variables[`fluid-spacing-${n}`]);
+  assert.deepEqual(values.map(v => v.values.default.value), ['0', '2vw', '5vw', '10vw']);
+  for (const v of values) {
+    assert.equal(v.type, 'STRING');
+    assert.deepEqual(v.scopes, []);
+    assert.equal(v.values.default.level, 'info');
+    assert.match(v.values.default.reason, /viewport/);
+  }
+  assert.equal(variables['fluid-spacing-02'].codeSyntax.WEB, 'var(--cds-fluid-spacing-02)');
+});
+
+test('the deprecated layout-* scale is emitted, scoped to no picker, with the deprecation as its reason', { skip }, () => {
+  const { variables } = run().doc;
+  const v = variables['layout-01'];
+  assert.equal(v.type, 'FLOAT');
+  assert.deepEqual(v.scopes, []);
+  assert.equal(v.values.default.value, 16);
+  assert.equal(v.values.default.level, 'info');
+  assert.match(v.values.default.reason, /deprecated/i);
+  assert.equal(v.codeSyntax.WEB, '$layout-01');
 });
 
 test('mode values keep the alias and always the resolved value; alpha and button-danger-hover are raw with a reason', { skip }, () => {
@@ -132,16 +212,79 @@ test('codeSyntax is var(--cds-*) where the compiled CSS has it, else the Sass na
   assert.equal(web('button-primary'), 'var(--cds-button-primary)');
   assert.equal(web('spacing-05'), 'var(--cds-spacing-05)');
   assert.equal(web('body-compact-01-line-height'), 'var(--cds-body-compact-01-line-height)');
-  for (const name of ['size-lg', 'icon-size-01', 'border-radius-00']) {
+  for (const name of ['size-lg', 'icon-size-01', 'border-radius-00', 'container-01', 'layout-07']) {
     assert.equal(web(name), `$${name}`);
     assert.ok(doc.notes.some(n => n.level === 'info' && n.at === `variables.${name}.codeSyntax`));
   }
-  assert.deepEqual(doc.variables['font-family-sans'].codeSyntax, {});
+  for (const f of ['sans', 'mono', 'serif']) assert.deepEqual(doc.variables[`font-family-${f}`].codeSyntax, {});
+});
+
+test('Text Styles: all 36 Carbon styles, named by their current alias, in key order', { skip }, () => {
+  const { doc } = run();
+  const keys = Object.keys(doc.textStyles);
+  assert.equal(keys.length, 36);
+  assert.deepEqual(keys, [...keys].sort());
+  for (const k of ['body-compact-01', 'body-01', 'heading-compact-01', 'heading-07', 'fluid-heading-03', 'fluid-paragraph-01',
+    'fluid-quotation-02', 'fluid-display-04', 'caption-01', 'label-02', 'helper-text-01', 'code-02', 'heading-01', 'expressive-heading-02', 'legal-01'])
+    assert.ok(doc.textStyles[k], k);
+  for (const legacy of ['body-short-01', 'productive-heading-01', 'expressive-heading-03', 'quotation-01', 'display-01'])
+    assert.equal(doc.textStyles[legacy], undefined, `${legacy} is the alias target, emitted under its current name`);
+  assert.match(doc.textStyles['heading-07'].source, /productiveHeading07 \(heading07 = productiveHeading07\)/);
+});
+
+test('fluid styles keep their base values; breakpoints are ignored with a note', { skip }, () => {
+  const { doc } = run();
+  const s = doc.textStyles['fluid-heading-05'];
+  assert.deepEqual([s.fontSize, s.fontWeight, s.lineHeight.value, s.letterSpacing.value], [32, 400, 40, 0]);
+  assert.ok(doc.notes.some(n => n.at === 'textStyles' && /breakpoints/.test(n.message)));
+});
+
+test('helper-text-01 inherits Regular 400 and has no font-weight variable; helper-text-02 binds the one Carbon emits', { skip }, () => {
+  const { doc } = run();
+  const one = doc.textStyles['helper-text-01'];
+  assert.deepEqual([one.fontWeight, one.fontStyle], [400, 'Regular']);
+  assert.equal(one.binds.fontWeight, undefined);
+  assert.equal(doc.variables['helper-text-01-font-weight'], undefined);
+  assert.ok(doc.notes.some(n => n.level === 'info' && n.at === 'textStyles.helper-text-01.fontWeight' && /inherit/.test(n.message)));
+  const two = doc.variables['helper-text-02-font-weight'];
+  assert.equal(doc.textStyles['helper-text-02'].binds.fontWeight, 'helper-text-02-font-weight');
+  assert.equal(two.values.default.value, 400);
+  assert.equal(two.values.default.level, 'info');
+  assert.match(two.values.default.reason, /inherit/);
+});
+
+test('where styles.ts and the compiled CSS differ, the document takes the CSS line height and says so', { skip }, () => {
+  const { doc } = run();
+  const lh = name => doc.variables[`${name}-line-height`].values.default;
+  assert.equal(lh('heading-07').value, 64); // CSS 1.19 x 54; styles.ts 1.199 would round to 65
+  assert.equal(lh('expressive-heading-01').value, 20); // CSS 1.42857 x 14; styles.ts 1.25 would be 18
+  assert.equal(doc.textStyles['heading-07'].lineHeight.value, 64);
+  assert.equal(doc.textStyles['expressive-heading-01'].lineHeight.value, 20);
+  for (const name of ['heading-07', 'expressive-heading-01']) {
+    assert.equal(lh(name).level, 'warning');
+    assert.match(lh(name).reason, /styles\.ts/);
+  }
+  assert.equal(lh('heading-06').value, 50, 'heading-06 agrees with the CSS (1.199 x 42 = 50.358)');
+  assert.equal(lh('heading-06').level, undefined);
+});
+
+test('code styles bind Plex Mono and quotation styles Plex Serif', { skip }, () => {
+  const { doc } = run();
+  assert.deepEqual(['sans', 'mono', 'serif'].map(f => doc.variables[`font-family-${f}`].values.default.value), ['IBM Plex Sans', 'IBM Plex Mono', 'IBM Plex Serif']);
+  for (const f of ['sans', 'mono', 'serif']) assert.equal(doc.variables[`font-family-${f}`].type, 'STRING');
+  assert.deepEqual([doc.textStyles['code-01'].fontFamily, doc.textStyles['code-01'].binds.fontFamily], ['IBM Plex Mono', 'font-family-mono']);
+  assert.deepEqual([doc.textStyles['fluid-quotation-01'].fontFamily, doc.textStyles['fluid-quotation-01'].binds.fontFamily], ['IBM Plex Serif', 'font-family-serif']);
+  assert.equal(doc.textStyles['body-01'].binds.fontFamily, 'font-family-sans');
+});
+
+test('generation fails, naming the style, on a Type field it cannot read', { skip }, () => {
+  const file = 'packages/type/src/styles.ts';
+  const bad = { ...sources, files: { ...sources.files, [file]: sources.files[file].replace('export const legal01 = {', 'export const legal01 = {\n  textTransform: upper,') } };
+  assert.throws(() => generate({ sources: bad, contracts: [{ path: CONTRACT, contract: button() }] }), /legal01.*textTransform/);
 });
 
 test('textStyles are keyed by the Contract name and bind the Type variables', { skip }, () => {
   const { doc } = run();
-  assert.deepEqual(Object.keys(doc.textStyles), ['body-compact-01', 'body-compact-02']);
   const s = doc.textStyles['body-compact-01'];
   assert.equal(s.name, 'Body/body-compact-01');
   assert.deepEqual([s.fontFamily, s.fontStyle, s.fontSize, s.lineHeight, s.fontWeight, s.letterSpacing],

@@ -8,9 +8,10 @@ import { mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { foundationsPlan, stripReviewFields } from '../scripts/build-plan.mjs';
+import { foundationsPlan } from '../scripts/build-plan.mjs';
 import { formatDiff, review } from '../scripts/base-loop.mjs';
 import { recordResult, setGroups } from '../scripts/ledger.mjs';
+import { DEFAULT_GROUPS, reach, selection, subsetDocument } from '../scripts/foundations-subset.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
 
 const DOC_TEXT = readFileSync(new URL('../../../design-systems/carbon/carbon.foundations.json', import.meta.url), 'utf8');
@@ -34,35 +35,39 @@ function pack({ docText = DOC_TEXT, ledger = null, options = {} } = {}) {
 const call = async (mock, opts) => runPackage(pack(opts).code, mock.figma);
 const names = mock => mock.snapshot().collections.flatMap(c => c.variables.map(v => v.name));
 
-// Today's document plus theme a Contract does not use, in document order: a Primitive, a Theme group aliasing it,
-// a Layer collection after Theme aliasing that group (two hops), a Fluid spacing group and an unused Text Style.
+// The Button default subset, as it was built before the document carried the whole theme (#108): To-design's
+// default selection of the whole-theme document must build exactly this.
+const DEFAULT_PLAN = JSON.parse(readFileSync(new URL('./fixtures/button-default-subset.plan.json', import.meta.url), 'utf8'));
+
+// A small whole theme for the selection mechanics: the default subset of the committed document, plus real entries
+// it leaves out (support-success with its Primitives green.50 and green.40, fluid-spacing-01, and the unused Text
+// Style heading-01 with its variables), plus a Layer collection after Theme whose `field` aliases support-success
+// (two hops). Carbon has no Layer collection yet (ADR 0009), so that one is made up.
 const COLLECTIONS = ['primitives', 'theme', 'layer', 'layout', 'type'];
 function wholeTheme() {
-  const doc = JSON.parse(DOC_TEXT);
+  const real = JSON.parse(DOC_TEXT);
+  const keep = selection(real, DEFAULT_GROUPS);
+  const extra = reach(real, ['support-success', 'fluid-spacing-01', 'heading-01']);
+  const doc = subsetDocument(real, { variables: new Set([...keep.variables, ...extra.variables]), textStyles: new Set([...keep.textStyles, ...extra.textStyles]) });
   doc.collections.splice(2, 0, { key: 'layer', name: 'Layer', modes: [{ key: 'one', label: 'Layer 01' }, { key: 'two', label: 'Layer 02' }] });
-  const themeModes = alias => Object.fromEntries(['white', 'g10', 'g90', 'g100'].map(m => [m, { alias, resolved: '#24a148' }]));
-  const extra = {
-    'green.50': { collection: 'primitives', name: 'Green/50', type: 'COLOR', scopes: [], codeSyntax: {}, hidden: true, values: { default: { value: '#24a148', resolved: '#24a148' } }, usedBy: [] },
-    'support-success': { collection: 'theme', name: 'Support/support-success', type: 'COLOR', scopes: ['ALL_FILLS'], codeSyntax: { WEB: 'var(--cds-support-success)' }, values: themeModes('green.50'), usedBy: [] },
-    'field': { collection: 'layer', name: 'Layer/field', type: 'COLOR', scopes: ['ALL_FILLS'], codeSyntax: { WEB: 'var(--cds-field)' }, values: { one: { alias: 'support-success', resolved: '#24a148' }, two: { alias: 'support-success', resolved: '#24a148' } }, usedBy: [] },
-    'fluid-spacing-01': { collection: 'layout', name: 'Fluid spacing/fluid-spacing-01', type: 'FLOAT', scopes: ['GAP'], codeSyntax: {}, values: { default: { value: 0 } }, usedBy: [] },
-    'heading-01-font-size': { collection: 'type', name: 'Heading/heading-01-font-size', type: 'FLOAT', scopes: ['FONT_SIZE'], codeSyntax: {}, values: { default: { value: 14 } }, usedBy: [] },
-  };
+  const field = { collection: 'layer', name: 'Layer/field', type: 'COLOR', scopes: ['ALL_FILLS'], codeSyntax: { WEB: 'var(--cds-field)' }, values: { one: { alias: 'support-success', resolved: '#24a148' }, two: { alias: 'support-success', resolved: '#24a148' } }, usedBy: [] };
   const byOrder = ([ka, a], [kb, b]) => COLLECTIONS.indexOf(a.collection) - COLLECTIONS.indexOf(b.collection) || (ka < kb ? -1 : ka > kb ? 1 : 0);
-  doc.variables = Object.fromEntries(Object.entries({ ...doc.variables, ...extra }).sort(byOrder));
-  doc.textStyles['heading-01'] = { ...doc.textStyles['body-compact-01'], name: 'Heading/heading-01', usedBy: [],
-    binds: { ...doc.textStyles['body-compact-01'].binds, fontSize: 'heading-01-font-size' } };
+  doc.variables = Object.fromEntries(Object.entries({ ...doc.variables, field }).sort(byOrder));
   return JSON.stringify(doc, null, 2) + '\n';
 }
+const SUPPORT = ['field', 'green.40', 'green.50', 'support-success'];
 
-test("today's document is exactly the default subset, so the plan carries it whole", () => {
-  assert.deepEqual(pack().plan.foundations, stripReviewFields(JSON.parse(DOC_TEXT)));
+test('the default selection of the whole-theme document builds exactly the Button default subset of before', () => {
+  const { plan } = pack();
+  assert.deepEqual(plan.foundations, DEFAULT_PLAN);
+  assert.equal(Object.keys(plan.foundations.variables).length, 75);
+  assert.ok(Object.keys(JSON.parse(DOC_TEXT).variables).length > 600, 'the document itself carries the whole theme');
 });
 
 test('a document larger than the selection builds only the closure, Spacing, Size and their alias and bind targets', async () => {
   const docText = wholeTheme();
   const { plan } = pack({ docText });
-  assert.deepEqual(Object.keys(plan.foundations.variables), Object.keys(JSON.parse(DOC_TEXT).variables));
+  assert.deepEqual(Object.keys(plan.foundations.variables), Object.keys(DEFAULT_PLAN.variables));
   assert.deepEqual(Object.keys(plan.foundations.textStyles), ['body-compact-01', 'body-compact-02']);
   assert.deepEqual(plan.foundations.collections.map(c => c.key), ['primitives', 'theme', 'layout', 'type'], 'a collection with nothing selected is left out');
   assert.match(plan.documentHash, /^sha256:/);
@@ -109,8 +114,8 @@ test('removing a group makes its variables Orphans that keep their nodes; a targ
   assert.throws(() => setGroups(noLayer, FILE_KEY, doc, { remove: ['Layer'] }), /Layer is not a selected group/);
   mock.log.length = 0;
   const dropped = await call(mock, { docText, ledger: noLayer });
-  assert.deepEqual(dropped.orphaned.variables.sort(), ['field', 'green.50', 'support-success']);
-  assert.deepEqual(Object.keys(dropped.ledger.foundations.orphans.variables).sort(), ['field', 'green.50', 'support-success']);
+  assert.deepEqual(dropped.orphaned.variables.sort(), SUPPORT);
+  assert.deepEqual(Object.keys(dropped.ledger.foundations.orphans.variables).sort(), SUPPORT);
   for (const name of ['Layer/field', 'Support/support-success', 'Green/50']) assert.ok(names(mock).includes(name), `${name} is never deleted by a run`);
   assert.deepEqual(mock.log.filter(([op]) => !['setCurrentPage', 'loadFont'].includes(op)), []);
 });
@@ -177,9 +182,9 @@ test('a chunked build orphans a dropped group once, in chunk 1', async () => {
   const { ledger } = await buildInChunks(mock, docText, setGroups(null, FILE_KEY, doc, { add: ['Layer'] }), { budget });
   assert.ok(ledger.foundations.variables.field);
   const { ledger: after, results } = await buildInChunks(mock, docText, setGroups(ledger, FILE_KEY, doc, { remove: ['Layer'] }), { budget });
-  assert.deepEqual(results[0].orphaned.variables.sort(), ['field', 'green.50', 'support-success']);
+  assert.deepEqual(results[0].orphaned.variables.sort(), SUPPORT);
   assert.deepEqual(results.slice(1).flatMap(r => r.orphaned.variables), []);
-  assert.deepEqual(Object.keys(after.foundations.orphans.variables).sort(), ['field', 'green.50', 'support-success']);
+  assert.deepEqual(Object.keys(after.foundations.orphans.variables).sort(), SUPPORT);
   assert.equal(after.foundations.variables.field, undefined);
   assert.equal(Object.keys(after.foundations.variables).length, 75);
 });
@@ -251,16 +256,30 @@ test('the base-loop picker offers every document token with the typed value and 
   const contract = JSON.parse(readFileSync(new URL('button.component.json', fix), 'utf8'));
   const typed24 = JSON.parse(readFileSync(new URL('readback.typed24.json', fix), 'utf8'))[0];
   const doc = JSON.parse(DOC_TEXT);
-  doc.variables['fluid-spacing-03'] = { ...doc.variables['spacing-06'], name: 'Fluid spacing/fluid-spacing-03', usedBy: [] };
-  const built = Object.fromEntries(Object.keys(JSON.parse(DOC_TEXT).variables).map((n, i) => [n, `VariableID:1:${i}`]));
+  // the file built the default subset, less spacing-06
+  const built = Object.fromEntries(Object.keys(DEFAULT_PLAN.variables).filter(n => n !== 'spacing-06').map((n, i) => [n, `VariableID:1:${i}`]));
 
   const [gap] = review(contract, typed24, doc, { built }).proposals;
-  assert.deepEqual(gap.tokenCandidates, ['fluid-spacing-03', 'spacing-06']);
-  assert.deepEqual(gap.unbuiltGroups, { 'fluid-spacing-03': 'Fluid spacing' });
-  assert.match(formatDiff(contract, typed24, review(contract, typed24, doc, { built })), /token\(s\) fluid-spacing-03 \(not built: add group Fluid spacing\), spacing-06 /);
+  assert.deepEqual(gap.tokenCandidates, ['spacing-06'], 'layout-02 is 24px too, but deprecated (scopes []), so it is never offered');
+  assert.deepEqual(gap.unbuiltGroups, { 'spacing-06': 'Spacing' });
+  assert.match(formatDiff(contract, typed24, review(contract, typed24, doc, { built })), /token\(s\) spacing-06 \(not built: add group Spacing\) /);
 
   const [unknown] = review(contract, typed24, doc).proposals;
   assert.deepEqual(unknown.unbuiltGroups, {}, 'without the ledger nothing is marked');
+});
+
+test('the owner can add the Fluid spacing group: its STRING variables build in the Layout collection', async () => {
+  const doc = JSON.parse(DOC_TEXT);
+  const ledger = setGroups(null, FILE_KEY, doc, { add: ['Fluid spacing'] });
+  const mock = mockFigma({ fileKey: FILE_KEY });
+  const result = await call(mock, { ledger });
+  assert.equal(result.summary.conflicts, 0, JSON.stringify(result.conflicts));
+  const layout = mock.snapshot().collections.find(c => c.name === 'Layout');
+  const fluid = layout.variables.filter(v => v.name.startsWith('Fluid spacing/'));
+  assert.deepEqual(fluid.map(v => v.name), ['01', '02', '03', '04'].map(n => `Fluid spacing/fluid-spacing-${n}`));
+  for (const v of fluid) assert.equal(v.type, 'STRING');
+  assert.deepEqual(fluid.map(v => v.values), [['Default', '0'], ['Default', '2vw'], ['Default', '5vw'], ['Default', '10vw']].map(m => [m]));
+  assert.equal(Object.keys(result.ledger.foundations.variables).length, 75 + 4);
 });
 
 test('binding a token this file has not built cannot be carried until its group is added', () => {
