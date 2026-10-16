@@ -23,7 +23,7 @@ import { readFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { convert } from '../../contract/scripts/color.mjs';
-import { resolve, validate, variantName } from '../../contract/scripts/contract.mjs';
+import { expand, resolve, validate, variantName } from '../../contract/scripts/contract.mjs';
 import { writeJson } from '../../contract/scripts/io.mjs';
 import { candidateRules, compiledRules, winner } from './cascade.mjs';
 import { evaluate, round } from './foundations.mjs';
@@ -93,7 +93,7 @@ function variantsOf(candidate) {
 }
 
 /**
- * Read one family at the exact tier. Returns {name, file, files, axes, layout, paint, pending, notes, expectedCount}:
+ * Read one family at the exact tier. Returns {name, file, files, axes, layout, paint, pending, notes, omit, expectedCount}:
  * `pending` lists the paint values #120 owns: [{at, light, dark, lines, reason, variants}], each with the winning
  * utility per Mode, the source lines that name them and how many variants use them. Throws on anything it cannot
  * read exactly (see the header).
@@ -190,6 +190,22 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     values: [{ key: 'enabled', label: 'Enabled', code: {} }, ...STATES.filter(s => stateCss[s]).map(stateValue)] });
   let tuples = [{}];
   for (const a of axes) tuples = tuples.flatMap(t => a.values.map(v => ({ ...t, [a.key]: v.key })));
+  // An attribute axis changes only the variants whose classes style that attribute. Elsewhere its `on` value is a
+  // twin of `off`, so the selection omits it: the cva values that style it are read from the source, never listed.
+  const omit = [];
+  for (const [attr, ax] of Object.entries(ATTR_AXES)) {
+    const using = live.filter(r => attr in r.when.attrs).map(r => r.entry);
+    if (!using.length || using.some(e => !e.axis)) continue;
+    const match = {};
+    for (const axis of Object.keys(cv.variants).filter(a => using.some(e => e.axis === a))) {
+      const without = Object.keys(cv.variants[axis]).filter(v => !using.some(e => e.axis === axis && e.value === v));
+      match[axis] = without.length === 1 ? without[0] : without;
+    }
+    if (Object.values(match).some(v => !v.length)) continue;
+    match[ax.key] = ax.on;
+    const named = Object.entries(match).filter(([k]) => k !== ax.key).map(([k, v]) => `${k} ${[].concat(v).join(', ')}`);
+    omit.push({ match, reason: `${ax.on} is the twin of ${ax.off}: no ${attr} utility in ${named.join('; ')}` });
+  }
 
   // 5. Per variant: the classes `cn()` keeps, then the cascade per Mode.
   const merged = new Map(); // cva combo -> Set of surviving entries
@@ -369,7 +385,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   });
 
   // 8. Notes.
-  const expectedCount = tuples.length;
+  const expectedCount = expand({ axes, excluded: [], selection: { omit } }).length;
   const list = cs => cs.join(', ');
   const notes = [];
   if (drops.size)
@@ -390,10 +406,10 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   if (exportedParts.length) notes.push({ level: 'info', at: file, message: `${list(exportedParts)}: parts beyond the root are the agent tier (#122).` });
   notes.push({ level: 'info', at: 'figma.grid', message: 'A placeholder layout (size across, every other axis down); the agent tier (#122) lays the grid out.' });
   if (expectedCount > VARIANT_LIMIT)
-    notes.push({ level: 'verify', at: 'selection', message: `${expectedCount} variants: past ADR 0004's ~${VARIANT_LIMIT}. Every axis is fully selected and nothing is cut; probe the build cost before building it, or narrow it with selection.omit.` });
+    notes.push({ level: 'verify', at: 'selection', message: `${expectedCount} variants: past ADR 0004's ~${VARIANT_LIMIT}. Only attribute twins are omitted and nothing else is cut; probe the build cost before building it, or narrow it with selection.omit.` });
 
   return { name: Name, file, files: sortedFiles, element: root.element, axes, layout, paint,
-    pending: [...pendingBy.values()], notes, expectedCount, alias: `${ui}/${family}` };
+    pending: [...pendingBy.values()], notes, omit, expectedCount, alias: `${ui}/${family}` };
 }
 
 /**
@@ -491,7 +507,7 @@ export async function generate({ project, family, foundations, drafts = [], tool
       files: f.files, snapshotId: snapshotId(f.files) },
     axes: f.axes,
     excluded: [],
-    selection: { status: 'draft', omit: [], expectedCount: f.expectedCount, approval: null },
+    selection: { status: 'draft', omit: f.omit, expectedCount: f.expectedCount, approval: null },
     anatomy: { name: f.name, type: 'COMPONENT' },
     properties: [],
     layout: f.layout,

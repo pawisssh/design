@@ -153,7 +153,7 @@ In order: each cva variant axis, then the attribute axes, then the canonical Sta
 
   Any other attribute state fails, naming the utility.
 - **State.** `enabled`, then each of `hover`, `active`, `focus` and `disabled` that a carried rule uses. `css` lists the selectors the CSS uses for that state, joined with ", ". `disabled` is `{disabled: true}` on a native control, else the attribute.
-- **Selection.** Every axis is fully selected. Past ADR 0004's ~600 variants, a `verify` note says so; nothing is cut.
+- **Selection.** An attribute axis changes only the variants whose classes style that attribute, so `selection.omit` drops its on value everywhere else: those variants would be twins of their off value. The omit is read from the source, never listed by hand. Button omits `expanded` for `variant` `default`, `destructive` and `link`, which have no `aria-expanded:` utility: 768 − 192 = 576 variants. Nothing else is cut. Past ADR 0004's ~600 variants after the omit, a `verify` note says so.
 
 ### Layout and paint of the root
 

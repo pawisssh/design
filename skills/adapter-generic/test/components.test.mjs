@@ -69,9 +69,19 @@ test('aria-disabled folds into disabled, with both selectors in css and no new a
   assert.equal(byKey(axes).state.values.find(v => v.key === 'disabled').css, ':disabled, [aria-disabled="true"]');
 });
 
-test('every axis is fully selected; past ADR 0004\'s ~600 variants it is reported, not cut', { skip }, async () => {
-  const { expectedCount, notes } = await button();
-  assert.equal(expectedCount, 6 * 8 * 2 * 2 * 4);
+test('the selection omits expanded where no class styles aria-expanded: those variants are their collapsed twins', { skip }, async () => {
+  const { expectedCount, omit, notes } = await button();
+  assert.deepEqual(omit.map(o => o.match), [{ variant: ['default', 'destructive', 'link'], expanded: 'expanded' }]);
+  assert.match(omit[0].reason, /no aria-expanded utility/);
+  assert.equal(expectedCount, 6 * 8 * 2 * 2 * 4 - 3 * 8 * 2 * 4);
+  assert.ok(!notes.some(n => n.level === 'verify' && /ADR 0004/.test(n.message)), 'under ~600 after the omit: no warning');
+});
+
+test('past ADR 0004\'s ~600 variants after the omit, it is reported, not cut', { skip }, async () => {
+  // The base styles aria-expanded, so every variant does.
+  const project = variant(text => text.replace('"group/button ', '"aria-expanded:bg-muted group/button '));
+  const { expectedCount, omit, notes } = await readFamily({ project, family: 'button', foundations });
+  assert.deepEqual([expectedCount, omit], [768, []]);
   assert.ok(notes.some(n => n.level === 'verify' && /768 variants/.test(n.message) && /ADR 0004/.test(n.message)));
 });
 
