@@ -18,7 +18,7 @@ const ROLE_SCOPE = {
   gap: 'GAP', padding: 'GAP', margin: 'GAP', 'border-radius': 'CORNER_RADIUS',
   'font-size': 'FONT_SIZE', 'line-height': 'LINE_HEIGHT', 'font-weight': 'FONT_WEIGHT', 'letter-spacing': 'LETTER_SPACING',
 };
-const COLOR_ROLES = new Set(['background-color', 'color', 'border-color', 'outline-color']);
+export const COLOR_ROLES = new Set(['background-color', 'color', 'border-color', 'outline-color']);
 const TYPE_ROLES = new Set(['font-size', 'line-height', 'font-weight', 'letter-spacing']);
 export const NEAR_DELTA_E = 0.02;
 const CHROMA_GUARD = 0.01;
@@ -44,6 +44,33 @@ export const collectionOf = (foundations, mode) => foundations.collections.find(
 const group = v => v.name.split('/')[0];
 const round = (n, d = 4) => Math.round(n * 10 ** d) / 10 ** d;
 const px = value => { const m = /^(-?\d*\.?\d+)(px|rem)?$/.exec(value.trim()); return m ? Number(m[1]) * (m[2] === 'rem' ? 16 : 1) : null; };
+
+// CSS-wide keywords and currentcolor carry no colour of their own.
+const CSS_WIDE = /^(inherit|initial|unset|revert|revert-layer|currentcolor)$/i;
+
+/** Two "#rrggbb" colours equal within one byte per channel (the converter's rounding). */
+export const sameHex = (a, b) => [1, 3, 5].every(i => Math.abs(parseInt(a.slice(i, i + 2), 16) - parseInt(b.slice(i, i + 2), 16)) <= 1);
+
+/**
+ * A value with the Prototype's own custom properties followed (and a `var()` fallback taken when the name is not
+ * one of them). A reference to a Foundations token is left as written.
+ */
+export function followCustom(value, custom) {
+  let v = String(value).trim();
+  for (let hops = 0; hops < 8; hops++) {
+    const m = /^var\(\s*(--[\w-]+)\s*(?:,\s*([\s\S]*))?\)$/.exec(v);
+    if (!m) break;
+    if (custom[m[1]] !== undefined) v = custom[m[1]];
+    else if (m[2]) v = m[2].trim();
+    else break;
+  }
+  return v;
+}
+
+/** A colour's text for keys and `raw`: normalised when the converter reads it, else as written, lower-cased. */
+export function colorText(value) {
+  try { return normaliseColor(value); } catch { return String(value).trim().toLowerCase(); }
+}
 
 /** Normalised text of a colour ("#rrggbb", or "rgba(r, g, b, a)" below full alpha), via the shared converter. */
 export function normaliseColor(value) {
@@ -85,6 +112,7 @@ export function matchDeclaration({ property, value }, ctx) {
     if (!ref) break;
     if (ctx.custom && ctx.custom[ref[1]] !== undefined) { via.push(ref[1]); v = ctx.custom[ref[1]]; continue; }
     const key = webIndex(foundations)[ref[1]];
+    if (!key && ref[2]) { v = ref[2].trim(); continue; }
     if (!key) return offSystem(`unknown token \`${ref[1]}\``, []);
     const variable = foundations.variables[key];
     if (variable.hidden) return offSystem(`\`${ref[1]}\` is a hidden Primitive; a region binds theme tokens only`, [], key);
@@ -111,19 +139,20 @@ function pool(foundations, need, groups, collections, type) {
 
 function matchColor(value, role, need, groups, ctx) {
   let raw;
-  try { raw = convert(value); } catch { return { kind: 'skip' }; }
+  try { raw = convert(value); } catch {
+    if (CSS_WIDE.test(value.trim())) return { kind: 'skip' };
+    return offSystem(`\`${value.trim()}\` is not a colour the shared converter reads; write it as hex, rgb() or a token`, []);
+  }
   if (raw.alpha === 0) return { kind: 'skip' };
   const { foundations } = ctx.system;
   const collection = collectionOf(foundations, ctx.mode);
   const modeLabel = collection.modes.find(m => m.key === ctx.mode).label;
-  const bytes = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
-  const rawBytes = bytes(raw.hex);
   const rawChroma = chroma(raw.hex);
   const scored = pool(foundations, need, groups, [collection.key], 'COLOR').map(c => {
     const t = convert(valueIn(c.variable, ctx.mode));
     return { token: c.key, hex: t.hex, alpha: t.alpha, delta: deltaE(raw.hex, t.hex) };
   });
-  const exact = scored.filter(c => bytes(c.hex).every((b, i) => Math.abs(b - rawBytes[i]) <= 1) && Math.abs(c.alpha - raw.alpha) <= 0.01);
+  const exact = scored.filter(c => sameHex(c.hex, raw.hex) && Math.abs(c.alpha - raw.alpha) <= 0.01);
   if (exact.length === 1) return { kind: 'exact', token: exact[0].token };
   if (exact.length > 1) return { kind: 'tie', candidates: exact.map(c => c.token).sort() };
   const rank = (a, b) => a.delta - b.delta || (a.token < b.token ? -1 : 1);
@@ -144,7 +173,7 @@ function matchColor(value, role, need, groups, ctx) {
 
 function matchLength(value, role, need, groups, ctx) {
   const n = px(value);
-  if (n === null || n === 0 || n < 0) return { kind: 'skip' };
+  if (n === null || n <= 0) return { kind: 'skip' };
   const { foundations } = ctx.system;
   const single = foundations.collections.filter(c => c.modes.length === 1 && !c.hidden).map(c => c.key);
   const steps = pool(foundations, need, groups, single, 'FLOAT').map(c => ({ token: c.key, value: Number(valueIn(c.variable, 'default')) }))
@@ -162,7 +191,7 @@ function matchLength(value, role, need, groups, ctx) {
 
 /**
  * Match a text tuple {fontSize, lineHeight|null, fontWeight, letterSpacing} against the Text Styles (#61 Type):
- * exact | tie | near (size and weight equal) | partial (the font size against the Type variables) | off-system.
+ * exact | tie | near (size and weight equal, line height within 1px) | partial (the font size against the Type variables) | off-system.
  */
 export function matchText(t, ctx) {
   const styles = Object.entries(ctx.system.foundations.textStyles);
@@ -170,12 +199,13 @@ export function matchText(t, ctx) {
   const ls = s => (s.letterSpacing && s.letterSpacing.unit === 'PIXELS' ? s.letterSpacing.value : 0);
   const base = styles.filter(([, s]) => s.fontSize === t.fontSize && s.fontWeight === t.fontWeight);
   if (t.lineHeight !== null) {
-    const exact = base.filter(([, s]) => lh(s) !== null && Math.abs(lh(s) - t.lineHeight) <= 1 && Math.abs(ls(s) - t.letterSpacing) <= 0.05);
+    const exact = base.filter(([, s]) => lh(s) !== null && Math.abs(lh(s) - t.lineHeight) <= 0.5 && Math.abs(ls(s) - t.letterSpacing) <= 0.05);
     if (exact.length === 1) return { kind: 'exact', token: exact[0][0] };
     if (exact.length > 1) return { kind: 'tie', candidates: exact.map(([k]) => k).sort() };
-    if (base.length) {
+    const close = base.filter(([, s]) => lh(s) !== null && Math.abs(lh(s) - t.lineHeight) <= 1);
+    if (close.length) {
       const dist = s => Math.abs((lh(s) ?? 0) - t.lineHeight) + Math.abs(ls(s) - t.letterSpacing);
-      const ranked = base.map(([k, s]) => ({ token: k, delta: round(dist(s), 2) })).sort((a, b) => a.delta - b.delta || (a.token < b.token ? -1 : 1));
+      const ranked = close.map(([k, s]) => ({ token: k, delta: round(dist(s), 2) })).sort((a, b) => a.delta - b.delta || (a.token < b.token ? -1 : 1));
       return { kind: 'near', candidates: ranked.slice(0, 3) };
     }
   }

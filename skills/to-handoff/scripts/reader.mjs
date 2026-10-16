@@ -11,7 +11,8 @@ import { readFileSync } from 'node:fs';
 import { parseCss, parseInline } from './css.mjs';
 import { loadParse5 } from './deps.mjs';
 
-const MASK = '';
+// A private-use character (U+E000) that stands in for a template hole while the HTML is parsed.
+const MASK = '\uE000';
 
 /** Read one HTML file. `rel` is its path relative to the Prototype root (the `at` prefix). */
 export function readHtml(path, rel, { depsDir } = {}) {
@@ -203,7 +204,7 @@ function skipCode(src, i, stop) {
     if (c === "'" || c === '"') { i = skipString(src, i) ; continue; }
     if (c === '`') { i = scanTemplate(src, i).end; continue; }
     if (c === '/' && src[i + 1] === '/') { i = src.indexOf('\n', i); if (i < 0) return src.length; continue; }
-    if (c === '/' && src[i + 1] === '*') { i = src.indexOf('*/', i) + 2; continue; }
+    if (c === '/' && src[i + 1] === '*') { const end = src.indexOf('*/', i + 2); if (end < 0) return src.length; i = end + 2; continue; }
     if ('([{'.includes(c)) depth++;
     else if (')]}'.includes(c)) { if (depth === 0 && c === stop) return i; depth--; }
     i++;

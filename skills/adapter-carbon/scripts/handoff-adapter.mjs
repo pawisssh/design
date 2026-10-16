@@ -14,8 +14,6 @@ export const roleGroups = {
   padding: ['Spacing'],
   margin: ['Spacing'],
   'border-radius': ['Border radius'],
-  width: ['Size'],
-  height: ['Size'],
 };
 
 // The tokens the mode map compares a Prototype's surfaces against (#61 "mode map by page surface").

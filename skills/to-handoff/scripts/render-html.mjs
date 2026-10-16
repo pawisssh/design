@@ -6,7 +6,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { handoffContentHash } from './generate.mjs';
-import { loadDesignSystem } from './system.mjs';
+import { loadDesignSystem, stateAxisOf } from './system.mjs';
 
 const OPTIONAL = ['flow', 'interactions', 'data', 'a11y', 'tokensToAdd'];
 const FLAGS = {
@@ -290,7 +290,7 @@ function snippetFor(contract, u, text) {
     else put(p.code.prop, text(u.properties[p.key]));
   }
   for (const axis of contract.axes) {
-    if (axis.canonical || axis.key === 'state') continue;
+    if (axis === stateAxisOf(contract)) continue;
     const key = u.tuple[axis.key] === undefined ? axis.default : u.tuple[axis.key];
     const value = axis.values.find(v => v.key === key);
     if (!value || !value.code) continue;
@@ -298,7 +298,7 @@ function snippetFor(contract, u, text) {
     if (emit) for (const [k, v] of Object.entries(value.code)) put(k, v);
   }
   if (u.state) {
-    const axis = contract.axes.find(a => a.canonical || a.key === 'state');
+    const axis = stateAxisOf(contract);
     const value = axis && axis.values.find(v => v.key === u.state);
     if (value && value.code) for (const [k, v] of Object.entries(value.code)) put(k, v);
   }

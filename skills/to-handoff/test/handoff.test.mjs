@@ -11,7 +11,9 @@ import { fileURLToPath } from 'node:url';
 import { contentHash, validate } from '../../contract/scripts/contract.mjs';
 import { hasDeps } from '../scripts/deps.mjs';
 import { generate, loadDesignSystem, render, validateHandoff } from '../scripts/handoff.mjs';
-import { matchDeclaration } from '../scripts/match.mjs';
+import { parseInline } from '../scripts/css.mjs';
+import { matchDeclaration, matchText } from '../scripts/match.mjs';
+import { innerHtmlTemplates } from '../scripts/reader.mjs';
 
 const repo = p => fileURLToPath(new URL(`../../../${p}`, import.meta.url));
 const fixture = p => fileURLToPath(new URL(`fixtures/invite-teammates/${p}`, import.meta.url));
@@ -108,8 +110,10 @@ test('#edf5ff is Off-system with nearest and its Primitive; a near match and a t
   assert.equal(near.by, 'agent');
   assert.ok(near.delta > 0 && near.delta <= 0.02);
   const h1 = handoff.screens[0].regions.flatMap(r => r.text || []).find(t => handoff.copy[t.copy].text === 'Invite teammates');
-  assert.equal(h1.style.textStyle, 'heading-03');
-  assert.equal(h1.style.match, 'near');
+  // 20/30 is 2px off heading-03's 20/28, beyond "near" (within 1px): only the font size matches, a tied pick.
+  assert.equal(h1.style.textStyle, undefined);
+  assert.equal(h1.style.partial.fontSize.token, 'heading-03-font-size');
+  assert.equal(h1.style.partial.fontSize.by, 'agent');
   const ref = styles(handoff).find(s => s.property === 'border-color');
   assert.equal(ref.token, 'border-subtle-01');
   assert.ok(handoff.openQuestions.filter(q => q.kind === 'font').length === 1);
@@ -194,6 +198,26 @@ test('the matcher never lets a Primitive or a component token match a region, ev
   assert.match(unknown.reason, /unknown token `--cds-nope`/);
   const primary = matchDeclaration({ property: 'background-color', value: '#0f62fe' }, ctx);
   assert.ok(![primary.token, ...(primary.candidates || []), ...(primary.nearest || []).map(n => n.token)].some(t => t && system.foundations.variables[t] && (system.foundations.variables[t].family || system.foundations.variables[t].hidden)));
+});
+
+test('edge values: a named colour is Off-system, never dropped; a var() fallback is matched; text "near" is within 1px', { skip: noDeps }, async () => {
+  const { system } = await run();
+  const ctx = { system, mode: 'white' };
+  assert.deepEqual(parseInline('border: 1px solid gray; background: red').map(d => `${d.property} ${d.value}`),
+    ['border-color gray', 'border-width 1px', 'background-color red']);
+  const named = matchDeclaration({ property: 'background-color', value: 'red' }, ctx);
+  assert.equal(named.kind, 'off-system');
+  assert.match(named.reason, /`red` is not a colour the shared converter reads/);
+  assert.equal(matchDeclaration({ property: 'color', value: 'inherit' }, ctx).kind, 'skip');
+  assert.deepEqual(matchDeclaration({ property: 'color', value: 'var(--nope, #161616)' }, ctx), { kind: 'tie', candidates: ['icon-primary', 'text-primary'] });
+  const style = { fontSize: 14, fontWeight: 400, letterSpacing: 0.16 };
+  assert.equal(matchText({ ...style, lineHeight: 18 }, ctx).kind, 'tie');
+  assert.equal(matchText({ ...style, lineHeight: 19 }, ctx).kind, 'near');
+  assert.equal(matchText({ ...style, lineHeight: 30 }, ctx).kind, 'partial');
+});
+
+test('an unclosed comment in a template hole ends the scan instead of looping', () => {
+  assert.ok(Array.isArray(innerHtmlTemplates('app.innerHTML = `<p>${a /* never closed`;')));
 });
 
 const noRender = async () => {

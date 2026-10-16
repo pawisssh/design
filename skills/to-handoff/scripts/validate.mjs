@@ -4,6 +4,7 @@
 // states, and no usage of a retired Proposal.
 import { readFileSync } from 'node:fs';
 import { STANDARD_STATES } from './recognise.mjs';
+import { stateAxisOf } from './system.mjs';
 
 const SCHEMA = JSON.parse(readFileSync(new URL('../handoff.schema.json', import.meta.url), 'utf8'));
 
@@ -96,11 +97,11 @@ export function validateHandoff(handoff, system) {
         if (def && u.tuple) for (const [k, v] of Object.entries(u.tuple)) {
           const axis = def.axes.find(a => a.key === k);
           if (!axis) err('tuple', at, `${at}: tuple axis ${k} is not an axis of \`${def.family.key}\``);
-          else if (axis.canonical || axis.key === 'state') err('tuple', at, `${at}: tuple axis ${k} is the State axis; use usage.state`);
+          else if (axis === stateAxisOf(def)) err('tuple', at, `${at}: tuple axis ${k} is the State axis; use usage.state`);
           else if (!axis.values.some(x => x.key === v)) err('tuple', at, `${at}: tuple ${k} "${v}" is not a ${axis.label} value of \`${def.family.key}\``);
         }
         const stateValue = s => {
-          const axis = def && def.axes.find(a => a.canonical || a.key === 'state');
+          const axis = def && stateAxisOf(def);
           const value = axis && axis.values.find(x => x.key === s);
           if (!value || !value.code) err('state', at, `${at}: state "${s}" is not an authored State value of \`${def ? def.family.key : '?'}\``);
         };

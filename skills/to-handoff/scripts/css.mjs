@@ -79,19 +79,23 @@ function declarations(src, from, to) {
 
 const COLOR_WORD = /^(#[0-9a-f]{3,8}|(rgb|rgba|hsl|hsla|hwb|lab|lch|oklab|oklch|color|color-mix)\(.*\)|var\(.*\)|transparent|currentcolor|white|black)$/i;
 const isColorWord = w => COLOR_WORD.test(w);
+// Words a background or border shorthand holds that are not its colour; any other bare word is a named colour,
+// left for the matcher (the shared converter reads few names, so the rest become Off-system, never dropped).
+const NOT_COLOR = /^(none|hidden|solid|dashed|dotted|double|groove|ridge|inset|outset|thin|medium|thick|repeat|repeat-x|repeat-y|no-repeat|space|round|scroll|fixed|local|top|bottom|left|right|center|auto|cover|contain|border-box|padding-box|content-box|text|inherit|initial|unset|revert|revert-layer)$/i;
+const colorWordOf = words => words.find(isColorWord) || words.find(w => /^[a-z]+$/i.test(w) && !NOT_COLOR.test(w));
 
 // Shorthand -> the longhands the matcher reads. Unknown shorthands pass through as written.
 function expand(property, value) {
   const words = splitWords(value);
   if (property === 'background') {
-    const c = words.find(isColorWord) || (words.length === 1 && /^none$/i.test(words[0]) ? 'transparent' : null);
+    const c = colorWordOf(words) || (words.length === 1 && /^none$/i.test(words[0]) ? 'transparent' : null);
     return c ? [{ property: 'background-color', value: c }] : [];
   }
   const border = /^border(-(top|right|bottom|left))?$/.exec(property);
   if (border) {
     if (words.length === 1 && /^(0|none)$/.test(words[0])) return [{ property: `${property}-width`, value: '0' }];
     const out = [];
-    const c = words.find(isColorWord);
+    const c = colorWordOf(words);
     if (c) out.push({ property: `${property}-color`, value: c });
     const w = words.find(x => /^\d/.test(x));
     if (w) out.push({ property: `${property}-width`, value: w });

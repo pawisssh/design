@@ -10,7 +10,7 @@
   "recognise:div.toast[role=status]": { "noContract": "toast-notification", "reason": "Carbon ships ToastNotification, but this Design System has no Contract for it yet" },
   "token:background-color:#fafafa": "background",
   "token:color:#161616": "text-primary",
-  "textStyle:20/30/400/0": "heading-03",
+  "token:font-size:20px": "heading-03-font-size",
   "token:color:#525252": "text-secondary",
   "textStyle:14/18/400/0.16": "body-compact-01",
   "token:font-size:14px": "body-compact-01-font-size",

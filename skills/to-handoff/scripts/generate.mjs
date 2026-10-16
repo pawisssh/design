@@ -9,15 +9,15 @@ import { basename, join } from 'node:path';
 import { convert, deltaE } from '../../contract/scripts/color.mjs';
 import { contentHash as contractHash, proposalContentHash, resolve, sha256 } from '../../contract/scripts/contract.mjs';
 import { computed, splitWords } from './css.mjs';
-import { collectionOf, matchDeclaration, matchText, normaliseColor, roleOf, valueIn } from './match.mjs';
+import { COLOR_ROLES, collectionOf, colorText, followCustom, matchDeclaration, matchText, roleOf, sameHex, valueIn } from './match.mjs';
+import { stateAxisOf } from './system.mjs';
 import { readHtml, walk } from './reader.mjs';
 import {
-  STANDARD_STATES, atomIn, atomsOf, candidateOf, evaluate, isPlaceholderText, ownDeclarations, parseCondition, signature, standIns, stateOfAtom,
+  STANDARD_STATES, atomIn, atomsOf, candidateOf, evaluate, isPlaceholderText, ownDeclarations, parseCondition, standIns, stateOfAtom,
 } from './recognise.mjs';
 import { loadDesignSystem } from './system.mjs';
 
 const PROTOTYPE_MODE = 'light';
-const COLOR_ROLES = new Set(['background-color', 'color', 'border-color', 'outline-color']);
 const LANDMARKS = { header: 'banner', nav: 'navigation', main: 'main', aside: 'complementary', footer: 'contentinfo' };
 const LANDMARK_ROLES = new Set(['banner', 'navigation', 'main', 'complementary', 'contentinfo', 'region', 'search', 'form']);
 const HEADINGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
@@ -131,7 +131,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   // ---- the mode map (#61): page and first container surfaces against the Adapter's surface tokens ----
   const body = findTag(doc.root, 'body');
   const mount = doc.mounts[0] || body;
-  const bg = el => { const v = style(el)['background-color']; if (!v || !v.own) return null; try { const c = convert(resolveCustom(v.value, custom)); return c.alpha > 0 ? c.hex : null; } catch { return null; } };
+  const bg = el => { const v = style(el)['background-color']; if (!v || !v.own) return null; try { const c = convert(followCustom(v.value, custom)); return c.alpha > 0 ? c.hex : null; } catch { return null; } };
   let container = null;
   walk(mount, el => { if (!container && el !== mount && el.children.filter(c => c.type === 'element').length >= 2 && bg(el)) container = el; });
   const pageHex = bg(body) || bg(mount) || '#ffffff';
@@ -167,10 +167,10 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   }
   const stateAtoms = s => atoms.filter(a => stateOfAtom(a) === s);
   const present = STANDARD_STATES.filter(s => s === 'default' || stateAtoms(s).length);
-  const valueIn_ = s => atomIn(s, defaults);
+  const atomsIn = s => atomIn(s, defaults);
   const shownIn = el => {
     if (!el.cond.length) return null;
-    const ins = present.filter(s => el.cond.every(c => evaluate(parseCondition(c.expr), valueIn_(s)) === c.value));
+    const ins = present.filter(s => el.cond.every(c => evaluate(parseCondition(c.expr), atomsIn(s)) === c.value));
     return ins.length === present.length ? null : ins;
   };
 
@@ -216,7 +216,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const cand = candidateOf(el, rules);
     if (cand) {
       const answer = d.ask(`recognise:${cand.sig}`, {
-        kind: 'recognise', question: `What is \`${cand.sig}\` ("${elementText(el, valueIn_('default')).slice(0, 40)}")?`, candidates: families, evidence: { at: [at(el.offset)] },
+        kind: 'recognise', question: `What is \`${cand.sig}\` ("${elementText(el, atomsIn('default')).slice(0, 40)}")?`, candidates: families, evidence: { at: [at(el.offset)] },
       }, checkRecognise);
       recognised.push({ el, cand, answer });
       usageOf.set(el, recognised[recognised.length - 1]);
@@ -255,7 +255,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     } else {
       u.raw = { element: cand.sig };
       u.reason = answer.reason;
-      const text = elementText(el, valueIn_(states ? states[0] : 'default'));
+      const text = elementText(el, atomsIn(states ? states[0] : 'default'));
       if (text) u.properties = { text: addCopy(`${id}-text`, text, (textNodes(el)[0] || el).offset) };
       if (answer.noContract) {
         u.question = question({
@@ -278,7 +278,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     if (cand.kind === 'group') {
       const text = (def.properties || []).find(p => p.type === 'TEXT');
       const kids = el.children.filter(c => c.type === 'element');
-      if (text) out.items = kids.map((k, n) => ({ properties: { [text.key]: addCopy(`${id}-${kebab(text.key)}-${n + 1}`, elementText(k, valueIn_('default')), k.offset) }, at: at(k.offset) }));
+      if (text) out.items = kids.map((k, n) => ({ properties: { [text.key]: addCopy(`${id}-${kebab(text.key)}-${n + 1}`, elementText(k, atomsIn('default')), k.offset) }, at: at(k.offset) }));
       return out;
     }
     for (const p of def.properties || []) {
@@ -287,15 +287,15 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       const node = (p.binds || [])[0] && p.binds[0].node;
       if (c.prop === 'children') {
         const t = textNodes(el)[0];
-        if (t) props[p.key] = addCopy(`${id}-${kebab(p.key)}`, elementText(el, valueIn_('default')), t.offset);
+        if (t) props[p.key] = addCopy(`${id}-${kebab(p.key)}`, elementText(el, atomsIn('default')), t.offset);
       } else if (c.prop && typeof el.attrs[c.prop] === 'string') {
         props[p.key] = addCopy(`${id}-${kebab(p.key)}`, el.attrs[c.prop], el.offset);
       } else if (c.itemProp) {
         const options = el.children.filter(x => x.type === 'element' && x.tag === 'option');
-        if (options.length) out.items = options.map((o, n) => ({ properties: { [p.key]: addCopy(`${id}-${kebab(p.key)}-${n + 1}`, elementText(o, valueIn_('default')), o.offset) }, at: at(o.offset) }));
+        if (options.length) out.items = options.map((o, n) => ({ properties: { [p.key]: addCopy(`${id}-${kebab(p.key)}-${n + 1}`, elementText(o, atomsIn('default')), o.offset) }, at: at(o.offset) }));
       } else if (node && roleOfNode(node) === 'label' && elId) {
         const label = labelFor(elId);
-        if (label) props[p.key] = addCopy(`${id}-${kebab(p.key)}`, elementText(label, valueIn_('default')), label.offset);
+        if (label) props[p.key] = addCopy(`${id}-${kebab(p.key)}`, elementText(label, atomsIn('default')), label.offset);
       }
     }
     for (const prop of code.required || []) if (!(prop in props) && el.attrs[prop] !== undefined && typeof el.attrs[prop] === 'string') props[prop] = el.attrs[prop];
@@ -305,7 +305,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
 
   // A State value (its code non-null) an attribute hole sets, and a TEXT property a text ternary varies, per state.
   function recordUsageStates(def, el, u) {
-    const stateAxis = def.axes.find(a => a.canonical || a.key === 'state');
+    const stateAxis = stateAxisOf(def);
     const byAttr = {};
     if (stateAxis) for (const v of stateAxis.values) if (v.code) for (const k of Object.keys(v.code)) byAttr[k] = v.key;
     const childrenProp = (def.properties || []).find(p => p.type === 'TEXT' && p.code && p.code.prop === 'children');
@@ -313,13 +313,13 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       const entry = {};
       for (const h of el.attrHoles) {
         if (!h.ternary) continue;
-        const branch = evaluate(parseCondition(h.ternary.cond), valueIn_(s)) ? h.ternary.then : h.ternary.else;
+        const branch = evaluate(parseCondition(h.ternary.cond), atomsIn(s)) ? h.ternary.then : h.ternary.else;
         const word = branch.text !== undefined ? branch.text.trim() : '';
         if (byAttr[word]) entry.state = byAttr[word];
       }
       if (childrenProp && hasTernary(el) && s !== 'default') {
-        const text = elementText(el, valueIn_(s));
-        if (text !== elementText(el, valueIn_('default')))
+        const text = elementText(el, atomsIn(s));
+        if (text !== elementText(el, atomsIn('default')))
           entry.properties = { [childrenProp.key]: addCopy(`${u.id}-${kebab(childrenProp.key)}-${s}`, text, textNodes(el)[0].offset) };
       }
       if (Object.keys(entry).length) usageStates[s][u.id] = entry;
@@ -339,9 +339,9 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       const role = roleOf(decl.property);
       if (!COLOR_ROLES.has(role)) continue;
       let c;
-      try { c = convert(resolveCustom(decl.value, custom)); } catch { continue; }
+      try { c = convert(followCustom(decl.value, custom)); } catch { continue; }
       if (c.alpha === 0 || hexes.some(h => sameHex(h, c.hex))) continue;
-      const raw = normaliseColor(resolveCustom(decl.value, custom));
+      const raw = colorText(followCustom(decl.value, custom));
       if (out.some(o => o.property === decl.property && o.raw === raw)) continue;
       out.push({ property: decl.property, raw, reason: `\`${contract.family.key}\` ${Object.values(full).join(' ')} paints no ${raw} in ${best.label}`, question: `q-off-axis-${id}` });
     }
@@ -416,7 +416,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       const existing = r.styles.find(s => s.property === decl.property && s.raw === raw);
       if (existing) { if (!existing.at.includes(where)) existing.at.push(where); continue; }
       const s = { property: decl.property, raw, at: [where] };
-      const norm = COLOR_ROLES.has(role) ? normaliseColor(resolveCustom(raw, custom)) : raw;
+      const norm = COLOR_ROLES.has(role) ? colorText(followCustom(raw, custom)) : raw;
       const key = `token:${role}:${norm}`;
       if (result.kind === 'reference' || result.kind === 'exact') {
         s.token = result.token;
@@ -453,7 +453,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   }
 
   function addText(r, el, t) {
-    const text = textOf(t.parts, valueIn_('default'));
+    const text = textOf(t.parts, atomsIn('default'));
     if (!text) return;
     const c = style(el);
     const num = (prop, fallback) => { const v = c[prop] && c[prop].value; if (!v) return fallback; const m = /^(-?\d*\.?\d+)px$/.exec(v); return m ? Number(m[1]) : fallback; };
@@ -636,28 +636,15 @@ function tupleProblem(def, tuple, name) {
   for (const [k, v] of Object.entries(tuple)) {
     const axis = def.axes.find(a => a.key === k);
     if (!axis) return `tuple axis ${k} is not an axis of ${name}`;
-    if (axis.canonical || axis.key === 'state') return `tuple axis ${k} is the State axis; a State comes from the Prototype's conditions`;
+    if (axis === stateAxisOf(def)) return `tuple axis ${k} is the State axis; a State comes from the Prototype's conditions`;
     if (!axis.values.some(x => x.key === v)) return `tuple ${k} "${v}" is not a ${axis.label} value of ${name} (${axis.values.map(x => x.key).join(', ')})`;
   }
   return null;
 }
 const viaProblem = via => (via === undefined || via === 'library' || via === 'element' ? null : `via "${via}" is not library or element`);
-const sameHex = (a, b) => [1, 3, 5].every(i => Math.abs(parseInt(a.slice(i, i + 2), 16) - parseInt(b.slice(i, i + 2), 16)) <= 1);
 const firstClass = el => (el.classes[0] ? `.${el.classes[0]}` : el.tag);
 function landmarkOf(el) {
   if (typeof el.attrs.role === 'string' && LANDMARK_ROLES.has(el.attrs.role)) return el.attrs.role;
   return LANDMARKS[el.tag] || null;
 }
 function findTag(root, tag) { let found = null; walk(root, e => { if (!found && e.tag === tag) found = e; }); return found; }
-function resolveCustom(value, custom) {
-  let v = String(value).trim();
-  for (let hops = 0; hops < 8; hops++) {
-    const m = /^var\(\s*(--[\w-]+)\s*(?:,\s*([\s\S]*))?\)$/.exec(v);
-    if (!m) break;
-    if (custom[m[1]] !== undefined) v = custom[m[1]];
-    else if (m[2]) v = m[2].trim();
-    else break;
-  }
-  return v;
-}
-export { signature };

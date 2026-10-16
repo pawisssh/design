@@ -7,6 +7,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 
+/** A Contract's or Proposal's State axis (the canonical one), or undefined. */
+export const stateAxisOf = def => def.axes.find(a => a.canonical || a.key === 'state');
+
 const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
 const jsonIn = (dir, suffix) => (existsSync(dir) ? readdirSync(dir).filter(f => f.endsWith(suffix)).sort() : []).map(f => readJson(join(dir, f)));
 
