@@ -1,18 +1,23 @@
 #!/usr/bin/env node
 // Node entry for the shared Contract module: reads files, validates, prints a summary.
 //   node skills/contract/scripts/check.mjs <component.json> [--foundations <file>] [--table]
+//   node skills/contract/scripts/check.mjs <proposal.json> [--foundations <file>]
+// A Proposal (design-systems/<ds>/proposals/<key>.proposal.json) is validated against the Design System's
+// Contracts (contracts/*.component.json) and other Proposals.
 // The foundations document defaults to the one next to the contracts folder
 // (design-systems/<ds>/contracts/<family>.component.json -> design-systems/<ds>/<ds>.foundations.json).
 // --table prints the resolved paint for the Figma grid rows (figma.grid.rows) at the default of
 // every other axis. Exit code 1 when the Contract is invalid.
 import { parseArgs } from 'node:util';
-import { validate, expand, baseTuple, variantName, closure, resolve } from './contract.mjs';
+import { readdirSync, existsSync } from 'node:fs';
+import { dirname, join, resolve as resolvePath } from 'node:path';
+import { validateProposal, validate, expand, baseTuple, variantName, closure, resolve } from './contract.mjs';
 import { foundationsPathFor, readJson } from './io.mjs';
 
 const { values: args, positionals } = parseArgs({ allowPositionals: true, options: { foundations: { type: 'string' }, table: { type: 'boolean', default: false } } });
 const [contractPath] = positionals;
 if (!contractPath) {
-  console.error('usage: check.mjs <component.json> [--foundations <file>] [--table]');
+  console.error('usage: check.mjs <component.json | proposal.json> [--foundations <file>] [--table]');
   process.exit(2);
 }
 let c, foundations;
@@ -22,6 +27,17 @@ try {
 } catch (e) {
   console.error(e.message);
   process.exit(2);
+}
+if (contractPath.endsWith('.proposal.json')) {
+  const dsDir = resolvePath(dirname(contractPath), '..');
+  const readAll = (dir, suffix) => (existsSync(dir) ? readdirSync(dir).filter(f => f.endsWith(suffix)).map(f => readJson(join(dir, f))) : []);
+  const contracts = readAll(join(dsDir, 'contracts'), '.component.json');
+  const proposals = readAll(dirname(contractPath), '.proposal.json').filter(x => !c.family || !x.family || x.family.key !== c.family.key);
+  const result = validateProposal(c, foundations, { contracts, proposals });
+  for (const e of result.errors) console.log(`FAIL [rule ${e.rule}] ${e.message}`);
+  if (result.readyToRetire) console.log(`ready to retire: Contract "${result.readyToRetire}" has this key; the owner confirms retirement in chat`);
+  console.log(result.ok ? `\nOK (Proposal ${c.family.key}, status ${c.status})` : `\nINVALID (${result.errors.length} errors)`);
+  process.exit(result.ok ? 0 : 1);
 }
 const { ok, errors } = validate(c, foundations);
 for (const e of errors) console.log(`FAIL [rule ${e.rule}] ${e.message}`);
