@@ -410,7 +410,8 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       found[e[0]] = node;
     }
     const total = plan.total;
-    const variants = prev && prev.variants && prev.variants.length === total ? prev.variants.slice() : new Array(total).fill(null);
+    // this call's variant ids by expansion index; the ledger merges them into the family's list (state carries only these)
+    const variants = {};
     const propKeys = () => {
       const defs = set ? set.componentPropertyDefinitions : {};
       const out = {};

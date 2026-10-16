@@ -353,7 +353,15 @@ export function setsPlan(contract, docText, ledger, {
           throw new Error(`entry ${e[0]} does not resolve to the Contract's ${sec}`);
     });
   const bases = ledger.bases && ledger.bases[family] ? { [family]: ledger.bases[family] } : {};
-  return { plan, state: { schemaVersion: 1, fileKey, variables, textStyles, icons, bases, sets: ledger.sets && ledger.sets[family] ? { [family]: ledger.sets[family] } : {}, templates: ledger.templates || null } };
+  // The family's ledger record, with the variant ids of this call's entries only: a call carries no other ids.
+  const rec = ledger.sets && ledger.sets[family];
+  const sets = {};
+  if (rec) {
+    const ids = {};
+    for (const i of picked) if (rec.variants && rec.variants[i]) ids[i] = rec.variants[i];
+    sets[family] = { ...rec, variants: ids };
+  }
+  return { plan, state: { schemaVersion: 1, fileKey, variables, textStyles, icons, bases, sets, templates: ledger.templates || null } };
 }
 
 const USAGE = [

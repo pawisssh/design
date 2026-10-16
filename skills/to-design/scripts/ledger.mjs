@@ -17,8 +17,9 @@ export const readLedger = path => (existsSync(path) ? JSON.parse(readFileSync(pa
 
 /**
  * The ledger after a slice result. Refuses an error result; a result with conflicts carries the old section back
- * unchanged. Sections replace whole, except `sets`, which a sets call returns for its one family (#32): the
- * other families' records are kept, so a call carries no other family's ids.
+ * unchanged. Sections replace whole, except `sets` (#32): a sets call returns its one family, with the variant ids
+ * of its own entries as {expansion index: id or null}. The other families are kept, and the ids are merged into
+ * the family's list of `total` ids, so a call carries no ids beyond its batch.
  */
 export function recordResult(ledger, result) {
   if (!result || result.error) throw new Error(`not recording a failed call: ${result && result.error}`);
@@ -26,7 +27,15 @@ export function recordResult(ledger, result) {
   if (ledger && ledger.fileKey !== result.fileKey) throw new Error(`ledger is for ${ledger.fileKey}, result for ${result.fileKey}`);
   const before = ledger || emptyLedger(result.fileKey);
   const out = { ...before, ...result.ledger };
-  if (result.slice === 'sets' && result.ledger.sets) out.sets = { ...(before.sets || {}), ...result.ledger.sets };
+  if (result.slice === 'sets' && result.ledger.sets) {
+    out.sets = { ...(before.sets || {}) };
+    for (const [family, rec] of Object.entries(result.ledger.sets)) {
+      const old = out.sets[family];
+      const variants = old && Array.isArray(old.variants) && old.variants.length === rec.total ? old.variants.slice() : new Array(rec.total).fill(null);
+      for (const [i, id] of Object.entries(rec.variants || {})) variants[Number(i)] = id;
+      out.sets[family] = { ...rec, variants };
+    }
+  }
   return out;
 }
 
