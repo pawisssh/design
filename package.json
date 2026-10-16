@@ -1,0 +1,11 @@
+{
+  "name": "design",
+  "private": true,
+  "description": "No dependencies. `npm test` runs every skill's node:test suite.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test skills/*/test/*.test.mjs skills/*/tests/*.test.mjs"
+  }
+}

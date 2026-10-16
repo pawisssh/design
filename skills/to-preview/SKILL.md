@@ -24,9 +24,10 @@ node skills/to-preview/scripts/catalog.mjs design-systems/<ds>/contracts/<family
 Open the page (from `file://`, or serve `.scratch/to-preview/` with any static server). What the owner sees:
 
 - **Specimens** are the Contract's axes minus `excluded`. Tuples the Contract already omits are shown unchecked, so they can be re-included.
-- The **Base Component** (every axis at its default) is locked on.
+- Each specimen is a 200×200 **card** in one grid of up to 6 columns, in Contract axis order: the axis values at top-left (the full variant name on hover), the checkbox at top-right, the specimen centred, and `Source` with the Code Library package and version in the footer. An unchecked card's specimen is dimmed.
+- The **Base Component** (every axis at its default) is locked on, and its card footer reads `Base Component`.
 - A State whose `code` is `null` (Hover, Active, Focus) is forced through its CSS pseudo-class; Disabled renders through its code props.
-- **Theme** is a display-only toggle over the foundations document's modes. Specimens render once, in the default (first) mode, and export needs only that.
+- **Theme** is a display-only toggle over the foundations document's modes; the cards follow it too. Specimens render once, in the default (first) mode, and export needs only that.
 - Axis filters change what is visible; **Check visible** and **Uncheck visible** change the selection.
 
 **Export omit patch** downloads two files:
@@ -42,6 +43,10 @@ The page refuses to export unless every checked specimen rendered and the patch,
 node skills/to-preview/scripts/apply-omit.mjs <family>.omit-patch.json --checked <family>.checked.json --contract design-systems/<ds>/contracts/<family>.component.json
 ```
 
-It applies the patch with the shared module's `applyOmit`, validates against the foundations document, asserts the expanded set equals the checked tuples (tuple by tuple, not only the count) and that nothing but `selection` changed, then writes the Contract in place. The written Contract is a draft with `approval: null`. On any failure it writes nothing and exits 1. Done when it prints the variant count and `status draft`.
+It applies the patch with the shared module's `applyOmit`, validates against the foundations document, asserts the expanded set equals the checked tuples (tuple by tuple, not only the count) and that nothing but `selection` changed, then writes the Contract in place. The written Contract is a draft with `approval: null`. On any failure it writes nothing and exits 1. Done when it prints the variant count and `status draft`. The write keeps the Contract's layout, so a diff shows only the `selection` lines.
+
+## 4. Next
+
+Regenerate the foundations document with the Adapter's foundations step (Carbon: `node skills/adapter-carbon/scripts/foundations.mjs`). It changes only when the omit dropped every variant that used a token. Then hand the draft Contract to [To-design](../to-design/SKILL.md), whose base loop ends with the owner's approval.
 
 Tests: `node --test skills/to-preview/test/*.test.mjs`.

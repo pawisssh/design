@@ -58,7 +58,7 @@ test('a drifted package returns package-mismatch and changes nothing', async () 
     plan: code.replace('"Gray 10"', '"Gray 11"'),
     planLen: code.replace('"Gray 10"', '"Gray 1"'),
     state: code.replace('const STATE_SRC = String.raw`{', 'const STATE_SRC = String.raw`{"x":1,'),
-    core: code.replace(/(async function buildComponentSets\([^)]*\) \{)/, '$1 '),
+    core: code.replace(/(async function buildComponentSets\([^)]*\) ?\{)/, '$1 '),
     entries: code.replace(/"entries":\d+/, '"entries":76'),
   };
   for (const [field, drifted] of Object.entries(drifts)) {
@@ -354,11 +354,23 @@ test('the build-plan and ledger CLIs run from a path that contains a space', () 
   mkdirSync(dir, { recursive: true });
   mkdirSync(join(base, 'skills/contract/scripts'), { recursive: true });
   copyFileSync(new URL('../../contract/scripts/contract.mjs', import.meta.url), join(base, 'skills/contract/scripts/contract.mjs'));
-  for (const name of ['build-plan.mjs', 'ledger.mjs', 'base-loop.mjs']) copyFileSync(new URL(`../scripts/${name}`, import.meta.url), join(dir, name));
+  for (const name of ['build-plan.mjs', 'ledger.mjs', 'base-loop.mjs', 'readback.mjs']) copyFileSync(new URL(`../scripts/${name}`, import.meta.url), join(dir, name));
   const plan = spawnSync('node', [join(dir, 'build-plan.mjs'), 'foundations', '--doc', fileURLToPath(DOC_PATH), '--file-key', FILE_KEY, '--out', join(dir, 'run')], { cwd: dir, encoding: 'utf8' });
   assert.equal(plan.status, 0, plan.stderr);
   assert.equal(JSON.parse(plan.stdout).status, 'derived');
   assert.equal(JSON.parse(readFileSync(join(dir, 'run', 'plan.json'), 'utf8')).fileKey, FILE_KEY);
   const ledger = spawnSync('node', [join(dir, 'ledger.mjs')], { cwd: dir, encoding: 'utf8' });
   assert.equal(ledger.status, 2, 'usage error, so main() ran');
+});
+
+test('ledger.mjs record --ledger writes the given ledger file, as every other To-design CLI reads it', () => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'ledger-cli-')));
+  const result = { slice: 'foundations', fileKey: FILE_KEY, summary: {}, ledger: { foundations: { documentHash: 'sha256:x' } } };
+  writeFileSync(join(dir, 'result.json'), JSON.stringify(result));
+  const at = join(dir, 'elsewhere', `${FILE_KEY}.ledger.json`);
+  const cli = fileURLToPath(new URL('../scripts/ledger.mjs', import.meta.url));
+  const run = spawnSync('node', [cli, 'record', join(dir, 'result.json'), '--ledger', at], { cwd: dir, encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: dir } });
+  assert.equal(run.status, 0, run.stderr);
+  assert.equal(JSON.parse(run.stdout).ledger, at);
+  assert.equal(JSON.parse(readFileSync(at, 'utf8')).foundations.documentHash, 'sha256:x');
 });

@@ -5,32 +5,51 @@
 <title>Component preview</title>
 <!-- library-styles -->
 <style>
-  body > header,.cs-main,.cs-toolbar,.cs-cell,.cs-cell-title,.cs-specimen,.cs-toolbar select,#export,.cs-toolbar button{box-sizing:border-box} body{margin:0;font:14px system-ui,sans-serif;color:#18222e;background:#f5f7fa}
-  #export,.cs-toolbar button,.cs-toolbar select,.cs-cell-title > input{font:inherit} #export,.cs-toolbar button{cursor:pointer;padding:8px 12px;border:1px solid #ccd4df;border-radius:7px;background:white;color:#18222e}
+  /* Chrome colours are Carbon tokens (--cds-*) from the library stylesheet; the Theme toggle puts the mode class on <body>. */
+  body > header,.tp-main,.tp-toolbar,.tp-cell,.tp-specimen,.tp-toolbar select,#export,.tp-toolbar button{box-sizing:border-box}
+  body.tp-page{margin:0;font:14px/1.4 system-ui,sans-serif;color:var(--cds-text-primary);background:var(--cds-layer-01)}
+  #export,.tp-toolbar button,.tp-toolbar select{font:inherit} #export,.tp-toolbar button{cursor:pointer;padding:8px 12px;border:1px solid var(--cds-border-strong-01);background:var(--cds-field-02);color:var(--cds-text-primary)}
   #export:disabled{cursor:default;opacity:.5}
-  #export:focus-visible,.cs-toolbar button:focus-visible,.cs-toolbar select:focus-visible,.cs-cell-title > input:focus-visible{outline:3px solid #91b8ff;outline-offset:2px}
-  body > header{padding:20px 24px;background:white;border-bottom:1px solid #dbe1e9;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-  body > header > h1{font-size:20px;margin:0} .cs-main{padding:24px;min-width:0}
-  .cs-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 20px}.cs-toolbar label{display:flex;gap:5px;align-items:center}
-  .cs-toolbar select{padding:7px;border:1px solid #ccd4df;border-radius:6px;background:white;color:#18222e}
-  #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;align-items:start}
-  .cs-cell{background:white;border:1px solid #dbe1e9;border-radius:9px;padding:14px;min-width:0}.cs-cell.cs-omitted{border-style:dashed;background:#f0f2f5}
-  .cs-cell-title{display:flex;gap:7px;align-items:start;font-size:12px;margin-bottom:12px}.cs-specimen{padding:16px;min-height:72px;overflow:visible}
-  .cs-cell[hidden]{display:none} #status{color:#49566a;flex:1} #error{color:#9a2424;white-space:pre-wrap}
-  @media(max-width:760px){.cs-main{padding:16px}}
+  #export:focus-visible,.tp-toolbar button:focus-visible,.tp-toolbar select:focus-visible,.tp-card-head > input:focus-visible{outline:2px solid var(--cds-focus);outline-offset:2px}
+  body > header{padding:20px 24px;background:var(--cds-background);border-bottom:1px solid var(--cds-border-subtle-01);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  body > header > h1{font-size:20px;margin:0} .tp-main{padding:24px;min-width:0}
+  .tp-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 20px}.tp-toolbar label{display:flex;gap:5px;align-items:center}
+  .tp-toolbar select{padding:7px;border:1px solid var(--cds-border-strong-01);background:var(--cds-field-02);color:var(--cds-text-primary)}
+  /* Cards butt together with shared 1px borders: each card overlaps the one before it by its border. */
+  #grid{display:grid;grid-template-columns:repeat(auto-fill,200px);max-width:1200px;box-sizing:content-box;padding:1px 0 0 1px}
+  .tp-cell{width:200px;height:200px;margin:-1px 0 0 -1px;padding:16px;display:grid;grid-template-rows:auto 1fr auto;row-gap:8px;border:1px solid var(--cds-border-subtle-01);background:var(--cds-background)}
+  .tp-card-head{display:flex;gap:8px;align-items:start;justify-content:space-between}.tp-card-head > input{margin:0;flex:none;accent-color:var(--cds-icon-primary)}
+  .tp-card-name{font-size:12px;line-height:16px;overflow-wrap:anywhere}
+  .tp-specimen{display:flex;align-items:center;justify-content:center;min-height:0;min-width:0}
+  .tp-omitted .tp-specimen{opacity:.4}
+  .tp-card-foot{display:flex;flex-wrap:wrap;column-gap:16px;font-size:12px;line-height:16px;color:var(--cds-text-secondary)}.tp-card-foot > span{white-space:nowrap}
+  .tp-cell[hidden]{display:none} #status{color:var(--cds-text-secondary);flex:1} #error{color:var(--cds-text-error);white-space:pre-wrap}
+  @media(max-width:760px){.tp-main{padding:16px}}
 </style>
+<body class="tp-page">
 <header><h1 id="title">Component preview</h1><span id="status" aria-live="polite">Loading the catalog.</span><button id="export" disabled>Export omit patch</button></header>
-<main class="cs-main"><div id="filters" class="cs-toolbar"></div><div id="grid"></div><p id="error" role="alert"></p></main>
+<main class="tp-main"><div id="filters" class="tp-toolbar"></div><div id="grid"></div><p id="error" role="alert"></p></main>
 <script src="./contract.js"></script>
 <script src="./selection-model.js"></script>
+<script src="./catalog-card.js"></script>
 <script>
 (() => {
   "use strict";
-  // To-preview shell over one Contract. catalog = {contract, modes, forces, specimens}; see scripts/catalog.mjs.
+  // To-preview shell over one Contract. catalog = {contract, modes, forces, sourceLabel, specimens}; see scripts/catalog.mjs.
   // Checked = kept in the Contract; unchecked = omitted. The Base Component is locked on.
   const $ = id => document.getElementById(id);
   let model, catalog, renderer, mode, filters = {}, rendered = false;
-  const element = (tag, text) => { const node = document.createElement(tag); if (text !== undefined) node.textContent = text; return node; };
+  // Node factory for the page and the cards: props are DOM properties, `dataset` and `aria-*` attributes.
+  const h = (tag, props = {}, ...children) => {
+    const node = document.createElement(tag);
+    for (const [key, value] of Object.entries(props)) {
+      if (key === "dataset") Object.assign(node.dataset, value);
+      else if (key.startsWith("aria-")) node.setAttribute(key, value);
+      else node[key] = value;
+    }
+    node.append(...children);
+    return node;
+  };
   const modeClass = key => (catalog.modes.find(m => m.key === key) || {}).className;
   const defaultMode = () => catalog.modes.length ? catalog.modes[0].key : undefined;
 
@@ -38,39 +57,37 @@
     const total = model.specimens.size, checked = model.selected.size;
     $("status").textContent = checked + " of " + total + " variants checked · " + (total - checked) + " omitted · the Base Component is locked on";
     $("export").disabled = !rendered;
-    document.querySelectorAll(".cs-cell").forEach(cell => {
-      const on = model.selected.has(cell.dataset.id); cell.classList.toggle("cs-omitted", !on); cell.querySelector("input").checked = on;
+    document.querySelectorAll(".tp-cell").forEach(cell => {
+      const on = model.selected.has(cell.dataset.id); cell.classList.toggle("tp-omitted", !on); cell.querySelector("input").checked = on;
     });
   }
   function filterGrid() {
-    document.querySelectorAll(".cs-cell").forEach(cell => { cell.hidden = !model.matches(model.specimen(cell.dataset.id), filters); });
+    document.querySelectorAll(".tp-cell").forEach(cell => { cell.hidden = !model.matches(model.specimen(cell.dataset.id), filters); });
   }
   function controls() {
     $("filters").replaceChildren();
     for (const axis of catalog.contract.axes) {
-      const label = element("label", axis.label), select = element("select");
+      const label = h("label", {}, axis.label), select = h("select");
       select.append(new Option("All", ""));
       for (const value of axis.values) select.append(new Option(value.label, value.key));
       select.onchange = () => { filters[axis.key] = select.value; filterGrid(); };
       label.append(select); $("filters").append(label);
     }
     for (const [text, value] of [["Check visible", true], ["Uncheck visible", false]]) {
-      const button = element("button", text); button.onclick = () => { model.selectMatching(filters, value); summary(); }; $("filters").append(button);
+      const button = h("button", {}, text); button.onclick = () => { model.selectMatching(filters, value); summary(); }; $("filters").append(button);
     }
     if (catalog.modes.length > 1) {
-      // Display only: swaps the theme class on every specimen; nothing re-renders and the selection is untouched.
-      const label = element("label", "Theme"), select = element("select");
+      // Display only: swaps the theme class on the page, so the specimens and the card chrome follow it;
+      // nothing re-renders and the selection is untouched.
+      const label = h("label", {}, "Theme"), select = h("select");
       for (const m of catalog.modes) select.append(new Option(m.label, m.key));
-      select.onchange = () => {
-        const from = modeClass(mode); mode = select.value;
-        document.querySelectorAll(".cs-specimen").forEach(host => { host.classList.remove(from); host.classList.add(modeClass(mode)); });
-      };
+      select.onchange = () => { document.body.classList.remove(modeClass(mode)); mode = select.value; document.body.classList.add(modeClass(mode)); };
       label.append(select); $("filters").append(label);
     }
   }
 
   // State forcing: copy every style rule that uses a forced pseudo-class (":hover") with the pseudo-class
-  // replaced by a class (".cs-force-hover"), right after the original so the cascade order holds. Copies
+  // replaced by a class (".tp-force-hover"), right after the original so the cascade order holds. Copies
   // from a hover-capability media query (@media (any-hover: hover)) go beside the query, not inside it.
   function splitSelectors(text) {
     const out = []; let depth = 0, current = "";
@@ -81,7 +98,7 @@
     return out.concat(current).map(s => s.trim());
   }
   function forceStates(pseudos) {
-    const patterns = pseudos.map(p => [new RegExp(p + "(?![\\w-])", "g"), ".cs-force-" + p.slice(1)]);
+    const patterns = pseudos.map(p => [new RegExp(p + "(?![\\w-])", "g"), ".tp-force-" + p.slice(1)]);
     const forced = rule => {
       const selectors = splitSelectors(rule.selectorText).filter(s => patterns.some(([re]) => { re.lastIndex = 0; return re.test(s); }));
       if (!selectors.length) return null;
@@ -101,18 +118,12 @@
 
   async function render() {
     $("grid").replaceChildren();
-    const forceFor = specimen => catalog.forces.filter(f => specimen.tuple[f.axis] === f.value).map(f => "cs-force-" + f.pseudo.slice(1));
+    const forceFor = specimen => catalog.forces.filter(f => specimen.tuple[f.axis] === f.value).map(f => "tp-force-" + f.pseudo.slice(1));
     try {
       for (const specimen of model.specimens.values()) {
-        const cell = element("section"); cell.className = "cs-cell"; cell.dataset.id = specimen.id;
-        const title = element("label"); title.className = "cs-cell-title";
-        const checkbox = element("input"); checkbox.type = "checkbox";
-        if (specimen.id === model.baseId) { checkbox.disabled = true; checkbox.title = "The Base Component is locked on"; }
+        const { card, checkbox, host } = catalogCard(specimen, { contract: catalog.contract, baseId: model.baseId, sourceLabel: catalog.sourceLabel, h });
         checkbox.onchange = () => { model.select(specimen.id, checkbox.checked); summary(); };
-        title.append(checkbox, element("span", specimen.name + (specimen.id === model.baseId ? " · Base Component" : "")));
-        const host = element("div"); host.className = "cs-specimen"; host.dataset.specimenId = specimen.id;
-        if (modeClass(mode)) host.classList.add(modeClass(mode));
-        cell.append(title, host); $("grid").append(cell);
+        $("grid").append(card);
         const renderedIn = mode;
         await renderer(specimen, host);
         if (!host.firstElementChild) throw new Error("The renderer returned an empty specimen: " + specimen.name);
@@ -126,7 +137,7 @@
   }
 
   function download(name, data) {
-    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" })), link = element("a");
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" })), link = h("a");
     link.href = url; link.download = name; document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   function selection() {
@@ -139,17 +150,19 @@
       const { patch, checked } = selection(), family = patch.family;
       download(family + ".omit-patch.json", patch);
       download(family + ".checked.json", checked);
-      window.dispatchEvent(new CustomEvent("component-sheet:selection", { detail: { patch, checked } }));
+      window.dispatchEvent(new CustomEvent("to-preview:selection", { detail: { patch, checked } }));
       $("status").textContent = "Exported " + family + ".omit-patch.json (" + patch.expectedCount + " variants, " + patch.omit.length + " omit patterns) and " + family + ".checked.json. The agent applies them to the Contract.";
     } catch (error) { $("error").textContent = error.message; }
   };
 
-  window.ComponentSheet = {
+  window.Catalog = {
     configure(options) {
       if (typeof options.renderSpecimen !== "function") throw new Error("Provide the Adapter's specimen renderer");
       catalog = options.catalog; renderer = options.renderSpecimen; filters = {}; rendered = false;
-      model = new ComponentSheetSelection(catalog.contract, window.Contract);
+      model = new CatalogSelection(catalog.contract, window.Contract);
+      if (modeClass(mode)) document.body.classList.remove(modeClass(mode));
       mode = defaultMode();
+      if (modeClass(mode)) document.body.classList.add(modeClass(mode));
       $("title").textContent = catalog.contract.family.name + " preview";
       forceStates([...new Set(catalog.forces.map(f => f.pseudo))]);
       controls(); summary(); render();

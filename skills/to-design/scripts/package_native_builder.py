@@ -2,7 +2,7 @@
 """Package the fixed builder core with a build plan and ledger state into one use_figma package.
 
 The package embeds plan and state as String.raw text (any "<" rebuilt at run time, see literal()) with a CHECK block of FNV-1a-32 hashes
-(#17); the core verifies it before its first change. MCP-only: there is no Console/Scripter wrapper.
+(#17); the core verifies it before its first change. The package runs only in use_figma.
 """
 import argparse
 import hashlib
@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import re
+import subprocess
 import sys
 
 CORE_START = "async function buildComponentSets"
@@ -37,6 +38,63 @@ def core_source(core):
     return core[start:].rstrip()
 
 
+def _word(ch):
+    return ch.isalnum() or ch in "_$"
+
+
+def squeeze(line):
+    """One line of core code with the spaces it does not need dropped: a space stays only between two word
+    characters (`return x`), between two of + and - (`a - -b`) and after < (`i < s`). Strings and template literals are copied unchanged; a
+    trailing // comment is dropped. Fails closed on what a line-wise scan cannot read safely: a string that does
+    not end on its line, a block comment, and a regex literal (a / where an operand starts)."""
+    out, i, n, last = [], 0, len(line), ""
+    while i < n:
+        ch = line[i]
+        if ch in "'\"`":
+            j = i + 1
+            while j < n and line[j] != ch:
+                j += 2 if line[j] == "\\" else 1
+            if j >= n:
+                raise ValueError(f"Core holds a string or template literal that spans lines; compaction would change it: {line.strip()!r}")
+            out.append(line[i:j + 1])
+            i, last = j + 1, ch
+            continue
+        if ch == "/" and line[i + 1:i + 2] == "/":
+            break
+        if ch == "/" and line[i + 1:i + 2] == "*":
+            raise ValueError(f"Core must use // comments only: {line.strip()!r}")
+        if ch == "/":
+            before = "".join(out).rstrip()
+            if not before or before[-1] in "(,=:[!&|?{};+-*%~^" or re.search(r"\b(return|typeof|case|in|of)$", before):
+                raise ValueError(f"Core must not hold a regex literal; compaction cannot read one: {line.strip()!r}")
+        if ch in " \t":
+            j = i
+            while j < n and line[j] in " \t":
+                j += 1
+            nxt = line[j] if j < n else ""
+            # after "<" too: "i<s" would spell markup (see MARKUP)
+            if last and nxt and ((_word(last) and _word(nxt)) or (last in "+-" and nxt in "+-") or last == "<"):
+                out.append(" ")
+                last = " "
+            i = j
+            continue
+        out.append(ch)
+        i, last = i + 1, ch
+    return "".join(out).strip()
+
+
+def compact(core):
+    """The core as packaged, so the components core fits use_figma's 50,000 chars next to a batch plan: blank
+    lines, // comments, indentation and the spaces around punctuation dropped (see squeeze). Line breaks stay, so
+    automatic semicolons fall where they did and the code means the same; the CHECK core hash is over this text."""
+    lines = []
+    for line in core.splitlines():
+        text = squeeze(line)
+        if text:
+            lines.append(text)
+    return "\n".join(lines) + "\n"
+
+
 def embeddable(name, text):
     """Text that String.raw carries unchanged."""
     if "`" in text or "${" in text or not text.isascii():
@@ -57,7 +115,7 @@ def literal(text):
 
 
 def plan_entries(plan):
-    """The CHECK entry count: the objects the foundations slice builds, the icons, one Base Component, or the selected variants."""
+    """The CHECK entry count: the objects the foundations slice builds, the icons, one Base Component, or the batch's variants."""
     if plan.get("slice") == "base":
         return 1
     if plan.get("slice") == "foundations":
@@ -67,25 +125,29 @@ def plan_entries(plan):
     return len(plan["selection"]["entries"])
 
 
-def check_selection(plan):
-    selection = plan.get("selection")
-    if not isinstance(selection, dict) or selection.get("schemaVersion") != 1:
-        raise ValueError("Plan must embed the approved versioned selection")
-    if not plan.get("snapshotId") or selection.get("snapshotId") != plan["snapshotId"]:
-        raise ValueError("Selection and plan source snapshots must match")
-    if not isinstance(selection.get("entries"), list) or not selection["entries"]:
-        raise ValueError("Selection must contain approved specimens")
-    families = selection.get("selectedFamilies")
-    if not isinstance(families, list) or not families or not all(isinstance(value, str) and value.strip() for value in families) or len(families) != len(set(families)):
-        raise ValueError("Selection must contain unique selected families")
+def check_sets(plan):
+    for field in ("fileKey", "page", "family", "set", "templates", "tree", "props", "P", "frags", "selection", "total"):
+        if field not in plan:
+            raise ValueError(f"Sets plan needs {field}")
+    if not plan.get("snapshotId") or not str(plan.get("contentHash", "")).startswith("sha256:"):
+        raise ValueError("Sets plan must carry the approved Contract's snapshotId and contentHash")
+    mode = (plan.get("options") or {}).get("mode", "build")
+    selection = plan["selection"]
+    axes = selection.get("axes") if isinstance(selection, dict) else None
+    entries = selection.get("entries") if isinstance(selection, dict) else None
+    if selection.get("schemaVersion") != 1 or not isinstance(axes, list) or not axes or not isinstance(entries, list):
+        raise ValueError("Sets plan selection must be versioned axis-ordered tuples")
+    if not entries and mode in ("build", "reconcile", "sample", "theme"):
+        raise ValueError(f"A {mode} plan must select variants")
     seen = set()
-    for row in selection["entries"]:
-        if not isinstance(row, dict) or row.get("familyId") not in families or not isinstance(row.get("properties"), dict):
-            raise ValueError("Invalid selected specimen")
-        key = json.dumps(row, sort_keys=True)
-        if key in seen:
-            raise ValueError("Selection entries must be unique")
-        seen.add(key)
+    for e in entries:
+        if not isinstance(e, list) or not all(isinstance(x, int) and x >= 0 for x in e) or len(e) < len(axes) + 1:
+            raise ValueError("Sets plan entries must be lists of indexes")
+        if e[0] in seen or e[0] >= plan["total"]:
+            raise ValueError("Sets plan entries must hold unique expansion indexes below total")
+        seen.add(e[0])
+        if mode != "reconcile" and (str(e[len(axes) + 1]) not in plan["P"] or any(str(f) not in plan["frags"] for f in e[len(axes) + 2:])):
+            raise ValueError(f"Sets plan entry {e[0]} names a wiring or fragment the plan does not carry")
 
 
 def check_foundations(plan):
@@ -130,8 +192,16 @@ def package(core, plan, state):
         check_icons(plan)
     elif plan.get("slice") == "base":
         check_base(plan)
+    elif plan.get("slice") == "sets":
+        check_sets(plan)
     else:
-        check_selection(plan)
+        raise ValueError(f"Plan slice must be one of foundations, icons, base, sets; got {plan.get('slice')!r}")
+    # Markup-like text in a comment fails closed too, though compaction drops the comment.
+    found = MARKUP.search(core)
+    if found:
+        raise ValueError(f"Core spells markup-like text {found.group(0)!r}: {core[max(0, found.start() - 30):found.end() + 30]!r}")
+    core_source(core)  # ASCII, and nothing outside the function, before compaction reads it
+    core = compact(core)
     if not isinstance(state, dict):
         raise ValueError("State must be an object")
     if state.get("fileKey") and plan.get("fileKey") and state["fileKey"] != plan["fileKey"]:
@@ -156,12 +226,35 @@ def package(core, plan, state):
     return mcp, check, identity
 
 
+def main_working_tree(directory):
+    """The main working tree of the git repository holding `directory`, or None outside git. The desktop host loads
+    project hooks and sets CLAUDE_PROJECT_DIR from the main working tree, also for a session in a worktree (#26)."""
+    try:
+        common = subprocess.run(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], cwd=directory,
+                                capture_output=True, text=True, check=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    common = Path(common)
+    return common.parent.resolve() if common.name == ".git" else None
+
+
 def package_path(path):
-    """Path of the package relative to the project dir, as the hook resolves it."""
-    root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path.cwd()).resolve()
+    """Path of the package relative to the project dir, as the hook resolves it: the main working tree when the
+    package sits in a git repository (so a worktree's package reads .claude/worktrees/<wt>/.scratch/...), else
+    CLAUDE_PROJECT_DIR or the current directory."""
+    existing = path.parent.resolve()
+    while not existing.exists():
+        existing = existing.parent
+    main_tree = main_working_tree(existing)
+    root = main_tree or Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path.cwd()).resolve()
     relative = Path(os.path.relpath(path.resolve(), root)).as_posix()
-    if relative == ".." or relative.startswith("../") or re.search(r"\s", relative):
-        raise ValueError(f"Package path must be inside the project dir {root} and contain no whitespace: {relative}")
+    if relative == ".." or relative.startswith("../"):
+        if main_tree:
+            raise ValueError(f"Package path must be inside the main working tree {root}, where the hook resolves it; "
+                             f"write the package there (a worktree under it works): {relative}")
+        raise ValueError(f"Package path must be inside the project dir {root}: {relative}")
+    if re.search(r"\s", relative):
+        raise ValueError(f"Package path must contain no whitespace: {relative}")
     return relative
 
 

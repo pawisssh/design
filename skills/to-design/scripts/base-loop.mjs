@@ -11,14 +11,17 @@
 //   node skills/to-design/scripts/base-loop.mjs approve  <component.json> <readback.json> --snapshot-id <id> --content-hash <hash> [--at <iso>] [--prototype --out <.scratch path>]
 //   node skills/to-design/scripts/base-loop.mjs regen    <fixtures dir> <out dir>   (the fixtures dir holds button.component.json and readback.*.json)
 // Every command takes [--foundations <file>] (default: the one next to the contracts folder).
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import {
   approve, asDraft, baseTuple, closure, contentHash, coversScope, expand, matches, resolve, scopeFor, validate, variantName,
 } from '../../contract/scripts/contract.mjs';
-import { ledgerPath, readLedger } from './ledger.mjs';
+import { foundationsPathFor, readJson, writeJson } from '../../contract/scripts/io.mjs';
+import { anatomyTree, baseProps, expectedBase, expectedVariant, near, norm, normalizeReadback, same } from './readback.mjs';
+import { defaultLedgerPath, readLedger } from './ledger.mjs';
+
 
 const SECTIONS = ['layout', 'paint'];
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -28,113 +31,6 @@ const isRaw = v => isObj(v) && 'raw' in v;
 
 /** The reason a raw value from an owner tweak carries (no token backs it). */
 export const RAW_REASON = 'owner tweak at Base Component approval; no token';
-
-// ---------- what the Base Component should read back as ----------
-
-/** The review specimen's property values: TEXT and INSTANCE_SWAP at their default, every BOOLEAN on (Icon = true). */
-export function reviewProps(contract) {
-  return Object.fromEntries(contract.properties.map(p => [p.key, p.type === 'BOOLEAN' ? true : p.default]));
-}
-
-// "icon:default" -> the Contract's default icon key; "icon:<key>" -> key.
-const iconRef = (contract, ref) => {
-  const key = String(ref).replace(/^icon:/, '');
-  return key === 'default' ? contract.icons && contract.icons.default : key;
-};
-
-/** The anatomy as a readback reports it: name, type and children (an instance's children are not part of it). */
-export function anatomyTree(node) {
-  const out = { name: node.name, type: node.type };
-  if (node.type !== 'INSTANCE' && node.children && node.children.length) out.children = node.children.map(anatomyTree);
-  return out;
-}
-
-/**
- * What the Base Component should read back as, for the review specimen `props`:
- * {tuple, name, tree, layout, paint, visible, text, swap}. `visible` covers every node below the root,
- * `text` the TEXT property's node, `swap` each INSTANCE node's icon key.
- */
-export function expectedBase(contract, props = reviewProps(contract)) {
-  const tuple = baseTuple(contract);
-  const r = resolve(contract, tuple);
-  const visible = {};
-  const text = {};
-  const swap = {};
-  (function walk(n, root) {
-    if (!root) visible[n.name] = true;
-    if (n.type === 'INSTANCE' && /^icon:/.test(n.instanceOf || '')) swap[n.name] = iconRef(contract, n.instanceOf);
-    (n.children || []).forEach(c => walk(c, false));
-  })(contract.anatomy, true);
-  for (const p of contract.properties)
-    for (const b of r.binds[p.key]) {
-      if (p.type === 'BOOLEAN' && b.field === 'visible') visible[b.node] = !!props[p.key];
-      if (p.type === 'TEXT' && b.field === 'characters') text[b.node] = props[p.key];
-      if (p.type === 'INSTANCE_SWAP' && b.field === 'mainComponent') swap[b.node] = iconRef(contract, props[p.key]);
-    }
-  return { tuple, name: variantName(contract, tuple), tree: anatomyTree(contract.anatomy), layout: r.layout, paint: r.paint, visible, text, swap };
-}
-
-// ---------- readback: Figma ids -> Contract vocabulary ----------
-
-/**
- * A core readback (`base` slice, ids) in Contract vocabulary: `{var: id}` becomes `{token: flatName}` and
- * `{style: id}` becomes `{token: styleName}` through the file's ledger; a swap's component id becomes the
- * icon key. An id the ledger does not know becomes `{token: null, id}`.
- */
-export function normalizeReadback(raw, ledger) {
-  const f = (ledger && ledger.foundations) || {};
-  const byId = {};
-  const add = (map, kind) => { for (const [name, id] of Object.entries(map || {})) byId[id] = { kind, name }; };
-  add(f.variables, 'var');
-  add(f.textStyles, 'style');
-  for (const kind of ['variables', 'textStyles'])
-    for (const [name, o] of Object.entries((f.orphans && f.orphans[kind]) || {})) byId[o.id] = { kind: kind === 'variables' ? 'var' : 'style', name };
-  const icons = {};
-  for (const [key, o] of Object.entries((ledger && ledger.icons && ledger.icons.components) || {})) icons[o.id] = key;
-  const map = v => {
-    if (Array.isArray(v)) return v.map(map);
-    if (!isObj(v)) return v;
-    if ('var' in v || 'style' in v) {
-      const id = 'var' in v ? v.var : v.style;
-      const hit = byId[id];
-      return hit && hit.kind === ('var' in v ? 'var' : 'style') ? { token: hit.name } : { token: null, id };
-    }
-    return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, map(x)]));
-  };
-  const out = { ...raw, layout: map(raw.layout), paint: map(raw.paint) };
-  if (raw.swap) out.swap = Object.fromEntries(Object.entries(raw.swap).map(([n, id]) => [n, icons[id] || (id ? `unknown:${id}` : null)]));
-  return out;
-}
-
-// ---------- diff ----------
-
-const near = (a, b) => typeof a === 'number' && typeof b === 'number' && Math.abs(a - b) <= 1e-3;
-// A value without its annotations (by, was, level, reason, why): what Figma can show.
-function norm(v) {
-  if (Array.isArray(v)) return v.map(normEffect);
-  if (isToken(v)) return { token: v.token };
-  if (isRaw(v)) return { raw: v.raw };
-  return v;
-}
-// An effect with every numeric field present (Figma reports 0 for what the Contract leaves out).
-function normEffect(e) {
-  if (!isObj(e)) return e;
-  const out = { type: e.type };
-  for (const k of ['color', 'spread', 'blur', 'x', 'y']) out[k] = e[k] === undefined ? { raw: k === 'color' ? null : 0 } : norm(e[k]);
-  if (e.visible === false) out.visible = false;
-  return out;
-}
-function same(a, b) {
-  const x = norm(a);
-  const y = norm(b);
-  if (Array.isArray(x) || Array.isArray(y))
-    return Array.isArray(x) && Array.isArray(y) && x.length === y.length && x.every((e, i) => same(e, y[i]));
-  if (isObj(x) && isObj(y)) {
-    const keys = [...new Set([...Object.keys(x), ...Object.keys(y)])];
-    return keys.every(k => (isObj(x[k]) || isObj(y[k]) ? same(x[k], y[k]) : x[k] === y[k] || near(x[k], y[k])));
-  }
-  return x === y || near(x, y) || (x == null && y == null);
-}
 
 /** A value as one short string: `{spacing-07}`, `raw 15`, `none`, `∅`. */
 export function show(v) {
@@ -172,14 +68,25 @@ const UNMAPPED = {
 };
 
 /**
- * Diff a normalized Base Component readback against what the Contract resolves to for the Base Component.
+ * A base slice result's readback in Contract vocabulary (see normalizeReadback), marked with the property
+ * values it was built at: `specimen` is "set" once the ledger records the family's Component Set (property
+ * defaults), else "review" (every BOOLEAN on). See baseProps.
+ */
+export function normalizeBaseResult(result, ledger) {
+  const inSet = !!(ledger && ledger.sets && ledger.sets[result.family]);
+  return { ...normalizeReadback(result.readback, ledger), specimen: inSet ? 'set' : 'review' };
+}
+
+/**
+ * Diff a normalized Base Component readback against what the Contract resolves to for the Base Component
+ * (or for `tuple`, a variant of the set). `props` defaults to the readback's `specimen` (see baseProps).
  * Returns {name, changes, unread}: each change is {kind, section, node, field, from, to, why?} with kind
  * `token-edit` (the owner bound a variable), `raw-edit` (a typed value), `detached` (a binding lost while the
  * value stayed, which a rebuild restores) or `unmapped` (a tweak the Contract cannot carry, `why` says which).
  * `unread` lists the expected fields the readback does not report. Effects are compared in order.
  */
-export function diff(contract, readback, foundations, props = reviewProps(contract)) {
-  const exp = expectedBase(contract, props);
+export function diff(contract, readback, foundations, props = baseProps(contract, readback.specimen === 'set'), tuple = baseTuple(contract)) {
+  const exp = expectedVariant(contract, tuple, props);
   const changes = [];
   const unread = [];
   const unmapped = (reason, section, node, field, from, to) =>
@@ -457,25 +364,18 @@ export function approveReviewed(contract, readback, foundations, { snapshotId, c
 
 // ---------- CLI ----------
 
-const readJson = p => JSON.parse(readFileSync(p, 'utf8'));
-const writeJson = (p, v) => { mkdirSync(dirname(p), { recursive: true }); writeFileSync(p, JSON.stringify(v, null, 2) + '\n'); };
+// Non-Contract outputs (a normalized readback) are written fresh.
+const writeOutput = (p, v) => { mkdirSync(dirname(p), { recursive: true }); writeFileSync(p, JSON.stringify(v, null, 2) + '\n'); };
 // A saved readback: one object, or the prototype's array of readbacks (the first is the Base Component).
 const readReadback = p => { const r = readJson(p); return Array.isArray(r) ? r[0] : r; };
 
-function foundationsFor(contractPath, given) {
-  if (given) return readJson(given);
-  const dsDir = resolvePath(dirname(contractPath), '..');
-  const found = readdirSync(dsDir).filter(f => f.endsWith('.foundations.json'));
-  if (found.length !== 1) throw new Error(`no single *.foundations.json in ${dsDir}; pass --foundations <file>`);
-  return readJson(join(dsDir, found[0]));
-}
-
 // Validates before writing and refuses an invalid Contract; `allow(error)` names the errors a prototype accepts.
-function writeContract(path, c, foundations, allow = () => false) {
+// The write keeps the hand layout of the Contract it was read from (`from`): only changed values are spliced in.
+function writeContract(path, c, foundations, from, allow = () => false) {
   const v = validate(c, foundations);
   const blocking = v.errors.filter(e => !allow(e));
   if (blocking.length) throw new Error(`refused to write an invalid Contract to ${path}: ${blocking.map(e => `[${e.rule}] ${e.at}: ${e.message}`).join('; ')}`);
-  writeJson(path, c);
+  writeJson(path, c, { from });
   return v;
 }
 
@@ -523,8 +423,8 @@ function main() {
   if (cmd === 'readback' && a && values.out) {
     const result = readJson(a);
     if (result.error || !result.readback) throw new Error(`no readback in ${a}: ${result.error || 'missing'}`);
-    const ledger = readLedger(values.ledger || ledgerPath(result.fileKey));
-    writeJson(values.out, normalizeReadback(result.readback, ledger));
+    const ledger = readLedger(values.ledger || defaultLedgerPath(result.fileKey));
+    writeOutput(values.out, normalizeBaseResult(result, ledger));
     return print(`wrote ${values.out}\n`);
   }
   if (cmd === 'regen' && a && b) {
@@ -535,7 +435,7 @@ function main() {
   }
   if (!a || !b) { console.error('usage: see the header of base-loop.mjs'); process.exit(2); }
   const contract = readJson(a);
-  const foundations = foundationsFor(a, values.foundations);
+  const foundations = readJson(foundationsPathFor(a, values.foundations));
   const readback = readReadback(b);
   const outPath = values.out || a;
   if (cmd === 'diff') return print(formatDiff(contract, readback, review(contract, readback, foundations)));
@@ -543,12 +443,12 @@ function main() {
     const r = review(contract, readback, foundations, { by: values.by });
     const confirm = values.confirm === 'all' ? 'all' : values.confirm.split(',').map(s => s.trim()).filter(Boolean);
     const res = applyEdits(contract, r.proposals, { confirm });
-    const v = writeContract(outPath, res.contract, foundations);
+    const v = writeContract(outPath, res.contract, foundations, a);
     return print(JSON.stringify({ status: 'applied', out: outPath, applied: res.applied, notes: res.notes.map(n => `${n.level} ${n.at}`), closure: res.closure, valid: v.ok, errors: v.errors }, null, 2) + '\n');
   }
   if (cmd === 'discard') {
     if (!values.note) throw new Error('discard needs --note <at>');
-    writeContract(outPath, discardNote(contract, values.note, readback, foundations), foundations);
+    writeContract(outPath, discardNote(contract, values.note, readback, foundations), foundations, a);
     return print(`discarded the note at ${values.note}; wrote ${outPath}\n`);
   }
   if (cmd === 'review') {
@@ -564,7 +464,7 @@ function main() {
       snapshotId: values['snapshot-id'], contentHash: values['content-hash'], at: values.at || new Date().toISOString(), prototype: values.prototype,
     });
     // a prototype approval fails rule 8 by design: it is never an owner approval
-    const v = writeContract(outPath, c, foundations, e => values.prototype && e.rule === 8 && /only the owner approves/.test(e.message));
+    const v = writeContract(outPath, c, foundations, a, e => values.prototype && e.rule === 8 && /only the owner approves/.test(e.message));
     return print(JSON.stringify({ status: 'approved', out: outPath, approval: c.selection.approval, valid: v.ok, errors: v.errors }, null, 2) + '\n');
   }
   console.error('usage: see the header of base-loop.mjs');
@@ -575,4 +475,3 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   try { main(); } catch (e) { console.error(`base-loop: ${e.message}`); process.exit(1); }
 }
 
-export { same, norm };

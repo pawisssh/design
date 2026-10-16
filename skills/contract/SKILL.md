@@ -11,7 +11,7 @@ The neutral, shared skill: the one place that defines the **Contract** (one `com
 
 - [Contract schema](references/contract-schema.md): every field of a Contract, its match patterns, rules and value forms. Read before writing or editing a Contract.
 - [Foundations schema](references/foundations-schema.md): collections, modes, variables, scopes, codeSyntax and Text Styles, plus the foundations ledger. Read before generating or reading a foundations document.
-- [Mapping](references/mapping.md): how the older hand-off files (selection manifest, expected file, layout and token plans, build plan) map onto the Contract. Read when a skill still names one of those files.
+- [Adapter guide](references/adapter-guide.md): what any Adapter must produce, and how to get from Code Library source to a draft Contract (variants, anatomy, CSS to layout fields, rules, raw values, icons, Code Connect). Read before writing an Adapter or a Contract.
 
 ## Instances
 
@@ -25,20 +25,19 @@ Committed instances live in the project, per Design System: `design-systems/<des
 |---|---|
 | `validate(contract, foundations)` | `{ok, errors: [{rule, at, message}]}` for the rules in [Validation](references/contract-schema.md#validation), including rule 6 (tokens inside their variable's scopes) and rule 8 (approval `snapshotId` and `contentHash`). |
 | `expand(contract)` | The selected tuples, `{axisKey: valueKey}` in axis order. |
-| `baseTuple(contract)`, `variantName(contract, tuple)` | The Base Component tuple; the Figma name `Kind=Primary, Size=Large, State=Enabled`. |
+| `baseTuple(contract)`, `variantName(contract, tuple)`, `tupleKey(contract, tuple)` | The Base Component tuple; the Figma name `Kind=Primary, Size=Large, State=Enabled`; the value keys joined in axis order (`primary\|lg\|enabled`), an internal id that never leaves a tool. |
 | `matches(pattern, tuple)` | Whether a match pattern covers a tuple. |
 | `resolve(contract, tuple)` | `{layout, paint, from, binds}`: per node, the fields after every matching rule (later wins) and `sameAs`; `from["layout.Button.gap"]` is the index of the rule that set the field; `binds[propertyKey]` is the property binds for the tuple. |
 | `closure(contract)` | The sorted token names the selected variants use, skipping `was`. |
+| `icons(contract)`, `iconName(key)` | The Contract's icon keys (`default` first, then `preferred`); the kit-style Figma name (`arrow--right` → `Arrow--right`). |
 | `applyOmit(contract, patch)` | A draft copy with To-preview's omit patch applied (replaces `selection.omit`). Throws on another family or `snapshotId`. |
 | `asDraft(contract)` | A copy with `status: "draft"`, `approval: null`. Use it on every Contract write. |
 | `approve(contract, at, {prototype})` | A copy approved by the owner: `{by: "owner", at, snapshotId, contentHash}`. Call it only after the owner's explicit "approve" in chat. Throws while a `warning` note is open. `prototype: true` writes `by: "orchestrator (prototype)"` (`PROTOTYPE_APPROVER`), which rule 8 rejects, so it never stands in a committed Contract. |
 | `scopeFor(contract, node, field, key)`, `coversScope(scopes, need)` | The VariableScope a token bound at `node.field` needs (rule 6; `key` for an effect's nested reference), or undefined; whether a variable's `scopes` cover it. |
 | `contentHash(contract)`, `sha256(text)` | `sha256:<hex>` of the canonical Contract without `selection.status` and `selection.approval`; hex sha256 of a string's UTF-8 bytes. |
 
-From the command line: `node skills/contract/scripts/check.mjs <component.json> [--foundations <file>] [--table]` validates and prints the variant count, Base Component, token closure and, with `--table`, the resolved paint for the grid rows. Tests: `node --test skills/contract/test/*.test.mjs`.
+[`scripts/io.mjs`](scripts/io.mjs) is the file side, for node only: `readJson`, `foundationsPathFor(contractPath, given)` (the given path, else the single `*.foundations.json` next to the `contracts/` folder) and `writeJson(path, value, {from})`. Every tool that writes a Contract writes through `writeJson`: it splices the changed values into the file's existing text, so hand-aligned lines and inline objects stay as they were and a diff shows only what changed.
+
+From the command line: `node skills/contract/scripts/check.mjs <component.json> [--foundations <file>] [--table]` validates and prints the variant count, Base Component, token closure and, with `--table`, the resolved paint for the grid rows. It exits 1 on a validation error and 2 when a file cannot be read. Tests: `node --test skills/contract/test/*.test.mjs`.
 
 The formal JSON Schema is [`contract.schema.json`](contract.schema.json).
-
-## Coming next
-
-The Adapter guide (#34).

@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
 import { buildCatalog } from '../scripts/catalog.mjs';
 
 const button = JSON.parse(readFileSync(new URL('../../../design-systems/carbon/contracts/button.component.json', import.meta.url)));
@@ -19,6 +20,9 @@ test('the page carries the Contract, one rendered specimen per tuple and the lib
   const omitted = JSON.parse(JSON.stringify(button));
   omitted.selection.omit = [{ match: { state: 'focus' } }];
   omitted.selection.expectedCount = 196;
+  // An omit edit resets the Contract to draft (asDraft), as apply-omit does.
+  omitted.selection.status = 'draft';
+  omitted.selection.approval = null;
   const html = buildCatalog({ contract: omitted, foundations, renderer: stub });
   const data = embedded(html);
   assert.deepEqual(data.contract, omitted);
@@ -47,8 +51,29 @@ test('States without code props are forced through their CSS pseudo-class', () =
   ]);
 });
 
+test('the card footer source is the Code Library package and its pinned version, from the Contract', () => {
+  assert.equal(embedded(buildCatalog({ contract: button, foundations, renderer: stub })).sourceLabel, '@carbon/react 1.118.0');
+  const bumped = JSON.parse(JSON.stringify(button));
+  bumped.source.packages['@carbon/react'] = '9.9.9';
+  bumped.selection.status = 'draft';
+  bumped.selection.approval = null;
+  assert.equal(embedded(buildCatalog({ contract: bumped, foundations, renderer: stub })).sourceLabel, '@carbon/react 9.9.9');
+});
+
 test('an invalid Contract gets no catalog', () => {
   const broken = JSON.parse(JSON.stringify(button));
   broken.selection.expectedCount = 7;
   assert.throws(() => buildCatalog({ contract: broken, foundations, renderer: stub }), /rule 4.*expectedCount is 7/);
+});
+
+test('the page scripts run the selection model on the inlined Contract module', () => {
+  const html = buildCatalog({ contract: button, foundations, renderer: stub });
+  const scripts = [...html.matchAll(/<script>\n([\s\S]*?)\n<\/script>/g)].map(m => m[1]);
+  const window = {};
+  const context = vm.createContext({ window });
+  for (const name of ['window.Contract = ', 'class CatalogSelection', 'function catalogCard']) vm.runInContext(scripts.find(s => s.includes(name)), context);
+  const model = new context.CatalogSelection(button, window.Contract);
+  assert.equal(model.baseId, 'primary|lg|enabled');
+  assert.equal(model.specimens.size, 245);
+  assert.equal(typeof context.catalogCard, 'function', 'the card builder is inlined too');
 });

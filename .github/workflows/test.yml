@@ -1,0 +1,21 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Without the pinned Carbon sources and preview packages, 22 adapter-carbon tests skip.
+      - run: node skills/adapter-carbon/scripts/sources.mjs
+      - run: npm test

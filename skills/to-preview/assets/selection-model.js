@@ -3,7 +3,7 @@
   // To-preview selection over one Contract. Specimens are the Contract's tuples (axes minus `excluded`);
   // the ones the Contract omits start unchecked. `contractModule` is the shared Contract module
   // (skills/contract/scripts/contract.mjs): the only implementation of expand, match and apply-omit.
-  class ComponentSheetSelection {
+  class CatalogSelection {
     constructor(contract, contractModule) {
       if (!contract || contract.schemaVersion !== 1 || !contract.family || !contract.source || !contract.source.snapshotId)
         throw new Error("Invalid Contract: schemaVersion 1 with family and source.snapshotId required");
@@ -20,9 +20,9 @@
       for (const tuple of contractModule.expand(contract)) this.selected.add(this.idOf(tuple));
       this.baseId = this.idOf(contractModule.baseTuple(contract));
     }
-    // The specimen id ("primary|lg|enabled") is an internal DOM id only; it never leaves the page.
+    // The specimen id is the tuple key ("primary|lg|enabled"): an internal DOM id only; it never leaves the page.
     idOf(tuple) {
-      return this.contract.axes.map(axis => tuple[axis.key]).join("|");
+      return this.module.tupleKey(this.contract, tuple);
     }
     specimen(id) {
       const specimen = this.specimens.get(id);
@@ -92,6 +92,6 @@
       return patch;
     }
   }
-  root.ComponentSheetSelection = ComponentSheetSelection;
-  if (typeof module !== "undefined" && module.exports) module.exports = ComponentSheetSelection;
+  root.CatalogSelection = CatalogSelection;
+  if (typeof module !== "undefined" && module.exports) module.exports = CatalogSelection;
 })(typeof globalThis !== "undefined" ? globalThis : window);

@@ -2,6 +2,7 @@
 // PreToolUse hook for mcp__*__use_figma (To-design package delivery, pawisssh/design#25).
 // Swaps the packager's fail-closed stub `/*@package <path> sha256=<hex>*/ throw new Error("package not injected");`
 // for the verified package file via updatedInput, so the agent never re-types the package.
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { appendFileSync, mkdirSync, readFileSync, realpathSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
@@ -49,12 +50,25 @@ try {
   appendFileSync(join(logDir, 'use-figma-package.log'), JSON.stringify(record) + '\n');
 } catch {}
 
+// This hook and its settings load from the main checkout, so a checkout behind its upstream on them runs an old
+// hook. Local refs only (no fetch, the hook has 10s); any git failure skips the warning and never blocks the call.
+let behind = 0;
+try {
+  const r = spawnSync('git', ['rev-list', '--count', 'HEAD..@{upstream}', '--', ':/skills/to-design/hooks', ':/.claude/settings.json'], { cwd: root, encoding: 'utf8', timeout: 2000 });
+  if (r.status === 0) behind = Number(r.stdout.trim()) || 0;
+} catch {}
+const stale = behind
+  ? `the main checkout ${root} is ${behind} commit(s) behind its upstream on the use_figma hook or .claude/settings.json`
+  : null;
+
 process.stdout.write(JSON.stringify({
+  ...(stale && { systemMessage: `To-design: ${stale}; pull it and start a new session.` }),
   hookSpecificOutput: {
     hookEventName: 'PreToolUse',
     // "allow": use_figma does not appear to carry anthropic/requiresUserInteraction (#16); if it does, Claude Code prompts anyway.
     permissionDecision: 'allow',
     permissionDecisionReason: `@package ${record.path} sha256=${actual.slice(0, 12)} expanded to ${text.length} chars`,
     updatedInput: { ...toolInput, code: text },
+    ...(stale && { additionalContext: `This package was swapped by a stale hook: ${stale}. Tell the owner to pull the main checkout and start a new session.` }),
   },
 }));
