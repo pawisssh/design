@@ -126,6 +126,7 @@
         "default": { "type": "string" },
         "defaultSource": { "type": "string" },
         "canonical": { "type": "boolean" },
+        "slot": { "type": "string", "description": "a Slot axis (#88): the anatomy node whose presence this axis sets; each value says whether it is filled" },
         "values": {
           "type": "array",
           "minItems": 1,
@@ -136,7 +137,8 @@
               "key": { "type": "string" },
               "label": { "type": "string", "pattern": "^[^=,]+$" },
               "code": { "type": ["object", "null"] },
-              "css": { "type": "string" }
+              "css": { "type": "string" },
+              "filled": { "type": "boolean", "description": "on a Slot axis value: whether the slot is filled" }
             }
           }
         },
@@ -193,6 +195,7 @@
       "anyOf": [
         { "type": "string", "description": "a keyword: none, hug, fill, fixed, row, column, start, center, end, space-between, inside, …" },
         { "type": "number" },
+        { "type": "boolean", "description": "visible: true/false (#88)" },
         { "$ref": "#/$defs/token" },
         { "$ref": "#/$defs/raw" },
         { "type": "object", "required": ["sameAs"], "properties": { "sameAs": { "type": "string", "pattern": "^.+\\.[A-Za-z]+$" } } },

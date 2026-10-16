@@ -293,3 +293,49 @@ test('the module runs inlined, without export, in a bare context (no TextEncoder
     bare: ['undefined', 'undefined', 'undefined', 'undefined', 'undefined'],
   });
 });
+
+// ---------- Slot axis (#88), on the prototype shadcn Button (prototypes/slot-styling) ----------
+const shadcn = () => load('prototypes/slot-styling/button.component.json');
+const shadcnFoundations = load('prototypes/slot-styling/shadcn.foundations.json');
+const slotRejects = (c, rule, ...parts) => {
+  const result = contract.validate(c, shadcnFoundations);
+  assert.equal(result.ok, false, 'expected the Contract to be rejected');
+  assert.ok(result.errors.some(e => e.rule === rule && parts.every(p => e.message.includes(p))),
+    `no rule ${rule} error containing ${JSON.stringify(parts)}; got:\n${result.errors.map(e => `  [${e.rule}] ${e.message}`).join('\n')}`);
+};
+
+test('the prototype shadcn Button with a Slot axis is valid and expands to 72 variants', () => {
+  assert.deepEqual(contract.validate(shadcn(), shadcnFoundations), { ok: true, errors: [] });
+  assert.equal(contract.expand(shadcn()).length, 72);
+});
+
+test('the Slot axis value picks the padding: Default size is 16 empty, 12 filled', () => {
+  const c = shadcn();
+  const at = icon => contract.resolve(c, { variant: 'default', size: 'default', icon, state: 'enabled' }).layout;
+  assert.deepEqual([at('none').Button.paddingLeft.token, at('none').Icon.visible], ['spacing-4', false]);
+  assert.deepEqual([at('icon').Button.paddingLeft.token, at('icon').Icon.visible], ['spacing-3', true]);
+});
+
+test('rejects a Slot axis whose slot is not a non-root anatomy node', () => {
+  const c = shadcn();
+  c.axes.find(a => a.key === 'icon').slot = 'Button';
+  slotRejects(c, 3, 'slot "Button" is not a non-root anatomy node');
+});
+
+test('rejects a Slot axis without a filled and an empty value', () => {
+  const c = shadcn();
+  c.axes.find(a => a.key === 'icon').values[0].filled = true;
+  slotRejects(c, 3, 'needs a filled and an empty value');
+});
+
+test('rejects a slot whose visible rule disagrees with the Slot axis', () => {
+  const c = shadcn();
+  c.layout = c.layout.filter(r => r.match.icon !== 'none');
+  slotRejects(c, 5, 'Icon.visible must be false where icon is none');
+});
+
+test('rejects a BOOLEAN bound to a slot the Slot axis already shows and hides', () => {
+  const c = shadcn();
+  c.properties.push({ key: 'showIcon', label: 'Show icon', type: 'BOOLEAN', default: true, binds: [{ node: 'Icon', field: 'visible' }] });
+  slotRejects(c, 5, 'Icon.visible is set by a rule and bound to property showIcon');
+});

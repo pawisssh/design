@@ -59,6 +59,9 @@ export function expectedVariant(contract, tuple, props) {
     if (n.type === 'INSTANCE' && /^icon:/.test(n.instanceOf || '')) swap[n.name] = iconRef(contract, n.instanceOf);
     (n.children || []).forEach(c => walk(c, false));
   })(contract.anatomy, true);
+  // #88: a `visible` layout field (a slot axis, an icon-only size) is property wiring for the core, not a layout fragment.
+  for (const [node, fields] of Object.entries(r.layout))
+    if ('visible' in fields) { visible[node] = fields.visible; delete fields.visible; }
   for (const p of contract.properties)
     for (const b of r.binds[p.key]) {
       (refs[b.node] = refs[b.node] || {})[b.field] = p.key;
