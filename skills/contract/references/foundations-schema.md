@@ -15,9 +15,9 @@ Worked example: [`carbon.foundations.json`](../../../design-systems/carbon/carbo
 node skills/adapter-carbon/scripts/foundations.mjs
 ```
 
-It reads every Contract in `design-systems/carbon/contracts/` and the pinned Carbon sources, which `skills/adapter-carbon/scripts/sources.mjs` fetches into gitignored `.scratch/adapter-carbon/sources/` and checks against their pinned hashes. The token closure comes from the shared module's `closure()`, and the scope check is the shared module's `validate()` (rule 6) run on the generated document. The output does not depend on the order of the Contracts, and two runs produce byte-identical files, so the ledger's `documentHash` is stable.
+It reads every Contract in `design-systems/carbon/contracts/` and the pinned Carbon sources, which `skills/adapter-carbon/scripts/sources.mjs` fetches into gitignored `.scratch/adapter-carbon/sources/` and checks against their pinned hashes. The token closure comes from the shared module's `closure()`, and the scope check is rule 6 of the shared module's `validate()`, run on the generated document. The output does not depend on the order of the Contracts, and two runs produce byte-identical files, so the ledger's `documentHash` is stable.
 
-Output for Button: 38 closure tokens, 75 variables (20 Primitives, 24 Theme, 22 Layout, 9 Type) and 2 Text Styles. Layout holds 12 closure tokens plus the 10 other `spacing-*` steps (see [Who writes it](#who-writes-it)). All 96 Theme mode values, 13 spacing values and 8 type values match the compiled `@carbon/styles` CSS. All 9 Sass codeSyntax fallbacks exist in `@carbon/layout`. The Button Contract validates against the document, so every Contract use of a token falls inside that variable's scopes.
+Output for Button: 38 closure tokens, 75 variables (20 Primitives, 24 Theme, 22 Layout, 9 Type) and 2 Text Styles. Layout holds 12 closure tokens plus the 10 other `spacing-*` steps (see [Who writes it](#who-writes-it)). All 96 Theme mode values, 13 spacing values and 8 type values match the compiled `@carbon/styles` CSS. All 9 Sass codeSyntax fallbacks exist in `@carbon/layout`. The Button Contract passes rule 6 against the document, so every Contract use of a token falls inside that variable's scopes.
 
 ## Top level
 
@@ -30,7 +30,7 @@ Output for Button: 38 closure tokens, 75 variables (20 Primitives, 24 Theme, 22 
 | `collections` | yes | Ordered list `{key, name, modes: [{key, label}], hidden?}`. The first mode is the default. |
 | `variables` | yes | Map from flat name to variable. See [Variables](#variables). The order is collection order, then name, which is also the creation order (aliases need their targets first). |
 | `textStyles` | yes (may be `{}`) | Map from flat name to Text Style. See [Text Styles](#text-styles). |
-| `checks` | yes | Evidence from generation: a CSS cross-check (`against`, `sha256`, `matched`, `missing`), a Sass fallback check (`against`, `matched`) and the scope check (`by`, the validator that ran; `contracts`, how many Contracts it validated; `errors`, always 0, since generation fails otherwise). |
+| `checks` | yes | Evidence from generation: a CSS cross-check (`against`, `sha256`, `matched`, `missing`), a Sass fallback check (`against`, `matched`) and the scope check (`by`, the validator and rule that ran; `contracts`, how many Contracts it checked; `errors`, always 0, since generation fails otherwise). |
 | `notes` | no | `{level: info|warning|verify, at, message}`, as in the Contract. |
 
 ## Collections and modes
@@ -222,6 +222,6 @@ Identity is the flat name, carried through the ledger id. Figma names and labels
 2. Every closure token resolves in the Code Library sources, and every alias target exists in the palette.
 3. Every resolved Theme value equals the compiled CSS in the matching `.cds--white` / `.cds--g10` / `.cds--g90` / `.cds--g100` block. Every emitted layout and type custom property matches in px.
 4. Every Sass codeSyntax fallback exists in `@carbon/layout`.
-5. Every Contract is valid against the generated document under the shared module's `validate()`, so every Contract use (fill on FRAME, TEXT or vector; stroke; effect colour; padding or gap; min height or size; radius) is inside the bound variable's scopes (rule 6).
+5. Every Contract passes rule 6 of the shared module's `validate()` against the generated document, so every Contract use (fill on FRAME, TEXT or vector; stroke; effect colour; padding or gap; min height or size; radius) is inside the bound variable's scopes.
 6. Figma names are unique. No flat name is both a variable and a Text Style.
 7. Every Theme mode value that is not an alias carries `level` and `reason`.

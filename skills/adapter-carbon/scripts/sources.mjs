@@ -46,7 +46,8 @@ export const CARBON = {
   },
 };
 
-const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+/** Hex sha256 of a string or bytes. */
+export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const pkgDir = (dir, name) => join(dir, 'npm', `${name}@${CARBON.packages[name].version}`);
 
 /** Download every pinned source into `dir`, verifying each hash. Skips files already present and valid. */

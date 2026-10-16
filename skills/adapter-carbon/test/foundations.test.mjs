@@ -9,9 +9,8 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createHash } from 'node:crypto';
 import { generate } from '../scripts/foundations.mjs';
-import { hasSources, readSources } from '../scripts/sources.mjs';
+import { hasSources, readSources, sha256 as sha } from '../scripts/sources.mjs';
 import { validate, closure } from '../../contract/scripts/contract.mjs';
 
 const root = new URL('../../../', import.meta.url);
@@ -24,7 +23,6 @@ const button = () => JSON.parse(read(CONTRACT));
 const skip = hasSources() ? false : 'Carbon sources missing: run node skills/adapter-carbon/scripts/sources.mjs';
 const sources = skip ? null : readSources();
 const run = (contracts = [{ path: CONTRACT, contract: button() }]) => generate({ sources, contracts });
-const sha = text => createHash('sha256').update(text).digest('hex');
 
 test('two CLI runs write byte-identical documents (stable documentHash)', { skip }, () => {
   const dir = mkdtempSync(join(tmpdir(), 'foundations-'));
@@ -187,4 +185,16 @@ test('generation fails when Contracts pin a commit other than the sources', { sk
   const c = button();
   c.source.commit = '0000000';
   assert.throws(() => run([{ path: CONTRACT, contract: c }]), /commit/);
+});
+
+test('generation fails when Contracts pin a package version other than the one the checks read', { skip }, () => {
+  const c = button();
+  c.source.packages['@carbon/styles'] = '1.0.0';
+  assert.throws(() => run([{ path: CONTRACT, contract: c }]), /@carbon\/styles@1\.0\.0 but the checks read @carbon\/styles@1\.117\.0/);
+});
+
+test('only rule 6 blocks generation: a Contract error outside it (a stale expectedCount) does not', { skip }, () => {
+  const c = button();
+  c.selection.expectedCount = 1;
+  assert.equal(run([{ path: CONTRACT, contract: c }]).text, read(COMMITTED));
 });

@@ -12,19 +12,18 @@
 // The token closure and the scope check come from the shared Contract module (closure, validate rule 6);
 // this file only knows how to read Carbon. Generation throws (the CLI exits 1 and writes nothing) when a token
 // is missing from Carbon, a resolved value differs from the compiled CSS, a Sass fallback does not exist, or a
-// Contract is invalid against the generated document, including any token used outside its variable's scopes.
-import { createHash } from 'node:crypto';
+// Contract fails validation rule 6 against the generated document (a token used outside its variable's scopes).
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { closure, validate } from '../../contract/scripts/contract.mjs';
-import { CARBON, DEFAULT_DIR, REPO_ROOT, fetchSources, hasSources, readSources } from './sources.mjs';
+import { CARBON, DEFAULT_DIR, REPO_ROOT, fetchSources, hasSources, readSources, sha256 } from './sources.mjs';
 
 const MODES = [['white', 'White'], ['g10', 'Gray 10'], ['g90', 'Gray 90'], ['g100', 'Gray 100']]; // fixed; DTCG may add keys such as "fallback"
 const SINGLE = [['default', 'Default']];
 const COLLECTIONS = ['primitives', 'theme', 'layout', 'type'];
 const PACKAGES = ['@carbon/colors', '@carbon/layout', '@carbon/styles', '@carbon/themes', '@carbon/type'];
-const F = {
+const FILE = {
   colors: 'packages/colors/src/dtcg/colors.json',
   layout: 'packages/layout/src/dtcg/layout.json',
   button: 'packages/themes/src/dtcg/components/button.json',
@@ -48,14 +47,12 @@ const LAYOUT_GROUP = {
 };
 const FONT_STYLE = { 300: 'Light', 400: 'Regular', 600: 'SemiBold' }; // IBM Plex Sans style per weight
 
-class GenerationError extends Error {}
-const fail = msg => { throw new GenerationError(msg); };
-const sha256 = text => createHash('sha256').update(text).digest('hex');
+const fail = msg => { throw new Error(msg); };
 const byKey = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
-// Python's str.capitalize(): first character upper, the rest lower ("icon-size" -> "Icon size").
+// Group label: first character upper, the rest lower ("icon-size" -> "Icon size", as the schema names it).
 const title = s => { const t = s.replace(/-/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase(); };
-// Python's "{:g}" for the small values used here (6 significant digits, no trailing zeros).
-const g = x => String(Number(x.toPrecision(6)));
+// A number in %g style: 6 significant digits, no trailing zeros (0.3, 0.875, 1.28572).
+const formatG = x => String(Number(x.toPrecision(6)));
 
 // ---------- reading Carbon ----------
 
@@ -77,7 +74,7 @@ function flattenLayout(doc) {
     if (group.startsWith('$')) continue;
     for (const [key, node] of Object.entries(members))
       if (!key.startsWith('$') && node && typeof node === 'object' && '$value' in node)
-        out[key] = { group, node, source: `${F.layout}#/${group}/${key}` };
+        out[key] = { group, node, source: `${FILE.layout}#/${group}/${key}` };
   }
   return out;
 }
@@ -102,15 +99,15 @@ const primitiveName = key => {
 };
 const rgbaCss = (hex, alpha) => {
   const [r, gr, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
-  return `rgba(${r}, ${gr}, ${b}, ${g(alpha)})`;
+  return `rgba(${r}, ${gr}, ${b}, ${formatG(alpha)})`;
 };
 
 function layoutPx(node) {
   const v = node.$value;
   const conv = ((node.$extensions || {})['carbon.layout'] || {}).converter;
   let px, how;
-  if (conv === 'miniUnits') [px, how] = [v * 8, `${g(v)} miniUnits x 8`];
-  else if (conv === 'rem') [px, how] = [v, `${g(v)}px (rem converter)`];
+  if (conv === 'miniUnits') [px, how] = [v * 8, `${formatG(v)} miniUnits x 8`];
+  else if (conv === 'rem') [px, how] = [v, `${formatG(v)}px (rem converter)`];
   else if (typeof v === 'string' && v.endsWith('rem')) [px, how] = [parseFloat(v) * 16, `${v} x 16`];
   else if (typeof v === 'string' && v.endsWith('px')) [px, how] = [parseFloat(v), v];
   else fail(`unknown layout unit ${JSON.stringify(node)}`);
@@ -126,12 +123,12 @@ function typeSource(files) {
     for (const m of text.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/^export const (\w+) =\s*([^;]*);/gm)) out[m[1]] = m[2].trim();
     return out;
   };
-  const scale = consts(files[F.scale]);
-  const weight = consts(files[F.fontWeight]);
-  const styles = consts(files[F.styles]);
-  const famStack = consts(files[F.fontFamily]).sans;
+  const scale = consts(files[FILE.scale]);
+  const weight = consts(files[FILE.fontWeight]);
+  const styles = consts(files[FILE.styles]);
+  const famStack = consts(files[FILE.fontFamily]).sans;
   const fam = famStack && /^"'([^']+)'/.exec(famStack);
-  if (!fam) fail(`${F.fontFamily}: cannot read the first family of \`sans\``);
+  if (!fam) fail(`${FILE.fontFamily}: cannot read the first family of \`sans\``);
   const num = (expr, at) => (/^-?\d+(\.\d+)?$/.test(expr) ? Number(expr) : fail(`${at}: "${expr}" is not a number`));
 
   function style(token) {
@@ -140,8 +137,8 @@ function typeSource(files) {
     let target = id;
     if (/^\w+$/.test(styles[id])) target = styles[id]; // bodyCompact01 = bodyShort01
     const body = styles[target] && /^\{([\s\S]*)\}$/.exec(styles[target]);
-    if (!body) fail(`${F.styles}#${target}: not an object literal`);
-    const at = `${F.styles}#${target}`;
+    if (!body) fail(`${FILE.styles}#${target}: not an object literal`);
+    const at = `${FILE.styles}#${target}`;
     const fields = Object.fromEntries(body[1].split(',').map(s => s.trim()).filter(Boolean).map(s => {
       const i = s.indexOf(':');
       return [s.slice(0, i).trim(), s.slice(i + 1).trim()];
@@ -197,6 +194,8 @@ export function generate({ sources, contracts }) {
   if (commits.length !== 1) fail(`Contracts pin different commits ${commits.join(', ')}; one Code Library version per foundations document`);
   if (commits[0] !== sources.commit) fail(`Contracts pin commit ${commits[0]} but the sources are commit ${sources.commit}`);
   const src0 = contracts[0].contract.source;
+  for (const [name, pin] of Object.entries(CARBON.packages))
+    if (src0.packages[name] !== pin.version) fail(`Contracts pin ${name}@${src0.packages[name]} but the checks read ${name}@${pin.version}`);
 
   // 1. the token union, from the shared module's closure
   const usedBy = {};
@@ -206,10 +205,10 @@ export function generate({ sources, contracts }) {
   const users = t => [...(usedBy[t] || [])].sort(byKey);
 
   const files = sources.files;
-  const comps = flattenTheme(JSON.parse(files[F.button]), F.button);
-  const themes = flattenTheme(JSON.parse(files[F.themes]), F.themes);
-  const layout = flattenLayout(JSON.parse(files[F.layout]));
-  const pal = palette(JSON.parse(files[F.colors]));
+  const comps = flattenTheme(JSON.parse(files[FILE.button]), FILE.button);
+  const themes = flattenTheme(JSON.parse(files[FILE.themes]), FILE.themes);
+  const layout = flattenLayout(JSON.parse(files[FILE.layout]));
+  const pal = palette(JSON.parse(files[FILE.colors]));
   const type = typeSource(files);
   const css = cssIndex(sources.css.text);
 
@@ -247,6 +246,7 @@ export function generate({ sources, contracts }) {
       let v = node.$extensions['carbon.themes'][mode];
       let alpha = mods[mode];
       if (v && typeof v === 'object') [v, alpha] = [v.value, v.alpha];
+      if (typeof v !== 'string') fail(`${name}/${mode}: no carbon.themes value in ${source}`);
       if (v.startsWith('{')) {
         const key = paletteKey(v);
         if (!(key in pal)) fail(`${name}/${mode}: palette ${key} missing`);
@@ -289,12 +289,12 @@ export function generate({ sources, contracts }) {
   // 4. Primitives: only the palette entries some Theme mode aliases
   for (const key of [...primitives].sort(byKey))
     variables[key] = { collection: 'primitives', name: primitiveName(key), type: 'COLOR',
-      source: `${F.colors}#/${key.replace('.', '/')}`, scopes: [], hidden: true, values: { default: { value: pal[key] } } };
+      source: `${FILE.colors}#/${key.replace('.', '/')}`, scopes: [], hidden: true, values: { default: { value: pal[key] } } };
 
   // 5. Type variables and Text Styles
   const fam = 'font-family-sans';
   if (styleTokens.length) {
-    variables[fam] = { collection: 'type', name: `Font family/${fam}`, type: 'STRING', source: `${F.fontFamily}#sans`,
+    variables[fam] = { collection: 'type', name: `Font family/${fam}`, type: 'STRING', source: `${FILE.fontFamily}#sans`,
       scopes: ['FONT_FAMILY'], codeSyntax: {},
       values: { default: { value: type.style(styleTokens[0]).fontFamily, from: 'first family of the sans stack' } },
       usedBy: [...new Set(styleTokens.flatMap(users))].sort(byKey) };
@@ -306,10 +306,10 @@ export function generate({ sources, contracts }) {
     if (!FONT_STYLE[t.fontWeight]) fail(`${s}: no IBM Plex Sans style for weight ${t.fontWeight}`);
     const lhPx = Math.round(t.lineHeight * t.fontSize);
     const fields = [
-      ['font-size', 'fontSize', t.fontSize, t.fontSizeFrom, ['FONT_SIZE'], `${g(t.fontSize / 16)}rem`],
-      ['line-height', 'lineHeight', lhPx, `${t.lineHeight} x ${t.fontSize} = ${(t.lineHeight * t.fontSize).toFixed(4)}, rounded`, ['LINE_HEIGHT'], g(t.lineHeight)],
+      ['font-size', 'fontSize', t.fontSize, t.fontSizeFrom, ['FONT_SIZE'], `${formatG(t.fontSize / 16)}rem`],
+      ['line-height', 'lineHeight', lhPx, `${t.lineHeight} x ${t.fontSize} = ${(t.lineHeight * t.fontSize).toFixed(4)}, rounded`, ['LINE_HEIGHT'], formatG(t.lineHeight)],
       ['font-weight', 'fontWeight', t.fontWeight, t.fontWeightFrom, ['FONT_WEIGHT'], String(t.fontWeight)],
-      ['letter-spacing', 'letterSpacing', t.letterSpacing, 'px', ['LETTER_SPACING'], t.letterSpacing ? `${g(t.letterSpacing)}px` : '0'],
+      ['letter-spacing', 'letterSpacing', t.letterSpacing, 'px', ['LETTER_SPACING'], t.letterSpacing ? `${formatG(t.letterSpacing)}px` : '0'],
     ];
     const binds = { fontFamily: fam };
     const group = title(s.split('-')[0]);
@@ -364,7 +364,7 @@ export function generate({ sources, contracts }) {
       css: { against: `@carbon/styles@${CARBON.packages['@carbon/styles'].version} css/styles.css`,
         sha256: `sha256:${sources.css.sha256}`, matched: checks.css, missing: checks.cssMissing },
       sass: { against: `@carbon/layout@${CARBON.packages['@carbon/layout'].version} scss/generated`, matched: checks.sass },
-      scopes: { by: 'skills/contract/scripts/contract.mjs validate', contracts: contracts.length, errors: 0 },
+      scopes: { by: 'skills/contract/scripts/contract.mjs validate, rule 6', contracts: contracts.length, errors: 0 },
     },
     notes: [...notes,
       { level: 'info', at: 'textStyles.*.binds', message: 'Type variables bind onto Text Styles through use_figma (verified in #27): weight 400 selects IBM Plex Sans Regular and px lineHeight and letterSpacing hold, so the text-node fallback is not used. letterSpacing reads back as float32 (0.16 -> 0.1599999964), so compare it with a tolerance.' },
@@ -372,10 +372,11 @@ export function generate({ sources, contracts }) {
     ],
   };
 
-  // 6. every Contract is valid against the generated document, including rule 6 (tokens inside their scopes)
+  // 6. validation rule 6 against the generated document: every token exists and is used inside its
+  // variable's scopes. Other rules (expectedCount, approval) are the Contract's business, not this step's.
   for (const { path, contract } of contracts) {
-    const { errors } = validate(contract, doc);
-    if (errors.length) fail(`Contract ${path} is invalid against the generated foundations:\n${errors.map(e => `  rule ${e.rule} at ${e.at}: ${e.message}`).join('\n')}`);
+    const errors = validate(contract, doc).errors.filter(e => e.rule === 6 || e.rule === 'schema');
+    if (errors.length) fail(`Contract ${path} fails validation rule 6 against the generated foundations:\n${errors.map(e => `  rule ${e.rule} at ${e.at}: ${e.message}`).join('\n')}`);
   }
 
   const text = JSON.stringify(doc, null, 2) + '\n';
@@ -383,7 +384,7 @@ export function generate({ sources, contracts }) {
   for (const v of Object.values(variables)) counts[v.collection] = (counts[v.collection] || 0) + 1;
   const summary = [
     `closure ${tokens.length} tokens from ${contracts.length} Contract(s); variables ${COLLECTIONS.map(c => `${c} ${counts[c] || 0}`).join(', ')}; text styles ${Object.keys(textStyles).length}`,
-    `css matched ${checks.css}, missing ${checks.cssMissing.length}; sass fallbacks ${checks.sass}; Contracts valid against the document (rule 6 scopes included)`,
+    `css matched ${checks.css}, missing ${checks.cssMissing.length}; sass fallbacks ${checks.sass}; every Contract passes rule 6 (tokens exist, used inside their scopes)`,
   ];
   return { doc, text, documentHash: `sha256:${sha256(text)}`, summary };
 }
@@ -414,7 +415,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     writeFileSync(out, text);
     console.log([...summary, `wrote ${relative(process.cwd(), out)} (${text.length} chars, documentHash ${documentHash})`, 'OK'].join('\n'));
   } catch (e) {
-    console.error(e instanceof GenerationError ? `FAIL: ${e.message}` : e.stack);
+    console.error(`FAIL: ${e.message}`);
     process.exit(1);
   }
 }

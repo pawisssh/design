@@ -2031,7 +2031,7 @@
       "matched": 9
     },
     "scopes": {
-      "by": "skills/contract/scripts/contract.mjs validate",
+      "by": "skills/contract/scripts/contract.mjs validate, rule 6",
       "contracts": 1,
       "errors": 0
     }
