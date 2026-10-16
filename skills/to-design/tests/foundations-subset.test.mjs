@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { foundationsPlan, stripReviewFields } from '../scripts/build-plan.mjs';
+import { formatDiff, review } from '../scripts/base-loop.mjs';
 import { recordResult, setGroups } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
 
@@ -241,4 +242,36 @@ test('ledger.mjs groups adds and removes the owner\'s groups in the given ledger
   assert.equal(plan.status, 0, plan.stderr);
   assert.deepEqual(JSON.parse(plan.stdout).chunk, { index: 1, of: 1 });
   assert.ok(JSON.parse(readFileSync(join(dir, 'run', 'plan.json'), 'utf8')).foundations.variables.field);
+});
+
+// ---- the base-loop picker ----
+
+test('the base-loop picker offers every document token with the typed value and marks the ones this file has not built', () => {
+  const fix = new URL('./fixtures/base-loop/', import.meta.url);
+  const contract = JSON.parse(readFileSync(new URL('button.component.json', fix), 'utf8'));
+  const typed24 = JSON.parse(readFileSync(new URL('readback.typed24.json', fix), 'utf8'))[0];
+  const doc = JSON.parse(DOC_TEXT);
+  doc.variables['fluid-spacing-03'] = { ...doc.variables['spacing-06'], name: 'Fluid spacing/fluid-spacing-03', usedBy: [] };
+  const built = Object.fromEntries(Object.keys(JSON.parse(DOC_TEXT).variables).map((n, i) => [n, `VariableID:1:${i}`]));
+
+  const [gap] = review(contract, typed24, doc, { built }).proposals;
+  assert.deepEqual(gap.tokenCandidates, ['fluid-spacing-03', 'spacing-06']);
+  assert.deepEqual(gap.unbuilt, ['fluid-spacing-03']);
+  assert.match(formatDiff(contract, typed24, review(contract, typed24, doc, { built })), /token\(s\) fluid-spacing-03 \(not built: add group Fluid spacing\), spacing-06 /);
+
+  const [unknown] = review(contract, typed24, doc).proposals;
+  assert.deepEqual(unknown.unbuilt, [], 'without the ledger nothing is marked');
+});
+
+test('binding a token this file has not built cannot be carried until its group is added', () => {
+  const fix = new URL('./fixtures/base-loop/', import.meta.url);
+  const contract = JSON.parse(readFileSync(new URL('button.component.json', fix), 'utf8'));
+  const tweaked = JSON.parse(readFileSync(new URL('readback.tweaked.json', fix), 'utf8'))[0];
+  const doc = JSON.parse(DOC_TEXT);
+  const edit = review(contract, tweaked, doc).proposals.find(p => p.change.kind === 'token-edit');
+  const token = edit.newValue.token;
+  const built = Object.fromEntries(Object.keys(doc.variables).filter(n => n !== token).map(n => [n, 'id']));
+  const refused = review(contract, tweaked, doc, { built }).proposals.find(p => p.id === edit.id);
+  assert.equal(refused.problem, `token "${token}" is not built in this file: add group ${doc.variables[token].name.split('/')[0]} (ledger.mjs groups --add) and rebuild foundations`);
+  assert.equal(edit.problem, undefined);
 });
