@@ -25,11 +25,25 @@ Create or reuse only required foundations/helpers. Keep complete selected tuple 
 
 Save `native-builder-core.js`, versioned `build-plan.json`, and run state. Use [scripts/package_native_builder.py](scripts/package_native_builder.py) to emit `build-components.mcp.js` and `build-components.js` from the same core/plan. The MCP wrapper uses top-level return; the Console/Scripter wrapper uses an async function invocation and reports results. Do not promise that a plain browser/Node console provides the `figma` API.
 
+## Package delivery
+
+Run the packager from the project root and write the package under `.scratch/to-design/`. It records `fileSha256` in `script-package.json` and prints `chars`, `fileSha256` and a fail-closed `stub`:
+
+```
+/*@package .scratch/to-design/<run>/build-components.mcp.js sha256=<hex>*/ throw new Error("package not injected");
+```
+
+Once the hook is registered and its live check (#26) has passed, send exactly that stub as `use_figma`'s `code`; never re-type the package. Until then, deliver the contents of `build-components.mcp.js` inline. The PreToolUse hook [hooks/use-figma-package.mjs](hooks/use-figma-package.mjs) swaps it for the file after checking the sha256 against the stub and `fileSha256`, the path stays inside the project, and the package is at most 50,000 chars. It logs each swap to `.scratch/to-design/use-figma-package.log`. If the hook refuses, it blocks the call with a one-line reason: fix the cause and re-package rather than editing the stub.
+
+- **Registering the hook is the owner's step.** The owner pastes [hooks/settings.snippet.json](hooks/settings.snippet.json) into the project's `.claude/settings.json`; agents don't edit settings. `onFailure` needs Claude Code v2.1.295 or later (Claude Code hooks docs).
+- **Project hooks load only at session start.** After registering, start a fresh session. Ticket #26 runs the live check.
+- **If `use_figma` returns `Error: package not injected`**, the hook isn't loaded, and nothing was changed in Figma. Deliver the contents of `build-components.mcp.js` inline instead. The core's integrity gate (spec #22, from #17; not built yet) is meant to catch drift before its first change.
+
 ## One-call execution and recovery
 
 Default to generating artifacts without Figma writes. Execute only when the user requested/authorized execution of the reviewed selected snapshot; respect existing authorization instead of adding redundant approval prompts. An Export Selection browser action alone is not an MCP execution bridge.
 
-For requested execution, resolve the actual file and create one only with that scope, loading `figma-create-new-file` first. Read/embed the saved MCP script as the `code` argument to `use_figma`. Build all selected sets on one page in one call, with a single page switch and dependency-first loops; there is no call per variant. Reuse the same page/IDs on updates. Split only if the live executor limit/failure or an explicit multi-page destination requires it; retain the complete selection and report the actual batch count.
+For requested execution, resolve the actual file and create one only with that scope, loading `figma-create-new-file` first. Deliver the package as the `code` argument to `use_figma` as [Package delivery](#package-delivery) describes: the printed stub once the hook is live, inline until then. Build all selected sets on one page in one call, with a single page switch and dependency-first loops; there is no call per variant. Reuse the same page/IDs on updates. Split only if the live executor limit/failure or an explicit multi-page destination requires it; retain the complete selection and report the actual batch count.
 
 Return all created/updated IDs, component/property mappings, coverage evidence and partial state even on recoverable failures. Persist one authoritative ledger under `.scratch/to-design/`; subordinate skill state paths reference that ledger. Inspect partial output before retry, then regenerate the packaged script with reconciled state. Keep canvas mutations serialized under the live executor contract.
 
