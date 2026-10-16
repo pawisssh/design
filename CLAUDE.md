@@ -1,6 +1,6 @@
 ## Tests
 
-`npm test` runs every skill's suite; CI runs it on each PR. Run `node skills/adapter-carbon/scripts/sources.mjs` first, or 22 adapter-carbon tests skip.
+`npm test` runs every skill's suite; CI runs it on each PR. Run `node skills/adapter-carbon/scripts/sources.mjs` first, or 25 adapter-carbon tests skip.
 
 ## Worktree agents
 

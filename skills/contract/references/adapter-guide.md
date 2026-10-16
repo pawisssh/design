@@ -84,7 +84,7 @@ A BOOLEAN may bind different nodes on different variants (`binds[].match`), and 
 
 - `icons`: the icon package and version, the file path pattern with a fallback, the `default` and the `preferred` list (`default` must be in it). The icon colour per variant is a `paint` rule on the glyph's single `Vector`.
 - `figma`: page (plural family name), Component Set name, description, Header (type, title, namespace) and `grid {columns, rows}` by axis keys.
-- `code`: framework, package, component, import and `alwaysEmit` (props the snippet must always set, with `alwaysEmitWhy`). Per-value and per-property `code` sits next to the value or property, so Code Connect cannot drift from the axes.
+- `code`: framework, package, component, import and `alwaysEmit` (props the snippet must always set, with `alwaysEmitWhy`), plus `required` (props the component needs that no axis value or property sets, such as `id`) and `items` (a Repeated child's `{component, props}`) where the code has them (#93, see [contract-schema.md](contract-schema.md#code)). Per-value and per-property `code` sits next to the value or property, so Code Connect cannot drift from the axes.
 - `notes`: every resolved disagreement and every check you could not run, with `level` and `at`. An open `warning` note blocks approval.
 
 ## 6. Foundations document

@@ -115,14 +115,11 @@ function walkRefs(value, path, fn, key) {
 export function icons(contract) {
   const i = contract.icons;
   if (!i) return [];
-  const fixed = [];
-  const walk = n => {
-    const m = /^icon:(.+)$/.exec((n && n.instanceOf) || '');
-    if (m && m[1] !== 'default') fixed.push(m[1]);
-    ((n && n.children) || []).forEach(walk);
-  };
-  walk(contract.anatomy);
-  (contract.subComponents || []).forEach(s => walk(s.anatomy));
+  const fixed = [contract, ...(contract.subComponents || [])]
+    .flatMap(c => Object.values(anatomyIndex(c)))
+    .map(n => /^icon:(.+)$/.exec(n.instanceOf || ''))
+    .filter(m => m && m[1] !== 'default')
+    .map(m => m[1]);
   return [i.default].concat(i.preferred || [], fixed).filter((k, n, all) => k && all.indexOf(k) === n);
 }
 
@@ -266,7 +263,7 @@ export function validate(contract, foundations) {
     const ip = p.code && p.code.itemProp;
     if (ip === undefined) continue;
     const at = `properties.${p.key}.code.itemProp`;
-    if (p.type !== 'TEXT') err(3, at, 'only a TEXT property can show an item prop');
+    if (p.type !== 'TEXT') err(3, at, 'only a TEXT property can show a Repeated child prop');
     else if (!isObj(items) || !Array.isArray(items.props) || !items.props.includes(ip)) err(3, at, `"${ip}" is not one of code.items.props`);
   }
   if (errors.length) return { ok: false, errors }; // rules 2, 4, 5 and 6 expand, which needs valid patterns

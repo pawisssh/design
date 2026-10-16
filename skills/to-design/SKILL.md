@@ -80,7 +80,7 @@ Core: `builder-core.js`. It builds the Variable collections, modes, variables an
 node skills/to-design/scripts/build-plan.mjs icons --contract design-systems/<ds>/contracts/<family>.component.json [--contract ...] --icons-dir .scratch/adapter-carbon/sources/npm/@carbon/icons@11.90.0/package --file-key <key> --out .scratch/to-design/<run> [--page Icons] [--adopt]
 ```
 
-Core: `builder-core.js`. It takes the union of the Contracts' `icons.default` and `icons.preferred`, reads each SVG (16 px file, else the 32 px fallback) and strips unpainted shapes such as the transparent bounding box. It builds one 16x16 component per icon on the Icons page: no fill, one flattened VECTOR named `Vector` with SCALE/SCALE constraints, kit-style name (`Arrow--right`), the source file in the description.
+Core: `builder-core.js`. It takes the union of the Contracts' icon lists (`icons()`: `icons.default`, `icons.preferred` and every fixed `icon:<key>` instance), reads each SVG (16 px file, else the 32 px fallback) and strips unpainted shapes (`fill="none"` or `opacity="0"`), such as the transparent bounding box. It builds one 16x16 component per icon on the Icons page: no fill, one flattened VECTOR named `Vector` with SCALE/SCALE constraints, kit-style name (`Arrow--right`), the source file in the description.
 
 - Ownership is the same as for foundations, but there is no prune: a dropped icon becomes an orphan and is never deleted.
 - A rerun reverts hand edits to the name, description, size, fill, page, and the Vector's name and constraints. It does not compare the Vector's geometry or fill.

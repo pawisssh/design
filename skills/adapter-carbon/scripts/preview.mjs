@@ -62,14 +62,14 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
 
   // Content properties: TEXT at its default; an icon swap shows the Contract's default icon (non-default
   // BOOLEANs on, as in the base-loop review specimen), so the icon slot is reviewed too. A Repeated child
-  // (`code.items`, #93) renders as one item: each `itemProp` takes its property's default, and an item prop no
-  // property shows repeats that text (SelectItem's value).
+  // (`code.items`, #93) renders once: each `itemProp` takes its property's default, and a child prop no property
+  // shows repeats that text (SelectItem's value).
   const content = {};
-  const item = {};
+  const childProps = {};
   let children;
   for (const p of contract.properties) {
     const code = p.code || {};
-    if (p.type === 'TEXT' && code.itemProp) item[code.itemProp] = p.default;
+    if (p.type === 'TEXT' && code.itemProp) childProps[code.itemProp] = p.default;
     else if (p.type === 'TEXT' && code.prop === 'children') children = p.default;
     else if (p.type === 'TEXT' && code.prop) content[code.prop] = p.default;
     else if (p.type === 'INSTANCE_SWAP' && code.prop && code.valueFrom === 'icon') {
@@ -79,12 +79,12 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
     }
   }
 
-  const items = contract.code.items;
-  if (items) {
-    const Item = library[items.component];
-    if (!Item) throw new Error(`${contract.code.package} has no export ${items.component}`);
-    const text = Object.values(item)[0] || 'Item';
-    children = React.createElement(Item, Object.fromEntries(items.props.map(k => [k, k in item ? item[k] : text])));
+  const repeated = contract.code.items;
+  if (repeated) {
+    const Child = library[repeated.component];
+    if (!Child) throw new Error(`${contract.code.package} has no export ${repeated.component}`);
+    const text = Object.values(childProps)[0];
+    children = React.createElement(Child, Object.fromEntries(repeated.props.map(k => [k, k in childProps ? childProps[k] : text])));
   }
 
   return {
@@ -92,8 +92,8 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
     modeClass: mode => `cds--${mode}`,
     render(tuple) {
       // A required prop no axis or property sets (`code.required`, #93), such as id, gets a placeholder unique per tuple.
-      const id = [contract.family.key, ...contract.axes.map(a => tuple[a.key])].join('-');
-      const props = Object.fromEntries((contract.code.required || []).map(k => [k, id]));
+      const placeholder = [contract.family.key, ...contract.axes.map(a => tuple[a.key])].join('-');
+      const props = Object.fromEntries((contract.code.required || []).map(k => [k, placeholder]));
       Object.assign(props, content);
       for (const axis of contract.axes) {
         const value = axis.values.find(v => v.key === tuple[axis.key]);

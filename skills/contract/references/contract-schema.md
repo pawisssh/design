@@ -124,7 +124,7 @@ A tweak the owner makes to the Base Component in Figma lands **in place**, on th
 
 | Type | Fields |
 |---|---|
-| `TEXT` | `default`, `binds: [{node, field: "characters"}]`, `code: {prop}`; or `code: {itemProp}` for the text of the shown repeated child (#93, see [Code](#code)) |
+| `TEXT` | `default`, `binds: [{node, field: "characters"}]`, `code: {prop}`; or `code: {itemProp}` for the text of the shown Repeated child (#93, see [Code](#code)) |
 | `BOOLEAN` | `default`, `binds: [{match?, node, field: "visible"}]`, `code: {prop, whenFalse}` |
 | `INSTANCE_SWAP` | `default: "icon:default"`, `preferred: "icon:preferred"`, `binds: [{node, field: "mainComponent"}]`, `code: {prop, valueFrom}` |
 
@@ -162,7 +162,7 @@ A token whose *mode value* is raw in Figma (the alpha entries, `button-danger-ho
 ```
 
 - Keys are `@carbon/icons` file names. The kit-style Figma name is derived by rule: capitalise the first letter and keep `--` (`arrow--right` → `Arrow--right`).
-- `default` must be in `preferred`. The builder builds exactly the union of every Contract's icon list (see [Derived](#derived-not-stored)) as icon atoms (#13); `default` and `preferred` become the INSTANCE_SWAP `preferredValues`.
+- `default` must be in `preferred`. A family whose icons are all fixed `icon:<key>` instances, such as TextInput, still declares `default` and `preferred` (rule 7). The builder builds exactly the union of every Contract's icon list (see [Derived](#derived-not-stored)) as icon atoms (#13); `default` and `preferred` become the INSTANCE_SWAP `preferredValues`.
 - An icon is one flattened Vector with one fill. A two-tone icon whose second colour comes from CSS (Carbon's `warning--alt--filled`, inner mark `$black-100`) loses that colour; the Contract says so in a `verify` note. Shapes that paint nothing (`fill="none"`, `opacity="0"`) are dropped before flattening.
 - The icon fill per Kind × State comes from the `paint` rules on `Glyph/Vector`.
 
@@ -193,8 +193,8 @@ These are computed from the Contract, never written into it:
 |---|---|
 | `framework`, `package`, `component`, `import` | the component and how to import it |
 | `alwaysEmit` | axis keys a snippet always writes, even at the default (with `alwaysEmitWhy`) |
-| `required` | optional (#93): props the component requires that no axis value or property sets, such as `id`. Whoever renders or emits the component supplies them: To-preview a placeholder per tuple, a Handoff the usage's id. |
-| `items` | optional (#93): `{component, props}` for repeated children, such as Select's `{"component": "SelectItem", "props": ["value", "text"]}`. The Contract never lists the items; a Handoff usage gives them as `items: [{value, text}, …]`. A TEXT property with `code: {itemProp: "text"}` shows the shown item's text in Figma and is not a component prop. |
+| `required` | optional (#93): props the component requires that no axis value or property sets, such as `id`. Whoever renders or emits the component supplies them: To-preview a placeholder per tuple, a Handoff the Usage's id. |
+| `items` | optional (#93): `{component, props}` for a Repeated child, such as Select's `{"component": "SelectItem", "props": ["value", "text"]}`. The Contract never lists the children; a Handoff Usage gives them as `items: [{value, text}, …]`. A TEXT property with `code: {itemProp: "text"}` shows the shown child's text in Figma and is not a component prop. |
 
 A TEXT property whose node a variant hides (`visible: false`) is not emitted for that variant, so a warn snippet carries `warnText` and not `invalidText` [assumption, #93].
 

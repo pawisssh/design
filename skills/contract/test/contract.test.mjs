@@ -374,7 +374,7 @@ test('`code.items` names a Repeated child, and an `itemProp` property shows one 
   formRejects(d, 3, 'properties.label.code.itemProp', '"text" is not one of code.items.props');
   const e = select();
   e.properties.push({ key: 'open', label: 'Open', type: 'BOOLEAN', default: false, binds: [{ node: 'Chevron', field: 'visible' }], code: { itemProp: 'text' } });
-  formRejects(e, 3, 'only a TEXT property can show an item prop');
+  formRejects(e, 3, 'only a TEXT property can show a Repeated child prop');
 });
 
 test('the icon list adds every fixed `icon:<key>` an INSTANCE names, after default and preferred, each once', () => {
