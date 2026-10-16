@@ -57,7 +57,7 @@ An Adapter written for one Code Library that reads it fully without an agent, su
 _Avoid_: Custom adapter, scripted adapter
 
 **Component Proposal**:
-The description of a Component Family that does not exist in the Code Library yet, shaped like a Contract but with no code behind it. It is retired when the Adapter reads the built component into a real Contract.
+The description of a Component Family that does not exist in the Code Library yet, shaped like a Contract but with no code behind it. It is retired when a Contract takes its place, read from the built component or chosen by the owner instead; one built in an app rather than the Code Library stays a Proposal that records where it was built.
 _Avoid_: Draft Contract, proposed Contract, custom component
 
 **Foundations document**:
