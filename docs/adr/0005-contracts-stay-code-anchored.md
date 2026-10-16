@@ -11,3 +11,4 @@ A Contract is only ever written by an Adapter reading a Code Library, never from
 
 - A Component Proposal built in an app rather than the Code Library stays a Proposal that records where it was built, because no Adapter reads the app, so no Contract can be anchored there (#80).
 - A Proposal is retired when a Contract takes its place: one the Adapter read from the built component, or an existing one the owner chose instead. Nothing from the Proposal is copied into that Contract (#80).
+- To-design may build a Component Set from a Proposal ahead of code, but the set never feeds a Contract. At retirement the Contract adopts the set in place and rebuilds it from the Contract; owner tweaks in Figma write into the Proposal, never into a Contract (#79).
