@@ -105,12 +105,12 @@ export function evaluate(text, env, at) {
 /**
  * Generate the Foundations document of a shadcn/ui project.
  * @param project  the project folder (components.json at its root).
- * @param drafts   agent-drafted values; read by the component tier, a later ticket, so it must be empty here.
+ * @param drafts   agent-drafted values; read by the agent tier (#122), so it must be empty here.
  * @param tools    the pinned tools folder (sources.mjs).
  * @returns {doc, text, documentHash, summary}. Throws on any failed check (see the header).
  */
 export async function generate({ project, drafts = [], tools = DEFAULT_DIR }) {
-  if (drafts.length) fail('drafts are read by the component tier, which does not exist yet');
+  if (drafts.length) fail('drafts are read by the agent tier (#122), which does not exist yet');
   const readText = rel => readFileSync(join(project, rel), 'utf8');
   const config = JSON.parse(readText('components.json'));
   const cssFile = config.tailwind && config.tailwind.css;

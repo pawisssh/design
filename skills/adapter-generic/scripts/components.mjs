@@ -188,7 +188,6 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   };
   axes.push({ key: 'state', label: 'State', canonical: true, default: 'enabled', defaultSource: 'canonical State axis (#6)',
     values: [{ key: 'enabled', label: 'Enabled', code: {} }, ...STATES.filter(s => stateCss[s]).map(stateValue)] });
-  const attrAxis = Object.fromEntries(Object.entries(ATTR_AXES).map(([a, ax]) => [a, ax]));
   let tuples = [{}];
   for (const a of axes) tuples = tuples.flatMap(t => a.values.map(v => ({ ...t, [a.key]: v.key })));
 
@@ -214,7 +213,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const applies = (r, t, mode, keep) => {
     const w = r.when;
     if (!keep.has(r.entry) || (w.mode && w.mode !== mode) || (w.state && w.state !== t.state)) return false;
-    if (Object.keys(w.attrs).some(a => t[attrAxis[a].key] !== attrAxis[a].on)) return false;
+    if (Object.keys(w.attrs).some(a => t[ATTR_AXES[a].key] !== ATTR_AXES[a].on)) return false;
     return !w.props || Object.entries(w.props).every(([p, v]) => t[p] === v);
   };
 
@@ -386,11 +385,11 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   };
   for (const kind of ['slot', 'ancestor', 'descendant', 'media', 'condition', 'text', 'other', 'none'])
     if (report[kind].length) notes.push({ level: 'info', at: file, message: `${list(report[kind])}: ${why[kind]}` });
-  const parts_ = components.filter(c => c.exported && c !== root).map(c => c.name);
-  if (parts_.length) notes.push({ level: 'info', at: file, message: `${list(parts_)}: parts beyond the root are the agent tier (#122).` });
+  const exportedParts = components.filter(c => c.exported && c !== root).map(c => c.name);
+  if (exportedParts.length) notes.push({ level: 'info', at: file, message: `${list(exportedParts)}: parts beyond the root are the agent tier (#122).` });
   notes.push({ level: 'info', at: 'figma.grid', message: 'A placeholder layout (size across, every other axis down); the agent tier (#122) lays the grid out.' });
   if (expectedCount > VARIANT_LIMIT)
-    notes.push({ level: 'verify', at: 'selection', message: `${expectedCount} variants: past ADR 0004's ~${VARIANT_LIMIT}. Every axis is fully selected and nothing is cut; narrow it with selection.omit before a build.` });
+    notes.push({ level: 'verify', at: 'selection', message: `${expectedCount} variants: past ADR 0004's ~${VARIANT_LIMIT}. Every axis is fully selected and nothing is cut; probe the build cost before building it, or narrow it with selection.omit.` });
 
   return { name: Name, file, files: sortedFiles, element: root.element, axes, layout, paint,
     pending: [...pendingBy.values()], notes, expectedCount, alias: `${ui}/${family}` };
