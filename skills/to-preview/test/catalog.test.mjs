@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
 import { buildCatalog } from '../scripts/catalog.mjs';
 
 const button = JSON.parse(readFileSync(new URL('../../../design-systems/carbon/contracts/button.component.json', import.meta.url)));
@@ -54,4 +55,15 @@ test('an invalid Contract gets no catalog', () => {
   const broken = JSON.parse(JSON.stringify(button));
   broken.selection.expectedCount = 7;
   assert.throws(() => buildCatalog({ contract: broken, foundations, renderer: stub }), /rule 4.*expectedCount is 7/);
+});
+
+test('the page scripts run the selection model on the inlined Contract module', () => {
+  const html = buildCatalog({ contract: button, foundations, renderer: stub });
+  const scripts = [...html.matchAll(/<script>\n([\s\S]*?)\n<\/script>/g)].map(m => m[1]);
+  const window = {};
+  const context = vm.createContext({ window });
+  for (const name of ['window.Contract = ', 'class CatalogSelection']) vm.runInContext(scripts.find(s => s.includes(name)), context);
+  const model = new context.CatalogSelection(button, window.Contract);
+  assert.equal(model.baseId, 'primary|lg|enabled');
+  assert.equal(model.specimens.size, 245);
 });

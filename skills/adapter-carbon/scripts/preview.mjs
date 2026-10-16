@@ -18,7 +18,8 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { REPO_ROOT } from './sources.mjs';
+// Computed here, not imported from sources.mjs: sources.mjs imports this module for its fetch step.
+const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 
 export const PREVIEW_DIR = join(REPO_ROOT, '.scratch/adapter-carbon/preview');
 const PINNED_DIR = fileURLToPath(new URL('../preview/', import.meta.url));

@@ -84,7 +84,7 @@ test('a patch that omits the Base Component is refused', () => {
 test('a patch with extra fields or for another source snapshot is refused', () => {
   const { files } = setup(button, () => {});
   const patch = JSON.parse(readFileSync(files.patch, 'utf8'));
-  writeFileSync(files.patch, JSON.stringify({ ...patch, themeId: 'white' }));
+  writeFileSync(files.patch, JSON.stringify({ ...patch, mode: 'white' }));
   runFails(files, /expected exactly family, snapshotId, omit, expectedCount/);
   writeFileSync(files.patch, JSON.stringify({ ...patch, snapshotId: 'sha256:stale' }));
   writeFileSync(files.checked, JSON.stringify({ family: 'button', snapshotId: 'sha256:stale', checked: [] }));
