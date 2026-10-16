@@ -14,7 +14,8 @@ import { mockFigma, runPackage } from './mock-figma.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const BUTTON = JSON.parse(readFileSync(join(ROOT, 'design-systems/carbon/contracts/button.component.json'), 'utf8'));
-// The Button icons' SVGs, copied verbatim from the pinned package, so these tests run on a fresh clone.
+// The Button icons' SVGs, and the TextInput and Select status and chevron icons (#93), copied verbatim from the
+// pinned package, so these tests run on a fresh clone.
 const ICONS_DIR = join(ROOT, 'skills/to-design/tests/fixtures/carbon-icons@11.90.0');
 const PINNED_DIR = join(ROOT, '.scratch/adapter-carbon/sources/npm/@carbon/icons@11.90.0/package');
 const CORE = join(ROOT, 'skills/to-design/assets/builder-core.js');
@@ -115,6 +116,18 @@ test('shapes that paint nothing (fill="none", Carbon\'s inner path and transpare
   });
   const { plan } = derive({ contracts: [withIcons(['two-tone'])], dir });
   assert.equal(plan.icons[0].svg, svg(32, '<path d="M16,2A14,14,0,1,0,30,16Z"/>'));
+});
+
+test('a 16px status icon\'s inner path marked opacity="0" is dropped too, so warning--filled keeps its mark (#93)', () => {
+  const textInput = JSON.parse(readFileSync(join(ROOT, 'skills/contract/test/fixtures/form-controls/text-input.component.json'), 'utf8'));
+  const { plan } = derive({ contracts: [textInput] });
+  assert.deepEqual(plan.icons.map(i => [i.key, i.file]), [['warning--filled', 'svg/16/warning--filled.svg'], ['warning--alt--filled', 'svg/32/warning--alt--filled.svg']]);
+  const [filled, alt] = plan.icons.map(i => i.svg);
+  assert.equal((filled.match(/<path/g) || []).length, 1, 'only the disc with the mark cut out is left');
+  assert.doesNotMatch(filled, /opacity="0"|inner-path/);
+  assert.doesNotMatch(alt, /fill="none"|inner-path/);
+  const dir = fakeIcons({ 'svg/16/x.svg': svg(16, '<path d="M8,1z"/><path d="M7.5,4h1z" data-icon-path="inner-path" opacity="0"/><path d="M2,2z" opacity="0.5"/>') });
+  assert.equal(derive({ contracts: [withIcons(['x'])], dir }).plan.icons[0].svg, svg(16, '<path d="M8,1z"/><path d="M2,2z" opacity="0.5"/>'), 'a partly transparent shape stays');
 });
 
 test('the package is well under the 50,000-char cap; save.svg\'s literal TAB reaches the core intact', async () => {
