@@ -333,6 +333,7 @@ function checkPatterns(c, err) {
       continue;
     }
     if (!anatomy[a.slot] || a.slot === c.anatomy.name) err(3, `${at}.slot`, `slot "${a.slot}" is not a non-root anatomy node`);
+    if (a.canonical) err(3, at, `${a.key} is canonical; a Slot axis never is`);
     if (a.values.some(v => typeof v.filled !== 'boolean')) err(3, at, 'every value of a Slot axis says whether it is `filled` (true or false)');
     else if (a.values.length !== 2 || a.values.filter(v => v.filled).length !== 1) err(3, at, 'a Slot axis needs one filled and one empty value');
   }

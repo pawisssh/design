@@ -521,6 +521,12 @@ test('rejects `filled` on a value of an axis that names no slot (rule 3)', () =>
   slotRejects(c, 3, '`filled` is for a Slot axis, and variant names no `slot`');
 });
 
+test('rejects a canonical Slot axis (rule 3)', () => {
+  const c = slotButton();
+  c.axes.find(a => a.key === 'icon').canonical = true;
+  slotRejects(c, 3, 'icon is canonical; a Slot axis never is');
+});
+
 test('rejects a slot whose visible rule disagrees with the Slot axis (rule 5)', () => {
   const c = slotButton();
   c.layout = c.layout.filter(r => r.match.icon !== 'none');

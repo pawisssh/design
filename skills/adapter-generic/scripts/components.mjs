@@ -49,7 +49,8 @@ const NATIVE_DISABLED = new Set(['button', 'input', 'select', 'textarea', 'field
 const VARIANT_LIMIT = 600; // ADR 0004
 // The content of a slot a Contract carries: an svg, sized unless the consumer sizes it (#121).
 const SLOT_CONTENT = /^svg(:not\(\[class\*='size-'\]\))?$/;
-const FRAME_FIELDS = ['width', 'height', 'visible'];
+const SIZE_FIELDS = ['width', 'height'];
+const FRAME_FIELDS = [...SIZE_FIELDS, 'visible'];
 // Logical sides, start before end, order a family's slot frames; any other slot follows them by key.
 const SIDES = ['inline-start', 'inline-end'];
 // CSS properties a Contract field carries; any other utility is reported, not carried.
@@ -176,13 +177,14 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const side = s => (SIDES.includes(s.value) ? SIDES.indexOf(s.value) : SIDES.length);
   const slots = [...new Set(live.map(r => r.when.slot).filter(Boolean))].map(sel => {
     const [, attr, value] = /^\[([\w-]+)="([^"]*)"\]$/.exec(sel);
-    if (!value) fail(`${list(live.filter(r => r.when.slot === sel).map(r => r.candidate))}: :has(${sel}) names no slot value`);
+    const utilities = [...new Set(live.filter(r => r.when.slot === sel).map(r => r.candidate))];
+    if (!value) fail(`${list(utilities)}: :has(${sel}) names no slot value`);
     const key = `${attr.replace(/^data-/, '')}-${value}`;
-    return { sel, key, value, node: title(key), utilities: [...new Set(live.filter(r => r.when.slot === sel).map(r => r.candidate))] };
+    return { sel, key, value, node: title(key), utilities };
   }).sort((a, b) => side(a) - side(b) || byKey(a.key, b.key));
   const slotOf = Object.fromEntries(slots.map(s => [s.sel, s.key]));
   const sizing = new Set(slots.length ? report.descendant.filter(c => ruleOf[c].every(r => SLOT_CONTENT.test(r.target))
-    && [...propsOf(c)].every(p => p === 'width' || p === 'height')) : []);
+    && [...propsOf(c)].every(p => SIZE_FIELDS.includes(p))) : []);
   report.descendant = report.descendant.filter(c => !sizing.has(c));
   const content = ruled(sizing);
 
@@ -381,7 +383,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     const sizes = content.filter(r => applies(r, t, mode, keep));
     for (const s of slots) {
       const f = frames[s.node] = {};
-      for (const field of ['width', 'height']) {
+      for (const field of SIZE_FIELDS) {
         const r = winner(sizes, [field]);
         f[field] = r ? length(field, r, [field]).value : fail(`${Name} (${variantName({ axes }, t)}): no svg size utility sizes the ${s.node} slot`);
       }
