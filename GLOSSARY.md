@@ -12,8 +12,12 @@ _Avoid_: Code component library, framework, source library
 A Figma library file produced from a Code Library.
 _Avoid_: Figma library, design kit
 
+**Linked Library**:
+One or more published Figma library files the owner already has for the same Code Library, made outside To-design, whose variables and Text Styles a Design Library binds to instead of having its own. To-design reads it and never changes it.
+_Avoid_: Existing library, team library, kit, external library, adopted library
+
 **Design System**:
-One Foundations document and the Contracts planned with it, for one Code Library; Design Libraries are built from it, and handoffs refer to it.
+One Foundations document and the Contracts and Component Proposals planned with it, for one Code Library; Design Libraries are built from it, and handoffs refer to it.
 _Avoid_: DS, system
 
 ## Components
@@ -57,12 +61,16 @@ An Adapter written for one Code Library that reads it fully without an agent, su
 _Avoid_: Custom adapter, scripted adapter
 
 **Component Proposal**:
-The description of a Component Family that does not exist in the Code Library yet, shaped like a Contract but with no code behind it. It is retired when a Contract takes its place, read from the built component or chosen by the owner instead; one built in an app rather than the Code Library stays a Proposal that records where it was built.
+The description of a whole new Component Family that does not exist in the Code Library yet, shaped like a Contract but with no code behind it, and stating why no existing Contract fits. A missing value on an existing family is not a Component Proposal. It is retired when a Contract takes its place, read from the built component or chosen by the owner instead; one built in an app rather than the Code Library stays a Proposal that records where it was built.
 _Avoid_: Draft Contract, proposed Contract, custom component
 
 **Foundations document**:
 The generated description of the Code Library's whole theme (every shared token and mode it defines, used by a Contract or not), which every Contract in that Design System refers to. One per Design System.
 _Avoid_: Tokens file, theme file, variables JSON
+
+**Synthesized token**:
+A token the Adapter adds to the Foundations document for one Component Family, where the Code Library styles that component with a value none of its own tokens holds in every mode, such as a dark-only override or a token at reduced opacity.
+_Avoid_: Derived token, fake token, component variable
 
 ## Handoffs
 
@@ -89,6 +97,14 @@ _Avoid_: Mock (when more than data is meant), fake, throwaway code
 **Rendering**:
 One output format's layout of a Handoff, such as HTML, Markdown, a Figma frame or a Confluence page. It never adds or drops a Handoff's content.
 _Avoid_: Export, view, handoff document
+
+**Sign-off**:
+The owner's one explicit approval of a Handoff revision, covering every decision the agent made in it and the pending Component Proposals it uses. Developers read a signed-off Handoff; they never sign it.
+_Avoid_: Approval (when the Handoff's is meant; that is a Contract's or a Component Proposal's), acceptance (that is the Handoff's Given/When/Then criteria), review
+
+**Drift**:
+A change, after Sign-off, to the Prototype or to a part of the Design System that a Handoff uses. A Handoff with Drift keeps its content but no longer counts as signed off until the owner signs it again.
+_Avoid_: Stale (that is a Foundations document that must be regenerated), outdated, out of sync
 
 ## Building
 
