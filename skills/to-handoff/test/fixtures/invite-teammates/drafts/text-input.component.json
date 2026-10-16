@@ -1,0 +1,1209 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "text-input",
+    "name": "Text Input",
+    "description": "Single-line text field with a label, optional helper text and an invalid or warning message. Password, Fluid and inline variants are separate families or out of this draft."
+  },
+  "source": {
+    "codeLibrary": "Carbon React",
+    "adapter": "carbon",
+    "repository": "https://github.com/carbon-design-system/carbon",
+    "tag": "v11.118.0",
+    "commit": "44f90d8d6b24889af06cee1422ceb37f58e40bed",
+    "packages": {
+      "@carbon/react": "1.118.0",
+      "@carbon/styles": "1.117.0",
+      "@carbon/themes": "11.83.0",
+      "@carbon/layout": "11.61.0",
+      "@carbon/type": "11.69.0",
+      "@carbon/colors": "11.60.0",
+      "@carbon/icons": "11.90.0",
+      "@carbon/icons-react": "11.90.0"
+    },
+    "files": {
+      "packages/layout/src/dtcg/layout.json": "sha256:b337e0e6c8ee8be4845f0a8b2fa0320930bd2999ffbd53c83748afb12723e821",
+      "packages/react/src/components/TextInput/TextInput.tsx": "sha256:9aa7c347eea7f2caa6084c843a087be69754b57f29cb1f45b5ea44ce804a38f3",
+      "packages/react/src/internal/useNormalizedInputProps.tsx": "sha256:dc13ed8486b181d25e14f6a1b3dac54677559a1b38b5867156bd94080a58573c",
+      "packages/styles/scss/_layer.scss": "sha256:dd0b522522b50f473f5de993002046afcdead321d81a8e9a32da53ecb54522df",
+      "packages/styles/scss/components/form/_form.scss": "sha256:fbdd993d1e165e67e71c77109cd10e08bbe623f05be694a259492ec8e2295308",
+      "packages/styles/scss/components/text-input/_text-input.scss": "sha256:332ebd0aaa06515ad056193349ed928fbd101597c25b4ef6d063708044813981",
+      "packages/styles/scss/utilities/_focus-outline.scss": "sha256:7a14398aaed4189dbfaf5778450efe17e2da7dff4a17f09a6bd7bbe649a48c78",
+      "packages/styles/scss/utilities/_placeholder-colors.scss": "sha256:efc6be1eca2392b96f91cf3ebac2f3da45f731fbdaf6cce5a703fbd0cb01ad0b",
+      "packages/themes/src/dtcg/themes.json": "sha256:7f1febe786830b88b26db78e3e573b1cfe2ca9af546ecac54708719df1330ac8",
+      "packages/type/src/styles.ts": "sha256:c6a491d1233ad3af8cfc08681a86780f2a1a2b1865cdac5eb9375dcb556fbbdf"
+    },
+    "snapshotId": "sha256:8b616b073a192fc74a5cb965257c3be4d8de4b06f106a5e01a78ed25d590ef56"
+  },
+  "axes": [
+    {
+      "key": "size",
+      "label": "Size",
+      "default": "md",
+      "defaultSource": "_text-input.scss layout.use('size', $default: 'md', $min: 'xs', $max: 'lg'); React has no default",
+      "values": [
+        {
+          "key": "xs",
+          "label": "Extra Small",
+          "code": {
+            "size": "xs"
+          }
+        },
+        {
+          "key": "sm",
+          "label": "Small",
+          "code": {
+            "size": "sm"
+          }
+        },
+        {
+          "key": "md",
+          "label": "Medium",
+          "code": {
+            "size": "md"
+          }
+        },
+        {
+          "key": "lg",
+          "label": "Large",
+          "code": {
+            "size": "lg"
+          }
+        }
+      ]
+    },
+    {
+      "key": "validation",
+      "label": "Validation",
+      "default": "none",
+      "defaultSource": "TextInput.tsx: invalid and warn default to false",
+      "values": [
+        {
+          "key": "none",
+          "label": "None",
+          "code": {}
+        },
+        {
+          "key": "invalid",
+          "label": "Invalid",
+          "code": {
+            "invalid": true
+          }
+        },
+        {
+          "key": "warn",
+          "label": "Warning",
+          "code": {
+            "warn": true
+          }
+        }
+      ]
+    },
+    {
+      "key": "readOnly",
+      "label": "Read Only",
+      "default": "editable",
+      "defaultSource": "TextInput.tsx: readOnly defaults to undefined",
+      "values": [
+        {
+          "key": "editable",
+          "label": "Editable",
+          "code": {}
+        },
+        {
+          "key": "read-only",
+          "label": "Read-only",
+          "code": {
+            "readOnly": true
+          }
+        }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        {
+          "key": "enabled",
+          "label": "Enabled",
+          "code": {}
+        },
+        {
+          "key": "focus",
+          "label": "Focus",
+          "code": null,
+          "css": ":focus, :active"
+        },
+        {
+          "key": "disabled",
+          "label": "Disabled",
+          "code": {
+            "disabled": true
+          },
+          "css": ":disabled"
+        }
+      ]
+    }
+  ],
+  "excluded": [
+    {
+      "match": {
+        "readOnly": "read-only",
+        "validation": [
+          "invalid",
+          "warn"
+        ]
+      },
+      "reason": "readOnly overrides invalid and warn",
+      "evidence": [
+        "useNormalizedInputProps.tsx L70-L72: invalid: !readOnly && …, warn: !readOnly && …"
+      ]
+    },
+    {
+      "match": {
+        "readOnly": "read-only",
+        "state": "disabled"
+      },
+      "reason": "readOnly overrides disabled",
+      "evidence": [
+        "useNormalizedInputProps.tsx L69: disabled: !readOnly && disabled"
+      ]
+    },
+    {
+      "match": {
+        "state": "disabled",
+        "validation": [
+          "invalid",
+          "warn"
+        ]
+      },
+      "reason": "disabled overrides invalid and warn",
+      "evidence": [
+        "useNormalizedInputProps.tsx L70-L72: invalid: … && !disabled && invalid"
+      ]
+    }
+  ],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 36,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Text input",
+    "type": "COMPONENT",
+    "children": [
+      {
+        "name": "Label",
+        "type": "TEXT",
+        "role": "label"
+      },
+      {
+        "name": "Field group",
+        "type": "FRAME",
+        "children": [
+          {
+            "name": "Field",
+            "type": "FRAME",
+            "role": "input",
+            "children": [
+              {
+                "name": "Box",
+                "type": "FRAME",
+                "children": [
+                  {
+                    "name": "Value",
+                    "type": "TEXT",
+                    "role": "value"
+                  },
+                  {
+                    "name": "Invalid icon",
+                    "type": "INSTANCE",
+                    "role": "icon",
+                    "instanceOf": "icon:warning--filled"
+                  },
+                  {
+                    "name": "Warn icon",
+                    "type": "INSTANCE",
+                    "role": "icon",
+                    "instanceOf": "icon:warning--alt--filled"
+                  }
+                ]
+              },
+              {
+                "name": "Underline",
+                "type": "FRAME"
+              }
+            ]
+          },
+          {
+            "name": "Helper",
+            "type": "TEXT",
+            "role": "helper-text"
+          },
+          {
+            "name": "Invalid text",
+            "type": "TEXT",
+            "role": "validation-message"
+          },
+          {
+            "name": "Warn text",
+            "type": "TEXT",
+            "role": "validation-message"
+          }
+        ]
+      }
+    ]
+  },
+  "properties": [
+    {
+      "key": "label",
+      "label": "Label",
+      "type": "TEXT",
+      "default": "Label",
+      "binds": [
+        {
+          "node": "Label",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "labelText"
+      }
+    },
+    {
+      "key": "placeholder",
+      "label": "Placeholder",
+      "type": "TEXT",
+      "default": "Placeholder text",
+      "binds": [
+        {
+          "node": "Value",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "placeholder"
+      }
+    },
+    {
+      "key": "helperText",
+      "label": "Helper text",
+      "type": "TEXT",
+      "default": "Helper text",
+      "binds": [
+        {
+          "node": "Helper",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "helperText"
+      }
+    },
+    {
+      "key": "invalidText",
+      "label": "Invalid text",
+      "type": "TEXT",
+      "default": "Error message",
+      "binds": [
+        {
+          "node": "Invalid text",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "invalidText"
+      }
+    },
+    {
+      "key": "warnText",
+      "label": "Warn text",
+      "type": "TEXT",
+      "default": "Warning message",
+      "binds": [
+        {
+          "node": "Warn text",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "warnText"
+      }
+    }
+  ],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Text input": {
+          "direction": "column",
+          "width": "fill",
+          "height": "hug",
+          "alignMain": "start",
+          "alignCross": "start",
+          "paddingTop": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the form item has no padding"
+          },
+          "paddingRight": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the form item has no padding"
+          },
+          "paddingBottom": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the form item has no padding"
+          },
+          "paddingLeft": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the form item has no padding"
+          },
+          "gap": {
+            "token": "spacing-03"
+          }
+        },
+        "Label": {
+          "textStyle": {
+            "token": "label-01"
+          },
+          "textResize": "width-and-height"
+        },
+        "Field group": {
+          "direction": "column",
+          "width": "fill",
+          "height": "hug",
+          "gap": {
+            "token": "spacing-02"
+          }
+        },
+        "Field": {
+          "direction": "column",
+          "width": "fill",
+          "height": "hug",
+          "strokeWeight": {
+            "raw": 2,
+            "level": "warning",
+            "reason": "outline: 2px with outline-offset: -2px (focus-outline mixin); no design token"
+          },
+          "strokeAlign": "inside",
+          "gap": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the underline is the input's bottom border, flush with the box"
+          }
+        },
+        "Box": {
+          "direction": "row",
+          "width": "fill",
+          "alignCross": "center",
+          "paddingLeft": {
+            "token": "spacing-05"
+          },
+          "paddingRight": {
+            "token": "spacing-05"
+          },
+          "gap": {
+            "token": "spacing-03"
+          }
+        },
+        "Value": {
+          "textStyle": {
+            "token": "body-compact-01"
+          },
+          "width": "fill",
+          "textResize": "height"
+        },
+        "Invalid icon": {
+          "width": {
+            "token": "icon-size-01"
+          },
+          "height": {
+            "token": "icon-size-01"
+          },
+          "visible": false
+        },
+        "Warn icon": {
+          "width": {
+            "token": "icon-size-01"
+          },
+          "height": {
+            "token": "icon-size-01"
+          },
+          "visible": false
+        },
+        "Underline": {
+          "width": "fill",
+          "height": {
+            "raw": 1,
+            "level": "warning",
+            "reason": "border-block-end: 1px is a constant with no design token"
+          }
+        },
+        "Helper": {
+          "textStyle": {
+            "token": "helper-text-01"
+          },
+          "width": "fill",
+          "textResize": "height",
+          "visible": true
+        },
+        "Invalid text": {
+          "textStyle": {
+            "token": "helper-text-01"
+          },
+          "width": "fill",
+          "textResize": "height",
+          "visible": false
+        },
+        "Warn text": {
+          "textStyle": {
+            "token": "helper-text-01"
+          },
+          "width": "fill",
+          "textResize": "height",
+          "visible": false
+        }
+      }
+    },
+    {
+      "match": {
+        "validation": "invalid"
+      },
+      "set": {
+        "Invalid icon": {
+          "visible": true
+        },
+        "Invalid text": {
+          "visible": true
+        },
+        "Helper": {
+          "visible": false
+        }
+      }
+    },
+    {
+      "match": {
+        "validation": "warn"
+      },
+      "set": {
+        "Warn icon": {
+          "visible": true
+        },
+        "Warn text": {
+          "visible": true
+        },
+        "Helper": {
+          "visible": false
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "xs"
+      },
+      "set": {
+        "Box": {
+          "height": {
+            "raw": 23,
+            "level": "info",
+            "reason": "derived: size-xs (24) − 1px bottom border (box-sizing: border-box)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "sm"
+      },
+      "set": {
+        "Box": {
+          "height": {
+            "raw": 31,
+            "level": "info",
+            "reason": "derived: size-sm (32) − 1px bottom border"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "md"
+      },
+      "set": {
+        "Box": {
+          "height": {
+            "raw": 39,
+            "level": "info",
+            "reason": "derived: size-md (40) − 1px bottom border"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "lg"
+      },
+      "set": {
+        "Box": {
+          "height": {
+            "raw": 47,
+            "level": "info",
+            "reason": "derived: size-lg (48) − 1px bottom border"
+          }
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Text input": {
+          "fill": "none",
+          "stroke": "none"
+        },
+        "Label": {
+          "fill": {
+            "token": "text-secondary"
+          }
+        },
+        "Field": {
+          "fill": {
+            "token": "field"
+          },
+          "stroke": "none"
+        },
+        "Value": {
+          "fill": {
+            "token": "text-placeholder"
+          }
+        },
+        "Invalid icon/Vector": {
+          "fill": {
+            "token": "support-error"
+          }
+        },
+        "Warn icon/Vector": {
+          "fill": {
+            "token": "support-warning"
+          }
+        },
+        "Underline": {
+          "fill": {
+            "token": "border-strong"
+          }
+        },
+        "Helper": {
+          "fill": {
+            "token": "text-helper"
+          }
+        },
+        "Invalid text": {
+          "fill": {
+            "token": "text-error"
+          }
+        },
+        "Warn text": {
+          "fill": {
+            "token": "text-primary"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "validation": "invalid"
+      },
+      "set": {
+        "Field": {
+          "stroke": {
+            "token": "support-error"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "readOnly": "read-only"
+      },
+      "set": {
+        "Field": {
+          "fill": "none"
+        },
+        "Underline": {
+          "fill": {
+            "token": "border-subtle"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus"
+      },
+      "set": {
+        "Field": {
+          "stroke": {
+            "token": "focus"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "disabled"
+      },
+      "set": {
+        "Label": {
+          "fill": {
+            "token": "text-disabled"
+          }
+        },
+        "Value": {
+          "fill": {
+            "token": "text-disabled"
+          }
+        },
+        "Helper": {
+          "fill": {
+            "token": "text-disabled"
+          }
+        }
+      }
+    }
+  ],
+  "icons": {
+    "source": {
+      "package": "@carbon/icons",
+      "version": "11.90.0",
+      "path": "svg/16/{key}.svg",
+      "fallback": "svg/32/{key}.svg"
+    },
+    "default": "warning--filled",
+    "preferred": [
+      "warning--filled"
+    ]
+  },
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": [
+      {
+        "family": "IBM Plex Sans",
+        "styles": [
+          "Regular"
+        ]
+      }
+    ]
+  },
+  "figma": {
+    "page": "Text inputs",
+    "componentSetName": "Text Input",
+    "description": "Carbon React TextInput (@carbon/react 1.118.0). Draft: not yet built or reviewed in Figma.",
+    "header": {
+      "type": "Component",
+      "title": "Text Input",
+      "namespace": "@carbon/react"
+    },
+    "grid": {
+      "columns": [
+        "size"
+      ],
+      "rows": [
+        "validation",
+        "readOnly",
+        "state"
+      ]
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@carbon/react",
+    "component": "TextInput",
+    "import": "import { TextInput } from '@carbon/react';",
+    "required": [
+      "id"
+    ],
+    "alwaysEmit": [
+      "size"
+    ],
+    "alwaysEmitWhy": "A TextInput without size inherits the nearest <Layout size>; emit size explicitly so the snippet matches the variant."
+  },
+  "notes": [
+    {
+      "level": "verify",
+      "at": "anatomy.Warn icon",
+      "message": "WarningAltFilled is two-tone: _text-input.scss paints its inner path (path:first-of-type, fill=\"none\" in the SVG) $black-100 while the outer path takes $support-warning. Icons are one flattened Vector (#13), so the Design Library shows a support-warning triangle with the mark cut out instead of a black mark."
+    },
+    {
+      "level": "info",
+      "at": "anatomy.Invalid text",
+      "message": "Carbon renders invalidText when invalid and warnText when warn, in the same .cds--form-requirement, and drops helperText for either. The Contract keeps one TEXT node and one property per message, shown by `visible` rules (#93), so each property names one code prop."
+    },
+    {
+      "level": "info",
+      "at": "layout.Box.paddingLeft",
+      "message": "Padding is layout.density('padding-inline') at the default density 'normal', which is $spacing-05 (16px). Density has no DTCG token."
+    },
+    {
+      "level": "info",
+      "at": "paint[state=focus]",
+      "message": "Carbon styles :focus and :active the same (focus-outline('outline')); Active is folded into Focus. Carbon has no hover style for the field."
+    },
+    {
+      "level": "info",
+      "at": "family",
+      "message": "Left out of this draft: inline (labels beside the field), enableCounter/maxCount, hideLabel, the decorator/AI label slot, the deprecated light prop, the v12 border-radius and gradient border behind enable-v12-release, and the Fluid and Password variants."
+    }
+  ],
+  "drafted": {
+    "anatomy.Box": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L227 input.cds--text-input"
+      ],
+      "fingerprint": "sha256:a5ccd090503e9e5f0ddc699bd97099b15a5f5b5b45b66796a75bc1943211b12e"
+    },
+    "anatomy.Field": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L293 div.cds--text-input__field-wrapper"
+      ],
+      "fingerprint": "sha256:2fc7babd3938c2c318028f6f856ba8e74fd028e5230b872ded76e1259818c361"
+    },
+    "anatomy.Field group": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L287 div.cds--text-input__field-outer-wrapper"
+      ],
+      "fingerprint": "sha256:180a0420608ac0992f2ff80267660808f86dcbbffe19ce421e8920e72b8b1a93"
+    },
+    "anatomy.Helper": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L282 div.cds--form__helper-text"
+      ],
+      "fingerprint": "sha256:759833432ac301907ef4e8096444da0c74d05de2048451c93ce6c4d0fb949112"
+    },
+    "anatomy.Invalid icon": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L301 svg.cds--text-input__invalid-icon when invalid"
+      ],
+      "fingerprint": "sha256:85440ce46be37aca972728adeae76c4d46e23960a75faa199ca2f83f84afead2"
+    },
+    "anatomy.Invalid text": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L147 div.cds--form-requirement holding invalidText"
+      ],
+      "fingerprint": "sha256:3dc9ea41a1a3d2b2cac6fb3ed59c4e0cc04af814f29f0b4681af0bbd83115b50"
+    },
+    "anatomy.Label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L276 label.cds--label"
+      ],
+      "fingerprint": "sha256:ee67536ebaf7cd93dbbfa88c54924f845d2e2936589b955cacde407c7d5beb5e"
+    },
+    "anatomy.Underline": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L46 the input's bottom border; no element of its own"
+      ],
+      "fingerprint": "sha256:4c26028ea5b76afaca5c199f026fb53915f6d0656f7bc6bacbbaf1496bc17ef2"
+    },
+    "anatomy.Value": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L227 the input's value; no element of its own"
+      ],
+      "fingerprint": "sha256:bcc7daa69936262eb0127fb5cbb7f2f1b537fb293242e0e4fe96dcac219d71a0"
+    },
+    "anatomy.Warn icon": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L303 svg.cds--text-input__invalid-icon--warning when warn"
+      ],
+      "fingerprint": "sha256:d18a65859012f9248c1e1b90ccd24870506dfc7b3c2981848808b76cf124c9e7"
+    },
+    "anatomy.Warn text": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L147 div.cds--form-requirement holding warnText"
+      ],
+      "fingerprint": "sha256:d086ad8d050a354fc364ee9d258d88ed988ff0be58dff23894bf3005b3f05902"
+    },
+    "axes.readOnly.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L133 readOnly prop"
+      ],
+      "fingerprint": "sha256:ffe1055fce98a2644f3eb269a8166b86a1f87f1902fb35b339256b25b87ff7d7"
+    },
+    "axes.readOnly.values.editable.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L133 readOnly prop"
+      ],
+      "fingerprint": "sha256:ffe1055fce98a2644f3eb269a8166b86a1f87f1902fb35b339256b25b87ff7d7"
+    },
+    "axes.readOnly.values.read-only.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L133 readOnly prop"
+      ],
+      "fingerprint": "sha256:ffe1055fce98a2644f3eb269a8166b86a1f87f1902fb35b339256b25b87ff7d7"
+    },
+    "axes.size.label": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L36 layout.use('size') gives the xs–lg scale; Carbon's docs name them"
+      ],
+      "fingerprint": "sha256:dfaa586df1d1592a37783ceef6e26866ff0477b3a4e5fb79c332b2a26a8ce31e"
+    },
+    "axes.size.values.lg.label": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L36 layout.use('size') gives the xs–lg scale; Carbon's docs name them"
+      ],
+      "fingerprint": "sha256:dfaa586df1d1592a37783ceef6e26866ff0477b3a4e5fb79c332b2a26a8ce31e"
+    },
+    "axes.size.values.md.label": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L36 layout.use('size') gives the xs–lg scale; Carbon's docs name them"
+      ],
+      "fingerprint": "sha256:dfaa586df1d1592a37783ceef6e26866ff0477b3a4e5fb79c332b2a26a8ce31e"
+    },
+    "axes.size.values.sm.label": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L36 layout.use('size') gives the xs–lg scale; Carbon's docs name them"
+      ],
+      "fingerprint": "sha256:dfaa586df1d1592a37783ceef6e26866ff0477b3a4e5fb79c332b2a26a8ce31e"
+    },
+    "axes.size.values.xs.label": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L36 layout.use('size') gives the xs–lg scale; Carbon's docs name them"
+      ],
+      "fingerprint": "sha256:dfaa586df1d1592a37783ceef6e26866ff0477b3a4e5fb79c332b2a26a8ce31e"
+    },
+    "axes.validation.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L87 invalid and warn props; Carbon docs call warn \"Warning\""
+      ],
+      "fingerprint": "sha256:2736a75865b58dc20eb7d7a3c1f8f3d2d41257efd959813d510371c2f621920c"
+    },
+    "axes.validation.values.invalid.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L87 invalid and warn props; Carbon docs call warn \"Warning\""
+      ],
+      "fingerprint": "sha256:2736a75865b58dc20eb7d7a3c1f8f3d2d41257efd959813d510371c2f621920c"
+    },
+    "axes.validation.values.none.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L87 invalid and warn props; Carbon docs call warn \"Warning\""
+      ],
+      "fingerprint": "sha256:2736a75865b58dc20eb7d7a3c1f8f3d2d41257efd959813d510371c2f621920c"
+    },
+    "axes.validation.values.warn.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L87 invalid and warn props; Carbon docs call warn \"Warning\""
+      ],
+      "fingerprint": "sha256:2736a75865b58dc20eb7d7a3c1f8f3d2d41257efd959813d510371c2f621920c"
+    },
+    "code.alwaysEmit": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L232 the size class; without size the nearest <Layout size> applies"
+      ],
+      "fingerprint": "sha256:2c8c026a667a515fd4285af4ace5f7d9d0ecce8e9c5a936d18c3a8a20cc0f753"
+    },
+    "family.description": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L34 TextInputProps: label, helper text, invalid and warn messages"
+      ],
+      "fingerprint": "sha256:2c8c026a667a515fd4285af4ace5f7d9d0ecce8e9c5a936d18c3a8a20cc0f753"
+    },
+    "figma.description": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L34 TextInputProps"
+      ],
+      "fingerprint": "sha256:2c8c026a667a515fd4285af4ace5f7d9d0ecce8e9c5a936d18c3a8a20cc0f753"
+    },
+    "figma.grid": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L36 size is the widest axis, so it is the columns"
+      ],
+      "fingerprint": "sha256:2c8c026a667a515fd4285af4ace5f7d9d0ecce8e9c5a936d18c3a8a20cc0f753"
+    },
+    "icons.default": {
+      "by": "agent",
+      "evidence": [
+        "useNormalizedInputProps.tsx:L80 WarningFilled is the invalid icon"
+      ],
+      "fingerprint": "sha256:2c8c026a667a515fd4285af4ace5f7d9d0ecce8e9c5a936d18c3a8a20cc0f753"
+    },
+    "icons.preferred": {
+      "by": "agent",
+      "evidence": [
+        "useNormalizedInputProps.tsx:L80 WarningFilled is the invalid icon"
+      ],
+      "fingerprint": "sha256:2c8c026a667a515fd4285af4ace5f7d9d0ecce8e9c5a936d18c3a8a20cc0f753"
+    },
+    "layout.Box.alignCross": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L35 .cds--text-input: no declaration sets alignCross; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:d31dfd5bc139ca58fc49be0b489cc0048efde23bd6574e2d6d52c6e5115b9a47"
+    },
+    "layout.Box.direction": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L35 .cds--text-input: no declaration sets direction; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:d31dfd5bc139ca58fc49be0b489cc0048efde23bd6574e2d6d52c6e5115b9a47"
+    },
+    "layout.Box.width": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L35 .cds--text-input: no declaration sets width; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:d31dfd5bc139ca58fc49be0b489cc0048efde23bd6574e2d6d52c6e5115b9a47"
+    },
+    "layout.Field group.direction": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L302 .cds--text-input__field-outer-wrapper: no declaration sets direction; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:2def2ce964e0c87908872476d960c279b744660979d8b67c1a80d921b7aa49f4"
+    },
+    "layout.Field group.height": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L302 .cds--text-input__field-outer-wrapper: no declaration sets height; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:2def2ce964e0c87908872476d960c279b744660979d8b67c1a80d921b7aa49f4"
+    },
+    "layout.Field group.width": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L302 .cds--text-input__field-outer-wrapper: no declaration sets width; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:2def2ce964e0c87908872476d960c279b744660979d8b67c1a80d921b7aa49f4"
+    },
+    "layout.Field.direction": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L96 .cds--text-input__field-wrapper: no declaration sets direction; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:41a496854a688062aa16b43d076d3d89b7f64d6ce96869e338c4e711f29e3f22"
+    },
+    "layout.Field.height": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L96 .cds--text-input__field-wrapper: no declaration sets height; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:41a496854a688062aa16b43d076d3d89b7f64d6ce96869e338c4e711f29e3f22"
+    },
+    "layout.Field.width": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L96 .cds--text-input__field-wrapper: no declaration sets width; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:41a496854a688062aa16b43d076d3d89b7f64d6ce96869e338c4e711f29e3f22"
+    },
+    "layout.Helper.textResize": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L217 .cds--form__helper-text: no declaration sets textResize; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:5f59856697d76418b4ca193716e15c7aef710d6561439918fbe223746da15490"
+    },
+    "layout.Helper.width": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L217 .cds--form__helper-text: no declaration sets width; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:5f59856697d76418b4ca193716e15c7aef710d6561439918fbe223746da15490"
+    },
+    "layout.Invalid text.textResize": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L147 .cds--form-requirement: no declaration sets textResize; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:14608e6a2eb8db9c9a5866ebf6b47d8e3d287e298f0b2f93ae62ade8308f821d"
+    },
+    "layout.Invalid text.width": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L147 .cds--form-requirement: no declaration sets width; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:14608e6a2eb8db9c9a5866ebf6b47d8e3d287e298f0b2f93ae62ade8308f821d"
+    },
+    "layout.Label.textResize": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L41 .cds--label: no declaration sets textResize; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:daebe8b1df5a1cd768f90ce382f720ce56f3bc684be1b3070a554bb473afac30"
+    },
+    "layout.Text input.alignCross": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L267 .cds--text-input-wrapper: no declaration sets alignCross; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:1af503d159d3cbc97e4170c42d19d35a8b5ddb49365151f525ba00a50daab7d4"
+    },
+    "layout.Text input.alignMain": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L267 .cds--text-input-wrapper: no declaration sets alignMain; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:1af503d159d3cbc97e4170c42d19d35a8b5ddb49365151f525ba00a50daab7d4"
+    },
+    "layout.Text input.direction": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L267 .cds--text-input-wrapper: no declaration sets direction; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:1af503d159d3cbc97e4170c42d19d35a8b5ddb49365151f525ba00a50daab7d4"
+    },
+    "layout.Text input.height": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L267 .cds--text-input-wrapper: no declaration sets height; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:1af503d159d3cbc97e4170c42d19d35a8b5ddb49365151f525ba00a50daab7d4"
+    },
+    "layout.Text input.width": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L267 .cds--text-input-wrapper: no declaration sets width; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:1af503d159d3cbc97e4170c42d19d35a8b5ddb49365151f525ba00a50daab7d4"
+    },
+    "layout.Underline.width": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L35 .cds--text-input: no declaration sets width; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:ea201725045c7f62f262d4208bf02a1dc2fa4ea1c39dc0e476ae9b9a2385fab6"
+    },
+    "layout.Value.textResize": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L35 .cds--text-input: no declaration sets textResize; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:426937d771369bf8b66c8d15f9e3a8cddf2ccaae5e7ae90e2825c3219081e6d3"
+    },
+    "layout.Value.width": {
+      "by": "agent",
+      "evidence": [
+        "_text-input.scss:L35 .cds--text-input: no declaration sets width; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:426937d771369bf8b66c8d15f9e3a8cddf2ccaae5e7ae90e2825c3219081e6d3"
+    },
+    "layout.Warn text.textResize": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L147 .cds--form-requirement: no declaration sets textResize; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:e9d7a1d1b62ce5e4b69db7b432254ecec365b000a5a9f9ae471656dbcc0386f1"
+    },
+    "layout.Warn text.width": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L147 .cds--form-requirement: no declaration sets width; judged for Auto Layout"
+      ],
+      "fingerprint": "sha256:e9d7a1d1b62ce5e4b69db7b432254ecec365b000a5a9f9ae471656dbcc0386f1"
+    },
+    "properties.helperText.default": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L67 helperText prop"
+      ],
+      "fingerprint": "sha256:e455b6666d700edc3b380f477824fe52fb4d915d079ff900f35974cadd84bbfb"
+    },
+    "properties.helperText.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L67 helperText prop"
+      ],
+      "fingerprint": "sha256:e455b6666d700edc3b380f477824fe52fb4d915d079ff900f35974cadd84bbfb"
+    },
+    "properties.invalidText.default": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L92 invalidText prop"
+      ],
+      "fingerprint": "sha256:68b4d8a988edf7c3a36bbf6750645c89f69c972ef04758edfda2687f305bc688"
+    },
+    "properties.invalidText.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L92 invalidText prop"
+      ],
+      "fingerprint": "sha256:68b4d8a988edf7c3a36bbf6750645c89f69c972ef04758edfda2687f305bc688"
+    },
+    "properties.label.default": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L98 labelText prop"
+      ],
+      "fingerprint": "sha256:c2601e15b90199a109438c3f1cc9dcb07a476e9f23ecb61511e5691352955784"
+    },
+    "properties.label.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L98 labelText prop"
+      ],
+      "fingerprint": "sha256:c2601e15b90199a109438c3f1cc9dcb07a476e9f23ecb61511e5691352955784"
+    },
+    "properties.placeholder.default": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L128 placeholder prop"
+      ],
+      "fingerprint": "sha256:180b88beffa507eeaaf615e1c6865eb2a529d0cea14c72782043b11d4e73958f"
+    },
+    "properties.placeholder.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L128 placeholder prop"
+      ],
+      "fingerprint": "sha256:180b88beffa507eeaaf615e1c6865eb2a529d0cea14c72782043b11d4e73958f"
+    },
+    "properties.warnText.default": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L164 warnText prop"
+      ],
+      "fingerprint": "sha256:e8cf099f9b0a9c3911a5e8bfff503aed9210bbe3397eb5d91c4229cb2ae75e9e"
+    },
+    "properties.warnText.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L164 warnText prop"
+      ],
+      "fingerprint": "sha256:e8cf099f9b0a9c3911a5e8bfff503aed9210bbe3397eb5d91c4229cb2ae75e9e"
+    }
+  }
+}

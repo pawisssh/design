@@ -21,6 +21,10 @@ const PROTOTYPE = fixture('index.html');
 const DECISIONS = JSON.parse(readFileSync(fixture('decisions.json'), 'utf8'));
 const BUTTON = repo('design-systems/carbon/contracts/button.component.json');
 const BUTTON_BYTES = readFileSync(BUTTON, 'utf8');
+// Stands in for the Adapter's agent step: the TextInput Contract an agent wrote under adapter-carbon SKILL.md §2.
+const DRAFT = fixture('drafts/text-input.component.json');
+// A raw email field keeps its own styles in its region, so they need the token picks a Contract usage doesn't.
+const RAW_EMAIL = { 'textStyle:12/16/400/0.32': 'label-01', 'token:border-color:#8d8d8d': 'border-strong-01', 'token:background-color:#ffffff': 'field-02' };
 const noDeps = !hasDeps() && 'parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
 
 function designSystem() {
@@ -29,8 +33,7 @@ function designSystem() {
   mkdirSync(join(dir, 'proposals'));
   copyFileSync(repo('design-systems/carbon/carbon.foundations.json'), join(dir, 'carbon.foundations.json'));
   copyFileSync(BUTTON, join(dir, 'contracts/button.component.json'));
-  for (const f of ['text-input', 'select'])
-    copyFileSync(repo(`skills/contract/test/fixtures/form-controls/${f}.component.json`), join(dir, `contracts/${f}.component.json`));
+  copyFileSync(repo('skills/contract/test/fixtures/form-controls/select.component.json'), join(dir, 'contracts/select.component.json'));
   copyFileSync(fixture('proposals/avatar-stack.proposal.json'), join(dir, 'proposals/avatar-stack.proposal.json'));
   return dir;
 }
@@ -87,13 +90,100 @@ test('Button usages are Contract usages with tuples, recognised by the agent; th
   assert.equal(role.contract, 'select');
   assert.equal(role.properties.id, 'role');
   assert.deepEqual(role.items.map(i => handoff.copy[i.properties.value.slice(5)].text), ['Viewer', 'Editor', 'Admin']);
-  assert.equal(usage(handoff, 'email').contract, 'text-input');
   const toast = usage(handoff, 'toast');
   assert.ok(toast.raw && toast.reason);
   assert.ok(handoff.openQuestions.some(q => q.id === toast.question && q.kind === 'no-contract'));
   // Support tokens are in for regions: the toast's #24a148 is exactly support-success, not Off-system.
   assert.equal(styles(handoff).find(s => s.raw === '#24a148').token, 'support-success');
   assert.ok(!handoff.values.some(v => Object.values(v.raw).includes('#24a148')));
+});
+
+test('a family with no Contract: the Adapter\'s draft is checked, written into contracts/ at draft, and the usage points at it', { skip: noDeps }, async () => {
+  const { ds, handoff } = await run();
+  const written = join(ds, 'contracts/text-input.component.json');
+  assert.equal(readFileSync(written, 'utf8'), readFileSync(DRAFT, 'utf8'), 'the draft is written once, as the Adapter wrote it');
+  const draft = JSON.parse(readFileSync(written, 'utf8'));
+  assert.equal(draft.selection.status, 'draft');
+  assert.equal(draft.selection.approval, null);
+  assert.ok(Object.keys(draft.drafted).length > 0, 'Drafted values from the start');
+  const email = usage(handoff, 'email');
+  assert.equal(email.contract, 'text-input');
+  assert.deepEqual(email.tuple, { size: 'md' });
+  assert.deepEqual(email.match, { by: 'agent', via: 'element' });
+  assert.equal(email.properties.id, 'email');
+  assert.deepEqual(handoff.source.contracts['text-input'], { snapshotId: draft.source.snapshotId, contentHash: contentHash(draft) });
+  assert.ok(handoff.source.notes.some(n => /`text-input`.*mid-run at status draft/.test(n.text)));
+  assert.ok(!handoff.openQuestions.some(q => q.id === 'q-no-contract-email'));
+});
+
+test('a draft that fails the check, can\'t be read, can\'t be written or isn\'t a draft falls back to raw plus a question, and joins no contracts/', { skip: noDeps }, async () => {
+  const scratch = mkdtempSync(join(tmpdir(), 'to-handoff-draft-'));
+  const write = (name, edit) => { const c = JSON.parse(readFileSync(DRAFT, 'utf8')); edit(c); const p = join(scratch, name); writeFileSync(p, JSON.stringify(c, null, 2)); return p; };
+  const cases = [
+    [{ path: write('bad-token.json', c => { c.paint[0].set.Field.fill = { token: 'no-such-token' }; }) }, /fails the Adapter's check: .*no-such-token/],
+    [{ path: write('approved.json', c => { c.selection.status = 'approved'; }) }, /stays status draft with approval null/],
+    [{ path: write('other-pin.json', c => { c.source.commit = '0'.repeat(40); }) }, /not the Design System's Carbon pin/],
+    [{ path: join(scratch, 'missing.json') }, /could not be read/],
+    [{ unwritable: 'TextInput needs the Tooltip Contract for its counter, and that one can\'t be written either' }, /Tooltip Contract/],
+  ];
+  for (const [answer, why] of cases) {
+    const ds = designSystem();
+    const { handoff, requests } = await generate({ prototype: PROTOTYPE, designSystem: ds, decisions: { ...DECISIONS, ...RAW_EMAIL, 'contract:text-input': answer } });
+    assert.deepEqual(requests, []);
+    const email = usage(handoff, 'email');
+    assert.equal(email.contract, undefined);
+    assert.deepEqual(email.raw, { element: 'input[type=email]' });
+    assert.match(email.reason, /no Contract/);
+    const q = handoff.openQuestions.find(x => x.id === email.question);
+    assert.equal(q.kind, 'no-contract');
+    assert.match(q.text, why);
+    assert.equal(handoff.source.contracts['text-input'], undefined);
+    assert.ok(!existsSync(join(ds, 'contracts/text-input.component.json')), 'a failed draft is never written');
+  }
+});
+
+test('a mid-run draft leaves the Foundations document alone; the owner re-generating it for the new family keeps usedHash', { skip: noDeps }, async () => {
+  const ds = designSystem();
+  const path = join(ds, 'carbon.foundations.json');
+  const before = readFileSync(path, 'utf8');
+  const first = await generate({ prototype: PROTOTYPE, designSystem: ds, decisions: DECISIONS });
+  assert.equal(readFileSync(path, 'utf8'), before);
+  // What the Carbon foundations step does once text-input joins contracts/: the variables it uses gain it in
+  // usedBy, and nothing else moves. A Handoff pins usedHash, which leaves usedBy out (ADR 0007).
+  const doc = JSON.parse(before);
+  // text-primary and text-secondary are among the variables this Handoff uses too.
+  for (const v of ['field', 'border-strong', 'text-primary', 'text-secondary', 'helper-text-01-font-size']) doc.variables[v].usedBy = [...(doc.variables[v].usedBy || []), 'text-input'].sort();
+  assert.ok(styles(first.handoff).some(s => s.token === 'text-primary') && styles(first.handoff).some(s => s.token === 'text-secondary'));
+  writeFileSync(path, JSON.stringify(doc, null, 2) + '\n');
+  const again = await generate({ prototype: PROTOTYPE, designSystem: ds, decisions: DECISIONS });
+  assert.equal(again.handoff.source.foundations.usedHash, first.handoff.source.foundations.usedHash);
+  assert.notEqual(again.handoff.source.foundations.documentHash, first.handoff.source.foundations.documentHash);
+});
+
+test('an open draft request writes no Contract; an existing, different Contract is never replaced', { skip: noDeps }, async () => {
+  const ds = designSystem();
+  const { [`contract:text-input`]: _, ...rest } = DECISIONS;
+  const open = await generate({ prototype: PROTOTYPE, designSystem: ds, decisions: rest });
+  assert.ok(open.requests.some(r => r.key === 'contract:text-input'));
+  assert.equal(open.path, null);
+  assert.match(open.requests[0].question, /skills\/adapter-carbon\/SKILL\.md/);
+  assert.ok(!existsSync(join(ds, 'contracts/text-input.component.json')));
+  const other = JSON.parse(readFileSync(DRAFT, 'utf8'));
+  other.family.description = 'A hand-written TextInput';
+  writeFileSync(join(ds, 'contracts/text-input.component.json'), JSON.stringify(other));
+  await assert.rejects(generate({ prototype: PROTOTYPE, designSystem: ds, decisions: DECISIONS }), /another `text-input` Contract/);
+  assert.equal(JSON.parse(readFileSync(join(ds, 'contracts/text-input.component.json'), 'utf8')).family.description, 'A hand-written TextInput');
+  // Once the owner approves the written draft, a re-run with the same answers keeps the approved Contract.
+  const approved = JSON.parse(readFileSync(DRAFT, 'utf8'));
+  approved.selection.status = 'approved';
+  approved.selection.approval = { by: 'owner', contentHash: contentHash(approved) };
+  const bytes = JSON.stringify(approved);
+  writeFileSync(join(ds, 'contracts/text-input.component.json'), bytes);
+  const after = await generate({ prototype: PROTOTYPE, designSystem: ds, decisions: DECISIONS });
+  assert.equal(readFileSync(join(ds, 'contracts/text-input.component.json'), 'utf8'), bytes);
+  assert.equal(usage(after.handoff, 'email').contract, 'text-input');
+  assert.ok(!after.handoff.source.notes.some(n => /mid-run/.test(n.text)));
+  assert.doesNotMatch(await renderHtml(after.handoff, await loadDesignSystem(ds)), /<code>text-input<\/code> Contract draft/);
 });
 
 test('#edf5ff is Off-system with nearest and its Primitive; a near match and a tied pick are flagged', { skip: noDeps }, async () => {
@@ -237,6 +327,12 @@ test('render writes the static HTML Rendering: real renders, flags, mode toggle,
   assert.match(html, /class="[^"]*cds--btn--primary/);
   assert.match(html, /class="[^"]*cds--btn--danger--ghost/);
   assert.match(html, /cds--text-input/);
+  // A usage of a draft Contract says so on its card, and Needs a look lists the Contract with its Drafted values.
+  const card = id => html.slice(html.indexOf(`<article class="card" id="usage-${id}">`)).split('</article>')[0];
+  assert.match(card('email'), /Contract draft, not approved/);
+  assert.doesNotMatch(card('send'), /Contract draft/);
+  const drafted = Object.keys(JSON.parse(readFileSync(DRAFT, 'utf8')).drafted).length;
+  assert.match(html, new RegExp(`<code>text-input</code> Contract draft, not approved.*${drafted} Drafted values`));
   assert.match(html, /<SelectItem value="Viewer" text="Viewer" \/>/);
   assert.match(html, /<Button kind="danger--ghost" size="sm">Remove<\/Button>/);
   for (const [g, word] of [['≠', 'Off-system'], ['≈', 'near'], ['◇', 'agent pick'], ['+', 'Proposal'], ['∅', 'no Contract'], ['↯', 'off-axis'], ['!', 'missing'], ['◌', 'mock'], ['=', 'exact'], ['✓', 'import'], ['?', 'q-state-error']])

@@ -1,6 +1,7 @@
 {
   "condition:state.email": false,
-  "recognise:input[type=email]": { "contract": "text-input", "tuple": { "size": "md" }, "via": "element" },
+  "recognise:input[type=email]": { "draft": "text-input", "tuple": { "size": "md" }, "via": "element", "reason": "Carbon ships TextInput, but this Design System has no Contract for it yet" },
+  "contract:text-input": { "path": "skills/to-handoff/test/fixtures/invite-teammates/drafts/text-input.component.json" },
   "recognise:select": { "contract": "select", "tuple": { "size": "md" }, "via": "element" },
   "recognise:div.avatars>span": { "proposal": "avatar-stack", "tuple": { "size": "sm" }, "via": "element" },
   "recognise:button.link-danger": { "contract": "button", "tuple": { "kind": "danger--ghost", "size": "sm" }, "via": "element" },

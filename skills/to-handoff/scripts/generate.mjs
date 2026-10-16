@@ -5,12 +5,12 @@
 // requests and write nothing; an answer outside its request's candidates is refused.
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { basename, isAbsolute, join } from 'node:path';
 import { convert, deltaE } from '../../contract/scripts/color.mjs';
 import { canonical, contentHash as contractHash, proposalContentHash, resolve, sha256 } from '../../contract/scripts/contract.mjs';
 import { computed, splitWords } from './css.mjs';
 import { COLOR_ROLES, collectionOf, colorText, followCustom, matchDeclaration, matchText, roleOf, sameHex, valueIn } from './match.mjs';
-import { stateAxisOf } from './system.mjs';
+import { REPO_ROOT, stateAxisOf } from './system.mjs';
 import { readHtml, walk } from './reader.mjs';
 import {
   STANDARD_STATES, atomIn, atomsOf, candidateOf, evaluate, isPlaceholderText, ownDeclarations, parseCondition, standIns, stateOfAtom,
@@ -206,8 +206,67 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       if (!p) return `no Proposal "${answer.proposal}" in ${system.key}`;
       return tupleProblem(p, answer.tuple, `\`${answer.proposal}\``) || viaProblem(answer.via);
     }
+    if (answer.draft) {
+      if (!answer.reason) return 'a draft answer needs a reason, the raw usage\'s reason if the draft fails';
+      return answer.tuple && typeof answer.tuple === 'object' ? viaProblem(answer.via) : `\`${answer.draft}\` needs a tuple`;
+    }
     if (answer.raw === true || answer.noContract) return answer.reason ? null : 'a raw usage needs a reason';
-    return 'an answer names a contract, a proposal, raw or noContract';
+    return 'an answer names a contract, a proposal, a draft, raw or noContract';
+  };
+
+  // ---- a family the Code Library ships with no Contract (#90, #115): the Adapter writes it mid-run ----
+  // The agent follows the Adapter's procedure for the whole family and answers with the file it wrote. A draft
+  // that passes the Adapter's check is used in this run and written into contracts/ once nothing is open; one
+  // that fails, can't be read or can't be written falls back to a raw usage plus an open question.
+  const drafts = new Map();
+  const draftOf = family => {
+    if (drafts.has(family)) return drafts.get(family);
+    const answer = d.ask(`contract:${family}`, {
+      kind: 'contract-draft', candidates: [],
+      question: `\`${family}\` has no Contract in ${system.key}. ${adapter.contractProcedure}. Write the whole family at status draft with its Drafted values, then answer {path} with the file, or {unwritable: reason}.`,
+    }, a => (a && (typeof a.path === 'string' && a.path || typeof a.unwritable === 'string' && a.unwritable) ? null : 'a draft answer is {path} or {unwritable: reason}'));
+    let result = null;
+    if (answer && answer.unwritable) result = { failed: answer.unwritable };
+    else if (answer) {
+      const path = isAbsolute(answer.path) ? answer.path : join(REPO_ROOT, answer.path);
+      let text, contract;
+      try { text = readFileSync(path, 'utf8'); contract = JSON.parse(text); } catch (e) { result = { failed: `its draft at ${answer.path} could not be read (${e.message})` }; }
+      if (!result) {
+        const problems = draftProblems(contract, family);
+        const existing = system.contracts[family];
+        if (problems.length) result = { failed: `its draft at ${answer.path} fails the Adapter's check: ${problems.join('; ')}` };
+        else if (existing && contractHash(existing) !== contractHash(contract)) throw new Error(`decision "contract:${family}": ${system.key} has another \`${family}\` Contract; a mid-run draft never replaces one`);
+        // A re-run after the write finds the same Contract in contracts/ and keeps it, approved or not.
+        else result = existing ? { contract: existing } : { contract, text, write: true };
+      }
+    }
+    drafts.set(family, result);
+    if (result && result.contract) {
+      system.contracts[family] = result.contract;
+      if (result.contract.selection.status === 'draft') notes.push({
+        level: 'info',
+        text: `\`${family}\` is a Contract the Adapter wrote mid-run at status draft (${Object.keys(result.contract.drafted || {}).length} Drafted values); its check passed. `
+          + 'The owner approves it through To-design\'s base loop; this Handoff\'s sign-off does not.',
+      });
+    }
+    return result;
+  };
+  const draftProblems = (c, family) => {
+    if (!c || typeof c !== 'object' || !c.family || !c.selection) return ['it is not a Contract'];
+    const out = [];
+    if (c.family.key !== family) out.push(`its family is \`${c.family.key}\`, not \`${family}\``);
+    if (c.selection.status !== 'draft' || c.selection.approval !== null) out.push('a Contract written mid-run stays status draft with approval null');
+    return [...out, ...adapter.checkContract(c, foundations)];
+  };
+  // A draft answer as the recognise answer it stands for: a Contract usage on a pass, a raw one on a failure.
+  const effective = (answer, key) => {
+    if (!answer || !answer.draft) return answer;
+    const r = draftOf(answer.draft);
+    if (!r) return undefined;
+    if (r.failed) return { noContract: answer.draft, reason: answer.reason, failed: r.failed };
+    const problem = tupleProblem(r.contract, answer.tuple, `\`${answer.draft}\``);
+    if (problem) throw new Error(`decision "${key}": ${problem}`);
+    return { contract: answer.draft, tuple: answer.tuple, via: answer.via };
   };
 
   const recognised = [];
@@ -215,9 +274,10 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     if (el.type !== 'element' || consumed.has(el)) return;
     const cand = candidateOf(el, rules);
     if (cand) {
-      const answer = d.ask(`recognise:${cand.sig}`, {
+      const key = `recognise:${cand.sig}`;
+      const answer = effective(d.ask(key, {
         kind: 'recognise', question: `What is \`${cand.sig}\` ("${elementText(el, atomsIn('default')).slice(0, 40)}")?`, candidates: families, evidence: { at: [at(el.offset)] },
-      }, checkRecognise);
+      }, checkRecognise), key);
       recognised.push({ el, cand, answer });
       usageOf.set(el, recognised[recognised.length - 1]);
       walk(el, x => { if (x !== el) consumed.add(x); });
@@ -260,7 +320,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       if (answer.noContract) {
         u.question = question({
           id: `q-no-contract-${id}`, kind: 'no-contract', to: 'owner',
-          text: `\`${cand.sig}\` is a ${answer.noContract} with no Contract in ${system.key} yet. ${adapter.contractProcedure}, then re-run To-handoff.`,
+          text: `\`${cand.sig}\` is a ${answer.noContract} with no Contract in ${system.key} yet${answer.failed ? `, and the Adapter could not write one mid-run: ${answer.failed}` : ''}. ${adapter.contractProcedure}, then re-run To-handoff.`,
         });
       }
     }
@@ -573,6 +633,13 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     : `acceptance is a non-empty list of {id, screen: "${screenId}", state, given, when, then}`));
 
   if (d.requests.length) return { requests: d.requests, handoff: undefined, path: null, wrote: false };
+
+  // A mid-run draft that passed joins contracts/ as the Adapter wrote it, once per family; it never replaces one.
+  for (const [family, r] of [...drafts].sort(([a], [b]) => (a < b ? -1 : 1))) {
+    if (!r || !r.write) continue;
+    mkdirSync(join(designSystem, 'contracts'), { recursive: true });
+    writeFileSync(join(designSystem, 'contracts', `${family}.component.json`), r.text);
+  }
 
   // ---- source pins ----
   const files = { [rel]: fileHash(readFileSync(prototype)) };
