@@ -51,6 +51,15 @@ test('States without code props are forced through their CSS pseudo-class', () =
   ]);
 });
 
+test('the card footer source is the Code Library package and its pinned version, from the Contract', () => {
+  assert.equal(embedded(buildCatalog({ contract: button, foundations, renderer: stub })).source, '@carbon/react 1.118.0');
+  const bumped = JSON.parse(JSON.stringify(button));
+  bumped.source.packages['@carbon/react'] = '9.9.9';
+  bumped.selection.status = 'draft';
+  bumped.selection.approval = null;
+  assert.equal(embedded(buildCatalog({ contract: bumped, foundations, renderer: stub })).source, '@carbon/react 9.9.9');
+});
+
 test('an invalid Contract gets no catalog', () => {
   const broken = JSON.parse(JSON.stringify(button));
   broken.selection.expectedCount = 7;
@@ -62,8 +71,9 @@ test('the page scripts run the selection model on the inlined Contract module', 
   const scripts = [...html.matchAll(/<script>\n([\s\S]*?)\n<\/script>/g)].map(m => m[1]);
   const window = {};
   const context = vm.createContext({ window });
-  for (const name of ['window.Contract = ', 'class CatalogSelection']) vm.runInContext(scripts.find(s => s.includes(name)), context);
+  for (const name of ['window.Contract = ', 'class CatalogSelection', 'function catalogCard']) vm.runInContext(scripts.find(s => s.includes(name)), context);
   const model = new context.CatalogSelection(button, window.Contract);
   assert.equal(model.baseId, 'primary|lg|enabled');
   assert.equal(model.specimens.size, 245);
+  assert.equal(typeof context.catalogCard, 'function', 'the card builder is inlined too');
 });
