@@ -1,5 +1,7 @@
 # Catalog, source matrix and selection contract
 
+> **Superseded (#33).** To-preview now reads the Contract and exports an omit patch; see [the SKILL](../SKILL.md). This file stays only while `to-design` still links here, and goes in the hard cut (#34).
+
 This contract is the single handoff between the two custom skills. Install `to-preview` and `to-design` together; the consumer references this resource rather than pretending it can read it when the producer is absent.
 
 ## Independent source matrix

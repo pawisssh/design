@@ -1,40 +1,47 @@
 ---
 name: to-preview
-description: Build an interactive HTML component catalog from real library code or component specs, with full state/size/theme grids, variant checkboxes, filters and selection-manifest export. Use to review and select component families or individual variants before generating native Figma scripts.
+description: HTML catalog of a Contract's variants, rendered with the real Code Library, where the owner unchecks the combinations they don't want; exports an omit patch the agent applies to the Contract. Use to review or narrow a Component Family's variants before To-design.
 ---
 
 # To-preview
 
-Own source discovery, interactive preview and selection evidence. Produce an inspectable catalog backed by real components plus a versioned selection manifest. Native Figma script generation belongs to `to-design`; this skill returns its artifacts to the caller without starting that workflow itself.
+Shows every combination a Contract allows, rendered with the real Code Library component, so the owner can leave some out. The only output is an **omit patch**; the agent applies it to the Contract. To-preview never approves anything and never changes defaults, labels or States: those are explicit Contract edits. It is optional: To-design starts from any valid draft Contract.
 
-## Source and scope
+To-preview knows no Code Library. The Adapter named in the Contract's `source.adapter` renders the specimens (see [references/interactive-template.md](references/interactive-template.md) for the renderer interface and the page).
 
-Discover the requested project's exports, implementation/types/styles, stories, tokens, fonts/providers and assets. Accept HTML/CSS, installed code libraries and `.txt` component specs. Read [references/source-adapters.md](references/source-adapters.md) for Coinbase/spec inputs. Inventory family names cheaply; render full grids only for opened/selected families. For an explicitly scoped batch, limit the catalog to that batch.
+## 1. Generate the catalog
 
-Stories are examples, not exhaustive coverage. Include source-defined CSS pseudo-states and supported selected/focus composites; record state precedence, defaults, constraints, aliases and source/version evidence. Equivalent aliases require an explicit mapping. Preserve unresolved source gaps instead of inventing visual values.
+```
+node skills/to-preview/scripts/catalog.mjs design-systems/<ds>/contracts/<family>.component.json
+```
 
-## Catalog, matrix and source plan
+- It validates the Contract (refusing an invalid one) and writes one self-contained page to `.scratch/to-preview/<family>/index.html` (gitignored). `--foundations <file>` and `--out <file>` override the defaults.
+- The Adapter's packages must be fetched first. For Carbon: `node skills/adapter-carbon/scripts/sources.mjs`.
+- Done when the command prints the page path and the checked count.
 
-Read [references/sheet-contract.md](references/sheet-contract.md) for the shared catalog/selection contract. Derive the full supported finite visual matrix independently of rendered success. Keep arbitrary text and icon names outside the finite product; show supported compositions, long copy and icon/visibility review cases. Record invalid complete tuples with source evidence.
+## 2. The owner reviews
 
-Record anatomy/parent-child roles, authored layout and intrinsic/fixed/stretch intent, min/max limits, text behavior, overlays/anchors and token identities/aliases per mode. Keep computed pixel bounds as separate evidence. This source plan feeds both preview review and the later native builder; Figma API conversion is owned by the consuming skill.
+Open the page (from `file://`, or serve `.scratch/to-preview/` with any static server). What the owner sees:
 
-Compute dependencies per specimen/family: required tokens, actual icons, fonts and nested components. Include their transitive closure automatically, show it in the selection summary and preserve order. Dependency helpers do not authorize building unrelated complete families.
+- **Specimens** are the Contract's axes minus `excluded`. Tuples the Contract already omits are shown unchecked, so they can be re-included.
+- The **Base Component** (every axis at its default) is locked on.
+- A State whose `code` is `null` (Hover, Active, Focus) is forced through its CSS pseudo-class; Disabled renders through its code props.
+- **Theme** is a display-only toggle over the foundations document's modes. Specimens render once, in the default (first) mode, and export needs only that.
+- Axis filters change what is visible; **Check visible** and **Uncheck visible** change the selection.
 
-## Interactive HTML
+**Export omit patch** downloads two files:
 
-Copy/adapt [assets/component-sheet-template.html](assets/component-sheet-template.html) and [assets/selection-model.js](assets/selection-model.js). Wire `ComponentSheet.configure({catalog, renderSpecimen})` to the real project renderer as documented in [references/interactive-template.md](references/interactive-template.md). React/Vue/etc. previews mount real exports through the existing runtime; plain HTML uses original markup/styles. Keep source packages unchanged.
+- `<family>.omit-patch.json`: exactly `{family, snapshotId, omit, expectedCount}`. `omit` is the whole owner omit list: the Contract's own patterns that still hold (kept verbatim so their reasons survive), then whole-value patterns (`{"state": "focus"}`, or an array when several values of one axis are off), then single tuples.
+- `<family>.checked.json`: `{family, snapshotId, checked: [tuple]}`, the tuples left checked.
 
-Provide family checkboxes, a complete variant grid for each opened/selected family, variant checkboxes, size/state/theme filters, group select/clear actions and a selection/dependency count. Choosing a family selects its supported specimens by default; users may exclude individual states/sizes/themes/variants. Visible filters only change display; Select/Clear visible explicitly changes selection. Keep selected and excluded cases recognizable.
+The page refuses to export unless every checked specimen rendered and the patch, applied to the Contract, expands to exactly the checked tuples. Browsers may ask once to allow the second download.
 
-Every specimen has a stable source-mapped ID; captions/controls stay outside the component DOM. Materialize transient states with source-backed stable preview mechanisms and compare with real interactions. Wait for fonts/assets, provide inverse/background contexts and avoid virtualization hiding required selected specimens. Large family grids may be explicit batches whose union is verified.
+## 3. Apply the patch
 
-The Export / Apply Selection action creates `selection-manifest.json` containing exact selected rows, source snapshot, dependency closure and approval of the selected content. Show source-supported effective defaults and any differences from source defaults for partial sets. Export is a browser download/copy/custom event; immediate local file/API delivery requires an explicitly implemented bridge. Do not claim the browser can call MCP or write an arbitrary filesystem path by itself.
+```
+node skills/to-preview/scripts/apply-omit.mjs <family>.omit-patch.json --checked <family>.checked.json --contract design-systems/<ds>/contracts/<family>.component.json
+```
 
-## Validate and hand off
+It applies the patch with the shared module's `applyOmit`, validates against the foundations document, asserts the expanded set equals the checked tuples (tuple by tuple, not only the count) and that nothing but `selection` changed, then writes the Contract in place. The written Contract is a draft with `approval: null`. On any failure it writes nothing and exits 1. Done when it prints the variant count and `status draft`.
 
-Before export, render/verify every selected family and confirm selected specimen IDs, tuples/themes and dependency closure against the independent matrix. Record actual fonts/assets/states and short/long-label, optional-icon and narrow/wide behavior. Distinguish complete-family selection from a deliberate partial selection; full source coverage remains available for audit, but only approved rows are build scope.
-
-Persist source catalog, full expected matrices, plans, preview adapter/start command, batch URLs, verification and selection under `.scratch/to-preview/`. Pin selection to the reviewed source snapshot; source drift invalidates approval and requires refreshed preview/selection.
-
-Return preview path/URL/start command and exported manifest location with selected/unselected counts and unresolved gaps. Opening the catalog alone is not verification of unopened families. Return to the caller; `to-design` can consume the handoff when the user requests script generation. HTML export approves content selection, not external execution by itself.
+Tests: `node --test skills/to-preview/test/*.test.mjs`.

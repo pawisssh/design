@@ -1,5 +1,7 @@
 # Source adapters
 
+> **Superseded (#33).** Reading a Code Library is now an Adapter skill's job (such as `adapter-carbon`); To-preview reads only the Contract. This file goes in the hard cut (#34).
+
 Read only for the source formats present. Adapters produce the same source inventory, full visual matrix, anatomy/layout/token plans and renderer registration. They do not independently construct Figma assets.
 
 ## Code / HTML libraries

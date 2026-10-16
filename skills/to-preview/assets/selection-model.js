@@ -13,14 +13,16 @@
       this.selected = new Set();
       this.verified = new Set();
       const all = contractModule.expand({ ...contract, selection: { ...contract.selection, omit: [] } });
-      // The specimen id is an internal DOM id only; it never leaves the page.
-      const idOf = tuple => contract.axes.map(axis => tuple[axis.key]).join("|");
       for (const tuple of all) {
-        const id = idOf(tuple);
+        const id = this.idOf(tuple);
         this.specimens.set(id, { id, tuple, name: contractModule.variantName(contract, tuple) });
       }
-      for (const tuple of contractModule.expand(contract)) this.selected.add(idOf(tuple));
-      this.baseId = idOf(contractModule.baseTuple(contract));
+      for (const tuple of contractModule.expand(contract)) this.selected.add(this.idOf(tuple));
+      this.baseId = this.idOf(contractModule.baseTuple(contract));
+    }
+    // The specimen id ("primary|lg|enabled") is an internal DOM id only; it never leaves the page.
+    idOf(tuple) {
+      return this.contract.axes.map(axis => tuple[axis.key]).join("|");
     }
     specimen(id) {
       const specimen = this.specimens.get(id);
@@ -80,7 +82,7 @@
       }
       for (const s of off) if (!covered(s)) omit.push({ ...s.tuple });
       const patch = { family: c.family.key, snapshotId: c.source.snapshotId, omit, expectedCount: this.selected.size };
-      const expanded = m.expand(m.applyOmit(c, patch)).map(t => c.axes.map(a => t[a.key]).join("|"));
+      const expanded = m.expand(m.applyOmit(c, patch)).map(t => this.idOf(t));
       if (expanded.length !== this.selected.size || !expanded.every(id => this.selected.has(id)))
         throw new Error("The omit patch does not reproduce the checked specimens; nothing exported");
       return patch;
