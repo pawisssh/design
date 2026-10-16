@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "family": { "key": "avatar-stack", "name": "Avatar stack", "description": "Overlapping initials avatars that show who is in a workspace." },
+  "proposal": {
+    "by": "agent",
+    "reason": "Carbon ships no avatar or avatar group; the Prototype's overlapping initials circles are their own family.",
+    "considered": [
+      { "contract": "button", "whyNot": "The avatars are not actions." }
+    ],
+    "origin": { "input": "prototype", "at": "index.html:65" },
+    "home": { "where": "app", "path": "components/avatar-stack" }
+  },
+  "axes": [
+    {
+      "key": "size", "label": "Size", "default": "sm", "defaultSource": "prototype",
+      "values": [ { "key": "sm", "label": "Small" }, { "key": "md", "label": "Medium" } ]
+    }
+  ],
+  "anatomy": {
+    "name": "Stack", "type": "COMPONENT", "role": "container",
+    "children": [
+      { "name": "Avatar", "type": "FRAME", "role": "avatar", "children": [ { "name": "Initials", "type": "TEXT", "role": "label" } ] }
+    ]
+  },
+  "properties": [
+    { "key": "initials", "label": "Initials", "type": "TEXT", "default": "JD", "binds": [ { "node": "Initials", "field": "characters" } ] }
+  ],
+  "layout": [
+    { "match": {}, "set": {
+      "Stack": { "direction": "HORIZONTAL" },
+      "Initials": { "textStyle": { "token": "label-01" } }
+    } },
+    { "match": { "size": "sm" }, "set": { "Avatar": { "width": 24, "height": 24 } } },
+    { "match": { "size": "md" }, "set": { "Avatar": { "width": 32, "height": 32 } } }
+  ],
+  "paint": [
+    { "match": {}, "set": {
+      "Avatar": { "fill": { "token": "layer-accent-01" }, "stroke": { "token": "layer-01" } },
+      "Initials": { "fill": { "token": "text-primary" } }
+    } }
+  ],
+  "status": "pending",
+  "approval": null
+}
