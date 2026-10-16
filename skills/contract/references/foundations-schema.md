@@ -27,7 +27,7 @@ Output with the Button Contract (#108): 38 closure tokens; 683 variables (244 Pr
 | `designSystem` | yes | `{key, name}`. `key` names the file (`carbon.foundations.json`) and the ledger section. |
 | `source` | yes | Same shape as the Contract's `source`: `codeLibrary`, `adapter`, `repository`, `tag`, `commit`, `packages`, `files {path: sha256:…}`, `snapshotId`. `files` lists every file the Adapter read for foundations, and `snapshotId` is computed over it the same way as the Contract's. It includes `colors.json` and `scale.ts`, which are not in Button's Contract. |
 | `closure` | yes | A record of what Contracts use, not the document's scope (#107). `contracts: [{family, path, snapshotId}]` is the Contracts this document was derived from. `tokens` is the sorted union of their token references, including `textStyle` references. To-design builds the closure in every Design Library file (see [To-design builds a subset](#to-design-builds-a-subset)). |
-| `collections` | yes | Ordered list `{key, name, modes: [{key, label, selector?}], hidden?}`. The first mode is the default. `selector` is the CSS that switches to the mode (`[data-carbon-theme="g100"]`, `.cds--layer-two`, later `.dark`). It is review-only: To-preview reads it, and the build plan strips it. |
+| `collections` | yes | Ordered list `{key, name, modes: [{key, label, selector?}], hidden?}`. The first mode is the default. `selector` is the CSS that switches to the mode (`.cds--g100`, `.cds--layer-two`, later `.dark`). It is review-only: To-preview reads it, and the build plan strips it. To-preview applies each Mode as one class, so a selector it reads is one class selector (#109). |
 | `variables` | yes | Map from flat name to variable. See [Variables](#variables). The order is collection order, then tokens by name, which is also the creation order (aliases need their targets first). |
 | `textStyles` | yes (may be `{}`) | Map from flat name to Text Style. See [Text Styles](#text-styles). |
 | `checks` | yes | Evidence from generation: a CSS cross-check (`against`, `sha256`, `matched`, `missing`, and `differs`, the sorted flat names whose value the document takes from the CSS over the source), a Sass fallback check (`against`, `matched`) and the scope check (`by`, the validator and rule that ran; `contracts`, how many Contracts it checked; `errors`, always 0, since generation fails otherwise). |
@@ -40,12 +40,14 @@ The Carbon collections, each holding the whole theme (#108).
 | key | name | modes | Content |
 |---|---|---|---|
 | `primitives` | `Primitives` | `default` | The whole palette (`colors.json`, 244 entries). `hidden: true` (`hiddenFromPublishing`), scopes `[]`. |
-| `theme` | `Theme` | `white` White, `g10` Gray 10, `g90` Gray 90, `g100` Gray 100 | Every `themes.json` token, plus the component tokens of each Component Family that has a Contract (`button.json`'s 15 `button-*`, each with `family: "button"`). Component tokens of families without a Contract stay out (ADR 0006). |
+| `theme` | `Theme` | `white` White, `g10` Gray 10, `g90` Gray 90, `g100` Gray 100, selectors `.cds--white` … `.cds--g100` | Every `themes.json` token, plus the component tokens of each Component Family that has a Contract (`button.json`'s 15 `button-*`, each with `family: "button"`). Component tokens of families without a Contract stay out (ADR 0006). |
+| `layer` | `Layer` | `one` One, `two` Two, `three` Three, selectors `.cds--layer-one` … `.cds--layer-three` | The 15 contextual tokens of `@carbon/styles`' layer sets (`layer/_layer-sets.scss`, #109): `field`, `layer`, `border-subtle` and the rest. Level n aliases the set's nth Theme token (`field` → `field-01`/`02`/`03`; `border-subtle` lists `-00` first, so One is `border-subtle-00`). A Layer value is an alias only (see [Value forms](#value-forms-per-mode)). ADR 0012. |
 | `layout` | `Layout` | `default` | Every `layout.json` group: Spacing, Fluid spacing, Container, Layout, Size, Icon size, Border radius. |
 | `type` | `Type` | `default` | The variables that Text Styles bind, for every `@carbon/type` style. |
 
 - **Modes are keyed by the Code Library's theme key** (`white`, `g10`, `g90`, `g100`), not by the Figma label. `label` is the Figma mode name, so renaming a label never breaks values or the ledger, the same rule as Contract axis values. The Adapter iterates this fixed list, so extra DTCG keys such as `button-separator`'s `fallback` are ignored.
 - Single-mode collections use the mode key `default` (label `Default`).
+- A Layer variable takes its Figma group from its level-one target (`Field/field`, `Border/border-subtle`), so a group selected for a subset build brings its Layer tokens with it. Layer is built after Theme, because its aliases need their targets first.
 
 ## Variables
 
@@ -83,12 +85,12 @@ The Carbon collections, each holding the whole theme (#108).
 
 | Form | Meaning | Figma write |
 |---|---|---|
-| `{alias, resolved}` | Alias to any variable earlier in document order, by its flat name: a Primitive, or a Theme token for a Layer token. `resolved` is the final colour. The builder core today accepts only a target in an earlier collection, so a same-collection alias (a Synthesized token, ADR 0009) waits on a core change. | `createVariableAlias(target)` |
+| `{alias, resolved}` | Alias to any variable earlier in document order, by its flat name: a Primitive, or a Theme token for a Layer token. `resolved` is the final colour. A Layer value is `{alias}` alone: its colour depends on the Theme mode too, so it has no single `resolved`. The builder core today accepts only a target in an earlier collection, so a same-collection alias (a Synthesized token, ADR 0009) waits on a core change. | `createVariableAlias(target)` |
 | `{raw, alpha, resolved, from, level, reason}` | The source value is an alias plus alpha (`{value, alpha}` in `themes.json`, `org.carbon.alphaModifiers` in `button.json`). It is flattened to RGBA because a Figma alias cannot carry alpha. `from` keeps the source alias. | `{r, g, b, a}` |
 | any COLOR form with `from.css` | Optional. The value's source text as CSS (a custom property's declared value). Review-only, like the rest of `from`. | as the form |
 | `{value, resolved?, level?, reason?}` | A literal that is the token's own source value: palette hexes, layout px, type numbers, `fluid-spacing-*` CSS text, and `button-danger-hover` `#b81921`. In the Theme collection a `value` always carries `level` and `reason`, because Theme is otherwise alias-only. `button-danger-hover` is kept exact; the nearest primitive, `red.60Hover` `#b81922`, is off by one. The three `ai-popover-caret-*` tokens are DTCG colour objects (`{colorSpace, components, hex}`) in every mode; the value is their `hex`, at level `info`. | literal |
 
-- `resolved` is present on every COLOR mode value. It is written in the same notation as the compiled CSS (`#0f62fe`, `rgba(141, 141, 141, 0.3)`), so the generator can compare it against each `.cds--<theme>` block, and To-preview can use it without resolving aliases.
+- `resolved` is present on every COLOR mode value outside Layer. It is written in the same notation as the compiled CSS (`#0f62fe`, `rgba(141, 141, 141, 0.3)`), so the generator can compare it against each `.cds--<theme>` block, and To-preview can use it without resolving aliases.
 - FLOAT values are px. `from` records the conversion: `spacing-*`, `container-*` and `layout-*` are in miniUnits (×8), `size-*` and most `border-radius-*` are px with a rem converter, `icon-size-*` is a `"1rem"` string (×16), and `border-radius-00` and `border-radius-max` are px strings (`"0px"`, `"999999px"`).
 - `fluid-spacing-*` is viewport-relative (`0`, `2vw`, `5vw`, `10vw`). Figma has no vw unit, so it is a STRING holding the exact CSS text, with scopes `[]` and an info reason. It is there for codeSyntax and for matching, and binds to nothing.
 - Every value the generator cannot read (a palette hex, a Layout value, a Theme mode value, a Type field) fails generation, naming the token, and the mode where there is one. Nothing is skipped silently.
@@ -242,8 +244,8 @@ Identity is the flat name, carried through the ledger id. Figma names and labels
 ## Validation (generator)
 
 1. Every Contract in `closure.contracts` pins the same `source.commit`.
-2. Every closure token resolves in the Code Library sources, every source value is readable, and every alias target exists in the palette. The schema allows any earlier variable; Carbon's generator emits only palette aliases today.
-3. Every resolved Theme value equals the compiled CSS in the matching `.cds--white` / `.cds--g10` / `.cds--g90` / `.cds--g100` block. Every emitted layout and type custom property matches in px (`fluid-spacing-*` as exact text), and each family's first font matches the CSS stack, except the listed `checks.css.differs`.
+2. Every closure token resolves in the Code Library sources, every source value is readable, and every Theme alias target exists in the palette. Every layer set lists at least three Theme tokens, and every Layer alias targets a Theme token.
+3. Every resolved Theme value equals the compiled CSS in the matching `.cds--white` / `.cds--g10` / `.cds--g90` / `.cds--g100` block. Every Layer value matches its `.cds--layer-one` / `-two` / `-three` block, `var(--cds-<target>, <White fallback>)`, in target and fallback, and every Mode selector has a rule in the CSS. Every emitted layout and type custom property matches in px (`fluid-spacing-*` as exact text), and each family's first font matches the CSS stack, except the listed `checks.css.differs`.
 4. Every Sass codeSyntax fallback exists in `@carbon/layout`.
 5. Every Contract passes rule 6 of the shared module's `validate()` against the generated document, so every Contract use (fill on FRAME, TEXT or vector; stroke; effect colour; padding or gap; min height or size; radius) is inside the bound variable's scopes.
 6. Figma names are unique. No flat name is both a variable and a Text Style.

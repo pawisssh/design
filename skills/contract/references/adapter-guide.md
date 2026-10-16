@@ -43,6 +43,7 @@ Not an Adapter's job: Figma ids, build plans, approvals and the owner's omit lis
 | Free text | a `TEXT` property bound to `characters` | default and long copy |
 | Icon choice | an `INSTANCE_SWAP` property bound to `mainComponent`, plus `icons` | default and another real icon |
 | Theme | foundations modes | every mode, never a variant |
+| Styling set by an ancestor (Carbon Layer level) | foundations modes; bind the name the Code Library's CSS uses (`field` where Carbon writes `$field`, `field-01` where it writes `$field-01`), ADR 0012 | each Layer Mode, never a variant |
 | Finite structure change | an axis value or a separate family | every structure |
 | Selected, checked or open | a value of its own axis (State stays canonical), or a nested component when only a child changes | each value in every State |
 | Callback, ref, telemetry id | nothing (code only) | — |

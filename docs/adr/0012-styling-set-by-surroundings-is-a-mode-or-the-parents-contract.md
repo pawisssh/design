@@ -38,6 +38,6 @@ Decided by the agent standing in for the owner in [How is a component's styling 
 - **Foundations.** Each Mode records the CSS selector that switches to it, such as `.cds--layer-two`, `.cds--g100` or `.dark`. To-handoff finds a usage's Mode from its nearest such ancestor.
 - **To-handoff.** It renders a usage in its recorded Mode by wrapping the per-family render in that selector.
 - **To-design.** A Contract binding `field` pulls the Layer collection into the build subset. A Figma frame set to a Layer Mode then shifts the fields inside it.
-- **To-preview.** Its catalog accepts only one multi-Mode collection, so Carbon with Layer breaks it until that changes.
+- **To-preview.** Its catalog has one toggle per multi-Mode collection, Theme and Layer, each applying its Mode's selector (#109).
 - **Neither way covers a child styled by some other ancestor.** That styling gets an info note in the child's Contract and nothing else. Examples are shadcn Kbd in TooltipContent and Calendar in Card.
 - **Fixed child counts.** A parent Contract's anatomy has a fixed number of child instances, while ButtonSet, ButtonGroup and ToggleGroup take any number in code.
