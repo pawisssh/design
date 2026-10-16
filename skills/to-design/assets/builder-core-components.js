@@ -457,7 +457,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
         if (!(name in O)) { conflict('prune', name, 'not-orphan'); continue; }
         const n = await get(O[name]);
         count[name] = n && n.type === 'COMPONENT' ? (await n.getInstancesAsync()).length : null;
-        if (opts.prune && count[name] !== L[name]) conflict('prune', name, 'stale: ' + count[name] + ' instances, the preview counted ' + L[name]);
+        if (opts.prune && count[name] !== null && count[name] !== L[name]) conflict('prune', name, 'stale: ' + count[name] + ' instances, the preview counted ' + L[name]);
       }
       if (conflicts.length) return stop();
       if (!opts.prune) return Object.assign(report, { summary: { orphans: Object.keys(O).length, conflicts: 0 }, orphans: count, scope: 'instances in this file only: other files are not counted' });
@@ -472,7 +472,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       for (const k of set ? set.children : []) {
         const v = parse(k.name);
         const i = v ? v.reduce((m, x, a) => m * A[a].values.length + x, 0) : 0;
-        if (v && !((parseInt(plan.selection.member[i >> 2], 16) >> (i & 3)) & 1)) out.push([k.name, k.id, k.key]);
+        if (!v || !((parseInt(plan.selection.member[i >> 2], 16) >> (i & 3)) & 1)) out.push([k.name, k.id, k.key]);
       }
       return out;
     };

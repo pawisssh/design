@@ -67,13 +67,20 @@ export function recordResult(ledger, result) {
 /**
  * A family's orphans after a sets result (#67, ADR 0003): the variants the selection dropped, by variant name,
  * as {id, key, droppedAt}. A dropped variant becomes an orphan only when the ledger recorded its id (as a
- * variant or an orphan) before this result; a node it never recorded stays `extra`. An orphan leaves the list
- * when a rebuild records its id as a variant again, or when a prune deletes it.
+ * variant or an orphan) before this result; a node it never recorded stays `extra`. An orphan keeps the name
+ * and droppedAt it was first recorded with, even if a hand renames its node. It leaves the list when a rebuild
+ * records its id as a variant again, when a build or reconcile no longer finds it in the set (they report every
+ * node the selection dropped), or when a prune deletes it.
  */
 function orphansAfter(old, result, variants, at) {
-  const orphans = { ...((old && old.orphans) || {}) };
-  const known = new Set([...((old && old.variants) || []), ...Object.values(orphans).map(o => o.id)]);
-  for (const [name, id, key] of result.dropped || []) if (known.has(id) && !orphans[name]) orphans[name] = { id, key, droppedAt: at };
+  const before = (old && old.orphans) || {};
+  const known = new Set([...((old && old.variants) || []), ...Object.values(before).map(o => o.id)]);
+  const nameOf = new Map(Object.entries(before).map(([name, o]) => [o.id, name]));
+  const orphans = Array.isArray(result.dropped) ? {} : { ...before };
+  for (const [name, id, key] of result.dropped || []) {
+    if (nameOf.has(id)) orphans[nameOf.get(id)] = before[nameOf.get(id)];
+    else if (known.has(id) && !orphans[name]) orphans[name] = { id, key, droppedAt: at };
+  }
   for (const name of result.pruned || []) delete orphans[name];
   for (const [name, o] of Object.entries(orphans)) if (variants.includes(o.id)) delete orphans[name];
   return orphans;
@@ -114,6 +121,7 @@ function main() {
   const result = JSON.parse(readFileSync(resultPath, 'utf8'));
   if (command === 'prune-list') {
     const list = pruneList(result, args.values.name || []);
+    mkdirSync(dirname(args.values.out), { recursive: true });
     writeFileSync(args.values.out, JSON.stringify(list, null, 2) + '\n');
     console.log(JSON.stringify({ status: 'written', out: args.values.out, ...list }));
     return;
@@ -123,9 +131,10 @@ function main() {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(ledger, null, 2) + '\n');
   // a build call's dropped variants: the ones the ledger keeps as orphans, and the ones it never recorded (extra)
-  const orphans = (result.slice === 'sets' && ledger.sets[result.family].orphans) || {};
-  const dropped = (result.dropped || []).map(d => d[0]);
-  const report = dropped.length ? { orphaned: dropped.filter(n => n in orphans), extra: dropped.filter(n => !(n in orphans)) } : {};
+  const kept = new Set(Object.values((result.slice === 'sets' && ledger.sets[result.family].orphans) || {}).map(o => o.id));
+  const dropped = result.dropped || [];
+  const names = tracked => dropped.filter(d => kept.has(d[1]) === tracked).map(d => d[0]);
+  const report = dropped.length ? { orphaned: names(true), extra: names(false) } : {};
   console.log(JSON.stringify({ status: 'recorded', ledger: path, slice: result.slice, summary: result.summary, ...report }));
 }
 

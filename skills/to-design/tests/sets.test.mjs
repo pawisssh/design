@@ -164,7 +164,8 @@ test('after an omit edit the rebuild finds every kept variant by name and moves 
   for (const { result } of runs) {
     assert.deepEqual([result.summary.created, result.summary.updated, result.summary.dropped], [0, 0, 49], JSON.stringify(result.updated));
     assert.ok(result.outputBytes < 20000, `${result.outputBytes} bytes out`);
-  }  const rec = env.ledger.sets.button;
+  }
+  const rec = env.ledger.sets.button;
   assert.equal(rec.variants.length, TOTAL - 49);
   assert.deepEqual(rec.variants, expand(omitted).map(t => ids.get(variantName(omitted, t))));
   assert.equal(set.children.length, TOTAL, 'the sets slice never deletes a variant');
@@ -220,6 +221,32 @@ test('re-selecting a dropped variant reuses its orphan id and key, even after a 
   const set = await setNode(env);
   assert.equal(set.children.length, TOTAL);
   assert.deepEqual(checkCoverage(BUTTON, (await sets(env, { mode: 'coverage' })).result, env.ledger).problems, []);
+});
+
+test('an orphan deleted by hand leaves the list, and the variant built again in its place is an orphan when dropped again', async () => {
+  const env = await setup();
+  await buildAll(env);
+  await buildAll(env, withoutFocus());
+  const name = 'Kind=Secondary, Size=Medium, State=Focus';
+  const gone = env.ledger.sets.button.orphans[name].id;
+  (await env.mock.figma.getNodeByIdAsync(gone)).remove();
+  await buildAll(env);
+  assert.deepEqual(env.ledger.sets.button.orphans, {});
+  const made = env.ledger.sets.button.variants[expand(BUTTON).findIndex(t => variantName(BUTTON, t) === name)];
+  assert.notEqual(made, gone);
+  await buildAll(env, withoutFocus(), { at: LATER });
+  assert.deepEqual(env.ledger.sets.button.orphans[name], { id: made, key: (await env.mock.figma.getNodeByIdAsync(made)).key, droppedAt: LATER });
+});
+
+test('a dropped variant a hand renamed before the rebuild is still an orphan, under the name it has', async () => {
+  const env = await setup();
+  await buildAll(env);
+  const node = (await setNode(env)).children.find(k => k.name === 'Kind=Tertiary, Size=Small, State=Focus');
+  node.name = 'Focus (old)';
+  await buildAll(env, withoutFocus());
+  const orphans = env.ledger.sets.button.orphans;
+  assert.equal(Object.keys(orphans).length, 49);
+  assert.equal(orphans['Focus (old)'].id, node.id);
 });
 
 // A Button set rebuilt without Focus: 49 orphans, two of them used by instances on another page.
@@ -284,6 +311,16 @@ test('prune deletes only the orphans on the owner-confirmed list, and refuses a 
   assert.equal(env.ledger.sets.button.variants.length, TOTAL - 49, 'the variant ids are kept');
   for (const { result: r } of await buildAll(env, omitted)) assert.equal(r.summary.created, 0, 'a rebuild does not bring it back');
   assert.deepEqual(checkCoverage(omitted, (await sets(env, { mode: 'coverage' }, { contract: omitted })).result, env.ledger).problems, []);
+});
+
+test('a prune whose result was lost can be sent again: an orphan it already deleted is not stale', async () => {
+  const { env, omitted } = await orphaned();
+  const quiet = 'Kind=Ghost, Size=Small, State=Focus';
+  const list = pruneList(await preview(env, omitted), [quiet]);
+  await sets(env, { mode: 'prune', prune: list.prune }, { contract: omitted, drop: true });
+  const { result } = await sets(env, { mode: 'prune', prune: list.prune }, { contract: omitted });
+  assert.deepEqual([result.summary.conflicts, result.pruned], [0, [quiet]]);
+  assert.ok(!(quiet in env.ledger.sets.button.orphans));
 });
 
 // One rule for the Base Component's property values: the review specimen (every BOOLEAN on) while it stands
