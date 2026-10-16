@@ -56,8 +56,12 @@ _Avoid_: Source adapter, connector, parser
 The Adapter for any Code Library: it reads standard token and prop formats exactly, and an agent drafts what those formats leave out, marked for the owner to approve.
 _Avoid_: Universal adapter, AI adapter
 
+**Drafted value**:
+A value in a Contract that the Generic Adapter's agent chose because no standard format states it, such as a label, a layer, or an icon slot's default, recorded with the evidence it was drafted from. The Contract's one approval covers it, and a re-run keeps it while that evidence is unchanged.
+_Avoid_: Draft Contract (that is a Contract not yet approved), guess, suggestion, AI value
+
 **Dedicated Adapter**:
-An Adapter written for one Code Library that reads it fully without an agent, such as the Carbon Adapter. A Code Library graduates to one when the Generic Adapter's drafts keep changing between runs.
+An Adapter written for one Code Library that reads it fully without an agent, such as the Carbon Adapter. A Code Library graduates to one when the owner keeps correcting its Drafted values, or its upgrades keep reopening many of them.
 _Avoid_: Custom adapter, scripted adapter
 
 **Component Proposal**:
