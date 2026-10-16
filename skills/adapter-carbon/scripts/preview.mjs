@@ -73,15 +73,22 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
   // Content props for one render. The specimen (no `properties`) shows TEXT defaults and the Contract's default
   // icon (non-default BOOLEANs on, as in the base-loop review specimen), so the icon slot is reviewed too.
   // A usage takes each property from `properties` by key, else its Contract default: a BOOLEAN that gates a
-  // swap (`visibleWhen`) hides it when false, and `whenFalse: "omit"` drops the prop.
+  // swap (`visibleWhen`) hides it when false, and `whenFalse: "omit"` drops the prop. A Repeated child
+  // (`code.items`, #93) renders once: each `itemProp` takes its property's value, and a child prop no property
+  // shows repeats that text (SelectItem's value).
+  const repeated = contract.code.items;
+  const Child = repeated && library[repeated.component];
+  if (repeated && !Child) throw new Error(`${contract.code.package} has no export ${repeated.component}`);
   const contentFor = (properties, tuple) => {
     const specimen = properties === undefined;
     const value = p => (specimen ? (p.type === 'BOOLEAN' ? !p.default : p.default) : p.key in properties ? properties[p.key] : p.default);
     const props = {};
+    const childProps = {};
     let children;
     const swapProps = contract.properties.filter(p => p.type === 'INSTANCE_SWAP' && p.code && p.code.prop).map(p => p.code.prop);
     for (const p of contract.properties) {
       const code = p.code || {};
+      if (p.type === 'TEXT' && code.itemProp) childProps[code.itemProp] = value(p);
       if (!code.prop) continue;
       const v = value(p);
       if (p.type === 'TEXT') {
@@ -93,6 +100,10 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
       } else if (p.type === 'BOOLEAN' && swapProps.indexOf(code.prop) < 0) {
         if (v || code.whenFalse !== 'omit') props[code.prop] = v;
       }
+    }
+    if (repeated) {
+      const text = Object.values(childProps)[0];
+      children = React.createElement(Child, Object.fromEntries(repeated.props.map(k => [k, k in childProps ? childProps[k] : text])));
     }
     for (const prop of (contract.code && contract.code.required) || [])
       if (!(prop in props) && !(prop === 'children' && children !== undefined))

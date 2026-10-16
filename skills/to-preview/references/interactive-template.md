@@ -34,7 +34,7 @@ It should refuse to render when the installed packages differ from `contract.sou
 
 The chrome uses Carbon `--cds-*` tokens from the library stylesheet, never raw hex: page `--cds-layer-01` (gray in White, as in the reference), card `--cds-background` (the surface Carbon designs components on), border `--cds-border-subtle-01`, text `--cds-text-primary` and `--cds-text-secondary`. The Theme toggle puts the mode class (`modeClass`) on `<body>`, so the specimens and the chrome switch together.
 
-**Forcing a State.** Every style rule whose selector uses a forced pseudo-class gets a copy with the pseudo-class replaced by a class (`:hover` becomes `.tp-force-hover`), inserted right after the original. Copies from a hover-capability media query (`@media (any-hover: hover)`) go beside the query, so they apply in any browser. The rendered component's root element gets the class.
+**Forcing a State.** Every style rule whose selector uses a forced pseudo-class gets a copy with the pseudo-class replaced by a class (`:hover` becomes `.tp-force-hover`), inserted right after the original. Copies from a hover-capability media query (`@media (any-hover: hover)`) go beside the query, so they apply in any browser. Every element of the rendered specimen gets the class, its root and each descendant, because a form control styles `:hover` and `:focus` on its nested `<input>` or `<select>` (#93).
 
 **Selection model.** `new CatalogSelection(contract, contractModule)`: `specimens`, `selected`, `baseId`, `select(id, on)` (throws on unchecking the Base Component), `selectAll`, `selectMatching(filters, on)` (skips the Base Component), `verify(id)`, `checkedTuples()` and `omitPatch()`. All expansion and matching goes through the shared Contract module.
 

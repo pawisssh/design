@@ -1,0 +1,2957 @@
+{
+  "schemaVersion": 1,
+  "designSystem": {
+    "key": "carbon",
+    "name": "Carbon"
+  },
+  "source": {
+    "codeLibrary": "Carbon React",
+    "adapter": "carbon",
+    "repository": "https://github.com/carbon-design-system/carbon",
+    "tag": "v11.118.0",
+    "commit": "44f90d8d6b24889af06cee1422ceb37f58e40bed",
+    "packages": {
+      "@carbon/colors": "11.60.0",
+      "@carbon/layout": "11.61.0",
+      "@carbon/styles": "1.117.0",
+      "@carbon/themes": "11.83.0",
+      "@carbon/type": "11.69.0"
+    },
+    "files": {
+      "packages/colors/src/dtcg/colors.json": "sha256:af0c7d35f8a20d64332fb3e895c0522b0684b75a06d9da484ab05b21818d6674",
+      "packages/layout/src/dtcg/layout.json": "sha256:b337e0e6c8ee8be4845f0a8b2fa0320930bd2999ffbd53c83748afb12723e821",
+      "packages/themes/src/dtcg/components/button.json": "sha256:56d85c6538f45449901b98da4358169c7b01a2d5b2e6f6f496ac268a1831ea36",
+      "packages/themes/src/dtcg/themes.json": "sha256:7f1febe786830b88b26db78e3e573b1cfe2ca9af546ecac54708719df1330ac8",
+      "packages/type/src/fontFamily.ts": "sha256:433150c88e95926de09b5f82865a1dba49476e18be7349a0792ef1d54fe9ef0a",
+      "packages/type/src/fontWeight.ts": "sha256:69ab0e6a58e327013648c0ba67b9619d73f5820a33fada229170f52c832af63b",
+      "packages/type/src/scale.ts": "sha256:c379f62d305ff79158d73a28d2460512cc3232de13812a3baf3dd19f20ced070",
+      "packages/type/src/styles.ts": "sha256:c6a491d1233ad3af8cfc08681a86780f2a1a2b1865cdac5eb9375dcb556fbbdf"
+    },
+    "snapshotId": "sha256:20458d326bb6fa1a0ccf122d9c25f83bbb6dc789a644320bf87a61dbb16858fb"
+  },
+  "closure": {
+    "contracts": [
+      {
+        "family": "button",
+        "path": "design-systems/carbon/contracts/button.component.json",
+        "snapshotId": "sha256:4c82c3cc7f2af6fa24fba39bb5e159c415b5691800130268c9d8903901164152"
+      },
+      {
+        "family": "select",
+        "path": "design-systems/carbon/contracts/select.component.json",
+        "snapshotId": "sha256:ee272e9f6722577721baa37d96517972a60bb89ca9fd8631114f78484e98c1b2"
+      },
+      {
+        "family": "text-input",
+        "path": "design-systems/carbon/contracts/text-input.component.json",
+        "snapshotId": "sha256:8b616b073a192fc74a5cb965257c3be4d8de4b06f106a5e01a78ed25d590ef56"
+      }
+    ],
+    "tokens": [
+      "background",
+      "background-active",
+      "background-hover",
+      "body-compact-01",
+      "body-compact-02",
+      "border-radius-00",
+      "border-strong-01",
+      "border-subtle-00",
+      "button-danger-active",
+      "button-danger-hover",
+      "button-danger-primary",
+      "button-danger-secondary",
+      "button-disabled",
+      "button-primary",
+      "button-primary-active",
+      "button-primary-hover",
+      "button-secondary",
+      "button-secondary-active",
+      "button-secondary-hover",
+      "button-tertiary",
+      "button-tertiary-active",
+      "button-tertiary-hover",
+      "field-01",
+      "field-hover-01",
+      "focus",
+      "helper-text-01",
+      "icon-disabled",
+      "icon-primary",
+      "icon-size-01",
+      "icon-size-02",
+      "label-01",
+      "link-primary",
+      "link-primary-hover",
+      "size-2xl",
+      "size-lg",
+      "size-md",
+      "size-sm",
+      "size-xl",
+      "size-xs",
+      "spacing-02",
+      "spacing-03",
+      "spacing-05",
+      "spacing-07",
+      "support-error",
+      "support-warning",
+      "text-disabled",
+      "text-error",
+      "text-helper",
+      "text-inverse",
+      "text-on-color",
+      "text-on-color-disabled",
+      "text-placeholder",
+      "text-primary",
+      "text-secondary"
+    ],
+    "fullScales": [
+      "size",
+      "spacing"
+    ]
+  },
+  "collections": [
+    {
+      "key": "primitives",
+      "name": "Primitives",
+      "modes": [
+        {
+          "key": "default",
+          "label": "Default"
+        }
+      ],
+      "hidden": true
+    },
+    {
+      "key": "theme",
+      "name": "Theme",
+      "modes": [
+        {
+          "key": "white",
+          "label": "White"
+        },
+        {
+          "key": "g10",
+          "label": "Gray 10"
+        },
+        {
+          "key": "g90",
+          "label": "Gray 90"
+        },
+        {
+          "key": "g100",
+          "label": "Gray 100"
+        }
+      ]
+    },
+    {
+      "key": "layout",
+      "name": "Layout",
+      "modes": [
+        {
+          "key": "default",
+          "label": "Default"
+        }
+      ]
+    },
+    {
+      "key": "type",
+      "name": "Type",
+      "modes": [
+        {
+          "key": "default",
+          "label": "Default"
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "blue.30": {
+      "collection": "primitives",
+      "name": "Blue/30",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/blue/30",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#a6c8ff"
+        }
+      }
+    },
+    "blue.40": {
+      "collection": "primitives",
+      "name": "Blue/40",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/blue/40",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#78a9ff"
+        }
+      }
+    },
+    "blue.60": {
+      "collection": "primitives",
+      "name": "Blue/60",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/blue/60",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#0f62fe"
+        }
+      }
+    },
+    "blue.60Hover": {
+      "collection": "primitives",
+      "name": "Blue/60Hover",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/blue/60Hover",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#0050e6"
+        }
+      }
+    },
+    "blue.70": {
+      "collection": "primitives",
+      "name": "Blue/70",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/blue/70",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#0043ce"
+        }
+      }
+    },
+    "blue.80": {
+      "collection": "primitives",
+      "name": "Blue/80",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/blue/80",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#002d9c"
+        }
+      }
+    },
+    "gray.10": {
+      "collection": "primitives",
+      "name": "Gray/10",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/10",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#f4f4f4"
+        }
+      }
+    },
+    "gray.100": {
+      "collection": "primitives",
+      "name": "Gray/100",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/100",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#161616"
+        }
+      }
+    },
+    "gray.10Hover": {
+      "collection": "primitives",
+      "name": "Gray/10Hover",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/10Hover",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#e8e8e8"
+        }
+      }
+    },
+    "gray.20": {
+      "collection": "primitives",
+      "name": "Gray/20",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/20",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#e0e0e0"
+        }
+      }
+    },
+    "gray.30": {
+      "collection": "primitives",
+      "name": "Gray/30",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/30",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#c6c6c6"
+        }
+      }
+    },
+    "gray.40": {
+      "collection": "primitives",
+      "name": "Gray/40",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/40",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#a8a8a8"
+        }
+      }
+    },
+    "gray.50": {
+      "collection": "primitives",
+      "name": "Gray/50",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/50",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#8d8d8d"
+        }
+      }
+    },
+    "gray.60": {
+      "collection": "primitives",
+      "name": "Gray/60",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/60",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#6f6f6f"
+        }
+      }
+    },
+    "gray.60Hover": {
+      "collection": "primitives",
+      "name": "Gray/60Hover",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/60Hover",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#5e5e5e"
+        }
+      }
+    },
+    "gray.70": {
+      "collection": "primitives",
+      "name": "Gray/70",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/70",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#525252"
+        }
+      }
+    },
+    "gray.80": {
+      "collection": "primitives",
+      "name": "Gray/80",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/80",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#393939"
+        }
+      }
+    },
+    "gray.80Hover": {
+      "collection": "primitives",
+      "name": "Gray/80Hover",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/80Hover",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#474747"
+        }
+      }
+    },
+    "gray.90": {
+      "collection": "primitives",
+      "name": "Gray/90",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/90",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#262626"
+        }
+      }
+    },
+    "gray.90Hover": {
+      "collection": "primitives",
+      "name": "Gray/90Hover",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/gray/90Hover",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#333333"
+        }
+      }
+    },
+    "red.30": {
+      "collection": "primitives",
+      "name": "Red/30",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/red/30",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#ffb3b8"
+        }
+      }
+    },
+    "red.40": {
+      "collection": "primitives",
+      "name": "Red/40",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/red/40",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#ff8389"
+        }
+      }
+    },
+    "red.50": {
+      "collection": "primitives",
+      "name": "Red/50",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/red/50",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#fa4d56"
+        }
+      }
+    },
+    "red.60": {
+      "collection": "primitives",
+      "name": "Red/60",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/red/60",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#da1e28"
+        }
+      }
+    },
+    "red.80": {
+      "collection": "primitives",
+      "name": "Red/80",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/red/80",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#750e13"
+        }
+      }
+    },
+    "white": {
+      "collection": "primitives",
+      "name": "Neutral/White",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/white",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#ffffff"
+        }
+      }
+    },
+    "yellow.30": {
+      "collection": "primitives",
+      "name": "Yellow/30",
+      "type": "COLOR",
+      "source": "packages/colors/src/dtcg/colors.json#/yellow/30",
+      "scopes": [],
+      "hidden": true,
+      "values": {
+        "default": {
+          "value": "#f1c21b"
+        }
+      }
+    },
+    "background": {
+      "collection": "theme",
+      "name": "Background/background",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/background",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-background)"
+      },
+      "values": {
+        "white": {
+          "alias": "white",
+          "resolved": "#ffffff"
+        },
+        "g10": {
+          "alias": "gray.10",
+          "resolved": "#f4f4f4"
+        },
+        "g90": {
+          "alias": "gray.90",
+          "resolved": "#262626"
+        },
+        "g100": {
+          "alias": "gray.100",
+          "resolved": "#161616"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "background-active": {
+      "collection": "theme",
+      "name": "Background/background-active",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/background/active",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-background-active)"
+      },
+      "values": {
+        "white": {
+          "raw": "#8d8d8d",
+          "alpha": 0.5,
+          "resolved": "rgba(141, 141, 141, 0.5)",
+          "from": {
+            "alias": "gray.50",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g10": {
+          "raw": "#8d8d8d",
+          "alpha": 0.5,
+          "resolved": "rgba(141, 141, 141, 0.5)",
+          "from": {
+            "alias": "gray.50",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g90": {
+          "raw": "#8d8d8d",
+          "alpha": 0.4,
+          "resolved": "rgba(141, 141, 141, 0.4)",
+          "from": {
+            "alias": "gray.50",
+            "alpha": 0.4
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g100": {
+          "raw": "#8d8d8d",
+          "alpha": 0.4,
+          "resolved": "rgba(141, 141, 141, 0.4)",
+          "from": {
+            "alias": "gray.50",
+            "alpha": 0.4
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "background-hover": {
+      "collection": "theme",
+      "name": "Background/background-hover",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/background/hover",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-background-hover)"
+      },
+      "values": {
+        "white": {
+          "raw": "#8d8d8d",
+          "alpha": 0.12,
+          "resolved": "rgba(141, 141, 141, 0.12)",
+          "from": {
+            "alias": "gray.50",
+            "alpha": 0.12
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g10": {
+          "raw": "#8d8d8d",
+          "alpha": 0.12,
+          "resolved": "rgba(141, 141, 141, 0.12)",
+          "from": {
+            "alias": "gray.50",
+            "alpha": 0.12
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g90": {
+          "raw": "#8d8d8d",
+          "alpha": 0.16,
+          "resolved": "rgba(141, 141, 141, 0.16)",
+          "from": {
+            "alias": "gray.50",
+            "alpha": 0.16
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g100": {
+          "raw": "#8d8d8d",
+          "alpha": 0.16,
+          "resolved": "rgba(141, 141, 141, 0.16)",
+          "from": {
+            "alias": "gray.50",
+            "alpha": 0.16
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "border-strong-01": {
+      "collection": "theme",
+      "name": "Border/border-strong-01",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/border/strong/01",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-border-strong-01)"
+      },
+      "values": {
+        "white": {
+          "alias": "gray.50",
+          "resolved": "#8d8d8d"
+        },
+        "g10": {
+          "alias": "gray.50",
+          "resolved": "#8d8d8d"
+        },
+        "g90": {
+          "alias": "gray.50",
+          "resolved": "#8d8d8d"
+        },
+        "g100": {
+          "alias": "gray.60",
+          "resolved": "#6f6f6f"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "border-subtle-00": {
+      "collection": "theme",
+      "name": "Border/border-subtle-00",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/border/subtle/00",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-border-subtle-00)"
+      },
+      "values": {
+        "white": {
+          "alias": "gray.20",
+          "resolved": "#e0e0e0"
+        },
+        "g10": {
+          "alias": "gray.30",
+          "resolved": "#c6c6c6"
+        },
+        "g90": {
+          "alias": "gray.70",
+          "resolved": "#525252"
+        },
+        "g100": {
+          "alias": "gray.80",
+          "resolved": "#393939"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "button-danger-active": {
+      "collection": "theme",
+      "name": "Button/button-danger-active",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/components/button.json#/button/danger-active",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-button-danger-active)"
+      },
+      "values": {
+        "white": {
+          "alias": "red.80",
+          "resolved": "#750e13"
+        },
+        "g10": {
+          "alias": "red.80",
+          "resolved": "#750e13"
+        },
+        "g90": {
+          "alias": "red.80",
+          "resolved": "#750e13"
+        },
+        "g100": {
+          "alias": "red.80",
+          "resolved": "#750e13"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "button-danger-hover": {
+      "collection": "theme",
+      "name": "Button/button-danger-hover",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/components/button.json#/button/danger-hover",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-button-danger-hover)"
+      },
+      "values": {
+        "white": {
+          "value": "#b81921",
+          "resolved": "#b81921",
+          "level": "info",
+          "reason": "DTCG literal, not a palette alias; kept exact (nearest primitive red.60Hover #b81922 differs)"
+        },
+        "g10": {
+          "value": "#b81921",
+          "resolved": "#b81921",
+          "level": "info",
+          "reason": "DTCG literal, not a palette alias; kept exact (nearest primitive red.60Hover #b81922 differs)"
+        },
+        "g90": {
+          "value": "#b81921",
+          "resolved": "#b81921",
+          "level": "info",
+          "reason": "DTCG literal, not a palette alias; kept exact (nearest primitive red.60Hover #b81922 differs)"
+        },
+        "g100": {
+          "value": "#b81921",
+          "resolved": "#b81921",
+          "level": "info",
+          "reason": "DTCG literal, not a palette alias; kept exact (nearest primitive red.60Hover #b81922 differs)"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "button-danger-primary": {
+      "collection": "theme",
+      "name": "Button/button-danger-primary",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/components/button.json#/button/danger-primary",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-button-danger-primary)"
+      },
+      "values": {
+        "white": {
+          "alias": "red.60",
+          "resolved": "#da1e28"
+        },
+        "g10": {
+          "alias": "red.60",
+          "resolved": "#da1e28"
+        },
+        "g90": {
+          "alias": "red.60",
+          "resolved": "#da1e28"
+        },
+        "g100": {
+          "alias": "red.60",
+          "resolved": "#da1e28"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "button-danger-secondary": {
+      "collection": "theme",
+      "name": "Button/button-danger-secondary",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/components/button.json#/button/danger-secondary",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-button-danger-secondary)"
+      },
+      "values": {
+        "white": {
+          "alias": "red.60",
+          "resolved": "#da1e28"
+        },
+        "g10": {
+          "alias": "red.60",
+          "resolved": "#da1e28"
+        },
+        "g90": {
+          "alias": "red.40",
+          "resolved": "#ff8389"
+        },
+        "g100": {
+          "alias": "red.50",
+          "resolved": "#fa4d56"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "button-disabled": {
+      "collection": "theme",
+      "name": "Button/button-disabled",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/components/button.json#/button/disabled",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-button-disabled)"
+      },
+      "values": {
+        "white": {
+          "alias": "gray.30",
+          "resolved": "#c6c6c6"
+        },
+        "g10": {
+          "alias": "gray.30",
+          "resolved": "#c6c6c6"
+        },
+        "g90": {
+          "raw": "#8d8d8d",
+          "alpha": 0.3,
+          "resolved": "rgba(141, 141, 141, 0.3)",
+          "from": {
+            "alias": "gray.50",
+            "alpha": 0.3
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g100": {
+          "raw": "#8d8d8d",
+          "alpha": 0.3,
+          "resolved": "rgba(141, 141, 141, 0.3)",
+          "from": {
+            "alias": "gray.50",
+            "alpha": 0.3
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "button-primary": {
+      "collection": "theme",
+      "name": "Button/button-primary",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/components/button.json#/button/primary",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-button-primary)"
+      },
+      "values": {
+        "white": {
+          "alias": "blue.60",
+          "resolved": "#0f62fe"
+        },
+        "g10": {
+          "alias": "blue.60",
+          "resolved": "#0f62fe"
+        },
+        "g90": {
+          "alias": "blue.60",
+          "resolved": "#0f62fe"
+        },
+        "g100": {
+          "alias": "blue.60",
+          "resolved": "#0f62fe"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "button-primary-active": {
+      "collection": "theme",
+      "name": "Button/button-primary-active",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/components/button.json#/button/primary-active",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-button-primary-active)"
+      },
+      "values": {
+        "white": {
+          "alias": "blue.80",
+          "resolved": "#002d9c"
+        },
+        "g10": {
+          "alias": "blue.80",
+          "resolved": "#002d9c"
+        },
+        "g90": {
+          "alias": "blue.80",
+          "resolved": "#002d9c"
+        },
+        "g100": {
+          "alias": "blue.80",
+          "resolved": "#002d9c"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "button-primary-hover": {
+      "collection": "theme",
+      "name": "Button/button-primary-hover",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/components/button.json#/button/primary-hover",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-button-primary-hover)"
+      },
+      "values": {
+        "white": {
+          "alias": "blue.60Hover",
+          "resolved": "#0050e6"
+        },
+        "g10": {
+          "alias": "blue.60Hover",
+          "resolved": "#0050e6"
+        },
+        "g90": {
+          "alias": "blue.60Hover",
+          "resolved": "#0050e6"
+        },
+        "g100": {
+          "alias": "blue.60Hover",
+          "resolved": "#0050e6"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "button-secondary": {
+      "collection": "theme",
+      "name": "Button/button-secondary",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/components/button.json#/button/secondary",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-button-secondary)"
+      },
+      "values": {
+        "white": {
+          "alias": "gray.80",
+          "resolved": "#393939"
+        },
+        "g10": {
+          "alias": "gray.80",
+          "resolved": "#393939"
+        },
+        "g90": {
+          "alias": "gray.60",
+          "resolved": "#6f6f6f"
+        },
+        "g100": {
+          "alias": "gray.60",
+          "resolved": "#6f6f6f"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "button-secondary-active": {
+      "collection": "theme",
+      "name": "Button/button-secondary-active",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/components/button.json#/button/secondary-active",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-button-secondary-active)"
+      },
+      "values": {
+        "white": {
+          "alias": "gray.60",
+          "resolved": "#6f6f6f"
+        },
+        "g10": {
+          "alias": "gray.60",
+          "resolved": "#6f6f6f"
+        },
+        "g90": {
+          "alias": "gray.80",
+          "resolved": "#393939"
+        },
+        "g100": {
+          "alias": "gray.80",
+          "resolved": "#393939"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "button-secondary-hover": {
+      "collection": "theme",
+      "name": "Button/button-secondary-hover",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/components/button.json#/button/secondary-hover",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-button-secondary-hover)"
+      },
+      "values": {
+        "white": {
+          "alias": "gray.80Hover",
+          "resolved": "#474747"
+        },
+        "g10": {
+          "alias": "gray.80Hover",
+          "resolved": "#474747"
+        },
+        "g90": {
+          "alias": "gray.60Hover",
+          "resolved": "#5e5e5e"
+        },
+        "g100": {
+          "alias": "gray.60Hover",
+          "resolved": "#5e5e5e"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "button-tertiary": {
+      "collection": "theme",
+      "name": "Button/button-tertiary",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/components/button.json#/button/tertiary",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-button-tertiary)"
+      },
+      "values": {
+        "white": {
+          "alias": "blue.60",
+          "resolved": "#0f62fe"
+        },
+        "g10": {
+          "alias": "blue.60",
+          "resolved": "#0f62fe"
+        },
+        "g90": {
+          "alias": "white",
+          "resolved": "#ffffff"
+        },
+        "g100": {
+          "alias": "white",
+          "resolved": "#ffffff"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "button-tertiary-active": {
+      "collection": "theme",
+      "name": "Button/button-tertiary-active",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/components/button.json#/button/tertiary-active",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-button-tertiary-active)"
+      },
+      "values": {
+        "white": {
+          "alias": "blue.80",
+          "resolved": "#002d9c"
+        },
+        "g10": {
+          "alias": "blue.80",
+          "resolved": "#002d9c"
+        },
+        "g90": {
+          "alias": "gray.30",
+          "resolved": "#c6c6c6"
+        },
+        "g100": {
+          "alias": "gray.30",
+          "resolved": "#c6c6c6"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "button-tertiary-hover": {
+      "collection": "theme",
+      "name": "Button/button-tertiary-hover",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/components/button.json#/button/tertiary-hover",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-button-tertiary-hover)"
+      },
+      "values": {
+        "white": {
+          "alias": "blue.60Hover",
+          "resolved": "#0050e6"
+        },
+        "g10": {
+          "alias": "blue.60Hover",
+          "resolved": "#0050e6"
+        },
+        "g90": {
+          "alias": "gray.10",
+          "resolved": "#f4f4f4"
+        },
+        "g100": {
+          "alias": "gray.10",
+          "resolved": "#f4f4f4"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "field-01": {
+      "collection": "theme",
+      "name": "Field/field-01",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/field/01",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-field-01)"
+      },
+      "values": {
+        "white": {
+          "alias": "gray.10",
+          "resolved": "#f4f4f4"
+        },
+        "g10": {
+          "alias": "white",
+          "resolved": "#ffffff"
+        },
+        "g90": {
+          "alias": "gray.80",
+          "resolved": "#393939"
+        },
+        "g100": {
+          "alias": "gray.90",
+          "resolved": "#262626"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "field-hover-01": {
+      "collection": "theme",
+      "name": "Field/field-hover-01",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/field/hover/01",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-field-hover-01)"
+      },
+      "values": {
+        "white": {
+          "alias": "gray.10Hover",
+          "resolved": "#e8e8e8"
+        },
+        "g10": {
+          "alias": "gray.10Hover",
+          "resolved": "#e8e8e8"
+        },
+        "g90": {
+          "alias": "gray.80Hover",
+          "resolved": "#474747"
+        },
+        "g100": {
+          "alias": "gray.90Hover",
+          "resolved": "#333333"
+        }
+      },
+      "usedBy": [
+        "select"
+      ]
+    },
+    "focus": {
+      "collection": "theme",
+      "name": "Focus/focus",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/focus",
+      "scopes": [
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-focus)"
+      },
+      "values": {
+        "white": {
+          "alias": "blue.60",
+          "resolved": "#0f62fe"
+        },
+        "g10": {
+          "alias": "blue.60",
+          "resolved": "#0f62fe"
+        },
+        "g90": {
+          "alias": "white",
+          "resolved": "#ffffff"
+        },
+        "g100": {
+          "alias": "white",
+          "resolved": "#ffffff"
+        }
+      },
+      "usedBy": [
+        "button",
+        "select",
+        "text-input"
+      ]
+    },
+    "icon-disabled": {
+      "collection": "theme",
+      "name": "Icon/icon-disabled",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/icon/disabled",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-icon-disabled)"
+      },
+      "values": {
+        "white": {
+          "raw": "#161616",
+          "alpha": 0.25,
+          "resolved": "rgba(22, 22, 22, 0.25)",
+          "from": {
+            "alias": "gray.100",
+            "alpha": 0.25
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g10": {
+          "raw": "#161616",
+          "alpha": 0.25,
+          "resolved": "rgba(22, 22, 22, 0.25)",
+          "from": {
+            "alias": "gray.100",
+            "alpha": 0.25
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g90": {
+          "raw": "#f4f4f4",
+          "alpha": 0.25,
+          "resolved": "rgba(244, 244, 244, 0.25)",
+          "from": {
+            "alias": "gray.10",
+            "alpha": 0.25
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g100": {
+          "raw": "#f4f4f4",
+          "alpha": 0.25,
+          "resolved": "rgba(244, 244, 244, 0.25)",
+          "from": {
+            "alias": "gray.10",
+            "alpha": 0.25
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        }
+      },
+      "usedBy": [
+        "select"
+      ]
+    },
+    "icon-primary": {
+      "collection": "theme",
+      "name": "Icon/icon-primary",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/icon/primary",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-icon-primary)"
+      },
+      "values": {
+        "white": {
+          "alias": "gray.100",
+          "resolved": "#161616"
+        },
+        "g10": {
+          "alias": "gray.100",
+          "resolved": "#161616"
+        },
+        "g90": {
+          "alias": "gray.10",
+          "resolved": "#f4f4f4"
+        },
+        "g100": {
+          "alias": "gray.10",
+          "resolved": "#f4f4f4"
+        }
+      },
+      "usedBy": [
+        "select"
+      ]
+    },
+    "link-primary": {
+      "collection": "theme",
+      "name": "Link/link-primary",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/link/primary",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-link-primary)"
+      },
+      "values": {
+        "white": {
+          "alias": "blue.60",
+          "resolved": "#0f62fe"
+        },
+        "g10": {
+          "alias": "blue.60",
+          "resolved": "#0f62fe"
+        },
+        "g90": {
+          "alias": "blue.40",
+          "resolved": "#78a9ff"
+        },
+        "g100": {
+          "alias": "blue.40",
+          "resolved": "#78a9ff"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "link-primary-hover": {
+      "collection": "theme",
+      "name": "Link/link-primary-hover",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/link/primary/hover",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-link-primary-hover)"
+      },
+      "values": {
+        "white": {
+          "alias": "blue.70",
+          "resolved": "#0043ce"
+        },
+        "g10": {
+          "alias": "blue.70",
+          "resolved": "#0043ce"
+        },
+        "g90": {
+          "alias": "blue.30",
+          "resolved": "#a6c8ff"
+        },
+        "g100": {
+          "alias": "blue.30",
+          "resolved": "#a6c8ff"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "support-error": {
+      "collection": "theme",
+      "name": "Support/support-error",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/support/error",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-support-error)"
+      },
+      "values": {
+        "white": {
+          "alias": "red.60",
+          "resolved": "#da1e28"
+        },
+        "g10": {
+          "alias": "red.60",
+          "resolved": "#da1e28"
+        },
+        "g90": {
+          "alias": "red.40",
+          "resolved": "#ff8389"
+        },
+        "g100": {
+          "alias": "red.50",
+          "resolved": "#fa4d56"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "support-warning": {
+      "collection": "theme",
+      "name": "Support/support-warning",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/support/warning",
+      "scopes": [
+        "ALL_FILLS",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-support-warning)"
+      },
+      "values": {
+        "white": {
+          "alias": "yellow.30",
+          "resolved": "#f1c21b"
+        },
+        "g10": {
+          "alias": "yellow.30",
+          "resolved": "#f1c21b"
+        },
+        "g90": {
+          "alias": "yellow.30",
+          "resolved": "#f1c21b"
+        },
+        "g100": {
+          "alias": "yellow.30",
+          "resolved": "#f1c21b"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "text-disabled": {
+      "collection": "theme",
+      "name": "Text/text-disabled",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/text/disabled",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-text-disabled)"
+      },
+      "values": {
+        "white": {
+          "raw": "#161616",
+          "alpha": 0.25,
+          "resolved": "rgba(22, 22, 22, 0.25)",
+          "from": {
+            "alias": "gray.100",
+            "alpha": 0.25
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g10": {
+          "raw": "#161616",
+          "alpha": 0.25,
+          "resolved": "rgba(22, 22, 22, 0.25)",
+          "from": {
+            "alias": "gray.100",
+            "alpha": 0.25
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g90": {
+          "raw": "#f4f4f4",
+          "alpha": 0.25,
+          "resolved": "rgba(244, 244, 244, 0.25)",
+          "from": {
+            "alias": "gray.10",
+            "alpha": 0.25
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g100": {
+          "raw": "#f4f4f4",
+          "alpha": 0.25,
+          "resolved": "rgba(244, 244, 244, 0.25)",
+          "from": {
+            "alias": "gray.10",
+            "alpha": 0.25
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        }
+      },
+      "usedBy": [
+        "button",
+        "select",
+        "text-input"
+      ]
+    },
+    "text-error": {
+      "collection": "theme",
+      "name": "Text/text-error",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/text/error",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-text-error)"
+      },
+      "values": {
+        "white": {
+          "alias": "red.60",
+          "resolved": "#da1e28"
+        },
+        "g10": {
+          "alias": "red.60",
+          "resolved": "#da1e28"
+        },
+        "g90": {
+          "alias": "red.30",
+          "resolved": "#ffb3b8"
+        },
+        "g100": {
+          "alias": "red.40",
+          "resolved": "#ff8389"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "text-helper": {
+      "collection": "theme",
+      "name": "Text/text-helper",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/text/helper",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-text-helper)"
+      },
+      "values": {
+        "white": {
+          "alias": "gray.60",
+          "resolved": "#6f6f6f"
+        },
+        "g10": {
+          "alias": "gray.60",
+          "resolved": "#6f6f6f"
+        },
+        "g90": {
+          "alias": "gray.30",
+          "resolved": "#c6c6c6"
+        },
+        "g100": {
+          "alias": "gray.40",
+          "resolved": "#a8a8a8"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "text-inverse": {
+      "collection": "theme",
+      "name": "Text/text-inverse",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/text/inverse",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-text-inverse)"
+      },
+      "values": {
+        "white": {
+          "alias": "white",
+          "resolved": "#ffffff"
+        },
+        "g10": {
+          "alias": "white",
+          "resolved": "#ffffff"
+        },
+        "g90": {
+          "alias": "gray.100",
+          "resolved": "#161616"
+        },
+        "g100": {
+          "alias": "gray.100",
+          "resolved": "#161616"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "text-on-color": {
+      "collection": "theme",
+      "name": "Text/text-on-color",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/text/on/color",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-text-on-color)"
+      },
+      "values": {
+        "white": {
+          "alias": "white",
+          "resolved": "#ffffff"
+        },
+        "g10": {
+          "alias": "white",
+          "resolved": "#ffffff"
+        },
+        "g90": {
+          "alias": "white",
+          "resolved": "#ffffff"
+        },
+        "g100": {
+          "alias": "white",
+          "resolved": "#ffffff"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "text-on-color-disabled": {
+      "collection": "theme",
+      "name": "Text/text-on-color-disabled",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/text/on/color/disabled",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-text-on-color-disabled)"
+      },
+      "values": {
+        "white": {
+          "alias": "gray.50",
+          "resolved": "#8d8d8d"
+        },
+        "g10": {
+          "alias": "gray.50",
+          "resolved": "#8d8d8d"
+        },
+        "g90": {
+          "raw": "#ffffff",
+          "alpha": 0.25,
+          "resolved": "rgba(255, 255, 255, 0.25)",
+          "from": {
+            "alias": "white",
+            "alpha": 0.25
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g100": {
+          "raw": "#ffffff",
+          "alpha": 0.25,
+          "resolved": "rgba(255, 255, 255, 0.25)",
+          "from": {
+            "alias": "white",
+            "alpha": 0.25
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "text-placeholder": {
+      "collection": "theme",
+      "name": "Text/text-placeholder",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/text/placeholder",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-text-placeholder)"
+      },
+      "values": {
+        "white": {
+          "raw": "#161616",
+          "alpha": 0.4,
+          "resolved": "rgba(22, 22, 22, 0.4)",
+          "from": {
+            "alias": "gray.100",
+            "alpha": 0.4
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g10": {
+          "raw": "#161616",
+          "alpha": 0.4,
+          "resolved": "rgba(22, 22, 22, 0.4)",
+          "from": {
+            "alias": "gray.100",
+            "alpha": 0.4
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g90": {
+          "raw": "#f4f4f4",
+          "alpha": 0.4,
+          "resolved": "rgba(244, 244, 244, 0.4)",
+          "from": {
+            "alias": "gray.10",
+            "alpha": 0.4
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        },
+        "g100": {
+          "raw": "#f4f4f4",
+          "alpha": 0.4,
+          "resolved": "rgba(244, 244, 244, 0.4)",
+          "from": {
+            "alias": "gray.10",
+            "alpha": 0.4
+          },
+          "level": "info",
+          "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
+        }
+      },
+      "usedBy": [
+        "text-input"
+      ]
+    },
+    "text-primary": {
+      "collection": "theme",
+      "name": "Text/text-primary",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/text/primary",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-text-primary)"
+      },
+      "values": {
+        "white": {
+          "alias": "gray.100",
+          "resolved": "#161616"
+        },
+        "g10": {
+          "alias": "gray.100",
+          "resolved": "#161616"
+        },
+        "g90": {
+          "alias": "gray.10",
+          "resolved": "#f4f4f4"
+        },
+        "g100": {
+          "alias": "gray.10",
+          "resolved": "#f4f4f4"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "text-secondary": {
+      "collection": "theme",
+      "name": "Text/text-secondary",
+      "type": "COLOR",
+      "source": "packages/themes/src/dtcg/themes.json#/text/secondary",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-text-secondary)"
+      },
+      "values": {
+        "white": {
+          "alias": "gray.70",
+          "resolved": "#525252"
+        },
+        "g10": {
+          "alias": "gray.70",
+          "resolved": "#525252"
+        },
+        "g90": {
+          "alias": "gray.30",
+          "resolved": "#c6c6c6"
+        },
+        "g100": {
+          "alias": "gray.30",
+          "resolved": "#c6c6c6"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "border-radius-00": {
+      "collection": "layout",
+      "name": "Border radius/border-radius-00",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/border-radius/border-radius-00",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "codeSyntax": {
+        "WEB": "$border-radius-00"
+      },
+      "values": {
+        "default": {
+          "value": 0,
+          "from": "0px"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "icon-size-01": {
+      "collection": "layout",
+      "name": "Icon size/icon-size-01",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/icon-size/icon-size-01",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "$icon-size-01"
+      },
+      "values": {
+        "default": {
+          "value": 16,
+          "from": "1rem x 16"
+        }
+      },
+      "usedBy": [
+        "button",
+        "select",
+        "text-input"
+      ]
+    },
+    "icon-size-02": {
+      "collection": "layout",
+      "name": "Icon size/icon-size-02",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/icon-size/icon-size-02",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "$icon-size-02"
+      },
+      "values": {
+        "default": {
+          "value": 20,
+          "from": "1.25rem x 16"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "size-2xl": {
+      "collection": "layout",
+      "name": "Size/size-2xl",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/size/size-2xl",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "$size-2xl"
+      },
+      "values": {
+        "default": {
+          "value": 80,
+          "from": "80px (rem converter)"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "size-lg": {
+      "collection": "layout",
+      "name": "Size/size-lg",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/size/size-lg",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "$size-lg"
+      },
+      "values": {
+        "default": {
+          "value": 48,
+          "from": "48px (rem converter)"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "size-md": {
+      "collection": "layout",
+      "name": "Size/size-md",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/size/size-md",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "$size-md"
+      },
+      "values": {
+        "default": {
+          "value": 40,
+          "from": "40px (rem converter)"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "size-sm": {
+      "collection": "layout",
+      "name": "Size/size-sm",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/size/size-sm",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "$size-sm"
+      },
+      "values": {
+        "default": {
+          "value": 32,
+          "from": "32px (rem converter)"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "size-xl": {
+      "collection": "layout",
+      "name": "Size/size-xl",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/size/size-xl",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "$size-xl"
+      },
+      "values": {
+        "default": {
+          "value": 64,
+          "from": "64px (rem converter)"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "size-xs": {
+      "collection": "layout",
+      "name": "Size/size-xs",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/size/size-xs",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "$size-xs"
+      },
+      "values": {
+        "default": {
+          "value": 24,
+          "from": "24px (rem converter)"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "spacing-01": {
+      "collection": "layout",
+      "name": "Spacing/spacing-01",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-01",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-01)"
+      },
+      "values": {
+        "default": {
+          "value": 2,
+          "from": "0.25 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-02": {
+      "collection": "layout",
+      "name": "Spacing/spacing-02",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-02",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-02)"
+      },
+      "values": {
+        "default": {
+          "value": 4,
+          "from": "0.5 miniUnits x 8"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "spacing-03": {
+      "collection": "layout",
+      "name": "Spacing/spacing-03",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-03",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-03)"
+      },
+      "values": {
+        "default": {
+          "value": 8,
+          "from": "1 miniUnits x 8"
+        }
+      },
+      "usedBy": [
+        "button",
+        "select",
+        "text-input"
+      ]
+    },
+    "spacing-04": {
+      "collection": "layout",
+      "name": "Spacing/spacing-04",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-04",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-04)"
+      },
+      "values": {
+        "default": {
+          "value": 12,
+          "from": "1.5 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-05": {
+      "collection": "layout",
+      "name": "Spacing/spacing-05",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-05",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-05)"
+      },
+      "values": {
+        "default": {
+          "value": 16,
+          "from": "2 miniUnits x 8"
+        }
+      },
+      "usedBy": [
+        "button",
+        "select",
+        "text-input"
+      ]
+    },
+    "spacing-06": {
+      "collection": "layout",
+      "name": "Spacing/spacing-06",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-06",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-06)"
+      },
+      "values": {
+        "default": {
+          "value": 24,
+          "from": "3 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-07": {
+      "collection": "layout",
+      "name": "Spacing/spacing-07",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-07",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-07)"
+      },
+      "values": {
+        "default": {
+          "value": 32,
+          "from": "4 miniUnits x 8"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "spacing-08": {
+      "collection": "layout",
+      "name": "Spacing/spacing-08",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-08",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-08)"
+      },
+      "values": {
+        "default": {
+          "value": 40,
+          "from": "5 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-09": {
+      "collection": "layout",
+      "name": "Spacing/spacing-09",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-09",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-09)"
+      },
+      "values": {
+        "default": {
+          "value": 48,
+          "from": "6 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-10": {
+      "collection": "layout",
+      "name": "Spacing/spacing-10",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-10",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-10)"
+      },
+      "values": {
+        "default": {
+          "value": 64,
+          "from": "8 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-11": {
+      "collection": "layout",
+      "name": "Spacing/spacing-11",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-11",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-11)"
+      },
+      "values": {
+        "default": {
+          "value": 80,
+          "from": "10 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-12": {
+      "collection": "layout",
+      "name": "Spacing/spacing-12",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-12",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-12)"
+      },
+      "values": {
+        "default": {
+          "value": 96,
+          "from": "12 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-13": {
+      "collection": "layout",
+      "name": "Spacing/spacing-13",
+      "type": "FLOAT",
+      "source": "packages/layout/src/dtcg/layout.json#/spacing/spacing-13",
+      "scopes": [
+        "GAP"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-spacing-13)"
+      },
+      "values": {
+        "default": {
+          "value": 160,
+          "from": "20 miniUnits x 8"
+        }
+      },
+      "usedBy": []
+    },
+    "body-compact-01-font-size": {
+      "collection": "type",
+      "name": "Body/body-compact-01-font-size",
+      "type": "FLOAT",
+      "source": "packages/type/src/styles.ts#bodyShort01 (bodyCompact01 = bodyShort01)",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-body-compact-01-font-size)"
+      },
+      "values": {
+        "default": {
+          "value": 14,
+          "from": "rem(scale02), scale02 = 14"
+        }
+      },
+      "usedBy": [
+        "button",
+        "select",
+        "text-input"
+      ]
+    },
+    "body-compact-01-font-weight": {
+      "collection": "type",
+      "name": "Body/body-compact-01-font-weight",
+      "type": "FLOAT",
+      "source": "packages/type/src/styles.ts#bodyShort01 (bodyCompact01 = bodyShort01)",
+      "scopes": [
+        "FONT_WEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-body-compact-01-font-weight)"
+      },
+      "values": {
+        "default": {
+          "value": 400,
+          "from": "fontWeight.ts regular"
+        }
+      },
+      "usedBy": [
+        "button",
+        "select",
+        "text-input"
+      ]
+    },
+    "body-compact-01-letter-spacing": {
+      "collection": "type",
+      "name": "Body/body-compact-01-letter-spacing",
+      "type": "FLOAT",
+      "source": "packages/type/src/styles.ts#bodyShort01 (bodyCompact01 = bodyShort01)",
+      "scopes": [
+        "LETTER_SPACING"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-body-compact-01-letter-spacing)"
+      },
+      "values": {
+        "default": {
+          "value": 0.16,
+          "from": "px"
+        }
+      },
+      "usedBy": [
+        "button",
+        "select",
+        "text-input"
+      ]
+    },
+    "body-compact-01-line-height": {
+      "collection": "type",
+      "name": "Body/body-compact-01-line-height",
+      "type": "FLOAT",
+      "source": "packages/type/src/styles.ts#bodyShort01 (bodyCompact01 = bodyShort01)",
+      "scopes": [
+        "LINE_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-body-compact-01-line-height)"
+      },
+      "values": {
+        "default": {
+          "value": 18,
+          "from": "1.28572 x 14 = 18.0001, rounded"
+        }
+      },
+      "usedBy": [
+        "button",
+        "select",
+        "text-input"
+      ]
+    },
+    "body-compact-02-font-size": {
+      "collection": "type",
+      "name": "Body/body-compact-02-font-size",
+      "type": "FLOAT",
+      "source": "packages/type/src/styles.ts#bodyShort02 (bodyCompact02 = bodyShort02)",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-body-compact-02-font-size)"
+      },
+      "values": {
+        "default": {
+          "value": 16,
+          "from": "rem(scale03), scale03 = 16"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "body-compact-02-font-weight": {
+      "collection": "type",
+      "name": "Body/body-compact-02-font-weight",
+      "type": "FLOAT",
+      "source": "packages/type/src/styles.ts#bodyShort02 (bodyCompact02 = bodyShort02)",
+      "scopes": [
+        "FONT_WEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-body-compact-02-font-weight)"
+      },
+      "values": {
+        "default": {
+          "value": 400,
+          "from": "fontWeight.ts regular"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "body-compact-02-letter-spacing": {
+      "collection": "type",
+      "name": "Body/body-compact-02-letter-spacing",
+      "type": "FLOAT",
+      "source": "packages/type/src/styles.ts#bodyShort02 (bodyCompact02 = bodyShort02)",
+      "scopes": [
+        "LETTER_SPACING"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-body-compact-02-letter-spacing)"
+      },
+      "values": {
+        "default": {
+          "value": 0,
+          "from": "px"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "body-compact-02-line-height": {
+      "collection": "type",
+      "name": "Body/body-compact-02-line-height",
+      "type": "FLOAT",
+      "source": "packages/type/src/styles.ts#bodyShort02 (bodyCompact02 = bodyShort02)",
+      "scopes": [
+        "LINE_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-body-compact-02-line-height)"
+      },
+      "values": {
+        "default": {
+          "value": 22,
+          "from": "1.375 x 16 = 22.0000, rounded"
+        }
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "font-family-sans": {
+      "collection": "type",
+      "name": "Font family/font-family-sans",
+      "type": "STRING",
+      "source": "packages/type/src/fontFamily.ts#sans",
+      "scopes": [
+        "FONT_FAMILY"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "default": {
+          "value": "IBM Plex Sans",
+          "from": "first family of the sans stack"
+        }
+      },
+      "usedBy": [
+        "button",
+        "select",
+        "text-input"
+      ]
+    },
+    "helper-text-01-font-size": {
+      "collection": "type",
+      "name": "Helper/helper-text-01-font-size",
+      "type": "FLOAT",
+      "source": "packages/type/src/styles.ts#helperText01",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-helper-text-01-font-size)"
+      },
+      "values": {
+        "default": {
+          "value": 12,
+          "from": "rem(scale01), scale01 = 12"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "helper-text-01-letter-spacing": {
+      "collection": "type",
+      "name": "Helper/helper-text-01-letter-spacing",
+      "type": "FLOAT",
+      "source": "packages/type/src/styles.ts#helperText01",
+      "scopes": [
+        "LETTER_SPACING"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-helper-text-01-letter-spacing)"
+      },
+      "values": {
+        "default": {
+          "value": 0.32,
+          "from": "px"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "helper-text-01-line-height": {
+      "collection": "type",
+      "name": "Helper/helper-text-01-line-height",
+      "type": "FLOAT",
+      "source": "packages/type/src/styles.ts#helperText01",
+      "scopes": [
+        "LINE_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-helper-text-01-line-height)"
+      },
+      "values": {
+        "default": {
+          "value": 16,
+          "from": "1.33333 x 12 = 16.0000, rounded"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "label-01-font-size": {
+      "collection": "type",
+      "name": "Label/label-01-font-size",
+      "type": "FLOAT",
+      "source": "packages/type/src/styles.ts#label01",
+      "scopes": [
+        "FONT_SIZE"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-label-01-font-size)"
+      },
+      "values": {
+        "default": {
+          "value": 12,
+          "from": "rem(scale01), scale01 = 12"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "label-01-font-weight": {
+      "collection": "type",
+      "name": "Label/label-01-font-weight",
+      "type": "FLOAT",
+      "source": "packages/type/src/styles.ts#label01",
+      "scopes": [
+        "FONT_WEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-label-01-font-weight)"
+      },
+      "values": {
+        "default": {
+          "value": 400,
+          "from": "fontWeight.ts regular"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "label-01-letter-spacing": {
+      "collection": "type",
+      "name": "Label/label-01-letter-spacing",
+      "type": "FLOAT",
+      "source": "packages/type/src/styles.ts#label01",
+      "scopes": [
+        "LETTER_SPACING"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-label-01-letter-spacing)"
+      },
+      "values": {
+        "default": {
+          "value": 0.32,
+          "from": "px"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "label-01-line-height": {
+      "collection": "type",
+      "name": "Label/label-01-line-height",
+      "type": "FLOAT",
+      "source": "packages/type/src/styles.ts#label01",
+      "scopes": [
+        "LINE_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--cds-label-01-line-height)"
+      },
+      "values": {
+        "default": {
+          "value": 16,
+          "from": "1.33333 x 12 = 16.0000, rounded"
+        }
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    }
+  },
+  "textStyles": {
+    "body-compact-01": {
+      "name": "Body/body-compact-01",
+      "source": "packages/type/src/styles.ts#bodyShort01 (bodyCompact01 = bodyShort01)",
+      "fontFamily": "IBM Plex Sans",
+      "fontStyle": "Regular",
+      "fontSize": 14,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 18
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0.16
+      },
+      "binds": {
+        "fontFamily": "font-family-sans",
+        "fontSize": "body-compact-01-font-size",
+        "lineHeight": "body-compact-01-line-height",
+        "fontWeight": "body-compact-01-font-weight",
+        "letterSpacing": "body-compact-01-letter-spacing"
+      },
+      "usedBy": [
+        "button",
+        "select",
+        "text-input"
+      ]
+    },
+    "body-compact-02": {
+      "name": "Body/body-compact-02",
+      "source": "packages/type/src/styles.ts#bodyShort02 (bodyCompact02 = bodyShort02)",
+      "fontFamily": "IBM Plex Sans",
+      "fontStyle": "Regular",
+      "fontSize": 16,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 22
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0
+      },
+      "binds": {
+        "fontFamily": "font-family-sans",
+        "fontSize": "body-compact-02-font-size",
+        "lineHeight": "body-compact-02-line-height",
+        "fontWeight": "body-compact-02-font-weight",
+        "letterSpacing": "body-compact-02-letter-spacing"
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "helper-text-01": {
+      "name": "Helper/helper-text-01",
+      "source": "packages/type/src/styles.ts#helperText01",
+      "fontFamily": "IBM Plex Sans",
+      "fontStyle": "Regular",
+      "fontSize": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 16
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0.32
+      },
+      "binds": {
+        "fontFamily": "font-family-sans",
+        "fontSize": "helper-text-01-font-size",
+        "lineHeight": "helper-text-01-line-height",
+        "letterSpacing": "helper-text-01-letter-spacing"
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    },
+    "label-01": {
+      "name": "Label/label-01",
+      "source": "packages/type/src/styles.ts#label01",
+      "fontFamily": "IBM Plex Sans",
+      "fontStyle": "Regular",
+      "fontSize": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 16
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0.32
+      },
+      "binds": {
+        "fontFamily": "font-family-sans",
+        "fontSize": "label-01-font-size",
+        "lineHeight": "label-01-line-height",
+        "fontWeight": "label-01-font-weight",
+        "letterSpacing": "label-01-letter-spacing"
+      },
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
+    }
+  },
+  "checks": {
+    "css": {
+      "against": "@carbon/styles@1.117.0 css/styles.css",
+      "sha256": "sha256:13f00ebee3715ac407ba7960ea1e51f6307ba0ddfb147604f06fec1bc94bf9db",
+      "matched": 176,
+      "missing": []
+    },
+    "sass": {
+      "against": "@carbon/layout@11.61.0 scss/generated",
+      "matched": 9
+    },
+    "scopes": {
+      "by": "skills/contract/scripts/contract.mjs validate, rule 6",
+      "contracts": 3,
+      "errors": 0
+    }
+  },
+  "notes": [
+    {
+      "level": "info",
+      "at": "variables.border-radius-00.codeSyntax",
+      "message": "No --cds-border-radius-00 custom property in compiled @carbon/styles; codeSyntax uses the Sass name $border-radius-00."
+    },
+    {
+      "level": "info",
+      "at": "variables.icon-size-01.codeSyntax",
+      "message": "No --cds-icon-size-01 custom property in compiled @carbon/styles; codeSyntax uses the Sass name $icon-size-01."
+    },
+    {
+      "level": "info",
+      "at": "variables.icon-size-02.codeSyntax",
+      "message": "No --cds-icon-size-02 custom property in compiled @carbon/styles; codeSyntax uses the Sass name $icon-size-02."
+    },
+    {
+      "level": "info",
+      "at": "variables.size-2xl.codeSyntax",
+      "message": "No --cds-size-2xl custom property in compiled @carbon/styles; codeSyntax uses the Sass name $size-2xl."
+    },
+    {
+      "level": "info",
+      "at": "variables.size-lg.codeSyntax",
+      "message": "No --cds-size-lg custom property in compiled @carbon/styles; codeSyntax uses the Sass name $size-lg."
+    },
+    {
+      "level": "info",
+      "at": "variables.size-md.codeSyntax",
+      "message": "No --cds-size-md custom property in compiled @carbon/styles; codeSyntax uses the Sass name $size-md."
+    },
+    {
+      "level": "info",
+      "at": "variables.size-sm.codeSyntax",
+      "message": "No --cds-size-sm custom property in compiled @carbon/styles; codeSyntax uses the Sass name $size-sm."
+    },
+    {
+      "level": "info",
+      "at": "variables.size-xl.codeSyntax",
+      "message": "No --cds-size-xl custom property in compiled @carbon/styles; codeSyntax uses the Sass name $size-xl."
+    },
+    {
+      "level": "info",
+      "at": "variables.size-xs.codeSyntax",
+      "message": "No --cds-size-xs custom property in compiled @carbon/styles; codeSyntax uses the Sass name $size-xs."
+    },
+    {
+      "level": "info",
+      "at": "variables.font-family-sans.codeSyntax",
+      "message": "Carbon emits no font-family custom property for body styles (they inherit); codeSyntax left empty."
+    },
+    {
+      "level": "info",
+      "at": "textStyles.*.binds",
+      "message": "Type variables bind onto Text Styles through use_figma (verified in #27): weight 400 selects IBM Plex Sans Regular and px lineHeight and letterSpacing hold, so the text-node fallback is not used. letterSpacing reads back as float32 (0.16 -> 0.1599999964), so compare it with a tolerance."
+    },
+    {
+      "level": "info",
+      "at": "variables.*-line-height",
+      "message": "Carbon line heights are unitless (1.28572); Figma binds lineHeight in px, so the variable holds size x ratio rounded (18, 22). codeSyntax still names the unitless CSS property."
+    }
+  ]
+}

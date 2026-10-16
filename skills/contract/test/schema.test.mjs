@@ -11,6 +11,8 @@ const foundations = load('design-systems/carbon/carbon.foundations.json');
 const fixtures = {
   button: 'design-systems/carbon/contracts/button.component.json',
   'owner-edits': 'skills/contract/test/fixtures/button.owner-edits.component.json',
+  'text-input': 'skills/contract/test/fixtures/form-controls/text-input.component.json',
+  select: 'skills/contract/test/fixtures/form-controls/select.component.json',
   drafted: 'skills/contract/test/fixtures/button.drafted.component.json',
 };
 
@@ -69,6 +71,17 @@ test('every key the schema requires at the top level and in selection is require
     const { ok, errors } = contract.validate(c, foundations);
     assert.ok(!ok && errors.some(e => e.at === key), `validate accepts a Contract without ${key}`);
   }
+});
+
+test('the schema rejects a `visible` that is not a boolean and `code.items` without props, as validate does (#93)', () => {
+  const formFoundations = load('skills/contract/test/fixtures/form-controls/carbon.foundations.json');
+  const c = load(fixtures.select);
+  c.layout[0].set.Helper.visible = 'no';
+  c.code.items = { component: 'SelectItem', props: [] };
+  const errors = check(schema, c);
+  assert.ok(errors.some(e => e.startsWith('$.layout[0].set.Helper.visible')), errors.join('\n'));
+  assert.ok(errors.some(e => e.startsWith('$.code.items.props')), errors.join('\n'));
+  assert.equal(contract.validate(c, formFoundations).ok, false);
 });
 
 test('the schema rejects the drafted entry shapes validate rejects; a bad key path is validate rule 9 only', () => {

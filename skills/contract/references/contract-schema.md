@@ -24,7 +24,7 @@ Worked example: [`button.component.json`](../../../design-systems/carbon/contrac
 | `subComponents` | yes (may be `[]`) | `_`-prefixed Sub-components, tier `item` or `base`. See [Sub-components](#sub-components). |
 | `dependencies` | yes | `families`: other Component Families used as instances, as `{key, contract, source.tag}`. `fonts`: the fonts used. Tokens and icons are not listed here, because they are derived (see [Derived, not stored](#derived-not-stored)). |
 | `figma` | yes | Figma-only presentation: `page` (plural), `componentSetName`, `description`, `header` (Type, Title, Namespace for the `Component Header` instance), and `grid` (`columns` and `rows` as axis keys). |
-| `code` | yes | Code Connect: `framework`, `package`, `component`, `import`, `alwaysEmit`. Per-value and per-property code mappings sit next to the value or property they describe. |
+| `code` | yes | Code Connect: `framework`, `package`, `component`, `import`, `alwaysEmit`, and optionally `required` and `items` (#93, see [Code](#code)). Per-value and per-property code mappings sit next to the value or property they describe. |
 | `notes` | no | Report entries `{level: info|warning|verify, at, message}` for decisions and render checks that are not tied to a single raw value. When a probe settles a `verify` note, it becomes `info` and its message starts with `Resolved (#N)` or `Adjusted (#N)`. |
 | `drafted` | no | [Drafted values](#drafted-values): a map from value path to `{by: "agent", evidence, fingerprint}` or `{by: "owner", was}`. |
 
@@ -117,13 +117,15 @@ A tweak the owner makes to the Base Component in Figma lands **in place**, on th
 
 - One tree per Component Set, shared by every variant (#6). States and sizes change bound values, never the tree.
 - Layer names are final Figma layer names, and they are unique within the tree. Rules address nodes by name. A path such as `Glyph/Vector` addresses a layer inside an instance; the single-`Vector` icon rule from #13 makes that path stable.
-- `instanceOf` is `icon:default`, `family:<key>` (another Component Family, which must be built first), or `sub:<name>` (a Sub-component).
+- `instanceOf` is `icon:default`, `icon:<key>` (one fixed icon, #93), `family:<key>` (another Component Family, which must be built first), or `sub:<name>` (a Sub-component).
+- A node that shows only in some variants, such as a form control's status icon or validation message, is in the tree once and hidden with a `visible: false` layout rule elsewhere (#88, #93). Where the content differs per variant, each version is its own node: TextInput has `Invalid icon` (`icon:warning--filled`) and `Warn icon` (`icon:warning--alt--filled`), and `Invalid text` and `Warn text`, each shown by its validation value. One node per version keeps one icon per INSTANCE, one code prop per property and one fill per path.
+- A border on one side, such as a field's underline, is its own FRAME (`Underline`, `height` 1px, `fill` the border colour), because a node has one `strokeWeight` (#93). Revisit only if a family needs per-side widths that a FRAME cannot draw, such as a border that changes width on one side per state.
 
 ## Properties
 
 | Type | Fields |
 |---|---|
-| `TEXT` | `default`, `binds: [{node, field: "characters"}]`, `code: {prop}` |
+| `TEXT` | `default`, `binds: [{node, field: "characters"}]`, `code: {prop}`; or `code: {itemProp}` for the text of the shown Repeated child (#93, see [Code](#code)) |
 | `BOOLEAN` | `default`, `binds: [{match?, node, field: "visible"}]`, `code: {prop, whenFalse}` |
 | `INSTANCE_SWAP` | `default: "icon:default"`, `preferred: "icon:preferred"`, `binds: [{node, field: "mainComponent"}]`, `code: {prop, valueFrom}` |
 
@@ -134,7 +136,7 @@ A tweak the owner makes to the Base Component in Figma lands **in place**, on th
 
 `layout` and `paint` are ordered lists of `{match, set}`. `set` maps an anatomy node name to fields. For each variant, the builder applies every matching rule in order, and a later rule wins per field. The Adapter resolves the CSS cascade into these rules. The builder does no cascade logic beyond "later wins", and it never guesses a value: when a required field is unresolved for a selected variant, the Contract is invalid.
 
-**Layout fields** (a neutral vocabulary that maps 1:1 to Auto Layout): `direction` (`row`/`column`), `width`/`height` (`hug`/`fill`/`fixed` or a value), `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `alignMain`, `alignCross` (`start`/`center`/`end`/`space-between`), `paddingTop`/`Right`/`Bottom`/`Left`, `gap`, `radius`, `strokeWeight`, `strokeAlign` (`inside`/`center`/`outside`), `textStyle`, `textResize`.
+**Layout fields** (a neutral vocabulary that maps 1:1 to Auto Layout): `direction` (`row`/`column`), `width`/`height` (`hug`/`fill`/`fixed` or a value), `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `alignMain`, `alignCross` (`start`/`center`/`end`/`space-between`), `paddingTop`/`Right`/`Bottom`/`Left`, `gap`, `radius`, `strokeWeight`, `strokeAlign` (`inside`/`center`/`outside`), `textStyle`, `textResize`, `visible` (`true`/`false`; any rule may set it: a size that hides a node (#88), a validation value that shows a message (#93); To-design writes it as the variant's layer visibility, not a layout field).
 
 **Paint fields:** `fill`, `stroke`, `effects` (a list of `{type: inner-shadow|drop-shadow, spread, blur, x, y, color}`), `opacity`. On a TEXT node `fill` is the text colour.
 
@@ -161,7 +163,8 @@ A token whose *mode value* is raw in Figma (the alpha entries, `button-danger-ho
 ```
 
 - Keys are `@carbon/icons` file names. The kit-style Figma name is derived by rule: capitalise the first letter and keep `--` (`arrow--right` → `Arrow--right`).
-- `default` must be in `preferred`. The builder builds exactly the union of every Contract's `default` and `preferred` as icon atoms (#13), and those become the INSTANCE_SWAP `preferredValues`.
+- `default` must be in `preferred`. A family whose icons are all fixed `icon:<key>` instances, such as TextInput, still declares `default` and `preferred` (rule 7). The builder builds exactly the union of every Contract's icon list (see [Derived](#derived-not-stored)) as icon atoms (#13); `default` and `preferred` become the INSTANCE_SWAP `preferredValues`.
+- An icon is one flattened Vector with one fill. A two-tone icon whose second colour comes from CSS (Carbon's `warning--alt--filled`, inner mark `$black-100`) loses that colour; the Contract says so in a `verify` note. Shapes that paint nothing (`fill="none"`, `opacity="0"`) are dropped before flattening.
 - The icon fill per Kind × State comes from the `paint` rules on `Glyph/Vector`.
 
 ## Sub-components
@@ -177,11 +180,24 @@ A Sub-component uses the same fields as a family, without `source`, `selection`,
 These are computed from the Contract, never written into it:
 
 - the token closure, which feeds the foundations scope (#9)
-- the icon list: `icons(contract)` returns one Contract's `default` then its `preferred`, without duplicates (the builder takes the union over Contracts), and `iconName(key)` gives the kit-style name (`trash-can` → `Trash-can`)
+- the icon list: `icons(contract)` returns one Contract's `default`, then its `preferred`, then every fixed `icon:<key>` an INSTANCE names in the anatomy or a Sub-component (#93), without duplicates (the builder takes the union over Contracts), and `iconName(key)` gives the kit-style name (`trash-can` → `Trash-can`)
 - the expanded variant tuples and their tuple keys (`tupleKey`, To-preview's internal ids)
 - Figma ids and keys, which live in the builder ledger
 
 `closure()` derives the token closure: the tokens (variables and Text Styles) that the selected variants resolve to, after `sameAs`, skipping `was`. A token used only by omitted variants, or only by a value a later rule always overrides, is not in it. For Button it is 38 tokens, which adds `spacing-07` to #9's list. It also shows that Button does not use `spacing-10`, `icon-primary` (the ghost icon renders `link-primary`, checked by render in #20), `icon-on-color-disabled`, `background-selected`, `layer-selected-disabled`, `button-separator` or the skeleton tokens.
+
+## Code
+
+`code` maps the Component Family to its Code Library component for Code Connect and for a Handoff's snippets.
+
+| Field | Meaning |
+|---|---|
+| `framework`, `package`, `component`, `import` | the component and how to import it |
+| `alwaysEmit` | axis keys a snippet always writes, even at the default (with `alwaysEmitWhy`) |
+| `required` | optional (#93): props the component requires that no axis value or property sets, such as `id`. Whoever renders or emits the component supplies them: To-preview a placeholder per tuple, a Handoff the Usage's id. |
+| `items` | optional (#93): `{component, props}` for a Repeated child, such as Select's `{"component": "SelectItem", "props": ["value", "text"]}`. The Contract never lists the children; a Handoff Usage gives them as `items: [{value, text}, …]`. A TEXT property with `code: {itemProp: "text"}` shows the shown child's text in Figma and is not a component prop. |
+
+A TEXT property whose node a variant hides (`visible: false`) is not emitted for that variant, so a warn snippet carries `warnText` and not `invalidText` [assumption, #93].
 
 ## Drafted values
 
@@ -211,9 +227,9 @@ These are computed from the Contract, never written into it:
 
 1. `schemaVersion` is known, and the axis, value and property keys are unique. Labels are unique per axis, Title Case, and contain no `=` or `,`.
 2. Every axis has a `default` that is one of its values. The default tuple is selected.
-3. Every pattern (`excluded`, `selection.omit`, rules, property `binds`) names known axes and values. Every exclusion has `reason` and `evidence`. Every rule and bind names an anatomy node, or an `<INSTANCE node>/<layer>` path such as `Glyph/Vector`.
+3. Every pattern (`excluded`, `selection.omit`, rules, property `binds`) names known axes and values. Every exclusion has `reason` and `evidence`. Every rule and bind names an anatomy node, or an `<INSTANCE node>/<layer>` path such as `Glyph/Vector`. `visible` is `true` or `false`, set only by a layout rule and only on a non-root anatomy node. `code.required` names no prop an axis value or a property already sets; `code.items` has a `component` and a non-empty `props`; a property's `code.itemProp` is on a TEXT property and is one of `code.items.props` (#93).
 4. The expansion equals `selection.expectedCount`.
-5. Every selected variant resolves every required field for every anatomy node, every `sameAs` resolves, and every variant gets exactly one bind per property. Required fields are, per anatomy node type: COMPONENT `direction`, `padding*`, `gap`, `fill`, `stroke`; TEXT `textStyle`, `fill`; FRAME `width`, `height`. On top of these, a field that any rule sets for a node is required for that node in every selected variant, so the builder never falls back to a Figma default (for Button this makes every field of the first layout and paint rules required everywhere, plus `minHeight` on every size).
+5. Every selected variant resolves every required field for every anatomy node, every `sameAs` resolves, and every variant gets exactly one bind per property. Required fields are, per anatomy node type: COMPONENT `direction`, `padding*`, `gap`, `fill`, `stroke`; TEXT `textStyle`, `fill`; FRAME `width`, `height`. On top of these, a field that any rule sets for a node is required for that node in every selected variant, so the builder never falls back to a Figma default (for Button this makes every field of the first layout and paint rules required everywhere, plus `minHeight` on every size). No property binds a `visible` that a rule sets (#93).
 6. Every `raw` value has `level` (`info` or `warning`) and `reason`. Every token a selected variant uses exists in the foundations document (`textStyle` in `textStyles`, every other field in `variables`) and is used inside that variable's `scopes`. The scope a field needs: `padding*` and `gap` → `GAP` (Figma has no padding scope, #27); `width`, `height`, `min*`, `max*` → `WIDTH_HEIGHT`; `radius` → `CORNER_RADIUS`; `strokeWeight` → `STROKE_FLOAT`; `stroke` → `STROKE_COLOR`; effect `color` → `EFFECT_COLOR`; `fill` → `TEXT_FILL` on a TEXT node, `SHAPE_FILL` on an `<instance>/<layer>` path, `FRAME_FILL` otherwise (`ALL_FILLS` covers all three). Uses are checked after `sameAs`, so `Glyph/Vector` checks the label colour as `SHAPE_FILL`. `was` is skipped.
 7. Every `instanceOf` target is declared: `icon:*` needs `icons` (whose `default` is in `preferred`), `family:<key>` needs `dependencies.families`, `sub:<name>` needs `subComponents`. That each target is built first is enforced by the builder's build order, not by `validate`.
 8. `status` is `draft` with `approval: null`, or `approved` with an [approval](#approval) by the owner whose `snapshotId` and `contentHash` both match, and no `warning` note (an uncarried owner tweak) is open.

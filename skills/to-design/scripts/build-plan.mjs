@@ -63,9 +63,10 @@ export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune
   return { plan, state: ledger || emptyLedger(fileKey) };
 }
 
-// Shapes that paint nothing: Carbon's two-tone inner path (fill="none", data-icon-path) and its
-// transparent rectangle (style="fill:none"). Code never paints them, and a flatten would fill them in.
-const UNPAINTED = /<(path|rect|circle|ellipse|polygon)\b[^>]*(\bfill="none"|fill:\s*none)[^>]*\/>/g;
+// Shapes that paint nothing: Carbon's two-tone inner path (fill="none", data-icon-path, or opacity="0" in
+// 16px status icons such as warning--filled, #93) and its transparent rectangle (style="fill:none"). Code
+// never paints them, and a flatten would fill them in: warning--filled would build as a solid disc.
+const UNPAINTED = /<(path|rect|circle|ellipse|polygon)\b[^>]*(\bfill="none"|fill:\s*none|\bopacity="0")[^>]*\/>/g;
 
 /**
  * The icons slice's plan and state: one entry per icon the Contracts name (`icons()` of the shared module),
@@ -357,8 +358,9 @@ export function setsPlan(contract, docText, ledger, {
     entries.forEach((e, n) => {
       const r = resolve(contract, decoded[n].tuple);
       const spec = entrySpec(plan, e);
+      // `visible` is property wiring, not a layout fragment (readback's expectedVariant, #93), so it is left out here.
       for (const sec of ['layout', 'paint'])
-        if (JSON.stringify(spec[sec]) !== JSON.stringify(Object.fromEntries(Object.entries(r[sec]).map(([node, fl]) => [node, stripFields(fl)]))))
+        if (JSON.stringify(spec[sec]) !== JSON.stringify(Object.fromEntries(Object.entries(r[sec]).map(([node, { visible, ...fl }]) => [node, stripFields(fl)]))))
           throw new Error(`entry ${e[0]} does not resolve to the Contract's ${sec}`);
     });
   const bases = ledger.bases && ledger.bases[family] ? { [family]: ledger.bases[family] } : {};

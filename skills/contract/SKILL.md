@@ -29,7 +29,7 @@ Committed instances live in the project, per Design System: `design-systems/<des
 | `matches(pattern, tuple)` | Whether a match pattern covers a tuple. |
 | `resolve(contract, tuple)` | `{layout, paint, from, binds}`: per node, the fields after every matching rule (later wins) and `sameAs`; `from["layout.Button.gap"]` is the index of the rule that set the field; `binds[propertyKey]` is the property binds for the tuple. |
 | `closure(contract)` | The sorted token names the selected variants use, skipping `was`. |
-| `icons(contract)`, `iconName(key)` | The Contract's icon keys (`default` first, then `preferred`); the kit-style Figma name (`arrow--right` → `Arrow--right`). |
+| `icons(contract)`, `iconName(key)` | The Contract's icon keys (`default` first, then `preferred`, then every fixed `icon:<key>` an INSTANCE names); the kit-style Figma name (`arrow--right` → `Arrow--right`). |
 | `applyOmit(contract, patch)` | A draft copy with To-preview's omit patch applied (replaces `selection.omit`). Throws on another family or `snapshotId`. |
 | `asDraft(contract)` | A copy with `status: "draft"`, `approval: null`. Use it on every Contract write. |
 | `approve(contract, at, {prototype})` | A copy approved by the owner: `{by: "owner", at, snapshotId, contentHash}`. Call it only after the owner's explicit "approve" in chat. Throws while a `warning` note is open. `prototype: true` writes `by: "orchestrator (prototype)"` (`PROTOTYPE_APPROVER`), which rule 8 rejects, so it never stands in a committed Contract. |

@@ -128,7 +128,9 @@
         const renderedIn = mode;
         await renderer(specimen, host);
         if (!host.firstElementChild) throw new Error("The renderer returned an empty specimen: " + specimen.name);
-        host.firstElementChild.classList.add(...forceFor(specimen));
+        // A form control styles :hover and :focus on its nested <input> or <select>, not its root (#93), so the
+        // forced class goes on every element of the specimen, as a pointer over the innermost one would.
+        for (const el of [host.firstElementChild, ...host.firstElementChild.querySelectorAll("*")]) el.classList.add(...forceFor(specimen));
         if (renderedIn === defaultMode()) model.verify(specimen.id);
       }
       if (document.fonts) await document.fonts.ready;
