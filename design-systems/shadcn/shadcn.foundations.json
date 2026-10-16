@@ -1,0 +1,2034 @@
+{
+  "schemaVersion": 1,
+  "designSystem": {
+    "key": "shadcn",
+    "name": "shadcn/ui"
+  },
+  "source": {
+    "codeLibrary": "shadcn/ui",
+    "adapter": "generic",
+    "packages": {
+      "shadcn": "4.22.0",
+      "tailwindcss": "4.3.3",
+      "tw-animate-css": "1.4.0"
+    },
+    "files": {
+      "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
+      "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
+      "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
+    },
+    "snapshotId": "sha256:5f3bbeca13d59af1786e0e53050426eb89d1bd0d445d60aae0889e40bb059b4e"
+  },
+  "closure": {
+    "contracts": [],
+    "tokens": []
+  },
+  "collections": [
+    {
+      "key": "theme",
+      "name": "Theme",
+      "modes": [
+        {
+          "key": "light",
+          "label": "Light",
+          "selector": ":root"
+        },
+        {
+          "key": "dark",
+          "label": "Dark",
+          "selector": ".dark"
+        }
+      ]
+    },
+    {
+      "key": "layout",
+      "name": "Layout",
+      "modes": [
+        {
+          "key": "default",
+          "label": "Default"
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "accent": {
+      "collection": "theme",
+      "name": "Color/accent",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --accent",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--accent)"
+      },
+      "values": {
+        "light": {
+          "value": "#f5f5f5",
+          "resolved": "#f5f5f5",
+          "from": {
+            "css": "oklch(0.97 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#262626",
+          "resolved": "#262626",
+          "from": {
+            "css": "oklch(0.269 0 0)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "accent-foreground": {
+      "collection": "theme",
+      "name": "Color/accent-foreground",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --accent-foreground",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--accent-foreground)"
+      },
+      "values": {
+        "light": {
+          "value": "#171717",
+          "resolved": "#171717",
+          "from": {
+            "css": "oklch(0.205 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#fafafa",
+          "resolved": "#fafafa",
+          "from": {
+            "css": "oklch(0.985 0 0)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "background": {
+      "collection": "theme",
+      "name": "Color/background",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --background",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--background)"
+      },
+      "values": {
+        "light": {
+          "value": "#ffffff",
+          "resolved": "#ffffff",
+          "from": {
+            "css": "oklch(1 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#0a0a0a",
+          "resolved": "#0a0a0a",
+          "from": {
+            "css": "oklch(0.145 0 0)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "border": {
+      "collection": "theme",
+      "name": "Color/border",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --border",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--border)"
+      },
+      "values": {
+        "light": {
+          "value": "#e5e5e5",
+          "resolved": "#e5e5e5",
+          "from": {
+            "css": "oklch(0.922 0 0)"
+          }
+        },
+        "dark": {
+          "raw": "#ffffff",
+          "alpha": 0.1,
+          "resolved": "rgba(255, 255, 255, 0.1)",
+          "from": {
+            "css": "oklch(1 0 0 / 10%)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "card": {
+      "collection": "theme",
+      "name": "Color/card",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --card",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--card)"
+      },
+      "values": {
+        "light": {
+          "value": "#ffffff",
+          "resolved": "#ffffff",
+          "from": {
+            "css": "oklch(1 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#171717",
+          "resolved": "#171717",
+          "from": {
+            "css": "oklch(0.205 0 0)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "card-foreground": {
+      "collection": "theme",
+      "name": "Color/card-foreground",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --card-foreground",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--card-foreground)"
+      },
+      "values": {
+        "light": {
+          "value": "#0a0a0a",
+          "resolved": "#0a0a0a",
+          "from": {
+            "css": "oklch(0.145 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#fafafa",
+          "resolved": "#fafafa",
+          "from": {
+            "css": "oklch(0.985 0 0)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "chart-1": {
+      "collection": "theme",
+      "name": "Chart/chart-1",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --chart-1",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--chart-1)"
+      },
+      "values": {
+        "light": {
+          "value": "#d4d4d4",
+          "resolved": "#d4d4d4",
+          "from": {
+            "css": "oklch(0.87 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#d4d4d4",
+          "resolved": "#d4d4d4",
+          "from": {
+            "css": "oklch(0.87 0 0)"
+          }
+        }
+      },
+      "usedBy": [],
+      "family": "chart"
+    },
+    "chart-2": {
+      "collection": "theme",
+      "name": "Chart/chart-2",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --chart-2",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--chart-2)"
+      },
+      "values": {
+        "light": {
+          "value": "#737373",
+          "resolved": "#737373",
+          "from": {
+            "css": "oklch(0.556 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#737373",
+          "resolved": "#737373",
+          "from": {
+            "css": "oklch(0.556 0 0)"
+          }
+        }
+      },
+      "usedBy": [],
+      "family": "chart"
+    },
+    "chart-3": {
+      "collection": "theme",
+      "name": "Chart/chart-3",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --chart-3",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--chart-3)"
+      },
+      "values": {
+        "light": {
+          "value": "#525252",
+          "resolved": "#525252",
+          "from": {
+            "css": "oklch(0.439 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#525252",
+          "resolved": "#525252",
+          "from": {
+            "css": "oklch(0.439 0 0)"
+          }
+        }
+      },
+      "usedBy": [],
+      "family": "chart"
+    },
+    "chart-4": {
+      "collection": "theme",
+      "name": "Chart/chart-4",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --chart-4",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--chart-4)"
+      },
+      "values": {
+        "light": {
+          "value": "#404040",
+          "resolved": "#404040",
+          "from": {
+            "css": "oklch(0.371 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#404040",
+          "resolved": "#404040",
+          "from": {
+            "css": "oklch(0.371 0 0)"
+          }
+        }
+      },
+      "usedBy": [],
+      "family": "chart"
+    },
+    "chart-5": {
+      "collection": "theme",
+      "name": "Chart/chart-5",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --chart-5",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--chart-5)"
+      },
+      "values": {
+        "light": {
+          "value": "#262626",
+          "resolved": "#262626",
+          "from": {
+            "css": "oklch(0.269 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#262626",
+          "resolved": "#262626",
+          "from": {
+            "css": "oklch(0.269 0 0)"
+          }
+        }
+      },
+      "usedBy": [],
+      "family": "chart"
+    },
+    "destructive": {
+      "collection": "theme",
+      "name": "Color/destructive",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --destructive",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--destructive)"
+      },
+      "values": {
+        "light": {
+          "value": "#e7000b",
+          "resolved": "#e7000b",
+          "from": {
+            "css": "oklch(0.577 0.245 27.325)"
+          },
+          "level": "info",
+          "reason": "outside sRGB, clipped per channel"
+        },
+        "dark": {
+          "value": "#ff6467",
+          "resolved": "#ff6467",
+          "from": {
+            "css": "oklch(0.704 0.191 22.216)"
+          },
+          "level": "info",
+          "reason": "outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": []
+    },
+    "foreground": {
+      "collection": "theme",
+      "name": "Color/foreground",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --foreground",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--foreground)"
+      },
+      "values": {
+        "light": {
+          "value": "#0a0a0a",
+          "resolved": "#0a0a0a",
+          "from": {
+            "css": "oklch(0.145 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#fafafa",
+          "resolved": "#fafafa",
+          "from": {
+            "css": "oklch(0.985 0 0)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "input": {
+      "collection": "theme",
+      "name": "Color/input",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --input",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--input)"
+      },
+      "values": {
+        "light": {
+          "value": "#e5e5e5",
+          "resolved": "#e5e5e5",
+          "from": {
+            "css": "oklch(0.922 0 0)"
+          }
+        },
+        "dark": {
+          "raw": "#ffffff",
+          "alpha": 0.15,
+          "resolved": "rgba(255, 255, 255, 0.15)",
+          "from": {
+            "css": "oklch(1 0 0 / 15%)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "muted": {
+      "collection": "theme",
+      "name": "Color/muted",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --muted",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--muted)"
+      },
+      "values": {
+        "light": {
+          "value": "#f5f5f5",
+          "resolved": "#f5f5f5",
+          "from": {
+            "css": "oklch(0.97 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#262626",
+          "resolved": "#262626",
+          "from": {
+            "css": "oklch(0.269 0 0)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "muted-foreground": {
+      "collection": "theme",
+      "name": "Color/muted-foreground",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --muted-foreground",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--muted-foreground)"
+      },
+      "values": {
+        "light": {
+          "value": "#737373",
+          "resolved": "#737373",
+          "from": {
+            "css": "oklch(0.556 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#a1a1a1",
+          "resolved": "#a1a1a1",
+          "from": {
+            "css": "oklch(0.708 0 0)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "popover": {
+      "collection": "theme",
+      "name": "Color/popover",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --popover",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--popover)"
+      },
+      "values": {
+        "light": {
+          "value": "#ffffff",
+          "resolved": "#ffffff",
+          "from": {
+            "css": "oklch(1 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#171717",
+          "resolved": "#171717",
+          "from": {
+            "css": "oklch(0.205 0 0)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "popover-foreground": {
+      "collection": "theme",
+      "name": "Color/popover-foreground",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --popover-foreground",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--popover-foreground)"
+      },
+      "values": {
+        "light": {
+          "value": "#0a0a0a",
+          "resolved": "#0a0a0a",
+          "from": {
+            "css": "oklch(0.145 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#fafafa",
+          "resolved": "#fafafa",
+          "from": {
+            "css": "oklch(0.985 0 0)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "primary": {
+      "collection": "theme",
+      "name": "Color/primary",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --primary",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--primary)"
+      },
+      "values": {
+        "light": {
+          "value": "#171717",
+          "resolved": "#171717",
+          "from": {
+            "css": "oklch(0.205 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#e5e5e5",
+          "resolved": "#e5e5e5",
+          "from": {
+            "css": "oklch(0.922 0 0)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "primary-foreground": {
+      "collection": "theme",
+      "name": "Color/primary-foreground",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --primary-foreground",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--primary-foreground)"
+      },
+      "values": {
+        "light": {
+          "value": "#fafafa",
+          "resolved": "#fafafa",
+          "from": {
+            "css": "oklch(0.985 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#171717",
+          "resolved": "#171717",
+          "from": {
+            "css": "oklch(0.205 0 0)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "ring": {
+      "collection": "theme",
+      "name": "Color/ring",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --ring",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--ring)"
+      },
+      "values": {
+        "light": {
+          "value": "#a1a1a1",
+          "resolved": "#a1a1a1",
+          "from": {
+            "css": "oklch(0.708 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#737373",
+          "resolved": "#737373",
+          "from": {
+            "css": "oklch(0.556 0 0)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "secondary": {
+      "collection": "theme",
+      "name": "Color/secondary",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --secondary",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--secondary)"
+      },
+      "values": {
+        "light": {
+          "value": "#f5f5f5",
+          "resolved": "#f5f5f5",
+          "from": {
+            "css": "oklch(0.97 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#262626",
+          "resolved": "#262626",
+          "from": {
+            "css": "oklch(0.269 0 0)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "secondary-foreground": {
+      "collection": "theme",
+      "name": "Color/secondary-foreground",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --secondary-foreground",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--secondary-foreground)"
+      },
+      "values": {
+        "light": {
+          "value": "#171717",
+          "resolved": "#171717",
+          "from": {
+            "css": "oklch(0.205 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#fafafa",
+          "resolved": "#fafafa",
+          "from": {
+            "css": "oklch(0.985 0 0)"
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "sidebar": {
+      "collection": "theme",
+      "name": "Sidebar/sidebar",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --sidebar",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--sidebar)"
+      },
+      "values": {
+        "light": {
+          "value": "#fafafa",
+          "resolved": "#fafafa",
+          "from": {
+            "css": "oklch(0.985 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#171717",
+          "resolved": "#171717",
+          "from": {
+            "css": "oklch(0.205 0 0)"
+          }
+        }
+      },
+      "usedBy": [],
+      "family": "sidebar"
+    },
+    "sidebar-accent": {
+      "collection": "theme",
+      "name": "Sidebar/sidebar-accent",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --sidebar-accent",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--sidebar-accent)"
+      },
+      "values": {
+        "light": {
+          "value": "#f5f5f5",
+          "resolved": "#f5f5f5",
+          "from": {
+            "css": "oklch(0.97 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#262626",
+          "resolved": "#262626",
+          "from": {
+            "css": "oklch(0.269 0 0)"
+          }
+        }
+      },
+      "usedBy": [],
+      "family": "sidebar"
+    },
+    "sidebar-accent-foreground": {
+      "collection": "theme",
+      "name": "Sidebar/sidebar-accent-foreground",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --sidebar-accent-foreground",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--sidebar-accent-foreground)"
+      },
+      "values": {
+        "light": {
+          "value": "#171717",
+          "resolved": "#171717",
+          "from": {
+            "css": "oklch(0.205 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#fafafa",
+          "resolved": "#fafafa",
+          "from": {
+            "css": "oklch(0.985 0 0)"
+          }
+        }
+      },
+      "usedBy": [],
+      "family": "sidebar"
+    },
+    "sidebar-border": {
+      "collection": "theme",
+      "name": "Sidebar/sidebar-border",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --sidebar-border",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--sidebar-border)"
+      },
+      "values": {
+        "light": {
+          "value": "#e5e5e5",
+          "resolved": "#e5e5e5",
+          "from": {
+            "css": "oklch(0.922 0 0)"
+          }
+        },
+        "dark": {
+          "raw": "#ffffff",
+          "alpha": 0.1,
+          "resolved": "rgba(255, 255, 255, 0.1)",
+          "from": {
+            "css": "oklch(1 0 0 / 10%)"
+          }
+        }
+      },
+      "usedBy": [],
+      "family": "sidebar"
+    },
+    "sidebar-foreground": {
+      "collection": "theme",
+      "name": "Sidebar/sidebar-foreground",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --sidebar-foreground",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--sidebar-foreground)"
+      },
+      "values": {
+        "light": {
+          "value": "#0a0a0a",
+          "resolved": "#0a0a0a",
+          "from": {
+            "css": "oklch(0.145 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#fafafa",
+          "resolved": "#fafafa",
+          "from": {
+            "css": "oklch(0.985 0 0)"
+          }
+        }
+      },
+      "usedBy": [],
+      "family": "sidebar"
+    },
+    "sidebar-primary": {
+      "collection": "theme",
+      "name": "Sidebar/sidebar-primary",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --sidebar-primary",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--sidebar-primary)"
+      },
+      "values": {
+        "light": {
+          "value": "#171717",
+          "resolved": "#171717",
+          "from": {
+            "css": "oklch(0.205 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#1447e6",
+          "resolved": "#1447e6",
+          "from": {
+            "css": "oklch(0.488 0.243 264.376)"
+          }
+        }
+      },
+      "usedBy": [],
+      "family": "sidebar"
+    },
+    "sidebar-primary-foreground": {
+      "collection": "theme",
+      "name": "Sidebar/sidebar-primary-foreground",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --sidebar-primary-foreground",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--sidebar-primary-foreground)"
+      },
+      "values": {
+        "light": {
+          "value": "#fafafa",
+          "resolved": "#fafafa",
+          "from": {
+            "css": "oklch(0.985 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#fafafa",
+          "resolved": "#fafafa",
+          "from": {
+            "css": "oklch(0.985 0 0)"
+          }
+        }
+      },
+      "usedBy": [],
+      "family": "sidebar"
+    },
+    "sidebar-ring": {
+      "collection": "theme",
+      "name": "Sidebar/sidebar-ring",
+      "type": "COLOR",
+      "source": "app/globals.css :root .dark --sidebar-ring",
+      "scopes": [
+        "ALL_FILLS",
+        "EFFECT_COLOR",
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--sidebar-ring)"
+      },
+      "values": {
+        "light": {
+          "value": "#a1a1a1",
+          "resolved": "#a1a1a1",
+          "from": {
+            "css": "oklch(0.708 0 0)"
+          }
+        },
+        "dark": {
+          "value": "#737373",
+          "resolved": "#737373",
+          "from": {
+            "css": "oklch(0.556 0 0)"
+          }
+        }
+      },
+      "usedBy": [],
+      "family": "sidebar"
+    },
+    "radius-2xl": {
+      "collection": "layout",
+      "name": "Radius/radius-2xl",
+      "type": "FLOAT",
+      "source": "app/globals.css @theme inline --radius-2xl",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--radius) * 1.8)"
+      },
+      "values": {
+        "default": {
+          "value": 18,
+          "from": {
+            "multiplier": "--radius",
+            "factor": 1.8
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "radius-3xl": {
+      "collection": "layout",
+      "name": "Radius/radius-3xl",
+      "type": "FLOAT",
+      "source": "app/globals.css @theme inline --radius-3xl",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--radius) * 2.2)"
+      },
+      "values": {
+        "default": {
+          "value": 22,
+          "from": {
+            "multiplier": "--radius",
+            "factor": 2.2
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "radius-4xl": {
+      "collection": "layout",
+      "name": "Radius/radius-4xl",
+      "type": "FLOAT",
+      "source": "app/globals.css @theme inline --radius-4xl",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--radius) * 2.6)"
+      },
+      "values": {
+        "default": {
+          "value": 26,
+          "from": {
+            "multiplier": "--radius",
+            "factor": 2.6
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "radius-lg": {
+      "collection": "layout",
+      "name": "Radius/radius-lg",
+      "type": "FLOAT",
+      "source": "app/globals.css @theme inline --radius-lg",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--radius)"
+      },
+      "values": {
+        "default": {
+          "value": 10,
+          "from": {
+            "multiplier": "--radius",
+            "factor": 1
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "radius-md": {
+      "collection": "layout",
+      "name": "Radius/radius-md",
+      "type": "FLOAT",
+      "source": "app/globals.css @theme inline --radius-md",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--radius) * 0.8)"
+      },
+      "values": {
+        "default": {
+          "value": 8,
+          "from": {
+            "multiplier": "--radius",
+            "factor": 0.8
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "radius-sm": {
+      "collection": "layout",
+      "name": "Radius/radius-sm",
+      "type": "FLOAT",
+      "source": "app/globals.css @theme inline --radius-sm",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--radius) * 0.6)"
+      },
+      "values": {
+        "default": {
+          "value": 6,
+          "from": {
+            "multiplier": "--radius",
+            "factor": 0.6
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "radius-xl": {
+      "collection": "layout",
+      "name": "Radius/radius-xl",
+      "type": "FLOAT",
+      "source": "app/globals.css @theme inline --radius-xl",
+      "scopes": [
+        "CORNER_RADIUS"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--radius) * 1.4)"
+      },
+      "values": {
+        "default": {
+          "value": 14,
+          "from": {
+            "multiplier": "--radius",
+            "factor": 1.4
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-0": {
+      "collection": "layout",
+      "name": "Spacing/spacing-0",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "0px"
+      },
+      "values": {
+        "default": {
+          "value": 0,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 0
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-0_5": {
+      "collection": "layout",
+      "name": "Spacing/spacing-0_5",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 0.5)"
+      },
+      "values": {
+        "default": {
+          "value": 2,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 0.5
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-1": {
+      "collection": "layout",
+      "name": "Spacing/spacing-1",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--spacing)"
+      },
+      "values": {
+        "default": {
+          "value": 4,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 1
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-10": {
+      "collection": "layout",
+      "name": "Spacing/spacing-10",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 10)"
+      },
+      "values": {
+        "default": {
+          "value": 40,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 10
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-11": {
+      "collection": "layout",
+      "name": "Spacing/spacing-11",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 11)"
+      },
+      "values": {
+        "default": {
+          "value": 44,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 11
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-12": {
+      "collection": "layout",
+      "name": "Spacing/spacing-12",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 12)"
+      },
+      "values": {
+        "default": {
+          "value": 48,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 12
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-14": {
+      "collection": "layout",
+      "name": "Spacing/spacing-14",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 14)"
+      },
+      "values": {
+        "default": {
+          "value": 56,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 14
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-16": {
+      "collection": "layout",
+      "name": "Spacing/spacing-16",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 16)"
+      },
+      "values": {
+        "default": {
+          "value": 64,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 16
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-1_5": {
+      "collection": "layout",
+      "name": "Spacing/spacing-1_5",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 1.5)"
+      },
+      "values": {
+        "default": {
+          "value": 6,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 1.5
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-2": {
+      "collection": "layout",
+      "name": "Spacing/spacing-2",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 2)"
+      },
+      "values": {
+        "default": {
+          "value": 8,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 2
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-20": {
+      "collection": "layout",
+      "name": "Spacing/spacing-20",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 20)"
+      },
+      "values": {
+        "default": {
+          "value": 80,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 20
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-24": {
+      "collection": "layout",
+      "name": "Spacing/spacing-24",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 24)"
+      },
+      "values": {
+        "default": {
+          "value": 96,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 24
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-28": {
+      "collection": "layout",
+      "name": "Spacing/spacing-28",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 28)"
+      },
+      "values": {
+        "default": {
+          "value": 112,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 28
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-2_5": {
+      "collection": "layout",
+      "name": "Spacing/spacing-2_5",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 2.5)"
+      },
+      "values": {
+        "default": {
+          "value": 10,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 2.5
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-3": {
+      "collection": "layout",
+      "name": "Spacing/spacing-3",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 3)"
+      },
+      "values": {
+        "default": {
+          "value": 12,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 3
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-32": {
+      "collection": "layout",
+      "name": "Spacing/spacing-32",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 32)"
+      },
+      "values": {
+        "default": {
+          "value": 128,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 32
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-36": {
+      "collection": "layout",
+      "name": "Spacing/spacing-36",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 36)"
+      },
+      "values": {
+        "default": {
+          "value": 144,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 36
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-3_5": {
+      "collection": "layout",
+      "name": "Spacing/spacing-3_5",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 3.5)"
+      },
+      "values": {
+        "default": {
+          "value": 14,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 3.5
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-4": {
+      "collection": "layout",
+      "name": "Spacing/spacing-4",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 4)"
+      },
+      "values": {
+        "default": {
+          "value": 16,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 4
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-40": {
+      "collection": "layout",
+      "name": "Spacing/spacing-40",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 40)"
+      },
+      "values": {
+        "default": {
+          "value": 160,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 40
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-44": {
+      "collection": "layout",
+      "name": "Spacing/spacing-44",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 44)"
+      },
+      "values": {
+        "default": {
+          "value": 176,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 44
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-48": {
+      "collection": "layout",
+      "name": "Spacing/spacing-48",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 48)"
+      },
+      "values": {
+        "default": {
+          "value": 192,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 48
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-5": {
+      "collection": "layout",
+      "name": "Spacing/spacing-5",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 5)"
+      },
+      "values": {
+        "default": {
+          "value": 20,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 5
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-52": {
+      "collection": "layout",
+      "name": "Spacing/spacing-52",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 52)"
+      },
+      "values": {
+        "default": {
+          "value": 208,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 52
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-56": {
+      "collection": "layout",
+      "name": "Spacing/spacing-56",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 56)"
+      },
+      "values": {
+        "default": {
+          "value": 224,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 56
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-6": {
+      "collection": "layout",
+      "name": "Spacing/spacing-6",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 6)"
+      },
+      "values": {
+        "default": {
+          "value": 24,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 6
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-60": {
+      "collection": "layout",
+      "name": "Spacing/spacing-60",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 60)"
+      },
+      "values": {
+        "default": {
+          "value": 240,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 60
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-64": {
+      "collection": "layout",
+      "name": "Spacing/spacing-64",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 64)"
+      },
+      "values": {
+        "default": {
+          "value": 256,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 64
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-7": {
+      "collection": "layout",
+      "name": "Spacing/spacing-7",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 7)"
+      },
+      "values": {
+        "default": {
+          "value": 28,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 7
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-72": {
+      "collection": "layout",
+      "name": "Spacing/spacing-72",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 72)"
+      },
+      "values": {
+        "default": {
+          "value": 288,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 72
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-8": {
+      "collection": "layout",
+      "name": "Spacing/spacing-8",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 8)"
+      },
+      "values": {
+        "default": {
+          "value": 32,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 8
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-80": {
+      "collection": "layout",
+      "name": "Spacing/spacing-80",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 80)"
+      },
+      "values": {
+        "default": {
+          "value": 320,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 80
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-9": {
+      "collection": "layout",
+      "name": "Spacing/spacing-9",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 9)"
+      },
+      "values": {
+        "default": {
+          "value": 36,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 9
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-96": {
+      "collection": "layout",
+      "name": "Spacing/spacing-96",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "calc(var(--spacing) * 96)"
+      },
+      "values": {
+        "default": {
+          "value": 384,
+          "from": {
+            "multiplier": "--spacing",
+            "factor": 96
+          }
+        }
+      },
+      "usedBy": []
+    },
+    "spacing-px": {
+      "collection": "layout",
+      "name": "Spacing/spacing-px",
+      "type": "FLOAT",
+      "source": "tailwindcss@4.3.3 theme.css --spacing",
+      "scopes": [
+        "GAP",
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "1px"
+      },
+      "values": {
+        "default": {
+          "value": 1,
+          "from": {
+            "css": "1px"
+          }
+        }
+      },
+      "usedBy": []
+    }
+  },
+  "textStyles": {},
+  "checks": {
+    "css": {
+      "against": "app/globals.css",
+      "converted": 62,
+      "by": "skills/contract/scripts/color.mjs convert"
+    },
+    "compiled": {
+      "against": "tailwindcss@4.3.3 compile() over app/globals.css",
+      "matched": 73
+    }
+  },
+  "notes": [
+    {
+      "level": "info",
+      "at": "app/globals.css @theme inline --font-heading",
+      "message": "Font families are not carried: var(--font-sans) is set at runtime (next/font), not in the CSS."
+    },
+    {
+      "level": "info",
+      "at": "app/globals.css @theme inline --font-mono",
+      "message": "Font families are not carried: var(--font-geist-mono) is set at runtime (next/font), not in the CSS."
+    },
+    {
+      "level": "info",
+      "at": "app/globals.css @theme inline --font-sans",
+      "message": "Font families are not carried: var(--font-sans) is set at runtime (next/font), not in the CSS."
+    },
+    {
+      "level": "info",
+      "at": "variables",
+      "message": "Only the project's own CSS is read. Tailwind's default theme (its colour palette, fonts, shadows) is not carried."
+    },
+    {
+      "level": "info",
+      "at": "app/globals.css --spacing --radius",
+      "message": "Multipliers are not variables: each step records its multiplier and factor in `from` (#70 §3)."
+    }
+  ]
+}
