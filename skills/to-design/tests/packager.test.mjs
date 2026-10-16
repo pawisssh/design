@@ -98,6 +98,29 @@ test('non-ASCII in the plan is escaped, so the package stays ASCII and chars equ
   assert.equal(run.json.chars, text.length);
 });
 
+test('compaction drops spaces and comments but keeps strings, a - -b and i < s; a regex literal or a block comment is refused', () => {
+  const root = project();
+  writeFileSync(join(root, 'core.js'), [
+    '// a comment',
+    'async function buildComponentSets(figma, plan, state) {',
+    "  const s = 'a  b // c', t = `x  ${1 + 2}`; // trailing",
+    '  for (let i = 0; i < s.length; i++) if (i - -1 === 2) return { s, t };',
+    '}',
+    '',
+  ].join('\n'));
+  const run = pack(root);
+  assert.equal(run.status, 0, run.stdout);
+  const text = readFileSync(join(root, '.scratch/to-design/pkg/build-components.mcp.js'), 'utf8');
+  assert.ok(text.includes("const s='a  b // c',t=`x  ${1 + 2}`;\nfor(let i=0;i< s.length;i++)if(i- -1===2)return{s,t};\n}"), text);
+  assert.ok(!text.includes('trailing') && !text.includes('a comment'));
+  for (const bad of ["  return 'x'.replace(/ /g, '');", '  return /* no */ 1;']) {
+    writeFileSync(join(root, 'core.js'), `async function buildComponentSets(figma, plan, state) {\n${bad}\n}\n`);
+    const r = pack(root);
+    assert.equal(r.status, 2, bad);
+    assert.match(r.json.error, /regex literal|\/\/ comments only/);
+  }
+});
+
 test('a core that is not ASCII is refused, since its hash must match in the packager and in Figma', () => {
   const root = project();
   writeFileSync(join(root, 'core.js'), `${CORE.replace('{ return', '{ /* → */ return')}`);

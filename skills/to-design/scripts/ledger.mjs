@@ -15,12 +15,19 @@ export const emptyLedger = fileKey => ({ schemaVersion: 1, fileKey, foundations:
 
 export const readLedger = path => (existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : null);
 
-/** The ledger after a slice result. Refuses an error result; a result with conflicts carries the old section back unchanged. */
+/**
+ * The ledger after a slice result. Refuses an error result; a result with conflicts carries the old section back
+ * unchanged. Sections replace whole, except `sets`, which a sets call returns for its one family (#32): the
+ * other families' records are kept, so a call carries no other family's ids.
+ */
 export function recordResult(ledger, result) {
   if (!result || result.error) throw new Error(`not recording a failed call: ${result && result.error}`);
   if (!result.fileKey || !result.ledger) throw new Error('result has no fileKey or ledger');
   if (ledger && ledger.fileKey !== result.fileKey) throw new Error(`ledger is for ${ledger.fileKey}, result for ${result.fileKey}`);
-  return { ...(ledger || emptyLedger(result.fileKey)), ...result.ledger };
+  const before = ledger || emptyLedger(result.fileKey);
+  const out = { ...before, ...result.ledger };
+  if (result.slice === 'sets' && result.ledger.sets) out.sets = { ...(before.sets || {}), ...result.ledger.sets };
+  return out;
 }
 
 function main() {
