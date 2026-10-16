@@ -229,6 +229,13 @@ export function validate(contract, foundations) {
     if (b.match) checkPattern(b.match, `properties.${p.key}.binds[${i}].match`);
     if (!anatomy[b.node]) err(3, `properties.${p.key}.binds[${i}]`, `unknown anatomy node "${b.node}"`);
   }));
+  // Slot axes (#88): `slot` names an anatomy node; every value says whether it fills it, and both cases exist.
+  const slotAxes = c.axes.filter(a => a.slot !== undefined);
+  for (const a of slotAxes) {
+    if (!anatomy[a.slot] || a.slot === c.anatomy.name) err(3, `axes.${a.key}.slot`, `slot "${a.slot}" is not a non-root anatomy node`);
+    if (a.values.some(v => typeof v.filled !== 'boolean')) err(3, `axes.${a.key}`, 'every value of a slot axis needs `filled: true|false`');
+    else if (!a.values.some(v => v.filled) || a.values.every(v => v.filled)) err(3, `axes.${a.key}`, 'a slot axis needs a filled and an empty value');
+  }
   if (errors.length) return { ok: false, errors }; // rules 2, 4, 5 and 6 expand, which needs valid patterns
 
   // 2. defaults and the Base Component
@@ -269,6 +276,16 @@ export function validate(contract, foundations) {
     for (const p of c.properties)
       if (r.binds[p.key].length !== 1)
         gap(`properties.${p.key}.binds`, `property ${p.key} has ${r.binds[p.key].length} binds (needs exactly 1)`, t);
+    // #88: a slot axis's node shows exactly when the tuple fills it; a `visible` rule and a BOOLEAN never share a node.
+    for (const a of slotAxes) {
+      const v = a.values.find(x => x.key === t[a.key]);
+      const shown = r.layout[a.slot] && r.layout[a.slot].visible;
+      if (shown !== v.filled) gap(`layout ${a.slot}.visible`, `layout ${a.slot}.visible must be ${v.filled} where ${a.key} is ${v.key}`, t);
+    }
+    for (const p of c.properties)
+      for (const b of r.binds[p.key])
+        if (b.field === 'visible' && r.layout[b.node] && 'visible' in r.layout[b.node])
+          gap(`properties.${p.key}.binds`, `${b.node}.visible is set by a rule and bound to property ${p.key}`, t);
   }
   for (const [problem, { at, tuples }] of Object.entries(gaps))
     err(5, at, `${problem} in ${tuples.length} selected variant${tuples.length === 1 ? '' : 's'}, e.g. ${variantName(c, tuples[0])}`);

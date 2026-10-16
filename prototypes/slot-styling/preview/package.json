@@ -1,0 +1,16 @@
+{
+  "name": "prototype-slot-styling-preview",
+  "private": true,
+  "description": "PROTOTYPE (#88): packages to render the shadcn/ui Button. Installed with npm ci --ignore-scripts into .scratch/prototype-slot-styling.",
+  "dependencies": {
+    "@tailwindcss/cli": "4.3.3",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "esbuild": "0.25.10",
+    "lucide-react": "1.58.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "tailwind-merge": "3.3.1",
+    "tailwindcss": "4.3.3"
+  }
+}
