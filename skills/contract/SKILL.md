@@ -41,3 +41,13 @@ Committed instances live in the project, per Design System: `design-systems/<des
 From the command line: `node skills/contract/scripts/check.mjs <component.json> [--foundations <file>] [--table]` validates and prints the variant count, Base Component, token closure and, with `--table`, the resolved paint for the grid rows. It exits 1 on a validation error and 2 when a file cannot be read. Tests: `node --test skills/contract/test/*.test.mjs`.
 
 The formal JSON Schema is [`contract.schema.json`](contract.schema.json).
+
+## Colour converter
+
+[`scripts/color.mjs`](scripts/color.mjs) is the only CSS colour → sRGB conversion ([#70](https://github.com/pawisssh/design/issues/70) §5). An Adapter writing a Foundations COLOR and To-handoff's matcher reading a Prototype colour both call it, so both sides of a match convert the same way. Never convert colours elsewhere. Like `contract.mjs` it is pure ES2019 with no imports, and it can be inlined beside it.
+
+| Function | Returns |
+|---|---|
+| `convert(text)` | `{hex: "#rrggbb", alpha, clipped}` for hex, `rgb()`, `hsl()`, `oklab()`, `oklch()`, `color(srgb …)`, `color(display-p3 …)`, `color-mix()` in `srgb`/`oklab`/`oklch`, `transparent`, `black` and `white`. The route is CSS Color 4 with each channel clipped to [0, 1]. `clipped` is true when the clip moved a channel by more than half an 8-bit step. Alpha is rounded to 4 decimals. `color-mix()` mixes premultiplied, and an achromatic colour's hue is missing in oklch. `var()`, `calc()`, other named colours and relative colour syntax throw, naming the value. |
+| `oklab(text)` | OKLab `[L, a, b]` of the converted 8-bit colour. |
+| `deltaE(a, b)`, `chroma(text)` | OKLab ΔE between two converted colours; OKLab chroma √(a² + b²), which the [#91](https://github.com/pawisssh/design/issues/91) near-tier guard compares with 0.01. |
