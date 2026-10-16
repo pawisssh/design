@@ -186,7 +186,7 @@ The foundations ledger is one section of the single authoritative ledger per Des
 
 - Keys are flat names in both `variables` and `textStyles`, and mode keys in `collections.*.modes`. These are the same strings the Contract and the document use, so the builder binds with `ledger.variables[token]` and `ledger.textStyles[token]`.
 - The slice returns this section uncompacted. It is about 3 KB for Button, far under the 20 KB output cap, so #18's ID-array compaction is not needed here.
-- The foundations slice package carries the document without the review-only fields (`source`, `from`, `reason`, `level`, `usedBy`, `resolved`, `notes`, `checks`). That is about 17.8 K characters of compact JSON for Button, under the 50 K code cap with room for the core (the whole package was 34.1 K characters on the first live run and 37.6 K with a full ledger). `skills/to-design/scripts/build-plan.mjs` strips these fields when it derives the build plan, and a to-design test asserts that the stripped and the full document build the same objects (#29).
+- The foundations slice package carries the document without the review-only fields (`source`, `closure`, `from`, `reason`, `level`, `usedBy`, `resolved`, `notes`, `checks`). That is about 17.8 K characters of compact JSON for Button, under the 50 K code cap with room for the core (the whole package was 34.1 K characters on the first live run and 37.6 K with a full ledger). `skills/to-design/scripts/build-plan.mjs` strips these fields when it derives the build plan, and a to-design test asserts that the stripped and the full document build the same objects (#29).
 
 ## Update semantics (idempotent)
 
@@ -212,7 +212,7 @@ Identity is the flat name, carried through the ledger id. Figma names and labels
 
 ## Not verified
 
-- Whether a `GAP`-only variable appears in the **padding** picker in the Figma UI. The API binds it to padding (#27), but only an eye check in Figma can show the picker. Settled by #27: `GAP` is the only auto-layout spacing scope the API accepts, and mode order can be fixed (step 3).
+- Whether a `GAP`-only variable appears in the **padding** picker in the Figma UI. The API binds it to padding and `GAP` is the only auto-layout spacing scope it accepts (#27), but only an eye check in Figma can show the picker.
 
 ## Validation (generator)
 

@@ -4,9 +4,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { foundationsPlan } from '../scripts/build-plan.mjs';
 import { recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
@@ -342,4 +343,18 @@ test('the package leaves out review-only fields, and the stripped document build
   assert.deepEqual(a.snapshot(), b.snapshot());
   assert.deepEqual(fromStripped.ledger, fromFull.ledger);
   assert.ok(pack().out.chars < pack({ strip: false }).out.chars);
+});
+
+// ---- CLIs ----
+
+test('the build-plan and ledger CLIs run from a path that contains a space', () => {
+  const dir = join(realpathSync(mkdtempSync(join(tmpdir(), 'to-design-cli-'))), 'a space');
+  mkdirSync(dir);
+  for (const name of ['build-plan.mjs', 'ledger.mjs']) copyFileSync(new URL(`../scripts/${name}`, import.meta.url), join(dir, name));
+  const plan = spawnSync('node', [join(dir, 'build-plan.mjs'), 'foundations', '--doc', fileURLToPath(DOC_PATH), '--file-key', FILE_KEY, '--out', join(dir, 'run')], { cwd: dir, encoding: 'utf8' });
+  assert.equal(plan.status, 0, plan.stderr);
+  assert.equal(JSON.parse(plan.stdout).status, 'derived');
+  assert.equal(JSON.parse(readFileSync(join(dir, 'run', 'plan.json'), 'utf8')).fileKey, FILE_KEY);
+  const ledger = spawnSync('node', [join(dir, 'ledger.mjs')], { cwd: dir, encoding: 'utf8' });
+  assert.equal(ledger.status, 2, 'usage error, so main() ran');
 });

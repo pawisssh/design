@@ -8,6 +8,7 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { emptyLedger, ledgerPath, readLedger } from './ledger.mjs';
 
@@ -76,4 +77,4 @@ function main() {
   console.log(JSON.stringify({ status: 'derived', slice: plan.slice, fileKey, ledger: path, documentHash: plan.documentHash, options: plan.options, out: values.out }));
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();

@@ -6,6 +6,7 @@
 //   node skills/to-design/scripts/ledger.mjs record <result.json>
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export const ledgerPath = (fileKey, root = process.env.CLAUDE_PROJECT_DIR || process.cwd()) =>
   join(root, '.scratch', 'to-design', `${fileKey}.ledger.json`);
@@ -36,4 +37,4 @@ function main() {
   console.log(JSON.stringify({ status: 'recorded', ledger: path, slice: result.slice, summary: result.summary }));
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();
