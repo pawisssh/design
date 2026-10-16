@@ -8,6 +8,8 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
   const t0 = Date.now();
 
   // ---- integrity gate (#17): verify every CHECK field before the first change ----
+  // Kept identical in builder-core.js, except the per-core block (tests/gate-parity.test.mjs).
+  // gate begin
   const fnv = s => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(16).padStart(8, '0'); };
   const mismatch = (field, expected, got) => ({ error: 'package-mismatch', field, expected, got });
   if (!CHECK || typeof PLAN_SRC !== 'string' || typeof STATE_SRC !== 'string') return mismatch('check', 'CHECK, PLAN_SRC and STATE_SRC', typeof CHECK);
@@ -18,9 +20,12 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
   if (coreHash !== CHECK.core) return mismatch('core', CHECK.core, coreHash);
   let plan, state;
   try { plan = JSON.parse(PLAN_SRC); state = JSON.parse(STATE_SRC); } catch (e) { return mismatch('json', 'valid JSON', String(e && e.message)); }
+  // gate per-core begin
   const entries = plan.slice === 'base' ? 1 : ((plan.selection && plan.selection.entries) || []).length;
+  // gate per-core end
   if (entries !== CHECK.entries) return mismatch('entries', CHECK.entries, entries);
   if (typeof figma.fileKey === 'string' && figma.fileKey !== plan.fileKey) return { error: 'wrong-file', expected: plan.fileKey, got: figma.fileKey };
+  // gate end
 
   // the field kit's maps (its functions follow the dispatch; these must be set before it runs)
   const V = {}, S = {}, I = {};
