@@ -204,7 +204,8 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
           const [a, b] = [list[j], list[i]];
           if (!keep.has(a) || !keep.has(b) || variantsOf(a.candidate) !== variantsOf(b.candidate)) continue;
           const pa = propsOf(a.candidate), pb = propsOf(b.candidate);
-          if (pa.size && [...pa].every(p => pb.has(p))) { keep.delete(a); if (a.candidate !== b.candidate) drops.add(`${b.candidate} drops ${a.candidate}`); }
+          // tailwind-merge's font-size group: `text-[0.8rem]` drops `text-sm` though it leaves line-height unset.
+          if (pa.size && ([...pa].every(p => pb.has(p)) || (pa.has('font-size') && pb.has('font-size')))) { keep.delete(a); if (a.candidate !== b.candidate) drops.add(`${b.candidate} drops ${a.candidate}`); }
         }
       merged.set(key, keep);
     }
@@ -372,7 +373,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const list = cs => cs.join(', ');
   const notes = [];
   if (drops.size)
-    notes.push({ level: 'info', at: `${file} ${root.cva}`, message: `Each variant's classes are merged as cn() merges them, modelled (no package code runs): a later class drops an earlier one with the same variants whose CSS properties it covers. Here: ${list([...drops].sort(byKey))}.` });
+    notes.push({ level: 'info', at: `${file} ${root.cva}`, message: `Each variant's classes are merged as cn() merges them, modelled (no package code runs): a later class drops an earlier one with the same variants whose CSS properties it covers, or that also sets font-size. Here: ${list([...drops].sort(byKey))}.` });
   const why = {
     slot: 'Styled by what the component holds (:has); the slot axis is #121. Not carried.',
     ancestor: 'Styled by an ancestor; that is a Mode or the parent\'s Contract (ADR 0012). Not carried.',

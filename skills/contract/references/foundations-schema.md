@@ -180,7 +180,7 @@ To change a value, change the source pin or an Adapter rule and regenerate. To a
 
 The document is stale, and must be regenerated before any build, when any of these holds:
 
-- `source.commit` differs from the `source.commit` of any Contract in `closure.contracts`. A Design System is pinned to one Code Library version. Contracts at different commits are rejected. An installed-source library has no commit; its Contracts pin by `source.snapshotId` and `source.files` instead.
+- `source.commit` differs from the `source.commit` of any Contract in `closure.contracts`. A Design System is pinned to one Code Library version. Contracts at different commits are rejected. This rule holds for libraries pinned by commit. An installed-source library has none, and the same check by `source.packages` is future work.
 - A listed Contract's current `source.snapshotId` differs from the one recorded in `closure.contracts`.
 - The recomputed token union differs from `closure.tokens`, for example after a Contract edit that did not change its snapshot.
 - Contract validation rule 6 ("every token exists in the foundations") fails.
@@ -253,7 +253,7 @@ Identity is the flat name, carried through the ledger id. Figma names and labels
 
 ## Validation (generator)
 
-1. Every Contract in `closure.contracts` pins the same `source.commit` (for an installed-source library, which has none, the same `source.snapshotId` inputs).
+1. Every Contract in `closure.contracts` pins the same `source.commit`. This holds for libraries pinned by commit; installed-source libraries have no commit yet.
 2. Every closure token resolves in the Code Library sources, every source value is readable, and every Theme alias target exists in the palette. Every layer set lists at least three Theme tokens, and every Layer alias targets a Theme token.
 3. Every resolved Theme value equals the compiled CSS in the matching `.cds--white` / `.cds--g10` / `.cds--g90` / `.cds--g100` block. Every Layer value matches its `.cds--layer-one` / `-two` / `-three` block, `var(--cds-<target>, <White fallback>)`, in target and fallback, and every Mode selector has a rule in the CSS. Every emitted layout and type custom property matches in px (`fluid-spacing-*` as exact text), and each family's first font matches the CSS stack, except the listed `checks.css.differs`.
 4. Every Sass codeSyntax fallback exists in `@carbon/layout`.

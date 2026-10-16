@@ -137,7 +137,7 @@ It reads one component family of the project, `<ui alias>/<key>.tsx`, and writes
   - any other attribute (`[aria-invalid="true"]`), which must be in the attribute table below.
 
   Specificity counts `:is`, `:not` and `:has` as their most specific argument and `:where` as nothing. The winner per property is the highest specificity, then the latest rule in the output.
-- **Merging.** Before the cascade, each variant's classes are merged the way `cn()` merges them. This is modelled; no package code runs. A later class drops an earlier one that has the same variants and whose CSS properties it covers (`rounded-[min(…)]` drops `rounded-lg`). The Contract notes each drop.
+- **Merging.** Before the cascade, each variant's classes are merged the way `cn()` merges them. This is modelled; no package code runs. A later class drops an earlier one that has the same variants and whose CSS properties it covers (`rounded-[min(…)]` drops `rounded-lg`). It also drops an earlier class when both set a font size, as tailwind-merge's font-size group does (`text-[0.8rem]` drops `text-sm`). No other class group is modelled. The Contract notes each drop.
 
 ### Axes
 

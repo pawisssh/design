@@ -102,6 +102,13 @@ test('Button layout per size matches its compiled CSS, the 1px border added to e
   assert.match(at('default').paddingLeft.reason, /calc\(var\(--spacing\) \* 2\.5\) = 10px \+ 1px border/);
 });
 
+test('cn() is modelled: a later class drops an earlier one it covers, and a font size drops a font size', { skip }, async () => {
+  const { notes } = await button();
+  const cn = notes.find(n => /merged as cn\(\) merges them/.test(n.message));
+  assert.match(cn.message, /border-border drops border-transparent/);
+  assert.match(cn.message, /text-\[0\.8rem\] drops text-sm/);
+});
+
 test('layout is the same in every State, attribute and variant value: the rules hang off size only', { skip }, async () => {
   const { layout } = await button();
   assert.ok(layout.every(r => Object.keys(r.match).every(k => k === 'size')), JSON.stringify(layout.map(r => r.match)));
