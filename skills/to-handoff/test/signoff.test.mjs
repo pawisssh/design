@@ -132,6 +132,19 @@ test('a test approval writes approval and signed.json and approves the shown Pro
   await assert.rejects(approve({ handoffPath, designSystem: ds, ...shown(ds, handoffPath), at: AT, test: true }), /already signed off/);
 });
 
+test('approve changes only the approval lines of a hand-formatted Proposal and keeps every other byte', { skip: noDeps }, async () => {
+  const { ds } = await signed();
+  const before = readFileSync(fixture('proposals/avatar-stack.proposal.json'), 'utf8');
+  const after = readFileSync(join(ds, 'proposals/avatar-stack.proposal.json'), 'utf8');
+  const cut = before.indexOf('  "status": "pending"');
+  assert.ok(cut > 0 && before.includes('{ "key": "sm"'), 'the fixture is hand-formatted');
+  assert.equal(after.slice(0, cut), before.slice(0, cut));
+  const tail = after.slice(cut).split('\n');
+  assert.equal(tail[0], '  "status": "approved",');
+  assert.match(tail[1], /^ {2}"approval": /);
+  assert.ok(after.endsWith('\n}\n'));
+});
+
 test('a test approval is refused outside .scratch', { skip: noDeps }, async () => {
   const { ds, handoffPath } = await generated(undefined, join(tmpdir(), 'to-handoff-signoff'));
   try {

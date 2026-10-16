@@ -4,15 +4,15 @@
 // Sign-off is the owner's. approve runs only after the owner types "approve" in chat, with the hashes the
 // review showed, and writes `approval: {by: "owner", …}`. `{test: true}` writes TEST_APPROVER instead, only
 // under <repo>/.scratch/; validateHandoff rejects that approver anywhere else. Drift is never stored.
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { contentHash as contractHash, proposalContentHash } from '../../contract/scripts/contract.mjs';
+import { writeJson } from '../../contract/scripts/io.mjs';
 import { contentOf, handoffContentHash, prototypeFiles, usedHash } from './hash.mjs';
 import { REPO_ROOT, TEST_APPROVER, inScratch, loadDesignSystem } from './system.mjs';
 import { validateHandoff } from './validate.mjs';
 
 const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
-const toJson = o => JSON.stringify(o, null, 2) + '\n';
 
 /**
  * Leaf changes from `a` to `b`: [{path, change: "added" | "removed" | "changed", before?, after?}]. Arrays whose
@@ -208,15 +208,15 @@ export async function approve({ handoffPath, designSystem, contentHash, proposal
     const p = readJson(file);
     p.status = 'approved';
     p.approval = { by, at, contentHash: proposalContentHash(p) };
-    writeFileSync(file, toJson(p));
+    writeJson(file, p);
     approved.push(k);
   }
   h.status = 'approved';
   h.approval = { by, at, revision: h.revision, contentHash: hash };
-  const text = toJson(h);
-  writeFileSync(handoffPath, text);
+  // Spliced into each file's own text (io.mjs), so a Sign-off changes only the status and approval lines.
+  writeJson(handoffPath, h);
   const signedPath = join(dirname(handoffPath), 'signed.json');
-  writeFileSync(signedPath, text);
+  copyFileSync(handoffPath, signedPath);
   return { handoff: h, approved, signedPath };
 }
 
