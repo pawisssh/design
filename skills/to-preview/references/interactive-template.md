@@ -18,7 +18,7 @@ It should refuse to render when the installed packages differ from `contract.sou
 
 [`assets/catalog-template.html`](../assets/catalog-template.html) is the shell; `catalog.mjs` inlines into it the library CSS, the shared Contract module (`skills/contract/scripts/contract.mjs`, with `export` stripped, as `window.Contract`), [`assets/selection-model.js`](../assets/selection-model.js), [`assets/catalog-card.js`](../assets/catalog-card.js) and the catalog data `{contract, toggles, forces, sourceLabel, specimens}`:
 
-- `toggles`: one per multi-mode collection of the foundations document, in document order, `[{key, label, modes: [{key, label, className}]}]`. `className` is the Mode's `selector` without its dot; the generator refuses a selector that is not one class. Each collection's first mode is the default.
+- `toggles`: one per multi-mode collection of the foundations document, in document order, `[{key, label, modes: [{key, label, className}]}]`. `className` is the Mode's `selector` without its dot; `buildCatalog` refuses a selector that is not one class. Each collection's first mode is the default.
 - `forces`: `[{axis, value, pseudo}]` for every axis value with `code: null`; `pseudo` is the leading pseudo-class of its `css`.
 - `sourceLabel`: the card footer value, `code.package` and its pin in `source.packages` (`@carbon/react 1.118.0`).
 - `specimens`: `{key: html}`, keyed by `tupleKey` from the shared Contract module. The key (`primary|lg|enabled`) is an internal DOM id and never leaves the page.

@@ -6,7 +6,7 @@
 <!-- library-styles -->
 <style>
   /* Chrome colours are Carbon tokens (--cds-*) from the library stylesheet; the Theme toggle puts its Mode class on <body>,
-     a Layer toggle on a wrapper around the grid, and a card's background follows the layer (layer-background-01 is background). */
+     a Layer toggle on a wrapper around the grid, and a card's background is the layer's own surface, --cds-layer-background (at level one it equals --cds-background). */
   body > header,.tp-main,.tp-toolbar,.tp-cell,.tp-specimen,.tp-toolbar select,#export,.tp-toolbar button{box-sizing:border-box}
   body.tp-page{margin:0;font:14px/1.4 system-ui,sans-serif;color:var(--cds-text-primary);background:var(--cds-layer-01)}
   #export,.tp-toolbar button,.tp-toolbar select{font:inherit} #export,.tp-toolbar button{cursor:pointer;padding:8px 12px;border:1px solid var(--cds-border-strong-01);background:var(--cds-field-02);color:var(--cds-text-primary)}
@@ -40,8 +40,8 @@
   // To-preview shell over one Contract. catalog = {contract, toggles, forces, sourceLabel, specimens}; see scripts/catalog.mjs.
   // Checked = kept in the Contract; unchecked = omitted. The Base Component is locked on.
   const $ = id => document.getElementById(id);
-  // modes[i]: toggle i's element and its current Mode {host, key, className}.
-  let model, catalog, renderer, modes = [], filters = {}, rendered = false;
+  // toggleState[i]: toggle i's element and its current Mode {host, key, className}.
+  let model, catalog, renderer, toggleState = [], filters = {}, rendered = false;
   // Node factory for the page and the cards: props are DOM properties, `dataset` and `aria-*` attributes.
   const h = (tag, props = {}, ...children) => {
     const node = document.createElement(tag);
@@ -54,20 +54,20 @@
     return node;
   };
   function setMode(i, key) {
-    const m = modes[i];
+    const m = toggleState[i];
     if (m.className) m.host.classList.remove(m.className);
     m.key = key; m.className = catalog.toggles[i].modes.find(x => x.key === key).className;
     m.host.classList.add(m.className);
   }
-  const atDefaults = () => modes.every((m, i) => m.key === catalog.toggles[i].modes[0].key);
+  const atDefaults = () => toggleState.every((m, i) => m.key === catalog.toggles[i].modes[0].key);
   // The first toggle (Theme) goes on <body>, so the chrome follows it; each later one (Layer) on its own wrapper
   // around the grid, nested in document order, so its class sits inside the earlier ones' (a Carbon Theme class
-  // resets the layer tokens to level one). Every toggle starts at its first Mode.
-  function modeHosts() {
-    for (const m of modes) if (m.className) m.host.classList.remove(m.className);
+  // resets the layer tokens to level one). Undoes any earlier wrapping first, and resets every toggle to its first Mode.
+  function resetModeHosts() {
+    for (const m of toggleState) if (m.className) m.host.classList.remove(m.className);
     const grid = $("grid");
     while (grid.parentElement.classList.contains("tp-mode-host")) grid.parentElement.replaceWith(grid);
-    modes = catalog.toggles.map((t, i) => {
+    toggleState = catalog.toggles.map((_, i) => {
       if (i === 0) return { host: document.body };
       const host = h("div", { className: "tp-mode-host" });
       grid.replaceWith(host); host.append(grid);
@@ -185,7 +185,7 @@
       if (typeof options.renderSpecimen !== "function") throw new Error("Provide the Adapter's specimen renderer");
       catalog = options.catalog; renderer = options.renderSpecimen; filters = {}; rendered = false;
       model = new CatalogSelection(catalog.contract, window.Contract);
-      modeHosts();
+      resetModeHosts();
       $("title").textContent = catalog.contract.family.name + " preview";
       forceStates([...new Set(catalog.forces.map(f => f.pseudo))]);
       controls(); summary(); render();
