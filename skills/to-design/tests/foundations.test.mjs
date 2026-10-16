@@ -363,6 +363,28 @@ test('the build-plan and ledger CLIs run from a path that contains a space', () 
   assert.equal(ledger.status, 2, 'usage error, so main() ran');
 });
 
+test('selecting the Field group builds Layer after Theme: modes One, Two, Three, each aliasing its level\'s Theme variable (#109)', async () => {
+  const mock = mockFigma({ fileKey: FILE_KEY });
+  const result = await call(mock, { ledger: { schemaVersion: 1, fileKey: FILE_KEY, sets: {}, foundationsGroups: ['Field'] } });
+  assert.equal(result.error, undefined, JSON.stringify(result).slice(0, 300));
+  const snap = mock.snapshot();
+  const created = mock.log.filter(([op]) => op === 'createVariableCollection').map(([, , name]) => name);
+  assert.deepEqual(created, ['Primitives', 'Theme', 'Layer', 'Layout', 'Type'], 'Layer is created after Theme');
+  const layer = byName(snap.collections, 'Layer');
+  assert.deepEqual(layer.modes.map(m => m.name), ['One', 'Two', 'Three'], 'One is the first mode, so the default');
+  assert.deepEqual(layer.variables.map(v => v.name), ['Field/field', 'Field/field-hover']);
+  const v = name => byName(allVariables(mock), name);
+  const alias = name => ({ type: 'VARIABLE_ALIAS', id: v(name).id });
+  assert.deepEqual(v('Field/field').values, [['One', alias('Field/field-01')], ['Two', alias('Field/field-02')], ['Three', alias('Field/field-03')]]);
+  assert.deepEqual(v('Field/field').scopes, v('Field/field-01').scopes);
+  assert.deepEqual(v('Field/field').codeSyntax, { WEB: 'var(--cds-field)' });
+  assert.equal(byName(snap.collections, 'Theme').variables.filter(x => x.name.startsWith('Field/')).length, 6);
+  const f = result.ledger.foundations;
+  assert.deepEqual(Object.keys(f.collections), ['primitives', 'theme', 'layer', 'layout', 'type']);
+  assert.deepEqual(f.collections.layer.modes, Object.fromEntries(['one', 'two', 'three'].map((k, i) => [k, layer.modes[i].modeId])));
+  assert.equal(f.variables.field, v('Field/field').id);
+});
+
 test('ledger.mjs record --ledger writes the given ledger file, as every other To-design CLI reads it', () => {
   const dir = realpathSync(mkdtempSync(join(tmpdir(), 'ledger-cli-')));
   const result = { slice: 'foundations', fileKey: FILE_KEY, summary: {}, ledger: { foundations: { documentHash: 'sha256:x' } } };
