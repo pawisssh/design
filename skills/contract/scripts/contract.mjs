@@ -85,15 +85,16 @@ export function closure(contract) {
   return [...tokens].sort();
 }
 
-// Calls fn({tuple, section, node, field, path, ref}) for every value reference ({token} or {raw})
-// that a selected variant resolves to, including those nested in effects. Skips `was`.
+// Calls fn({tuple, section, node, field, key, path, ref}) for every value reference ({token} or {raw})
+// that a selected variant resolves to, including those nested in effects. Skips `was`. `path` names
+// the rule that set the field ("paint[1].Button.fill"); `key` is set for a nested reference ("color").
 function forEachUse(contract, fn) {
   for (const tuple of expand(contract)) {
     const r = resolve(contract, tuple);
     for (const section of SECTIONS)
       for (const [node, fields] of Object.entries(r[section]))
         for (const [field, value] of Object.entries(fields))
-          walkRefs(value, `${section}.${node}.${field}`, (ref, path, key) =>
+          walkRefs(value, `${section}[${r.from[`${section}.${node}.${field}`]}].${node}.${field}`, (ref, path, key) =>
             fn({ tuple, section, node, field, key, path, ref }));
   }
 }
@@ -221,23 +222,24 @@ export function validate(contract, foundations) {
           if (!required[section][node]) required[section][node] = new Set();
           required[section][node].add(field);
         }
-  const misses = {}; // "layout Button.minHeight is unresolved" -> [tuples]
-  const miss = (key, t) => { (misses[key] = misses[key] || []).push(t); };
+  const gaps = {}; // problem text -> {at, tuples}, so one problem is reported once with its variant count
+  const gap = (at, problem, t) => { (gaps[problem] = gaps[problem] || { at, tuples: [] }).tuples.push(t); };
   for (const t of selected) {
     const r = resolve(c, t);
     for (const section of SECTIONS)
       for (const [node, fields] of Object.entries(required[section]))
         for (const field of fields) {
+          const at = `${section} ${node}.${field}`;
           const v = r[section][node] && r[section][node][field];
-          if (v === undefined) miss(`${section} ${node}.${field} is unresolved`, t);
-          else if (isObj(v) && 'sameAs' in v) miss(`${section} ${node}.${field} sameAs "${v.sameAs}" does not resolve`, t);
+          if (v === undefined) gap(at, `${at} is unresolved`, t);
+          else if (isObj(v) && 'sameAs' in v) gap(at, `${at} sameAs "${v.sameAs}" does not resolve`, t);
         }
     for (const p of c.properties)
-      if (r.binds[p.key].length !== 1) miss(`property ${p.key} has ${r.binds[p.key].length} binds (needs exactly 1)`, t);
+      if (r.binds[p.key].length !== 1)
+        gap(`properties.${p.key}.binds`, `property ${p.key} has ${r.binds[p.key].length} binds (needs exactly 1)`, t);
   }
-  for (const [what, tuples] of Object.entries(misses))
-    err(5, what.split(' ').slice(0, 2).join(' '),
-      `${what} in ${tuples.length} selected variant${tuples.length === 1 ? '' : 's'}, e.g. ${variantName(c, tuples[0])}`);
+  for (const [problem, { at, tuples }] of Object.entries(gaps))
+    err(5, at, `${problem} in ${tuples.length} selected variant${tuples.length === 1 ? '' : 's'}, e.g. ${variantName(c, tuples[0])}`);
 
   // 6. raw values carry level and reason; tokens exist and are used inside their variable's scopes
   for (const section of SECTIONS)
@@ -306,6 +308,8 @@ function checkApproval(c, err) {
   if (!isObj(approval)) return err(8, 'selection.approval', 'an approved Contract needs an approval {by, at, snapshotId, contentHash}');
   if (approval.by !== 'owner') err(8, 'selection.approval.by', `only the owner approves (by: "owner"), not ${JSON.stringify(approval.by)}`);
   if (typeof approval.at !== 'string' || !approval.at) err(8, 'selection.approval.at', 'approval.at must be an ISO time');
+  for (const n of blockingNotes(c))
+    err(8, 'notes', `the warning note at ${n.at} blocks approval (an uncarried owner tweak): ${n.message}`);
   if (approval.snapshotId !== c.source.snapshotId)
     err(8, 'selection.approval.snapshotId', `approval.snapshotId ${approval.snapshotId} does not match source.snapshotId ${c.source.snapshotId}: the source moved since approval`);
   const hash = contentHash(c);
@@ -346,7 +350,7 @@ function checkShape(c, err) {
     if (!isObj(p) || typeof p.key !== 'string' || !['TEXT', 'BOOLEAN', 'INSTANCE_SWAP'].includes(p.type) || !Array.isArray(p.binds))
       err('schema', `properties[${i}]`, 'a property needs `key`, `type` (TEXT, BOOLEAN or INSTANCE_SWAP) and `binds`');
   });
-  for (const section of ['layout', 'paint'])
+  for (const section of SECTIONS)
     (Array.isArray(c[section]) ? c[section] : []).forEach((r, i) => {
       if (!isObj(r) || !isObj(r.match) || !isObj(r.set)) err('schema', `${section}[${i}]`, 'a rule is {match, set}');
     });
@@ -367,10 +371,19 @@ export function applyOmit(contract, patch) {
   if (patch.snapshotId !== contract.source.snapshotId)
     throw new Error(`omit patch snapshotId ${patch.snapshotId} does not match source.snapshotId ${contract.source.snapshotId}`);
   const c = clone(contract);
-  c.selection.omit = patch.omit.map(match => ({ match: clone(match) }));
+  const patternKey = p => canonical(Object.fromEntries(Object.entries(p).map(([k, v]) => [k, Array.isArray(v) ? [...v].sort() : v])));
+  const reasons = {};
+  for (const o of contract.selection.omit) if (o.reason) reasons[patternKey(o.match)] = o.reason;
+  c.selection.omit = patch.omit.map(match => {
+    const reason = reasons[patternKey(match)];
+    return reason ? { match: clone(match), reason } : { match: clone(match) };
+  });
   c.selection.expectedCount = patch.expectedCount;
   return asDraft(c);
 }
+
+// Notes that block approval: an owner tweak the Contract cannot carry is recorded as a `warning` note.
+const blockingNotes = c => (c.notes || []).filter(n => n.level === 'warning');
 
 /** A copy marked as edited: `status: "draft"`, `approval: null`. Call it on every Contract write. */
 export function asDraft(contract) {
@@ -383,8 +396,12 @@ export function asDraft(contract) {
 /**
  * Record the owner's approval, given only after an explicit "approve" in chat at the end of the base
  * loop. Returns a copy with status "approved" and approval {by: "owner", at, snapshotId, contentHash}.
+ * Throws while a `warning` note (an uncarried owner tweak) is open: resolve or remove it first.
  */
 export function approve(contract, at) {
+  const blocking = blockingNotes(contract);
+  if (blocking.length)
+    throw new Error(`cannot approve: ${blocking.length} warning note(s) block approval, first at ${blocking[0].at}: ${blocking[0].message}`);
   const c = clone(contract);
   c.selection.status = 'approved';
   c.selection.approval = { by: 'owner', at, snapshotId: c.source.snapshotId, contentHash: contentHash(c) };

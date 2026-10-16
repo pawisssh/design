@@ -65,7 +65,7 @@ Themes are not an axis. They are Figma Variable modes, defined once per Design S
 - `expectedCount` is a checksum. Tools reject the Contract when the expansion gives a different count.
 - `status` is `draft` or `approved`. `approval` is `null` while draft and `{by, at, snapshotId, contentHash}` once approved (see [Approval](#approval)). Execution authorisation is not stored here.
 - The default tuple must be selected. To start from a different Base Component, change `axes[].default` and set `defaultSource: "owner"`.
-- To-preview's export is an omit patch, `{family, snapshotId, omit: [pattern], expectedCount}`. It is the whole owner omit list, so `applyOmit()` replaces `selection.omit` with it (each pattern becomes `{match}`) rather than adding to it. The agent then validates and asserts that the expanded set equals the checked combinations. To-preview edits only `selection.omit` and `expectedCount` and never writes an approval.
+- To-preview's export is an omit patch, `{family, snapshotId, omit: [pattern], expectedCount}`. It is the whole owner omit list, so `applyOmit()` replaces `selection.omit` with it (each pattern becomes `{match}`, keeping the `reason` of a pattern that was already there) rather than adding to it, so a combination the owner re-checks drops out of the list. The agent then validates and asserts that the expanded set equals the checked combinations. To-preview edits only `selection.omit` and `expectedCount` and never writes an approval.
 
 ### Approval
 
@@ -98,7 +98,7 @@ A tweak the owner makes to the Base Component in Figma lands **in place**, on th
 
 - A tweak to a bound variable becomes a token edit. A typed number becomes a raw `warning`. Tokens are read only from `boundVariables`, and a typed number that equals exactly one token is offered as that token, never swapped in silently.
 - `was` is history, not a live value: the token closure and the raw `level`/`reason` check skip it.
-- The agent asks first when the rule is shared by other variants (blast radius). There is no top-level edit log. A derived raw that an edit made stale gets a `verify` note, not a recompute. Tweaks the Contract cannot express (for example `letterSpacing`, a structure change) become `notes` warnings and block approval.
+- The agent asks first when the rule is shared by other variants (blast radius). There is no top-level edit log. A derived raw that an edit made stale gets a `verify` note, not a recompute. Tweaks the Contract cannot express (for example `letterSpacing`, a structure change) become `notes` at level `warning` and block approval: `approve()` refuses and rule 8 rejects an approved Contract while one is open.
 - An Adapter re-run keeps `by: "owner"` values and reports a conflict when the source value also changed (merge mechanics not yet specified).
 
 ## Anatomy
@@ -186,10 +186,10 @@ These are computed from the Contract, never written into it:
 2. Every axis has a `default` that is one of its values. The default tuple is selected.
 3. Every pattern (`excluded`, `selection.omit`, rules, property `binds`) names known axes and values. Every exclusion has `reason` and `evidence`. Every rule and bind names an anatomy node, or an `<INSTANCE node>/<layer>` path such as `Glyph/Vector`.
 4. The expansion equals `selection.expectedCount`.
-5. Every selected variant resolves every required field for every anatomy node, every `sameAs` resolves, and every variant gets exactly one bind per property. Required fields are, per anatomy node type: COMPONENT `direction`, `padding*`, `gap`, `fill`, `stroke`; TEXT `textStyle`, `fill`; FRAME `width`, `height`. On top of these, a field that any rule sets for a node is required for that node in every selected variant, so the builder never falls back to a Figma default (for Button this adds `minHeight`, `effects` and the `Glyph/Vector` fill).
+5. Every selected variant resolves every required field for every anatomy node, every `sameAs` resolves, and every variant gets exactly one bind per property. Required fields are, per anatomy node type: COMPONENT `direction`, `padding*`, `gap`, `fill`, `stroke`; TEXT `textStyle`, `fill`; FRAME `width`, `height`. On top of these, a field that any rule sets for a node is required for that node in every selected variant, so the builder never falls back to a Figma default (for Button this makes every field of the first layout and paint rules required everywhere, plus `minHeight` on every size).
 6. Every `raw` value has `level` (`info` or `warning`) and `reason`. Every token a selected variant uses exists in the foundations document (`textStyle` in `textStyles`, every other field in `variables`) and is used inside that variable's `scopes`. The scope a field needs: `padding*` and `gap` → `GAP` (Figma has no padding scope, #27); `width`, `height`, `min*`, `max*` → `WIDTH_HEIGHT`; `radius` → `CORNER_RADIUS`; `strokeWeight` → `STROKE_FLOAT`; `stroke` → `STROKE_COLOR`; effect `color` → `EFFECT_COLOR`; `fill` → `TEXT_FILL` on a TEXT node, `SHAPE_FILL` on an `<instance>/<layer>` path, `FRAME_FILL` otherwise (`ALL_FILLS` covers all three). Uses are checked after `sameAs`, so `Glyph/Vector` checks the label colour as `SHAPE_FILL`. `was` is skipped.
-7. Every `instanceOf` target is declared: `icon:*` needs `icons` (whose `default` is in `preferred`), `family:<key>` needs `dependencies.families`, `sub:<name>` needs `subComponents`. Build order (targets first) is the builder's job.
-8. `status` is `draft` with `approval: null`, or `approved` with an [approval](#approval) by the owner whose `snapshotId` and `contentHash` both match.
+7. Every `instanceOf` target is declared: `icon:*` needs `icons` (whose `default` is in `preferred`), `family:<key>` needs `dependencies.families`, `sub:<name>` needs `subComponents`. That each target is built first is enforced by the builder's build order, not by `validate`.
+8. `status` is `draft` with `approval: null`, or `approved` with an [approval](#approval) by the owner whose `snapshotId` and `contentHash` both match, and no `warning` note (an uncarried owner tweak) is open.
 
 ## Versioning
 

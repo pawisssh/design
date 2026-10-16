@@ -100,13 +100,13 @@ test('rejects a wrong expectedCount', () => {
 test('rejects a token used outside its variable scopes (rule 6)', () => {
   const c = button();
   c.paint.find(r => r.match.kind === 'primary' && !r.match.state).set.Button.fill = { token: 'text-on-color' };
-  rejects(c, 6, '"text-on-color"', 'FRAME_FILL', 'paint.Button.fill', '[SHAPE_FILL, TEXT_FILL]');
+  rejects(c, 6, '"text-on-color"', 'FRAME_FILL', 'paint[1].Button.fill', '[SHAPE_FILL, TEXT_FILL]');
 });
 
 test('padding and gap bind under the GAP scope (rule 6, #27)', () => {
   const c = button();
   c.layout[0].set.Button.paddingLeft = { token: 'size-xs' };
-  rejects(c, 6, '"size-xs"', 'GAP', 'layout.Button.paddingLeft', '[WIDTH_HEIGHT]');
+  rejects(c, 6, '"size-xs"', 'GAP', 'layout[0].Button.paddingLeft', '[WIDTH_HEIGHT]');
 });
 
 test('rejects a token that is not in the foundations document', () => {
@@ -206,6 +206,30 @@ test('applyOmit replaces the omit list, resets the approval, and the result vali
   const back = contract.applyOmit(c, { family: 'button', snapshotId, omit: [], expectedCount: 245 });
   assert.equal(contract.expand(back).length, 245);
   assert.equal(approved.selection.status, 'approved', 'applyOmit does not mutate its input');
+});
+
+test('an uncarried owner tweak (a warning note) blocks approval', () => {
+  // The owner-edits fixture carries the prototype's warning note for an uncarried letterSpacing tweak.
+  const edited = load('skills/contract/test/fixtures/button.owner-edits.component.json');
+  assert.throws(() => contract.approve(edited, '2026-10-16T09:00:00Z'), /layout\.Label\.letterSpacing/);
+  const forced = contract.approve(button(), '2026-10-16T09:00:00Z');
+  forced.notes = edited.notes;
+  forced.selection.approval.contentHash = contract.contentHash(forced);
+  rejects(forced, 8, 'warning note', 'layout.Label.letterSpacing', 'blocks approval');
+});
+
+test('applyOmit keeps the reason of an omit pattern the patch carries again', () => {
+  const c = button();
+  c.selection.omit = [{ match: { size: '2xl', kind: 'danger--ghost' }, reason: 'owner: not used' }];
+  c.selection.expectedCount = 240;
+  const patched = contract.applyOmit(c, {
+    family: 'button', snapshotId: c.source.snapshotId, expectedCount: 230,
+    omit: [{ kind: 'danger--ghost', size: '2xl' }, { size: 'xs', kind: 'ghost' }],
+  });
+  assert.deepEqual(patched.selection.omit, [
+    { match: { kind: 'danger--ghost', size: '2xl' }, reason: 'owner: not used' },
+    { match: { size: 'xs', kind: 'ghost' } },
+  ]);
 });
 
 test('applyOmit refuses a patch for another family or another source snapshot', () => {

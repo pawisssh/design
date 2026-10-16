@@ -31,7 +31,7 @@ Committed instances live in the project, per Design System: `design-systems/<des
 | `closure(contract)` | The sorted token names the selected variants use, skipping `was`. |
 | `applyOmit(contract, patch)` | A draft copy with To-preview's omit patch applied (replaces `selection.omit`). Throws on another family or `snapshotId`. |
 | `asDraft(contract)` | A copy with `status: "draft"`, `approval: null`. Use it on every Contract write. |
-| `approve(contract, at)` | A copy approved by the owner: `{by: "owner", at, snapshotId, contentHash}`. Call it only after the owner's explicit "approve" in chat. |
+| `approve(contract, at)` | A copy approved by the owner: `{by: "owner", at, snapshotId, contentHash}`. Call it only after the owner's explicit "approve" in chat. Throws while a `warning` note is open. |
 | `contentHash(contract)`, `sha256(text)` | `sha256:<hex>` of the canonical Contract without `selection.status` and `selection.approval`; hex sha256 of a string's UTF-8 bytes. |
 
 From the command line: `node skills/contract/scripts/check.mjs <component.json> [--foundations <file>] [--table]` validates and prints the variant count, Base Component, token closure and, with `--table`, the resolved paint for the grid rows. Tests: `node --test skills/contract/test/*.test.mjs`.
