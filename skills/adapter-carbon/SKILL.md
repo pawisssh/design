@@ -15,6 +15,20 @@ The Adapter for the Carbon React Code Library. There is one Adapter skill per Co
 
 The committed outputs for the pilot (Carbon `v11.118.0`, commit `44f90d8`) are in [`design-systems/carbon/`](../../design-systems/carbon/). The Button Contract there was written by an agent and is the reference output.
 
+## Foundations step
+
+Regenerate the foundations document after any Contract edit that changes its tokens, a new Contract, or a new source pin:
+
+```
+node skills/adapter-carbon/scripts/foundations.mjs
+```
+
+- It reads every `design-systems/carbon/contracts/*.component.json` and writes `design-systems/carbon/carbon.foundations.json`. Never edit that file by hand; change a Contract, the pin or a rule here, and regenerate.
+- Sources: [`scripts/sources.mjs`](scripts/sources.mjs) pins Carbon `v11.118.0` (commit `44f90d8`). It fetches the 8 value files (DTCG themes, button, layout, colors and `@carbon/type` sources) from the repository at that commit and checks each sha256. It also fetches the `@carbon/styles` and `@carbon/layout` npm tarballs, used only for the checks, and checks each against its registry `integrity`. Everything lands in gitignored `.scratch/adapter-carbon/sources/`. The step fetches on first use; `node skills/adapter-carbon/scripts/sources.mjs` fetches up front. Nothing from a package is run.
+- The token closure comes from the shared module's `closure()`. After generating, it runs the shared module's `validate()` on every Contract against the new document. Generation fails, and writes nothing, on any validation error (including a token used outside its variable's scopes, rule 6), a token Carbon does not define, a resolved value that differs from the compiled CSS, or a missing Sass fallback.
+- The rules it applies (collections, modes, naming, scopes, codeSyntax, raw exceptions) are in the [foundations schema](../contract/references/foundations-schema.md).
+- Tests: `node --test skills/adapter-carbon/test/*.test.mjs`. They skip, saying so, until the sources are fetched.
+
 ## Coming next
 
-The foundations step `scripts/derive_foundations.py` lands in #28, the preview renderer in #33, and the agent guide from Carbon source to a draft Contract in #34.
+The preview renderer in #33, and the agent guide from Carbon source to a draft Contract in #34.
