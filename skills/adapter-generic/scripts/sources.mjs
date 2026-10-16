@@ -27,7 +27,7 @@ export const TOOLS = {
     extract: ['package/package.json', 'package/LICENSE', 'package/index.css', 'package/preflight.css', 'package/theme.css',
       'package/utilities.css', 'package/dist'],
   },
-  // Read by the component tier (cva and prop unions from the TS AST), a later ticket.
+  // Read only as a parser by the component step (source.mjs): cva calls and components from the TS AST.
   typescript: {
     version: '6.0.3',
     integrity: 'sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==',

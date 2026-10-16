@@ -40,7 +40,7 @@ const CLIPPED = 'outside sRGB, clipped per channel';
 
 const fail = msg => { throw new Error(msg); };
 const byKey = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
-const round = x => Math.round(x * 1e4) / 1e4; // px to 4 decimals, so 10 x 2.2 is 22, not 22.000000000000004
+export const round = x => Math.round(x * 1e4) / 1e4; // px to 4 decimals, so 10 x 2.2 is 22, not 22.000000000000004
 const title = s => s.charAt(0).toUpperCase() + s.slice(1);
 const isColour = text => /^(#|(rgba?|hsla?|oklab|oklch|color|color-mix)\(|(transparent|black|white)$)/i.test(text);
 
@@ -84,11 +84,16 @@ function scaled(text, at) {
   return { css: text };
 }
 
-/** Evaluate a compiled length (`calc(var(--spacing) * 1.5)`, `var(--radius)`, `1px`) to px, given px per property. */
-function evaluate(text, env, at) {
+/**
+ * Evaluate a compiled length (`calc(var(--spacing) * 1.5)`, `var(--radius)`, `min(var(--radius-md), 10px)`, `1px`)
+ * to px, given px per property.
+ */
+export function evaluate(text, env, at) {
   const t = text.trim();
   let m = /^var\((--[\w-]+)\)$/.exec(t);
   if (m) return m[1] in env ? env[m[1]] : fail(`${at}: compiled ${t} names an unknown property`);
+  m = /^(min|max)\(([^,]+),([^,]+)\)$/.exec(t);
+  if (m) return Math[m[1]](evaluate(m[2], env, at), evaluate(m[3], env, at));
   m = /^calc\((.+)\*(.+)\)$/.exec(t);
   if (m) return round(evaluate(m[1], env, at) * evaluate(m[2], env, at));
   if (/^-?\d*\.?\d+$/.test(t)) return parseFloat(t);
