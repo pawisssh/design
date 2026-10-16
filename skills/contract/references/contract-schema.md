@@ -172,7 +172,7 @@ A Sub-component uses the same fields as a family, without `source`, `selection`,
 These are computed from the Contract, never written into it:
 
 - the token closure, which feeds the foundations scope (#9)
-- the icon list
+- the icon list: `icons(contract)` returns one Contract's `default` then its `preferred`, without duplicates (the builder takes the union over Contracts), and `iconName(key)` gives the kit-style name (`trash-can` → `Trash-can`)
 - the expanded variant tuples and specimen ids
 - Figma ids and keys, which live in the builder ledger
 

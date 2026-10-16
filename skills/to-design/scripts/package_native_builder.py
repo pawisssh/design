@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Package the fixed builder core with a build plan and ledger state into one use_figma package.
 
-The package embeds plan and state as String.raw text with a CHECK block of FNV-1a-32 hashes
+The package embeds plan and state as String.raw text (any "<" rebuilt at run time, see literal()) with a CHECK block of FNV-1a-32 hashes
 (#17); the core verifies it before its first change. MCP-only: there is no Console/Scripter wrapper.
 """
 import argparse
@@ -44,10 +44,24 @@ def embeddable(name, text):
     return text
 
 
+# use_figma transpiles a script whose string values hold markup-like text ("<svg", "<p", even spelled
+# as the escape "\u003csvg"), and that rewrites buildComponentSets.toString(), so the core hash no longer matches (#30).
+# The package therefore never spells "<": a text holding one is emitted as String.raw pieces joined
+# with String.fromCharCode(60), which rebuilds the exact text at run time.
+MARKUP = re.compile(r"<[A-Za-z/!?]|\\u003c|\\x3c|\\u\{0*3c\}", re.IGNORECASE)
+
+
+def literal(text):
+    """A JS expression whose value is `text` and whose source spells no "<"."""
+    return "[" + ",".join(f"String.raw`{part}`" for part in text.split("<")) + "].join(String.fromCharCode(60))" if "<" in text else f"String.raw`{text}`"
+
+
 def plan_entries(plan):
-    """The CHECK entry count: the objects the foundations slice builds, or the selected variants."""
+    """The CHECK entry count: the objects the foundations slice builds, the icons, or the selected variants."""
     if plan.get("slice") == "foundations":
         return len(plan["foundations"]["variables"]) + len(plan["foundations"]["textStyles"])
+    if plan.get("slice") == "icons":
+        return len(plan["icons"])
     return len(plan["selection"]["entries"])
 
 
@@ -80,6 +94,18 @@ def check_foundations(plan):
         raise ValueError("Foundations plan must name its fileKey and documentHash")
 
 
+def check_icons(plan):
+    icons = plan.get("icons")
+    if not plan.get("fileKey") or not plan.get("page") or not isinstance(icons, list):
+        raise ValueError("Icons plan must name its fileKey and page and carry an icons list")
+    keys = [icon.get("key") for icon in icons if isinstance(icon, dict)]
+    if len(keys) != len(icons) or len(set(keys)) != len(keys):
+        raise ValueError("Icons plan entries must have unique keys")
+    for icon in icons:
+        if not all(isinstance(icon.get(field), str) and icon[field] for field in ("key", "name", "file", "svg", "sha256")):
+            raise ValueError(f"Icon {icon.get('key')} needs key, name, file, svg and sha256")
+
+
 def package(core, plan, state):
     if not re.search(r"async\s+function\s+buildComponentSets\s*\(", core):
         raise ValueError("Core must declare async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK)")
@@ -87,6 +113,8 @@ def package(core, plan, state):
         raise ValueError("Build plan schemaVersion must be 1")
     if plan.get("slice") == "foundations":
         check_foundations(plan)
+    elif plan.get("slice") == "icons":
+        check_icons(plan)
     else:
         check_selection(plan)
     if not isinstance(state, dict):
@@ -100,11 +128,16 @@ def package(core, plan, state):
     identity = hashlib.sha256((core + plan_src + state_src).encode()).hexdigest()
     mcp = (
         f"// Native build package: {identity}\n{core.rstrip()}\n"
-        f"const PLAN_SRC = String.raw`{plan_src}`;\n"
-        f"const STATE_SRC = String.raw`{state_src}`;\n"
+        f"const PLAN_SRC = {literal(plan_src)};\n"
+        f"const STATE_SRC = {literal(state_src)};\n"
         f"const CHECK = {json.dumps(check, separators=(',', ':'))};\n"
         "return await buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK);\n"
     )
+    # Data comes through literal(); markup-like text anywhere else (a core comment or string) fails closed.
+    found = MARKUP.search(mcp)
+    if found:
+        raise ValueError(f"Package spells markup-like text {found.group(0)!r}, which makes use_figma rewrite the core: "
+                         f"{mcp[max(0, found.start() - 30):found.end() + 30]!r}")
     return mcp, check, identity
 
 

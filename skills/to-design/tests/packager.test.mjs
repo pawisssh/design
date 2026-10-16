@@ -124,6 +124,31 @@ test('plan text with a backtick or ${ is refused, since String.raw could not car
   }
 });
 
+// use_figma transpiles scripts whose strings hold markup-like text, which reformats the core's toString() (#30).
+test('a "<" in plan text is rebuilt at run time with String.fromCharCode(60), never spelled in the package', () => {
+  const root = project();
+  const note = '<svg a="1">x</svg> and i < 2';
+  writeFileSync(join(root, 'plan.json'), JSON.stringify({ ...PLAN, note }));
+  const run = pack(root);
+  assert.equal(run.status, 0, run.stdout + run.stderr);
+  const text = readFileSync(join(root, '.scratch/to-design/pkg/build-components.mcp.js'), 'utf8');
+  assert.ok(!text.slice(CORE.length).includes('<'), 'no "<" outside the core');
+  const planExpr = text.match(/^const PLAN_SRC = (.*);$/m)[1];
+  const planSrc = new Function(`return ${planExpr};`)();
+  assert.equal(JSON.parse(planSrc).note, note);
+  assert.equal(planSrc.length, run.json.check.planLen);
+});
+
+test('a core that spells markup-like text is refused, since use_figma would rewrite it', () => {
+  for (const bad of ['// <svg> in a comment', "const s = '\\u003cp';"]) {
+    const root = project();
+    writeFileSync(join(root, 'core.js'), CORE.replace('{ return', `{\n  ${bad}\n  return`));
+    const run = pack(root);
+    assert.equal(run.status, 2, bad);
+    assert.match(run.json.error, /markup-like text/);
+  }
+});
+
 test('a package written outside the project dir is refused, since the hook could never expand it', () => {
   const root = project();
   const run = pack(root, '../elsewhere');

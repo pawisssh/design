@@ -137,12 +137,126 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
     _needFont(font) { if (!fonts.has(`${font.family}/${font.style}`)) throw new Error(`font not loaded: ${font.family} ${font.style}`); }
   }
 
-  const root = { children: pages.map(name => ({ id: `0:${next++}`, type: 'PAGE', name })) };
+  // ---- scene nodes: pages, frames, components, vectors (what the icons slice uses) ----
+  // createNodeFromSvg gives a FRAME the size of the viewBox with one VECTOR per shape, constrained SCALE/SCALE
+  // (probed in #13). resize() scales only children whose constraints are SCALE, so the order of
+  // "set SCALE, then resize" matters as it does in Figma. flatten() names its result "Flattened" and resets
+  // constraints to MIN, so the core has to set both.
+  const nodes = new Map();
+  class SceneNode {
+    constructor(type, name, { x = 0, y = 0, width = 100, height = 100 } = {}) {
+      this.id = `${next++}:${next++}`; this.type = type; this._name = name; this.parent = null; this.children = [];
+      this._x = x; this._y = y; this.width = width; this.height = height; this._fills = []; this._description = '';
+      this._constraints = { horizontal: 'MIN', vertical: 'MIN' };
+      nodes.set(this.id, this);
+    }
+    get name() { return this._name; }
+    set name(v) { w('node.name', this.id, v); this._name = v; }
+    get x() { return this._x; }
+    set x(v) { w('node.x', this.id, v); this._x = v; }
+    get y() { return this._y; }
+    set y(v) { w('node.y', this.id, v); this._y = v; }
+    get fills() { return clone(this._fills); }
+    set fills(v) { w('node.fills', this.id, v); this._fills = clone(v); }
+    get constraints() { return { ...this._constraints }; }
+    set constraints(v) { w('node.constraints', this.id, v); this._constraints = { ...v }; }
+    get description() { return this._description; }
+    set description(v) { w('node.description', this.id, v); this._description = v; }
+    get removed() { return !nodes.has(this.id); }
+    appendChild(child) {
+      w('appendChild', this.id, child.id);
+      if (child.parent) child.parent.children = child.parent.children.filter(n => n !== child);
+      child.parent = this; this.children.push(child);
+    }
+    resize(width, height) {
+      w('resize', this.id, width, height);
+      const sx = width / this.width, sy = height / this.height;
+      for (const c of this.children) {
+        if (c._constraints.horizontal === 'SCALE') { c._x *= sx; c.width *= sx; }
+        if (c._constraints.vertical === 'SCALE') { c._y *= sy; c.height *= sy; }
+      }
+      this.width = width; this.height = height;
+    }
+    remove() {
+      w('node.remove', this.id);
+      const drop = n => { nodes.delete(n.id); n.children.forEach(drop); };
+      drop(this);
+      if (this.parent) this.parent.children = this.parent.children.filter(n => n !== this);
+    }
+  }
+  class Page extends SceneNode {
+    constructor(name) { super('PAGE', name); this.loaded = false; }
+    async loadAsync() { this.loaded = true; }
+  }
+  class Component extends SceneNode {
+    constructor(name, box) { super('COMPONENT', name, box); this.key = createKey(this.id); }
+  }
+  const createKey = id => [...id].reduce((h, ch) => (Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0), 2166136261).toString(16).padStart(8, '0').repeat(5);
+
+  // Bounds of one SVG shape, from a rect's attributes or the absolute coordinate pairs of a path.
+  function shapeBox(tag, attrs, view) {
+    const attr = name => { const m = attrs.match(new RegExp(`\\b${name}="([^"]*)"`)); return m ? m[1] : null; };
+    if (tag === 'rect') return { x: +(attr('x') || 0), y: +(attr('y') || 0), width: +attr('width'), height: +attr('height') };
+    const nums = (attr('d') || attr('points') || '').match(/-?\d*\.?\d+/g);
+    if (!nums || nums.length < 2) return { x: 0, y: 0, width: view.width, height: view.height };
+    const xs = nums.filter((_, i) => i % 2 === 0).map(Number), ys = nums.filter((_, i) => i % 2 === 1).map(Number);
+    return { x: Math.min(...xs), y: Math.min(...ys), width: Math.max(...xs) - Math.min(...xs), height: Math.max(...ys) - Math.min(...ys) };
+  }
+
+  const root = { children: pages.map(name => { const p = new Page(name); return p; }) };
+  for (const p of root.children) p.parent = root;
   const figma = {
     fileKey,
     root,
     currentPage: root.children[0],
     async setCurrentPageAsync(page) { w('setCurrentPage', page.id); figma.currentPage = page; },
+    async getNodeByIdAsync(id) { return nodes.get(id) || null; },
+    createPage() {
+      const p = new Page('Page');
+      w('createPage', p.id);
+      p.parent = root; root.children.push(p);
+      return p;
+    },
+    createNodeFromSvg(svg) {
+      const vb = svg.match(/viewBox="0 0 (\d+) (\d+)"/);
+      if (!vb) throw new Error('mock createNodeFromSvg needs a viewBox');
+      const view = { width: +vb[1], height: +vb[2] };
+      const frame = new SceneNode('FRAME', 'svg', view);
+      w('createNodeFromSvg', frame.id);
+      frame._fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+      for (const [, tag, attrs] of svg.matchAll(/<(path|rect|circle|polygon|ellipse)\b([^>]*)\/?>/g)) {
+        const v = new SceneNode('VECTOR', 'Vector', shapeBox(tag, attrs, view));
+        v._fills = [{ type: 'SOLID', color: { r: 0, g: 0, b: 0 } }];
+        v._constraints = { horizontal: 'SCALE', vertical: 'SCALE' };
+        v.parent = frame; frame.children.push(v);
+      }
+      frame.parent = figma.currentPage; figma.currentPage.children.push(frame);
+      return frame;
+    },
+    createComponentFromNode(node) {
+      if (!node.parent || node.parent.type !== 'PAGE') throw new Error('mock createComponentFromNode needs a node on a page');
+      const c = new Component(node.name, { x: node._x, y: node._y, width: node.width, height: node.height });
+      w('createComponentFromNode', c.id, node.id);
+      c._fills = node._fills;
+      for (const child of node.children) child.parent = c;
+      c.children = node.children; node.children = [];
+      const siblings = node.parent.children;
+      siblings.splice(siblings.indexOf(node), 1, c);
+      c.parent = node.parent; nodes.delete(node.id);
+      return c;
+    },
+    flatten(list, parent) {
+      if (!list.length) throw new Error('flatten needs nodes');
+      const host = parent || list[0].parent;
+      const x = Math.min(...list.map(n => n._x)), y = Math.min(...list.map(n => n._y));
+      const box = { x, y, width: Math.max(...list.map(n => n._x + n.width)) - x, height: Math.max(...list.map(n => n._y + n.height)) - y };
+      const v = new SceneNode('VECTOR', 'Flattened', box);
+      w('flatten', v.id, list.map(n => n.id));
+      v._fills = list[0]._fills;
+      for (const n of list) { nodes.delete(n.id); n.parent.children = n.parent.children.filter(c => c !== n); }
+      v.parent = host; host.children.push(v);
+      return v;
+    },
     async loadFontAsync(font) { w('loadFont', `${font.family}/${font.style}`); fonts.add(`${font.family}/${font.style}`); },
     async getLocalTextStylesAsync() { return [...styles.values()]; },
     async getStyleByIdAsync(id) { return styles.get(id) || null; },
@@ -161,9 +275,16 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
     },
   };
 
+  const tree = n => ({
+    id: n.id, type: n.type, name: n.name, x: n._x, y: n._y, width: n.width, height: n.height, fills: n.fills,
+    constraints: n.constraints, ...(n.type === 'COMPONENT' ? { key: n.key, description: n.description } : {}),
+    children: n.children.map(tree),
+  });
+
   // What the file holds, by Figma name, with ids, for whole-state comparisons.
   function snapshot() {
     return {
+      pages: root.children.map(p => ({ id: p.id, name: p.name, children: p.children.map(tree) })),
       collections: [...collections.values()].map(c => ({
         id: c.id, name: c.name, hidden: c.hiddenFromPublishing, modes: c.modes,
         variables: [...variables.values()].filter(v => v.variableCollectionId === c.id).map(v => ({

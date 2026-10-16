@@ -18,13 +18,15 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
   try { plan = JSON.parse(PLAN_SRC); state = JSON.parse(STATE_SRC); } catch (e) { return mismatch('json', 'valid JSON', String(e && e.message)); }
   const entries = plan.slice === 'foundations'
     ? Object.keys(plan.foundations.variables).length + Object.keys(plan.foundations.textStyles).length
-    : ((plan.selection && plan.selection.entries) || []).length;
+    : plan.slice === 'icons' ? plan.icons.length
+      : ((plan.selection && plan.selection.entries) || []).length;
   if (entries !== CHECK.entries) return mismatch('entries', CHECK.entries, entries);
   if (typeof figma.fileKey === 'string' && figma.fileKey !== plan.fileKey) return { error: 'wrong-file', expected: plan.fileKey, got: figma.fileKey };
 
-  if (plan.slice !== 'foundations') return { error: 'unknown-slice', slice: plan.slice };
+  const slices = { foundations: foundationsSlice, icons: iconsSlice };
+  if (!slices[plan.slice]) return { error: 'unknown-slice', slice: plan.slice };
 
-  const result = await foundationsSlice();
+  const result = await slices[plan.slice]();
   result.ms = Date.now() - t0;
   result.outputBytes = JSON.stringify(result).length;
   return result;
@@ -278,6 +280,141 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
           collections: ledgerCollections, variables: ledgerVariables, textStyles: ledgerStyles, orphans,
         },
       },
+    });
+  }
+
+  // ---- icons slice: icon atoms from SVG text, on the Icons page (#30) ----
+  // Each icon is one 16x16 component with no fill and one flattened VECTOR named Vector, constrained
+  // SCALE/SCALE (#13), named kit style. Ownership as in foundations: only ledger-recorded nodes are touched;
+  // an unrecorded page or component with a target name is a conflict unless plan.options.adopt. A changed
+  // SVG rebuilds only the Vector, so the component keeps its id and key. A dropped icon becomes an orphan
+  // and is never deleted here.
+  async function iconsSlice() {
+    const SIZE = 16;
+    const SCALE = { horizontal: 'SCALE', vertical: 'SCALE' };
+    const adopt = !!(plan.options || {}).adopt;
+    const prev = state.icons || null;
+    const prevComps = (prev && prev.components) || {};
+    const prevOrphans = (prev && prev.orphans) || {};
+    const conflicts = [];
+    const conflict = (kind, name, reason, id) => conflicts.push(id ? { kind, name, reason, id } : { kind, name, reason });
+    const report = { slice: 'icons', fileKey: plan.fileKey };
+
+    // -- preflight: read only --
+    let page = prev && prev.page ? figma.root.children.find(p => p.id === prev.page) || null : null;
+    if (!page) {
+      const same = figma.root.children.find(p => p.name === plan.page);
+      if (same && !adopt) conflict('page', plan.page, 'unowned', same.id);
+      else page = same || null;
+    }
+    if (page) await page.loadAsync();
+    const recorded = new Set(Object.values(prevComps).concat(Object.values(prevOrphans)).map(r => r.id));
+    const nodes = {};
+    for (const icon of plan.icons) {
+      const rec = prevComps[icon.key] || prevOrphans[icon.key];
+      let node = rec ? await figma.getNodeByIdAsync(rec.id) : null;
+      if (node && node.type !== 'COMPONENT') { conflict('icon', icon.key, 'type-change', node.id); continue; }
+      if (!node && page) {
+        const same = page.children.find(n => n.type === 'COMPONENT' && n.name === icon.name && !recorded.has(n.id));
+        if (same && !adopt) { conflict('icon', icon.key, 'unowned', same.id); continue; }
+        node = same || null;
+      }
+      nodes[icon.key] = node;
+    }
+
+    const inPlan = {};
+    for (const icon of plan.icons) inPlan[icon.key] = true;
+    const orphans = {};
+    const orphaned = [];
+    for (const key of Object.keys(prevOrphans)) if (!inPlan[key]) orphans[key] = prevOrphans[key];
+    for (const key of Object.keys(prevComps)) {
+      if (!inPlan[key]) { orphans[key] = Object.assign({}, prevComps[key], { since: plan.at }); orphaned.push(key); }
+    }
+
+    if (conflicts.length) {
+      return Object.assign(report, {
+        summary: { created: 0, updated: 0, unchanged: 0, orphaned: 0, restored: 0, conflicts: conflicts.length },
+        conflicts, ledger: { icons: prev },
+      });
+    }
+
+    // -- apply --
+    const created = { page: false, icons: [] };
+    const updated = {};
+    const restored = [];
+    let pageRenamed = false;
+    let unchanged = 0;
+    if (!page) { page = figma.createPage(); page.name = plan.page; created.page = true; }
+    else if (page.name !== plan.page) { page.name = plan.page; pageRenamed = true; }
+    // createNodeFromSvg adds to the current page.
+    await figma.setCurrentPageAsync(page);
+
+    // The SVG as a SIZE x SIZE frame holding one VECTOR named Vector. Flatten first (a frame may hold several
+    // shapes), constrain the result SCALE (flatten resets constraints), and only then resize, so a 32 source
+    // scales down with its frame.
+    function svgFrame(icon) {
+      const frame = figma.createNodeFromSvg(icon.svg);
+      const kids = frame.children;
+      const v = kids.length === 1 && kids[0].type === 'VECTOR' ? kids[0] : figma.flatten(kids, frame);
+      v.name = 'Vector';
+      v.constraints = SCALE;
+      frame.resize(SIZE, SIZE);
+      return frame;
+    }
+
+    const components = {};
+    for (let i = 0; i < plan.icons.length; i++) {
+      const icon = plan.icons[i];
+      const description = plan.source.package + '@' + plan.source.version + ' ' + icon.file;
+      let comp = nodes[icon.key];
+      if (!comp) {
+        comp = figma.createComponentFromNode(svgFrame(icon));
+        comp.name = icon.name;
+        comp.fills = [];
+        comp.description = description;
+        comp.x = i * SIZE * 2;
+        comp.y = 0;
+        created.icons.push(icon.key);
+      } else {
+        const rec = prevComps[icon.key] || prevOrphans[icon.key];
+        if (prevOrphans[icon.key] && prevOrphans[icon.key].id === comp.id) restored.push(icon.key);
+        const fields = [];
+        if (!comp.parent || comp.parent.id !== page.id) { page.appendChild(comp); fields.push('page'); }
+        if (comp.name !== icon.name) { comp.name = icon.name; fields.push('name'); }
+        if (comp.description !== description) { comp.description = description; fields.push('description'); }
+        if (!near(comp.width, SIZE, 1e-3) || !near(comp.height, SIZE, 1e-3)) { comp.resize(SIZE, SIZE); fields.push('size'); }
+        if (comp.fills.length) { comp.fills = []; fields.push('fills'); }
+        const kids = comp.children;
+        const v = kids.length === 1 && kids[0].type === 'VECTOR' ? kids[0] : null;
+        if (!v || !rec || rec.id !== comp.id || rec.sha256 !== icon.sha256) {
+          // Rebuild the Vector inside the same component; keep the new vector's place in its frame.
+          const frame = svgFrame(icon);
+          const nv = frame.children[0];
+          const x = nv.x;
+          const y = nv.y;
+          for (const old of kids) old.remove();
+          comp.appendChild(nv);
+          nv.x = x;
+          nv.y = y;
+          frame.remove();
+          fields.push('vector');
+        } else {
+          if (v.name !== 'Vector') { v.name = 'Vector'; fields.push('vector:name'); }
+          const c = v.constraints;
+          if (c.horizontal !== 'SCALE' || c.vertical !== 'SCALE') { v.constraints = SCALE; fields.push('vector:constraints'); }
+        }
+        if (fields.length) updated[icon.key] = fields; else unchanged++;
+      }
+      components[icon.key] = { id: comp.id, key: comp.key, file: icon.file, sha256: icon.sha256 };
+    }
+
+    return Object.assign(report, {
+      summary: {
+        created: created.icons.length + (created.page ? 1 : 0), updated: Object.keys(updated).length + (pageRenamed ? 1 : 0),
+        unchanged, orphaned: orphaned.length, restored: restored.length, conflicts: 0,
+      },
+      created, updated, orphaned, restored, conflicts,
+      ledger: { icons: { source: plan.source, page: page.id, components, orphans } },
     });
   }
 }

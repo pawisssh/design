@@ -249,6 +249,15 @@ test('resolve reports the rule that last set each field', () => {
   assert.deepEqual(r.binds.label, [{ node: 'Label', field: 'characters' }]);
 });
 
+test('the icon list is the default icon plus the preferred icons, each once, with kit-style names', () => {
+  const c = button();
+  assert.deepEqual(contract.icons(c), ['add', 'arrow--right', 'launch', 'download', 'save', 'edit', 'filter', 'trash-can', 'close']);
+  assert.deepEqual(contract.icons({ ...c, icons: { ...c.icons, default: 'zoom-in', preferred: ['add', 'add'] } }), ['zoom-in', 'add']);
+  assert.deepEqual(contract.icons({ ...c, icons: undefined }), []);
+  assert.equal(contract.iconName('arrow--right'), 'Arrow--right');
+  assert.equal(contract.iconName('trash-can'), 'Trash-can');
+});
+
 test('the module runs inlined, without export, in a bare context (no TextEncoder, crypto, structuredClone)', () => {
   const src = readFileSync(new URL('skills/contract/scripts/contract.mjs', root), 'utf8').replace(/^export /gm, '');
   const out = vm.runInNewContext(`${src}
