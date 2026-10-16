@@ -35,28 +35,27 @@ Maintain one durable ledger under `.scratch/to-design/` for file/page/collection
 ## Packaging and syntax validation
 
 ```bash
-python3 /absolute/path/to/to-design/scripts/package_native_builder.py \
-  .scratch/to-design/native-builder-core.js \
-  .scratch/to-design/build-plan.json \
-  .scratch/to-design/generated \
-  --state .scratch/to-design/native-state.json
+python3 skills/to-design/scripts/package_native_builder.py \
+  skills/to-design/assets/builder-core.js \
+  .scratch/to-design/<run>/plan.json \
+  .scratch/to-design/<run> \
+  --state .scratch/to-design/<run>/state.json
 ```
 
 Omit `--state` for an initial empty ledger. The helper validates packaging identity/snapshot fields and emits:
 
-- `build-components.mcp.js`: shared core/data plus top-level `return await ...`, for the actual `use_figma` code argument.
-- `build-components.js`: same core/data with an async invocation and JSON reporting for a Figma API-capable Console/Scripter runtime.
-- `script-package.json`: input hash, source snapshot and `execution: not-run` metadata.
+- `build-components.mcp.js`: the fixed core, `PLAN_SRC`/`STATE_SRC` as `String.raw` text, the `CHECK` block and a top-level `return await ...`, for the actual `use_figma` code argument. MCP only: there is no Console/Scripter wrapper.
+- `script-package.json`: input hash, `fileSha256`, `check`, source snapshot and `execution: not-run` metadata.
 
-The packager is not a native engine or a visual validator; AI must generate the real core from selected specs. Parse the MCP file inside an AsyncFunction without invoking it, and parse the standalone JS normally. Test core logic through meaningful mocked invariants when appropriate; this does not replace Figma readback.
+The packager is not a native engine or a visual validator. Parse the MCP file inside an AsyncFunction without invoking it. Test core logic through meaningful mocked invariants when appropriate; this does not replace Figma readback.
 
 ## Execute one native build call
 
 Execution is separate from artifact generation. When the user has requested/authorized the selected build, resolve the actual target and live schemas; read the saved MCP file and submit its full contents to `use_figma` once. Its tool schema takes `code`, not a local path. Use required `skillNames` logging from loaded Figma skills; names do not load the instructions themselves.
 
-Default to the single page/single native call. Executor resource limits or explicit multi-page output may require splitting; report that exception and preserve the full selected union rather than promising arbitrary library sizes fit. Serialize mutating calls, with one page switch per call. Do not adopt conflicting multi-page parallel examples for this one-page workflow. A Console/Scripter run needs a runtime exposing `figma`; a normal browser/Node console does not.
+Default to the single page/single native call. Executor resource limits or explicit multi-page output may require splitting; report that exception and preserve the full selected union rather than promising arbitrary library sizes fit. Serialize mutating calls, with one page switch per call. Do not adopt conflicting multi-page parallel examples for this one-page workflow.
 
-Persist returned results/ledger immediately. Handle a partially failed build by returning recorded IDs/progress, reading the canvas and reconciling before retry. After changing state, regenerate both wrappers so they do not replay stale empty IDs. Use the connected error's retry-safety information when available.
+Persist returned results/ledger immediately. Handle a partially failed build by returning recorded IDs/progress, reading the canvas and reconciling before retry. After changing state, record the result into the ledger and re-package, so the package does not replay stale empty IDs. Use the connected error's retry-safety information when available.
 
 ## Verify
 

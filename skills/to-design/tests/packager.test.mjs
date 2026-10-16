@@ -88,12 +88,40 @@ test('a selection with the same entry twice is refused', () => {
   assert.match(run.json.error, /entries must be unique/);
 });
 
-test('chars counts the way the hook does (UTF-16 units), so a non-BMP character counts twice', () => {
+test('non-ASCII in the plan is escaped, so the package stays ASCII and chars equals its length', () => {
   const root = project();
-  writeFileSync(join(root, 'core.js'), `${CORE}// 🙂\n`);
+  writeFileSync(join(root, 'plan.json'), JSON.stringify({ ...PLAN, note: 'Gray 10 → 🙂' }));
   const run = pack(root);
+  assert.equal(run.status, 0, run.stdout);
   const text = readFileSync(join(root, '.scratch/to-design/pkg/build-components.mcp.js'), 'utf8');
+  assert.ok(/^[\x00-\x7f]*$/.test(text));
   assert.equal(run.json.chars, text.length);
+});
+
+test('a core that is not ASCII is refused, since its hash must match in the packager and in Figma', () => {
+  const root = project();
+  writeFileSync(join(root, 'core.js'), `${CORE.replace('{ return', '{ /* → */ return')}`);
+  const run = pack(root);
+  assert.equal(run.status, 2);
+  assert.match(run.json.error, /Core must be ASCII/);
+});
+
+test('code outside buildComponentSets is refused, since the core hash would not cover it', () => {
+  const root = project();
+  writeFileSync(join(root, 'core.js'), `const helper = 1;\n${CORE}`);
+  const run = pack(root);
+  assert.equal(run.status, 2);
+  assert.match(run.json.error, /Only \/\/ comment lines may precede/);
+});
+
+test('plan text with a backtick or ${ is refused, since String.raw could not carry it', () => {
+  for (const bad of ['a `tick`', 'a ${x}']) {
+    const root = project();
+    writeFileSync(join(root, 'plan.json'), JSON.stringify({ ...PLAN, note: bad }));
+    const run = pack(root);
+    assert.equal(run.status, 2, bad);
+    assert.match(run.json.error, /must not contain a backtick/);
+  }
 });
 
 test('a package written outside the project dir is refused, since the hook could never expand it', () => {

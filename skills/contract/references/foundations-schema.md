@@ -99,7 +99,7 @@ These are the #9 group rules, amended where the Button Contract binds a token ou
 | `focus` | `STROKE_COLOR`, `EFFECT_COLOR` | adds `EFFECT_COLOR` for the focus ring's inner shadow (#7). |
 | `background` | `ALL_FILLS`, `STROKE_COLOR`, `EFFECT_COLOR` | adds `EFFECT_COLOR` for the gap-ring shadow (#7). |
 | other colours | `ALL_FILLS`, `STROKE_COLOR` | no change |
-| Spacing | `GAP` (gap and padding; inherited from #9, not re-checked) | no change |
+| Spacing | `GAP` (gap and padding; `PADDING` is not an API scope, and the API binds a `GAP` variable to padding, #27) | no change |
 | Size, Icon size | `WIDTH_HEIGHT` | no change |
 | Border radius | `CORNER_RADIUS` | no change |
 | Type | `FONT_FAMILY`, `FONT_SIZE`, `LINE_HEIGHT`, `FONT_WEIGHT`, `LETTER_SPACING` | new |
@@ -186,23 +186,23 @@ The foundations ledger is one section of the single authoritative ledger per Des
 
 - Keys are flat names in both `variables` and `textStyles`, and mode keys in `collections.*.modes`. These are the same strings the Contract and the document use, so the builder binds with `ledger.variables[token]` and `ledger.textStyles[token]`.
 - The slice returns this section uncompacted. It is about 3 KB for Button, far under the 20 KB output cap, so #18's ID-array compaction is not needed here.
-- The foundations slice package carries the document without the review-only fields (`source`, `from`, `reason`, `level`, `usedBy`, `resolved`, `notes`, `checks`). That is about 18.4 K characters of compact JSON for Button, under the 50 K code cap with room for the core. Proposed, not yet implemented: the packager strips these fields and asserts that the stripped copy still builds the same objects.
+- The foundations slice package carries the document without the review-only fields (`source`, `closure`, `from`, `reason`, `level`, `usedBy`, `resolved`, `notes`, `checks`). That is about 17.8 K characters of compact JSON for Button, under the 50 K code cap with room for the core (the whole package was 34.1 K characters on the first live run and 37.6 K with a full ledger). `skills/to-design/scripts/build-plan.mjs` strips these fields when it derives the build plan, and a to-design test asserts that the stripped and the full document build the same objects (#29).
 
 ## Update semantics (idempotent)
 
 Identity is the flat name, carried through the ledger id. Figma names and labels are presentation and may change.
 
-1. **Preflight, read-only.** Read every ledger id and every local collection and Text Style name. Compute the plan before any mutation, then gate on the package `CHECK` (#17).
-2. **Ownership.** The slice touches only collections and Text Styles recorded in the ledger. If a same-name collection or style exists that the ledger does not record, the result is `conflict: unowned` and nothing changes. The owner's own file, for example, has a `Theme` collection with Light/Dark modes. The run option `adopt: true` allows taking over exact-name objects. It is used only after a lost connection, once a readback has shown they came from this workflow (#10: lost connections still commit).
-3. **Collections and modes.** A ledger id that resolves is renamed in place if the name differs. A missing collection is created; its first mode is renamed to the default label and the rest are added. Modes match by key through the ledger, and a changed label is renamed. A mode in Figma that the document lacks is reported as `orphanMode` and kept, because removing a mode deletes its values. The slice does not reorder modes; a different default mode is reported, not fixed.
+1. **Gate, then preflight, read-only.** The core first verifies the package `CHECK` (#17) and the file key. Then it reads every ledger id and every local collection, variable and Text Style, and works out every conflict before any mutation.
+2. **Ownership.** The slice touches only collections, modes, variables and Text Styles recorded in the ledger. If a same-name object exists that the ledger does not record, the result is `conflict: unowned` and nothing changes. Any conflict stops the whole slice before its first change. The owner's own file, for example, has a `Theme` collection with Light/Dark modes. The run option `adopt: true` allows taking over exact-name objects. It is used only after a lost connection, once a readback has shown they came from this workflow (#10: lost connections still commit).
+3. **Collections and modes.** A ledger id that resolves is renamed in place if the name differs. A missing collection is created; its first mode is renamed to the default label and the rest are added. Modes match by key through the ledger, and a changed label is renamed. A mode in Figma that the document lacks is reported in `extraModes` and kept, because removing a mode deletes its values. Mode order is fixed, not just reported: Figma has no reorder method, but `setDefaultMode` moves a mode to index 0, so when the order differs the slice calls it for each document mode in reverse order. That leaves the document order, with the first mode (`white`) as the default (#27; confirmed by readback after the #29 live run). Extra modes end up after the document modes.
 4. **Variables**, in document order (Primitives, Theme, Layout, Type):
-   - Resolve the ledger id. If the id is missing, look for the exact `name` inside the owned collection and adopt it. Otherwise create the variable.
-   - If the resolved type differs, the result is `conflict: type-change`. Figma cannot change a variable's type, and deleting it would unbind consumers, so the owner decides.
-   - Then set `name`, `scopes`, `codeSyntax` (removing WEB when it is `{}`), `hiddenFromPublishing`, and every mode value. Writes are unconditional, which makes them idempotent (the smoke test re-ran 26 variables in 57 ms).
-5. **Text Styles**, after Type: resolve or create, load the font, write the literals, then `setBoundVariable` for each bind.
+   - Resolve the ledger id (or its `orphans` id, which restores it). If the id is missing and an unrecorded variable with the exact `name` sits in the owned collection, that is `conflict: unowned`, the same rule as step 2; `adopt: true` takes it over. Otherwise create the variable.
+   - If the resolved type differs, the result is `conflict: type-change`. Figma cannot change a variable's type, and deleting it would unbind consumers, so the owner decides. A recorded variable found in a different collection is `conflict: collection-change`.
+   - Then compare and write only what differs: `name`, `scopes`, `codeSyntax` (removing WEB when it is `{}`), `hiddenFromPublishing`, and every mode value. Figma stores numbers as float32 (`0.16` reads back as `0.1599999964`), so numbers compare within 1e-4 and colour channels within 1/512. The report lists the changed fields per name; a name with none counts as unchanged.
+5. **Text Styles**, after Type: resolve or create, load the font, write the literals for a new style or for fields no variable binds, then `setBoundVariable` for each bind whose bound id differs.
 6. **Orphans.** A ledger entry whose name is no longer in the document is never deleted. It moves to `orphans` with the `since` hash and appears in the report. Consumers keep their bindings. If the name returns, the same id is restored from `orphans`. Deletion happens only through the explicit run option `prune: [names]`, which the owner confirms.
 7. **Renames.** A token renamed in the Code Library is a new flat name plus an orphan, with no rename inference in v1. A variable renamed by hand in Figma is renamed back, because the document is the source.
-8. **Return** `{slice: "foundations", created, updated, unchanged, orphaned, conflicts, ledger}`. The agent persists the ledger before the next call.
+8. **Return** `{slice: "foundations", fileKey, summary, created, updated, orphaned, restored, pruned, conflicts, extraModes, ledger: {foundations}, ms, outputBytes}`. `summary` counts `created` (collections, modes, variables and Text Styles), `updated`, `unchanged`, `orphaned`, `restored`, `pruned` and `conflicts`. A run with conflicts returns the old ledger section unchanged. The agent records the result with `node skills/to-design/scripts/ledger.mjs record <result.json>` before the next call. Live on the draft file (#29): the first run created 88 objects in 457 ms (5.3 KB output); the second created 0, updated 0 and left 81 unchanged in 174 ms (3.9 KB).
 
 ## Where it lives
 
@@ -212,9 +212,7 @@ Identity is the flat name, carried through the ledger id. Figma names and labels
 
 ## Not verified
 
-- That the `GAP` scope covers padding. Inherited from #9, not re-checked.
-- The packager stripping review-only fields and asserting the stripped copy builds the same objects. Proposed, not implemented.
-- Whether Figma can reorder modes. The slice reports a different default mode instead of fixing it.
+- Whether a `GAP`-only variable appears in the **padding** picker in the Figma UI. The API binds it to padding and `GAP` is the only auto-layout spacing scope it accepts (#27), but only an eye check in Figma can show the picker.
 
 ## Validation (generator)
 
