@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Pinned Carbon sources for the foundations step (#28), and the one place that fetches and reads them.
+// Pinned Carbon sources for the foundations step (#28) and the icon atoms (#30), and the one place that fetches them.
 //   node skills/adapter-carbon/scripts/sources.mjs [--dir <dir>]   fetch into .scratch/adapter-carbon/sources
 //
 // - Value files: raw files from the Carbon repository at the pinned commit, each checked against its sha256.
@@ -42,6 +42,12 @@ export const CARBON = {
       version: '11.61.0',
       integrity: 'sha512-+j3wKiGe4XaJyub31TUhDXDL8py2cCg/ZqQ1y0BWp3/yi5IvlbH5lXhBjV/iJwpMgtbiGJuKkKBCKMgqDlf8tQ==',
       extract: ['package/scss/generated'],
+    },
+    // Icon atoms (#30): the SVGs To-design builds, read through the Contract's `icons.source` templates.
+    '@carbon/icons': {
+      version: '11.90.0',
+      integrity: 'sha512-lTCB5fPb8xaaOjFmLlHv7dZsAvDmMYoxdQGtgRxLc+0uKEvad0749YcOkTcuozEgTB48ki3RaxvL63DIOXj6fw==',
+      extract: ['package/package.json', 'package/svg/16', 'package/svg/32'],
     },
   },
 };

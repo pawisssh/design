@@ -108,6 +108,18 @@ function walkRefs(value, path, fn, key) {
   }
 }
 
+/** The icon list: the icon keys the builder makes atoms for, `icons.default` then `icons.preferred`, each once. */
+export function icons(contract) {
+  const i = contract.icons;
+  if (!i) return [];
+  return [i.default].concat(i.preferred || []).filter((k, n, all) => k && all.indexOf(k) === n);
+}
+
+/** Kit-style Figma name of an icon key: first letter capitalised, `--` kept (`arrow--right` -> `Arrow--right`). */
+export function iconName(key) {
+  return key.charAt(0).toUpperCase() + key.slice(1);
+}
+
 /** Figma variant name, `Prop=Value, …` with axis and value labels. */
 export function variantName(contract, tuple) {
   return contract.axes

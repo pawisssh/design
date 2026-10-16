@@ -45,9 +45,11 @@ def embeddable(name, text):
 
 
 def plan_entries(plan):
-    """The CHECK entry count: the objects the foundations slice builds, or the selected variants."""
+    """The CHECK entry count: the objects the foundations slice builds, the icons, or the selected variants."""
     if plan.get("slice") == "foundations":
         return len(plan["foundations"]["variables"]) + len(plan["foundations"]["textStyles"])
+    if plan.get("slice") == "icons":
+        return len(plan["icons"])
     return len(plan["selection"]["entries"])
 
 
@@ -80,6 +82,18 @@ def check_foundations(plan):
         raise ValueError("Foundations plan must name its fileKey and documentHash")
 
 
+def check_icons(plan):
+    icons = plan.get("icons")
+    if not plan.get("fileKey") or not plan.get("page") or not isinstance(icons, list):
+        raise ValueError("Icons plan must name its fileKey and page and carry an icons list")
+    keys = [icon.get("key") for icon in icons if isinstance(icon, dict)]
+    if len(keys) != len(icons) or len(set(keys)) != len(keys):
+        raise ValueError("Icons plan entries must have unique keys")
+    for icon in icons:
+        if not all(isinstance(icon.get(field), str) and icon[field] for field in ("key", "name", "file", "svg", "sha256")):
+            raise ValueError(f"Icon {icon.get('key')} needs key, name, file, svg and sha256")
+
+
 def package(core, plan, state):
     if not re.search(r"async\s+function\s+buildComponentSets\s*\(", core):
         raise ValueError("Core must declare async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK)")
@@ -87,6 +101,8 @@ def package(core, plan, state):
         raise ValueError("Build plan schemaVersion must be 1")
     if plan.get("slice") == "foundations":
         check_foundations(plan)
+    elif plan.get("slice") == "icons":
+        check_icons(plan)
     else:
         check_selection(plan)
     if not isinstance(state, dict):
