@@ -13,7 +13,7 @@ A Figma library file produced from a Code Library.
 _Avoid_: Figma library, design kit
 
 **Design System**:
-One Foundations document and the Contracts planned with it, for one Code Library; Design Libraries are built from it, and handoffs refer to it.
+One Foundations document and the Contracts and Component Proposals planned with it, for one Code Library; Design Libraries are built from it, and handoffs refer to it.
 _Avoid_: DS, system
 
 ## Components
