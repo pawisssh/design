@@ -333,7 +333,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const tokens = new Set();
     const collect = v => { if (Array.isArray(v)) v.forEach(collect); else if (v && typeof v === 'object') { if (typeof v.token === 'string') tokens.add(v.token); else Object.values(v).forEach(collect); } };
     collect(resolve(contract, full).paint);
-    const hexes = [...tokens].filter(t => foundations.variables[t]).map(t => convert(valueIn(foundations.variables[t], mode)).hex);
+    const hexes = [...tokens].filter(t => foundations.variables[t]).map(t => convert(valueIn(foundations.variables[t], mode, foundations)).hex);
     const out = [];
     for (const decl of ownDeclarations(rules, el)) {
       const role = roleOf(decl.property);
