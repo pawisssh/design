@@ -2,6 +2,10 @@
 
 `npm test` runs every skill's suite; CI runs it on each PR. Run `node skills/adapter-carbon/scripts/sources.mjs` first, or 22 adapter-carbon tests skip.
 
+## Worktree agents
+
+An agent isolated in a worktree runs each command as its own plain call from the worktree root, with literal paths and one `git` command per call. Put multi-step logic in a script file and run that. The worktree guard refuses shell variables, loops and heredocs around commands.
+
 ## Agent skills
 
 ### Issue tracker
