@@ -77,3 +77,14 @@ test('the page scripts run the selection model on the inlined Contract module', 
   assert.equal(model.specimens.size, 245);
   assert.equal(typeof context.catalogCard, 'function', 'the card builder is inlined too');
 });
+
+test('form controls get a catalog whose Hover and Focus are forced through their pseudo-classes (#93)', () => {
+  const fixture = file => JSON.parse(readFileSync(new URL(`../../contract/test/fixtures/form-controls/${file}`, import.meta.url)));
+  const formFoundations = fixture('carbon.foundations.json');
+  const page = name => embedded(buildCatalog({ contract: fixture(`${name}.component.json`), foundations: formFoundations, renderer: stub }));
+  const textInput = page('text-input'), select = page('select');
+  assert.deepEqual(textInput.forces, [{ axis: 'state', value: 'focus', pseudo: ':focus' }]);
+  assert.deepEqual(select.forces, [{ axis: 'state', value: 'hover', pseudo: ':hover' }, { axis: 'state', value: 'focus', pseudo: ':focus' }]);
+  assert.equal(Object.keys(textInput.specimens).length, 36);
+  assert.equal(Object.keys(select.specimens).length, 52);
+});

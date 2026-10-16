@@ -34,3 +34,32 @@ test('refuses to render when the installed packages differ from the Contract pin
   moved.source.packages['@carbon/react'] = '1.119.0';
   await assert.rejects(previewRenderer(moved), /@carbon\/react 1\.118\.0 is installed but the Contract pins 1\.119\.0/);
 });
+
+// Form controls (#93, #106), on the TextInput and Select fixture Contracts.
+const fixture = name => JSON.parse(readFileSync(new URL(`../../contract/test/fixtures/form-controls/${name}.component.json`, import.meta.url)));
+
+test('a `code.required` prop gets a placeholder unique per tuple, so a TextInput renders its label for its own input', { skip }, async () => {
+  const { render } = await previewRenderer(fixture('text-input'));
+  const html = render({ size: 'md', validation: 'none', readOnly: 'editable', state: 'enabled' });
+  assert.match(html, /<label for="text-input-md-none-editable-enabled" class="cds--label"/);
+  assert.match(html, /<input[^>]* id="text-input-md-none-editable-enabled"/);
+  assert.match(render({ size: 'lg', validation: 'none', readOnly: 'editable', state: 'enabled' }), /id="text-input-lg-none-editable-enabled"/);
+});
+
+test('validation shows one version of the content: the warn icon and text replace the helper text', { skip }, async () => {
+  const { render } = await previewRenderer(fixture('text-input'));
+  const html = render({ size: 'md', validation: 'warn', readOnly: 'editable', state: 'enabled' });
+  assert.match(html, /cds--text-input__invalid-icon--warning/);
+  assert.match(html, /cds--form-requirement/);
+  assert.doesNotMatch(html, /cds--form__helper-text/);
+});
+
+test('a Repeated child renders as one SelectItem whose text is the `itemProp` property default', { skip }, async () => {
+  const s = fixture('select');
+  const text = s.properties.find(p => p.code && p.code.itemProp === 'text').default;
+  const { render } = await previewRenderer(s);
+  const html = render({ size: 'md', validation: 'none', readOnly: 'editable', state: 'enabled' });
+  assert.match(html, /<select[^>]* id="select-md-none-editable-enabled"/);
+  assert.equal((html.match(/<option /g) || []).length, 1);
+  assert.match(html, new RegExp(`<option[^>]* value="${text}"[^>]*>${text}</option>`));
+});
