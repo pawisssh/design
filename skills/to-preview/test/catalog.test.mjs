@@ -32,14 +32,31 @@ test('the page carries the Contract, one rendered specimen per tuple and the lib
   assert.ok(!/<script src=/.test(html), 'self-contained: opens from file://');
 });
 
-test('the theme toggle offers the foundations Theme modes, first mode the default', () => {
+test('one toggle per multi-mode collection, Theme then Layer, each class from its Mode selector (#109)', () => {
   const data = embedded(buildCatalog({ contract: button, foundations, renderer: stub }));
-  assert.deepEqual(data.modes, [
-    { key: 'white', label: 'White', className: 'theme-white' },
-    { key: 'g10', label: 'Gray 10', className: 'theme-g10' },
-    { key: 'g90', label: 'Gray 90', className: 'theme-g90' },
-    { key: 'g100', label: 'Gray 100', className: 'theme-g100' },
+  assert.deepEqual(data.toggles, [
+    { key: 'theme', label: 'Theme', modes: [
+      { key: 'white', label: 'White', className: 'cds--white' },
+      { key: 'g10', label: 'Gray 10', className: 'cds--g10' },
+      { key: 'g90', label: 'Gray 90', className: 'cds--g90' },
+      { key: 'g100', label: 'Gray 100', className: 'cds--g100' },
+    ] },
+    { key: 'layer', label: 'Layer', modes: [
+      { key: 'one', label: 'One', className: 'cds--layer-one' },
+      { key: 'two', label: 'Two', className: 'cds--layer-two' },
+      { key: 'three', label: 'Three', className: 'cds--layer-three' },
+    ] },
   ]);
+});
+
+test('a Mode with no selector takes the renderer class; a selector that is not one class is refused', () => {
+  const plain = JSON.parse(JSON.stringify(foundations));
+  for (const c of plain.collections) for (const m of c.modes) delete m.selector;
+  assert.deepEqual(embedded(buildCatalog({ contract: button, foundations: plain, renderer: stub })).toggles[0].modes[0],
+    { key: 'white', label: 'White', className: 'theme-white' });
+  const nested = JSON.parse(JSON.stringify(foundations));
+  nested.collections.find(c => c.key === 'layer').modes[1].selector = '.cds--g10 .cds--layer-two';
+  assert.throws(() => buildCatalog({ contract: button, foundations: nested, renderer: stub }), /layer\/two.*"\.cds--g10 \.cds--layer-two".*one class/);
 });
 
 test('States without code props are forced through their CSS pseudo-class', () => {

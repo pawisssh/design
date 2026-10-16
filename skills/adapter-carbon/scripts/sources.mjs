@@ -29,6 +29,7 @@ export const CARBON = {
     'packages/colors/src/dtcg/colors.json': 'af0c7d35f8a20d64332fb3e895c0522b0684b75a06d9da484ab05b21818d6674',
     'packages/layout/src/dtcg/layout.json': 'b337e0e6c8ee8be4845f0a8b2fa0320930bd2999ffbd53c83748afb12723e821',
     'packages/themes/src/dtcg/components/button.json': '56d85c6538f45449901b98da4358169c7b01a2d5b2e6f6f496ac268a1831ea36',
+    'packages/styles/scss/layer/_layer-sets.scss': '4891d76581d6b3ea42f50a2e0ebdea0c843485a3c74ada02dfa2a5cf21177baa',
     'packages/themes/src/dtcg/themes.json': '7f1febe786830b88b26db78e3e573b1cfe2ca9af546ecac54708719df1330ac8',
     'packages/type/src/fontFamily.ts': '433150c88e95926de09b5f82865a1dba49476e18be7349a0792ef1d54fe9ef0a',
     'packages/type/src/fontWeight.ts': '69ab0e6a58e327013648c0ba67b9619d73f5820a33fada229170f52c832af63b',

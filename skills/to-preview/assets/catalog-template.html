@@ -5,7 +5,8 @@
 <title>Component preview</title>
 <!-- library-styles -->
 <style>
-  /* Chrome colours are Carbon tokens (--cds-*) from the library stylesheet; the Theme toggle puts the mode class on <body>. */
+  /* Chrome colours are Carbon tokens (--cds-*) from the library stylesheet; the Theme toggle puts its Mode class on <body>,
+     a Layer toggle on a wrapper around the grid, and a card's background is the layer's own surface, --cds-layer-background (at level one it equals --cds-background). */
   body > header,.tp-main,.tp-toolbar,.tp-cell,.tp-specimen,.tp-toolbar select,#export,.tp-toolbar button{box-sizing:border-box}
   body.tp-page{margin:0;font:14px/1.4 system-ui,sans-serif;color:var(--cds-text-primary);background:var(--cds-layer-01)}
   #export,.tp-toolbar button,.tp-toolbar select{font:inherit} #export,.tp-toolbar button{cursor:pointer;padding:8px 12px;border:1px solid var(--cds-border-strong-01);background:var(--cds-field-02);color:var(--cds-text-primary)}
@@ -17,7 +18,7 @@
   .tp-toolbar select{padding:7px;border:1px solid var(--cds-border-strong-01);background:var(--cds-field-02);color:var(--cds-text-primary)}
   /* Cards butt together with shared 1px borders: each card overlaps the one before it by its border. */
   #grid{display:grid;grid-template-columns:repeat(auto-fill,200px);max-width:1200px;box-sizing:content-box;padding:1px 0 0 1px}
-  .tp-cell{width:200px;height:200px;margin:-1px 0 0 -1px;padding:16px;display:grid;grid-template-rows:auto 1fr auto;row-gap:8px;border:1px solid var(--cds-border-subtle-01);background:var(--cds-background)}
+  .tp-cell{width:200px;height:200px;margin:-1px 0 0 -1px;padding:16px;display:grid;grid-template-rows:auto 1fr auto;row-gap:8px;border:1px solid var(--cds-border-subtle-01);background:var(--cds-layer-background,var(--cds-background))}
   .tp-card-head{display:flex;gap:8px;align-items:start;justify-content:space-between}.tp-card-head > input{margin:0;flex:none;accent-color:var(--cds-icon-primary)}
   .tp-card-name{font-size:12px;line-height:16px;overflow-wrap:anywhere}
   .tp-drafted{font-style:italic;text-decoration:underline dotted var(--cds-support-warning);text-underline-offset:2px}.tp-drafted::after{content:"*"}
@@ -36,10 +37,11 @@
 <script>
 (() => {
   "use strict";
-  // To-preview shell over one Contract. catalog = {contract, modes, forces, sourceLabel, specimens}; see scripts/catalog.mjs.
+  // To-preview shell over one Contract. catalog = {contract, toggles, forces, sourceLabel, specimens}; see scripts/catalog.mjs.
   // Checked = kept in the Contract; unchecked = omitted. The Base Component is locked on.
   const $ = id => document.getElementById(id);
-  let model, catalog, renderer, mode, filters = {}, rendered = false;
+  // toggleState[i]: toggle i's element and its current Mode {host, key, className}.
+  let model, catalog, renderer, toggleState = [], filters = {}, rendered = false;
   // Node factory for the page and the cards: props are DOM properties, `dataset` and `aria-*` attributes.
   const h = (tag, props = {}, ...children) => {
     const node = document.createElement(tag);
@@ -51,8 +53,28 @@
     node.append(...children);
     return node;
   };
-  const modeClass = key => (catalog.modes.find(m => m.key === key) || {}).className;
-  const defaultMode = () => catalog.modes.length ? catalog.modes[0].key : undefined;
+  function setMode(i, key) {
+    const m = toggleState[i];
+    if (m.className) m.host.classList.remove(m.className);
+    m.key = key; m.className = catalog.toggles[i].modes.find(x => x.key === key).className;
+    m.host.classList.add(m.className);
+  }
+  const atDefaults = () => toggleState.every((m, i) => m.key === catalog.toggles[i].modes[0].key);
+  // The first toggle (Theme) goes on <body>, so the chrome follows it; each later one (Layer) on its own wrapper
+  // around the grid, nested in document order, so its class sits inside the earlier ones' (a Carbon Theme class
+  // resets the layer tokens to level one). Undoes any earlier wrapping first, and resets every toggle to its first Mode.
+  function resetModeHosts() {
+    for (const m of toggleState) if (m.className) m.host.classList.remove(m.className);
+    const grid = $("grid");
+    while (grid.parentElement.classList.contains("tp-mode-host")) grid.parentElement.replaceWith(grid);
+    toggleState = catalog.toggles.map((_, i) => {
+      if (i === 0) return { host: document.body };
+      const host = h("div", { className: "tp-mode-host" });
+      grid.replaceWith(host); host.append(grid);
+      return { host };
+    });
+    catalog.toggles.forEach((t, i) => setMode(i, t.modes[0].key));
+  }
 
   function summary() {
     const total = model.specimens.size, checked = model.selected.size;
@@ -77,14 +99,14 @@
     for (const [text, value] of [["Check visible", true], ["Uncheck visible", false]]) {
       const button = h("button", {}, text); button.onclick = () => { model.selectMatching(filters, value); summary(); }; $("filters").append(button);
     }
-    if (catalog.modes.length > 1) {
-      // Display only: swaps the theme class on the page, so the specimens and the card chrome follow it;
+    catalog.toggles.forEach((t, i) => {
+      // Display only: swaps the Mode class, so the specimens and the card chrome follow it;
       // nothing re-renders and the selection is untouched.
-      const label = h("label", {}, "Theme"), select = h("select");
-      for (const m of catalog.modes) select.append(new Option(m.label, m.key));
-      select.onchange = () => { document.body.classList.remove(modeClass(mode)); mode = select.value; document.body.classList.add(modeClass(mode)); };
+      const label = h("label", {}, t.label), select = h("select");
+      for (const m of t.modes) select.append(new Option(m.label, m.key));
+      select.onchange = () => setMode(i, select.value);
       label.append(select); $("filters").append(label);
-    }
+    });
   }
 
   // State forcing: copy every style rule that uses a forced pseudo-class (":hover") with the pseudo-class
@@ -125,13 +147,13 @@
         const { card, checkbox, host } = catalogCard(specimen, { contract: catalog.contract, baseId: model.baseId, sourceLabel: catalog.sourceLabel, h });
         checkbox.onchange = () => { model.select(specimen.id, checkbox.checked); summary(); };
         $("grid").append(card);
-        const renderedIn = mode;
+        const inDefaults = atDefaults();
         await renderer(specimen, host);
         if (!host.firstElementChild) throw new Error("The renderer returned an empty specimen: " + specimen.name);
         // A form control styles :hover and :focus on its nested <input> or <select>, not its root (#93), so the
         // forced class goes on every element of the specimen, as a pointer over the innermost one would.
         for (const el of [host.firstElementChild, ...host.firstElementChild.querySelectorAll("*")]) el.classList.add(...forceFor(specimen));
-        if (renderedIn === defaultMode()) model.verify(specimen.id);
+        if (inDefaults) model.verify(specimen.id);
       }
       if (document.fonts) await document.fonts.ready;
       rendered = true;
@@ -163,9 +185,7 @@
       if (typeof options.renderSpecimen !== "function") throw new Error("Provide the Adapter's specimen renderer");
       catalog = options.catalog; renderer = options.renderSpecimen; filters = {}; rendered = false;
       model = new CatalogSelection(catalog.contract, window.Contract);
-      if (modeClass(mode)) document.body.classList.remove(modeClass(mode));
-      mode = defaultMode();
-      if (modeClass(mode)) document.body.classList.add(modeClass(mode));
+      resetModeHosts();
       $("title").textContent = catalog.contract.family.name + " preview";
       forceStates([...new Set(catalog.forces.map(f => f.pseudo))]);
       controls(); summary(); render();
