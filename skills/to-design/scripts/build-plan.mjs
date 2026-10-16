@@ -20,6 +20,7 @@ import { parseArgs } from 'node:util';
 import { baseTuple, contentHash, expand, icons as iconKeys, iconName, PROTOTYPE_APPROVER, resolve, validate, variantName } from '../../contract/scripts/contract.mjs';
 import { anatomyTree, baseProps, defaultProps, expectedBase, expectedVariant, iconRef as iconRefKey, norm } from './readback.mjs';
 import { defaultLedgerPath, emptyLedger, readLedger } from './ledger.mjs';
+import { selectedGroups, selection, subsetDocument } from './foundations-subset.mjs';
 
 // Fields only a reviewer reads. The core never needs them, so the package leaves them out.
 const REVIEW_ONLY = { document: ['source', 'closure', 'checks', 'notes'], entry: ['source', 'usedBy'], value: ['from', 'reason', 'level', 'resolved'] };
@@ -48,6 +49,8 @@ export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune
   if (ledger && ledger.fileKey !== fileKey) throw new Error(`ledger is for ${ledger.fileKey}, not ${fileKey}`);
   const doc = JSON.parse(docText);
   if (doc.schemaVersion !== 1) throw new Error('foundations document schemaVersion must be 1');
+  // the selected subset of the whole theme (#107); documentHash stays the whole document's, as later slices check it
+  const sub = subsetDocument(doc, selection(doc, selectedGroups(ledger)));
   const plan = {
     schemaVersion: 1,
     slice: 'foundations',
@@ -58,7 +61,7 @@ export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune
     designSystem: doc.designSystem.key,
     snapshotId: doc.source.snapshotId,
     documentHash: documentHash(docText),
-    foundations: strip ? stripReviewFields(doc) : doc,
+    foundations: strip ? stripReviewFields(sub) : sub,
   };
   return { plan, state: ledger || emptyLedger(fileKey) };
 }

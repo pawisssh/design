@@ -10,6 +10,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { selectedGroups, selection } from './foundations-subset.mjs';
 
 export const ledgerPath = (fileKey, root = process.env.CLAUDE_PROJECT_DIR || process.cwd()) =>
   join(root, '.scratch', 'to-design', `${fileKey}.ledger.json`);
@@ -99,6 +100,23 @@ export function pruneList(preview, names) {
     prune[name] = preview.orphans[name];
   }
   return { schemaVersion: 1, fileKey: preview.fileKey, family: preview.family, prune };
+}
+
+/**
+ * The ledger with the owner's foundations groups changed (#107, ADR 0006): `foundationsGroups` names the groups the
+ * file builds next to the closure (Spacing and Size until the owner changes it). A slice result never carries this
+ * section, so recording a build keeps it. A removed group's variables become orphans on the next foundations build.
+ */
+export function setGroups(ledger, fileKey, doc, { add = [], remove = [] } = {}) {
+  if (ledger && ledger.fileKey !== fileKey) throw new Error(`ledger is for ${ledger.fileKey}, not ${fileKey}`);
+  const groups = new Set(selectedGroups(ledger));
+  const absent = remove.filter(g => !groups.has(g));
+  if (absent.length) throw new Error(`${absent.join(', ')} is not a selected group (selected: ${[...groups].join(', ')})`);
+  for (const g of remove) groups.delete(g);
+  for (const g of add) groups.add(g);
+  const foundationsGroups = [...groups].sort();
+  selection(doc, foundationsGroups);
+  return { ...(ledger || emptyLedger(fileKey)), foundationsGroups };
 }
 
 const USAGE = [
