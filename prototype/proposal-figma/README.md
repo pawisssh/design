@@ -29,6 +29,7 @@ Every approval here is **simulated** (`by: "orchestrator (prototype)"`). A real 
 | Does the derived grid match hand-picked grids? | The rule is: the last non-State axis gives the columns, the other axes and then State give the rows. It reproduces Button's `columns [size]`, `rows [kind, state]`. Plan option gives a 4×2 grid. |
 | What happens if a same-key Contract is built with no retirement act? | **Two sets** named `Plan option`, on two pages, under the ledger keys `proposal:plan-option` and `plan-option`. The gate must refuse this. |
 | Does adoption in place keep node identity? | Yes. Same set node, **8/8 variant ids kept** after the axis rename (Selected→Checked, false/true→off/on), 2 new `Active` variants created, Header Type → `Component`, description → the Contract's. |
+| What does the arriving Contract stand for? | The component **moved into the Code Library** (`home` edited, #80 §7), which an Adapter then read. A `home: app` Proposal built in the app is marked `built` and never retired, so the `package: 'app'` Contract here is only a stand-in. |
 | Does adoption rename the page? | **No.** The core finds an owned page by id and never renames it, so the page stays `Plan option (Proposal)`. Adoption needs a page rename (in the core or in the adopt step). |
 
 ## Run
