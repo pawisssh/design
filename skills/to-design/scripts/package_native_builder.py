@@ -251,7 +251,7 @@ def package_path(path):
     if relative == ".." or relative.startswith("../"):
         if main_tree:
             raise ValueError(f"Package path must be inside the main working tree {root}, where the hook resolves it; "
-                             f"package from a worktree under it, or deliver the package inline: {relative}")
+                             f"write the package there (a worktree under it works): {relative}")
         raise ValueError(f"Package path must be inside the project dir {root}: {relative}")
     if re.search(r"\s", relative):
         raise ValueError(f"Package path must contain no whitespace: {relative}")

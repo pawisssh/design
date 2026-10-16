@@ -18,7 +18,7 @@ Not an Adapter's job: Figma ids, build plans, approvals and the owner's omit lis
 ## 1. Pin the source
 
 - Pin one repository commit (the dereferenced commit, not an annotated tag object) and the exact version of every package the Contract or the renderer uses (`source.packages`).
-- Read values only from that pin. A design kit in Figma is at most a structure reference (page layout, layer names); never take a value from it.
+- Read values only from that pin. The Code Library's own Figma file is at most a structure reference (page layout, layer names); never take a value from it.
 - Record every file you read in `source.files` as `sha256:<hex>` of its bytes, and compute `snapshotId`: `sha256:` of the `shasum -a 256` manifest (one `<hex>  <path>\n` line per file, sorted by path in byte order). In a shell, from the folder the paths are relative to: `printf '%s\n' <path>... | LC_ALL=C sort | xargs shasum -a 256 | shasum -a 256`. A moved pin is a new snapshot, and it voids any approval.
 
 ## 2. Find the variants
@@ -44,6 +44,7 @@ Not an Adapter's job: Figma ids, build plans, approvals and the owner's omit lis
 | Icon choice | an `INSTANCE_SWAP` property bound to `mainComponent`, plus `icons` | default and another real icon |
 | Theme | foundations modes | every mode, never a variant |
 | Finite structure change | an axis value or a separate family | every structure |
+| Selected, checked or open | a value of its own axis (State stays canonical), or a nested component when only a child changes | each value in every State |
 | Callback, ref, telemetry id | nothing (code only) | — |
 
 A BOOLEAN may bind different nodes on different variants (`binds[].match`), and every selected variant needs exactly one bind per property. Choose by actual behaviour: if a loading state moves the label or changes the width, it is a variant, not a BOOLEAN.
@@ -59,6 +60,7 @@ A BOOLEAN may bind different nodes on different variants (`binds[].match`), and 
 | `display: flex`, `flex-direction: row / column`; a block stack | `direction: row / column` | Reverse directions need explicit child order. Grid layouts need nested rows and columns or a note. |
 | `justify-content: flex-start / center / flex-end / space-between` | `alignMain: start / center / end / space-between` | Main axis follows `direction`; space-between is not a gap. |
 | `align-items` | `alignCross` | `stretch` is the child's `fill` on the cross axis, not an alignment. |
+| `flex-wrap: wrap` | nothing: the Contract has no wrap field | Model the rows as nested containers, or record a note. |
 | `gap`, `row-gap`, `column-gap` | `gap` | A row's gap is `column-gap`; a column's is `row-gap`. |
 | `padding` (logical or physical sides) | `paddingTop/Right/Bottom/Left` | Resolve logical sides with the writing direction. |
 | Intrinsic, shrink-to-fit size | `width` / `height`: `hug` | Check min/max and text wrapping. |

@@ -236,5 +236,5 @@ test('a worktree outside the main working tree is refused, since the hook could 
   writeFileSync(join(outside, 'plan.json'), JSON.stringify(PLAN));
   const run = pack(outside, '.scratch/to-design/run', { CLAUDE_PROJECT_DIR: outside });
   assert.equal(run.status, 2);
-  assert.match(run.json.error, /inside the main working tree .*deliver the package inline/);
+  assert.match(run.json.error, /inside the main working tree .*write the package there/);
 });

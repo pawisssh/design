@@ -362,3 +362,15 @@ test('the build-plan and ledger CLIs run from a path that contains a space', () 
   const ledger = spawnSync('node', [join(dir, 'ledger.mjs')], { cwd: dir, encoding: 'utf8' });
   assert.equal(ledger.status, 2, 'usage error, so main() ran');
 });
+
+test('ledger.mjs record --ledger writes the given ledger file, as every other To-design CLI reads it', () => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'ledger-cli-')));
+  const result = { slice: 'foundations', fileKey: FILE_KEY, summary: {}, ledger: { foundations: { documentHash: 'sha256:x' } } };
+  writeFileSync(join(dir, 'result.json'), JSON.stringify(result));
+  const at = join(dir, 'elsewhere', `${FILE_KEY}.ledger.json`);
+  const cli = fileURLToPath(new URL('../scripts/ledger.mjs', import.meta.url));
+  const run = spawnSync('node', [cli, 'record', join(dir, 'result.json'), '--ledger', at], { cwd: dir, encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: dir } });
+  assert.equal(run.status, 0, run.stderr);
+  assert.equal(JSON.parse(run.stdout).ledger, at);
+  assert.equal(JSON.parse(readFileSync(at, 'utf8')).foundations.documentHash, 'sha256:x');
+});

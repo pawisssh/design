@@ -37,12 +37,12 @@ export function writeJson(path, value, { from = path } = {}) {
 
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 
-function same(a, b) {
-  if (Array.isArray(a)) return Array.isArray(b) && a.length === b.length && a.every((x, i) => same(x, b[i]));
+function deepEqual(a, b) {
+  if (Array.isArray(a)) return Array.isArray(b) && a.length === b.length && a.every((x, i) => deepEqual(x, b[i]));
   if (isObj(a)) {
     if (!isObj(b)) return false;
     const ka = Object.keys(a);
-    return ka.length === Object.keys(b).length && ka.every(k => Object.hasOwn(b, k) && same(a[k], b[k]));
+    return ka.length === Object.keys(b).length && ka.every(k => Object.hasOwn(b, k) && deepEqual(a[k], b[k]));
   }
   return a === b;
 }
@@ -142,7 +142,7 @@ export function rewriteJson(text, value) {
   const render = (node, v) => (multiline(text, node) ? block(v, indentAt(text, node.start)) : inline(v));
 
   function patch(node, old, next) {
-    if (same(old, next)) return;
+    if (deepEqual(old, next)) return;
     if (node.kind === 'object' && isObj(next) && node.members.length) {
       const keys = Object.keys(next);
       const kept = node.members.map((m, i) => (Object.hasOwn(next, m.key) ? i : -1)).filter(i => i >= 0);

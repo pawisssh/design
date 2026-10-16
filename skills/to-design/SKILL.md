@@ -24,7 +24,7 @@ Steps 1-5 run the same way: derive a plan, package it, send it to `use_figma`, r
 - **The Adapter's sources fetched.** Carbon: `node skills/adapter-carbon/scripts/sources.mjs`, which also unpacks `@carbon/icons@11.90.0` into `.scratch/adapter-carbon/sources/npm/@carbon/icons@11.90.0/package` for the icons slice.
 - **The Design Library file key**: from its URL, `figma.com/design/<fileKey>/...`. Create a new file only when the owner asks. Every plan pins the key, and the core refuses another file (`wrong-file`).
 - **The owner's go-ahead to write to that file.** Generating plans and packages writes nothing to Figma; only a `use_figma` call does.
-- **The ledger**: `.scratch/to-design/<fileKey>.ledger.json` (gitignored), one per Design Library file. It maps names to Figma ids, so a rerun updates rather than duplicates. `build-plan.mjs`, `base-loop.mjs` and `coverage.mjs` read it from the project root (`$CLAUDE_PROJECT_DIR`, else the current folder) unless given `--ledger <path>`. `ledger.mjs record` writes it there. Run every command from the project root.
+- **The ledger**: `.scratch/to-design/<fileKey>.ledger.json` (gitignored), one per Design Library file. It maps names to Figma ids, so a rerun updates rather than duplicates. `build-plan.mjs`, `base-loop.mjs` and `coverage.mjs` read it from the project root (`$CLAUDE_PROJECT_DIR`, else the current folder) unless given `--ledger <path>`. `ledger.mjs record` writes it there, or to its `--ledger <path>`. Run every command from the project root. In a session in a worktree, `$CLAUDE_PROJECT_DIR` is the main checkout, so the ledger is the main checkout's; to use another one, pass the same `--ledger` to every command.
 
 ## The call cycle
 
@@ -61,7 +61,7 @@ From a worktree the path starts with `.claude/worktrees/<worktree>/`. Copy the s
 
 **Send exactly that stub as `use_figma`'s `code`. This is the default.** The PreToolUse hook [hooks/use-figma-package.mjs](hooks/use-figma-package.mjs) swaps it for the file after checking the sha256 against the stub and `fileSha256`, that the path stays inside the project, and that the package is at most 50,000 chars. It logs each swap to `.scratch/to-design/use-figma-package.log` in the main checkout. Verified live in #26: the conversation carries only the stub, and `use_figma` runs without a permission prompt, because the hook allows the call. Never re-type or paste a package when the stub works.
 
-- **The path is relative to the main working tree**, because the host loads project hooks and sets `$CLAUDE_PROJECT_DIR` from the main checkout, also for a session in a worktree. The packager computes it; a package outside the main working tree is refused (deliver it inline).
+- **The path is relative to the main checkout** (git's main working tree), because the desktop host loads project hooks and sets `$CLAUDE_PROJECT_DIR` from the main checkout, also for a session in a worktree. The packager computes it, and refuses to write a package outside the main checkout: write it under the main checkout (a worktree under it works).
 - **If the hook refuses**, it blocks the call with a one-line reason. Fix the cause and re-package; never edit the stub.
 - **If `use_figma` returns `Error: package not injected`**, this session has no hook, and nothing changed in Figma. A session started before the hook was registered has none: project hooks load only at session start. Deliver the full contents of `build-components.mcp.js` as `code` instead (inline delivery). The core's integrity gate catches any drift in an inline copy before its first change.
 - **The hook and its settings come from the main checkout.** A change to the hook or to `.claude/settings.json` takes effect only once it is merged into the main checkout, the checkout is pulled, and a new session starts. Registering the hook is the owner's step: they paste [hooks/settings.snippet.json](hooks/settings.snippet.json) into the project's `.claude/settings.json`. Agents never edit settings. `onFailure` needs Claude Code v2.1.295 or later.
@@ -148,7 +148,7 @@ Three read-only `sets` calls, each checked against the Contract by [scripts/cove
 ```
 node skills/to-design/scripts/build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out .scratch/to-design/<run> --mode coverage
 node skills/to-design/scripts/coverage.mjs coverage <component.json> .scratch/to-design/<run>/result.json
-# likewise --mode sample --sample 0,17,42 (expansion indexes, at most 12) and --mode theme --sample ...
+# likewise --mode sample --sample 0,17,42 (expansion indexes; keep to 12 or fewer) and --mode theme --sample ...
 node skills/to-design/scripts/coverage.mjs sample <component.json> .scratch/to-design/<run>/result.json
 node skills/to-design/scripts/coverage.mjs theme <component.json> .scratch/to-design/<run>/result.json
 ```

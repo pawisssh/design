@@ -17,7 +17,7 @@ import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { closure, validate } from '../../contract/scripts/contract.mjs';
-import { CARBON, DEFAULT_DIR, REPO_ROOT, fetchSources, hasSources, readSources, sha256 } from './sources.mjs';
+import { CARBON, DEFAULT_DIR, REPO_ROOT, fetchSources, hasSources, readSources, sha256, snapshotId } from './sources.mjs';
 
 const MODES = [['white', 'White'], ['g10', 'Gray 10'], ['g90', 'Gray 90'], ['g100', 'Gray 100']]; // fixed; DTCG may add keys such as "fallback"
 const SINGLE = [['default', 'Default']];
@@ -335,7 +335,6 @@ export function generate({ sources, contracts }) {
   if (dupes.length) fail(`duplicate Figma variable names: ${dupes.join(', ')}`);
 
   const fileHashes = Object.fromEntries(Object.keys(sources.hashes).sort(byKey).map(p => [p, `sha256:${sources.hashes[p]}`]));
-  const manifest = Object.keys(fileHashes).map(p => `${sources.hashes[p]}  ${p}\n`).join('');
   const doc = {
     schemaVersion: 1,
     designSystem: { key: 'carbon', name: 'Carbon' },
@@ -343,7 +342,7 @@ export function generate({ sources, contracts }) {
       codeLibrary: src0.codeLibrary, adapter: src0.adapter, repository: CARBON.repository, tag: CARBON.tag, commit: CARBON.commit,
       packages: Object.fromEntries(PACKAGES.map(p => [p, src0.packages[p]])),
       files: fileHashes,
-      snapshotId: `sha256:${sha256(manifest)}`,
+      snapshotId: snapshotId(fileHashes),
     },
     closure: {
       contracts: contracts.map(({ path, contract }) => ({ family: contract.family.key, path, snapshotId: contract.source.snapshotId }))
