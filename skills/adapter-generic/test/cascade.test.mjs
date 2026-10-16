@@ -34,6 +34,7 @@ const CSS = `@layer theme { :root { --x: 1px; } }
   .active\\:not-aria-\\[haspopup\\]\\:translate-y-px:active:not([aria-haspopup]) { --tw-translate-y: 1px; translate: var(--tw-translate-x) var(--tw-translate-y); }
   :where([data-slot="button-group"]) .in-data-\\[slot\\=button-group\\]\\:rounded-lg { border-radius: var(--radius); }
   .has-data-\\[icon\\=inline-end\\]\\:pr-2:has([data-icon="inline-end"]) { padding-right: calc(var(--spacing) * 2); }
+  .has-\\[\\>svg\\]\\:px-3:has(>svg) { padding-inline: calc(var(--spacing) * 3); }
   .\\[\\&_svg\\]\\:shrink-0 svg { flex-shrink: 0; }
   @media (width >= 40rem) { .sm\\:p-2 { padding: calc(var(--spacing) * 2); } }
 }
@@ -69,10 +70,17 @@ test('an attribute the component sets from its own prop is a condition on that p
 
 test('rules the tuple cannot decide are kept apart, each with its kind', () => {
   assert.equal(one('in-data-[slot=button-group]:rounded-lg').skip, 'ancestor');
-  assert.equal(one('has-data-[icon=inline-end]:pr-2').skip, 'slot');
+  assert.equal(one('has-[>svg]:px-3').skip, 'slot');
   assert.equal(one('[&_svg]:shrink-0').skip, 'descendant');
+  assert.equal(one('[&_svg]:shrink-0').target, 'svg');
   assert.equal(one('sm:p-2').skip, 'media');
   assert.equal(one('active:not-aria-[haspopup]:translate-y-px').skip, 'condition');
+});
+
+test('a filled slot, :has([attr="value"]), is a condition the caller decides (#121)', () => {
+  const r = one('has-data-[icon=inline-end]:pr-2');
+  assert.deepEqual([r.skip, r.when], [undefined, { mode: null, state: null, attrs: {}, slot: '[data-icon="inline-end"]' }]);
+  assert.deepEqual(r.specificity, [0, 2, 0], 'it beats the plain padding utility it overrides');
 });
 
 test('specificity counts classes, attributes and pseudo-classes; :is takes its argument, :where counts nothing', () => {

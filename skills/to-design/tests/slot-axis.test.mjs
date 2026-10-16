@@ -23,3 +23,15 @@ test('readback shows the slot exactly where the Slot axis fills it, as wiring, n
   // empty slot; filled slot with the label; an icon-only size (filled, no label)
   assert.equal(wirings.size, 3);
 });
+
+test('the generated shadcn Button reads back its two slot frames the same way', () => {
+  const shadcn = JSON.parse(readFileSync(new URL('../../../design-systems/shadcn/contracts/button.component.json', import.meta.url), 'utf8'));
+  const slots = shadcn.axes.filter(a => a.slot);
+  assert.deepEqual(slots.map(a => a.slot), ['Icon Inline Start', 'Icon Inline End']);
+  const props = defaultProps(shadcn);
+  for (const t of expand(shadcn)) {
+    const exp = expectedVariant(shadcn, t, props);
+    for (const a of slots) assert.equal(exp.visible[a.slot], a.values.find(v => v.key === t[a.key]).filled, exp.name);
+    for (const [node, fields] of Object.entries(exp.layout)) assert.ok(!('visible' in fields), `${exp.name}: ${node} keeps visible in its layout`);
+  }
+});
