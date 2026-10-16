@@ -18,7 +18,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { convert } from '../../contract/scripts/color.mjs';
-import { DEFAULT_DIR, FIXTURE, REPO_ROOT, TOOLS, fetchTools, hasTools, sha256, snapshotId, toolDir } from './sources.mjs';
+import { DEFAULT_DIR, FIXTURE, REPO_ROOT, STYLESHEETS, TOOLS, fetchTools, hasTools, sha256, snapshotId, toolDir } from './sources.mjs';
 import { build, utilityRule } from './tailwind.mjs';
 
 // Mode selector -> mode. The first is the default; a mode that omits a property inherits the default's value.
@@ -32,7 +32,7 @@ const ROLES = {
   radius: { type: 'FLOAT', group: 'Radius', scopes: ['CORNER_RADIUS'], utility: k => `rounded-${k}` },
 };
 // Component tokens: a theme colour whose first name segment is a shadcn component family (schema `family`).
-const FAMILIES = { sidebar: 'sidebar', chart: 'chart' };
+const FAMILIES = new Set(['sidebar', 'chart']);
 // Tailwind's classic named spacing scale (#70 §3); a step is `spacing-<n>` with "." written "_".
 const SPACING = ['0', 'px', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '5', '6', '7', '8', '9', '10', '11', '12', '14', '16',
   '20', '24', '28', '32', '36', '40', '44', '48', '52', '56', '60', '64', '72', '80', '96'];
@@ -112,7 +112,7 @@ export async function generate({ project, drafts = [], tools = DEFAULT_DIR }) {
   if (!cssFile) fail('components.json names no tailwind.css');
   if (!existsSync(join(project, 'package-lock.json'))) fail('no package-lock.json: the Adapter reads resolved versions from it');
   const lock = JSON.parse(readText('package-lock.json'));
-  for (const name of ['shadcn', 'tailwindcss', 'tw-animate-css']) {
+  for (const name of STYLESHEETS) {
     const got = (lock.packages[`node_modules/${name}`] || {}).version;
     if (got !== TOOLS[name].version) fail(`the project resolves ${name}@${got}, but the Adapter pins ${name}@${TOOLS[name].version}`);
   }
@@ -177,7 +177,8 @@ export async function generate({ project, drafts = [], tools = DEFAULT_DIR }) {
       if (c.clipped) Object.assign(v, { level: 'info', reason: CLIPPED });
       values[key] = v;
     });
-    const family = FAMILIES[name.split('-')[0]];
+    const head = name.split('-')[0];
+    const family = FAMILIES.has(head) ? head : undefined;
     const role = roles[prop];
     if (!role) notes.push({ level: 'info', at: `variables.${name}`, message: `No @theme --color-* refers to ${prop}; scoped as a colour by its value, codeSyntax not compiled.` });
     variables[name] = { collection: 'theme', name: `${family ? title(family) : 'Color'}/${name}`, type: 'COLOR',
@@ -242,7 +243,7 @@ export async function generate({ project, drafts = [], tools = DEFAULT_DIR }) {
     designSystem: { key: 'shadcn', name: 'shadcn/ui' },
     source: {
       codeLibrary: 'shadcn/ui', adapter: 'generic',
-      packages: Object.fromEntries(Object.keys(TOOLS).sort(byKey).map(n => [n, TOOLS[n].version])),
+      packages: Object.fromEntries(STYLESHEETS.map(n => [n, TOOLS[n].version])),
       files, snapshotId: snapshotId(files),
     },
     closure: { contracts: [], tokens: [] },
@@ -256,7 +257,6 @@ export async function generate({ project, drafts = [], tools = DEFAULT_DIR }) {
     checks: {
       css: { against: cssFile, converted: checks.converted, by: 'skills/contract/scripts/color.mjs convert' },
       compiled: { against: `tailwindcss@${TOOLS.tailwindcss.version} compile() over ${cssFile}`, matched: checks.compiled },
-      scopes: { by: 'skills/contract/scripts/contract.mjs validate, rule 6', contracts: 0, errors: 0 },
     },
     notes: [...notes,
       { level: 'info', at: 'variables', message: 'Only the project\'s own CSS is read. Tailwind\'s default theme (its colour palette, fonts, shadows) is not carried.' },

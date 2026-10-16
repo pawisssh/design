@@ -6,9 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { DEFAULT_DIR, TOOLS, toolDir } from './sources.mjs';
-
-const STYLESHEETS = ['tailwindcss', 'tw-animate-css', 'shadcn'];
+import { DEFAULT_DIR, STYLESHEETS, TOOLS, toolDir } from './sources.mjs';
 
 /** A stylesheet id, as an `@import` names it, to a file path. Throws for anything outside the pinned packages. */
 function resolveStylesheet(id, base, tools) {

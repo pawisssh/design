@@ -18,9 +18,11 @@ export const DEFAULT_DIR = join(REPO_ROOT, '.scratch/adapter-generic/tools');
 // The reference project: `shadcn@4.22.0 init --base radix --preset nova`, as source plus lockfile (see its NOTICE).
 export const FIXTURE = join(REPO_ROOT, 'skills/adapter-generic/fixtures/radix-nova');
 
+// `stylesheet`: the project resolves it too (its lockfile must agree) and its CSS may `@import` it.
 export const TOOLS = {
   tailwindcss: {
     version: '4.3.3',
+    stylesheet: true,
     integrity: 'sha512-gOhV3P7ufE62QDGg1zVaTgCR+EtPv92k2nIhVcVKcLmxT1sUBsQGhnZj175j+MqRt4zLF7ic+sCYjfhxMxj7YQ==',
     extract: ['package/package.json', 'package/LICENSE', 'package/index.css', 'package/preflight.css', 'package/theme.css',
       'package/utilities.css', 'package/dist'],
@@ -34,15 +36,20 @@ export const TOOLS = {
   // Stylesheets the fixture's CSS imports, at the versions its lockfile resolves.
   shadcn: {
     version: '4.22.0',
+    stylesheet: true,
     integrity: 'sha512-QKR3XUnatWlgo8IbZqGHrpsxjgdsfpPSAvJvLntQqAxPEf5U2sNsjDYLAS2xmFrOkC9lpj5UpZbrh/BuHrE2CQ==',
     extract: ['package/package.json', 'package/LICENSE.md', 'package/dist/tailwind.css'],
   },
   'tw-animate-css': {
     version: '1.4.0',
+    stylesheet: true,
     integrity: 'sha512-7bziOlRqH0hJx80h/3mbicLW7o8qLsH5+RaLR2t+OHM3D0JlWGODQKQ4cxbK7WlvmUxpcj6Kgu6EKqjrGFe3QQ==',
     extract: ['package/package.json', 'package/LICENSE', 'package/dist'],
   },
 };
+
+/** The pinned packages the project itself resolves and imports, by name. */
+export const STYLESHEETS = Object.keys(TOOLS).filter(n => TOOLS[n].stylesheet).sort();
 
 /** Hex sha256 of a string or bytes. */
 export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');

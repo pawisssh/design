@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { cpSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { generate } from '../scripts/foundations.mjs';
@@ -160,15 +160,16 @@ test('a colour declared only in :root holds the same value in Dark', { skip }, a
   assert.deepEqual(v.values.dark, v.values.light);
 });
 
-test('source pins the project files read, with snapshotId and the tool versions', { skip }, async () => {
+test('source pins the project files read, with snapshotId and the versions the project resolves', { skip }, async () => {
   const { source, closure, checks } = (await run()).doc;
   const files = ['app/globals.css', 'components.json', 'package-lock.json'];
   assert.deepEqual(Object.keys(source.files), files);
   for (const f of files) assert.equal(source.files[f], `sha256:${sha256(readFileSync(join(FIXTURE, f)))}`);
   assert.equal(source.snapshotId, snapshotId(source.files));
   assert.equal(source.adapter, 'generic');
-  assert.deepEqual(source.packages, { shadcn: '4.22.0', tailwindcss: '4.3.3', 'tw-animate-css': '1.4.0', typescript: '6.0.3' });
+  assert.deepEqual(source.packages, { shadcn: '4.22.0', tailwindcss: '4.3.3', 'tw-animate-css': '1.4.0' });
   assert.deepEqual(closure, { contracts: [], tokens: [] });
+  assert.deepEqual(Object.keys(checks), ['css', 'compiled'], 'no scope check until a Contract exists');
   assert.equal(checks.compiled.matched, 73); // 31 colours, 7 radius steps and 35 spacing steps
   assert.equal(checks.css.converted, 62); // 31 colours x 2 modes
 });
@@ -186,4 +187,18 @@ test('a theme property that refers to another fails, naming it', { skip }, async
 test('a non-colour value that differs by mode fails, naming the property', { skip }, async () => {
   const project = variant(css => css.replace('.dark {', '.dark {\n  --radius: 0.5rem;'));
   await assert.rejects(run(project), /--radius differs between modes/);
+});
+
+test('a project whose lockfile resolves another pinned version is refused, naming both', { skip }, async () => {
+  const project = variant(css => css);
+  const lock = join(project, 'package-lock.json');
+  writeFileSync(lock, readFileSync(lock, 'utf8').replace('"node_modules/shadcn": {\n      "version": "4.22.0"', '"node_modules/shadcn": {\n      "version": "4.21.0"'));
+  await assert.rejects(run(project), /resolves shadcn@4\.21\.0, but the Adapter pins shadcn@4\.22\.0/);
+});
+
+test('the CLI exits non-zero on a failed check and writes nothing', { skip }, () => {
+  const project = variant(css => css.replace('--ring: oklch(0.708 0 0);', '--ring: oklch(from var(--primary) l c h);'));
+  const out = join(mkdtempSync(join(tmpdir(), 'generic-out-')), 'out.json');
+  assert.throws(() => execFileSync('node', [CLI, '--project', project, '-o', out], { stdio: 'pipe' }), e => e.status === 1 && /FAIL: .*--ring/.test(e.stderr));
+  assert.equal(existsSync(out), false);
 });

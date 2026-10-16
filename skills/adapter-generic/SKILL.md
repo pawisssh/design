@@ -38,10 +38,10 @@ The one thing ever executed is Tailwind's own compiler, over the project's CSS (
 ## 2. Foundations step
 
 ```
-node skills/adapter-generic/scripts/foundations.mjs [--project <dir>] [-o <file>]
+node skills/adapter-generic/scripts/foundations.mjs [--project <dir>] [--tools <dir>] [-o <file>]
 ```
 
-It reads the reference project by default and writes [`design-systems/shadcn/shadcn.foundations.json`](../../design-systems/shadcn/shadcn.foundations.json).
+It reads the reference project and the fetched tools by default, and writes [`design-systems/shadcn/shadcn.foundations.json`](../../design-systems/shadcn/shadcn.foundations.json).
 
 - Never edit that file by hand. Change the project, the pins or a rule here, and regenerate.
 - A rerun is byte-identical.
@@ -124,4 +124,4 @@ Tests: `node --test skills/adapter-generic/test/*.test.mjs`. They skip, saying s
 
 ## Moving a pin
 
-Change `TOOLS` in `sources.mjs` (the version and its registry `integrity`). The Adapter refuses a project whose lockfile resolves another `shadcn`, `tailwindcss` or `tw-animate-css` version. After the change, regenerate the document.
+Change `TOOLS` in `sources.mjs` (the version and its registry `integrity`). The Adapter refuses a project whose lockfile resolves another version of a `stylesheet` package (`shadcn`, `tailwindcss`, `tw-animate-css`), because the compiled cross-check must run the Tailwind the project runs. `source.packages` records those three. After the change, regenerate the document.
