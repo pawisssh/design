@@ -1,0 +1,154 @@
+{
+  "$comment": "PROTOTYPE for #63. A sample Handoff (#56 + amendments from #60, #61, #62) for the sample Prototype. Style entries carry `raw` plus the `expect`ed tier; build.mjs runs a stand-in matcher (#61 rules) over them, checks each lands in the expected tier, and writes the matched Handoff to out/handoff.json. `interactions` is left out on purpose so the Rendering's 'Not specified' display is exercised.",
+  "schemaVersion": 1,
+  "revision": 1,
+  "feature": {
+    "name": "Invite teammates",
+    "owner": "Workspace admin flows",
+    "status": "draft",
+    "goal": "A workspace admin invites people by email and sees who is still pending.",
+    "scope": ["Invite one email at a time with a role", "See and remove pending invites", "See seats used"],
+    "nonGoals": ["Billing for extra seats", "Accepting an invite (the invitee's side)"]
+  },
+  "source": {
+    "input": "prototype",
+    "ref": "docs/prototype/html-handoff/sample-prototype/index.html",
+    "kind": "html-file",
+    "designSystem": "carbon",
+    "contracts": { "button": "sha256:4c82c3cc7f2af6fa24fba39bb5e159c415b5691800130268c9d8903901164152" },
+    "proposals": { "avatar-stack": "sha256:(not computed in the prototype)" },
+    "modes": { "light": "white" },
+    "notes": [
+      { "level": "info", "text": "Single-mode Prototype: matched in White only. Matched tokens carry Gray 10, Gray 90 and Gray 100 too, so a dark theme comes free but is unverified." }
+    ],
+    "ignored": []
+  },
+  "screens": [
+    {
+      "id": "invite",
+      "name": "Invite teammates",
+      "breakpoints": ["sm", "lg"],
+      "regions": [
+        {
+          "id": "header", "landmark": "header",
+          "text": [
+            { "copy": "title", "style": { "textStyle": { "raw": { "fontSize": 20, "lineHeight": 30, "fontWeight": 400, "letterSpacing": 0 }, "expect": "near" } }, "at": "index.html:15" },
+            { "copy": "lead", "style": { "textStyle": { "raw": { "fontSize": 14, "lineHeight": 18, "fontWeight": 400, "letterSpacing": 0.16 }, "expect": "exact-agent", "pick": "body-compact-01" } }, "at": "index.html:16" }
+          ],
+          "styles": [
+            { "property": "background-color", "raw": "#fafafa", "expect": "near", "pick": "background", "at": "index.html:13", "note": "page surface" },
+            { "property": "color", "raw": "#161616", "expect": "exact-agent", "pick": "text-primary", "at": "index.html:13" },
+            { "property": "color", "raw": "#525252", "expect": "exact-agent", "pick": "text-secondary", "at": "index.html:16" }
+          ],
+          "usages": []
+        },
+        {
+          "id": "promo", "landmark": null,
+          "text": [ { "copy": "promo", "at": "index.html:59" } ],
+          "styles": [
+            { "property": "background-color", "raw": "#edf5ff", "expect": "near", "pick": "layer-01", "at": "index.html:18", "note": "a blue info tint (Primitive blue.10) that the ΔE 0.02 threshold snaps to a grey layer" },
+            { "property": "color", "raw": "#002d9c", "expect": "off-system", "valueId": "promo-text", "reason": "Dark blue banner text; no Carbon Text, Link or Icon token is this blue in White.", "at": "index.html:18" },
+            { "property": "padding", "raw": "12px 16px", "expect": "exact", "at": "index.html:18" },
+            { "property": "border-radius", "raw": "8px", "expect": "exact", "at": "index.html:18" }
+          ],
+          "usages": []
+        },
+        {
+          "id": "invite-card", "landmark": "main",
+          "responsive": { "sm": "Actions stack full-width, primary on top", "lg": "Actions in one row, right-aligned" },
+          "styles": [
+            { "property": "background-color", "raw": "#f4f4f4", "expect": "exact-agent", "pick": "layer-01", "at": "index.html:17", "note": "card on the page surface" },
+            { "property": "border-color", "ref": "var(--cds-border-subtle-01)", "expect": "reference", "at": "index.html:11" },
+            { "property": "border-radius", "raw": "8px", "expect": "exact", "at": "index.html:17" },
+            { "property": "padding", "raw": "16px", "expect": "exact", "at": "index.html:17" },
+            { "property": "gap", "raw": "10px", "expect": "off-system", "valueId": "form-gap", "reason": "Between Carbon's 8px and 12px steps; the Prototype uses it for every row and button gap.", "at": ["index.html:20", "index.html:28"] }
+          ],
+          "text": [
+            { "copy": "email-label", "style": { "textStyle": { "raw": { "fontSize": 12, "lineHeight": 16, "fontWeight": 400, "letterSpacing": 0.32 }, "expect": "exact-agent", "pick": "label-01" } }, "at": "index.html:19" },
+            { "copy": "seats", "at": "index.html:65" },
+            { "copy": "empty", "states": ["empty"], "at": "index.html:67" }
+          ],
+          "usages": [
+            { "id": "email-input", "contract": "text-input", "tuple": { "size": "md" }, "properties": { "label": "copy:email-label", "placeholder": "copy:email-placeholder" },
+              "match": { "by": "agent", "via": "element", "candidates": [ { "size": "lg" } ] }, "at": "index.html:62" },
+            { "id": "role-select", "raw": { "element": "select" }, "reason": "No Contract for a select in this Design System. Carbon's Select would fit once the Adapter reads it.", "question": "q-no-contract", "properties": { "label": "copy:role-label" }, "at": "index.html:63" },
+            { "id": "seat-avatars", "proposal": "avatar-stack", "tuple": { "size": "sm" }, "at": "index.html:65" },
+            { "id": "remove-invite", "contract": "button", "tuple": { "kind": "danger--ghost", "size": "sm" }, "properties": { "label": "copy:remove" },
+              "match": { "by": "agent", "via": "element", "candidates": [ { "kind": "ghost" }, { "kind": "danger--tertiary" } ] }, "at": "index.html:66" },
+            { "id": "copy-link", "contract": "button", "tuple": { "kind": "primary", "size": "md" }, "properties": { "label": "copy:copy-link" },
+              "match": { "by": "agent", "via": "library", "candidates": [ { "kind": "secondary" } ] },
+              "offAxis": [ { "property": "background-color", "raw": "#198754", "reason": "Green 'success' button; Carbon Button has no success kind.", "question": "q-success-kind" } ],
+              "at": "index.html:69" },
+            { "id": "cancel", "contract": "button", "tuple": { "kind": "tertiary", "size": "md" }, "properties": { "label": "copy:cancel" },
+              "match": { "by": "agent", "via": "library", "candidates": [ { "kind": "secondary" } ] }, "at": "index.html:70" },
+            { "id": "send-invites", "contract": "button", "tuple": { "kind": "primary", "size": "md" }, "properties": { "label": "copy:send" },
+              "match": { "by": "agent", "via": "library", "candidates": [ { "size": "lg" } ] }, "at": "index.html:71" }
+          ]
+        },
+        {
+          "id": "toast", "landmark": "status", "overlay": true, "states": ["success"],
+          "usages": [
+            { "id": "sent-toast", "raw": { "element": "div[role=status]" }, "reason": "No Contract for a toast in this Design System. Carbon's ToastNotification would fit once the Adapter reads it.", "question": "q-no-contract", "properties": { "title": "copy:toast-sent" }, "at": "index.html:74" }
+          ]
+        }
+      ],
+      "states": {
+        "default": { "content": "Two pending invites (mock). Send invites is disabled until an email is typed.", "usageStates": { "send-invites": { "state": "disabled" } }, "force": { "email": "" } },
+        "loading": { "trigger": "state.isSending", "content": "Send invites shows 'Sending…' and is disabled while the request runs.", "usageStates": { "send-invites": { "state": "disabled", "properties": { "label": "copy:sending" } } }, "force": { "email": "ana@example.com", "isSending": true } },
+        "empty": { "trigger": "state.invites.length === 0", "content": "No pending invites: the list is replaced by an empty message.", "usageStates": { "send-invites": { "state": "disabled" } }, "force": { "invites": [] } },
+        "error": { "missing": true, "question": "q-error-state" },
+        "success": { "trigger": "state.sent", "content": "A toast confirms the send; the new invite joins the list.", "force": { "sent": true } }
+      }
+    }
+  ],
+  "copy": {
+    "title": { "text": "Invite teammates" },
+    "lead": { "text": "Teammates get an email with a link to join this workspace." },
+    "promo": { "text": "Lorem ipsum: invite 3 more people to unlock shared dashboards.", "placeholder": true },
+    "email-label": { "text": "Email" },
+    "email-placeholder": { "text": "jane@example.com", "placeholder": true },
+    "role-label": { "text": "Role" },
+    "seats": { "text": "{used} of {total} seats used" },
+    "remove": { "text": "Remove" },
+    "remove-aria": { "text": "Remove invite for {email}" },
+    "copy-link": { "text": "Copy invite link" },
+    "cancel": { "text": "Cancel" },
+    "send": { "text": "Send invites" },
+    "sending": { "text": "Sending…" },
+    "empty": { "text": "No pending invites yet." },
+    "toast-sent": { "text": "Invites sent" }
+  },
+  "values": [],
+  "flow": [
+    { "from": "invite.default", "trigger": "Click Send invites (email typed)", "to": "invite.loading" },
+    { "from": "invite.loading", "trigger": "Request resolves", "to": "invite.success" },
+    { "from": "invite.loading", "trigger": "Request fails", "to": "invite.error", "source": "missing" },
+    { "from": "invite.default", "trigger": "Remove the last pending invite", "to": "invite.empty" }
+  ],
+  "data": [
+    { "id": "pending-invites", "source": "mock", "shape": "{ email: string, role: 'Viewer' | 'Editor' | 'Admin' }[]", "note": "Two hard-coded invites.", "question": "q-invites-source", "at": "index.html:45" },
+    { "id": "send-invites", "source": "simulated", "shape": "(email, role) → void", "note": "setTimeout of 800 ms that always succeeds; no request is made.", "question": "q-error-state", "at": "index.html:52" }
+  ],
+  "a11y": {
+    "focusOrder": { "invite": ["email-input", "role-select", "remove-invite", "copy-link", "cancel", "send-invites"] },
+    "landmarks": { "header": "header", "invite-card": "main", "toast": "status (polite live region)" },
+    "labels": { "remove-invite": "copy:remove-aria" }
+  },
+  "tokensToAdd": {
+    "promo-text": { "$type": "color", "$value": "#002d9c", "$extensions": { "modes": { "white": "#002d9c", "g10": "#002d9c", "g90": "(not in the Prototype)", "g100": "(not in the Prototype)" } }, "$description": "From Off-system value promo-text; equals the Primitive blue.80." }
+  },
+  "acceptance": [
+    { "id": "send-disabled-when-empty", "screen": "invite", "state": "default", "given": "the email field is empty", "when": "the admin looks at the form", "then": "Send invites is disabled", "by": "agent" },
+    { "id": "send-shows-progress", "screen": "invite", "state": "loading", "given": "an email is typed", "when": "the admin clicks Send invites", "then": "the button reads 'Sending…' and stays disabled until the request ends", "by": "agent" },
+    { "id": "success-toast", "screen": "invite", "state": "success", "given": "a send is in progress", "when": "the request succeeds", "then": "a status toast reads 'Invites sent' and the email joins the pending list", "by": "agent" },
+    { "id": "remove-last-shows-empty", "screen": "invite", "state": "empty", "given": "one pending invite", "when": "the admin removes it", "then": "the list shows 'No pending invites yet.'", "by": "agent" }
+  ],
+  "openQuestions": [
+    { "id": "q-font", "kind": "font", "text": "The Prototype uses Inter. Use the Design System's font-family-sans (IBM Plex Sans)?" },
+    { "id": "q-error-state", "kind": "missing-state", "text": "What happens when sending fails? The Prototype's simulated send never fails, so the error state has no branch." },
+    { "id": "q-no-contract", "kind": "no-contract", "text": "The role select and the toast have no Contract in this Design System yet. The Adapter is drafting Select and ToastNotification; until then they stay raw." },
+    { "id": "q-success-kind", "kind": "off-axis", "text": "Copy invite link is green, but Carbon Button has no success kind. Use primary, secondary or another kind?" },
+    { "id": "q-breakpoint", "kind": "breakpoint", "text": "The Prototype stacks the actions below 640px; Carbon's md starts at 672px. Stack below md?" },
+    { "id": "q-invites-source", "kind": "stand-in", "text": "Where do pending invites really come from (endpoint, paging)?" }
+  ]
+}

@@ -1,0 +1,82 @@
+<!doctype html>
+<!-- PROTOTYPE input for #63: a hand-written stand-in for a vibe-coded single-HTML-file Prototype
+     ("Invite teammates"). It mimics Bootstrap class names and a v0-style look (Inter, rounded cards)
+     on purpose, so To-handoff has cross-library and plain-element usages to recognise. Not production. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invite teammates</title>
+<style>
+  :root { --border: var(--cds-border-subtle-01, #c6c6c6); }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #fafafa; color: #161616; }
+  main { max-width: 640px; margin: 0 auto; padding: 32px 16px; }
+  h1 { font-size: 20px; line-height: 30px; font-weight: 400; margin: 0 0 4px; }
+  .lead { color: #525252; font-size: 14px; line-height: 18px; letter-spacing: 0.16px; margin: 0 0 16px; }
+  .card { background: #f4f4f4; border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .promo { background: #edf5ff; color: #002d9c; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; }
+  label { display: block; font-size: 12px; line-height: 16px; letter-spacing: 0.32px; color: #525252; margin-bottom: 4px; }
+  .row { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+  .field { flex: 1 1 220px; }
+  input, select { width: 100%; height: 40px; border: 0; border-bottom: 1px solid #8d8d8d; background: #ffffff; padding: 0 12px; font: inherit; }
+  .btn { height: 40px; padding: 0 16px; border-radius: 6px; border: 1px solid transparent; font: inherit; font-size: 14px; cursor: pointer; }
+  .btn-primary { background: #0f62fe; color: #fff; }
+  .btn-primary:disabled { background: #c6c6c6; color: #8d8d8d; cursor: not-allowed; }
+  .btn-outline-secondary { background: transparent; border-color: #0f62fe; color: #0f62fe; }
+  .btn-success { background: #198754; color: #fff; }
+  .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+  .seats { display: flex; align-items: center; gap: 8px; margin: 16px 0 8px; font-size: 14px; color: #525252; }
+  .avatars { display: flex; }
+  .avatars span { width: 24px; height: 24px; border-radius: 50%; background: #e0e0e0; border: 2px solid #f4f4f4; margin-left: -6px; font-size: 10px; display: grid; place-items: center; }
+  .avatars span:first-child { margin-left: 0; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-top: 1px solid var(--border); font-size: 14px; }
+  .link-danger { background: none; border: 0; color: #da1e28; font: inherit; font-size: 12px; cursor: pointer; height: 32px; padding: 0 8px; }
+  .empty { color: #525252; font-size: 14px; padding: 8px 0; }
+  .toast { position: fixed; right: 16px; bottom: 16px; background: #24a148; color: #fff; padding: 12px 16px; border-radius: 8px; font-size: 14px; }
+  @media (max-width: 640px) { .actions { flex-direction: column-reverse; } .actions .btn { width: 100%; } }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+  // Stand-ins: mock data and a simulated send (setTimeout), as a v0 prototype would have.
+  const mockInvites = [
+    { email: 'john.doe@example.com', role: 'Editor' },
+    { email: 'jane@example.com', role: 'Viewer' },
+  ];
+  const state = { email: '', role: 'Viewer', invites: mockInvites.slice(), isSending: false, sent: false };
+  function sendInvites() {
+    state.isSending = true; render();
+    setTimeout(() => { state.isSending = false; state.sent = true; state.invites.push({ email: state.email, role: state.role }); state.email = ''; render(); }, 800);
+  }
+  function render() {
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <h1>Invite teammates</h1>
+      <p class="lead">Teammates get an email with a link to join this workspace.</p>
+      <div class="promo">Lorem ipsum: invite 3 more people to unlock shared dashboards.</div>
+      <section class="card">
+        <div class="row">
+          <div class="field"><label for="email">Email</label><input id="email" type="email" placeholder="jane@example.com" value="${state.email}"></div>
+          <div class="field" style="flex:0 0 140px"><label for="role">Role</label><select id="role"><option>Viewer</option><option>Editor</option><option>Admin</option></select></div>
+        </div>
+        <div class="seats"><div class="avatars"><span>JD</span><span>JA</span><span>+1</span></div>${state.invites.length + 1} of 5 seats used</div>
+        <ul>${state.invites.length === 0 ? '' : state.invites.map((i, n) => `<li><span>${i.email} · ${i.role}</span><button class="link-danger" data-n="${n}">Remove</button></li>`).join('')}</ul>
+        ${state.invites.length === 0 ? '<p class="empty">No pending invites yet.</p>' : ''}
+        <div class="actions">
+          <button class="btn btn-success" id="copy">Copy invite link</button>
+          <button class="btn btn-outline-secondary" id="cancel">Cancel</button>
+          <button class="btn btn-primary" id="send" ${!state.email || state.isSending ? 'disabled' : ''}>${state.isSending ? 'Sending…' : 'Send invites'}</button>
+        </div>
+      </section>
+      ${state.sent ? '<div class="toast" role="status">Invites sent</div>' : ''}`;
+    document.getElementById('email').oninput = e => { state.email = e.target.value; document.getElementById('send').disabled = !state.email; };
+    document.getElementById('send').onclick = sendInvites;
+    app.querySelectorAll('.link-danger').forEach(b => b.onclick = () => { state.invites.splice(+b.dataset.n, 1); render(); });
+  }
+  render();
+</script>
+</body>
+</html>

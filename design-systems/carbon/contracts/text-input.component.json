@@ -1,0 +1,272 @@
+{
+  "schemaVersion": 1,
+
+  "family": {
+    "key": "text-input",
+    "name": "Text Input",
+    "description": "Single-line text field with a label, optional helper text and an invalid or warning message. Password, Fluid and inline variants are separate families or out of this draft."
+  },
+
+  "source": {
+    "codeLibrary": "Carbon React",
+    "adapter": "carbon",
+    "repository": "https://github.com/carbon-design-system/carbon",
+    "tag": "v11.118.0",
+    "commit": "44f90d8d6b24889af06cee1422ceb37f58e40bed",
+    "packages": {
+      "@carbon/react": "1.118.0",
+      "@carbon/styles": "1.117.0",
+      "@carbon/themes": "11.83.0",
+      "@carbon/layout": "11.61.0",
+      "@carbon/type": "11.69.0",
+      "@carbon/colors": "11.60.0",
+      "@carbon/icons": "11.90.0",
+      "@carbon/icons-react": "11.90.0"
+    },
+    "files": {
+      "packages/layout/src/dtcg/layout.json": "sha256:b337e0e6c8ee8be4845f0a8b2fa0320930bd2999ffbd53c83748afb12723e821",
+      "packages/react/src/components/TextInput/TextInput.tsx": "sha256:9aa7c347eea7f2caa6084c843a087be69754b57f29cb1f45b5ea44ce804a38f3",
+      "packages/react/src/internal/useNormalizedInputProps.tsx": "sha256:dc13ed8486b181d25e14f6a1b3dac54677559a1b38b5867156bd94080a58573c",
+      "packages/styles/scss/_layer.scss": "sha256:dd0b522522b50f473f5de993002046afcdead321d81a8e9a32da53ecb54522df",
+      "packages/styles/scss/components/form/_form.scss": "sha256:fbdd993d1e165e67e71c77109cd10e08bbe623f05be694a259492ec8e2295308",
+      "packages/styles/scss/components/text-input/_text-input.scss": "sha256:332ebd0aaa06515ad056193349ed928fbd101597c25b4ef6d063708044813981",
+      "packages/styles/scss/utilities/_focus-outline.scss": "sha256:7a14398aaed4189dbfaf5778450efe17e2da7dff4a17f09a6bd7bbe649a48c78",
+      "packages/styles/scss/utilities/_placeholder-colors.scss": "sha256:efc6be1eca2392b96f91cf3ebac2f3da45f731fbdaf6cce5a703fbd0cb01ad0b",
+      "packages/themes/src/dtcg/themes.json": "sha256:7f1febe786830b88b26db78e3e573b1cfe2ca9af546ecac54708719df1330ac8",
+      "packages/type/src/styles.ts": "sha256:c6a491d1233ad3af8cfc08681a86780f2a1a2b1865cdac5eb9375dcb556fbbdf"
+    },
+    "snapshotId": "sha256:8b616b073a192fc74a5cb965257c3be4d8de4b06f106a5e01a78ed25d590ef56"
+  },
+
+  "axes": [
+    {
+      "key": "size",
+      "label": "Size",
+      "default": "md",
+      "defaultSource": "_text-input.scss layout.use('size', $default: 'md', $min: 'xs', $max: 'lg'); React has no default",
+      "values": [
+        { "key": "xs", "label": "Extra Small", "code": { "size": "xs" } },
+        { "key": "sm", "label": "Small",       "code": { "size": "sm" } },
+        { "key": "md", "label": "Medium",      "code": { "size": "md" } },
+        { "key": "lg", "label": "Large",       "code": { "size": "lg" } }
+      ]
+    },
+    {
+      "key": "validation",
+      "label": "Validation",
+      "default": "none",
+      "defaultSource": "TextInput.tsx: invalid and warn default to false",
+      "values": [
+        { "key": "none",    "label": "None",    "code": {} },
+        { "key": "invalid", "label": "Invalid", "code": { "invalid": true } },
+        { "key": "warn",    "label": "Warning", "code": { "warn": true } }
+      ]
+    },
+    {
+      "key": "readOnly",
+      "label": "Read Only",
+      "default": "editable",
+      "defaultSource": "TextInput.tsx: readOnly defaults to undefined",
+      "values": [
+        { "key": "editable",  "label": "Editable",  "code": {} },
+        { "key": "read-only", "label": "Read-only", "code": { "readOnly": true } }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        { "key": "enabled",  "label": "Enabled",  "code": {} },
+        { "key": "focus",    "label": "Focus",    "code": null, "css": ":focus, :active" },
+        { "key": "disabled", "label": "Disabled", "code": { "disabled": true }, "css": ":disabled" }
+      ]
+    }
+  ],
+
+  "excluded": [
+    { "match": { "readOnly": "read-only", "validation": ["invalid", "warn"] }, "reason": "readOnly overrides invalid and warn", "evidence": ["useNormalizedInputProps.tsx L70-L72: invalid: !readOnly && …, warn: !readOnly && …"] },
+    { "match": { "readOnly": "read-only", "state": "disabled" }, "reason": "readOnly overrides disabled", "evidence": ["useNormalizedInputProps.tsx L69: disabled: !readOnly && disabled"] },
+    { "match": { "state": "disabled", "validation": ["invalid", "warn"] }, "reason": "disabled overrides invalid and warn", "evidence": ["useNormalizedInputProps.tsx L70-L72: invalid: … && !disabled && invalid"] }
+  ],
+
+  "selection": { "status": "draft", "omit": [], "expectedCount": 36, "approval": null },
+
+  "anatomy": {
+    "name": "Text input",
+    "type": "COMPONENT",
+    "children": [
+      { "name": "Label", "type": "TEXT", "role": "label" },
+      {
+        "name": "Field group",
+        "type": "FRAME",
+        "children": [
+          {
+            "name": "Field",
+            "type": "FRAME",
+            "role": "input",
+            "children": [
+              {
+                "name": "Box",
+                "type": "FRAME",
+                "children": [
+                  { "name": "Value", "type": "TEXT", "role": "value" },
+                  {
+                    "name": "Status icon",
+                    "type": "FRAME",
+                    "role": "icon-slot",
+                    "children": [ { "name": "Glyph", "type": "INSTANCE", "role": "icon", "instanceOf": "icon:default" } ]
+                  }
+                ]
+              },
+              { "name": "Underline", "type": "FRAME" }
+            ]
+          },
+          { "name": "Helper", "type": "TEXT", "role": "helper-text" },
+          { "name": "Requirement", "type": "TEXT", "role": "validation-message" }
+        ]
+      }
+    ]
+  },
+
+  "properties": [
+    { "key": "label", "label": "Label", "type": "TEXT", "default": "Label", "binds": [ { "node": "Label", "field": "characters" } ], "code": { "prop": "labelText" } },
+    { "key": "placeholder", "label": "Placeholder", "type": "TEXT", "default": "Placeholder text", "binds": [ { "node": "Value", "field": "characters" } ], "code": { "prop": "placeholder" } },
+    { "key": "helperText", "label": "Helper text", "type": "TEXT", "default": "Helper text", "binds": [ { "node": "Helper", "field": "characters" } ], "code": { "prop": "helperText" } },
+    { "key": "message", "label": "Message", "type": "TEXT", "default": "Error message", "binds": [ { "node": "Requirement", "field": "characters" } ], "code": { "prop": "invalidText" } }
+  ],
+
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Text input": {
+          "direction": "column",
+          "width": "fill",
+          "height": "hug",
+          "alignMain": "start",
+          "alignCross": "start",
+          "paddingTop": { "raw": 0, "level": "info", "reason": "the form item has no padding" },
+          "paddingRight": { "raw": 0, "level": "info", "reason": "the form item has no padding" },
+          "paddingBottom": { "raw": 0, "level": "info", "reason": "the form item has no padding" },
+          "paddingLeft": { "raw": 0, "level": "info", "reason": "the form item has no padding" },
+          "gap": { "token": "spacing-03" }
+        },
+        "Label": { "textStyle": { "token": "label-01" }, "textResize": "width-and-height" },
+        "Field group": { "direction": "column", "width": "fill", "height": "hug", "gap": { "token": "spacing-02" } },
+        "Field": { "direction": "column", "width": "fill", "height": "hug", "strokeWeight": { "raw": 2, "level": "warning", "reason": "outline: 2px with outline-offset: -2px (focus-outline mixin); no design token" }, "strokeAlign": "inside", "gap": { "raw": 0, "level": "info", "reason": "the underline is the input's bottom border, flush with the box" } },
+        "Box": {
+          "direction": "row",
+          "width": "fill",
+          "alignCross": "center",
+          "paddingLeft": { "token": "spacing-05" },
+          "paddingRight": { "token": "spacing-05" },
+          "gap": { "token": "spacing-03" }
+        },
+        "Value": { "textStyle": { "token": "body-compact-01" }, "width": "fill", "textResize": "height" },
+        "Status icon": { "direction": "row", "width": { "token": "icon-size-01" }, "height": { "token": "icon-size-01" } },
+        "Glyph": { "width": "fill", "height": "fill" },
+        "Underline": { "width": "fill", "height": { "raw": 1, "level": "warning", "reason": "border-block-end: 1px is a constant with no design token" } },
+        "Helper": { "textStyle": { "token": "helper-text-01" }, "width": "fill", "textResize": "height" },
+        "Requirement": { "textStyle": { "token": "helper-text-01" }, "width": "fill", "textResize": "height" }
+      }
+    },
+    { "match": { "size": "xs" }, "set": { "Box": { "height": { "raw": 23, "level": "info", "reason": "derived: size-xs (24) − 1px bottom border (box-sizing: border-box)" } } } },
+    { "match": { "size": "sm" }, "set": { "Box": { "height": { "raw": 31, "level": "info", "reason": "derived: size-sm (32) − 1px bottom border" } } } },
+    { "match": { "size": "md" }, "set": { "Box": { "height": { "raw": 39, "level": "info", "reason": "derived: size-md (40) − 1px bottom border" } } } },
+    { "match": { "size": "lg" }, "set": { "Box": { "height": { "raw": 47, "level": "info", "reason": "derived: size-lg (48) − 1px bottom border" } } } }
+  ],
+
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Text input": { "fill": "none", "stroke": "none" },
+        "Label": { "fill": { "token": "text-secondary" } },
+        "Field": { "fill": { "token": "field-01" }, "stroke": "none" },
+        "Value": { "fill": { "token": "text-placeholder" } },
+        "Status icon": { "opacity": { "raw": 0, "level": "warning", "reason": "no status icon without invalid or warn; the schema has no rule-driven visibility, so the slot is transparent and keeps its 24px" } },
+        "Glyph/Vector": { "fill": { "token": "support-error" } },
+        "Underline": { "fill": { "token": "border-strong-01" } },
+        "Helper": { "fill": { "token": "text-helper" }, "opacity": { "raw": 1, "level": "info", "reason": "helper text shows when there is no validation message" } },
+        "Requirement": { "fill": { "token": "text-error" }, "opacity": { "raw": 0, "level": "warning", "reason": "no message without invalid or warn; no rule-driven visibility in the schema" } }
+      }
+    },
+    {
+      "match": { "validation": "invalid" },
+      "set": {
+        "Field": { "stroke": { "token": "support-error" } },
+        "Status icon": { "opacity": { "raw": 1, "level": "info", "reason": "WarningFilled icon shows when invalid" } },
+        "Helper": { "opacity": { "raw": 0, "level": "warning", "reason": "Carbon replaces the helper text with the message; no rule-driven visibility" } },
+        "Requirement": { "opacity": { "raw": 1, "level": "info", "reason": "invalidText shows when invalid" } }
+      }
+    },
+    {
+      "match": { "validation": "warn" },
+      "set": {
+        "Status icon": { "opacity": { "raw": 1, "level": "info", "reason": "WarningAltFilled icon shows when warn" } },
+        "Glyph/Vector": { "fill": { "token": "support-warning" } },
+        "Helper": { "opacity": { "raw": 0, "level": "warning", "reason": "Carbon replaces the helper text with the message; no rule-driven visibility" } },
+        "Requirement": { "fill": { "token": "text-primary" }, "opacity": { "raw": 1, "level": "info", "reason": "warnText shows when warn" } }
+      }
+    },
+    {
+      "match": { "readOnly": "read-only" },
+      "set": { "Field": { "fill": "none" }, "Underline": { "fill": { "token": "border-subtle-00" } } }
+    },
+    {
+      "match": { "state": "focus" },
+      "set": { "Field": { "stroke": { "token": "focus" } } }
+    },
+    {
+      "match": { "state": "disabled" },
+      "set": {
+        "Label": { "fill": { "token": "text-disabled" } },
+        "Value": { "fill": { "token": "text-disabled" } },
+        "Helper": { "fill": { "token": "text-disabled" } }
+      }
+    }
+  ],
+
+  "icons": {
+    "source": { "package": "@carbon/icons", "version": "11.90.0", "path": "svg/16/{key}.svg", "fallback": "svg/32/{key}.svg" },
+    "default": "warning--filled",
+    "preferred": ["warning--filled"]
+  },
+
+  "subComponents": [],
+
+  "dependencies": {
+    "families": [],
+    "fonts": [ { "family": "IBM Plex Sans", "styles": ["Regular"] } ]
+  },
+
+  "figma": {
+    "page": "Text inputs",
+    "componentSetName": "Text Input",
+    "description": "Carbon React TextInput (@carbon/react 1.118.0). Draft: not yet built or reviewed in Figma.",
+    "header": { "type": "Component", "title": "Text Input", "namespace": "@carbon/react" },
+    "grid": { "columns": ["size"], "rows": ["validation", "readOnly", "state"] }
+  },
+
+  "code": {
+    "framework": "react",
+    "package": "@carbon/react",
+    "component": "TextInput",
+    "import": "import { TextInput } from '@carbon/react';",
+    "alwaysEmit": ["size"],
+    "alwaysEmitWhy": "A TextInput without size inherits the nearest <Layout size>; emit size explicitly so the snippet matches the variant."
+  },
+
+  "notes": [
+    { "level": "verify", "at": "anatomy.Status icon", "message": "Warn shows WarningAltFilled, invalid shows WarningFilled. The schema binds one icon per slot, not one per rule, so warn variants show warning--filled tinted support-warning. warning--alt--filled is also two paths (the inner mark is black via path:first-of-type), which breaks the single-Vector icon rule (#13)." },
+    { "level": "verify", "at": "paint.*.opacity", "message": "Status icon, Helper and Requirement hide by opacity 0, so hidden layers still take their space in Auto Layout. Carbon removes them from the DOM. A rule-driven `visible` field would fix this; it is a schema change." },
+    { "level": "verify", "at": "properties.message.code", "message": "The message is invalidText when invalid and warnText when warn. A property has one code prop, so snippets for warn variants name the wrong prop." },
+    { "level": "info", "at": "paint.Field.fill", "message": "Carbon's $field, $border-strong and $border-subtle are contextual Layer tokens. At :root and .cds--layer-one they resolve to field-01, border-strong-01 and border-subtle-00, which the Contract binds. Inside <Layer level={1|2}> they shift to -02/-03; the Contract does not model Layer." },
+    { "level": "info", "at": "layout.Box.paddingLeft", "message": "Padding is layout.density('padding-inline') at the default density 'normal', which is $spacing-05 (16px). Density has no DTCG token." },
+    { "level": "info", "at": "paint[state=focus]", "message": "Carbon styles :focus and :active the same (focus-outline('outline')); Active is folded into Focus. Carbon has no hover style for the field." },
+    { "level": "info", "at": "family", "message": "Left out of this draft: inline (labels beside the field), enableCounter/maxCount, hideLabel, the decorator/AI label slot, the deprecated light prop, the v12 border-radius and gradient border behind enable-v12-release, and the Fluid and Password variants." }
+  ]
+}
