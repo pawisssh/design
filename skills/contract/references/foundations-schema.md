@@ -9,17 +9,15 @@ A Contract binds values by Carbon flat token name (`{ "token": "button-primary" 
 | Foundations document | one per Design System | names, modes, values, aliases, scopes, codeSyntax, Text Styles. No Figma ids. | the Adapter, generated |
 | Foundations ledger | one per Design Library file | flat name → Figma id for collections, modes, variables and Text Styles | the foundations slice (its return value) |
 
-Worked example: [`carbon.foundations.json`](../../../design-systems/carbon/carbon.foundations.json), the Carbon Button closure at `v11.118.0`. Ledger example: `docs/foundations/examples/carbon.foundations-ledger.example.json` on branch `research/skills-split`; its ids are illustrative. Generator and checker: `docs/foundations/tools/derive_foundations.py` on the same branch, which becomes the Carbon Adapter's foundations step in #28. The committed document was generated on that branch with:
+Worked example: [`carbon.foundations.json`](../../../design-systems/carbon/carbon.foundations.json), the Carbon Button closure at `v11.118.0`. Ledger example: `docs/foundations/examples/carbon.foundations-ledger.example.json` on branch `research/skills-split`; its ids are illustrative. The generator is the Carbon Adapter's foundations step, [`skills/adapter-carbon/scripts/foundations.mjs`](../../adapter-carbon/scripts/foundations.mjs) (#28). The committed document is its output:
 
 ```
-python3 docs/foundations/tools/derive_foundations.py --repo <carbon checkout @ 44f90d8> \
-  --css <@carbon/styles@1.117.0 css/styles.css> --layout-scss <@carbon/layout@11.61.0 scss/generated> \
-  --contract docs/contract/examples/carbon-button.component.json -o docs/foundations/examples/carbon.foundations.json
+node skills/adapter-carbon/scripts/foundations.mjs
 ```
 
-The Contract input is the Button Contract now committed at [`button.component.json`](../../../design-systems/carbon/contracts/button.component.json). The research branch is cut from `research/contract-probe-20` and so includes the #20 resolutions (focus effects in Figma array order, resolved verify notes). Those changes do not alter the token closure. The output does not depend on the order of the `--contract` arguments, and two runs produce byte-identical files, so the ledger's `documentHash` is stable.
+It reads every Contract in `design-systems/carbon/contracts/` and the pinned Carbon sources, which `skills/adapter-carbon/scripts/sources.mjs` fetches into gitignored `.scratch/adapter-carbon/sources/` and checks against their pinned hashes. The token closure comes from the shared module's `closure()`, and the scope check is rule 6 of the shared module's `validate()`, run on the generated document. The output does not depend on the order of the Contracts, and two runs produce byte-identical files, so the ledger's `documentHash` is stable.
 
-Output for Button: 38 closure tokens, 75 variables (20 Primitives, 24 Theme, 22 Layout, 9 Type) and 2 Text Styles. Layout holds 12 closure tokens plus the 10 other `spacing-*` steps (see [Who writes it](#who-writes-it)). All 96 Theme mode values, 13 spacing values and 8 type values match the compiled `@carbon/styles` CSS. All 9 Sass codeSyntax fallbacks exist in `@carbon/layout`. All 51 Contract uses of a token fall inside that variable's scopes.
+Output for Button: 38 closure tokens, 75 variables (20 Primitives, 24 Theme, 22 Layout, 9 Type) and 2 Text Styles. Layout holds 12 closure tokens plus the 10 other `spacing-*` steps (see [Who writes it](#who-writes-it)). All 96 Theme mode values, 13 spacing values and 8 type values match the compiled `@carbon/styles` CSS. All 9 Sass codeSyntax fallbacks exist in `@carbon/layout`. The Button Contract passes rule 6 against the document, so every Contract use of a token falls inside that variable's scopes.
 
 ## Top level
 
@@ -32,7 +30,7 @@ Output for Button: 38 closure tokens, 75 variables (20 Primitives, 24 Theme, 22 
 | `collections` | yes | Ordered list `{key, name, modes: [{key, label}], hidden?}`. The first mode is the default. |
 | `variables` | yes | Map from flat name to variable. See [Variables](#variables). The order is collection order, then name, which is also the creation order (aliases need their targets first). |
 | `textStyles` | yes (may be `{}`) | Map from flat name to Text Style. See [Text Styles](#text-styles). |
-| `checks` | yes | Evidence from generation: a CSS cross-check (`against`, `sha256`, `matched`, `missing`), a Sass fallback check and a scope check. |
+| `checks` | yes | Evidence from generation: a CSS cross-check (`against`, `sha256`, `matched`, `missing`), a Sass fallback check (`against`, `matched`) and the scope check (`by`, the validator and rule that ran; `contracts`, how many Contracts it checked; `errors`, always 0, since generation fails otherwise). |
 | `notes` | no | `{level: info|warning|verify, at, message}`, as in the Contract. |
 
 ## Collections and modes
@@ -139,7 +137,7 @@ Scopes only filter Figma's picker. The Plugin API binds a variable regardless of
 - The literal fields are what the builder writes first, so the style is correct even before the binds are applied. `binds` then attaches the Type variables (`TextStyle.setBoundVariable`).
 - Type variable flat names are Carbon's own custom property names (`body-compact-01-font-size`). One shared `font-family-sans` STRING variable serves every sans style.
 - Carbon line heights are unitless (1.28572). The variable holds px, `round(ratio × size)` (18, 22), while its codeSyntax still names the unitless CSS property.
-- **Unverified:** that binding the Type variables onto a Text Style works through `use_figma`, that `fontWeight` 400 selects `Regular` for IBM Plex Sans (the alternative is a `fontStyle` STRING bind, as the Carbon kit does), and that px `lineHeight` and `letterSpacing` bind. This is probed as an early build check, not before the schema is accepted. Fallback if it fails: bind the Type variables directly onto the text nodes and skip Text Styles (the alternative in #9 Q12). The Contract's `textStyle: {token}` then resolves to the same `binds` applied per node.
+- **Verified in #27** ([probes](../../../docs/research/foundations-figma-probes.md)): Type variables bound onto a Text Style through `use_figma` hold, `fontWeight` 400 selects `Regular` for IBM Plex Sans, and px `lineHeight` and `letterSpacing` bind. The text-node fallback is not used. `letterSpacing` reads back as float32 (0.16 → 0.1599999964), so readback diffs compare it with a tolerance.
 
 ## Who writes it
 
@@ -208,13 +206,12 @@ Identity is the flat name, carried through the ledger id. Figma names and labels
 
 ## Where it lives
 
-- This schema sits in the shared Contract skill (`skills/contract/references/`), next to the Contract schema. The generator moves into the Carbon Adapter skill (#28).
+- This schema sits in the shared Contract skill (`skills/contract/references/`), next to the Contract schema. The generator is in the Carbon Adapter skill (`skills/adapter-carbon/scripts/foundations.mjs`, #28).
 - A real instance is one `<designSystem.key>.foundations.json` per Design System, kept next to that Design System's Contracts in `design-systems/<designSystem.key>/` (layout set by [#21](https://github.com/pawisssh/design/issues/21)).
 - The ledger sits at `.scratch/to-design/<fileKey>.ledger.json`. It is gitignored and there is one per Design Library file. Foundations stay local to the Component Set file for the pilot (#9). Publishing them as a separate library stays in map fog; then a single foundations file would hold the ledger section and consumers would bind by variable key.
 
 ## Not verified
 
-- Text Style binding (see [Text Styles](#text-styles)): probed as an early build check, with the per-node fallback.
 - That the `GAP` scope covers padding. Inherited from #9, not re-checked.
 - The packager stripping review-only fields and asserting the stripped copy builds the same objects. Proposed, not implemented.
 - Whether Figma can reorder modes. The slice reports a different default mode instead of fixing it.
@@ -225,6 +222,6 @@ Identity is the flat name, carried through the ledger id. Figma names and labels
 2. Every closure token resolves in the Code Library sources, and every alias target exists in the palette.
 3. Every resolved Theme value equals the compiled CSS in the matching `.cds--white` / `.cds--g10` / `.cds--g90` / `.cds--g100` block. Every emitted layout and type custom property matches in px.
 4. Every Sass codeSyntax fallback exists in `@carbon/layout`.
-5. Every Contract use (fill on FRAME, TEXT or vector; stroke; effect colour; padding or gap; min height or size; radius) is inside the bound variable's scopes.
+5. Every Contract passes rule 6 of the shared module's `validate()` against the generated document, so every Contract use (fill on FRAME, TEXT or vector; stroke; effect colour; padding or gap; min height or size; radius) is inside the bound variable's scopes.
 6. Figma names are unique. No flat name is both a variable and a Text Style.
 7. Every Theme mode value that is not an alias carries `level` and `reason`.

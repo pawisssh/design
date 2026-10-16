@@ -33,7 +33,7 @@
     "contracts": [
       {
         "family": "button",
-        "path": "docs/contract/examples/carbon-button.component.json",
+        "path": "design-systems/carbon/contracts/button.component.json",
         "snapshotId": "sha256:4c82c3cc7f2af6fa24fba39bb5e159c415b5691800130268c9d8903901164152"
       }
     ],
@@ -2031,8 +2031,9 @@
       "matched": 9
     },
     "scopes": {
-      "contractUses": 51,
-      "outOfScope": 0
+      "by": "skills/contract/scripts/contract.mjs validate, rule 6",
+      "contracts": 1,
+      "errors": 0
     }
   },
   "notes": [
@@ -2087,9 +2088,9 @@
       "message": "Carbon emits no font-family custom property for body styles (they inherit); codeSyntax left empty."
     },
     {
-      "level": "verify",
+      "level": "info",
       "at": "textStyles.*.binds",
-      "message": "Unverified: binding Type variables onto Text Styles through use_figma (fontWeight 400 selecting IBM Plex Sans Regular vs a fontStyle bind, px lineHeight/letterSpacing). Probe as an early build check. Fallback: bind the Type variables directly onto text nodes and skip Text Styles (#9 Q12 alternative)."
+      "message": "Type variables bind onto Text Styles through use_figma (verified in #27): weight 400 selects IBM Plex Sans Regular and px lineHeight and letterSpacing hold, so the text-node fallback is not used. letterSpacing reads back as float32 (0.16 -> 0.1599999964), so compare it with a tolerance."
     },
     {
       "level": "info",
