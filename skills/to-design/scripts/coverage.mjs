@@ -34,9 +34,9 @@ function refsOf(contract, tuple) {
 const sortKeys = o => (o && typeof o === 'object' && !Array.isArray(o) ? Object.fromEntries(Object.keys(o).sort().map(k => [k, sortKeys(o[k])])) : o);
 const eqJ = (a, b) => JSON.stringify(sortKeys(a)) === JSON.stringify(sortKeys(b));
 
-// The component sheet (#22): the set's grid chrome, the Components frame and its Content. Written out here, apart
-// from the core that builds it, so the check does not trust the builder.
-const SHEET = {
+// The family page template (#22 Figma structure rules): the set's grid chrome, the Components frame and its
+// Content. Written out here, apart from the core that builds it, so the check does not trust the builder.
+const PAGE_TEMPLATE = {
   set: { gap: [20, 20], padding: 20, dash: [10, 5], radius: 5, stroke: { raw: '#9747ff' } },
   section: { name: 'Components', layoutMode: 'VERTICAL', children: ['Header', 'Content'], minWidth: 2560, minHeight: 1440 },
   content: { padding: [80, 80, 80, 80], gap: 80 },
@@ -79,11 +79,11 @@ export function checkCoverage(contract, readback) {
   const cells = keys => keys.reduce((m, k) => m * contract.axes.find(a => a.key === k).values.length, 1);
   const expectSet = { name: contract.figma.componentSetName, description: contract.figma.description, layoutMode: 'GRID',
     grid: [cells(contract.figma.grid.rows), cells(contract.figma.grid.columns)], defaultVariant: def, page: contract.figma.page,
-    parents: ['Content', 'Components'], ...SHEET.set };
+    parents: ['Content', 'Components'], ...PAGE_TEMPLATE.set };
   for (const [k, v] of Object.entries(expectSet)) if (!eqJ(s[k], v)) bad('set', { field: k, want: v, got: s[k] });
   const sec = readback.section || {};
-  for (const [k, v] of Object.entries(SHEET.section)) if (!eqJ(sec[k], v)) bad('section', { field: k, want: v, got: sec[k] });
-  for (const [k, v] of Object.entries(SHEET.content)) if (!eqJ((readback.content || {})[k], v)) bad('content', { field: k, want: v, got: (readback.content || {})[k] });
+  for (const [k, v] of Object.entries(PAGE_TEMPLATE.section)) if (!eqJ(sec[k], v)) bad('section', { field: k, want: v, got: sec[k] });
+  for (const [k, v] of Object.entries(PAGE_TEMPLATE.content)) if (!eqJ((readback.content || {})[k], v)) bad('content', { field: k, want: v, got: (readback.content || {})[k] });
   const h = contract.figma.header;
   const wantHeader = { Type: h.type, Title: h.title, Namespace: h.namespace };
   if (!eqJ(readback.header, wantHeader)) bad('header', { want: wantHeader, got: readback.header });

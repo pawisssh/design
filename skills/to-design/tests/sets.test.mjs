@@ -114,7 +114,7 @@ test('245 variants build in batches into one grid set on the Base Component, and
   const runs = await buildAll(env);
   for (const { result, out, plan, switches } of runs) {
     assert.equal(result.summary.conflicts, 0, JSON.stringify(result.conflicts));
-    assert.ok(switches <= 1, `batch ${plan.options.batch}: ${switches} page switches (figma-workflow.md: one per call)`);
+    assert.ok(switches <= 1, `batch ${plan.options.batch}: ${switches} page switches (at most one per call)`);
     assert.deepEqual(result.missing, []);
     assert.ok(out.chars < 50000, `batch ${plan.options.batch}: ${out.chars} chars`);
     assert.ok(result.outputBytes < 20000, `batch ${plan.options.batch}: ${result.outputBytes} bytes out`);
@@ -291,7 +291,7 @@ test('the coverage check catches a renamed, a moved and a deleted variant, and a
   set.gridRowCount = 36; // a hand drags a variant below the grid
   b.setGridChildPosition(35, 0);
   c.remove();
-  set.dashPattern = [4, 4]; // and restyles the sheet
+  set.dashPattern = [4, 4]; // and restyles the grid
   set.parent.itemSpacing = 40;
   const report = checkCoverage(BUTTON, (await sets(env, { mode: 'coverage' })).result);
   const kinds = report.problems.map(p => p.what);
