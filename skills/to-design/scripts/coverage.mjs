@@ -164,12 +164,12 @@ export function checkTheme(contract, readback, foundations) {
       const modes = (foundations.collections.find(c => c.key === v.collection) || { modes: [] }).modes;
       if (Object.keys(perMode).length !== modes.length) problems.push({ what: 'modes', name, at: where, want: modes.map(m => m.key), got: Object.keys(perMode) });
       for (const [mode, got] of Object.entries(perMode)) {
-        // the token's own collection at the read mode, any collection its alias reaches at its default: a Layer
-        // token is followed to the Theme token of that level, in the default Theme (#109)
+        // the read switches only the token's own collection: a Layer token is checked per level, Theme at its default
         const key = (modes.find(m => m.key === mode || m.label === mode) || {}).key;
         const exp = key && valueAt(foundations, token, { [v.collection]: key });
+        const expKey = exp == null ? undefined : colourKey(exp);
         checked++;
-        if (exp == null || colourKey(exp) !== got) problems.push({ what: 'colour', name, at: where, token, mode, want: exp == null ? undefined : colourKey(exp), got });
+        if (expKey === undefined || expKey !== got) problems.push({ what: 'colour', name, at: where, token, mode, want: expKey, got });
       }
       if (new Set(Object.values(perMode)).size > 1) switching++;
     }

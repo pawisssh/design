@@ -44,10 +44,6 @@ export function show(v) {
   return String(v);
 }
 
-// The value a token stands for with every collection at its default mode: a number, or a resolved colour
-// "#rrggbb". A Layer token is followed to its Theme token at Layer One, in the default Theme (#109).
-const tokenValue = (foundations, token) => valueAt(foundations, token);
-
 // The typography a Text Style sets, as the readback's `extras` reports it.
 function styleTypography(style) {
   const metric = m => (!m ? undefined : m.unit === 'PIXELS' ? m.value : m.unit === 'PERCENT' ? `${m.value}%` : m.unit);
@@ -105,7 +101,7 @@ export function diff(contract, readback, foundations, props = baseProps(contract
         if (isToken(got) && got.token === null) unmapped('foreign', section, node, field, want, got);
         else if (isToken(got)) changes.push({ kind: 'token-edit', section, node, field, from: want, to: got });
         else if (isRaw(got)) {
-          const tv = isToken(want) ? tokenValue(foundations, want.token) : undefined;
+          const tv = isToken(want) ? valueAt(foundations, want.token) : undefined;
           const kept = tv !== undefined && (near(tv, got.raw) || tv === String(got.raw).toLowerCase());
           changes.push({ kind: kept ? 'detached' : 'raw-edit', section, node, field, from: want, to: got });
         } else if (field === 'textStyle' && got == null && isToken(want)) changes.push({ kind: 'detached', section, node, field, from: want, to: got });
@@ -201,7 +197,7 @@ export function propose(contract, change, foundations, { by = 'owner', built = n
   const tokenCandidates = isRaw(newValue) && need
     ? Object.entries(foundations.variables)
       .filter(([, v]) => coversScope(v.scopes || [], need) && v.collection !== 'primitives')
-      .filter(([n]) => { const tv = tokenValue(foundations, n); return near(tv, newValue.raw) || tv === String(newValue.raw).toLowerCase(); })
+      .filter(([n]) => { const tv = valueAt(foundations, n); return near(tv, newValue.raw) || tv === String(newValue.raw).toLowerCase(); })
       .map(([n]) => n).sort()
     : [];
   const unbuiltGroups = built ? Object.fromEntries(tokenCandidates.filter(n => !(n in built)).map(n => [n, groupOf(foundations.variables[n])])) : {};

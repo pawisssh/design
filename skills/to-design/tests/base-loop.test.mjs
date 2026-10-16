@@ -1,6 +1,6 @@
 // Base-first loop (#31), offline: the prototype's saved readbacks (tests/fixtures/base-loop, from
-// docs/prototype/base-first-loop on research/skills-split) against a pinned copy of the Button Contract.
-// Run with `node --test skills/to-design/tests/*.test.mjs`.
+// docs/prototype/base-first-loop on research/skills-split) against a pinned copy of the Button Contract, and
+// the TextInput form-control fixture for a Layer token. Run with `node --test skills/to-design/tests/*.test.mjs`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -23,6 +23,9 @@ const FOUNDATIONS = read(join(ROOT, 'design-systems/carbon/carbon.foundations.js
 const OWNER_EDITS = read(join(ROOT, 'skills/contract/test/fixtures/button.owner-edits.component.json'));
 // The pinned Button as a draft with a `drafted` table (#105); its evidence and fingerprints are illustrative.
 const DRAFTED = read(join(ROOT, 'skills/contract/test/fixtures/button.drafted.component.json'));
+const FORMS = join(ROOT, 'skills/contract/test/fixtures/form-controls');
+const TEXT_INPUT = read(join(FORMS, 'text-input.component.json'));
+const FORMS_FOUNDATIONS = read(join(FORMS, 'carbon.foundations.json'));
 const rb = name => read(join(FIX, `readback.${name}.json`))[0];
 const AT = '2026-10-16T00:00:00.000Z';
 
@@ -128,17 +131,19 @@ test('a binding lost while the value stayed is detached, not an edit', () => {
 });
 
 test('a Layer token is followed to its Theme token: a raw fill equal to `field` at the default levels is detached (#109)', () => {
-  const FORMS = join(ROOT, 'skills/contract/test/fixtures/form-controls');
-  const textInput = read(join(FORMS, 'text-input.component.json'));
-  const doc = read(join(FORMS, 'carbon.foundations.json'));
-  const r = expectedBase(textInput);
+  const r = expectedBase(TEXT_INPUT);
   assert.deepEqual(r.paint.Field.fill, { token: 'field' });
-  assert.deepEqual(diff(textInput, r, doc).changes, []);
+  assert.deepEqual(diff(TEXT_INPUT, r, FORMS_FOUNDATIONS).changes, []);
   // field at Layer One is field-01, White #f4f4f4 (Carbon's themes.json)
   r.paint.Field.fill = { raw: '#f4f4f4' };
-  assert.deepEqual(kinds(diff(textInput, r, doc)), ['detached paint.Field.fill']);
+  assert.deepEqual(kinds(diff(TEXT_INPUT, r, FORMS_FOUNDATIONS)), ['detached paint.Field.fill']);
   r.paint.Field.fill = { raw: '#ffffff' };
-  assert.deepEqual(kinds(diff(textInput, r, doc)), ['raw-edit paint.Field.fill']);
+  assert.deepEqual(kinds(diff(TEXT_INPUT, r, FORMS_FOUNDATIONS)), ['raw-edit paint.Field.fill']);
+  // a raw value is offered the Layer tokens equal to it at Layer One too: layer-active is layer-active-01, #c6c6c6
+  r.paint.Field.fill = { raw: '#c6c6c6' };
+  const [fill] = review(TEXT_INPUT, r, FORMS_FOUNDATIONS).proposals;
+  assert.equal(FORMS_FOUNDATIONS.variables['layer-active'].collection, 'layer');
+  assert.ok(['layer-active', 'layer-active-01'].every(n => fill.tokenCandidates.includes(n)), JSON.stringify(fill.tokenCandidates));
 });
 
 test('effects are compared in order', () => {
