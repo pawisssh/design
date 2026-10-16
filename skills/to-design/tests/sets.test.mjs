@@ -176,6 +176,19 @@ test('after an omit edit the rebuild finds every kept variant by name and moves 
   assert.deepEqual(report.orphaned.sort(), focus.sort());
 });
 
+test('a rebuild whose first call was lost and reconciled still keeps the dropped variants as orphans', async () => {
+  const env = await setup();
+  await buildAll(env);
+  const ids = new Map((await setNode(env)).children.map(k => [k.name, k.id]));
+  const omitted = withoutFocus();
+  await sets(env, { batch: 0 }, { contract: omitted, drop: true });
+  await sets(env, { mode: 'reconcile' }, { contract: omitted });
+  await buildAll(env, omitted);
+  const orphans = env.ledger.sets.button.orphans;
+  assert.equal(Object.keys(orphans).length, 49);
+  for (const [name, o] of Object.entries(orphans)) assert.equal(o.id, ids.get(name));
+});
+
 test('a node in the set the ledger never recorded stays extra, even under a dropped variant\'s name', async () => {
   const env = await setup();
   const omitted = withoutFocus();

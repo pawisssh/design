@@ -465,10 +465,22 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       for (const name of Object.keys(L)) { const n = await get(O[name]); if (n && n.type === 'COMPONENT') n.remove(); pruned.push(name); }
       return Object.assign(report, { summary: { pruned: pruned.length, conflicts: 0 }, pruned, ledger: ledger(propKeys()) });
     }
+    // variants the whole selection no longer holds (#67): never deleted here; the ledger keeps the ones it
+    // recorded as orphans, and the rest stay extra
+    const drops = () => {
+      const out = [];
+      for (const k of set ? set.children : []) {
+        const v = parse(k.name);
+        const i = v ? v.reduce((m, x, a) => m * A[a].values.length + x, 0) : 0;
+        if (v && !((parseInt(plan.selection.member[i >> 2], 16) >> (i & 3)) & 1)) out.push([k.name, k.id, k.key]);
+      }
+      return out;
+    };
     if (mode === 'reconcile') {
       let hits = 0;
       for (const e of E) { const n = found[e[0]]; variants[e[0]] = n ? n.id : null; if (n) hits++; }
-      return Object.assign(report, { summary: { found: hits, absent: E.length - hits, set: !!set, conflicts: 0 }, ledger: ledger(propKeys()) });
+      const dropped = drops();
+      return Object.assign(report, { summary: { found: hits, absent: E.length - hits, set: !!set, dropped: dropped.length, conflicts: 0 }, dropped, ledger: ledger(propKeys()) });
     }
     if (mode !== 'build') {
       if (!set) { conflict('set', plan.set.name, 'not-built'); return stop(); }
@@ -640,14 +652,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       for (const k of pass) { const vals = parse(k.name); if (vals) { const t = cellOf(vals); place(k, t[0], t[1]); } }
     }
     if (set.gridRowCount !== R && !set.children.some(k => k.gridRowAnchorIndex >= R)) set.gridRowCount = R;
-    // variants the whole selection no longer holds (#67): never deleted here; the ledger keeps the ones it
-    // recorded as orphans, and the rest stay extra
-    const dropped = [];
-    for (const k of set.children) {
-      const v = parse(k.name);
-      const i = v ? v.reduce((m, x, a) => m * A[a].values.length + x, 0) : 0;
-      if (v && !((parseInt(plan.selection.member[i >> 2], 16) >> (i & 3)) & 1)) dropped.push([k.name, k.id, k.key]);
-    }
+    const dropped = drops();
     const upd = Object.keys(counts).reduce((m, k) => m + counts[k], 0);
     return Object.assign(report, {
       summary: { created: createdCount, updated: upd, variants: set.children.length, missing: missing.length, dropped: dropped.length, conflicts: 0 },

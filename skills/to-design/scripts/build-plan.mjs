@@ -311,7 +311,7 @@ export function setsPlan(contract, docText, ledger, {
     icons[key] = { id: comps[key].id, key: comps[key].key };
   }
   const ax = k => contract.axes.findIndex(a => a.key === k);
-  // The whole selection, for a build call to tell the variants it dropped (#67): bit i (hex, 4 per digit) is
+  // The whole selection, for a build or reconcile call to tell the variants it dropped (#67): bit i (hex, 4 per digit) is
   // tuple i of the axis-value product, in Contract order.
   const bits = new Array(Math.ceil(contract.axes.reduce((m, a) => m * a.values.length, 1) / 4)).fill(0);
   for (const t of tuples) { const i = contract.axes.reduce((m, a) => m * a.values.length + a.values.findIndex(v => v.key === t[a.key]), 0); bits[i >> 2] |= 1 << (i & 3); }
@@ -346,7 +346,7 @@ export function setsPlan(contract, docText, ledger, {
     props,
     P,
     frags: usedFrags,
-    selection: { schemaVersion: 1, axes, entries, ...(mode === 'build' ? { member: bits.map(b => b.toString(16)).join('') } : {}) },
+    selection: { schemaVersion: 1, axes, entries, ...(mode === 'build' || mode === 'reconcile' ? { member: bits.map(b => b.toString(16)).join('') } : {}) },
   };
   // The entries decode back to the expansion, and each resolves to what the Contract resolves.
   const decoded = decodeEntries(plan, contract);

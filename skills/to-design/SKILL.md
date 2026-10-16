@@ -124,7 +124,7 @@ Core: `builder-core-components.js`. `sets` takes an approved Contract only: it r
 - **Base first.** When the ledger has `bases[family]`, the Base Component is moved into the set and rebuilt in place (same id and key) at the property defaults, and batch 0 holds it. No tweaked scratch copy stays behind.
 - **Diffs only.** Writes happen only where the readback differs, so a rerun creates and updates nothing.
 - **Batch ids only.** A call carries and returns only its batch's variant ids. `ledger.mjs record` merges them into `sets[family].variants` (one id per expansion index) and keeps the other families.
-- **Lost connection.** A call whose result was lost may still have committed. Before retrying, run `--mode reconcile` (read only: it finds the set's variants by name), record its result, and only then re-derive and retry the batch.
+- **Lost connection.** A call whose result was lost may still have committed. Before retrying, run `--mode reconcile` (read only: it finds the set's variants by name, and reports the ones the selection dropped), record its result, and only then re-derive and retry the batch.
 - **After a Contract edit** (a new omit, a re-approval), rebuild every batch, then see [Dropped variants](#dropped-variants-orphans-and-prune) below.
 
 **The Figma structure** (checked by `coverage.mjs`):
@@ -139,7 +139,7 @@ Core: `builder-core-components.js`. `sets` takes an approved Contract only: it r
 - **Package size.** Packages run 40-47K chars, so 64 per call left too little room under 50,000.
 - **Output.** Build output is at most 2.3KB. A coverage read is about 1.5KB plus 23 bytes per variant (6.6KB at 245, 13.1KB at 539); `use_figma` output must stay under 20KB, so one coverage read holds about 800 variants. A sample read is about 1.6KB per variant (keep it to 12 or fewer); a theme read is about 0.35KB per variant.
 - **Time.** A creating call costs about 1.6 ms × variants created × set size: 5.1s at 49, 18.6s at 245, 41.8s at 539, so building a family is quadratic (539 variants took 263s over 11 calls). An update-free rerun call takes 0.4-1.1s, and a coverage read 0.3s at 539.
-- **Ceiling: 49 per call.** At 49 the largest package was 47,190 chars, and 64 per call at 539 variants would take about 55s, beyond the longest call measured. For a family above about 600 variants, lower `--per-call` so that 1.6 ms × per-call × set size stays under about 45s.
+- **Ceiling: 49 per call.** At 49 the largest package was 47,190 chars (the orphan flow of #67 later added about 1,260 chars to the core, so expect about 48.5K until a live run measures it again), and 64 per call at 539 variants would take about 55s, beyond the longest call measured. For a family above about 600 variants, lower `--per-call` so that 1.6 ms × per-call × set size stays under about 45s.
 
 ### Dropped variants: orphans and prune
 
