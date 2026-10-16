@@ -163,7 +163,8 @@ test('sha256 agrees with node:crypto on ASCII, multi-byte and block-boundary inp
 });
 
 test('approve records the owner, time, snapshotId and contentHash, and the result is valid', () => {
-  const c = contract.approve(button(), '2026-10-16T09:00:00Z');
+  const draft = contract.asDraft(button());
+  const c = contract.approve(draft, '2026-10-16T09:00:00Z');
   assert.equal(c.selection.status, 'approved');
   assert.deepEqual(c.selection.approval, {
     by: 'owner', at: '2026-10-16T09:00:00Z',
@@ -171,7 +172,7 @@ test('approve records the owner, time, snapshotId and contentHash, and the resul
     contentHash: 'sha256:4a9e9f38d7a42ccfd0ea029241862365784bfe49b7f087e48ceee8ee07711bf5',
   });
   assert.deepEqual(contract.validate(c, foundations), { ok: true, errors: [] });
-  assert.equal(button().selection.status, 'draft', 'approve does not mutate its input');
+  assert.equal(draft.selection.status, 'draft', 'approve does not mutate its input');
 });
 
 test('rejects an approval whose snapshotId does not match the source', () => {

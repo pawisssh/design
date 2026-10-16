@@ -19,6 +19,9 @@ test('the page carries the Contract, one rendered specimen per tuple and the lib
   const omitted = JSON.parse(JSON.stringify(button));
   omitted.selection.omit = [{ match: { state: 'focus' } }];
   omitted.selection.expectedCount = 196;
+  // An omit edit resets the Contract to draft (asDraft), as apply-omit does.
+  omitted.selection.status = 'draft';
+  omitted.selection.approval = null;
   const html = buildCatalog({ contract: omitted, foundations, renderer: stub });
   const data = embedded(html);
   assert.deepEqual(data.contract, omitted);
