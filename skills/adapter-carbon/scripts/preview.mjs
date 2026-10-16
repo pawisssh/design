@@ -21,19 +21,19 @@ import { fileURLToPath } from 'node:url';
 import { REPO_ROOT } from './sources.mjs';
 
 export const PREVIEW_DIR = join(REPO_ROOT, '.scratch/adapter-carbon/preview');
-const PINS = fileURLToPath(new URL('../preview/', import.meta.url));
+const PINNED_DIR = fileURLToPath(new URL('../preview/', import.meta.url));
 const lockOf = dir => (existsSync(join(dir, 'package-lock.json')) ? readFileSync(join(dir, 'package-lock.json'), 'utf8') : null);
 
 /** True when the pinned packages are installed in `dir` from the committed lockfile. */
 export function hasPreviewPackages(dir = PREVIEW_DIR) {
-  return lockOf(dir) === lockOf(PINS) && existsSync(join(dir, 'node_modules/@carbon/react/package.json'));
+  return lockOf(dir) === lockOf(PINNED_DIR) && existsSync(join(dir, 'node_modules/@carbon/react/package.json'));
 }
 
 /** Install the pinned packages into `dir` with `npm ci --ignore-scripts`. Skips when already installed. */
 export function fetchPreviewPackages(dir = PREVIEW_DIR) {
   if (hasPreviewPackages(dir)) return dir;
   mkdirSync(dir, { recursive: true });
-  for (const f of ['package.json', 'package-lock.json']) copyFileSync(join(PINS, f), join(dir, f));
+  for (const f of ['package.json', 'package-lock.json']) copyFileSync(join(PINNED_DIR, f), join(dir, f));
   execFileSync('npm', ['ci', '--ignore-scripts', '--legacy-peer-deps', '--no-audit', '--no-fund'], { cwd: dir, stdio: 'inherit' });
   return dir;
 }
@@ -46,7 +46,7 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
   if (!hasPreviewPackages(dir))
     throw new Error(`Carbon preview packages missing in ${dir}; run: node skills/adapter-carbon/scripts/preview.mjs`);
   const require = createRequire(join(dir, 'package.json'));
-  const pinned = JSON.parse(readFileSync(join(PINS, 'package.json'), 'utf8')).dependencies;
+  const pinned = JSON.parse(readFileSync(join(PINNED_DIR, 'package.json'), 'utf8')).dependencies;
   for (const name of Object.keys(pinned)) {
     const want = contract.source.packages[name];
     const got = JSON.parse(readFileSync(join(dir, 'node_modules', name, 'package.json'), 'utf8')).version;

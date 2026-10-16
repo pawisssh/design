@@ -75,11 +75,15 @@
       const omit = [];
       const covered = s => omit.some(p => m.matches(p, s.tuple));
       for (const o of c.selection.omit) if (allOff(o.match)) omit.push(JSON.parse(JSON.stringify(o.match)));
+      const keptCount = omit.length;
       for (const axis of c.axes) {
         const values = axis.values.map(v => v.key)
           .filter(v => allOff({ [axis.key]: v }) && off.some(s => s.tuple[axis.key] === v && !covered(s)));
         if (values.length) omit.push({ [axis.key]: values.length === 1 ? values[0] : values });
       }
+      // A kept Contract pattern now swallowed by a whole-value pattern is dropped, so nothing repeats.
+      const kept = omit.splice(0, keptCount), wholeValues = omit.slice();
+      omit.unshift(...kept.filter(p => !specimens.every(s => !m.matches(p, s.tuple) || wholeValues.some(w => m.matches(w, s.tuple)))));
       for (const s of off) if (!covered(s)) omit.push({ ...s.tuple });
       const patch = { family: c.family.key, snapshotId: c.source.snapshotId, omit, expectedCount: this.selected.size };
       const expanded = m.expand(m.applyOmit(c, patch)).map(t => this.idOf(t));

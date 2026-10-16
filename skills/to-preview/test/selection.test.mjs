@@ -87,6 +87,18 @@ test('an unchanged selection exports the Contract omit list unchanged', () => {
   assert.deepEqual(model.omitPatch().omit, c.selection.omit.map(o => o.match));
 });
 
+test('a Contract pattern swallowed by a whole value now off is dropped, not repeated', () => {
+  const c = copy(button);
+  c.selection.omit = [{ match: { kind: 'ghost', state: 'focus' }, reason: 'owner' }];
+  c.selection.expectedCount = 238;
+  const model = new Selection(c, contractModule);
+  model.selectMatching({ kind: 'ghost' }, false);
+  verifyAll(model);
+  const patch = model.omitPatch();
+  assert.deepEqual(patch.omit, [{ kind: 'ghost' }]);
+  assert.equal(patch.expectedCount, 210);
+});
+
 test('export needs every checked specimen rendered', () => {
   const model = new Selection(fixture(), contractModule);
   for (const id of model.specimens.keys()) if (id !== 'secondary|sm|hover') model.verify(id);
