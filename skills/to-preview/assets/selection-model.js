@@ -1,94 +1,95 @@
 (function (root) {
   "use strict";
+  // To-preview selection over one Contract. Specimens are the Contract's tuples (axes minus `excluded`);
+  // the ones the Contract omits start unchecked. `contractModule` is the shared Contract module
+  // (skills/contract/scripts/contract.mjs): the only implementation of expand, match and apply-omit.
   class ComponentSheetSelection {
-    constructor(catalog) {
-      if (!catalog || catalog.schemaVersion !== 1 || !catalog.snapshotId || !Array.isArray(catalog.families)) throw new Error("Invalid versioned catalog");
-      this.catalog = catalog;
-      this.families = new Map();
+    constructor(contract, contractModule) {
+      if (!contract || contract.schemaVersion !== 1 || !contract.family || !contract.source || !contract.source.snapshotId)
+        throw new Error("Invalid Contract: schemaVersion 1 with family and source.snapshotId required");
+      this.contract = contract;
+      this.module = contractModule;
       this.specimens = new Map();
       this.selected = new Set();
       this.verified = new Set();
-      for (const family of catalog.families) {
-        if (!family.id || this.families.has(family.id) || !Array.isArray(family.specimens)) throw new Error("Invalid or duplicate family");
-        this.families.set(family.id, family);
-        for (const specimen of family.specimens) {
-          if (!specimen.id || this.specimens.has(specimen.id) || !specimen.themeId || !specimen.properties || typeof specimen.properties !== "object") throw new Error("Invalid or duplicate specimen");
-          if (Object.values(specimen.properties).some(value => typeof value !== "string" || !value)) throw new Error("Specimen axis values must be nonempty strings");
-          this.specimens.set(specimen.id, { ...specimen, familyId: family.id });
-        }
+      const all = contractModule.expand({ ...contract, selection: { ...contract.selection, omit: [] } });
+      for (const tuple of all) {
+        const id = this.idOf(tuple);
+        this.specimens.set(id, { id, tuple, name: contractModule.variantName(contract, tuple) });
       }
+      for (const tuple of contractModule.expand(contract)) this.selected.add(this.idOf(tuple));
+      this.baseId = this.idOf(contractModule.baseTuple(contract));
     }
-    family(id) {
-      const family = this.families.get(id);
-      if (!family) throw new Error("Unknown family: " + id);
-      return family;
+    // The specimen id ("primary|lg|enabled") is an internal DOM id only; it never leaves the page.
+    idOf(tuple) {
+      return this.contract.axes.map(axis => tuple[axis.key]).join("|");
     }
-    selectFamily(id, value) {
-      for (const specimen of this.family(id).specimens) this.select(specimen.id, value);
+    specimen(id) {
+      const specimen = this.specimens.get(id);
+      if (!specimen) throw new Error("Unknown specimen: " + id);
+      return specimen;
     }
     select(id, value) {
-      if (!this.specimens.has(id)) throw new Error("Unknown specimen: " + id);
-      if (value) this.selected.add(id); else this.selected.delete(id);
+      const specimen = this.specimen(id);
+      if (value) this.selected.add(id);
+      else if (id === this.baseId) throw new Error("The Base Component (" + specimen.name + ") is locked on");
+      else this.selected.delete(id);
     }
-    selectMatching(familyId, filters, value) {
-      for (const specimen of this.family(familyId).specimens) {
-        if (this.matches(specimen, filters)) this.select(specimen.id, value);
-      }
+    selectAll(value) {
+      this.selectMatching({}, value);
     }
+    // Select visible / Clear visible: every specimen the display filters show, except the locked base.
+    selectMatching(filters, value) {
+      for (const specimen of this.specimens.values())
+        if (this.matches(specimen, filters) && (value || specimen.id !== this.baseId)) this.select(specimen.id, value);
+    }
+    // Display filters {axisKey: valueKey}; an empty value shows every value of that axis.
     matches(specimen, filters) {
-      return Object.entries(filters || {}).every(([axis, value]) => !value || (axis === "$theme" ? specimen.themeId : specimen.properties[axis]) === value);
+      return Object.entries(filters || {}).every(([axis, value]) => !value || specimen.tuple[axis] === value);
     }
+    // Called once a specimen has rendered in the default mode; export needs every checked one.
     verify(id) {
-      if (!this.specimens.has(id)) throw new Error("Unknown specimen: " + id);
+      this.specimen(id);
       this.verified.add(id);
     }
-    dependencyClosure() {
-      const registry = new Map((this.catalog.dependencies || []).map(item => [item.id, item]));
-      if (registry.size !== (this.catalog.dependencies || []).length) throw new Error("Duplicate dependency IDs");
-      const visiting = new Set(), visited = new Set(), result = [];
-      const visit = id => {
-        if (visited.has(id)) return;
-        if (visiting.has(id)) throw new Error("Dependency cycle: " + id);
-        const dependency = registry.get(id);
-        if (!dependency) throw new Error("Missing dependency: " + id);
-        visiting.add(id);
-        for (const child of dependency.dependencies || []) visit(child);
-        visiting.delete(id); visited.add(id); result.push(dependency);
-      };
-      const selectedFamilies = new Set();
-      for (const id of this.selected) {
-        const specimen = this.specimens.get(id);
-        selectedFamilies.add(specimen.familyId);
-        for (const dependency of specimen.dependencies || []) visit(dependency);
-      }
-      for (const id of selectedFamilies) for (const dependency of this.family(id).dependencies || []) visit(dependency);
-      return result;
+    checkedTuples() {
+      return [...this.specimens.values()].filter(s => this.selected.has(s.id)).map(s => ({ ...s.tuple }));
     }
-    manifest() {
-      if (!this.selected.size) throw new Error("Select at least one variant");
-      const unverified = [...this.selected].filter(id => !this.verified.has(id));
-      if (unverified.length) throw new Error("Selected specimens not rendered/verified: " + unverified.join(", "));
-      const entries = [...this.specimens.values()].filter(item => this.selected.has(item.id)).map(item => ({
-        familyId: item.familyId, specimenId: item.id,
-        properties: { ...item.properties }, themeId: item.themeId
-      }));
-      const selectedFamilies = [...this.families.keys()].filter(id => entries.some(item => item.familyId === id));
-      return {
-        schemaVersion: 1, snapshotId: this.catalog.snapshotId,
-        intent: "generate-native-script", selectedFamilies, entries,
-        dependencies: this.dependencyClosure(),
-        families: selectedFamilies.map(id => {
-          const family = this.family(id);
-          const selectedRows = entries.filter(item => item.familyId === id);
-          const selectedCount = selectedRows.length;
-          const sourceDefault = family.defaultProperties || family.specimens[0].properties;
-          const defaultRow = selectedRows.find(row => Object.entries(sourceDefault).every(([key,value]) => row.properties[key] === value)) || selectedRows[0];
-          return { id, name: family.name, expectedFile: family.expectedFile, layoutPlanFile: family.layoutPlanFile, tokenPlanFile: family.tokenPlanFile,
-            sourceDefaultProperties: { ...sourceDefault }, effectiveDefaultProperties: { ...defaultRow.properties }, selectedThemes: [...new Set(selectedRows.map(row => row.themeId))],
-            selectedCount, fullCount: family.specimens.length, scope: selectedCount === family.specimens.length ? "complete" : "partial" };
-        }),
-        approval: { action: "export-selection", approvedAt: new Date().toISOString(), executionAuthorized: false }
+    /**
+     * The export: {family, snapshotId, omit, expectedCount}. `omit` is the whole owner omit list:
+     * the Contract's own patterns that still hold (unchanged, so their reasons survive), then one
+     * pattern per axis whose whole values are off, then single tuples for the rest. Throws unless
+     * applying it to the Contract expands to exactly the checked tuples.
+     */
+    omitPatch() {
+      const c = this.contract, m = this.module;
+      const names = ids => ids.slice(0, 5).map(id => this.specimen(id).name).join("; ") + (ids.length > 5 ? " and " + (ids.length - 5) + " more" : "");
+      const unrendered = [...this.selected].filter(id => !this.verified.has(id));
+      if (unrendered.length) throw new Error("Checked specimens not rendered in the default mode: " + names(unrendered));
+      const specimens = [...this.specimens.values()];
+      const off = specimens.filter(s => !this.selected.has(s.id));
+      const allOff = pattern => {
+        const hit = specimens.filter(s => m.matches(pattern, s.tuple));
+        return hit.length > 0 && hit.every(s => !this.selected.has(s.id));
       };
+      const omit = [];
+      const covered = s => omit.some(p => m.matches(p, s.tuple));
+      for (const o of c.selection.omit) if (allOff(o.match)) omit.push(JSON.parse(JSON.stringify(o.match)));
+      const keptCount = omit.length;
+      for (const axis of c.axes) {
+        const values = axis.values.map(v => v.key)
+          .filter(v => allOff({ [axis.key]: v }) && off.some(s => s.tuple[axis.key] === v && !covered(s)));
+        if (values.length) omit.push({ [axis.key]: values.length === 1 ? values[0] : values });
+      }
+      // A kept Contract pattern now swallowed by a whole-value pattern is dropped, so nothing repeats.
+      const kept = omit.splice(0, keptCount), wholeValues = omit.slice();
+      omit.unshift(...kept.filter(p => !specimens.every(s => !m.matches(p, s.tuple) || wholeValues.some(w => m.matches(w, s.tuple)))));
+      for (const s of off) if (!covered(s)) omit.push({ ...s.tuple });
+      const patch = { family: c.family.key, snapshotId: c.source.snapshotId, omit, expectedCount: this.selected.size };
+      const expanded = m.expand(m.applyOmit(c, patch)).map(t => this.idOf(t));
+      if (expanded.length !== this.selected.size || !expanded.every(id => this.selected.has(id)))
+        throw new Error("The omit patch does not reproduce the checked specimens; nothing exported");
+      return patch;
     }
   }
   root.ComponentSheetSelection = ComponentSheetSelection;

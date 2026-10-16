@@ -29,6 +29,14 @@ node skills/adapter-carbon/scripts/foundations.mjs
 - The rules it applies (collections, modes, naming, scopes, codeSyntax, raw exceptions) are in the [foundations schema](../contract/references/foundations-schema.md).
 - Tests: `node --test skills/adapter-carbon/test/*.test.mjs`. They skip, saying so, until the sources are fetched.
 
+## Preview renderer
+
+[`scripts/preview.mjs`](scripts/preview.mjs) is the renderer `to-preview` finds by convention (the interface is in [to-preview's page reference](../to-preview/references/interactive-template.md)). It renders each tuple with the real `@carbon/react` component through `react-dom/server`, maps axis values through their Contract `code` props, shows the Contract's default icon so the icon slot is reviewed, returns the compiled `@carbon/styles` CSS, and maps a Theme mode to its Carbon class (`white` → `cds--white`).
+
+- Packages: [`preview/package.json`](preview/package.json) and its lockfile pin them. `node skills/adapter-carbon/scripts/sources.mjs` (or `node skills/adapter-carbon/scripts/preview.mjs`) installs them into gitignored `.scratch/adapter-carbon/preview/` with `npm ci --ignore-scripts`, so no install script runs (`@carbon/react` has a telemetry postinstall).
+- It refuses to render when an installed package differs from the Contract's `source.packages`. After moving the pin, update `preview/package.json` and regenerate the lockfile with `npm install --package-lock-only --ignore-scripts --legacy-peer-deps` in that folder.
+- Tests: `node --test skills/adapter-carbon/test/preview.test.mjs`. They skip, saying so, until the packages are fetched.
+
 ## Coming next
 
-The preview renderer lands in #33, and the agent guide from Carbon source to a draft Contract in #34.
+The agent guide from Carbon source to a draft Contract (#34).

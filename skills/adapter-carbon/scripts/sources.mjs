@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Pinned Carbon sources for the foundations step (#28), and the one place that fetches and reads them.
 //   node skills/adapter-carbon/scripts/sources.mjs [--dir <dir>]   fetch into .scratch/adapter-carbon/sources
+// The command also fetches the preview renderer's packages (preview.mjs) into .scratch/adapter-carbon/preview.
 //
 // - Value files: raw files from the Carbon repository at the pinned commit, each checked against its sha256.
 // - Check inputs: the compiled `@carbon/styles` CSS and `@carbon/layout` scss/generated, from the npm tarballs,
@@ -126,6 +127,12 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const args = process.argv.slice(2);
   const dir = args.includes('--dir') ? args[args.indexOf('--dir') + 1] : DEFAULT_DIR;
   fetchSources(dir).then(
-    d => { readSources(d); console.log(`Carbon ${CARBON.tag} sources OK in ${d}`); },
+    async d => {
+      readSources(d);
+      console.log(`Carbon ${CARBON.tag} sources OK in ${d}`);
+      // The preview renderer's pinned React packages (#33), so one fetch step readies every test.
+      const { PREVIEW_DIR, fetchPreviewPackages } = await import('./preview.mjs');
+      console.log(`Carbon preview packages OK in ${fetchPreviewPackages(PREVIEW_DIR)}`);
+    },
     e => { console.error(`FAIL: ${e.message}`); process.exit(1); });
 }

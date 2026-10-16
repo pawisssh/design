@@ -1,15 +1,31 @@
-# Interactive template integration
+# The catalog page and the preview renderer
 
-Copy `component-sheet-template.html` with `selection-model.js` into the generated preview. Integrate its markup/styles/script into an existing framework route when imports/providers require that runtime. The template is a selection shell, not a fabricated component library.
+Read when writing an Adapter's preview renderer or changing the page.
 
-Call `ComponentSheet.configure({catalog, renderSpecimen})` from the source-backed adapter. `catalog` follows the shared contract. `renderSpecimen(family, specimen, host)` must mount the real selected code export/state/theme into `host`, returning a Promise when necessary. Apply theme-specific specimen backgrounds and the original source font/provider contexts, including inherited font values on the specimen host when the component relies on app-level styles. Keep shell CSS scoped to its tagged controls. Controls/captions stay outside the actual component DOM.
+## Preview renderer (one per Adapter)
 
-Use framework lifecycle cleanup when re-mounting specimens; for React keep root handles in the adapter and unmount a previous family before replacing its host. Wait for framework commit/effects before resolving the renderer Promise. Template checks nonempty DOM plus font/image readiness, not fidelity; AI/browser review must still verify source states, typography and geometry.
+`scripts/catalog.mjs` imports `skills/adapter-<source.adapter>/scripts/preview.mjs` and calls `previewRenderer(contract)`. It returns (or resolves to):
 
-Catalog source specimen rows are never generated from selected nodes. Selecting a family selects all its specimen rows; user edits can reduce them. Filters change visibility only; Select visible / Clear visible change checkboxes explicitly. Export ensures every selected family has rendered before producing the manifest. A selected source default is retained; when excluded, the first selected source-ordered tuple becomes the effective default and is shown in the summary/manifest.
+| Field | What |
+|---|---|
+| `render(tuple)` | HTML text of the real Code Library component for one tuple `{axisKey: valueKey}`. Map axis values through their Contract `code` props. A value with `code: null` renders like the default; the page forces it through its CSS pseudo-class. |
+| `stylesheet` | The Code Library's compiled CSS, inlined into the page. |
+| `modeClass(modeKey)` | The class that applies one foundations Theme mode to a specimen's wrapper. |
 
-Dependencies are stable IDs in a catalog registry. Transitive closure is ordered dependency-first and rejects missing references or cycles. Include per-family essentials and per-specimen state/asset requirements, not every possible icon or unrelated family. Record helper data/spec references in registry entries so the native builder has actual source evidence.
+It should refuse to render when the installed packages differ from `contract.source.packages`. The Carbon renderer is [`adapter-carbon/scripts/preview.mjs`](../../adapter-carbon/scripts/preview.mjs).
 
-Export / Apply Selection downloads `selection-manifest.json` and dispatches `window` event `component-sheet:selection` with the manifest in `event.detail`. `ComponentSheet.getSelection()` provides the same data to an explicitly implemented local bridge. Downloads alone do not write an arbitrary project path or notify AI; locate the downloaded file or implement a project-local save endpoint with the task's scope. A backend/native plugin bridge is required for direct MCP execution from the preview.
+## The page
 
-The manifest approves selected content and has `executionAuthorized: false`; it does not override an explicit user request/authorization to execute elsewhere in the conversation. Default downstream scope is generating scripts; actual execution remains a separately requested action.
+[`assets/component-sheet-template.html`](../assets/component-sheet-template.html) is the shell; `catalog.mjs` inlines into it the library CSS, the shared Contract module (`skills/contract/scripts/contract.mjs`, with `export` stripped, as `window.Contract`), [`assets/selection-model.js`](../assets/selection-model.js) and the catalog data `{contract, modes, forces, specimens}`:
+
+- `modes`: the foundations document's one multi-mode collection, `[{key, label, className}]`; the first is the default.
+- `forces`: `[{axis, value, pseudo}]` for every axis value with `code: null`; `pseudo` is the leading pseudo-class of its `css`.
+- `specimens`: `{specimenId: html}`. The specimen id (`primary|lg|enabled`) is an internal DOM id and never leaves the page.
+
+`ComponentSheet.configure({catalog, renderSpecimen})` builds the selection model, forces the States and renders every specimen into its host. Captions and checkboxes stay outside the component DOM.
+
+**Forcing a State.** Every style rule whose selector uses a forced pseudo-class gets a copy with the pseudo-class replaced by a class (`:hover` becomes `.cs-force-hover`), inserted right after the original. Copies from a hover-capability media query (`@media (any-hover: hover)`) go beside the query, so they apply in any browser. The rendered component's root element gets the class.
+
+**Selection model.** `new ComponentSheetSelection(contract, contractModule)`: `specimens`, `selected`, `baseId`, `select(id, on)` (throws on unchecking the Base Component), `selectAll`, `selectMatching(filters, on)` (skips the Base Component), `verify(id)`, `checkedTuples()` and `omitPatch()`. All expansion and matching goes through the shared Contract module.
+
+**Export.** Downloads `<family>.omit-patch.json` and `<family>.checked.json` and dispatches the `window` event `component-sheet:selection` with `{patch, checked}` in `event.detail`; `ComponentSheet.getSelection()` returns the same. A download does not reach the agent by itself: the owner says where the files are, or a project-local bridge collects them.

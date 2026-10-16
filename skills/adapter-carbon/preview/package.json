@@ -1,0 +1,12 @@
+{
+  "name": "adapter-carbon-preview",
+  "private": true,
+  "description": "Pinned packages for the Carbon preview renderer. Installed into .scratch/adapter-carbon/preview by scripts/preview.mjs with npm ci --ignore-scripts; never installed here.",
+  "dependencies": {
+    "@carbon/icons-react": "11.90.0",
+    "@carbon/react": "1.118.0",
+    "@carbon/styles": "1.117.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}
