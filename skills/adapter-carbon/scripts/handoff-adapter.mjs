@@ -19,6 +19,17 @@ export const roleGroups = {
 // The tokens the mode map compares a Prototype's surfaces against (#61 "mode map by page surface").
 export const surfaces = { page: 'background', layer: 'layer-01' };
 
+// The breakpoints the runtime reader screenshots each state at (#113): `breakpoints` of @carbon/layout 11.61.0
+// (the pinned preview package), min-widths in px. The Foundations document carries no breakpoints, so the
+// Adapter names them; skills/adapter-carbon/test/preview.test.mjs checks them against the package.
+export const breakpoints = [
+  { key: 'sm', width: 320 },
+  { key: 'md', width: 672 },
+  { key: 'lg', width: 1056 },
+  { key: 'xlg', width: 1312 },
+  { key: 'max', width: 1584 },
+];
+
 // The Contract-writing procedure To-handoff names for a family the Code Library ships with no Contract yet (#90).
 // It is an agent step: follow the guide against the pinned source, then check the Contract.
 export const contractProcedure = 'Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs';

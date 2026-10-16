@@ -20,6 +20,6 @@ jobs:
       - run: node skills/adapter-carbon/scripts/sources.mjs
       # Without the pinned Tailwind, TypeScript and shadcn stylesheets, 21 adapter-generic tests skip.
       - run: node skills/adapter-generic/scripts/sources.mjs
-      # Without parse5, the to-handoff tests skip.
+      # Without its packages, the to-handoff tests skip; the runtime tests use the runner's Chrome.
       - run: node skills/to-handoff/scripts/deps.mjs
       - run: npm test

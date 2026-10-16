@@ -97,3 +97,12 @@ test('code.required props come from the usage, else a per-tuple placeholder', { 
   assert.match(render({}, { label: 'Go', id: 'cta-1' }), /^<button id="cta-1" /);
   assert.match(render({ kind: 'ghost' }), /^<button id="button-ghost-lg-enabled" /);
 });
+
+// To-handoff's breakpoints (#113) are @carbon/layout's, read from the pinned preview package.
+test('the handoff Adapter breakpoints are @carbon/layout breakpoints, in px, narrowest first', { skip }, async () => {
+  const { createRequire } = await import('node:module');
+  const { PREVIEW_DIR } = await import('../scripts/preview.mjs');
+  const { breakpoints: carbon } = createRequire(`${PREVIEW_DIR}/package.json`)('@carbon/layout');
+  const { breakpoints } = await import('../scripts/handoff-adapter.mjs');
+  assert.deepEqual(breakpoints, Object.entries(carbon).map(([key, b]) => ({ key, width: parseFloat(b.width) * 16 })));
+});
