@@ -24,7 +24,6 @@ export const surfaces = { page: 'background', layer: 'layer-01' };
 // It is an agent step: follow the guide against the pinned source, then check the Contract.
 export const contractProcedure = 'Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs';
 
-/** True when the renderer's packages are installed (fetched by node skills/adapter-carbon/scripts/sources.mjs). */
 /**
  * The check a Contract written by `contractProcedure` must pass before To-handoff uses it (#115): the shared
  * Contract rules against the Foundations document, and the Carbon pin, which the foundations step also refuses
@@ -41,6 +40,7 @@ export function checkContract(contract, foundations) {
   return out;
 }
 
+/** True when the renderer's packages are installed (fetched by node skills/adapter-carbon/scripts/sources.mjs). */
 export const available = () => hasPreviewPackages();
 
 /** The per-Contract renderer: {stylesheet, modeClass(mode), render(tuple, properties)}. */

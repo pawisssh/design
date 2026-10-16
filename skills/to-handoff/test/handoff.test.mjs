@@ -9,6 +9,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { contentHash, validate } from '../../contract/scripts/contract.mjs';
+import { generate as carbonFoundations } from '../../adapter-carbon/scripts/foundations.mjs';
+import { hasSources, readSources } from '../../adapter-carbon/scripts/sources.mjs';
 import { hasDeps } from '../scripts/deps.mjs';
 import { generate, loadDesignSystem, render, renderHtml, validateHandoff } from '../scripts/handoff.mjs';
 import { parseInline } from '../scripts/css.mjs';
@@ -142,18 +144,25 @@ test('a draft that fails the check, can\'t be read, can\'t be written or isn\'t 
   }
 });
 
-test('a mid-run draft leaves the Foundations document alone; the owner re-generating it for the new family keeps usedHash', { skip: noDeps }, async () => {
+const noCarbon = !hasSources() && 'Carbon sources missing; run: node skills/adapter-carbon/scripts/sources.mjs';
+test('a mid-run draft leaves the Foundations document alone; the owner re-generating it for the new family keeps usedHash', { skip: noDeps || noCarbon }, async () => {
   const ds = designSystem();
   const path = join(ds, 'carbon.foundations.json');
   const before = readFileSync(path, 'utf8');
   const first = await generate({ prototype: PROTOTYPE, designSystem: ds, decisions: DECISIONS });
   assert.equal(readFileSync(path, 'utf8'), before);
-  // What the Carbon foundations step does once text-input joins contracts/: the variables it uses gain it in
-  // usedBy, and nothing else moves. A Handoff pins usedHash, which leaves usedBy out (ADR 0007).
-  const doc = JSON.parse(before);
-  // text-primary and text-secondary are among the variables this Handoff uses too.
-  for (const v of ['field', 'border-strong', 'text-primary', 'text-secondary', 'helper-text-01-font-size']) doc.variables[v].usedBy = [...(doc.variables[v].usedBy || []), 'text-input'].sort();
-  assert.ok(styles(first.handoff).some(s => s.token === 'text-primary') && styles(first.handoff).some(s => s.token === 'text-secondary'));
+  // The Carbon foundations step, once text-input joins contracts/. The draft's tokens are all in Carbon's whole
+  // theme already (ADR 0006), so only closure and usedBy move, and usedHash leaves usedBy out (ADR 0007).
+  const read = p => ({ path: p, contract: JSON.parse(readFileSync(p, 'utf8')) });
+  const doc = JSON.parse(carbonFoundations({ sources: readSources(), contracts: [read(BUTTON), read(join(ds, 'contracts/text-input.component.json'))] }).text);
+  const old = JSON.parse(before);
+  assert.deepEqual(doc.collections, old.collections);
+  const changed = Object.keys(doc.variables).filter(k => JSON.stringify(doc.variables[k]) !== JSON.stringify(old.variables[k]));
+  assert.ok(changed.length);
+  for (const k of changed) assert.deepEqual({ ...doc.variables[k], usedBy: [] }, { ...old.variables[k], usedBy: [] }, k);
+  for (const k of Object.keys(doc.textStyles)) assert.deepEqual({ ...doc.textStyles[k], usedBy: [] }, { ...old.textStyles[k], usedBy: [] }, k);
+  // Some of them are tokens this Handoff uses, so the test would see a usedBy leak into usedHash.
+  assert.ok(styles(first.handoff).some(s => changed.includes(s.token)));
   writeFileSync(path, JSON.stringify(doc, null, 2) + '\n');
   const again = await generate({ prototype: PROTOTYPE, designSystem: ds, decisions: DECISIONS });
   assert.equal(again.handoff.source.foundations.usedHash, first.handoff.source.foundations.usedHash);

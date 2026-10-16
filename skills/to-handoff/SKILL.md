@@ -5,7 +5,7 @@ description: Turns a single-HTML-file Prototype into a validated Handoff (handof
 
 # To-handoff
 
-Reads one Prototype file statically and writes `design-systems/<ds>/handoffs/<feature-key>/handoff.json` and `renderings/index.html`. Every pick that could be a guess is a **decision** the agent answers in a `decisions.json`; with any decision open, generate writes nothing and returns the requests. To-handoff knows no Code Library: the Adapter named by the Foundations document's `source.adapter` supplies the role groups, the mode-map surfaces, the Contract-writing procedure and the renderer, in `skills/adapter-<adapter>/scripts/handoff-adapter.mjs`.
+Reads one Prototype file statically and writes `design-systems/<ds>/handoffs/<feature-key>/handoff.json` and `renderings/index.html`. Every pick that could be a guess is a **decision** the agent answers in a `decisions.json`; with any decision open, generate writes nothing and returns the requests. To-handoff knows no Code Library: the Adapter named by the Foundations document's `source.adapter` supplies the role groups, the mode-map surfaces, the Contract-writing procedure, the check a Contract written mid-run must pass (`checkContract`) and the renderer, in `skills/adapter-<adapter>/scripts/handoff-adapter.mjs`.
 
 Out of scope in the tracer: multi-file or React Prototypes, screenshots (the Rendering says `missing (static-only)`), review, approve and check. The owner signs a Handoff off; To-handoff never does.
 

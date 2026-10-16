@@ -259,7 +259,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     return [...out, ...adapter.checkContract(c, foundations)];
   };
   // A draft answer as the recognise answer it stands for: a Contract usage on a pass, a raw one on a failure.
-  const effective = (answer, key) => {
+  const resolveDraftAnswer = (answer, key) => {
     if (!answer || !answer.draft) return answer;
     const r = draftOf(answer.draft);
     if (!r) return undefined;
@@ -275,7 +275,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const cand = candidateOf(el, rules);
     if (cand) {
       const key = `recognise:${cand.sig}`;
-      const answer = effective(d.ask(key, {
+      const answer = resolveDraftAnswer(d.ask(key, {
         kind: 'recognise', question: `What is \`${cand.sig}\` ("${elementText(el, atomsIn('default')).slice(0, 40)}")?`, candidates: families, evidence: { at: [at(el.offset)] },
       }, checkRecognise), key);
       recognised.push({ el, cand, answer });

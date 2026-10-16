@@ -84,7 +84,7 @@ export async function renderHtml(handoff, system) {
   for (const key of Object.keys(h.source.contracts).sort()) {
     if (!isDraft(key)) continue;
     const drafted = Object.keys(contracts[key].drafted || {}).length;
-    look.push(['draft', `${code(key)} Contract draft, not approved`, `${drafted} Drafted values; the owner approves it through To-design's base loop, not this sign-off`, usages.filter(u => u.contract === key).map(u => u.id).join(', ')]);
+    look.push(['draft', `${code(key)} Contract draft, not approved`, `${drafted} Drafted values; the owner approves it through To-design's base loop, not this sign-off`, usages.filter(u => u.contract === key).map(u => u.at).join(', ')]);
   }
   for (const [name, s] of Object.entries(screen.states)) if (s.missing) look.push(['missing', `${esc(name)} state`, esc(question(s.question)) + qflag(s.question), screen.at || '']);
   for (const x of h.data || []) look.push([x.source === 'mock' ? 'mock' : 'simulated', code(x.id), esc(x.note || ''), x.at || '']);
