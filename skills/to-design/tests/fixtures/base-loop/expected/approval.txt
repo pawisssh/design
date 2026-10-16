@@ -10,6 +10,8 @@ selection: draft, 245 variants
 Readback: 0 difference(s), 4 field(s) not read
 Edits with by/was: 2
   layout[0].Button.gap = {spacing-06}  by owner (simulated, prototype #8), was {spacing-07}; changes 150/245 variants
+    shielded by layout[8] {"size":"lg-expressive"} = raw 28
+    shielded by layout[9] {"kind":["ghost","danger--ghost"]} = {spacing-03}
   layout[4].Button.paddingTop = raw 14  by owner (simulated, prototype #8), was raw 15; changes 105/245 variants
 Uncarried tweaks (warning notes, block approval): 0
 Verify notes: 2

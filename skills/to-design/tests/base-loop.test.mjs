@@ -161,6 +161,22 @@ test('discard: a warning note settles only once a clean readback no longer shows
   assert.match(note.message, /^Discarded \(base loop rebuild\): /);
 });
 
+test('discard refuses a readback that is not clean, or that does not report the noted field', () => {
+  const r = review(CONTRACT, rb('tweaked'), FOUNDATIONS);
+  const { contract } = applyEdits(CONTRACT, r.proposals, { confirm: 'all' });
+  const blind = { ...rb('v1'), extras: {} };
+  assert.throws(() => discardNote(contract, 'layout.Label.letterSpacing', blind, FOUNDATIONS), /does not report extras\.Label\.letterSpacing/);
+  const drifted = JSON.parse(JSON.stringify(rb('v1')));
+  drifted.layout.Button.paddingLeft = { raw: 12 };
+  assert.throws(() => discardNote(contract, 'layout.Label.letterSpacing', drifted, FOUNDATIONS), /not clean/);
+});
+
+test('an edit is by the owner, or a simulated owner named as such', () => {
+  const change = review(CONTRACT, rb('tweaked'), FOUNDATIONS).changes.find(c => c.kind === 'token-edit');
+  assert.throws(() => review(CONTRACT, rb('tweaked'), FOUNDATIONS, { by: 'orchestrator' }), /by "owner"/);
+  assert.equal(review(CONTRACT, rb('tweaked'), FOUNDATIONS, { by: 'owner (simulated, test)' }).proposals.find(p => p.change === change || p.id === `${change.node}.${change.field}`).newValue.by, 'owner (simulated, test)');
+});
+
 test('approval: only on a clean readback, bound to the snapshotId and contentHash the owner reviewed', () => {
   const r = complete(rb('v0'));
   const ids = { snapshotId: CONTRACT.source.snapshotId, contentHash: contentHash(CONTRACT), at: AT };

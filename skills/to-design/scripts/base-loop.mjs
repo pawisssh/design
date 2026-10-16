@@ -16,7 +16,7 @@ import { dirname, join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import {
-  approve, asDraft, baseTuple, closure, contentHash, coversScope, expand, resolve, scopeFor, validate, variantName,
+  approve, asDraft, baseTuple, closure, contentHash, coversScope, expand, matches, resolve, scopeFor, validate, variantName,
 } from '../../contract/scripts/contract.mjs';
 import { ledgerPath, readLedger } from './ledger.mjs';
 
@@ -243,6 +243,18 @@ function blastRadius(before, after, section, node, field) {
 
 const isDerived = v => isRaw(v) && v.level === 'info' && /^derived/i.test(v.reason || '');
 
+/** The later rules that also set section.node.field for a selected variant the rule at ruleIdx covers. */
+function shieldsOf(contract, section, ruleIdx, node, field) {
+  const rule = contract[section][ruleIdx];
+  const selected = expand(contract);
+  return contract[section].map((r, i) => ({ r, i }))
+    .filter(({ r, i }) => i > ruleIdx && r.set[node] && r.set[node][field] !== undefined && selected.some(x => matches(rule.match, x) && matches(r.match, x)))
+    .map(({ r, i }) => ({ rule: i, match: r.match, value: r.set[node][field] }));
+}
+
+/** Who may make an edit: the owner, or a simulated owner named as such ("owner (simulated, ...)"). */
+export const isOwner = by => by === 'owner' || /^owner \(simulated[^)]*\)$/.test(String(by));
+
 /**
  * Where a change lands and what it does. Expressible changes (`token-edit`, `raw-edit`) edit the rule that
  * last set the field for the Base Component, in place. The proposal carries that rule, the new value with
@@ -251,6 +263,7 @@ const isDerived = v => isRaw(v) && v.level === 'info' && /^derived/i.test(v.reas
  * derived raws it may make stale, and, for a typed number, the tokens of the field's scope with that value.
  */
 export function propose(contract, change, foundations, { by = 'owner' } = {}) {
+  if (!isOwner(by)) throw new Error(`an edit is by "owner" (or "owner (simulated, ...)" in a prototype), not "${by}"`);
   const { kind, section, node, field } = change;
   if (kind === 'detached') return { change, expressible: false, note: 'binding lost in Figma; the Contract keeps the token and a rebuild restores it' };
   if (kind === 'unmapped') return { change, expressible: false, note: change.why };
@@ -263,12 +276,7 @@ export function propose(contract, change, foundations, { by = 'owner' } = {}) {
   const edited = clone(contract);
   edited[section][ruleIdx].set[node][field] = newValue;
   const blast = blastRadius(contract, edited, section, node, field);
-  const selected = expand(contract);
-  const overlaps = r => selected.some(x => Object.entries(rule.match).every(([a, w]) => (Array.isArray(w) ? w : [w]).includes(x[a]))
-    && Object.entries(r.match).every(([a, w]) => (Array.isArray(w) ? w : [w]).includes(x[a])));
-  const shields = contract[section].map((r, i) => ({ r, i }))
-    .filter(({ r, i }) => i > ruleIdx && r.set[node] && r.set[node][field] !== undefined && overlaps(r))
-    .map(({ r, i }) => ({ rule: i, match: r.match, value: r.set[node][field] }));
+  const shields = shieldsOf(contract, section, ruleIdx, node, field);
   // A derived raw is flagged when it may rest on the edited value: one that shields the edit (same field), or a
   // sibling field on the same node of the edited rule. There is no machine-readable derivedFrom yet.
   const stale = shields.filter(s => isDerived(s.value)).map(s => ({ path: `${section}[${s.rule}].${node}.${field}`, value: s.value }))
@@ -344,20 +352,27 @@ export function applyEdits(contract, proposals, { confirm = [] } = {}) {
 }
 
 /**
- * Discard an uncarried tweak once the Base Component was rebuilt without it: the `warning` note at `at`
- * becomes `info`, so it no longer blocks approval. Refused while the readback still shows that tweak.
+ * Discard an uncarried tweak once the owner has chosen to drop it and the Base Component was rebuilt without
+ * it: the `warning` note at `at` becomes `info`, so it no longer blocks approval. Refused while the readback
+ * shows any difference, or does not report the noted field (a blind readback cannot prove the tweak is gone).
  */
 export function discardNote(contract, at, readback, foundations) {
   const i = (contract.notes || []).findIndex(n => n.level === 'warning' && n.at === at);
   if (i < 0) throw new Error(`no warning note at ${at}`);
-  const still = diff(contract, readback, foundations).changes.filter(ch => `${ch.section}.${ch.node}.${ch.field}` === at);
+  const d = diff(contract, readback, foundations);
+  const still = d.changes.filter(ch => `${ch.section}.${ch.node}.${ch.field}` === at);
   if (still.length) throw new Error(`the readback still shows ${at}: ${show(still[0].from)} -> ${show(still[0].to)}; rebuild the Base Component first`);
+  if (d.changes.length) throw new Error(`the readback is not clean (${d.changes.length} difference(s)); rebuild the Base Component first`);
+  // the noted field as `unread` names it: section.node.field, extras.node.field (typography), part.node, or tree
+  const [part, node, field] = at.split('.');
+  const blind = d.unread.filter(u => { const p = u.split('.'); return u === 'tree' ? field === 'tree' : p.length === 2 ? p[0] === part && p[1] === node : p[1] === node && p[2] === field; });
+  if (blind.length) throw new Error(`the readback does not report ${blind.join(', ')}; read the Base Component back in full first`);
   const c = clone(contract);
   c.notes[i] = { ...c.notes[i], level: 'info', message: `Discarded (base loop rebuild): ${c.notes[i].message}` };
   return asDraft(c);
 }
 
-/** Every value carrying `by`, with its `was` and the blast radius of that edit (variants that differ from `was`). */
+/** Every value carrying `by`, with its `was`, the blast radius of that edit (variants that differ from `was`) and the later rules that shield variants from it. */
 export function ownerEdits(contract) {
   const out = [];
   for (const section of SECTIONS)
@@ -367,7 +382,8 @@ export function ownerEdits(contract) {
           if (!isObj(value) || value.by === undefined) continue;
           const undone = clone(contract);
           undone[section][i].set[node][field] = clone(value.was);
-          out.push({ path: `${section}[${i}].${node}.${field}`, by: value.by, value: norm(value), was: value.was, blast: blastRadius(undone, contract, section, node, field) });
+          out.push({ path: `${section}[${i}].${node}.${field}`, by: value.by, value: norm(value), was: value.was, blast: blastRadius(undone, contract, section, node, field),
+            shields: shieldsOf(contract, section, i, node, field) });
         }
     });
   return out;
@@ -411,7 +427,8 @@ export function formatReview(contract, readback, result, { fileKey, contractPath
     `Readback: ${result.changes.length} difference(s), ${result.unread.length} field(s) not read${clean ? ' -- clean' : ''}`,
     ...result.changes.map(x => `  [${x.kind}] ${x.section}.${x.node}.${x.field}: ${show(x.from)} -> ${show(x.to)}`),
     `Edits with by/was: ${edits.length}`,
-    ...edits.map(e => `  ${e.path} = ${show(e.value)}  by ${e.by}, was ${show(e.was)}; changes ${e.blast.count}/${e.blast.of} variants`),
+    ...edits.flatMap(e => [`  ${e.path} = ${show(e.value)}  by ${e.by}, was ${show(e.was)}; changes ${e.blast.count}/${e.blast.of} variants`,
+      ...e.shields.map(x => `    shielded by ${e.path.split('[')[0]}[${x.rule}] ${JSON.stringify(x.match)} = ${show(x.value)}`)]),
     `Uncarried tweaks (warning notes, block approval): ${warnings.length}`,
     ...warnings.map(n => `  ${n.at}: ${n.message}`),
     `Verify notes: ${verify.length}`,
@@ -453,8 +470,11 @@ function foundationsFor(contractPath, given) {
   return readJson(join(dsDir, found[0]));
 }
 
-function writeContract(path, c, foundations) {
+// Validates before writing and refuses an invalid Contract; `allow(error)` names the errors a prototype accepts.
+function writeContract(path, c, foundations, allow = () => false) {
   const v = validate(c, foundations);
+  const blocking = v.errors.filter(e => !allow(e));
+  if (blocking.length) throw new Error(`refused to write an invalid Contract to ${path}: ${blocking.map(e => `[${e.rule}] ${e.at}: ${e.message}`).join('; ')}`);
   writeJson(path, c);
   return v;
 }
@@ -543,7 +563,8 @@ function main() {
     const c = approveReviewed(contract, readback, foundations, {
       snapshotId: values['snapshot-id'], contentHash: values['content-hash'], at: values.at || new Date().toISOString(), prototype: values.prototype,
     });
-    const v = writeContract(outPath, c, foundations);
+    // a prototype approval fails rule 8 by design: it is never an owner approval
+    const v = writeContract(outPath, c, foundations, e => values.prototype && e.rule === 8 && /only the owner approves/.test(e.message));
     return print(JSON.stringify({ status: 'approved', out: outPath, approval: c.selection.approval, valid: v.ok, errors: v.errors }, null, 2) + '\n');
   }
   console.error('usage: see the header of base-loop.mjs');
