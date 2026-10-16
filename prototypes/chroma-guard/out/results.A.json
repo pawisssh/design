@@ -1,0 +1,974 @@
+{
+  "labels": "A",
+  "chosen": "chroma-asym@0.01",
+  "raws": 1921,
+  "decisions": 77104,
+  "near": 14614,
+  "results": [
+    {
+      "id": "none",
+      "kind": "none",
+      "right": 14058,
+      "wrong": 326,
+      "missed": 0,
+      "off": 61369,
+      "wrongCandidates": 1120,
+      "wrongBySource": "237/80/0/9/0",
+      "missedBySource": "0/0/0/0/0",
+      "holdout": {
+        "right": 108,
+        "wrong": 122,
+        "missed": 0
+      }
+    },
+    {
+      "id": "dab<=0.004",
+      "kind": "Δab cap",
+      "x": 0.004,
+      "right": 5013,
+      "wrong": 0,
+      "missed": 9045,
+      "off": 61695,
+      "wrongCandidates": 0,
+      "wrongBySource": "0/0/0/0/0",
+      "missedBySource": "588/382/49/17/8009",
+      "holdout": {
+        "right": 35,
+        "wrong": 0,
+        "missed": 73
+      }
+    },
+    {
+      "id": "dab<=0.006",
+      "kind": "Δab cap",
+      "x": 0.006,
+      "right": 8087,
+      "wrong": 1,
+      "missed": 5971,
+      "off": 61694,
+      "wrongCandidates": 4,
+      "wrongBySource": "1/0/0/0/0",
+      "missedBySource": "420/233/31/8/5279",
+      "holdout": {
+        "right": 57,
+        "wrong": 1,
+        "missed": 51
+      }
+    },
+    {
+      "id": "dab<=0.008",
+      "kind": "Δab cap",
+      "x": 0.008,
+      "right": 10062,
+      "wrong": 2,
+      "missed": 3996,
+      "off": 61693,
+      "wrongCandidates": 8,
+      "wrongBySource": "2/0/0/0/0",
+      "missedBySource": "316/185/25/6/3464",
+      "holdout": {
+        "right": 65,
+        "wrong": 1,
+        "missed": 43
+      }
+    },
+    {
+      "id": "dab<=0.01",
+      "kind": "Δab cap",
+      "x": 0.01,
+      "right": 11260,
+      "wrong": 6,
+      "missed": 2798,
+      "off": 61689,
+      "wrongCandidates": 27,
+      "wrongBySource": "4/1/0/1/0",
+      "missedBySource": "246/137/25/2/2388",
+      "holdout": {
+        "right": 82,
+        "wrong": 3,
+        "missed": 26
+      }
+    },
+    {
+      "id": "dab<=0.012",
+      "kind": "Δab cap",
+      "x": 0.012,
+      "right": 12261,
+      "wrong": 17,
+      "missed": 1797,
+      "off": 61678,
+      "wrongCandidates": 71,
+      "wrongBySource": "11/5/0/1/0",
+      "missedBySource": "164/85/15/0/1533",
+      "holdout": {
+        "right": 87,
+        "wrong": 10,
+        "missed": 21
+      }
+    },
+    {
+      "id": "dab<=0.014",
+      "kind": "Δab cap",
+      "x": 0.014,
+      "right": 12953,
+      "wrong": 84,
+      "missed": 1105,
+      "off": 61611,
+      "wrongCandidates": 325,
+      "wrongBySource": "72/10/0/2/0",
+      "missedBySource": "113/40/8/0/944",
+      "holdout": {
+        "right": 90,
+        "wrong": 52,
+        "missed": 18
+      }
+    },
+    {
+      "id": "dab<=0.016",
+      "kind": "Δab cap",
+      "x": 0.016,
+      "right": 13533,
+      "wrong": 203,
+      "missed": 525,
+      "off": 61492,
+      "wrongCandidates": 718,
+      "wrongBySource": "157/38/0/8/0",
+      "missedBySource": "56/13/2/0/454",
+      "holdout": {
+        "right": 106,
+        "wrong": 89,
+        "missed": 2
+      }
+    },
+    {
+      "id": "dab<=0.018",
+      "kind": "Δab cap",
+      "x": 0.018,
+      "right": 13911,
+      "wrong": 267,
+      "missed": 147,
+      "off": 61428,
+      "wrongCandidates": 932,
+      "wrongBySource": "205/53/0/9/0",
+      "missedBySource": "13/0/0/0/134",
+      "holdout": {
+        "right": 108,
+        "wrong": 121,
+        "missed": 0
+      }
+    },
+    {
+      "id": "dC<=0.004",
+      "kind": "ΔC cap",
+      "x": 0.004,
+      "right": 7031,
+      "wrong": 4,
+      "missed": 7027,
+      "off": 61691,
+      "wrongCandidates": 10,
+      "wrongBySource": "0/4/0/0/0",
+      "missedBySource": "456/324/49/15/6183",
+      "holdout": {
+        "right": 42,
+        "wrong": 0,
+        "missed": 66
+      }
+    },
+    {
+      "id": "dC<=0.006",
+      "kind": "ΔC cap",
+      "x": 0.006,
+      "right": 9652,
+      "wrong": 9,
+      "missed": 4406,
+      "off": 61686,
+      "wrongCandidates": 24,
+      "wrongBySource": "1/8/0/0/0",
+      "missedBySource": "317/187/31/6/3865",
+      "holdout": {
+        "right": 63,
+        "wrong": 1,
+        "missed": 45
+      }
+    },
+    {
+      "id": "dC<=0.008",
+      "kind": "ΔC cap",
+      "x": 0.008,
+      "right": 11234,
+      "wrong": 13,
+      "missed": 2824,
+      "off": 61682,
+      "wrongCandidates": 40,
+      "wrongBySource": "5/8/0/0/0",
+      "missedBySource": "215/154/25/4/2426",
+      "holdout": {
+        "right": 70,
+        "wrong": 1,
+        "missed": 38
+      }
+    },
+    {
+      "id": "dC<=0.01",
+      "kind": "ΔC cap",
+      "x": 0.01,
+      "right": 12100,
+      "wrong": 20,
+      "missed": 1958,
+      "off": 61675,
+      "wrongCandidates": 71,
+      "wrongBySource": "10/9/0/1/0",
+      "missedBySource": "175/103/25/0/1655",
+      "holdout": {
+        "right": 85,
+        "wrong": 7,
+        "missed": 23
+      }
+    },
+    {
+      "id": "dC<=0.012",
+      "kind": "ΔC cap",
+      "x": 0.012,
+      "right": 12914,
+      "wrong": 48,
+      "missed": 1144,
+      "off": 61647,
+      "wrongCandidates": 203,
+      "wrongBySource": "37/10/0/1/0",
+      "missedBySource": "115/67/15/0/947",
+      "holdout": {
+        "right": 90,
+        "wrong": 23,
+        "missed": 18
+      }
+    },
+    {
+      "id": "dC<=0.014",
+      "kind": "ΔC cap",
+      "x": 0.014,
+      "right": 13430,
+      "wrong": 112,
+      "missed": 628,
+      "off": 61583,
+      "wrongCandidates": 451,
+      "wrongBySource": "96/14/0/2/0",
+      "missedBySource": "75/25/8/0/520",
+      "holdout": {
+        "right": 96,
+        "wrong": 59,
+        "missed": 12
+      }
+    },
+    {
+      "id": "chroma-asym@0.004",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.004,
+      "right": 9109,
+      "wrong": 24,
+      "missed": 4949,
+      "off": 61671,
+      "wrongCandidates": 77,
+      "wrongBySource": "12/11/0/1/0",
+      "missedBySource": "294/249/0/6/4400",
+      "holdout": {
+        "right": 42,
+        "wrong": 4,
+        "missed": 66
+      }
+    },
+    {
+      "id": "chroma-sym@0.004",
+      "kind": "chroma floor, both directions",
+      "x": 0.004,
+      "right": 8060,
+      "wrong": 24,
+      "missed": 5998,
+      "off": 61671,
+      "wrongCandidates": 77,
+      "wrongBySource": "12/11/0/1/0",
+      "missedBySource": "355/299/49/11/5284",
+      "holdout": {
+        "right": 36,
+        "wrong": 4,
+        "missed": 72
+      }
+    },
+    {
+      "id": "chroma-asym@0.006",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.006,
+      "right": 10455,
+      "wrong": 24,
+      "missed": 3603,
+      "off": 61671,
+      "wrongCandidates": 77,
+      "wrongBySource": "12/11/0/1/0",
+      "missedBySource": "250/165/0/0/3188",
+      "holdout": {
+        "right": 63,
+        "wrong": 4,
+        "missed": 45
+      }
+    },
+    {
+      "id": "chroma-sym@0.006",
+      "kind": "chroma floor, both directions",
+      "x": 0.006,
+      "right": 9590,
+      "wrong": 24,
+      "missed": 4468,
+      "off": 61671,
+      "wrongCandidates": 77,
+      "wrongBySource": "12/11/0/1/0",
+      "missedBySource": "314/200/31/4/3919",
+      "holdout": {
+        "right": 61,
+        "wrong": 4,
+        "missed": 47
+      }
+    },
+    {
+      "id": "chroma-asym@0.008",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.008,
+      "right": 11808,
+      "wrong": 11,
+      "missed": 2250,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "177/159/0/0/1914",
+      "holdout": {
+        "right": 62,
+        "wrong": 3,
+        "missed": 46
+      }
+    },
+    {
+      "id": "chroma-sym@0.008",
+      "kind": "chroma floor, both directions",
+      "x": 0.008,
+      "right": 10983,
+      "wrong": 11,
+      "missed": 3075,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "235/188/25/0/2627",
+      "holdout": {
+        "right": 60,
+        "wrong": 3,
+        "missed": 48
+      }
+    },
+    {
+      "id": "chroma-asym@0.009",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.009,
+      "right": 12380,
+      "wrong": 11,
+      "missed": 1678,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "133/110/0/0/1435",
+      "holdout": {
+        "right": 62,
+        "wrong": 3,
+        "missed": 46
+      }
+    },
+    {
+      "id": "chroma-sym@0.009",
+      "kind": "chroma floor, both directions",
+      "x": 0.009,
+      "right": 11485,
+      "wrong": 11,
+      "missed": 2573,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "191/141/25/0/2216",
+      "holdout": {
+        "right": 60,
+        "wrong": 3,
+        "missed": 48
+      }
+    },
+    {
+      "id": "chroma-asym@0.01",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.01,
+      "right": 12639,
+      "wrong": 11,
+      "missed": 1419,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "133/97/0/0/1189",
+      "holdout": {
+        "right": 87,
+        "wrong": 3,
+        "missed": 21
+      }
+    },
+    {
+      "id": "chroma-sym@0.01",
+      "kind": "chroma floor, both directions",
+      "x": 0.01,
+      "right": 11699,
+      "wrong": 11,
+      "missed": 2359,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "191/128/25/0/2015",
+      "holdout": {
+        "right": 85,
+        "wrong": 3,
+        "missed": 23
+      }
+    },
+    {
+      "id": "chroma-asym@0.011",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.011,
+      "right": 12901,
+      "wrong": 11,
+      "missed": 1157,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "109/84/0/0/964",
+      "holdout": {
+        "right": 87,
+        "wrong": 3,
+        "missed": 21
+      }
+    },
+    {
+      "id": "chroma-sym@0.011",
+      "kind": "chroma floor, both directions",
+      "x": 0.011,
+      "right": 12219,
+      "wrong": 11,
+      "missed": 1839,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "153/107/17/0/1562",
+      "holdout": {
+        "right": 87,
+        "wrong": 3,
+        "missed": 21
+      }
+    },
+    {
+      "id": "chroma-asym@0.012",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.012,
+      "right": 13126,
+      "wrong": 11,
+      "missed": 932,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "101/61/0/0/770",
+      "holdout": {
+        "right": 87,
+        "wrong": 3,
+        "missed": 21
+      }
+    },
+    {
+      "id": "chroma-sym@0.012",
+      "kind": "chroma floor, both directions",
+      "x": 0.012,
+      "right": 12459,
+      "wrong": 11,
+      "missed": 1599,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "143/88/15/0/1353",
+      "holdout": {
+        "right": 87,
+        "wrong": 3,
+        "missed": 21
+      }
+    },
+    {
+      "id": "chroma-asym@0.0125",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.0125,
+      "right": 13216,
+      "wrong": 36,
+      "missed": 842,
+      "off": 61659,
+      "wrongCandidates": 122,
+      "wrongBySource": "28/8/0/0/0",
+      "missedBySource": "91/42/0/0/709",
+      "holdout": {
+        "right": 87,
+        "wrong": 24,
+        "missed": 21
+      }
+    },
+    {
+      "id": "chroma-sym@0.0125",
+      "kind": "chroma floor, both directions",
+      "x": 0.0125,
+      "right": 12538,
+      "wrong": 36,
+      "missed": 1520,
+      "off": 61659,
+      "wrongCandidates": 122,
+      "wrongBySource": "28/8/0/0/0",
+      "missedBySource": "133/72/15/0/1300",
+      "holdout": {
+        "right": 87,
+        "wrong": 24,
+        "missed": 21
+      }
+    },
+    {
+      "id": "chroma-asym@0.013",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.013,
+      "right": 13359,
+      "wrong": 56,
+      "missed": 699,
+      "off": 61639,
+      "wrongCandidates": 203,
+      "wrongBySource": "48/8/0/0/0",
+      "missedBySource": "75/31/0/0/593",
+      "holdout": {
+        "right": 87,
+        "wrong": 46,
+        "missed": 21
+      }
+    },
+    {
+      "id": "chroma-sym@0.013",
+      "kind": "chroma floor, both directions",
+      "x": 0.013,
+      "right": 12943,
+      "wrong": 56,
+      "missed": 1115,
+      "off": 61639,
+      "wrongCandidates": 203,
+      "wrongBySource": "48/8/0/0/0",
+      "missedBySource": "93/55/12/0/955",
+      "holdout": {
+        "right": 87,
+        "wrong": 46,
+        "missed": 21
+      }
+    },
+    {
+      "id": "chroma-asym@0.015",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.015,
+      "right": 13539,
+      "wrong": 138,
+      "missed": 519,
+      "off": 61557,
+      "wrongCandidates": 513,
+      "wrongBySource": "130/8/0/0/0",
+      "missedBySource": "54/11/0/0/454",
+      "holdout": {
+        "right": 108,
+        "wrong": 71,
+        "missed": 0
+      }
+    },
+    {
+      "id": "chroma-sym@0.015",
+      "kind": "chroma floor, both directions",
+      "x": 0.015,
+      "right": 13263,
+      "wrong": 138,
+      "missed": 795,
+      "off": 61557,
+      "wrongCandidates": 513,
+      "wrongBySource": "130/8/0/0/0",
+      "missedBySource": "68/35/6/0/686",
+      "holdout": {
+        "right": 108,
+        "wrong": 71,
+        "missed": 0
+      }
+    },
+    {
+      "id": "chroma-asym@0.02",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.02,
+      "right": 13866,
+      "wrong": 321,
+      "missed": 192,
+      "off": 61374,
+      "wrongCandidates": 1107,
+      "wrongBySource": "234/78/0/9/0",
+      "missedBySource": "16/0/0/0/176",
+      "holdout": {
+        "right": 108,
+        "wrong": 119,
+        "missed": 0
+      }
+    },
+    {
+      "id": "chroma-sym@0.02",
+      "kind": "chroma floor, both directions",
+      "x": 0.02,
+      "right": 13662,
+      "wrong": 321,
+      "missed": 396,
+      "off": 61374,
+      "wrongCandidates": 1107,
+      "wrongBySource": "234/78/0/9/0",
+      "missedBySource": "30/6/0/0/360",
+      "holdout": {
+        "right": 108,
+        "wrong": 119,
+        "missed": 0
+      }
+    },
+    {
+      "id": "hue<=10°",
+      "kind": "hue angle (only when both chroma ≥ 0.01)",
+      "x": 10,
+      "right": 13498,
+      "wrong": 318,
+      "missed": 560,
+      "off": 61377,
+      "wrongCandidates": 1100,
+      "wrongBySource": "237/72/0/9/0",
+      "missedBySource": "32/10/0/0/518",
+      "holdout": {
+        "right": 108,
+        "wrong": 119,
+        "missed": 0
+      }
+    },
+    {
+      "id": "hue<=20°",
+      "kind": "hue angle (only when both chroma ≥ 0.01)",
+      "x": 20,
+      "right": 13789,
+      "wrong": 326,
+      "missed": 269,
+      "off": 61369,
+      "wrongCandidates": 1120,
+      "wrongBySource": "237/80/0/9/0",
+      "missedBySource": "28/6/0/0/235",
+      "holdout": {
+        "right": 108,
+        "wrong": 119,
+        "missed": 0
+      }
+    },
+    {
+      "id": "hue<=30°",
+      "kind": "hue angle (only when both chroma ≥ 0.01)",
+      "x": 30,
+      "right": 13962,
+      "wrong": 326,
+      "missed": 96,
+      "off": 61369,
+      "wrongCandidates": 1120,
+      "wrongBySource": "237/80/0/9/0",
+      "missedBySource": "10/6/0/0/80",
+      "holdout": {
+        "right": 108,
+        "wrong": 119,
+        "missed": 0
+      }
+    },
+    {
+      "id": "hue<=45°",
+      "kind": "hue angle (only when both chroma ≥ 0.01)",
+      "x": 45,
+      "right": 14046,
+      "wrong": 326,
+      "missed": 12,
+      "off": 61369,
+      "wrongCandidates": 1120,
+      "wrongBySource": "237/80/0/9/0",
+      "missedBySource": "4/0/0/0/8",
+      "holdout": {
+        "right": 108,
+        "wrong": 122,
+        "missed": 0
+      }
+    },
+    {
+      "id": "chroma-sym@0.006+hue<=30°",
+      "kind": "chroma floor both directions + hue angle",
+      "x": 0.006,
+      "right": 9184,
+      "wrong": 17,
+      "missed": 4874,
+      "off": 61678,
+      "wrongCandidates": 49,
+      "wrongBySource": "6/10/0/1/0",
+      "missedBySource": "343/214/31/4/4282",
+      "holdout": {
+        "right": 60,
+        "wrong": 1,
+        "missed": 48
+      }
+    },
+    {
+      "id": "chroma-sym@0.008+hue<=30°",
+      "kind": "chroma floor both directions + hue angle",
+      "x": 0.008,
+      "right": 10837,
+      "wrong": 11,
+      "missed": 3221,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "245/196/25/0/2755",
+      "holdout": {
+        "right": 60,
+        "wrong": 0,
+        "missed": 48
+      }
+    },
+    {
+      "id": "chroma-sym@0.01+hue<=30°",
+      "kind": "chroma floor both directions + hue angle",
+      "x": 0.01,
+      "right": 11603,
+      "wrong": 11,
+      "missed": 2455,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "201/134/25/0/2095",
+      "holdout": {
+        "right": 85,
+        "wrong": 0,
+        "missed": 23
+      }
+    },
+    {
+      "id": "chroma-sym@0.012+hue<=30°",
+      "kind": "chroma floor both directions + hue angle",
+      "x": 0.012,
+      "right": 12399,
+      "wrong": 11,
+      "missed": 1659,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "145/92/15/0/1407",
+      "holdout": {
+        "right": 87,
+        "wrong": 0,
+        "missed": 21
+      }
+    },
+    {
+      "id": "chroma-asym@0.008+hue<=20°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.008,
+      "right": 11471,
+      "wrong": 11,
+      "missed": 2587,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "205/167/0/0/2215",
+      "holdout": {
+        "right": 62,
+        "wrong": 0,
+        "missed": 46
+      }
+    },
+    {
+      "id": "chroma-asym@0.008+hue<=30°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.008,
+      "right": 11662,
+      "wrong": 11,
+      "missed": 2396,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "187/167/0/0/2042",
+      "holdout": {
+        "right": 62,
+        "wrong": 0,
+        "missed": 46
+      }
+    },
+    {
+      "id": "chroma-asym@0.008+hue<=45°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.008,
+      "right": 11770,
+      "wrong": 11,
+      "missed": 2288,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "181/161/0/0/1946",
+      "holdout": {
+        "right": 62,
+        "wrong": 3,
+        "missed": 46
+      }
+    },
+    {
+      "id": "chroma-asym@0.01+hue<=20°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.01,
+      "right": 12370,
+      "wrong": 11,
+      "missed": 1688,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "161/103/0/0/1424",
+      "holdout": {
+        "right": 87,
+        "wrong": 0,
+        "missed": 21
+      }
+    },
+    {
+      "id": "chroma-asym@0.01+hue<=30°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.01,
+      "right": 12543,
+      "wrong": 11,
+      "missed": 1515,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "143/103/0/0/1269",
+      "holdout": {
+        "right": 87,
+        "wrong": 0,
+        "missed": 21
+      }
+    },
+    {
+      "id": "chroma-asym@0.01+hue<=45°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.01,
+      "right": 12627,
+      "wrong": 11,
+      "missed": 1431,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "137/97/0/0/1197",
+      "holdout": {
+        "right": 87,
+        "wrong": 3,
+        "missed": 21
+      }
+    },
+    {
+      "id": "chroma-asym@0.012+hue<=20°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.012,
+      "right": 12925,
+      "wrong": 11,
+      "missed": 1133,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "119/65/0/0/949",
+      "holdout": {
+        "right": 87,
+        "wrong": 0,
+        "missed": 21
+      }
+    },
+    {
+      "id": "chroma-asym@0.012+hue<=30°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.012,
+      "right": 13066,
+      "wrong": 11,
+      "missed": 992,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "103/65/0/0/824",
+      "holdout": {
+        "right": 87,
+        "wrong": 0,
+        "missed": 21
+      }
+    },
+    {
+      "id": "chroma-asym@0.012+hue<=45°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.012,
+      "right": 13126,
+      "wrong": 11,
+      "missed": 932,
+      "off": 61684,
+      "wrongCandidates": 25,
+      "wrongBySource": "3/8/0/0/0",
+      "missedBySource": "101/61/0/0/770",
+      "holdout": {
+        "right": 87,
+        "wrong": 3,
+        "missed": 21
+      }
+    },
+    {
+      "id": "dE<=0.01",
+      "kind": "ΔE radius",
+      "x": 0.01,
+      "right": 7201,
+      "wrong": 3,
+      "missed": 6857
+    },
+    {
+      "id": "dE<=0.012",
+      "kind": "ΔE radius",
+      "x": 0.012,
+      "right": 9059,
+      "wrong": 7,
+      "missed": 4999
+    },
+    {
+      "id": "dE<=0.014",
+      "kind": "ΔE radius",
+      "x": 0.014,
+      "right": 10416,
+      "wrong": 38,
+      "missed": 3642
+    },
+    {
+      "id": "dE<=0.015",
+      "kind": "ΔE radius",
+      "x": 0.015,
+      "right": 11091,
+      "wrong": 83,
+      "missed": 2967
+    },
+    {
+      "id": "dE<=0.016",
+      "kind": "ΔE radius",
+      "x": 0.016,
+      "right": 11849,
+      "wrong": 154,
+      "missed": 2209
+    },
+    {
+      "id": "dE<=0.018",
+      "kind": "ΔE radius",
+      "x": 0.018,
+      "right": 13084,
+      "wrong": 226,
+      "missed": 974
+    }
+  ]
+}

@@ -1,0 +1,862 @@
+labels A; 1921 raw values (286 tailwind, 244 carbon-primitive, 59 shadcn-theme, 23 sample, 1276 noise, 33 css-named)
+targets: carbon:white 76, carbon:g10 76, carbon:g90 73, carbon:g100 73, shadcn:light 31, shadcn:dark 28, shadcn-zinc:light 31, shadcn-zinc:dark 28, shadcn-stone:light 31, shadcn-stone:dark 28, shadcn-gray:light 31, shadcn-gray:dark 28, shadcn-slate:light 31, shadcn-slate:dark 28 (Carbon translucent token-modes skipped: 118)
+77104 distinct (raw, role, mode) decisions past the exact tier; 14614 have a candidate within ΔE 0.02
+
+selection set (75753 decisions, 14384 with a near candidate):
+guard                          right  WRONG  missed    off  wrong-offered   wrong | missed by source (tailwind/carbon-primitive/shadcn-theme/sample/noise)
+none                           14058    326       0  61369          1120   237/80/0/9/0 | 0/0/0/0/0
+dab<=0.004                      5013      0    9045  61695             0   0/0/0/0/0 | 588/382/49/17/8009
+dab<=0.006                      8087      1    5971  61694             4   1/0/0/0/0 | 420/233/31/8/5279
+dab<=0.008                     10062      2    3996  61693             8   2/0/0/0/0 | 316/185/25/6/3464
+dab<=0.01                      11260      6    2798  61689            27   4/1/0/1/0 | 246/137/25/2/2388
+dab<=0.012                     12261     17    1797  61678            71   11/5/0/1/0 | 164/85/15/0/1533
+dab<=0.014                     12953     84    1105  61611           325   72/10/0/2/0 | 113/40/8/0/944
+dab<=0.016                     13533    203     525  61492           718   157/38/0/8/0 | 56/13/2/0/454
+dab<=0.018                     13911    267     147  61428           932   205/53/0/9/0 | 13/0/0/0/134
+dC<=0.004                       7031      4    7027  61691            10   0/4/0/0/0 | 456/324/49/15/6183
+dC<=0.006                       9652      9    4406  61686            24   1/8/0/0/0 | 317/187/31/6/3865
+dC<=0.008                      11234     13    2824  61682            40   5/8/0/0/0 | 215/154/25/4/2426
+dC<=0.01                       12100     20    1958  61675            71   10/9/0/1/0 | 175/103/25/0/1655
+dC<=0.012                      12914     48    1144  61647           203   37/10/0/1/0 | 115/67/15/0/947
+dC<=0.014                      13430    112     628  61583           451   96/14/0/2/0 | 75/25/8/0/520
+chroma-asym@0.004               9109     24    4949  61671            77   12/11/0/1/0 | 294/249/0/6/4400
+chroma-sym@0.004                8060     24    5998  61671            77   12/11/0/1/0 | 355/299/49/11/5284
+chroma-asym@0.006              10455     24    3603  61671            77   12/11/0/1/0 | 250/165/0/0/3188
+chroma-sym@0.006                9590     24    4468  61671            77   12/11/0/1/0 | 314/200/31/4/3919
+chroma-asym@0.008              11808     11    2250  61684            25   3/8/0/0/0 | 177/159/0/0/1914
+chroma-sym@0.008               10983     11    3075  61684            25   3/8/0/0/0 | 235/188/25/0/2627
+chroma-asym@0.009              12380     11    1678  61684            25   3/8/0/0/0 | 133/110/0/0/1435
+chroma-sym@0.009               11485     11    2573  61684            25   3/8/0/0/0 | 191/141/25/0/2216
+chroma-asym@0.01               12639     11    1419  61684            25   3/8/0/0/0 | 133/97/0/0/1189
+chroma-sym@0.01                11699     11    2359  61684            25   3/8/0/0/0 | 191/128/25/0/2015
+chroma-asym@0.011              12901     11    1157  61684            25   3/8/0/0/0 | 109/84/0/0/964
+chroma-sym@0.011               12219     11    1839  61684            25   3/8/0/0/0 | 153/107/17/0/1562
+chroma-asym@0.012              13126     11     932  61684            25   3/8/0/0/0 | 101/61/0/0/770
+chroma-sym@0.012               12459     11    1599  61684            25   3/8/0/0/0 | 143/88/15/0/1353
+chroma-asym@0.0125             13216     36     842  61659           122   28/8/0/0/0 | 91/42/0/0/709
+chroma-sym@0.0125              12538     36    1520  61659           122   28/8/0/0/0 | 133/72/15/0/1300
+chroma-asym@0.013              13359     56     699  61639           203   48/8/0/0/0 | 75/31/0/0/593
+chroma-sym@0.013               12943     56    1115  61639           203   48/8/0/0/0 | 93/55/12/0/955
+chroma-asym@0.015              13539    138     519  61557           513   130/8/0/0/0 | 54/11/0/0/454
+chroma-sym@0.015               13263    138     795  61557           513   130/8/0/0/0 | 68/35/6/0/686
+chroma-asym@0.02               13866    321     192  61374          1107   234/78/0/9/0 | 16/0/0/0/176
+chroma-sym@0.02                13662    321     396  61374          1107   234/78/0/9/0 | 30/6/0/0/360
+hue<=10°                       13498    318     560  61377          1100   237/72/0/9/0 | 32/10/0/0/518
+hue<=20°                       13789    326     269  61369          1120   237/80/0/9/0 | 28/6/0/0/235
+hue<=30°                       13962    326      96  61369          1120   237/80/0/9/0 | 10/6/0/0/80
+hue<=45°                       14046    326      12  61369          1120   237/80/0/9/0 | 4/0/0/0/8
+chroma-sym@0.006+hue<=30°       9184     17    4874  61678            49   6/10/0/1/0 | 343/214/31/4/4282
+chroma-sym@0.008+hue<=30°      10837     11    3221  61684            25   3/8/0/0/0 | 245/196/25/0/2755
+chroma-sym@0.01+hue<=30°       11603     11    2455  61684            25   3/8/0/0/0 | 201/134/25/0/2095
+chroma-sym@0.012+hue<=30°      12399     11    1659  61684            25   3/8/0/0/0 | 145/92/15/0/1407
+chroma-asym@0.008+hue<=20°     11471     11    2587  61684            25   3/8/0/0/0 | 205/167/0/0/2215
+chroma-asym@0.008+hue<=30°     11662     11    2396  61684            25   3/8/0/0/0 | 187/167/0/0/2042
+chroma-asym@0.008+hue<=45°     11770     11    2288  61684            25   3/8/0/0/0 | 181/161/0/0/1946
+chroma-asym@0.01+hue<=20°      12370     11    1688  61684            25   3/8/0/0/0 | 161/103/0/0/1424
+chroma-asym@0.01+hue<=30°      12543     11    1515  61684            25   3/8/0/0/0 | 143/103/0/0/1269
+chroma-asym@0.01+hue<=45°      12627     11    1431  61684            25   3/8/0/0/0 | 137/97/0/0/1197
+chroma-asym@0.012+hue<=20°     12925     11    1133  61684            25   3/8/0/0/0 | 119/65/0/0/949
+chroma-asym@0.012+hue<=30°     13066     11     992  61684            25   3/8/0/0/0 | 103/65/0/0/824
+chroma-asym@0.012+hue<=45°     13126     11     932  61684            25   3/8/0/0/0 | 101/61/0/0/770
+
+tighter ΔE radius, no guard (missed = right at 0.02, gone at this radius):
+ΔE<=0.01                       right 7201 WRONG 3 missed 6857
+ΔE<=0.012                      right 9059 WRONG 7 missed 4999
+ΔE<=0.014                      right 10416 WRONG 38 missed 3642
+ΔE<=0.015                      right 11091 WRONG 83 missed 2967
+ΔE<=0.016                      right 11849 WRONG 154 missed 2209
+ΔE<=0.018                      right 13084 WRONG 226 missed 974
+
+hold-out: CSS named colours (1351 decisions, 230 with a near candidate):
+none                           right 108 WRONG 122 missed 0
+dab<=0.01                      right 82 WRONG 3 missed 26
+dab<=0.012                     right 87 WRONG 10 missed 21
+chroma-asym@0.004              right 42 WRONG 4 missed 66
+chroma-sym@0.004               right 36 WRONG 4 missed 72
+chroma-asym@0.006              right 63 WRONG 4 missed 45
+chroma-sym@0.006               right 61 WRONG 4 missed 47
+chroma-asym@0.008              right 62 WRONG 3 missed 46
+chroma-sym@0.008               right 60 WRONG 3 missed 48
+chroma-asym@0.009              right 62 WRONG 3 missed 46
+chroma-sym@0.009               right 60 WRONG 3 missed 48
+chroma-asym@0.01               right 87 WRONG 3 missed 21
+chroma-sym@0.01                right 85 WRONG 3 missed 23
+chroma-asym@0.011              right 87 WRONG 3 missed 21
+chroma-sym@0.011               right 87 WRONG 3 missed 21
+chroma-asym@0.012              right 87 WRONG 3 missed 21
+chroma-sym@0.012               right 87 WRONG 3 missed 21
+chroma-asym@0.0125             right 87 WRONG 24 missed 21
+chroma-sym@0.0125              right 87 WRONG 24 missed 21
+chroma-asym@0.013              right 87 WRONG 46 missed 21
+chroma-sym@0.013               right 87 WRONG 46 missed 21
+chroma-asym@0.015              right 108 WRONG 71 missed 0
+chroma-sym@0.015               right 108 WRONG 71 missed 0
+chroma-asym@0.02               right 108 WRONG 119 missed 0
+chroma-sym@0.02                right 108 WRONG 119 missed 0
+chroma-sym@0.006+hue<=30°      right 60 WRONG 1 missed 48
+chroma-sym@0.008+hue<=30°      right 60 WRONG 0 missed 48
+chroma-sym@0.01+hue<=30°       right 85 WRONG 0 missed 23
+chroma-sym@0.012+hue<=30°      right 87 WRONG 0 missed 21
+chroma-asym@0.008+hue<=20°     right 62 WRONG 0 missed 46
+chroma-asym@0.008+hue<=30°     right 62 WRONG 0 missed 46
+chroma-asym@0.008+hue<=45°     right 62 WRONG 3 missed 46
+chroma-asym@0.01+hue<=20°      right 87 WRONG 0 missed 21
+chroma-asym@0.01+hue<=30°      right 87 WRONG 0 missed 21
+chroma-asym@0.01+hue<=45°      right 87 WRONG 3 missed 21
+chroma-asym@0.012+hue<=20°     right 87 WRONG 0 missed 21
+chroma-asym@0.012+hue<=30°     right 87 WRONG 0 missed 21
+chroma-asym@0.012+hue<=45°     right 87 WRONG 3 missed 21
+
+by Design System (selection set), right/WRONG/missed:
+guard                                    carbon          shadcn     shadcn-zinc    shadcn-stone     shadcn-gray    shadcn-slate
+none                                 4908/134/0       2056/37/0       2038/36/0       1909/34/0       1702/43/0       1445/42/0
+dab<=0.01                            4329/0/579      1613/0/443      1515/0/523      1443/0/466      1293/0/409      1067/6/378
+dab<=0.012                           4564/0/344      1777/0/279      1671/1/367      1647/0/262      1428/8/274      1174/8/271
+dC<=0.012                            4564/0/344      1777/0/279      1860/2/178       1868/6/41     1550/13/152     1295/27/150
+chroma-asym@0.008                    4002/0/906      1430/0/626      1724/0/314      1630/0/279      1599/4/103       1423/7/22
+chroma-sym@0.008                     4002/0/906      1430/0/626      1520/0/518      1390/0/519      1481/4/221      1160/7/285
+chroma-asym@0.01                     4329/0/579      1614/0/442      1859/0/179      1760/0/149       1637/4/65        1440/7/5
+chroma-sym@0.01                      4329/0/579      1614/0/442      1633/0/405      1488/0/421      1487/4/215      1148/7/297
+chroma-asym@0.012                    4564/0/344      1777/0/279      1913/0/125      1807/0/102       1620/4/82        1445/7/0
+chroma-sym@0.012                     4564/0/344      1777/0/279      1727/0/311      1679/0/230      1598/4/104      1114/7/331
+chroma-sym@0.008+hue<=30°            4002/0/906      1430/0/626      1474/0/564      1358/0/551      1439/4/263      1134/7/311
+chroma-sym@0.01+hue<=30°             4329/0/579      1614/0/442      1595/0/443      1470/0/439      1459/4/243      1136/7/309
+chroma-sym@0.012+hue<=30°            4564/0/344      1777/0/279      1697/0/341      1675/0/234      1574/4/128      1112/7/333
+chroma-asym@0.008+hue<=30°           4002/0/906      1430/0/626      1678/0/360      1598/0/311      1557/4/145       1397/7/48
+chroma-asym@0.01+hue<=30°            4329/0/579      1614/0/442      1821/0/217      1742/0/167       1609/4/93       1428/7/17
+chroma-asym@0.012+hue<=30°           4564/0/344      1777/0/279      1883/0/155      1803/0/106      1596/4/106        1443/7/2
+
+== none: wrong near picks (448) ==
+tailwind         red-50                                       #fef2f2 [red] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0134 Δab 0.0129 C 0.0129/0.0000
+tailwind         red-50                                       #fef2f2 [red] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0134 Δab 0.0129 C 0.0129/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0160 Δab 0.0125 C 0.0125/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0160 Δab 0.0125 C 0.0125/0.0000
+tailwind         blue-50                                      #eff6ff [blue] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0146 Δab 0.0142 C 0.0142/0.0000
+tailwind         blue-50                                      #eff6ff [blue] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0146 Δab 0.0142 C 0.0142/0.0000
+tailwind         indigo-50                                    #eef2ff [indigo] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0187 Δab 0.0179 C 0.0179/0.0000
+tailwind         indigo-50                                    #eef2ff [indigo] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0187 Δab 0.0179 C 0.0179/0.0000
+tailwind         violet-50                                    #f5f3ff [violet] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0162 Δab 0.0161 C 0.0161/0.0000
+tailwind         violet-50                                    #f5f3ff [violet] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0162 Δab 0.0161 C 0.0161/0.0000
+tailwind         purple-50                                    #faf5ff [purple] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0172 Δab 0.0142 C 0.0142/0.0000
+tailwind         purple-50                                    #faf5ff [purple] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0172 Δab 0.0142 C 0.0142/0.0000
+tailwind         pink-50                                      #fdf2f8 [pink] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0148 Δab 0.0141 C 0.0141/0.0000
+tailwind         pink-50                                      #fdf2f8 [pink] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0148 Δab 0.0141 C 0.0141/0.0000
+tailwind         rose-50                                      #fff1f2 [rose] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000
+tailwind         rose-50                                      #fff1f2 [rose] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000
+css-named        aliceblue                                    #f0f8ff [blue] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0150 Δab 0.0127 C 0.0127/0.0000
+css-named        aliceblue                                    #f0f8ff [blue] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0150 Δab 0.0127 C 0.0127/0.0000
+css-named        azure                                        #f0ffff [cyan] background-color carbon:white -> background #ffffff [white] ΔE 0.0192 Δab 0.0157 C 0.0157/0.0000
+css-named        azure                                        #f0ffff [cyan] color            carbon:white -> icon-inverse #ffffff [white] ΔE 0.0192 Δab 0.0157 C 0.0157/0.0000
+css-named        mintcream                                    #f5fffa [emerald] background-color carbon:white -> background #ffffff [white] ΔE 0.0152 Δab 0.0124 C 0.0124/0.0000
+css-named        mintcream                                    #f5fffa [emerald] color            carbon:white -> icon-inverse #ffffff [white] ΔE 0.0152 Δab 0.0124 C 0.0124/0.0000
+css-named        lavenderblush                                #fff0f5 [pink] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000
+css-named        lavenderblush                                #fff0f5 [pink] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000
+css-named        seashell                                     #fff5ee [orange] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0168 Δab 0.0143 C 0.0143/0.0000
+css-named        seashell                                     #fff5ee [orange] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0168 Δab 0.0143 C 0.0143/0.0000
+css-named        linen                                        #faf0e6 [orange] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0185 Δab 0.0171 C 0.0171/0.0000
+css-named        linen                                        #faf0e6 [orange] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0185 Δab 0.0171 C 0.0171/0.0000
+carbon-primitive orange.10                                    #fff2e8 [orange] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0194 Δab 0.0194 C 0.0194/0.0000
+carbon-primitive orange.10                                    #fff2e8 [orange] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0194 Δab 0.0194 C 0.0194/0.0000
+carbon-primitive red.10                                       #fff1f1 [red] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0153 Δab 0.0151 C 0.0151/0.0000
+carbon-primitive red.10                                       #fff1f1 [red] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0153 Δab 0.0151 C 0.0151/0.0000
+carbon-primitive magenta.10                                   #fff0f7 [magenta] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0186 Δab 0.0185 C 0.0185/0.0000
+carbon-primitive magenta.10                                   #fff0f7 [magenta] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0186 Δab 0.0185 C 0.0185/0.0000
+carbon-primitive purple.10                                    #f6f2ff [purple] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0177 Δab 0.0177 C 0.0177/0.0000
+carbon-primitive purple.10                                    #f6f2ff [purple] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0177 Δab 0.0177 C 0.0177/0.0000
+carbon-primitive blue.10                                      #edf5ff [blue] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0159 Δab 0.0159 C 0.0159/0.0000
+carbon-primitive blue.10                                      #edf5ff [blue] color            carbon:white -> link-inverse-active #f4f4f4 [gray] ΔE 0.0159 Δab 0.0159 C 0.0159/0.0000
+sample           #edf5ff (#63 index.html:18)                  #edf5ff [blue] background-color carbon:white -> field-01 #f4f4f4 [gray] ΔE 0.0159 Δab 0.0159 C 0.0159/0.0000
+tailwind         red-50                                       #fef2f2 [red] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0134 Δab 0.0129 C 0.0129/0.0000
+tailwind         red-50                                       #fef2f2 [red] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0134 Δab 0.0129 C 0.0129/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0160 Δab 0.0125 C 0.0125/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0160 Δab 0.0125 C 0.0125/0.0000
+tailwind         blue-50                                      #eff6ff [blue] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0146 Δab 0.0142 C 0.0142/0.0000
+tailwind         blue-50                                      #eff6ff [blue] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0146 Δab 0.0142 C 0.0142/0.0000
+tailwind         indigo-50                                    #eef2ff [indigo] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0187 Δab 0.0179 C 0.0179/0.0000
+tailwind         indigo-50                                    #eef2ff [indigo] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0187 Δab 0.0179 C 0.0179/0.0000
+tailwind         violet-50                                    #f5f3ff [violet] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0162 Δab 0.0161 C 0.0161/0.0000
+tailwind         violet-50                                    #f5f3ff [violet] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0162 Δab 0.0161 C 0.0161/0.0000
+tailwind         purple-50                                    #faf5ff [purple] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0172 Δab 0.0142 C 0.0142/0.0000
+tailwind         purple-50                                    #faf5ff [purple] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0172 Δab 0.0142 C 0.0142/0.0000
+tailwind         pink-50                                      #fdf2f8 [pink] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0148 Δab 0.0141 C 0.0141/0.0000
+tailwind         pink-50                                      #fdf2f8 [pink] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0148 Δab 0.0141 C 0.0141/0.0000
+tailwind         rose-50                                      #fff1f2 [rose] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000
+tailwind         rose-50                                      #fff1f2 [rose] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000
+css-named        aliceblue                                    #f0f8ff [blue] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0150 Δab 0.0127 C 0.0127/0.0000
+css-named        aliceblue                                    #f0f8ff [blue] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0150 Δab 0.0127 C 0.0127/0.0000
+css-named        azure                                        #f0ffff [cyan] background-color carbon:g10   -> field-01 #ffffff [white] ΔE 0.0192 Δab 0.0157 C 0.0157/0.0000
+css-named        azure                                        #f0ffff [cyan] color            carbon:g10   -> icon-inverse #ffffff [white] ΔE 0.0192 Δab 0.0157 C 0.0157/0.0000
+css-named        mintcream                                    #f5fffa [emerald] background-color carbon:g10   -> field-01 #ffffff [white] ΔE 0.0152 Δab 0.0124 C 0.0124/0.0000
+css-named        mintcream                                    #f5fffa [emerald] color            carbon:g10   -> icon-inverse #ffffff [white] ΔE 0.0152 Δab 0.0124 C 0.0124/0.0000
+css-named        lavenderblush                                #fff0f5 [pink] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000
+css-named        lavenderblush                                #fff0f5 [pink] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000
+css-named        seashell                                     #fff5ee [orange] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0168 Δab 0.0143 C 0.0143/0.0000
+css-named        seashell                                     #fff5ee [orange] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0168 Δab 0.0143 C 0.0143/0.0000
+css-named        linen                                        #faf0e6 [orange] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0185 Δab 0.0171 C 0.0171/0.0000
+css-named        linen                                        #faf0e6 [orange] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0185 Δab 0.0171 C 0.0171/0.0000
+carbon-primitive orange.10                                    #fff2e8 [orange] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0194 Δab 0.0194 C 0.0194/0.0000
+carbon-primitive orange.10                                    #fff2e8 [orange] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0194 Δab 0.0194 C 0.0194/0.0000
+carbon-primitive red.10                                       #fff1f1 [red] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0153 Δab 0.0151 C 0.0151/0.0000
+carbon-primitive red.10                                       #fff1f1 [red] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0153 Δab 0.0151 C 0.0151/0.0000
+carbon-primitive magenta.10                                   #fff0f7 [magenta] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0186 Δab 0.0185 C 0.0185/0.0000
+carbon-primitive magenta.10                                   #fff0f7 [magenta] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0186 Δab 0.0185 C 0.0185/0.0000
+carbon-primitive purple.10                                    #f6f2ff [purple] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0177 Δab 0.0177 C 0.0177/0.0000
+carbon-primitive purple.10                                    #f6f2ff [purple] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0177 Δab 0.0177 C 0.0177/0.0000
+carbon-primitive blue.10                                      #edf5ff [blue] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0159 Δab 0.0159 C 0.0159/0.0000
+carbon-primitive blue.10                                      #edf5ff [blue] color            carbon:g10   -> link-inverse-active #f4f4f4 [gray] ΔE 0.0159 Δab 0.0159 C 0.0159/0.0000
+sample           #edf5ff (#63 index.html:18)                  #edf5ff [blue] background-color carbon:g10   -> background #f4f4f4 [gray] ΔE 0.0159 Δab 0.0159 C 0.0159/0.0000
+tailwind         red-50                                       #fef2f2 [red] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0134 Δab 0.0129 C 0.0129/0.0000
+tailwind         red-50                                       #fef2f2 [red] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0134 Δab 0.0129 C 0.0129/0.0000
+tailwind         red-50                                       #fef2f2 [red] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0134 Δab 0.0129 C 0.0129/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0160 Δab 0.0125 C 0.0125/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0160 Δab 0.0125 C 0.0125/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0160 Δab 0.0125 C 0.0125/0.0000
+tailwind         blue-50                                      #eff6ff [blue] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0146 Δab 0.0142 C 0.0142/0.0000
+tailwind         blue-50                                      #eff6ff [blue] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0146 Δab 0.0142 C 0.0142/0.0000
+tailwind         blue-50                                      #eff6ff [blue] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0146 Δab 0.0142 C 0.0142/0.0000
+tailwind         indigo-50                                    #eef2ff [indigo] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0187 Δab 0.0179 C 0.0179/0.0000
+tailwind         indigo-50                                    #eef2ff [indigo] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0187 Δab 0.0179 C 0.0179/0.0000
+tailwind         indigo-50                                    #eef2ff [indigo] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0187 Δab 0.0179 C 0.0179/0.0000
+tailwind         violet-50                                    #f5f3ff [violet] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0162 Δab 0.0161 C 0.0161/0.0000
+tailwind         violet-50                                    #f5f3ff [violet] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0162 Δab 0.0161 C 0.0161/0.0000
+tailwind         violet-50                                    #f5f3ff [violet] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0162 Δab 0.0161 C 0.0161/0.0000
+tailwind         purple-50                                    #faf5ff [purple] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0172 Δab 0.0142 C 0.0142/0.0000
+tailwind         purple-50                                    #faf5ff [purple] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0172 Δab 0.0142 C 0.0142/0.0000
+tailwind         purple-50                                    #faf5ff [purple] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0172 Δab 0.0142 C 0.0142/0.0000
+tailwind         pink-50                                      #fdf2f8 [pink] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0148 Δab 0.0141 C 0.0141/0.0000
+tailwind         pink-50                                      #fdf2f8 [pink] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0148 Δab 0.0141 C 0.0141/0.0000
+tailwind         pink-50                                      #fdf2f8 [pink] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0148 Δab 0.0141 C 0.0141/0.0000
+tailwind         rose-50                                      #fff1f2 [rose] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000
+tailwind         rose-50                                      #fff1f2 [rose] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000
+tailwind         rose-50                                      #fff1f2 [rose] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000
+css-named        aliceblue                                    #f0f8ff [blue] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0150 Δab 0.0127 C 0.0127/0.0000
+css-named        aliceblue                                    #f0f8ff [blue] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0150 Δab 0.0127 C 0.0127/0.0000
+css-named        aliceblue                                    #f0f8ff [blue] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0150 Δab 0.0127 C 0.0127/0.0000
+css-named        azure                                        #f0ffff [cyan] color            carbon:g90   -> icon-interactive #ffffff [white] ΔE 0.0192 Δab 0.0157 C 0.0157/0.0000
+css-named        mintcream                                    #f5fffa [emerald] color            carbon:g90   -> icon-interactive #ffffff [white] ΔE 0.0152 Δab 0.0124 C 0.0124/0.0000
+css-named        lavenderblush                                #fff0f5 [pink] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000
+css-named        lavenderblush                                #fff0f5 [pink] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000
+css-named        lavenderblush                                #fff0f5 [pink] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000
+css-named        seashell                                     #fff5ee [orange] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0168 Δab 0.0143 C 0.0143/0.0000
+css-named        seashell                                     #fff5ee [orange] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0168 Δab 0.0143 C 0.0143/0.0000
+css-named        seashell                                     #fff5ee [orange] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0168 Δab 0.0143 C 0.0143/0.0000
+css-named        linen                                        #faf0e6 [orange] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0185 Δab 0.0171 C 0.0171/0.0000
+css-named        linen                                        #faf0e6 [orange] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0185 Δab 0.0171 C 0.0171/0.0000
+css-named        linen                                        #faf0e6 [orange] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0185 Δab 0.0171 C 0.0171/0.0000
+carbon-primitive orange.10                                    #fff2e8 [orange] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0194 Δab 0.0194 C 0.0194/0.0000
+carbon-primitive orange.10                                    #fff2e8 [orange] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0194 Δab 0.0194 C 0.0194/0.0000
+carbon-primitive orange.10                                    #fff2e8 [orange] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0194 Δab 0.0194 C 0.0194/0.0000
+carbon-primitive red.10                                       #fff1f1 [red] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0153 Δab 0.0151 C 0.0151/0.0000
+carbon-primitive red.10                                       #fff1f1 [red] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0153 Δab 0.0151 C 0.0151/0.0000
+carbon-primitive red.10                                       #fff1f1 [red] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0153 Δab 0.0151 C 0.0151/0.0000
+carbon-primitive magenta.10                                   #fff0f7 [magenta] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0186 Δab 0.0185 C 0.0185/0.0000
+carbon-primitive magenta.10                                   #fff0f7 [magenta] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0186 Δab 0.0185 C 0.0185/0.0000
+carbon-primitive magenta.10                                   #fff0f7 [magenta] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0186 Δab 0.0185 C 0.0185/0.0000
+carbon-primitive purple.10                                    #f6f2ff [purple] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0177 Δab 0.0177 C 0.0177/0.0000
+carbon-primitive purple.10                                    #f6f2ff [purple] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0177 Δab 0.0177 C 0.0177/0.0000
+carbon-primitive purple.10                                    #f6f2ff [purple] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0177 Δab 0.0177 C 0.0177/0.0000
+carbon-primitive blue.10                                      #edf5ff [blue] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0159 Δab 0.0159 C 0.0159/0.0000
+carbon-primitive blue.10                                      #edf5ff [blue] color            carbon:g90   -> icon-primary #f4f4f4 [gray] ΔE 0.0159 Δab 0.0159 C 0.0159/0.0000
+carbon-primitive blue.10                                      #edf5ff [blue] border-color     carbon:g90   -> border-inverse #f4f4f4 [gray] ΔE 0.0159 Δab 0.0159 C 0.0159/0.0000
+sample           #edf5ff (#63 index.html:18)                  #edf5ff [blue] background-color carbon:g90   -> background-inverse #f4f4f4 [gray] ΔE 0.0159 Δab 0.0159 C 0.0159/0.0000
+tailwind         red-50                                       #fef2f2 [red] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0134 Δab 0.0129 C 0.0129/0.0000
+tailwind         red-50                                       #fef2f2 [red] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0134 Δab 0.0129 C 0.0129/0.0000
+tailwind         red-50                                       #fef2f2 [red] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0134 Δab 0.0129 C 0.0129/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0160 Δab 0.0125 C 0.0125/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0160 Δab 0.0125 C 0.0125/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0160 Δab 0.0125 C 0.0125/0.0000
+tailwind         blue-50                                      #eff6ff [blue] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0146 Δab 0.0142 C 0.0142/0.0000
+tailwind         blue-50                                      #eff6ff [blue] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0146 Δab 0.0142 C 0.0142/0.0000
+tailwind         blue-50                                      #eff6ff [blue] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0146 Δab 0.0142 C 0.0142/0.0000
+tailwind         indigo-50                                    #eef2ff [indigo] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0187 Δab 0.0179 C 0.0179/0.0000
+tailwind         indigo-50                                    #eef2ff [indigo] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0187 Δab 0.0179 C 0.0179/0.0000
+tailwind         indigo-50                                    #eef2ff [indigo] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0187 Δab 0.0179 C 0.0179/0.0000
+tailwind         violet-50                                    #f5f3ff [violet] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0162 Δab 0.0161 C 0.0161/0.0000
+tailwind         violet-50                                    #f5f3ff [violet] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0162 Δab 0.0161 C 0.0161/0.0000
+tailwind         violet-50                                    #f5f3ff [violet] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0162 Δab 0.0161 C 0.0161/0.0000
+tailwind         purple-50                                    #faf5ff [purple] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0172 Δab 0.0142 C 0.0142/0.0000
+tailwind         purple-50                                    #faf5ff [purple] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0172 Δab 0.0142 C 0.0142/0.0000
+tailwind         purple-50                                    #faf5ff [purple] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0172 Δab 0.0142 C 0.0142/0.0000
+tailwind         pink-50                                      #fdf2f8 [pink] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0148 Δab 0.0141 C 0.0141/0.0000
+tailwind         pink-50                                      #fdf2f8 [pink] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0148 Δab 0.0141 C 0.0141/0.0000
+tailwind         pink-50                                      #fdf2f8 [pink] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0148 Δab 0.0141 C 0.0141/0.0000
+tailwind         rose-50                                      #fff1f2 [rose] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000
+tailwind         rose-50                                      #fff1f2 [rose] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000
+tailwind         rose-50                                      #fff1f2 [rose] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000
+css-named        aliceblue                                    #f0f8ff [blue] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0150 Δab 0.0127 C 0.0127/0.0000
+css-named        aliceblue                                    #f0f8ff [blue] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0150 Δab 0.0127 C 0.0127/0.0000
+css-named        aliceblue                                    #f0f8ff [blue] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0150 Δab 0.0127 C 0.0127/0.0000
+css-named        azure                                        #f0ffff [cyan] color            carbon:g100  -> icon-interactive #ffffff [white] ΔE 0.0192 Δab 0.0157 C 0.0157/0.0000
+css-named        mintcream                                    #f5fffa [emerald] color            carbon:g100  -> icon-interactive #ffffff [white] ΔE 0.0152 Δab 0.0124 C 0.0124/0.0000
+css-named        lavenderblush                                #fff0f5 [pink] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000
+css-named        lavenderblush                                #fff0f5 [pink] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000
+css-named        lavenderblush                                #fff0f5 [pink] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000
+css-named        seashell                                     #fff5ee [orange] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0168 Δab 0.0143 C 0.0143/0.0000
+css-named        seashell                                     #fff5ee [orange] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0168 Δab 0.0143 C 0.0143/0.0000
+css-named        seashell                                     #fff5ee [orange] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0168 Δab 0.0143 C 0.0143/0.0000
+css-named        linen                                        #faf0e6 [orange] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0185 Δab 0.0171 C 0.0171/0.0000
+css-named        linen                                        #faf0e6 [orange] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0185 Δab 0.0171 C 0.0171/0.0000
+css-named        linen                                        #faf0e6 [orange] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0185 Δab 0.0171 C 0.0171/0.0000
+carbon-primitive orange.10                                    #fff2e8 [orange] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0194 Δab 0.0194 C 0.0194/0.0000
+carbon-primitive orange.10                                    #fff2e8 [orange] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0194 Δab 0.0194 C 0.0194/0.0000
+carbon-primitive orange.10                                    #fff2e8 [orange] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0194 Δab 0.0194 C 0.0194/0.0000
+carbon-primitive red.10                                       #fff1f1 [red] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0153 Δab 0.0151 C 0.0151/0.0000
+carbon-primitive red.10                                       #fff1f1 [red] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0153 Δab 0.0151 C 0.0151/0.0000
+carbon-primitive red.10                                       #fff1f1 [red] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0153 Δab 0.0151 C 0.0151/0.0000
+carbon-primitive magenta.10                                   #fff0f7 [magenta] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0186 Δab 0.0185 C 0.0185/0.0000
+carbon-primitive magenta.10                                   #fff0f7 [magenta] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0186 Δab 0.0185 C 0.0185/0.0000
+carbon-primitive magenta.10                                   #fff0f7 [magenta] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0186 Δab 0.0185 C 0.0185/0.0000
+carbon-primitive purple.10                                    #f6f2ff [purple] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0177 Δab 0.0177 C 0.0177/0.0000
+carbon-primitive purple.10                                    #f6f2ff [purple] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0177 Δab 0.0177 C 0.0177/0.0000
+carbon-primitive purple.10                                    #f6f2ff [purple] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0177 Δab 0.0177 C 0.0177/0.0000
+carbon-primitive blue.10                                      #edf5ff [blue] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0159 Δab 0.0159 C 0.0159/0.0000
+carbon-primitive blue.10                                      #edf5ff [blue] color            carbon:g100  -> icon-primary #f4f4f4 [gray] ΔE 0.0159 Δab 0.0159 C 0.0159/0.0000
+carbon-primitive blue.10                                      #edf5ff [blue] border-color     carbon:g100  -> border-inverse #f4f4f4 [gray] ΔE 0.0159 Δab 0.0159 C 0.0159/0.0000
+sample           #edf5ff (#63 index.html:18)                  #edf5ff [blue] background-color carbon:g100  -> background-inverse #f4f4f4 [gray] ΔE 0.0159 Δab 0.0159 C 0.0159/0.0000
+tailwind         red-50                                       #fef2f2 [red] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0130 Δab 0.0129 C 0.0129/0.0000
+tailwind         red-50                                       #fef2f2 [red] color            shadcn:light -> primary-foreground #fafafa [neutral] ΔE 0.0195 Δab 0.0129 C 0.0129/0.0000
+tailwind         orange-50                                    #fff7ed [orange] background-color shadcn:light -> sidebar #fafafa [neutral] ΔE 0.0167 Δab 0.0158 C 0.0158/0.0000
+tailwind         orange-50                                    #fff7ed [orange] color            shadcn:light -> primary-foreground #fafafa [neutral] ΔE 0.0167 Δab 0.0158 C 0.0158/0.0000
+tailwind         green-50                                     #f0fdf4 [green] background-color shadcn:light -> sidebar #fafafa [neutral] ΔE 0.0183 Δab 0.0181 C 0.0181/0.0000
+tailwind         green-50                                     #f0fdf4 [green] color            shadcn:light -> primary-foreground #fafafa [neutral] ΔE 0.0183 Δab 0.0181 C 0.0181/0.0000
+tailwind         teal-50                                      #f0fdfa [teal] background-color shadcn:light -> sidebar #fafafa [neutral] ΔE 0.0143 Δab 0.0142 C 0.0142/0.0000
+tailwind         teal-50                                      #f0fdfa [teal] color            shadcn:light -> primary-foreground #fafafa [neutral] ΔE 0.0143 Δab 0.0142 C 0.0142/0.0000
+tailwind         cyan-50                                      #ecfeff [cyan] background-color shadcn:light -> sidebar #fafafa [neutral] ΔE 0.0189 Δab 0.0189 C 0.0189/0.0000
+tailwind         cyan-50                                      #ecfeff [cyan] color            shadcn:light -> primary-foreground #fafafa [neutral] ΔE 0.0189 Δab 0.0189 C 0.0189/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0143 Δab 0.0125 C 0.0125/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] color            shadcn:light -> primary-foreground #fafafa [neutral] ΔE 0.0148 Δab 0.0125 C 0.0125/0.0000
+tailwind         blue-50                                      #eff6ff [blue] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0142 Δab 0.0142 C 0.0142/0.0000
+tailwind         indigo-50                                    #eef2ff [indigo] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0197 Δab 0.0179 C 0.0179/0.0000
+tailwind         violet-50                                    #f5f3ff [violet] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0161 Δab 0.0161 C 0.0161/0.0000
+tailwind         purple-50                                    #faf5ff [purple] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0157 Δab 0.0142 C 0.0142/0.0000
+tailwind         purple-50                                    #faf5ff [purple] color            shadcn:light -> primary-foreground #fafafa [neutral] ΔE 0.0164 Δab 0.0142 C 0.0142/0.0000
+tailwind         fuchsia-50                                   #fdf4ff [fuchsia] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0187 Δab 0.0173 C 0.0173/0.0000
+tailwind         fuchsia-50                                   #fdf4ff [fuchsia] color            shadcn:light -> primary-foreground #fafafa [neutral] ΔE 0.0190 Δab 0.0173 C 0.0173/0.0000
+tailwind         pink-50                                      #fdf2f8 [pink] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0142 Δab 0.0141 C 0.0141/0.0000
+tailwind         pink-50                                      #fdf2f8 [pink] color            shadcn:light -> primary-foreground #fafafa [neutral] ΔE 0.0197 Δab 0.0141 C 0.0141/0.0000
+tailwind         rose-50                                      #fff1f2 [rose] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0152 Δab 0.0152 C 0.0152/0.0000
+css-named        aliceblue                                    #f0f8ff [blue] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0136 Δab 0.0127 C 0.0127/0.0000
+css-named        aliceblue                                    #f0f8ff [blue] color            shadcn:light -> primary-foreground #fafafa [neutral] ΔE 0.0161 Δab 0.0127 C 0.0127/0.0000
+css-named        azure                                        #f0ffff [cyan] background-color shadcn:light -> sidebar #fafafa [neutral] ΔE 0.0162 Δab 0.0157 C 0.0157/0.0000
+css-named        azure                                        #f0ffff [cyan] color            shadcn:light -> primary-foreground #fafafa [neutral] ΔE 0.0162 Δab 0.0157 C 0.0157/0.0000
+css-named        mintcream                                    #f5fffa [emerald] background-color shadcn:light -> sidebar #fafafa [neutral] ΔE 0.0138 Δab 0.0124 C 0.0124/0.0000
+css-named        mintcream                                    #f5fffa [emerald] color            shadcn:light -> primary-foreground #fafafa [neutral] ΔE 0.0138 Δab 0.0124 C 0.0124/0.0000
+css-named        lavenderblush                                #fff0f5 [pink] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0175 Δab 0.0174 C 0.0174/0.0000
+css-named        seashell                                     #fff5ee [orange] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0154 Δab 0.0143 C 0.0143/0.0000
+css-named        seashell                                     #fff5ee [orange] color            shadcn:light -> primary-foreground #fafafa [neutral] ΔE 0.0169 Δab 0.0143 C 0.0143/0.0000
+css-named        linen                                        #faf0e6 [orange] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0198 Δab 0.0171 C 0.0171/0.0000
+carbon-primitive orange.10                                    #fff2e8 [orange] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0194 Δab 0.0194 C 0.0194/0.0000
+carbon-primitive red.10                                       #fff1f1 [red] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0152 Δab 0.0151 C 0.0151/0.0000
+carbon-primitive magenta.10                                   #fff0f7 [magenta] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0186 Δab 0.0185 C 0.0185/0.0000
+carbon-primitive purple.10                                    #f6f2ff [purple] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0179 Δab 0.0177 C 0.0177/0.0000
+carbon-primitive blue.10                                      #edf5ff [blue] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0162 Δab 0.0159 C 0.0159/0.0000
+sample           #edf5ff (#63 index.html:18)                  #edf5ff [blue] background-color shadcn:light -> accent #f5f5f5 [neutral] ΔE 0.0162 Δab 0.0159 C 0.0159/0.0000
+tailwind         red-50                                       #fef2f2 [red] color            shadcn:dark  -> accent-foreground #fafafa [neutral] ΔE 0.0195 Δab 0.0129 C 0.0129/0.0000
+tailwind         orange-50                                    #fff7ed [orange] color            shadcn:dark  -> accent-foreground #fafafa [neutral] ΔE 0.0167 Δab 0.0158 C 0.0158/0.0000
+tailwind         green-50                                     #f0fdf4 [green] color            shadcn:dark  -> accent-foreground #fafafa [neutral] ΔE 0.0183 Δab 0.0181 C 0.0181/0.0000
+tailwind         teal-50                                      #f0fdfa [teal] color            shadcn:dark  -> accent-foreground #fafafa [neutral] ΔE 0.0143 Δab 0.0142 C 0.0142/0.0000
+tailwind         cyan-50                                      #ecfeff [cyan] color            shadcn:dark  -> accent-foreground #fafafa [neutral] ΔE 0.0189 Δab 0.0189 C 0.0189/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] color            shadcn:dark  -> accent-foreground #fafafa [neutral] ΔE 0.0148 Δab 0.0125 C 0.0125/0.0000
+tailwind         purple-50                                    #faf5ff [purple] color            shadcn:dark  -> accent-foreground #fafafa [neutral] ΔE 0.0164 Δab 0.0142 C 0.0142/0.0000
+tailwind         fuchsia-50                                   #fdf4ff [fuchsia] color            shadcn:dark  -> accent-foreground #fafafa [neutral] ΔE 0.0190 Δab 0.0173 C 0.0173/0.0000
+tailwind         pink-50                                      #fdf2f8 [pink] color            shadcn:dark  -> accent-foreground #fafafa [neutral] ΔE 0.0197 Δab 0.0141 C 0.0141/0.0000
+css-named        aliceblue                                    #f0f8ff [blue] color            shadcn:dark  -> accent-foreground #fafafa [neutral] ΔE 0.0161 Δab 0.0127 C 0.0127/0.0000
+css-named        azure                                        #f0ffff [cyan] color            shadcn:dark  -> accent-foreground #fafafa [neutral] ΔE 0.0162 Δab 0.0157 C 0.0157/0.0000
+css-named        mintcream                                    #f5fffa [emerald] color            shadcn:dark  -> accent-foreground #fafafa [neutral] ΔE 0.0138 Δab 0.0124 C 0.0124/0.0000
+css-named        seashell                                     #fff5ee [orange] color            shadcn:dark  -> accent-foreground #fafafa [neutral] ΔE 0.0169 Δab 0.0143 C 0.0143/0.0000
+tailwind         red-50                                       #fef2f2 [red] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0134 Δab 0.0130 C 0.0129/0.0013
+tailwind         red-50                                       #fef2f2 [red] color            shadcn-zinc:light -> primary-foreground #fafafa [zinc] ΔE 0.0195 Δab 0.0129 C 0.0129/0.0000
+tailwind         orange-50                                    #fff7ed [orange] background-color shadcn-zinc:light -> sidebar #fafafa [zinc] ΔE 0.0167 Δab 0.0158 C 0.0158/0.0000
+tailwind         orange-50                                    #fff7ed [orange] color            shadcn-zinc:light -> primary-foreground #fafafa [zinc] ΔE 0.0167 Δab 0.0158 C 0.0158/0.0000
+tailwind         green-50                                     #f0fdf4 [green] background-color shadcn-zinc:light -> sidebar #fafafa [zinc] ΔE 0.0183 Δab 0.0181 C 0.0181/0.0000
+tailwind         green-50                                     #f0fdf4 [green] color            shadcn-zinc:light -> primary-foreground #fafafa [zinc] ΔE 0.0183 Δab 0.0181 C 0.0181/0.0000
+tailwind         teal-50                                      #f0fdfa [teal] background-color shadcn-zinc:light -> sidebar #fafafa [zinc] ΔE 0.0143 Δab 0.0142 C 0.0142/0.0000
+tailwind         teal-50                                      #f0fdfa [teal] color            shadcn-zinc:light -> primary-foreground #fafafa [zinc] ΔE 0.0143 Δab 0.0142 C 0.0142/0.0000
+tailwind         cyan-50                                      #ecfeff [cyan] background-color shadcn-zinc:light -> sidebar #fafafa [zinc] ΔE 0.0189 Δab 0.0189 C 0.0189/0.0000
+tailwind         cyan-50                                      #ecfeff [cyan] color            shadcn-zinc:light -> primary-foreground #fafafa [zinc] ΔE 0.0189 Δab 0.0189 C 0.0189/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] background-color shadcn-zinc:light -> sidebar #fafafa [zinc] ΔE 0.0148 Δab 0.0125 C 0.0125/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] color            shadcn-zinc:light -> primary-foreground #fafafa [zinc] ΔE 0.0148 Δab 0.0125 C 0.0125/0.0000
+tailwind         blue-50                                      #eff6ff [blue] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0134 Δab 0.0131 C 0.0142/0.0013
+tailwind         indigo-50                                    #eef2ff [indigo] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0175 Δab 0.0167 C 0.0179/0.0013
+tailwind         violet-50                                    #f5f3ff [violet] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0148 Δab 0.0147 C 0.0161/0.0013
+tailwind         purple-50                                    #faf5ff [purple] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0160 Δab 0.0130 C 0.0142/0.0013
+tailwind         purple-50                                    #faf5ff [purple] color            shadcn-zinc:light -> primary-foreground #fafafa [zinc] ΔE 0.0164 Δab 0.0142 C 0.0142/0.0000
+tailwind         fuchsia-50                                   #fdf4ff [fuchsia] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0190 Δab 0.0162 C 0.0173/0.0013
+tailwind         fuchsia-50                                   #fdf4ff [fuchsia] color            shadcn-zinc:light -> primary-foreground #fafafa [zinc] ΔE 0.0190 Δab 0.0173 C 0.0173/0.0000
+tailwind         pink-50                                      #fdf2f8 [pink] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0140 Δab 0.0135 C 0.0141/0.0013
+tailwind         pink-50                                      #fdf2f8 [pink] color            shadcn-zinc:light -> primary-foreground #fafafa [zinc] ΔE 0.0197 Δab 0.0141 C 0.0141/0.0000
+tailwind         rose-50                                      #fff1f2 [rose] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0153 Δab 0.0151 C 0.0152/0.0013
+css-named        aliceblue                                    #f0f8ff [blue] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0140 Δab 0.0117 C 0.0127/0.0013
+css-named        aliceblue                                    #f0f8ff [blue] color            shadcn-zinc:light -> primary-foreground #fafafa [zinc] ΔE 0.0161 Δab 0.0127 C 0.0127/0.0000
+css-named        azure                                        #f0ffff [cyan] background-color shadcn-zinc:light -> sidebar #fafafa [zinc] ΔE 0.0162 Δab 0.0157 C 0.0157/0.0000
+css-named        azure                                        #f0ffff [cyan] color            shadcn-zinc:light -> primary-foreground #fafafa [zinc] ΔE 0.0162 Δab 0.0157 C 0.0157/0.0000
+css-named        mintcream                                    #f5fffa [emerald] background-color shadcn-zinc:light -> sidebar #fafafa [zinc] ΔE 0.0138 Δab 0.0124 C 0.0124/0.0000
+css-named        mintcream                                    #f5fffa [emerald] color            shadcn-zinc:light -> primary-foreground #fafafa [zinc] ΔE 0.0138 Δab 0.0124 C 0.0124/0.0000
+css-named        lavenderblush                                #fff0f5 [pink] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0170 Δab 0.0170 C 0.0174/0.0013
+css-named        seashell                                     #fff5ee [orange] background-color shadcn-zinc:light -> sidebar #fafafa [zinc] ΔE 0.0169 Δab 0.0143 C 0.0143/0.0000
+css-named        seashell                                     #fff5ee [orange] color            shadcn-zinc:light -> primary-foreground #fafafa [zinc] ΔE 0.0169 Δab 0.0143 C 0.0143/0.0000
+css-named        linen                                        #faf0e6 [orange] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0196 Δab 0.0182 C 0.0171/0.0013
+carbon-primitive red.10                                       #fff1f1 [red] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0153 Δab 0.0152 C 0.0151/0.0013
+carbon-primitive magenta.10                                   #fff0f7 [magenta] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0180 Δab 0.0179 C 0.0185/0.0013
+carbon-primitive purple.10                                    #f6f2ff [purple] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0165 Δab 0.0164 C 0.0177/0.0013
+carbon-primitive blue.10                                      #edf5ff [blue] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0148 Δab 0.0148 C 0.0159/0.0013
+sample           #edf5ff (#63 index.html:18)                  #edf5ff [blue] background-color shadcn-zinc:light -> accent #f4f4f5 [zinc] ΔE 0.0148 Δab 0.0148 C 0.0159/0.0013
+tailwind         red-50                                       #fef2f2 [red] color            shadcn-zinc:dark  -> accent-foreground #fafafa [zinc] ΔE 0.0195 Δab 0.0129 C 0.0129/0.0000
+tailwind         orange-50                                    #fff7ed [orange] color            shadcn-zinc:dark  -> accent-foreground #fafafa [zinc] ΔE 0.0167 Δab 0.0158 C 0.0158/0.0000
+tailwind         green-50                                     #f0fdf4 [green] color            shadcn-zinc:dark  -> accent-foreground #fafafa [zinc] ΔE 0.0183 Δab 0.0181 C 0.0181/0.0000
+tailwind         teal-50                                      #f0fdfa [teal] color            shadcn-zinc:dark  -> accent-foreground #fafafa [zinc] ΔE 0.0143 Δab 0.0142 C 0.0142/0.0000
+tailwind         cyan-50                                      #ecfeff [cyan] color            shadcn-zinc:dark  -> accent-foreground #fafafa [zinc] ΔE 0.0189 Δab 0.0189 C 0.0189/0.0000
+tailwind         sky-50                                       #f0f9ff [sky] color            shadcn-zinc:dark  -> accent-foreground #fafafa [zinc] ΔE 0.0148 Δab 0.0125 C 0.0125/0.0000
+tailwind         purple-50                                    #faf5ff [purple] color            shadcn-zinc:dark  -> accent-foreground #fafafa [zinc] ΔE 0.0164 Δab 0.0142 C 0.0142/0.0000
+tailwind         fuchsia-50                                   #fdf4ff [fuchsia] color            shadcn-zinc:dark  -> accent-foreground #fafafa [zinc] ΔE 0.0190 Δab 0.0173 C 0.0173/0.0000
+tailwind         pink-50                                      #fdf2f8 [pink] color            shadcn-zinc:dark  -> accent-foreground #fafafa [zinc] ΔE 0.0197 Δab 0.0141 C 0.0141/0.0000
+css-named        aliceblue                                    #f0f8ff [blue] color            shadcn-zinc:dark  -> accent-foreground #fafafa [zinc] ΔE 0.0161 Δab 0.0127 C 0.0127/0.0000
+css-named        azure                                        #f0ffff [cyan] color            shadcn-zinc:dark  -> accent-foreground #fafafa [zinc] ΔE 0.0162 Δab 0.0157 C 0.0157/0.0000
+css-named        mintcream                                    #f5fffa [emerald] color            shadcn-zinc:dark  -> accent-foreground #fafafa [zinc] ΔE 0.0138 Δab 0.0124 C 0.0124/0.0000
+css-named        seashell                                     #fff5ee [orange] color            shadcn-zinc:dark  -> accent-foreground #fafafa [zinc] ΔE 0.0169 Δab 0.0143 C 0.0143/0.0000
+tailwind         red-50                                       #fef2f2 [red] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0130 Δab 0.0130 C 0.0129/0.0013
+tailwind         red-50                                       #fef2f2 [red] color            shadcn-stone:light -> primary-foreground #fafaf9 [stone] ΔE 0.0193 Δab 0.0130 C 0.0129/0.0013
+tailwind         orange-50                                    #fff7ed [orange] background-color shadcn-stone:light -> sidebar #fafaf9 [stone] ΔE 0.0156 Δab 0.0147 C 0.0158/0.0013
+tailwind         orange-50                                    #fff7ed [orange] color            shadcn-stone:light -> primary-foreground #fafaf9 [stone] ΔE 0.0156 Δab 0.0147 C 0.0158/0.0013
+tailwind         green-50                                     #f0fdf4 [green] background-color shadcn-stone:light -> sidebar #fafaf9 [stone] ΔE 0.0175 Δab 0.0172 C 0.0181/0.0013
+tailwind         green-50                                     #f0fdf4 [green] color            shadcn-stone:light -> primary-foreground #fafaf9 [stone] ΔE 0.0175 Δab 0.0172 C 0.0181/0.0013
+tailwind         teal-50                                      #f0fdfa [teal] background-color shadcn-stone:light -> sidebar #fafaf9 [stone] ΔE 0.0140 Δab 0.0139 C 0.0142/0.0013
+tailwind         teal-50                                      #f0fdfa [teal] color            shadcn-stone:light -> primary-foreground #fafaf9 [stone] ΔE 0.0140 Δab 0.0139 C 0.0142/0.0013
+tailwind         cyan-50                                      #ecfeff [cyan] background-color shadcn-stone:light -> sidebar #fafaf9 [stone] ΔE 0.0190 Δab 0.0190 C 0.0189/0.0013
+tailwind         cyan-50                                      #ecfeff [cyan] color            shadcn-stone:light -> primary-foreground #fafaf9 [stone] ΔE 0.0190 Δab 0.0190 C 0.0189/0.0013
+tailwind         sky-50                                       #f0f9ff [sky] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0152 Δab 0.0134 C 0.0125/0.0013
+tailwind         sky-50                                       #f0f9ff [sky] color            shadcn-stone:light -> primary-foreground #fafaf9 [stone] ΔE 0.0154 Δab 0.0134 C 0.0125/0.0013
+tailwind         blue-50                                      #eff6ff [blue] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0153 Δab 0.0153 C 0.0142/0.0013
+tailwind         violet-50                                    #f5f3ff [violet] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0174 Δab 0.0174 C 0.0161/0.0013
+tailwind         purple-50                                    #faf5ff [purple] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0169 Δab 0.0154 C 0.0142/0.0013
+tailwind         purple-50                                    #faf5ff [purple] color            shadcn-stone:light -> primary-foreground #fafaf9 [stone] ΔE 0.0174 Δab 0.0154 C 0.0142/0.0013
+tailwind         fuchsia-50                                   #fdf4ff [fuchsia] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0199 Δab 0.0184 C 0.0173/0.0013
+tailwind         fuchsia-50                                   #fdf4ff [fuchsia] color            shadcn-stone:light -> primary-foreground #fafaf9 [stone] ΔE 0.0199 Δab 0.0184 C 0.0173/0.0013
+tailwind         pink-50                                      #fdf2f8 [pink] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0150 Δab 0.0149 C 0.0141/0.0013
+tailwind         rose-50                                      #fff1f2 [rose] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0153 Δab 0.0153 C 0.0152/0.0013
+css-named        aliceblue                                    #f0f8ff [blue] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0147 Δab 0.0137 C 0.0127/0.0013
+css-named        aliceblue                                    #f0f8ff [blue] color            shadcn-stone:light -> primary-foreground #fafaf9 [stone] ΔE 0.0167 Δab 0.0137 C 0.0127/0.0013
+css-named        azure                                        #f0ffff [cyan] background-color shadcn-stone:light -> sidebar #fafaf9 [stone] ΔE 0.0163 Δab 0.0158 C 0.0157/0.0013
+css-named        azure                                        #f0ffff [cyan] color            shadcn-stone:light -> primary-foreground #fafaf9 [stone] ΔE 0.0163 Δab 0.0158 C 0.0157/0.0013
+css-named        mintcream                                    #f5fffa [emerald] background-color shadcn-stone:light -> sidebar #fafaf9 [stone] ΔE 0.0133 Δab 0.0117 C 0.0124/0.0013
+css-named        mintcream                                    #f5fffa [emerald] color            shadcn-stone:light -> primary-foreground #fafaf9 [stone] ΔE 0.0133 Δab 0.0117 C 0.0124/0.0013
+css-named        lavenderblush                                #fff0f5 [pink] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0180 Δab 0.0179 C 0.0174/0.0013
+css-named        seashell                                     #fff5ee [orange] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0148 Δab 0.0134 C 0.0143/0.0013
+css-named        seashell                                     #fff5ee [orange] color            shadcn-stone:light -> primary-foreground #fafaf9 [stone] ΔE 0.0161 Δab 0.0134 C 0.0143/0.0013
+css-named        linen                                        #faf0e6 [orange] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0188 Δab 0.0161 C 0.0171/0.0013
+carbon-primitive orange.10                                    #fff2e8 [orange] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0185 Δab 0.0185 C 0.0194/0.0013
+carbon-primitive red.10                                       #fff1f1 [red] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0152 Δab 0.0152 C 0.0151/0.0013
+carbon-primitive magenta.10                                   #fff0f7 [magenta] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0192 Δab 0.0192 C 0.0185/0.0013
+carbon-primitive purple.10                                    #f6f2ff [purple] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0191 Δab 0.0190 C 0.0177/0.0013
+carbon-primitive blue.10                                      #edf5ff [blue] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0173 Δab 0.0170 C 0.0159/0.0013
+sample           #edf5ff (#63 index.html:18)                  #edf5ff [blue] background-color shadcn-stone:light -> accent #f5f5f4 [stone] ΔE 0.0173 Δab 0.0170 C 0.0159/0.0013
+tailwind         red-50                                       #fef2f2 [red] color            shadcn-stone:dark  -> accent-foreground #fafaf9 [stone] ΔE 0.0193 Δab 0.0130 C 0.0129/0.0013
+tailwind         orange-50                                    #fff7ed [orange] color            shadcn-stone:dark  -> accent-foreground #fafaf9 [stone] ΔE 0.0156 Δab 0.0147 C 0.0158/0.0013
+tailwind         green-50                                     #f0fdf4 [green] color            shadcn-stone:dark  -> accent-foreground #fafaf9 [stone] ΔE 0.0175 Δab 0.0172 C 0.0181/0.0013
+tailwind         teal-50                                      #f0fdfa [teal] color            shadcn-stone:dark  -> accent-foreground #fafaf9 [stone] ΔE 0.0140 Δab 0.0139 C 0.0142/0.0013
+tailwind         cyan-50                                      #ecfeff [cyan] color            shadcn-stone:dark  -> accent-foreground #fafaf9 [stone] ΔE 0.0190 Δab 0.0190 C 0.0189/0.0013
+tailwind         sky-50                                       #f0f9ff [sky] color            shadcn-stone:dark  -> accent-foreground #fafaf9 [stone] ΔE 0.0154 Δab 0.0134 C 0.0125/0.0013
+tailwind         purple-50                                    #faf5ff [purple] color            shadcn-stone:dark  -> accent-foreground #fafaf9 [stone] ΔE 0.0174 Δab 0.0154 C 0.0142/0.0013
+tailwind         fuchsia-50                                   #fdf4ff [fuchsia] color            shadcn-stone:dark  -> accent-foreground #fafaf9 [stone] ΔE 0.0199 Δab 0.0184 C 0.0173/0.0013
+css-named        aliceblue                                    #f0f8ff [blue] color            shadcn-stone:dark  -> accent-foreground #fafaf9 [stone] ΔE 0.0167 Δab 0.0137 C 0.0127/0.0013
+css-named        azure                                        #f0ffff [cyan] color            shadcn-stone:dark  -> accent-foreground #fafaf9 [stone] ΔE 0.0163 Δab 0.0158 C 0.0157/0.0013
+css-named        mintcream                                    #f5fffa [emerald] color            shadcn-stone:dark  -> accent-foreground #fafaf9 [stone] ΔE 0.0133 Δab 0.0117 C 0.0124/0.0013
+css-named        seashell                                     #fff5ee [orange] color            shadcn-stone:dark  -> accent-foreground #fafaf9 [stone] ΔE 0.0161 Δab 0.0134 C 0.0143/0.0013
+tailwind         red-50                                       #fef2f2 [red] background-color shadcn-gray:light -> accent #f3f4f6 [gray-tw] ΔE 0.0147 Δab 0.0143 C 0.0129/0.0029
+tailwind         red-50                                       #fef2f2 [red] color            shadcn-gray:light -> primary-foreground #f9fafb [gray-tw] ΔE 0.0199 Δab 0.0141 C 0.0129/0.0017
+tailwind         orange-50                                    #fff7ed [orange] background-color shadcn-gray:light -> sidebar #f9fafb [gray-tw] ΔE 0.0182 Δab 0.0175 C 0.0158/0.0017
+tailwind         orange-50                                    #fff7ed [orange] color            shadcn-gray:light -> primary-foreground #f9fafb [gray-tw] ΔE 0.0182 Δab 0.0175 C 0.0158/0.0017
+tailwind         green-50                                     #f0fdf4 [green] background-color shadcn-gray:light -> sidebar #f9fafb [gray-tw] ΔE 0.0184 Δab 0.0182 C 0.0181/0.0017
+tailwind         green-50                                     #f0fdf4 [green] color            shadcn-gray:light -> primary-foreground #f9fafb [gray-tw] ΔE 0.0184 Δab 0.0182 C 0.0181/0.0017
+tailwind         teal-50                                      #f0fdfa [teal] background-color shadcn-gray:light -> sidebar #f9fafb [gray-tw] ΔE 0.0137 Δab 0.0136 C 0.0142/0.0017
+tailwind         teal-50                                      #f0fdfa [teal] color            shadcn-gray:light -> primary-foreground #f9fafb [gray-tw] ΔE 0.0137 Δab 0.0136 C 0.0142/0.0017
+tailwind         cyan-50                                      #ecfeff [cyan] background-color shadcn-gray:light -> sidebar #f9fafb [gray-tw] ΔE 0.0178 Δab 0.0178 C 0.0189/0.0017
+tailwind         cyan-50                                      #ecfeff [cyan] color            shadcn-gray:light -> primary-foreground #f9fafb [gray-tw] ΔE 0.0178 Δab 0.0178 C 0.0189/0.0017
+tailwind         sky-50                                       #f0f9ff [sky] background-color shadcn-gray:light -> sidebar #f9fafb [gray-tw] ΔE 0.0132 Δab 0.0108 C 0.0125/0.0017
+tailwind         sky-50                                       #f0f9ff [sky] color            shadcn-gray:light -> primary-foreground #f9fafb [gray-tw] ΔE 0.0132 Δab 0.0108 C 0.0125/0.0017
+tailwind         blue-50                                      #eff6ff [blue] background-color shadcn-gray:light -> accent #f3f4f6 [gray-tw] ΔE 0.0119 Δab 0.0114 C 0.0142/0.0029
+tailwind         blue-50                                      #eff6ff [blue] color            shadcn-gray:light -> primary-foreground #f9fafb [gray-tw] ΔE 0.0189 Δab 0.0125 C 0.0142/0.0017
+tailwind         indigo-50                                    #eef2ff [indigo] background-color shadcn-gray:light -> accent #f3f4f6 [gray-tw] ΔE 0.0159 Δab 0.0151 C 0.0179/0.0029
+tailwind         violet-50                                    #f5f3ff [violet] background-color shadcn-gray:light -> accent #f3f4f6 [gray-tw] ΔE 0.0138 Δab 0.0136 C 0.0161/0.0029
+tailwind         purple-50                                    #faf5ff [purple] background-color shadcn-gray:light -> sidebar #f9fafb [gray-tw] ΔE 0.0155 Δab 0.0134 C 0.0142/0.0017
+tailwind         purple-50                                    #faf5ff [purple] color            shadcn-gray:light -> primary-foreground #f9fafb [gray-tw] ΔE 0.0155 Δab 0.0134 C 0.0142/0.0017
+tailwind         fuchsia-50                                   #fdf4ff [fuchsia] background-color shadcn-gray:light -> sidebar #f9fafb [gray-tw] ΔE 0.0184 Δab 0.0169 C 0.0173/0.0017
+tailwind         fuchsia-50                                   #fdf4ff [fuchsia] color            shadcn-gray:light -> primary-foreground #f9fafb [gray-tw] ΔE 0.0184 Δab 0.0169 C 0.0173/0.0017
+tailwind         pink-50                                      #fdf2f8 [pink] background-color shadcn-gray:light -> accent #f3f4f6 [gray-tw] ΔE 0.0146 Δab 0.0139 C 0.0141/0.0029
+tailwind         pink-50                                      #fdf2f8 [pink] color            shadcn-gray:light -> primary-foreground #f9fafb [gray-tw] ΔE 0.0195 Δab 0.0144 C 0.0141/0.0017
+tailwind         rose-50                                      #fff1f2 [rose] background-color shadcn-gray:light -> accent #f3f4f6 [gray-tw] ΔE 0.0165 Δab 0.0163 C 0.0152/0.0029
+css-named        aliceblue                                    #f0f8ff [blue] background-color shadcn-gray:light -> accent #f3f4f6 [gray-tw] ΔE 0.0129 Δab 0.0100 C 0.0127/0.0029
+css-named        aliceblue                                    #f0f8ff [blue] color            shadcn-gray:light -> primary-foreground #f9fafb [gray-tw] ΔE 0.0145 Δab 0.0110 C 0.0127/0.0017
+css-named        azure                                        #f0ffff [cyan] background-color shadcn-gray:light -> sidebar #f9fafb [gray-tw] ΔE 0.0153 Δab 0.0147 C 0.0157/0.0017
+css-named        azure                                        #f0ffff [cyan] color            shadcn-gray:light -> primary-foreground #f9fafb [gray-tw] ΔE 0.0153 Δab 0.0147 C 0.0157/0.0017
+css-named        mintcream                                    #f5fffa [emerald] background-color shadcn-gray:light -> sidebar #f9fafb [gray-tw] ΔE 0.0139 Δab 0.0123 C 0.0124/0.0017
+css-named        mintcream                                    #f5fffa [emerald] color            shadcn-gray:light -> primary-foreground #f9fafb [gray-tw] ΔE 0.0139 Δab 0.0123 C 0.0124/0.0017
+css-named        lavenderblush                                #fff0f5 [pink] background-color shadcn-gray:light -> accent #f3f4f6 [gray-tw] ΔE 0.0177 Δab 0.0177 C 0.0174/0.0029
+css-named        seashell                                     #fff5ee [orange] background-color shadcn-gray:light -> sidebar #f9fafb [gray-tw] ΔE 0.0181 Δab 0.0159 C 0.0143/0.0017
+css-named        seashell                                     #fff5ee [orange] color            shadcn-gray:light -> primary-foreground #f9fafb [gray-tw] ΔE 0.0181 Δab 0.0159 C 0.0143/0.0017
+carbon-primitive red.10                                       #fff1f1 [red] background-color shadcn-gray:light -> accent #f3f4f6 [gray-tw] ΔE 0.0166 Δab 0.0165 C 0.0151/0.0029
+carbon-primitive magenta.10                                   #fff0f7 [magenta] background-color shadcn-gray:light -> accent #f3f4f6 [gray-tw] ΔE 0.0185 Δab 0.0184 C 0.0185/0.0029
+carbon-primitive purple.10                                    #f6f2ff [purple] background-color shadcn-gray:light -> accent #f3f4f6 [gray-tw] ΔE 0.0155 Δab 0.0155 C 0.0177/0.0029
+carbon-primitive blue.10                                      #edf5ff [blue] background-color shadcn-gray:light -> accent #f3f4f6 [gray-tw] ΔE 0.0131 Δab 0.0131 C 0.0159/0.0029
+carbon-primitive cyan.10                                      #e5f6ff [cyan] background-color shadcn-gray:light -> accent #f3f4f6 [gray-tw] ΔE 0.0197 Δab 0.0194 C 0.0217/0.0029
+carbon-primitive cyan.100                                     #061727 [cyan] background-color shadcn-gray:light -> primary #101828 [gray-tw] ΔE 0.0154 Δab 0.0111 C 0.0399/0.0341
+carbon-primitive cyan.100                                     #061727 [cyan] color            shadcn-gray:light -> accent-foreground #101828 [gray-tw] ΔE 0.0154 Δab 0.0111 C 0.0399/0.0341
+sample           #edf5ff (#63 index.html:18)                  #edf5ff [blue] background-color shadcn-gray:light -> accent #f3f4f6 [gray-tw] ΔE 0.0131 Δab 0.0131 C 0.0159/0.0029
+tailwind         red-50                                       #fef2f2 [red] color            shadcn-gray:dark  -> accent-foreground #f9fafb [gray-tw] ΔE 0.0199 Δab 0.0141 C 0.0129/0.0017
+tailwind         orange-50                                    #fff7ed [orange] color            shadcn-gray:dark  -> accent-foreground #f9fafb [gray-tw] ΔE 0.0182 Δab 0.0175 C 0.0158/0.0017
+tailwind         green-50                                     #f0fdf4 [green] color            shadcn-gray:dark  -> accent-foreground #f9fafb [gray-tw] ΔE 0.0184 Δab 0.0182 C 0.0181/0.0017
+tailwind         teal-50                                      #f0fdfa [teal] color            shadcn-gray:dark  -> accent-foreground #f9fafb [gray-tw] ΔE 0.0137 Δab 0.0136 C 0.0142/0.0017
+tailwind         cyan-50                                      #ecfeff [cyan] color            shadcn-gray:dark  -> accent-foreground #f9fafb [gray-tw] ΔE 0.0178 Δab 0.0178 C 0.0189/0.0017
+tailwind         sky-50                                       #f0f9ff [sky] color            shadcn-gray:dark  -> accent-foreground #f9fafb [gray-tw] ΔE 0.0132 Δab 0.0108 C 0.0125/0.0017
+tailwind         blue-50                                      #eff6ff [blue] color            shadcn-gray:dark  -> accent-foreground #f9fafb [gray-tw] ΔE 0.0189 Δab 0.0125 C 0.0142/0.0017
+tailwind         purple-50                                    #faf5ff [purple] color            shadcn-gray:dark  -> accent-foreground #f9fafb [gray-tw] ΔE 0.0155 Δab 0.0134 C 0.0142/0.0017
+tailwind         fuchsia-50                                   #fdf4ff [fuchsia] color            shadcn-gray:dark  -> accent-foreground #f9fafb [gray-tw] ΔE 0.0184 Δab 0.0169 C 0.0173/0.0017
+tailwind         pink-50                                      #fdf2f8 [pink] color            shadcn-gray:dark  -> accent-foreground #f9fafb [gray-tw] ΔE 0.0195 Δab 0.0144 C 0.0141/0.0017
+css-named        aliceblue                                    #f0f8ff [blue] color            shadcn-gray:dark  -> accent-foreground #f9fafb [gray-tw] ΔE 0.0145 Δab 0.0110 C 0.0127/0.0017
+css-named        azure                                        #f0ffff [cyan] color            shadcn-gray:dark  -> accent-foreground #f9fafb [gray-tw] ΔE 0.0153 Δab 0.0147 C 0.0157/0.0017
+css-named        mintcream                                    #f5fffa [emerald] color            shadcn-gray:dark  -> accent-foreground #f9fafb [gray-tw] ΔE 0.0139 Δab 0.0123 C 0.0124/0.0017
+css-named        seashell                                     #fff5ee [orange] color            shadcn-gray:dark  -> accent-foreground #f9fafb [gray-tw] ΔE 0.0181 Δab 0.0159 C 0.0143/0.0017
+carbon-primitive cyan.100                                     #061727 [cyan] background-color shadcn-gray:dark  -> card #101828 [gray-tw] ΔE 0.0154 Δab 0.0111 C 0.0399/0.0341
+carbon-primitive cyan.100                                     #061727 [cyan] color            shadcn-gray:dark  -> primary-foreground #101828 [gray-tw] ΔE 0.0154 Δab 0.0111 C 0.0399/0.0341
+tailwind         red-50                                       #fef2f2 [red] background-color shadcn-slate:light -> accent #f1f5f9 [slate] ΔE 0.0182 Δab 0.0181 C 0.0129/0.0069
+tailwind         orange-50                                    #fff7ed [orange] background-color shadcn-slate:light -> sidebar #f8fafc [slate] ΔE 0.0197 Δab 0.0192 C 0.0158/0.0034
+tailwind         orange-50                                    #fff7ed [orange] color            shadcn-slate:light -> primary-foreground #f8fafc [slate] ΔE 0.0197 Δab 0.0192 C 0.0158/0.0034
+tailwind         green-50                                     #f0fdf4 [green] background-color shadcn-slate:light -> sidebar #f8fafc [slate] ΔE 0.0186 Δab 0.0185 C 0.0181/0.0034
+tailwind         green-50                                     #f0fdf4 [green] color            shadcn-slate:light -> primary-foreground #f8fafc [slate] ΔE 0.0186 Δab 0.0185 C 0.0181/0.0034
+tailwind         teal-50                                      #f0fdfa [teal] background-color shadcn-slate:light -> sidebar #f8fafc [slate] ΔE 0.0133 Δab 0.0133 C 0.0142/0.0034
+tailwind         teal-50                                      #f0fdfa [teal] color            shadcn-slate:light -> primary-foreground #f8fafc [slate] ΔE 0.0133 Δab 0.0133 C 0.0142/0.0034
+tailwind         cyan-50                                      #ecfeff [cyan] background-color shadcn-slate:light -> sidebar #f8fafc [slate] ΔE 0.0167 Δab 0.0167 C 0.0189/0.0034
+tailwind         cyan-50                                      #ecfeff [cyan] color            shadcn-slate:light -> primary-foreground #f8fafc [slate] ΔE 0.0167 Δab 0.0167 C 0.0189/0.0034
+tailwind         sky-50                                       #f0f9ff [sky] background-color shadcn-slate:light -> accent #f1f5f9 [slate] ΔE 0.0106 Δab 0.0059 C 0.0125/0.0069
+tailwind         sky-50                                       #f0f9ff [sky] color            shadcn-slate:light -> primary-foreground #f8fafc [slate] ΔE 0.0116 Δab 0.0092 C 0.0125/0.0034
+tailwind         blue-50                                      #eff6ff [blue] background-color shadcn-slate:light -> accent #f1f5f9 [slate] ΔE 0.0077 Δab 0.0074 C 0.0142/0.0069
+tailwind         blue-50                                      #eff6ff [blue] color            shadcn-slate:light -> primary-foreground #f8fafc [slate] ΔE 0.0174 Δab 0.0108 C 0.0142/0.0034
+tailwind         blue-100                                     #dbeafe [blue] border-color     shadcn-slate:light -> border #e2e8f0 [slate] ΔE 0.0192 Δab 0.0190 C 0.0316/0.0126
+tailwind         indigo-50                                    #eef2ff [indigo] background-color shadcn-slate:light -> accent #f1f5f9 [slate] ΔE 0.0136 Δab 0.0120 C 0.0179/0.0069
+tailwind         violet-50                                    #f5f3ff [violet] background-color shadcn-slate:light -> accent #f1f5f9 [slate] ΔE 0.0123 Δab 0.0123 C 0.0161/0.0069
+tailwind         purple-50                                    #faf5ff [purple] background-color shadcn-slate:light -> sidebar #f8fafc [slate] ΔE 0.0148 Δab 0.0129 C 0.0142/0.0034
+tailwind         purple-50                                    #faf5ff [purple] color            shadcn-slate:light -> primary-foreground #f8fafc [slate] ΔE 0.0148 Δab 0.0129 C 0.0142/0.0034
+tailwind         fuchsia-50                                   #fdf4ff [fuchsia] background-color shadcn-slate:light -> sidebar #f8fafc [slate] ΔE 0.0180 Δab 0.0166 C 0.0173/0.0034
+tailwind         fuchsia-50                                   #fdf4ff [fuchsia] color            shadcn-slate:light -> primary-foreground #f8fafc [slate] ΔE 0.0180 Δab 0.0166 C 0.0173/0.0034
+tailwind         pink-50                                      #fdf2f8 [pink] background-color shadcn-slate:light -> accent #f1f5f9 [slate] ΔE 0.0166 Δab 0.0163 C 0.0141/0.0069
+tailwind         pink-50                                      #fdf2f8 [pink] color            shadcn-slate:light -> primary-foreground #f8fafc [slate] ΔE 0.0196 Δab 0.0149 C 0.0141/0.0034
+tailwind         rose-50                                      #fff1f2 [rose] background-color shadcn-slate:light -> accent #f1f5f9 [slate] ΔE 0.0199 Δab 0.0199 C 0.0152/0.0069
+css-named        aliceblue                                    #f0f8ff [blue] background-color shadcn-slate:light -> accent #f1f5f9 [slate] ΔE 0.0090 Δab 0.0058 C 0.0127/0.0069
+css-named        aliceblue                                    #f0f8ff [blue] color            shadcn-slate:light -> primary-foreground #f8fafc [slate] ΔE 0.0129 Δab 0.0093 C 0.0127/0.0034
+css-named        azure                                        #f0ffff [cyan] background-color shadcn-slate:light -> sidebar #f8fafc [slate] ΔE 0.0146 Δab 0.0138 C 0.0157/0.0034
+css-named        azure                                        #f0ffff [cyan] color            shadcn-slate:light -> primary-foreground #f8fafc [slate] ΔE 0.0146 Δab 0.0138 C 0.0157/0.0034
+css-named        mintcream                                    #f5fffa [emerald] background-color shadcn-slate:light -> sidebar #f8fafc [slate] ΔE 0.0143 Δab 0.0124 C 0.0124/0.0034
+css-named        mintcream                                    #f5fffa [emerald] color            shadcn-slate:light -> primary-foreground #f8fafc [slate] ΔE 0.0143 Δab 0.0124 C 0.0124/0.0034
+css-named        lavender                                     #e6e6fa [indigo] border-color     shadcn-slate:light -> border #e2e8f0 [slate] ΔE 0.0174 Δab 0.0173 C 0.0269/0.0126
+css-named        seashell                                     #fff5ee [orange] background-color shadcn-slate:light -> sidebar #f8fafc [slate] ΔE 0.0194 Δab 0.0176 C 0.0143/0.0034
+css-named        seashell                                     #fff5ee [orange] color            shadcn-slate:light -> primary-foreground #f8fafc [slate] ΔE 0.0194 Δab 0.0176 C 0.0143/0.0034
+carbon-primitive purple.10                                    #f6f2ff [purple] background-color shadcn-slate:light -> accent #f1f5f9 [slate] ΔE 0.0146 Δab 0.0146 C 0.0177/0.0069
+carbon-primitive blue.10                                      #edf5ff [blue] background-color shadcn-slate:light -> accent #f1f5f9 [slate] ΔE 0.0092 Δab 0.0091 C 0.0159/0.0069
+carbon-primitive cyan.10                                      #e5f6ff [cyan] background-color shadcn-slate:light -> accent #f1f5f9 [slate] ΔE 0.0161 Δab 0.0153 C 0.0217/0.0069
+carbon-primitive cyan.100                                     #061727 [cyan] background-color shadcn-slate:light -> primary #0f172b [slate] ΔE 0.0156 Δab 0.0128 C 0.0399/0.0417
+carbon-primitive cyan.100                                     #061727 [cyan] color            shadcn-slate:light -> accent-foreground #0f172b [slate] ΔE 0.0156 Δab 0.0128 C 0.0399/0.0417
+sample           #edf5ff (#63 index.html:18)                  #edf5ff [blue] background-color shadcn-slate:light -> accent #f1f5f9 [slate] ΔE 0.0092 Δab 0.0091 C 0.0159/0.0069
+tailwind         orange-50                                    #fff7ed [orange] color            shadcn-slate:dark  -> accent-foreground #f8fafc [slate] ΔE 0.0197 Δab 0.0192 C 0.0158/0.0034
+tailwind         green-50                                     #f0fdf4 [green] color            shadcn-slate:dark  -> accent-foreground #f8fafc [slate] ΔE 0.0186 Δab 0.0185 C 0.0181/0.0034
+tailwind         teal-50                                      #f0fdfa [teal] color            shadcn-slate:dark  -> accent-foreground #f8fafc [slate] ΔE 0.0133 Δab 0.0133 C 0.0142/0.0034
+tailwind         cyan-50                                      #ecfeff [cyan] color            shadcn-slate:dark  -> accent-foreground #f8fafc [slate] ΔE 0.0167 Δab 0.0167 C 0.0189/0.0034
+tailwind         sky-50                                       #f0f9ff [sky] color            shadcn-slate:dark  -> accent-foreground #f8fafc [slate] ΔE 0.0116 Δab 0.0092 C 0.0125/0.0034
+tailwind         blue-50                                      #eff6ff [blue] color            shadcn-slate:dark  -> accent-foreground #f8fafc [slate] ΔE 0.0174 Δab 0.0108 C 0.0142/0.0034
+tailwind         blue-100                                     #dbeafe [blue] background-color shadcn-slate:dark  -> primary #e2e8f0 [slate] ΔE 0.0192 Δab 0.0190 C 0.0316/0.0126
+tailwind         blue-100                                     #dbeafe [blue] color            shadcn-slate:dark  -> primary #e2e8f0 [slate] ΔE 0.0192 Δab 0.0190 C 0.0316/0.0126
+tailwind         purple-50                                    #faf5ff [purple] color            shadcn-slate:dark  -> accent-foreground #f8fafc [slate] ΔE 0.0148 Δab 0.0129 C 0.0142/0.0034
+tailwind         fuchsia-50                                   #fdf4ff [fuchsia] color            shadcn-slate:dark  -> accent-foreground #f8fafc [slate] ΔE 0.0180 Δab 0.0166 C 0.0173/0.0034
+tailwind         pink-50                                      #fdf2f8 [pink] color            shadcn-slate:dark  -> accent-foreground #f8fafc [slate] ΔE 0.0196 Δab 0.0149 C 0.0141/0.0034
+css-named        aliceblue                                    #f0f8ff [blue] color            shadcn-slate:dark  -> accent-foreground #f8fafc [slate] ΔE 0.0129 Δab 0.0093 C 0.0127/0.0034
+css-named        azure                                        #f0ffff [cyan] color            shadcn-slate:dark  -> accent-foreground #f8fafc [slate] ΔE 0.0146 Δab 0.0138 C 0.0157/0.0034
+css-named        mintcream                                    #f5fffa [emerald] color            shadcn-slate:dark  -> accent-foreground #f8fafc [slate] ΔE 0.0143 Δab 0.0124 C 0.0124/0.0034
+css-named        lavender                                     #e6e6fa [indigo] background-color shadcn-slate:dark  -> primary #e2e8f0 [slate] ΔE 0.0174 Δab 0.0173 C 0.0269/0.0126
+css-named        lavender                                     #e6e6fa [indigo] color            shadcn-slate:dark  -> primary #e2e8f0 [slate] ΔE 0.0174 Δab 0.0173 C 0.0269/0.0126
+css-named        seashell                                     #fff5ee [orange] color            shadcn-slate:dark  -> accent-foreground #f8fafc [slate] ΔE 0.0194 Δab 0.0176 C 0.0143/0.0034
+carbon-primitive cyan.100                                     #061727 [cyan] background-color shadcn-slate:dark  -> card #0f172b [slate] ΔE 0.0156 Δab 0.0128 C 0.0399/0.0417
+carbon-primitive cyan.100                                     #061727 [cyan] color            shadcn-slate:dark  -> primary-foreground #0f172b [slate] ΔE 0.0156 Δab 0.0128 C 0.0399/0.0417
+== none: missed (0) ==
+
+== chroma-asym@0.01: wrong near picks (14) ==
+carbon-primitive cyan.100                                     #061727 [cyan] background-color shadcn-gray:light -> primary #101828 [gray-tw] ΔE 0.0154 Δab 0.0111 C 0.0399/0.0341
+carbon-primitive cyan.100                                     #061727 [cyan] color            shadcn-gray:light -> accent-foreground #101828 [gray-tw] ΔE 0.0154 Δab 0.0111 C 0.0399/0.0341
+carbon-primitive cyan.100                                     #061727 [cyan] background-color shadcn-gray:dark  -> card #101828 [gray-tw] ΔE 0.0154 Δab 0.0111 C 0.0399/0.0341
+carbon-primitive cyan.100                                     #061727 [cyan] color            shadcn-gray:dark  -> primary-foreground #101828 [gray-tw] ΔE 0.0154 Δab 0.0111 C 0.0399/0.0341
+tailwind         blue-100                                     #dbeafe [blue] border-color     shadcn-slate:light -> border #e2e8f0 [slate] ΔE 0.0192 Δab 0.0190 C 0.0316/0.0126
+css-named        lavender                                     #e6e6fa [indigo] border-color     shadcn-slate:light -> border #e2e8f0 [slate] ΔE 0.0174 Δab 0.0173 C 0.0269/0.0126
+carbon-primitive cyan.100                                     #061727 [cyan] background-color shadcn-slate:light -> primary #0f172b [slate] ΔE 0.0156 Δab 0.0128 C 0.0399/0.0417
+carbon-primitive cyan.100                                     #061727 [cyan] color            shadcn-slate:light -> accent-foreground #0f172b [slate] ΔE 0.0156 Δab 0.0128 C 0.0399/0.0417
+tailwind         blue-100                                     #dbeafe [blue] background-color shadcn-slate:dark  -> primary #e2e8f0 [slate] ΔE 0.0192 Δab 0.0190 C 0.0316/0.0126
+tailwind         blue-100                                     #dbeafe [blue] color            shadcn-slate:dark  -> primary #e2e8f0 [slate] ΔE 0.0192 Δab 0.0190 C 0.0316/0.0126
+css-named        lavender                                     #e6e6fa [indigo] background-color shadcn-slate:dark  -> primary #e2e8f0 [slate] ΔE 0.0174 Δab 0.0173 C 0.0269/0.0126
+css-named        lavender                                     #e6e6fa [indigo] color            shadcn-slate:dark  -> primary #e2e8f0 [slate] ΔE 0.0174 Δab 0.0173 C 0.0269/0.0126
+carbon-primitive cyan.100                                     #061727 [cyan] background-color shadcn-slate:dark  -> card #0f172b [slate] ΔE 0.0156 Δab 0.0128 C 0.0399/0.0417
+carbon-primitive cyan.100                                     #061727 [cyan] color            shadcn-slate:dark  -> primary-foreground #0f172b [slate] ΔE 0.0156 Δab 0.0128 C 0.0399/0.0417
+== chroma-asym@0.01: missed (1440) ==
+tailwind         slate-200                                    #e2e8f0 [slate] background-color carbon:white -> field-hover-01 #e8e8e8 [gray] ΔE 0.0128 Δab 0.0126 C 0.0126/0.0000   (dropped)
+tailwind         gray-300                                     #d1d5dc [gray-tw] background-color carbon:white -> layer-accent-hover-01 #d1d1d1 [gray] ΔE 0.0155 Δab 0.0106 C 0.0106/0.0000   (dropped)
+tailwind         zinc-500                                     #71717b [zinc] color            carbon:white -> text-helper #6f6f6f [gray] ΔE 0.0185 Δab 0.0153 C 0.0153/0.0000   (dropped)
+tailwind         zinc-600                                     #52525c [zinc] color            carbon:white -> icon-secondary #525252 [gray] ΔE 0.0167 Δab 0.0162 C 0.0162/0.0000   (dropped)
+tailwind         stone-500                                    #79716b [stone] color            carbon:white -> text-helper #6f6f6f [gray] ΔE 0.0183 Δab 0.0136 C 0.0136/0.0000   (dropped)
+tailwind         stone-600                                    #57534d [stone] color            carbon:white -> icon-secondary #525252 [gray] ΔE 0.0123 Δab 0.0110 C 0.0110/0.0000   (dropped)
+tailwind         mauve-300                                    #d7d0d7 [mauve] background-color carbon:white -> layer-accent-hover-01 #d1d1d1 [gray] ΔE 0.0130 Δab 0.0122 C 0.0122/0.0000   (dropped)
+tailwind         mist-400                                     #9ca8ab [mist] background-color carbon:white -> layer-accent-active-01 #a8a8a8 [gray] ΔE 0.0166 Δab 0.0143 C 0.0143/0.0000   (dropped)
+tailwind         mist-400                                     #9ca8ab [mist] border-color     carbon:white -> border-tile-02 #a8a8a8 [gray] ΔE 0.0166 Δab 0.0143 C 0.0143/0.0000   (dropped)
+tailwind         taupe-600                                    #5b4f4b [taupe] color            carbon:white -> icon-secondary #525252 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] background-color carbon:white -> background #ffffff [white] ΔE 0.0198 Δab 0.0142 C 0.0142/0.0000   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] color            carbon:white -> icon-inverse #ffffff [white] ΔE 0.0198 Δab 0.0142 C 0.0142/0.0000   (dropped)
+carbon-primitive coolGray.30                                  #c1c7cd [coolGray] background-color carbon:white -> layer-active-01 #c6c6c6 [gray] ΔE 0.0107 Δab 0.0107 C 0.0107/0.0000   (dropped)
+carbon-primitive coolGray.30                                  #c1c7cd [coolGray] border-color     carbon:white -> border-disabled #c6c6c6 [gray] ΔE 0.0107 Δab 0.0107 C 0.0107/0.0000   (dropped)
+carbon-primitive coolGray.40                                  #a2a9b0 [coolGray] background-color carbon:white -> layer-accent-active-01 #a8a8a8 [gray] ΔE 0.0129 Δab 0.0129 C 0.0129/0.0000   (dropped)
+carbon-primitive coolGray.40                                  #a2a9b0 [coolGray] border-color     carbon:white -> border-tile-02 #a8a8a8 [gray] ΔE 0.0129 Δab 0.0129 C 0.0129/0.0000   (dropped)
+carbon-primitive coolGray.50                                  #878d96 [coolGray] background-color carbon:white -> layer-selected-disabled #8d8d8d [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000   (dropped)
+carbon-primitive coolGray.50                                  #878d96 [coolGray] color            carbon:white -> icon-on-color-disabled #8d8d8d [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000   (dropped)
+carbon-primitive coolGray.50                                  #878d96 [coolGray] border-color     carbon:white -> border-strong-01 #8d8d8d [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000   (dropped)
+carbon-primitive coolGray.60                                  #697077 [coolGray] color            carbon:white -> text-helper #6f6f6f [gray] ΔE 0.0139 Δab 0.0139 C 0.0139/0.0000   (dropped)
+carbon-primitive coolGray.70                                  #4d5358 [coolGray] color            carbon:white -> icon-secondary #525252 [gray] ΔE 0.0113 Δab 0.0113 C 0.0113/0.0000   (dropped)
+carbon-primitive coolGray.80                                  #343a3f [coolGray] background-color carbon:white -> background-inverse #393939 [gray] ΔE 0.0120 Δab 0.0120 C 0.0120/0.0000   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] background-color carbon:white -> field-hover-01 #e8e8e8 [gray] ΔE 0.0122 Δab 0.0121 C 0.0121/0.0000   (dropped)
+carbon-primitive coolGray.20Hover                             #cdd3da [coolGray] background-color carbon:white -> layer-accent-hover-01 #d1d1d1 [gray] ΔE 0.0122 Δab 0.0117 C 0.0117/0.0000   (dropped)
+carbon-primitive coolGray.80Hover                             #434a51 [coolGray] background-color carbon:white -> background-inverse-hover #474747 [gray] ΔE 0.0167 Δab 0.0149 C 0.0149/0.0000   (dropped)
+tailwind         slate-200                                    #e2e8f0 [slate] background-color carbon:g10   -> field-hover-01 #e8e8e8 [gray] ΔE 0.0128 Δab 0.0126 C 0.0126/0.0000   (dropped)
+tailwind         gray-300                                     #d1d5dc [gray-tw] background-color carbon:g10   -> layer-accent-hover-01 #d1d1d1 [gray] ΔE 0.0155 Δab 0.0106 C 0.0106/0.0000   (dropped)
+tailwind         zinc-500                                     #71717b [zinc] color            carbon:g10   -> text-helper #6f6f6f [gray] ΔE 0.0185 Δab 0.0153 C 0.0153/0.0000   (dropped)
+tailwind         zinc-600                                     #52525c [zinc] color            carbon:g10   -> icon-secondary #525252 [gray] ΔE 0.0167 Δab 0.0162 C 0.0162/0.0000   (dropped)
+tailwind         stone-500                                    #79716b [stone] color            carbon:g10   -> text-helper #6f6f6f [gray] ΔE 0.0183 Δab 0.0136 C 0.0136/0.0000   (dropped)
+tailwind         stone-600                                    #57534d [stone] color            carbon:g10   -> icon-secondary #525252 [gray] ΔE 0.0123 Δab 0.0110 C 0.0110/0.0000   (dropped)
+tailwind         mauve-300                                    #d7d0d7 [mauve] background-color carbon:g10   -> layer-accent-hover-01 #d1d1d1 [gray] ΔE 0.0130 Δab 0.0122 C 0.0122/0.0000   (dropped)
+tailwind         mist-400                                     #9ca8ab [mist] background-color carbon:g10   -> layer-accent-active-01 #a8a8a8 [gray] ΔE 0.0166 Δab 0.0143 C 0.0143/0.0000   (dropped)
+tailwind         mist-400                                     #9ca8ab [mist] border-color     carbon:g10   -> border-tile-01 #a8a8a8 [gray] ΔE 0.0166 Δab 0.0143 C 0.0143/0.0000   (dropped)
+tailwind         taupe-600                                    #5b4f4b [taupe] color            carbon:g10   -> icon-secondary #525252 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] background-color carbon:g10   -> field-01 #ffffff [white] ΔE 0.0198 Δab 0.0142 C 0.0142/0.0000   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] color            carbon:g10   -> icon-inverse #ffffff [white] ΔE 0.0198 Δab 0.0142 C 0.0142/0.0000   (dropped)
+carbon-primitive coolGray.30                                  #c1c7cd [coolGray] background-color carbon:g10   -> layer-active-01 #c6c6c6 [gray] ΔE 0.0107 Δab 0.0107 C 0.0107/0.0000   (dropped)
+carbon-primitive coolGray.30                                  #c1c7cd [coolGray] border-color     carbon:g10   -> border-disabled #c6c6c6 [gray] ΔE 0.0107 Δab 0.0107 C 0.0107/0.0000   (dropped)
+carbon-primitive coolGray.40                                  #a2a9b0 [coolGray] background-color carbon:g10   -> layer-accent-active-01 #a8a8a8 [gray] ΔE 0.0129 Δab 0.0129 C 0.0129/0.0000   (dropped)
+carbon-primitive coolGray.40                                  #a2a9b0 [coolGray] border-color     carbon:g10   -> border-tile-01 #a8a8a8 [gray] ΔE 0.0129 Δab 0.0129 C 0.0129/0.0000   (dropped)
+carbon-primitive coolGray.50                                  #878d96 [coolGray] background-color carbon:g10   -> layer-selected-disabled #8d8d8d [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000   (dropped)
+carbon-primitive coolGray.50                                  #878d96 [coolGray] color            carbon:g10   -> icon-on-color-disabled #8d8d8d [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000   (dropped)
+carbon-primitive coolGray.50                                  #878d96 [coolGray] border-color     carbon:g10   -> border-strong-01 #8d8d8d [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000   (dropped)
+carbon-primitive coolGray.60                                  #697077 [coolGray] color            carbon:g10   -> text-helper #6f6f6f [gray] ΔE 0.0139 Δab 0.0139 C 0.0139/0.0000   (dropped)
+carbon-primitive coolGray.70                                  #4d5358 [coolGray] color            carbon:g10   -> icon-secondary #525252 [gray] ΔE 0.0113 Δab 0.0113 C 0.0113/0.0000   (dropped)
+carbon-primitive coolGray.80                                  #343a3f [coolGray] background-color carbon:g10   -> background-inverse #393939 [gray] ΔE 0.0120 Δab 0.0120 C 0.0120/0.0000   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] background-color carbon:g10   -> field-hover-01 #e8e8e8 [gray] ΔE 0.0122 Δab 0.0121 C 0.0121/0.0000   (dropped)
+carbon-primitive coolGray.20Hover                             #cdd3da [coolGray] background-color carbon:g10   -> layer-accent-hover-01 #d1d1d1 [gray] ΔE 0.0122 Δab 0.0117 C 0.0117/0.0000   (dropped)
+carbon-primitive coolGray.80Hover                             #434a51 [coolGray] background-color carbon:g10   -> background-inverse-hover #474747 [gray] ΔE 0.0167 Δab 0.0149 C 0.0149/0.0000   (dropped)
+tailwind         slate-200                                    #e2e8f0 [slate] background-color carbon:g90   -> background-inverse-hover #e8e8e8 [gray] ΔE 0.0128 Δab 0.0126 C 0.0126/0.0000   (dropped)
+tailwind         zinc-500                                     #71717b [zinc] background-color carbon:g90   -> field-03 #6f6f6f [gray] ΔE 0.0185 Δab 0.0153 C 0.0153/0.0000   (dropped)
+tailwind         zinc-500                                     #71717b [zinc] border-color     carbon:g90   -> border-subtle-01 #6f6f6f [gray] ΔE 0.0185 Δab 0.0153 C 0.0153/0.0000   (dropped)
+tailwind         zinc-600                                     #52525c [zinc] background-color carbon:g90   -> field-02 #525252 [gray] ΔE 0.0167 Δab 0.0162 C 0.0162/0.0000   (dropped)
+tailwind         zinc-600                                     #52525c [zinc] border-color     carbon:g90   -> border-subtle-00 #525252 [gray] ΔE 0.0167 Δab 0.0162 C 0.0162/0.0000   (dropped)
+tailwind         stone-500                                    #79716b [stone] background-color carbon:g90   -> field-03 #6f6f6f [gray] ΔE 0.0183 Δab 0.0136 C 0.0136/0.0000   (dropped)
+tailwind         stone-500                                    #79716b [stone] border-color     carbon:g90   -> border-subtle-01 #6f6f6f [gray] ΔE 0.0183 Δab 0.0136 C 0.0136/0.0000   (dropped)
+tailwind         stone-600                                    #57534d [stone] background-color carbon:g90   -> field-02 #525252 [gray] ΔE 0.0123 Δab 0.0110 C 0.0110/0.0000   (dropped)
+tailwind         stone-600                                    #57534d [stone] border-color     carbon:g90   -> border-subtle-00 #525252 [gray] ΔE 0.0123 Δab 0.0110 C 0.0110/0.0000   (dropped)
+tailwind         mist-400                                     #9ca8ab [mist] background-color carbon:g90   -> layer-selected-disabled #a8a8a8 [gray] ΔE 0.0166 Δab 0.0143 C 0.0143/0.0000   (dropped)
+tailwind         mist-400                                     #9ca8ab [mist] border-color     carbon:g90   -> border-strong-02 #a8a8a8 [gray] ΔE 0.0166 Δab 0.0143 C 0.0143/0.0000   (dropped)
+tailwind         mist-800                                     #22292b [mist] background-color carbon:g90   -> background #262626 [gray] ΔE 0.0123 Δab 0.0106 C 0.0106/0.0000   (dropped)
+tailwind         taupe-600                                    #5b4f4b [taupe] background-color carbon:g90   -> field-02 #525252 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000   (dropped)
+tailwind         taupe-600                                    #5b4f4b [taupe] border-color     carbon:g90   -> border-subtle-00 #525252 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000   (dropped)
+tailwind         taupe-800                                    #2b2422 [taupe] background-color carbon:g90   -> background #262626 [gray] ΔE 0.0113 Δab 0.0113 C 0.0113/0.0000   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] color            carbon:g90   -> icon-interactive #ffffff [white] ΔE 0.0198 Δab 0.0142 C 0.0142/0.0000   (dropped)
+carbon-primitive coolGray.30                                  #c1c7cd [coolGray] color            carbon:g90   -> icon-secondary #c6c6c6 [gray] ΔE 0.0107 Δab 0.0107 C 0.0107/0.0000   (dropped)
+carbon-primitive coolGray.30                                  #c1c7cd [coolGray] border-color     carbon:g90   -> border-strong-03 #c6c6c6 [gray] ΔE 0.0107 Δab 0.0107 C 0.0107/0.0000   (dropped)
+carbon-primitive coolGray.40                                  #a2a9b0 [coolGray] background-color carbon:g90   -> layer-selected-disabled #a8a8a8 [gray] ΔE 0.0129 Δab 0.0129 C 0.0129/0.0000   (dropped)
+carbon-primitive coolGray.40                                  #a2a9b0 [coolGray] border-color     carbon:g90   -> border-strong-02 #a8a8a8 [gray] ΔE 0.0129 Δab 0.0129 C 0.0129/0.0000   (dropped)
+carbon-primitive coolGray.50                                  #878d96 [coolGray] background-color carbon:g90   -> layer-accent-03 #8d8d8d [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000   (dropped)
+carbon-primitive coolGray.50                                  #878d96 [coolGray] border-color     carbon:g90   -> border-strong-01 #8d8d8d [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000   (dropped)
+carbon-primitive coolGray.60                                  #697077 [coolGray] background-color carbon:g90   -> field-03 #6f6f6f [gray] ΔE 0.0139 Δab 0.0139 C 0.0139/0.0000   (dropped)
+carbon-primitive coolGray.60                                  #697077 [coolGray] border-color     carbon:g90   -> border-subtle-01 #6f6f6f [gray] ΔE 0.0139 Δab 0.0139 C 0.0139/0.0000   (dropped)
+carbon-primitive coolGray.70                                  #4d5358 [coolGray] background-color carbon:g90   -> field-02 #525252 [gray] ΔE 0.0113 Δab 0.0113 C 0.0113/0.0000   (dropped)
+carbon-primitive coolGray.70                                  #4d5358 [coolGray] border-color     carbon:g90   -> border-subtle-00 #525252 [gray] ΔE 0.0113 Δab 0.0113 C 0.0113/0.0000   (dropped)
+carbon-primitive coolGray.80                                  #343a3f [coolGray] background-color carbon:g90   -> field-01 #393939 [gray] ΔE 0.0120 Δab 0.0120 C 0.0120/0.0000   (dropped)
+carbon-primitive coolGray.90                                  #21272a [coolGray] background-color carbon:g90   -> background #262626 [gray] ΔE 0.0103 Δab 0.0103 C 0.0103/0.0000   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] background-color carbon:g90   -> background-inverse-hover #e8e8e8 [gray] ΔE 0.0122 Δab 0.0121 C 0.0121/0.0000   (dropped)
+carbon-primitive coolGray.50Hover                             #757b85 [coolGray] background-color carbon:g90   -> layer-accent-hover-03 #7a7a7a [gray] ΔE 0.0170 Δab 0.0169 C 0.0169/0.0000   (dropped)
+carbon-primitive coolGray.60Hover                             #585e64 [coolGray] background-color carbon:g90   -> field-hover-03 #5e5e5e [gray] ΔE 0.0127 Δab 0.0123 C 0.0123/0.0000   (dropped)
+carbon-primitive coolGray.70Hover                             #5d646a [coolGray] background-color carbon:g90   -> field-hover-02 #636363 [gray] ΔE 0.0129 Δab 0.0129 C 0.0129/0.0000   (dropped)
+carbon-primitive coolGray.80Hover                             #434a51 [coolGray] background-color carbon:g90   -> field-hover-01 #474747 [gray] ΔE 0.0167 Δab 0.0149 C 0.0149/0.0000   (dropped)
+carbon-primitive coolGray.100Hover                            #222a2f [coolGray] background-color carbon:g90   -> background #262626 [gray] ΔE 0.0181 Δab 0.0146 C 0.0146/0.0000   (dropped)
+tailwind         slate-200                                    #e2e8f0 [slate] background-color carbon:g100  -> background-inverse-hover #e8e8e8 [gray] ΔE 0.0128 Δab 0.0126 C 0.0126/0.0000   (dropped)
+tailwind         zinc-500                                     #71717b [zinc] background-color carbon:g100  -> layer-accent-03 #6f6f6f [gray] ΔE 0.0185 Δab 0.0153 C 0.0153/0.0000   (dropped)
+tailwind         zinc-500                                     #71717b [zinc] border-color     carbon:g100  -> border-strong-01 #6f6f6f [gray] ΔE 0.0185 Δab 0.0153 C 0.0153/0.0000   (dropped)
+tailwind         zinc-600                                     #52525c [zinc] background-color carbon:g100  -> field-03 #525252 [gray] ΔE 0.0167 Δab 0.0162 C 0.0162/0.0000   (dropped)
+tailwind         zinc-600                                     #52525c [zinc] border-color     carbon:g100  -> border-subtle-01 #525252 [gray] ΔE 0.0167 Δab 0.0162 C 0.0162/0.0000   (dropped)
+tailwind         stone-500                                    #79716b [stone] background-color carbon:g100  -> layer-accent-03 #6f6f6f [gray] ΔE 0.0183 Δab 0.0136 C 0.0136/0.0000   (dropped)
+tailwind         stone-500                                    #79716b [stone] border-color     carbon:g100  -> border-strong-01 #6f6f6f [gray] ΔE 0.0183 Δab 0.0136 C 0.0136/0.0000   (dropped)
+tailwind         stone-600                                    #57534d [stone] background-color carbon:g100  -> field-03 #525252 [gray] ΔE 0.0123 Δab 0.0110 C 0.0110/0.0000   (dropped)
+tailwind         stone-600                                    #57534d [stone] border-color     carbon:g100  -> border-subtle-01 #525252 [gray] ΔE 0.0123 Δab 0.0110 C 0.0110/0.0000   (dropped)
+tailwind         mist-400                                     #9ca8ab [mist] background-color carbon:g100  -> layer-selected-disabled #a8a8a8 [gray] ΔE 0.0166 Δab 0.0143 C 0.0143/0.0000   (dropped)
+tailwind         mist-400                                     #9ca8ab [mist] color            carbon:g100  -> text-helper #a8a8a8 [gray] ΔE 0.0166 Δab 0.0143 C 0.0143/0.0000   (dropped)
+tailwind         mist-400                                     #9ca8ab [mist] border-color     carbon:g100  -> border-strong-03 #a8a8a8 [gray] ΔE 0.0166 Δab 0.0143 C 0.0143/0.0000   (dropped)
+tailwind         mist-800                                     #22292b [mist] background-color carbon:g100  -> field-01 #262626 [gray] ΔE 0.0123 Δab 0.0106 C 0.0106/0.0000   (dropped)
+tailwind         taupe-600                                    #5b4f4b [taupe] background-color carbon:g100  -> field-03 #525252 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000   (dropped)
+tailwind         taupe-600                                    #5b4f4b [taupe] border-color     carbon:g100  -> border-subtle-01 #525252 [gray] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000   (dropped)
+tailwind         taupe-800                                    #2b2422 [taupe] background-color carbon:g100  -> field-01 #262626 [gray] ΔE 0.0113 Δab 0.0113 C 0.0113/0.0000   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] color            carbon:g100  -> icon-interactive #ffffff [white] ΔE 0.0198 Δab 0.0142 C 0.0142/0.0000   (dropped)
+carbon-primitive coolGray.30                                  #c1c7cd [coolGray] color            carbon:g100  -> icon-secondary #c6c6c6 [gray] ΔE 0.0107 Δab 0.0107 C 0.0107/0.0000   (dropped)
+carbon-primitive coolGray.40                                  #a2a9b0 [coolGray] background-color carbon:g100  -> layer-selected-disabled #a8a8a8 [gray] ΔE 0.0129 Δab 0.0129 C 0.0129/0.0000   (dropped)
+carbon-primitive coolGray.40                                  #a2a9b0 [coolGray] color            carbon:g100  -> text-helper #a8a8a8 [gray] ΔE 0.0129 Δab 0.0129 C 0.0129/0.0000   (dropped)
+carbon-primitive coolGray.40                                  #a2a9b0 [coolGray] border-color     carbon:g100  -> border-strong-03 #a8a8a8 [gray] ΔE 0.0129 Δab 0.0129 C 0.0129/0.0000   (dropped)
+carbon-primitive coolGray.50                                  #878d96 [coolGray] background-color carbon:g100  -> layer-accent-active-02 #8d8d8d [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000   (dropped)
+carbon-primitive coolGray.50                                  #878d96 [coolGray] border-color     carbon:g100  -> border-strong-02 #8d8d8d [gray] ΔE 0.0153 Δab 0.0152 C 0.0152/0.0000   (dropped)
+carbon-primitive coolGray.60                                  #697077 [coolGray] background-color carbon:g100  -> layer-accent-03 #6f6f6f [gray] ΔE 0.0139 Δab 0.0139 C 0.0139/0.0000   (dropped)
+carbon-primitive coolGray.60                                  #697077 [coolGray] border-color     carbon:g100  -> border-strong-01 #6f6f6f [gray] ΔE 0.0139 Δab 0.0139 C 0.0139/0.0000   (dropped)
+carbon-primitive coolGray.70                                  #4d5358 [coolGray] background-color carbon:g100  -> field-03 #525252 [gray] ΔE 0.0113 Δab 0.0113 C 0.0113/0.0000   (dropped)
+carbon-primitive coolGray.70                                  #4d5358 [coolGray] border-color     carbon:g100  -> border-subtle-01 #525252 [gray] ΔE 0.0113 Δab 0.0113 C 0.0113/0.0000   (dropped)
+carbon-primitive coolGray.80                                  #343a3f [coolGray] background-color carbon:g100  -> field-02 #393939 [gray] ΔE 0.0120 Δab 0.0120 C 0.0120/0.0000   (dropped)
+carbon-primitive coolGray.80                                  #343a3f [coolGray] border-color     carbon:g100  -> border-subtle-00 #393939 [gray] ΔE 0.0120 Δab 0.0120 C 0.0120/0.0000   (dropped)
+carbon-primitive coolGray.90                                  #21272a [coolGray] background-color carbon:g100  -> field-01 #262626 [gray] ΔE 0.0103 Δab 0.0103 C 0.0103/0.0000   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] background-color carbon:g100  -> background-inverse-hover #e8e8e8 [gray] ΔE 0.0122 Δab 0.0121 C 0.0121/0.0000   (dropped)
+carbon-primitive coolGray.60Hover                             #585e64 [coolGray] background-color carbon:g100  -> layer-accent-hover-03 #5e5e5e [gray] ΔE 0.0127 Δab 0.0123 C 0.0123/0.0000   (dropped)
+carbon-primitive coolGray.70Hover                             #5d646a [coolGray] background-color carbon:g100  -> field-hover-03 #636363 [gray] ΔE 0.0129 Δab 0.0129 C 0.0129/0.0000   (dropped)
+carbon-primitive coolGray.80Hover                             #434a51 [coolGray] background-color carbon:g100  -> field-hover-02 #474747 [gray] ΔE 0.0167 Δab 0.0149 C 0.0149/0.0000   (dropped)
+carbon-primitive coolGray.90Hover                             #2b3236 [coolGray] background-color carbon:g100  -> field-hover-01 #333333 [gray] ΔE 0.0151 Δab 0.0120 C 0.0120/0.0000   (dropped)
+carbon-primitive coolGray.100Hover                            #222a2f [coolGray] background-color carbon:g100  -> field-01 #262626 [gray] ΔE 0.0181 Δab 0.0146 C 0.0146/0.0000   (dropped)
+tailwind         slate-200                                    #e2e8f0 [slate] border-color     shadcn:light -> border #e5e5e5 [neutral] ΔE 0.0144 Δab 0.0126 C 0.0126/0.0000   (dropped)
+tailwind         gray-300                                     #d1d5dc [gray-tw] background-color shadcn:light -> chart-1 #d4d4d4 [neutral] ΔE 0.0108 Δab 0.0106 C 0.0106/0.0000   (dropped)
+tailwind         zinc-400                                     #9f9fa9 [zinc] border-color     shadcn:light -> ring #a1a1a1 [neutral] ΔE 0.0148 Δab 0.0144 C 0.0144/0.0000   (dropped)
+tailwind         zinc-500                                     #71717b [zinc] background-color shadcn:light -> chart-2 #737373 [neutral] ΔE 0.0157 Δab 0.0153 C 0.0153/0.0000   (dropped)
+tailwind         zinc-500                                     #71717b [zinc] color            shadcn:light -> muted-foreground #737373 [neutral] ΔE 0.0157 Δab 0.0153 C 0.0153/0.0000   (dropped)
+tailwind         zinc-600                                     #52525c [zinc] background-color shadcn:light -> chart-3 #525252 [neutral] ΔE 0.0167 Δab 0.0162 C 0.0162/0.0000   (dropped)
+tailwind         zinc-700                                     #3f3f46 [zinc] background-color shadcn:light -> chart-4 #404040 [neutral] ΔE 0.0119 Δab 0.0119 C 0.0119/0.0000   (dropped)
+tailwind         stone-400                                    #a6a09b [stone] border-color     shadcn:light -> ring #a1a1a1 [neutral] ΔE 0.0100 Δab 0.0100 C 0.0100/0.0000   (dropped)
+tailwind         stone-500                                    #79716b [stone] background-color shadcn:light -> chart-2 #737373 [neutral] ΔE 0.0136 Δab 0.0136 C 0.0136/0.0000   (dropped)
+tailwind         stone-500                                    #79716b [stone] color            shadcn:light -> muted-foreground #737373 [neutral] ΔE 0.0136 Δab 0.0136 C 0.0136/0.0000   (dropped)
+tailwind         stone-600                                    #57534d [stone] background-color shadcn:light -> chart-3 #525252 [neutral] ΔE 0.0123 Δab 0.0110 C 0.0110/0.0000   (dropped)
+tailwind         stone-700                                    #44403b [stone] background-color shadcn:light -> chart-4 #404040 [neutral] ΔE 0.0103 Δab 0.0100 C 0.0100/0.0000   (dropped)
+tailwind         mauve-300                                    #d7d0d7 [mauve] background-color shadcn:light -> chart-1 #d4d4d4 [neutral] ΔE 0.0131 Δab 0.0122 C 0.0122/0.0000   (dropped)
+tailwind         mauve-400                                    #a89ea9 [mauve] border-color     shadcn:light -> ring #a1a1a1 [neutral] ΔE 0.0195 Δab 0.0194 C 0.0194/0.0000   (dropped)
+tailwind         olive-300                                    #d8d8d0 [olive] background-color shadcn:light -> chart-1 #d4d4d4 [neutral] ΔE 0.0148 Δab 0.0108 C 0.0108/0.0000   (dropped)
+tailwind         mist-700                                     #394447 [mist] background-color shadcn:light -> chart-4 #404040 [neutral] ΔE 0.0165 Δab 0.0152 C 0.0152/0.0000   (dropped)
+tailwind         mist-800                                     #22292b [mist] background-color shadcn:light -> chart-5 #262626 [neutral] ΔE 0.0123 Δab 0.0106 C 0.0106/0.0000   (dropped)
+tailwind         taupe-400                                    #aba09c [taupe] border-color     shadcn:light -> ring #a1a1a1 [neutral] ΔE 0.0150 Δab 0.0141 C 0.0141/0.0000   (dropped)
+tailwind         taupe-600                                    #5b4f4b [taupe] background-color shadcn:light -> chart-3 #525252 [neutral] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000   (dropped)
+tailwind         taupe-700                                    #473c39 [taupe] background-color shadcn:light -> chart-4 #404040 [neutral] ΔE 0.0170 Δab 0.0163 C 0.0163/0.0000   (dropped)
+tailwind         taupe-800                                    #2b2422 [taupe] background-color shadcn:light -> chart-5 #262626 [neutral] ΔE 0.0113 Δab 0.0113 C 0.0113/0.0000   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] background-color shadcn:light -> sidebar #fafafa [neutral] ΔE 0.0143 Δab 0.0142 C 0.0142/0.0000   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] color            shadcn:light -> primary-foreground #fafafa [neutral] ΔE 0.0143 Δab 0.0142 C 0.0142/0.0000   (dropped)
+carbon-primitive coolGray.60                                  #697077 [coolGray] background-color shadcn:light -> chart-2 #737373 [neutral] ΔE 0.0197 Δab 0.0139 C 0.0139/0.0000   (dropped)
+carbon-primitive coolGray.60                                  #697077 [coolGray] color            shadcn:light -> muted-foreground #737373 [neutral] ΔE 0.0197 Δab 0.0139 C 0.0139/0.0000   (dropped)
+carbon-primitive coolGray.70                                  #4d5358 [coolGray] background-color shadcn:light -> chart-3 #525252 [neutral] ΔE 0.0113 Δab 0.0113 C 0.0113/0.0000   (dropped)
+carbon-primitive coolGray.90                                  #21272a [coolGray] background-color shadcn:light -> chart-5 #262626 [neutral] ΔE 0.0103 Δab 0.0103 C 0.0103/0.0000   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] border-color     shadcn:light -> border #e5e5e5 [neutral] ΔE 0.0161 Δab 0.0121 C 0.0121/0.0000   (dropped)
+carbon-primitive coolGray.20Hover                             #cdd3da [coolGray] background-color shadcn:light -> chart-1 #d4d4d4 [neutral] ΔE 0.0130 Δab 0.0117 C 0.0117/0.0000   (dropped)
+carbon-primitive coolGray.100Hover                            #222a2f [coolGray] background-color shadcn:light -> chart-5 #262626 [neutral] ΔE 0.0181 Δab 0.0146 C 0.0146/0.0000   (dropped)
+tailwind         slate-200                                    #e2e8f0 [slate] background-color shadcn:dark  -> primary #e5e5e5 [neutral] ΔE 0.0144 Δab 0.0126 C 0.0126/0.0000   (dropped)
+tailwind         slate-200                                    #e2e8f0 [slate] color            shadcn:dark  -> primary #e5e5e5 [neutral] ΔE 0.0144 Δab 0.0126 C 0.0126/0.0000   (dropped)
+tailwind         gray-300                                     #d1d5dc [gray-tw] background-color shadcn:dark  -> chart-1 #d4d4d4 [neutral] ΔE 0.0108 Δab 0.0106 C 0.0106/0.0000   (dropped)
+tailwind         zinc-400                                     #9f9fa9 [zinc] color            shadcn:dark  -> muted-foreground #a1a1a1 [neutral] ΔE 0.0148 Δab 0.0144 C 0.0144/0.0000   (dropped)
+tailwind         zinc-500                                     #71717b [zinc] background-color shadcn:dark  -> chart-2 #737373 [neutral] ΔE 0.0157 Δab 0.0153 C 0.0153/0.0000   (dropped)
+tailwind         zinc-500                                     #71717b [zinc] border-color     shadcn:dark  -> ring #737373 [neutral] ΔE 0.0157 Δab 0.0153 C 0.0153/0.0000   (dropped)
+tailwind         zinc-600                                     #52525c [zinc] background-color shadcn:dark  -> chart-3 #525252 [neutral] ΔE 0.0167 Δab 0.0162 C 0.0162/0.0000   (dropped)
+tailwind         zinc-700                                     #3f3f46 [zinc] background-color shadcn:dark  -> chart-4 #404040 [neutral] ΔE 0.0119 Δab 0.0119 C 0.0119/0.0000   (dropped)
+tailwind         stone-400                                    #a6a09b [stone] color            shadcn:dark  -> muted-foreground #a1a1a1 [neutral] ΔE 0.0100 Δab 0.0100 C 0.0100/0.0000   (dropped)
+tailwind         stone-500                                    #79716b [stone] background-color shadcn:dark  -> chart-2 #737373 [neutral] ΔE 0.0136 Δab 0.0136 C 0.0136/0.0000   (dropped)
+tailwind         stone-500                                    #79716b [stone] border-color     shadcn:dark  -> ring #737373 [neutral] ΔE 0.0136 Δab 0.0136 C 0.0136/0.0000   (dropped)
+tailwind         stone-600                                    #57534d [stone] background-color shadcn:dark  -> chart-3 #525252 [neutral] ΔE 0.0123 Δab 0.0110 C 0.0110/0.0000   (dropped)
+tailwind         stone-700                                    #44403b [stone] background-color shadcn:dark  -> chart-4 #404040 [neutral] ΔE 0.0103 Δab 0.0100 C 0.0100/0.0000   (dropped)
+tailwind         mauve-300                                    #d7d0d7 [mauve] background-color shadcn:dark  -> chart-1 #d4d4d4 [neutral] ΔE 0.0131 Δab 0.0122 C 0.0122/0.0000   (dropped)
+tailwind         mauve-400                                    #a89ea9 [mauve] color            shadcn:dark  -> muted-foreground #a1a1a1 [neutral] ΔE 0.0195 Δab 0.0194 C 0.0194/0.0000   (dropped)
+tailwind         olive-300                                    #d8d8d0 [olive] background-color shadcn:dark  -> chart-1 #d4d4d4 [neutral] ΔE 0.0148 Δab 0.0108 C 0.0108/0.0000   (dropped)
+tailwind         mist-700                                     #394447 [mist] background-color shadcn:dark  -> chart-4 #404040 [neutral] ΔE 0.0165 Δab 0.0152 C 0.0152/0.0000   (dropped)
+tailwind         mist-800                                     #22292b [mist] background-color shadcn:dark  -> accent #262626 [neutral] ΔE 0.0123 Δab 0.0106 C 0.0106/0.0000   (dropped)
+tailwind         taupe-400                                    #aba09c [taupe] color            shadcn:dark  -> muted-foreground #a1a1a1 [neutral] ΔE 0.0150 Δab 0.0141 C 0.0141/0.0000   (dropped)
+tailwind         taupe-600                                    #5b4f4b [taupe] background-color shadcn:dark  -> chart-3 #525252 [neutral] ΔE 0.0174 Δab 0.0174 C 0.0174/0.0000   (dropped)
+tailwind         taupe-700                                    #473c39 [taupe] background-color shadcn:dark  -> chart-4 #404040 [neutral] ΔE 0.0170 Δab 0.0163 C 0.0163/0.0000   (dropped)
+tailwind         taupe-800                                    #2b2422 [taupe] background-color shadcn:dark  -> accent #262626 [neutral] ΔE 0.0113 Δab 0.0113 C 0.0113/0.0000   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] color            shadcn:dark  -> accent-foreground #fafafa [neutral] ΔE 0.0143 Δab 0.0142 C 0.0142/0.0000   (dropped)
+carbon-primitive coolGray.60                                  #697077 [coolGray] background-color shadcn:dark  -> chart-2 #737373 [neutral] ΔE 0.0197 Δab 0.0139 C 0.0139/0.0000   (dropped)
+carbon-primitive coolGray.60                                  #697077 [coolGray] border-color     shadcn:dark  -> ring #737373 [neutral] ΔE 0.0197 Δab 0.0139 C 0.0139/0.0000   (dropped)
+carbon-primitive coolGray.70                                  #4d5358 [coolGray] background-color shadcn:dark  -> chart-3 #525252 [neutral] ΔE 0.0113 Δab 0.0113 C 0.0113/0.0000   (dropped)
+carbon-primitive coolGray.90                                  #21272a [coolGray] background-color shadcn:dark  -> accent #262626 [neutral] ΔE 0.0103 Δab 0.0103 C 0.0103/0.0000   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] background-color shadcn:dark  -> primary #e5e5e5 [neutral] ΔE 0.0161 Δab 0.0121 C 0.0121/0.0000   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] color            shadcn:dark  -> primary #e5e5e5 [neutral] ΔE 0.0161 Δab 0.0121 C 0.0121/0.0000   (dropped)
+carbon-primitive coolGray.20Hover                             #cdd3da [coolGray] background-color shadcn:dark  -> chart-1 #d4d4d4 [neutral] ΔE 0.0130 Δab 0.0117 C 0.0117/0.0000   (dropped)
+carbon-primitive coolGray.100Hover                            #222a2f [coolGray] background-color shadcn:dark  -> accent #262626 [neutral] ΔE 0.0181 Δab 0.0146 C 0.0146/0.0000   (dropped)
+tailwind         slate-200                                    #e2e8f0 [slate] border-color     shadcn-zinc:light -> border #e4e4e7 [zinc] ΔE 0.0130 Δab 0.0094 C 0.0126/0.0040   (dropped)
+tailwind         slate-300                                    #cad5e2 [slate] background-color shadcn-zinc:light -> chart-1 #d4d4d8 [zinc] ΔE 0.0175 Δab 0.0173 C 0.0216/0.0055   (dropped)
+tailwind         gray-300                                     #d1d5dc [gray-tw] background-color shadcn-zinc:light -> chart-1 #d4d4d8 [zinc] ΔE 0.0061 Δab 0.0060 C 0.0106/0.0055   (dropped)
+tailwind         mauve-300                                    #d7d0d7 [mauve] background-color shadcn-zinc:light -> chart-1 #d4d4d8 [zinc] ΔE 0.0105 Δab 0.0087 C 0.0122/0.0055   (dropped)
+tailwind         mauve-900                                    #1d161e [mauve] background-color shadcn-zinc:light -> primary #18181b [zinc] ΔE 0.0146 Δab 0.0145 C 0.0188/0.0059   (dropped)
+tailwind         mauve-900                                    #1d161e [mauve] color            shadcn-zinc:light -> accent-foreground #18181b [zinc] ΔE 0.0146 Δab 0.0145 C 0.0188/0.0059   (dropped)
+tailwind         olive-300                                    #d8d8d0 [olive] background-color shadcn-zinc:light -> chart-1 #d4d4d8 [zinc] ΔE 0.0185 Δab 0.0163 C 0.0108/0.0055   (dropped)
+tailwind         mist-800                                     #22292b [mist] background-color shadcn-zinc:light -> chart-5 #27272a [zinc] ΔE 0.0101 Δab 0.0100 C 0.0106/0.0055   (dropped)
+tailwind         taupe-800                                    #2b2422 [taupe] background-color shadcn-zinc:light -> chart-5 #27272a [zinc] ΔE 0.0155 Δab 0.0141 C 0.0113/0.0055   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] background-color shadcn-zinc:light -> sidebar #fafafa [zinc] ΔE 0.0143 Δab 0.0142 C 0.0142/0.0000   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] color            shadcn-zinc:light -> primary-foreground #fafafa [zinc] ΔE 0.0143 Δab 0.0142 C 0.0142/0.0000   (dropped)
+carbon-primitive coolGray.90                                  #21272a [coolGray] background-color shadcn-zinc:light -> chart-5 #27272a [zinc] ΔE 0.0104 Δab 0.0086 C 0.0103/0.0055   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] border-color     shadcn-zinc:light -> border #e4e4e7 [zinc] ΔE 0.0155 Δab 0.0087 C 0.0121/0.0040   (dropped)
+carbon-primitive coolGray.20Hover                             #cdd3da [coolGray] background-color shadcn-zinc:light -> chart-1 #d4d4d8 [zinc] ΔE 0.0104 Δab 0.0078 C 0.0117/0.0055   (dropped)
+carbon-primitive coolGray.100Hover                            #222a2f [coolGray] background-color shadcn-zinc:light -> chart-5 #27272a [zinc] ΔE 0.0131 Δab 0.0119 C 0.0146/0.0055   (dropped)
+tailwind         slate-200                                    #e2e8f0 [slate] background-color shadcn-zinc:dark  -> primary #e4e4e7 [zinc] ΔE 0.0130 Δab 0.0094 C 0.0126/0.0040   (dropped)
+tailwind         slate-200                                    #e2e8f0 [slate] color            shadcn-zinc:dark  -> primary #e4e4e7 [zinc] ΔE 0.0130 Δab 0.0094 C 0.0126/0.0040   (dropped)
+tailwind         slate-300                                    #cad5e2 [slate] background-color shadcn-zinc:dark  -> chart-1 #d4d4d8 [zinc] ΔE 0.0175 Δab 0.0173 C 0.0216/0.0055   (dropped)
+tailwind         gray-300                                     #d1d5dc [gray-tw] background-color shadcn-zinc:dark  -> chart-1 #d4d4d8 [zinc] ΔE 0.0061 Δab 0.0060 C 0.0106/0.0055   (dropped)
+tailwind         mauve-300                                    #d7d0d7 [mauve] background-color shadcn-zinc:dark  -> chart-1 #d4d4d8 [zinc] ΔE 0.0105 Δab 0.0087 C 0.0122/0.0055   (dropped)
+tailwind         mauve-900                                    #1d161e [mauve] background-color shadcn-zinc:dark  -> card #18181b [zinc] ΔE 0.0146 Δab 0.0145 C 0.0188/0.0059   (dropped)
+tailwind         mauve-900                                    #1d161e [mauve] color            shadcn-zinc:dark  -> primary-foreground #18181b [zinc] ΔE 0.0146 Δab 0.0145 C 0.0188/0.0059   (dropped)
+tailwind         olive-300                                    #d8d8d0 [olive] background-color shadcn-zinc:dark  -> chart-1 #d4d4d8 [zinc] ΔE 0.0185 Δab 0.0163 C 0.0108/0.0055   (dropped)
+tailwind         mist-800                                     #22292b [mist] background-color shadcn-zinc:dark  -> accent #27272a [zinc] ΔE 0.0101 Δab 0.0100 C 0.0106/0.0055   (dropped)
+tailwind         taupe-800                                    #2b2422 [taupe] background-color shadcn-zinc:dark  -> accent #27272a [zinc] ΔE 0.0155 Δab 0.0141 C 0.0113/0.0055   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] color            shadcn-zinc:dark  -> accent-foreground #fafafa [zinc] ΔE 0.0143 Δab 0.0142 C 0.0142/0.0000   (dropped)
+carbon-primitive coolGray.90                                  #21272a [coolGray] background-color shadcn-zinc:dark  -> accent #27272a [zinc] ΔE 0.0104 Δab 0.0086 C 0.0103/0.0055   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] background-color shadcn-zinc:dark  -> primary #e4e4e7 [zinc] ΔE 0.0155 Δab 0.0087 C 0.0121/0.0040   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] color            shadcn-zinc:dark  -> primary #e4e4e7 [zinc] ΔE 0.0155 Δab 0.0087 C 0.0121/0.0040   (dropped)
+carbon-primitive coolGray.20Hover                             #cdd3da [coolGray] background-color shadcn-zinc:dark  -> chart-1 #d4d4d8 [zinc] ΔE 0.0104 Δab 0.0078 C 0.0117/0.0055   (dropped)
+carbon-primitive coolGray.100Hover                            #222a2f [coolGray] background-color shadcn-zinc:dark  -> accent #27272a [zinc] ΔE 0.0131 Δab 0.0119 C 0.0146/0.0055   (dropped)
+tailwind         slate-200                                    #e2e8f0 [slate] border-color     shadcn-stone:light -> border #e7e5e4 [stone] ΔE 0.0160 Δab 0.0150 C 0.0126/0.0026   (dropped)
+tailwind         gray-300                                     #d1d5dc [gray-tw] background-color shadcn-stone:light -> chart-1 #d6d3d1 [stone] ΔE 0.0149 Δab 0.0146 C 0.0106/0.0043   (dropped)
+tailwind         mauve-300                                    #d7d0d7 [mauve] background-color shadcn-stone:light -> chart-1 #d6d3d1 [stone] ΔE 0.0134 Δab 0.0130 C 0.0122/0.0043   (dropped)
+tailwind         olive-300                                    #d8d8d0 [olive] background-color shadcn-stone:light -> chart-1 #d6d3d1 [stone] ΔE 0.0143 Δab 0.0087 C 0.0108/0.0043   (dropped)
+tailwind         olive-900                                    #1d1d16 [olive] background-color shadcn-stone:light -> primary #1c1917 [stone] ΔE 0.0159 Δab 0.0104 C 0.0130/0.0061   (dropped)
+tailwind         olive-900                                    #1d1d16 [olive] color            shadcn-stone:light -> accent-foreground #1c1917 [stone] ΔE 0.0159 Δab 0.0104 C 0.0130/0.0061   (dropped)
+tailwind         mist-800                                     #22292b [mist] background-color shadcn-stone:light -> chart-5 #292524 [stone] ΔE 0.0181 Δab 0.0169 C 0.0106/0.0063   (dropped)
+tailwind         taupe-800                                    #2b2422 [taupe] background-color shadcn-stone:light -> chart-5 #292524 [stone] ΔE 0.0051 Δab 0.0050 C 0.0113/0.0063   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] background-color shadcn-stone:light -> sidebar #fafaf9 [stone] ΔE 0.0131 Δab 0.0130 C 0.0142/0.0013   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] color            shadcn-stone:light -> primary-foreground #fafaf9 [stone] ΔE 0.0131 Δab 0.0130 C 0.0142/0.0013   (dropped)
+carbon-primitive coolGray.90                                  #21272a [coolGray] background-color shadcn-stone:light -> chart-5 #292524 [stone] ΔE 0.0164 Δab 0.0164 C 0.0103/0.0063   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] border-color     shadcn-stone:light -> border #e7e5e4 [stone] ΔE 0.0171 Δab 0.0143 C 0.0121/0.0026   (dropped)
+carbon-primitive coolGray.20Hover                             #cdd3da [coolGray] background-color shadcn-stone:light -> chart-1 #d6d3d1 [stone] ΔE 0.0165 Δab 0.0159 C 0.0117/0.0043   (dropped)
+tailwind         slate-200                                    #e2e8f0 [slate] background-color shadcn-stone:dark  -> primary #e7e5e4 [stone] ΔE 0.0160 Δab 0.0150 C 0.0126/0.0026   (dropped)
+tailwind         slate-200                                    #e2e8f0 [slate] color            shadcn-stone:dark  -> primary #e7e5e4 [stone] ΔE 0.0160 Δab 0.0150 C 0.0126/0.0026   (dropped)
+tailwind         gray-300                                     #d1d5dc [gray-tw] background-color shadcn-stone:dark  -> chart-1 #d6d3d1 [stone] ΔE 0.0149 Δab 0.0146 C 0.0106/0.0043   (dropped)
+tailwind         mauve-300                                    #d7d0d7 [mauve] background-color shadcn-stone:dark  -> chart-1 #d6d3d1 [stone] ΔE 0.0134 Δab 0.0130 C 0.0122/0.0043   (dropped)
+tailwind         olive-300                                    #d8d8d0 [olive] background-color shadcn-stone:dark  -> chart-1 #d6d3d1 [stone] ΔE 0.0143 Δab 0.0087 C 0.0108/0.0043   (dropped)
+tailwind         olive-900                                    #1d1d16 [olive] background-color shadcn-stone:dark  -> card #1c1917 [stone] ΔE 0.0159 Δab 0.0104 C 0.0130/0.0061   (dropped)
+tailwind         olive-900                                    #1d1d16 [olive] color            shadcn-stone:dark  -> primary-foreground #1c1917 [stone] ΔE 0.0159 Δab 0.0104 C 0.0130/0.0061   (dropped)
+tailwind         mist-800                                     #22292b [mist] background-color shadcn-stone:dark  -> accent #292524 [stone] ΔE 0.0181 Δab 0.0169 C 0.0106/0.0063   (dropped)
+tailwind         taupe-800                                    #2b2422 [taupe] background-color shadcn-stone:dark  -> accent #292524 [stone] ΔE 0.0051 Δab 0.0050 C 0.0113/0.0063   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] color            shadcn-stone:dark  -> accent-foreground #fafaf9 [stone] ΔE 0.0131 Δab 0.0130 C 0.0142/0.0013   (dropped)
+carbon-primitive coolGray.90                                  #21272a [coolGray] background-color shadcn-stone:dark  -> accent #292524 [stone] ΔE 0.0164 Δab 0.0164 C 0.0103/0.0063   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] background-color shadcn-stone:dark  -> primary #e7e5e4 [stone] ΔE 0.0171 Δab 0.0143 C 0.0121/0.0026   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] color            shadcn-stone:dark  -> primary #e7e5e4 [stone] ΔE 0.0171 Δab 0.0143 C 0.0121/0.0026   (dropped)
+carbon-primitive coolGray.20Hover                             #cdd3da [coolGray] background-color shadcn-stone:dark  -> chart-1 #d6d3d1 [stone] ΔE 0.0165 Δab 0.0159 C 0.0117/0.0043   (dropped)
+tailwind         slate-200                                    #e2e8f0 [slate] border-color     shadcn-gray:light -> border #e5e7eb [gray-tw] ΔE 0.0070 Δab 0.0069 C 0.0126/0.0058   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] background-color shadcn-gray:light -> sidebar #f9fafb [gray-tw] ΔE 0.0159 Δab 0.0159 C 0.0142/0.0017   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] color            shadcn-gray:light -> primary-foreground #f9fafb [gray-tw] ΔE 0.0159 Δab 0.0159 C 0.0142/0.0017   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] border-color     shadcn-gray:light -> border #e5e7eb [gray-tw] ΔE 0.0080 Δab 0.0063 C 0.0121/0.0058   (dropped)
+tailwind         slate-200                                    #e2e8f0 [slate] background-color shadcn-gray:dark  -> primary #e5e7eb [gray-tw] ΔE 0.0070 Δab 0.0069 C 0.0126/0.0058   (dropped)
+tailwind         slate-200                                    #e2e8f0 [slate] color            shadcn-gray:dark  -> primary #e5e7eb [gray-tw] ΔE 0.0070 Δab 0.0069 C 0.0126/0.0058   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] color            shadcn-gray:dark  -> accent-foreground #f9fafb [gray-tw] ΔE 0.0159 Δab 0.0159 C 0.0142/0.0017   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] background-color shadcn-gray:dark  -> primary #e5e7eb [gray-tw] ΔE 0.0080 Δab 0.0063 C 0.0121/0.0058   (dropped)
+carbon-primitive coolGray.10Hover                             #e4e9f1 [coolGray] color            shadcn-gray:dark  -> primary #e5e7eb [gray-tw] ΔE 0.0080 Δab 0.0063 C 0.0121/0.0058   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] background-color shadcn-slate:light -> sidebar #f8fafc [slate] ΔE 0.0176 Δab 0.0175 C 0.0142/0.0034   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] color            shadcn-slate:light -> primary-foreground #f8fafc [slate] ΔE 0.0176 Δab 0.0175 C 0.0142/0.0034   (dropped)
+css-named        floralwhite                                  #fffaf0 [neutral] color            shadcn-slate:dark  -> accent-foreground #f8fafc [slate] ΔE 0.0176 Δab 0.0175 C 0.0142/0.0034   (dropped)
+  + 1189 from noise, e.g.
+  noise            #161616+0-4+0                                #161216 [gray] background-color carbon:white -> layer-selected-inverse #161616 [gray] ΔE 0.0152 Δab 0.0102 C 0.0102/0.0000   (dropped)
+  noise            #161616+0-4+0                                #161216 [gray] color            carbon:white -> icon-primary #161616 [gray] ΔE 0.0152 Δab 0.0102 C 0.0102/0.0000   (dropped)
+  noise            #161616+0-4+0                                #161216 [gray] border-color     carbon:white -> border-inverse #161616 [gray] ΔE 0.0152 Δab 0.0102 C 0.0102/0.0000   (dropped)
+  noise            #171717+0-4+0                                #171317 [neutral] background-color carbon:white -> layer-selected-inverse #161616 [gray] ΔE 0.0122 Δab 0.0101 C 0.0101/0.0000   (dropped)
+  noise            #171717+0-4+0                                #171317 [neutral] color            carbon:white -> icon-primary #161616 [gray] ΔE 0.0122 Δab 0.0101 C 0.0101/0.0000   (dropped)
+  noise            #171717+0-4+0                                #171317 [neutral] border-color     carbon:white -> border-inverse #161616 [gray] ΔE 0.0122 Δab 0.0101 C 0.0101/0.0000   (dropped)
+  noise            #18181b+0-4+0                                #18141b [zinc] background-color carbon:white -> layer-selected-inverse #161616 [gray] ΔE 0.0151 Δab 0.0151 C 0.0151/0.0000   (dropped)
+  noise            #18181b+0-4+0                                #18141b [zinc] color            carbon:white -> icon-primary #161616 [gray] ΔE 0.0151 Δab 0.0151 C 0.0151/0.0000   (dropped)
+
+== #91 pairs under chroma-asym@0.01 ==
+#edf5ff -> #f4f4f4: ΔE 0.0159 Δab 0.0159 C 0.0159/0.0000 -> not near ok
+#fafafa -> #ffffff: ΔE 0.0149 Δab 0.0000 C 0.0000/0.0000 -> near ok
+#0f62fe -> #0b5cff: ΔE 0.0134 Δab 0.0085 C 0.2430/0.2512 -> near ok
+#18181b -> #161616: ΔE 0.0117 Δab 0.0059 C 0.0059/0.0000 -> near ok
+test case #edf5ff background-color on Carbon White: Off-system; nearest field-01 0.0159, field-03 0.0159, layer-01 0.0159; primitive blue.10

@@ -1,0 +1,28 @@
+{
+  "$comment": "Colours from the sample Prototypes, with the property they are used on and the palette family the author meant. #63: docs/prototype/html-handoff/sample-prototype/index.html on prototype/html-handoff. #91: the issue's pairs. #84: prototypes/source-link/*-app on prototype/source-link (they use shadcn theme utilities, so only text-emerald-600 is a raw palette colour). #62 has no sample Prototype of its own.",
+  "samples": [
+    { "from": "#63 index.html:13", "raw": "#fafafa", "role": "background-color", "family": "neutral", "intent": "off-white page" },
+    { "from": "#63 index.html:13", "raw": "#161616", "role": "color", "family": "neutral" },
+    { "from": "#63 index.html:16", "raw": "#525252", "role": "color", "family": "neutral" },
+    { "from": "#63 index.html:17", "raw": "#f4f4f4", "role": "background-color", "family": "neutral" },
+    { "from": "#63 index.html:11", "raw": "#c6c6c6", "role": "border-color", "family": "neutral" },
+    { "from": "#63 index.html:18", "raw": "#edf5ff", "role": "background-color", "family": "blue", "intent": "blue info tint, Primitive blue.10" },
+    { "from": "#63 index.html:18", "raw": "#002d9c", "role": "color", "family": "blue" },
+    { "from": "#63 index.html:22", "raw": "#8d8d8d", "role": "border-color", "family": "neutral" },
+    { "from": "#63 index.html:22", "raw": "#ffffff", "role": "background-color", "family": "neutral" },
+    { "from": "#63 index.html:24", "raw": "#0f62fe", "role": "background-color", "family": "blue" },
+    { "from": "#63 index.html:24", "raw": "#ffffff", "role": "color", "family": "neutral" },
+    { "from": "#63 index.html:25", "raw": "#c6c6c6", "role": "background-color", "family": "neutral" },
+    { "from": "#63 index.html:25", "raw": "#8d8d8d", "role": "color", "family": "neutral" },
+    { "from": "#63 index.html:26", "raw": "#0f62fe", "role": "border-color", "family": "blue" },
+    { "from": "#63 index.html:26", "raw": "#0f62fe", "role": "color", "family": "blue" },
+    { "from": "#63 index.html:27", "raw": "#198754", "role": "background-color", "family": "green" },
+    { "from": "#63 index.html:31", "raw": "#e0e0e0", "role": "background-color", "family": "neutral" },
+    { "from": "#63 index.html:31", "raw": "#f4f4f4", "role": "border-color", "family": "neutral" },
+    { "from": "#63 index.html:35", "raw": "#da1e28", "role": "color", "family": "red" },
+    { "from": "#63 index.html:37", "raw": "#24a148", "role": "background-color", "family": "green" },
+    { "from": "#91 table", "raw": "#0b5cff", "role": "color", "family": "blue", "intent": "hand-typed brand blue" },
+    { "from": "#91 table", "raw": "#18181b", "role": "color", "family": "neutral", "intent": "Tailwind zinc-900 for Carbon grey" },
+    { "from": "#84 PlanCard.tsx / page.tsx text-emerald-600", "raw": "oklch(59.6% 0.145 163.225)", "role": "color", "family": "green" }
+  ]
+}

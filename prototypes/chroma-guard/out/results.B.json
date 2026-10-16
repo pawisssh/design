@@ -1,0 +1,974 @@
+{
+  "labels": "B",
+  "chosen": "chroma-asym@0.01",
+  "raws": 1944,
+  "decisions": 78153,
+  "near": 15141,
+  "results": [
+    {
+      "id": "none",
+      "kind": "none",
+      "right": 5509,
+      "wrong": 9402,
+      "missed": 0,
+      "off": 61891,
+      "wrongCandidates": 27204,
+      "wrongBySource": "1037/481/73/28/7783",
+      "missedBySource": "0/0/0/0/0",
+      "holdout": {
+        "right": 48,
+        "wrong": 182,
+        "missed": 0
+      }
+    },
+    {
+      "id": "dab<=0.004",
+      "kind": "Δab cap",
+      "x": 0.004,
+      "right": 3260,
+      "wrong": 2073,
+      "missed": 2263,
+      "off": 69206,
+      "wrongCandidates": 7922,
+      "wrongBySource": "218/44/24/12/1775",
+      "missedBySource": "10/25/0/10/2218",
+      "holdout": {
+        "right": 17,
+        "wrong": 18,
+        "missed": 39
+      }
+    },
+    {
+      "id": "dab<=0.006",
+      "kind": "Δab cap",
+      "x": 0.006,
+      "right": 4497,
+      "wrong": 4050,
+      "missed": 1019,
+      "off": 67236,
+      "wrongCandidates": 14624,
+      "wrongBySource": "379/173/42/15/3441",
+      "missedBySource": "0/5/0/4/1010",
+      "holdout": {
+        "right": 28,
+        "wrong": 30,
+        "missed": 26
+      }
+    },
+    {
+      "id": "dab<=0.008",
+      "kind": "Δab cap",
+      "x": 0.008,
+      "right": 5262,
+      "wrong": 5315,
+      "missed": 248,
+      "off": 65977,
+      "wrongCandidates": 18537,
+      "wrongBySource": "486/221/48/17/4543",
+      "missedBySource": "0/5/0/4/239",
+      "holdout": {
+        "right": 26,
+        "wrong": 40,
+        "missed": 26
+      }
+    },
+    {
+      "id": "dab<=0.01",
+      "kind": "Δab cap",
+      "x": 0.01,
+      "right": 5452,
+      "wrong": 6335,
+      "missed": 57,
+      "off": 64958,
+      "wrongCandidates": 21032,
+      "wrongBySource": "558/270/48/18/5441",
+      "missedBySource": "0/5/0/0/52",
+      "holdout": {
+        "right": 39,
+        "wrong": 46,
+        "missed": 13
+      }
+    },
+    {
+      "id": "dab<=0.012",
+      "kind": "Δab cap",
+      "x": 0.012,
+      "right": 5505,
+      "wrong": 7296,
+      "missed": 4,
+      "off": 63997,
+      "wrongCandidates": 23010,
+      "wrongBySource": "647/321/58/20/6250",
+      "missedBySource": "0/0/0/0/4",
+      "holdout": {
+        "right": 39,
+        "wrong": 58,
+        "missed": 13
+      }
+    },
+    {
+      "id": "dab<=0.014",
+      "kind": "Δab cap",
+      "x": 0.014,
+      "right": 5509,
+      "wrong": 8051,
+      "missed": 0,
+      "off": 63242,
+      "wrongCandidates": 24548,
+      "wrongBySource": "759/371/65/21/6835",
+      "missedBySource": "0/0/0/0/0",
+      "holdout": {
+        "right": 39,
+        "wrong": 103,
+        "missed": 12
+      }
+    },
+    {
+      "id": "dab<=0.016",
+      "kind": "Δab cap",
+      "x": 0.016,
+      "right": 5509,
+      "wrong": 8750,
+      "missed": 0,
+      "off": 62543,
+      "wrongCandidates": 25946,
+      "wrongBySource": "901/426/71/27/7325",
+      "missedBySource": "0/0/0/0/0",
+      "holdout": {
+        "right": 49,
+        "wrong": 146,
+        "missed": 0
+      }
+    },
+    {
+      "id": "dab<=0.018",
+      "kind": "Δab cap",
+      "x": 0.018,
+      "right": 5509,
+      "wrong": 9194,
+      "missed": 0,
+      "off": 62099,
+      "wrongCandidates": 26802,
+      "wrongBySource": "992/454/73/28/7647",
+      "missedBySource": "0/0/0/0/0",
+      "holdout": {
+        "right": 48,
+        "wrong": 181,
+        "missed": 0
+      }
+    },
+    {
+      "id": "dC<=0.004",
+      "kind": "ΔC cap",
+      "x": 0.004,
+      "right": 3762,
+      "wrong": 3654,
+      "missed": 1744,
+      "off": 67642,
+      "wrongCandidates": 12488,
+      "wrongBySource": "342/86/24/14/3188",
+      "missedBySource": "0/5/0/10/1729",
+      "holdout": {
+        "right": 17,
+        "wrong": 25,
+        "missed": 37
+      }
+    },
+    {
+      "id": "dC<=0.006",
+      "kind": "ΔC cap",
+      "x": 0.006,
+      "right": 4778,
+      "wrong": 5375,
+      "missed": 729,
+      "off": 65920,
+      "wrongCandidates": 18016,
+      "wrongBySource": "484/227/42/17/4605",
+      "missedBySource": "0/5/0/4/720",
+      "holdout": {
+        "right": 26,
+        "wrong": 38,
+        "missed": 26
+      }
+    },
+    {
+      "id": "dC<=0.008",
+      "kind": "ΔC cap",
+      "x": 0.008,
+      "right": 5358,
+      "wrong": 6410,
+      "missed": 151,
+      "off": 64883,
+      "wrongCandidates": 20867,
+      "wrongBySource": "590/255/48/19/5498",
+      "missedBySource": "0/0/0/4/147",
+      "holdout": {
+        "right": 26,
+        "wrong": 45,
+        "missed": 26
+      }
+    },
+    {
+      "id": "dC<=0.01",
+      "kind": "ΔC cap",
+      "x": 0.01,
+      "right": 5479,
+      "wrong": 7162,
+      "missed": 30,
+      "off": 64131,
+      "wrongCandidates": 22530,
+      "wrongBySource": "635/307/48/20/6152",
+      "missedBySource": "0/0/0/0/30",
+      "holdout": {
+        "right": 39,
+        "wrong": 53,
+        "missed": 13
+      }
+    },
+    {
+      "id": "dC<=0.012",
+      "kind": "ΔC cap",
+      "x": 0.012,
+      "right": 5507,
+      "wrong": 7978,
+      "missed": 2,
+      "off": 63315,
+      "wrongCandidates": 24159,
+      "wrongBySource": "722/344/58/20/6834",
+      "missedBySource": "0/0/0/0/2",
+      "holdout": {
+        "right": 39,
+        "wrong": 74,
+        "missed": 12
+      }
+    },
+    {
+      "id": "dC<=0.014",
+      "kind": "ΔC cap",
+      "x": 0.014,
+      "right": 5509,
+      "wrong": 8556,
+      "missed": 0,
+      "off": 62737,
+      "wrongCandidates": 25385,
+      "wrongBySource": "821/390/65/21/7259",
+      "missedBySource": "0/0/0/0/0",
+      "holdout": {
+        "right": 39,
+        "wrong": 116,
+        "missed": 10
+      }
+    },
+    {
+      "id": "chroma-asym@0.004",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.004,
+      "right": 4118,
+      "wrong": 5350,
+      "missed": 1408,
+      "off": 65926,
+      "wrongCandidates": 14252,
+      "wrongBySource": "518/163/73/20/4576",
+      "missedBySource": "2/0/0/6/1400",
+      "holdout": {
+        "right": 17,
+        "wrong": 29,
+        "missed": 39
+      }
+    },
+    {
+      "id": "chroma-sym@0.004",
+      "kind": "chroma floor, both directions",
+      "x": 0.004,
+      "right": 4061,
+      "wrong": 4344,
+      "missed": 1465,
+      "off": 66932,
+      "wrongCandidates": 12286,
+      "wrongBySource": "457/113/24/15/3735",
+      "missedBySource": "2/0/0/6/1457",
+      "holdout": {
+        "right": 17,
+        "wrong": 23,
+        "missed": 39
+      }
+    },
+    {
+      "id": "chroma-asym@0.006",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.006,
+      "right": 4711,
+      "wrong": 6250,
+      "missed": 802,
+      "off": 65039,
+      "wrongCandidates": 18686,
+      "wrongBySource": "564/247/73/20/5346",
+      "missedBySource": "2/0/0/0/800",
+      "holdout": {
+        "right": 26,
+        "wrong": 41,
+        "missed": 26
+      }
+    },
+    {
+      "id": "chroma-sym@0.006",
+      "kind": "chroma floor, both directions",
+      "x": 0.006,
+      "right": 4691,
+      "wrong": 5395,
+      "missed": 822,
+      "off": 65894,
+      "wrongCandidates": 16925,
+      "wrongBySource": "500/212/42/16/4625",
+      "missedBySource": "2/0/0/0/820",
+      "holdout": {
+        "right": 26,
+        "wrong": 39,
+        "missed": 26
+      }
+    },
+    {
+      "id": "chroma-asym@0.008",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.008,
+      "right": 5223,
+      "wrong": 7123,
+      "missed": 286,
+      "off": 64170,
+      "wrongCandidates": 21503,
+      "wrongBySource": "626/250/73/19/6155",
+      "missedBySource": "0/0/0/0/286",
+      "holdout": {
+        "right": 26,
+        "wrong": 39,
+        "missed": 26
+      }
+    },
+    {
+      "id": "chroma-sym@0.008",
+      "kind": "chroma floor, both directions",
+      "x": 0.008,
+      "right": 5207,
+      "wrong": 6304,
+      "missed": 302,
+      "off": 64989,
+      "wrongCandidates": 20434,
+      "wrongBySource": "568/221/48/19/5448",
+      "missedBySource": "0/0/0/0/302",
+      "holdout": {
+        "right": 26,
+        "wrong": 37,
+        "missed": 26
+      }
+    },
+    {
+      "id": "chroma-asym@0.009",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.009,
+      "right": 5355,
+      "wrong": 7563,
+      "missed": 154,
+      "off": 63730,
+      "wrongCandidates": 22651,
+      "wrongBySource": "670/299/73/19/6502",
+      "missedBySource": "0/0/0/0/154",
+      "holdout": {
+        "right": 26,
+        "wrong": 39,
+        "missed": 26
+      }
+    },
+    {
+      "id": "chroma-sym@0.009",
+      "kind": "chroma floor, both directions",
+      "x": 0.009,
+      "right": 5318,
+      "wrong": 6695,
+      "missed": 191,
+      "off": 64598,
+      "wrongCandidates": 21525,
+      "wrongBySource": "612/268/48/19/5748",
+      "missedBySource": "0/0/0/0/191",
+      "holdout": {
+        "right": 26,
+        "wrong": 37,
+        "missed": 26
+      }
+    },
+    {
+      "id": "chroma-asym@0.01",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.01,
+      "right": 5411,
+      "wrong": 7766,
+      "missed": 98,
+      "off": 63527,
+      "wrongCandidates": 23166,
+      "wrongBySource": "670/312/73/19/6692",
+      "missedBySource": "0/0/0/0/98",
+      "holdout": {
+        "right": 39,
+        "wrong": 51,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-sym@0.01",
+      "kind": "chroma floor, both directions",
+      "x": 0.01,
+      "right": 5348,
+      "wrong": 6879,
+      "missed": 161,
+      "off": 64414,
+      "wrongCandidates": 22017,
+      "wrongBySource": "612/281/48/19/5919",
+      "missedBySource": "0/0/0/0/161",
+      "holdout": {
+        "right": 39,
+        "wrong": 49,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-asym@0.011",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.011,
+      "right": 5408,
+      "wrong": 8031,
+      "missed": 101,
+      "off": 63262,
+      "wrongCandidates": 23836,
+      "wrongBySource": "694/325/73/19/6920",
+      "missedBySource": "0/0/0/0/101",
+      "holdout": {
+        "right": 39,
+        "wrong": 51,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-sym@0.011",
+      "kind": "chroma floor, both directions",
+      "x": 0.011,
+      "right": 5369,
+      "wrong": 7384,
+      "missed": 140,
+      "off": 63909,
+      "wrongCandidates": 22944,
+      "wrongBySource": "650/302/56/19/6357",
+      "missedBySource": "0/0/0/0/140",
+      "holdout": {
+        "right": 39,
+        "wrong": 51,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-asym@0.012",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.012,
+      "right": 5427,
+      "wrong": 8237,
+      "missed": 82,
+      "off": 63056,
+      "wrongCandidates": 24325,
+      "wrongBySource": "702/348/73/19/7095",
+      "missedBySource": "0/0/0/0/82",
+      "holdout": {
+        "right": 39,
+        "wrong": 51,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-sym@0.012",
+      "kind": "chroma floor, both directions",
+      "x": 0.012,
+      "right": 5373,
+      "wrong": 7620,
+      "missed": 136,
+      "off": 63673,
+      "wrongCandidates": 23461,
+      "wrongBySource": "660/321/58/19/6562",
+      "missedBySource": "0/0/0/0/136",
+      "holdout": {
+        "right": 39,
+        "wrong": 51,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-asym@0.0125",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.0125,
+      "right": 5441,
+      "wrong": 8338,
+      "missed": 68,
+      "off": 62955,
+      "wrongCandidates": 24588,
+      "wrongBySource": "737/367/73/19/7142",
+      "missedBySource": "0/0/0/0/68",
+      "holdout": {
+        "right": 39,
+        "wrong": 72,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-sym@0.0125",
+      "kind": "chroma floor, both directions",
+      "x": 0.0125,
+      "right": 5383,
+      "wrong": 7714,
+      "missed": 126,
+      "off": 63579,
+      "wrongCandidates": 23714,
+      "wrongBySource": "695/337/58/19/6605",
+      "missedBySource": "0/0/0/0/126",
+      "holdout": {
+        "right": 39,
+        "wrong": 72,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-asym@0.013",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.013,
+      "right": 5439,
+      "wrong": 8503,
+      "missed": 70,
+      "off": 62790,
+      "wrongCandidates": 25005,
+      "wrongBySource": "773/378/73/19/7260",
+      "missedBySource": "0/0/0/0/70",
+      "holdout": {
+        "right": 39,
+        "wrong": 94,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-sym@0.013",
+      "kind": "chroma floor, both directions",
+      "x": 0.013,
+      "right": 5393,
+      "wrong": 8129,
+      "missed": 116,
+      "off": 63164,
+      "wrongCandidates": 24552,
+      "wrongBySource": "755/354/61/19/6940",
+      "missedBySource": "0/0/0/0/116",
+      "holdout": {
+        "right": 39,
+        "wrong": 94,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-asym@0.015",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.015,
+      "right": 5439,
+      "wrong": 8765,
+      "missed": 70,
+      "off": 62528,
+      "wrongCandidates": 25728,
+      "wrongBySource": "876/398/73/19/7399",
+      "missedBySource": "0/0/0/0/70",
+      "holdout": {
+        "right": 48,
+        "wrong": 131,
+        "missed": 0
+      }
+    },
+    {
+      "id": "chroma-sym@0.015",
+      "kind": "chroma floor, both directions",
+      "x": 0.015,
+      "right": 5415,
+      "wrong": 8509,
+      "missed": 94,
+      "off": 62784,
+      "wrongCandidates": 25429,
+      "wrongBySource": "862/374/67/19/7187",
+      "missedBySource": "0/0/0/0/94",
+      "holdout": {
+        "right": 48,
+        "wrong": 131,
+        "missed": 0
+      }
+    },
+    {
+      "id": "chroma-asym@0.02",
+      "kind": "chroma floor, chromatic raw vs achromatic token",
+      "x": 0.02,
+      "right": 5493,
+      "wrong": 9221,
+      "missed": 16,
+      "off": 62072,
+      "wrongCandidates": 26980,
+      "wrongBySource": "1018/479/73/28/7623",
+      "missedBySource": "0/0/0/0/16",
+      "holdout": {
+        "right": 48,
+        "wrong": 179,
+        "missed": 0
+      }
+    },
+    {
+      "id": "chroma-sym@0.02",
+      "kind": "chroma floor, both directions",
+      "x": 0.02,
+      "right": 5479,
+      "wrong": 9027,
+      "missed": 30,
+      "off": 62266,
+      "wrongCandidates": 26753,
+      "wrongBySource": "1004/473/73/28/7449",
+      "missedBySource": "0/0/0/0/30",
+      "holdout": {
+        "right": 48,
+        "wrong": 179,
+        "missed": 0
+      }
+    },
+    {
+      "id": "hue<=10°",
+      "kind": "hue angle (only when both chroma ≥ 0.01)",
+      "x": 10,
+      "right": 5291,
+      "wrong": 9052,
+      "missed": 218,
+      "off": 62241,
+      "wrongCandidates": 26734,
+      "wrongBySource": "1005/463/73/28/7483",
+      "missedBySource": "0/0/0/0/218",
+      "holdout": {
+        "right": 48,
+        "wrong": 179,
+        "missed": 0
+      }
+    },
+    {
+      "id": "hue<=20°",
+      "kind": "hue angle (only when both chroma ≥ 0.01)",
+      "x": 20,
+      "right": 5457,
+      "wrong": 9185,
+      "missed": 52,
+      "off": 62108,
+      "wrongCandidates": 26935,
+      "wrongBySource": "1009/475/73/28/7600",
+      "missedBySource": "0/0/0/0/52",
+      "holdout": {
+        "right": 48,
+        "wrong": 179,
+        "missed": 0
+      }
+    },
+    {
+      "id": "hue<=30°",
+      "kind": "hue angle (only when both chroma ≥ 0.01)",
+      "x": 30,
+      "right": 5492,
+      "wrong": 9323,
+      "missed": 17,
+      "off": 61970,
+      "wrongCandidates": 27108,
+      "wrongBySource": "1027/475/73/28/7720",
+      "missedBySource": "0/0/0/0/17",
+      "holdout": {
+        "right": 48,
+        "wrong": 179,
+        "missed": 0
+      }
+    },
+    {
+      "id": "hue<=45°",
+      "kind": "hue angle (only when both chroma ≥ 0.01)",
+      "x": 45,
+      "right": 5507,
+      "wrong": 9392,
+      "missed": 2,
+      "off": 61901,
+      "wrongCandidates": 27194,
+      "wrongBySource": "1033/481/73/28/7777",
+      "missedBySource": "0/0/0/0/2",
+      "holdout": {
+        "right": 48,
+        "wrong": 182,
+        "missed": 0
+      }
+    },
+    {
+      "id": "chroma-sym@0.006+hue<=30°",
+      "kind": "chroma floor both directions + hue angle",
+      "x": 0.006,
+      "right": 4631,
+      "wrong": 5041,
+      "missed": 882,
+      "off": 66248,
+      "wrongCandidates": 16285,
+      "wrongBySource": "465/197/42/16/4321",
+      "missedBySource": "2/0/0/0/880",
+      "holdout": {
+        "right": 26,
+        "wrong": 35,
+        "missed": 26
+      }
+    },
+    {
+      "id": "chroma-sym@0.008+hue<=30°",
+      "kind": "chroma floor both directions + hue angle",
+      "x": 0.008,
+      "right": 5186,
+      "wrong": 6179,
+      "missed": 323,
+      "off": 65114,
+      "wrongCandidates": 20287,
+      "wrongBySource": "558/213/48/19/5341",
+      "missedBySource": "0/0/0/0/323",
+      "holdout": {
+        "right": 26,
+        "wrong": 34,
+        "missed": 26
+      }
+    },
+    {
+      "id": "chroma-sym@0.01+hue<=30°",
+      "kind": "chroma floor both directions + hue angle",
+      "x": 0.01,
+      "right": 5331,
+      "wrong": 6800,
+      "missed": 178,
+      "off": 64493,
+      "wrongCandidates": 21921,
+      "wrongBySource": "602/275/48/19/5856",
+      "missedBySource": "0/0/0/0/178",
+      "holdout": {
+        "right": 39,
+        "wrong": 46,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-sym@0.012+hue<=30°",
+      "kind": "chroma floor both directions + hue angle",
+      "x": 0.012,
+      "right": 5369,
+      "wrong": 7564,
+      "missed": 140,
+      "off": 63729,
+      "wrongCandidates": 23390,
+      "wrongBySource": "658/317/58/19/6512",
+      "missedBySource": "0/0/0/0/140",
+      "holdout": {
+        "right": 39,
+        "wrong": 48,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-asym@0.008+hue<=20°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.008,
+      "right": 5159,
+      "wrong": 6850,
+      "missed": 350,
+      "off": 64443,
+      "wrongCandidates": 21171,
+      "wrongBySource": "598/242/73/19/5918",
+      "missedBySource": "0/0/0/0/350",
+      "holdout": {
+        "right": 26,
+        "wrong": 36,
+        "missed": 26
+      }
+    },
+    {
+      "id": "chroma-asym@0.008+hue<=30°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.008,
+      "right": 5202,
+      "wrong": 6998,
+      "missed": 307,
+      "off": 64295,
+      "wrongCandidates": 21356,
+      "wrongBySource": "616/242/73/19/6048",
+      "missedBySource": "0/0/0/0/307",
+      "holdout": {
+        "right": 26,
+        "wrong": 36,
+        "missed": 26
+      }
+    },
+    {
+      "id": "chroma-asym@0.008+hue<=45°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.008,
+      "right": 5221,
+      "wrong": 7087,
+      "missed": 288,
+      "off": 64206,
+      "wrongCandidates": 21466,
+      "wrongBySource": "622/248/73/19/6125",
+      "missedBySource": "0/0/0/0/288",
+      "holdout": {
+        "right": 26,
+        "wrong": 39,
+        "missed": 26
+      }
+    },
+    {
+      "id": "chroma-asym@0.01+hue<=20°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.01,
+      "right": 5359,
+      "wrong": 7549,
+      "missed": 150,
+      "off": 63744,
+      "wrongCandidates": 22897,
+      "wrongBySource": "642/306/73/19/6509",
+      "missedBySource": "0/0/0/0/150",
+      "holdout": {
+        "right": 39,
+        "wrong": 48,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-asym@0.01+hue<=30°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.01,
+      "right": 5394,
+      "wrong": 7687,
+      "missed": 115,
+      "off": 63606,
+      "wrongCandidates": 23070,
+      "wrongBySource": "660/306/73/19/6629",
+      "missedBySource": "0/0/0/0/115",
+      "holdout": {
+        "right": 39,
+        "wrong": 48,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-asym@0.01+hue<=45°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.01,
+      "right": 5409,
+      "wrong": 7756,
+      "missed": 100,
+      "off": 63537,
+      "wrongCandidates": 23156,
+      "wrongBySource": "666/312/73/19/6686",
+      "missedBySource": "0/0/0/0/100",
+      "holdout": {
+        "right": 39,
+        "wrong": 51,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-asym@0.012+hue<=20°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.012,
+      "right": 5412,
+      "wrong": 8051,
+      "missed": 97,
+      "off": 63242,
+      "wrongCandidates": 24091,
+      "wrongBySource": "684/344/73/19/6931",
+      "missedBySource": "0/0/0/0/97",
+      "holdout": {
+        "right": 39,
+        "wrong": 48,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-asym@0.012+hue<=30°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.012,
+      "right": 5423,
+      "wrong": 8181,
+      "missed": 86,
+      "off": 63112,
+      "wrongCandidates": 24254,
+      "wrongBySource": "700/344/73/19/7045",
+      "missedBySource": "0/0/0/0/86",
+      "holdout": {
+        "right": 39,
+        "wrong": 48,
+        "missed": 13
+      }
+    },
+    {
+      "id": "chroma-asym@0.012+hue<=45°",
+      "kind": "chroma floor (chromatic raw vs achromatic token) + hue angle",
+      "x": 0.012,
+      "right": 5427,
+      "wrong": 8237,
+      "missed": 82,
+      "off": 63056,
+      "wrongCandidates": 24325,
+      "wrongBySource": "702/348/73/19/7095",
+      "missedBySource": "0/0/0/0/82",
+      "holdout": {
+        "right": 39,
+        "wrong": 51,
+        "missed": 13
+      }
+    },
+    {
+      "id": "dE<=0.01",
+      "kind": "ΔE radius",
+      "x": 0.01,
+      "right": 4001,
+      "wrong": 3528,
+      "missed": 1508
+    },
+    {
+      "id": "dE<=0.012",
+      "kind": "ΔE radius",
+      "x": 0.012,
+      "right": 4578,
+      "wrong": 4855,
+      "missed": 931
+    },
+    {
+      "id": "dE<=0.014",
+      "kind": "ΔE radius",
+      "x": 0.014,
+      "right": 4915,
+      "wrong": 5932,
+      "missed": 594
+    },
+    {
+      "id": "dE<=0.015",
+      "kind": "ΔE radius",
+      "x": 0.015,
+      "right": 5048,
+      "wrong": 6563,
+      "missed": 461
+    },
+    {
+      "id": "dE<=0.016",
+      "kind": "ΔE radius",
+      "x": 0.016,
+      "right": 5184,
+      "wrong": 7274,
+      "missed": 325
+    },
+    {
+      "id": "dE<=0.018",
+      "kind": "ΔE radius",
+      "x": 0.018,
+      "right": 5350,
+      "wrong": 8461,
+      "missed": 159
+    }
+  ]
+}
