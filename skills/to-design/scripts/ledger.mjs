@@ -15,12 +15,28 @@ export const emptyLedger = fileKey => ({ schemaVersion: 1, fileKey, foundations:
 
 export const readLedger = path => (existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : null);
 
-/** The ledger after a slice result. Refuses an error result; a result with conflicts carries the old section back unchanged. */
+/**
+ * The ledger after a slice result. Refuses an error result; a result with conflicts carries the old section back
+ * unchanged. Sections replace whole, except `sets` (#32): a sets call returns its one family, with the variant ids
+ * of its own entries as {expansion index: id or null}. The other families are kept, and the ids are merged into
+ * the family's list of `total` ids, so a call carries no ids beyond its batch.
+ */
 export function recordResult(ledger, result) {
   if (!result || result.error) throw new Error(`not recording a failed call: ${result && result.error}`);
   if (!result.fileKey || !result.ledger) throw new Error('result has no fileKey or ledger');
   if (ledger && ledger.fileKey !== result.fileKey) throw new Error(`ledger is for ${ledger.fileKey}, result for ${result.fileKey}`);
-  return { ...(ledger || emptyLedger(result.fileKey)), ...result.ledger };
+  const before = ledger || emptyLedger(result.fileKey);
+  const out = { ...before, ...result.ledger };
+  if (result.slice === 'sets' && result.ledger.sets) {
+    out.sets = { ...(before.sets || {}) };
+    for (const [family, rec] of Object.entries(result.ledger.sets)) {
+      const old = out.sets[family];
+      const variants = old && Array.isArray(old.variants) && old.variants.length === rec.total ? old.variants.slice() : new Array(rec.total).fill(null);
+      for (const [i, id] of Object.entries(rec.variants || {})) variants[Number(i)] = id;
+      out.sets[family] = { ...rec, variants };
+    }
+  }
+  return out;
 }
 
 function main() {

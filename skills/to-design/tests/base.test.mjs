@@ -176,7 +176,6 @@ test('both packages fit use_figma: foundations on its core, the base on the comp
   const fChars = pack(f.plan, f.state, CORE).out.chars;
   const bChars = pack(b.plan, b.state).out.chars;
   assert.ok(fChars < 50000 && bChars < 50000, `foundations ${fChars}, base ${bChars}`);
-  assert.ok(bChars < 25000, `base ${bChars}: room left for the component sets (#32)`);
 });
 
 test('a drifted package is refused before its first change', async () => {

@@ -9,13 +9,15 @@
 //        --icons-dir <unpacked icon package> --file-key <key> --out <dir> [--adopt] [--page Icons] [--ledger <path>]
 //   node skills/to-design/scripts/build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir>
 //        [--adopt] [--read-only] [--page <name>] [--ledger <path>]
+//   node skills/to-design/scripts/build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir>
+//        [--mode build|reconcile|coverage|sample|theme] [--batch N] [--per-call N] [--sample i,j] [--adopt] [--prototype] [--page <name>] [--ledger <path>]
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve as resolvePath, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { contentHash, icons as iconKeys, iconName, validate } from '../../contract/scripts/contract.mjs';
-import { expectedBase, norm } from './base-loop.mjs';
+import { baseTuple, contentHash, expand, icons as iconKeys, iconName, PROTOTYPE_APPROVER, resolve, validate, variantName } from '../../contract/scripts/contract.mjs';
+import { anatomyTree, defaultProps, expectedBase, expectedVariant, iconRef as iconRefKey, norm } from './expected.mjs';
 import { emptyLedger, ledgerPath, readLedger } from './ledger.mjs';
 
 // Fields only a reviewer reads. The core never needs them, so the package leaves them out.
@@ -161,10 +163,213 @@ export function basePlan(contract, docText, ledger, { fileKey, adopt = false, re
   return { plan, state: { schemaVersion: 1, fileKey, variables, textStyles, icons, bases: ledger.bases || null } };
 }
 
+// ---------- component sets (#32) ----------
+
+/**
+ * Variants per build call. Measured live (#32): see SKILL.md "Component Sets" for the slope and why this
+ * ceiling keeps each call well under the connection limit and the package under use_figma's 50,000 chars.
+ */
+export const PER_CALL = 49;
+// The Component Header template every family page's Header is an instance of (one per file):
+// TEXT properties with their font style and size.
+export const TEMPLATES = {
+  page: 'Templates',
+  header: { name: 'Component Header', fields: [['Type', 'Regular', 14], ['Title', 'SemiBold', 42], ['Namespace', 'Regular', 14]] },
+};
+const SET_MODES = ['build', 'reconcile', 'coverage', 'sample', 'theme'];
+
+// The approval gate: an approved Contract that validates. `prototype` also lets through the one error a
+// prototype approval raises (rule 8, by: PROTOTYPE_APPROVER), and nothing else.
+function checkApproved(contract, doc, prototype) {
+  const v = validate(contract, doc);
+  const approver = contract.selection && contract.selection.approval && contract.selection.approval.by;
+  const errors = v.errors.filter(e => !(prototype && e.rule === 8 && e.at === 'selection.approval.by' && approver === PROTOTYPE_APPROVER));
+  if (errors.length) throw new Error(`the Contract does not validate: ${errors.map(e => `${e.at}: ${e.message}`).join('; ')}`);
+  if (contract.selection.status !== 'approved') throw new Error('the Contract is not approved: approve the Base Component first (base-loop.mjs approve)');
+}
+
+const stripFields = fields => Object.fromEntries(Object.entries(fields).map(([k, x]) => [k, norm(x)]));
+
+// The fragments every variant is built from: each (section, node) field group a resolved tuple holds,
+// numbered over the whole expansion so a number means the same fragment in every batch; and each distinct
+// property wiring ({visible, text, swap, refs} at the property defaults). Returns per tuple its references.
+function fragmentsOf(contract, tuples) {
+  const frags = new Map();
+  const wirings = new Map();
+  const props = defaultProps(contract);
+  const refs = tuples.map(t => {
+    const exp = expectedVariant(contract, t, props);
+    const ids = [];
+    for (const sec of ['layout', 'paint'])
+      for (const [node, fields] of Object.entries(exp[sec])) {
+        const key = JSON.stringify([sec, node, stripFields(fields)]);
+        if (!frags.has(key)) frags.set(key, frags.size);
+        ids.push(frags.get(key));
+      }
+    const w = JSON.stringify({ visible: exp.visible, text: exp.text, swap: exp.swap, refs: exp.refs });
+    if (!wirings.has(w)) wirings.set(w, wirings.size);
+    return { p: wirings.get(w), frags: ids };
+  });
+  return { frags: [...frags.keys()].map(k => JSON.parse(k)), wirings: [...wirings.keys()].map(k => JSON.parse(k)), refs };
+}
+
+/** The tuples a sets plan's entries stand for, in entry order: [{index, tuple}]. */
+export function decodeEntries(plan, contract) {
+  const keys = plan.selection.axes;
+  return plan.selection.entries.map(e => ({
+    index: e[0],
+    tuple: Object.fromEntries(keys.map((k, a) => [k, contract.axes.find(x => x.key === k).values[e[a + 1]].key])),
+  }));
+}
+
+/** What one entry builds, read from the plan alone: {layout, paint} by node, and its property wiring. */
+export function entrySpec(plan, entry) {
+  const n = plan.selection.axes.length;
+  const out = { layout: {}, paint: {}, wiring: plan.P[entry[n + 1]] };
+  for (const id of entry.slice(n + 2)) { const [sec, node, fields] = plan.frags[id]; out[sec][node] = fields; }
+  return out;
+}
+
+/**
+ * A sets slice's plan and state (#32): one call for a family's Component Set, from the approved Contract.
+ * Modes: `build` (batch `batch` of `perCall` variants, in expansion order), `reconcile` (read only: the
+ * ledger section rebuilt from what the file holds, after a lost connection), `coverage` (read only: every
+ * variant's name, grid cell and property wiring), `sample` and `theme` (read only: full values, or the
+ * resolved colours per mode, of the variants at the expansion indexes `sample`).
+ * Entries are axis-ordered tuples [index, value positions..., wiring, fragments...]. The plan asserts they
+ * decode back to the expansion and resolve to what the Contract resolves; the core never matches rules.
+ * Options: fileKey (required), mode, batch, perCall, sample, adopt, prototype, page, at.
+ */
+export function setsPlan(contract, docText, ledger, {
+  fileKey, mode = 'build', batch = 0, perCall = PER_CALL, sample = [], adopt = false, prototype = false, page = null, at = new Date().toISOString(),
+} = {}) {
+  if (!fileKey) throw new Error('fileKey is required');
+  if (!SET_MODES.includes(mode)) throw new Error(`mode must be one of ${SET_MODES.join(', ')}`);
+  if (!ledger || ledger.fileKey !== fileKey) throw new Error(`no ledger for ${fileKey}: build foundations and icons first`);
+  const doc = JSON.parse(docText);
+  checkApproved(contract, doc, prototype);
+  const f = ledger.foundations;
+  if (!f) throw new Error('the ledger has no foundations: build them first');
+  if (f.documentHash !== documentHash(docText)) throw new Error(`the foundations document changed since the last foundations build (${f.documentHash}); rebuild foundations first`);
+  const family = contract.family.key;
+  const tuples = expand(contract);
+  const axes = contract.axes.map(a => a.key);
+  const base = baseTuple(contract);
+  const { frags, wirings, refs } = fragmentsOf(contract, tuples);
+
+  const of = Math.ceil(tuples.length / perCall);
+  let picked;
+  if (mode === 'build') {
+    if (!Number.isInteger(batch) || batch < 0 || batch >= of) throw new Error(`batch must be 0..${of - 1} (${tuples.length} variants, ${perCall} per call)`);
+    picked = tuples.map((_, i) => i).slice(batch * perCall, (batch + 1) * perCall);
+  } else if (mode === 'reconcile') picked = tuples.map((_, i) => i);
+  else if (mode === 'coverage') picked = [];
+  else {
+    if (!sample.length || sample.some(i => !Number.isInteger(i) || i < 0 || i >= tuples.length)) throw new Error(`sample must list expansion indexes 0..${tuples.length - 1}`);
+    picked = [...new Set(sample)];
+  }
+  const full = mode !== 'reconcile';
+  const pos = (t, k) => contract.axes.find(a => a.key === k).values.findIndex(v => v.key === t[k]);
+  const entries = picked.map(i => [i, ...axes.map(k => pos(tuples[i], k)), ...(full ? [refs[i].p, ...refs[i].frags] : [])]);
+  const P = {};
+  const usedFrags = {};
+  if (full) for (const i of picked) { P[refs[i].p] = wirings[refs[i].p]; for (const id of refs[i].frags) usedFrags[id] = frags[id]; }
+
+  // tokens -> ids, only those the picked fragments use
+  const variables = {};
+  const textStyles = {};
+  const use = (field, x) => {
+    if (Array.isArray(x)) return x.forEach(e => Object.entries(e).forEach(([k, y]) => use(k, y)));
+    if (!x || typeof x !== 'object' || !('token' in x)) return;
+    const [map, have] = field === 'textStyle' ? [textStyles, f.textStyles] : [variables, f.variables];
+    if (!have[x.token]) throw new Error(`${x.token} is not in the ledger's foundations`);
+    map[x.token] = have[x.token];
+  };
+  for (const [, , fields] of Object.values(usedFrags)) for (const [k, x] of Object.entries(fields)) use(k, x);
+  const fontFamily = ((contract.dependencies.fonts || [])[0] || {}).family || 'Inter';
+  const fonts = new Set((contract.dependencies.fonts || []).flatMap(ft => ft.styles.map(s => JSON.stringify({ family: ft.family, style: s }))));
+  for (const t of Object.keys(textStyles)) fonts.add(JSON.stringify({ family: doc.textStyles[t].fontFamily, style: doc.textStyles[t].fontStyle }));
+  for (const [, style] of TEMPLATES.header.fields) fonts.add(JSON.stringify({ family: fontFamily, style }));
+
+  const props = contract.properties.map(p => {
+    const o = { key: p.key, name: p.label, type: p.type, default: p.default };
+    if (p.type === 'INSTANCE_SWAP') {
+      o.default = iconRefKey(contract, p.default);
+      o.preferred = p.preferred === 'icon:preferred' ? [...contract.icons.preferred] : [].concat(p.preferred || []).map(r => iconRefKey(contract, r));
+    }
+    return o;
+  });
+  const comps = (ledger.icons && ledger.icons.components) || {};
+  const icons = {};
+  for (const key of iconKeys(contract)) {
+    if (!comps[key]) throw new Error(`icon ${key} is not in the ledger: build icons first`);
+    icons[key] = { id: comps[key].id, key: comps[key].key };
+  }
+  const ax = k => contract.axes.findIndex(a => a.key === k);
+  const plan = {
+    schemaVersion: 1,
+    slice: 'sets',
+    fileKey,
+    page: page || contract.figma.page,
+    at,
+    options: { mode, adopt: !!adopt, ...(mode === 'build' ? { batch, of, perCall } : {}) },
+    family,
+    designSystem: doc.designSystem.key,
+    snapshotId: contract.source.snapshotId,
+    contentHash: contentHash(contract),
+    documentHash: f.documentHash,
+    total: tuples.length,
+    baseIndex: tuples.findIndex(t => axes.every(k => t[k] === base[k])),
+    set: {
+      name: contract.figma.componentSetName,
+      description: contract.figma.description,
+      header: contract.figma.header,
+      // value labels in Contract order; `order` lists value positions default first, so the default variant sits top-left
+      axes: contract.axes.map(a => {
+        const d = a.values.findIndex(v => v.key === a.default);
+        return { label: a.label, values: a.values.map(v => v.label), order: [d, ...a.values.map((_, i) => i).filter(i => i !== d)] };
+      }),
+      grid: { columns: contract.figma.grid.columns.map(ax), rows: contract.figma.grid.rows.map(ax) },
+    },
+    templates: { page: TEMPLATES.page, fontFamily, header: TEMPLATES.header },
+    tree: anatomyTree(contract.anatomy),
+    fonts: [...fonts].sort().map(x => JSON.parse(x)),
+    props,
+    P,
+    frags: usedFrags,
+    selection: { schemaVersion: 1, axes, entries },
+  };
+  // The entries decode back to the expansion, and each resolves to what the Contract resolves.
+  const decoded = decodeEntries(plan, contract);
+  decoded.forEach(({ index, tuple }) => {
+    if (axes.some(k => tuple[k] !== tuples[index][k])) throw new Error(`entry ${index} decodes to ${variantName(contract, tuple)}, not ${variantName(contract, tuples[index])}`);
+  });
+  if (full)
+    entries.forEach((e, n) => {
+      const r = resolve(contract, decoded[n].tuple);
+      const spec = entrySpec(plan, e);
+      for (const sec of ['layout', 'paint'])
+        if (JSON.stringify(spec[sec]) !== JSON.stringify(Object.fromEntries(Object.entries(r[sec]).map(([node, fl]) => [node, stripFields(fl)]))))
+          throw new Error(`entry ${e[0]} does not resolve to the Contract's ${sec}`);
+    });
+  const bases = ledger.bases && ledger.bases[family] ? { [family]: ledger.bases[family] } : {};
+  // The family's ledger record, with the variant ids of this call's entries only: a call carries no other ids.
+  const rec = ledger.sets && ledger.sets[family];
+  const sets = {};
+  if (rec) {
+    const ids = {};
+    for (const i of picked) if (rec.variants && rec.variants[i]) ids[i] = rec.variants[i];
+    sets[family] = { ...rec, variants: ids };
+  }
+  return { plan, state: { schemaVersion: 1, fileKey, variables, textStyles, icons, bases, sets, templates: ledger.templates || null } };
+}
+
 const USAGE = [
   'usage: build-plan.mjs foundations --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--prune a,b] [--page <name>] [--ledger <path>]',
   '       build-plan.mjs icons --contract <component.json> [--contract ...] --icons-dir <package dir> --file-key <key> --out <dir> [--adopt] [--page <name>] [--ledger <path>]',
   '       build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--read-only] [--page <name>] [--ledger <path>]',
+  '       build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--mode build|reconcile|coverage|sample|theme]',
+  '                      [--batch N] [--per-call N] [--sample i,j] [--adopt] [--prototype (a Contract under .scratch only)] [--page <name>] [--ledger <path>]',
 ].join('\n');
 
 function main() {
@@ -174,19 +379,32 @@ function main() {
       doc: { type: 'string' }, 'file-key': { type: 'string' }, out: { type: 'string' }, ledger: { type: 'string' },
       adopt: { type: 'boolean', default: false }, prune: { type: 'string', default: '' }, page: { type: 'string' },
       contract: { type: 'string', multiple: true }, 'icons-dir': { type: 'string' }, 'read-only': { type: 'boolean', default: false },
+      mode: { type: 'string', default: 'build' }, batch: { type: 'string', default: '0' }, 'per-call': { type: 'string' }, sample: { type: 'string', default: '' },
+      prototype: { type: 'boolean', default: false },
     },
   });
   const slice = positionals[0];
   const ok = values['file-key'] && values.out
     && ((slice === 'foundations' && values.doc) || (slice === 'icons' && values.contract && values['icons-dir'])
-      || (slice === 'base' && values.doc && values.contract && values.contract.length === 1));
+      || ((slice === 'base' || slice === 'sets') && values.doc && values.contract && values.contract.length === 1));
   if (!ok) {
     console.error(USAGE);
     process.exit(2);
   }
   const fileKey = values['file-key'];
   const path = values.ledger || ledgerPath(fileKey);
-  const { plan, state } = slice === 'base'
+  // A prototype approval never reaches a committed Contract: --prototype takes a Contract under .scratch only.
+  if (values.prototype && (slice !== 'sets' || !resolvePath(values.contract[0]).split(sep).includes('.scratch'))) {
+    console.error('--prototype takes a Contract under .scratch only (a prototype approval is never committed)');
+    process.exit(2);
+  }
+  const { plan, state } = slice === 'sets'
+    ? setsPlan(JSON.parse(readFileSync(values.contract[0], 'utf8')), readFileSync(values.doc, 'utf8'), readLedger(path), {
+      fileKey, mode: values.mode, batch: Number(values.batch), adopt: values.adopt, prototype: values.prototype,
+      sample: values.sample ? values.sample.split(',').map(Number) : [],
+      ...(values['per-call'] ? { perCall: Number(values['per-call']) } : {}), ...(values.page ? { page: values.page } : {}),
+    })
+    : slice === 'base'
     ? basePlan(JSON.parse(readFileSync(values.contract[0], 'utf8')), readFileSync(values.doc, 'utf8'), readLedger(path), {
       fileKey, adopt: values.adopt, readOnly: values['read-only'], ...(values.page ? { page: values.page } : {}),
     })
@@ -201,7 +419,9 @@ function main() {
   writeFileSync(join(values.out, 'plan.json'), JSON.stringify(plan, null, 2) + '\n');
   writeFileSync(join(values.out, 'state.json'), JSON.stringify(state, null, 2) + '\n');
   const detail = slice === 'foundations' ? { documentHash: plan.documentHash }
-    : slice === 'base' ? { base: plan.base.name, contentHash: plan.contentHash } : { icons: plan.icons.length };
+    : slice === 'base' ? { base: plan.base.name, contentHash: plan.contentHash }
+    : slice === 'sets' ? { family: plan.family, entries: plan.selection.entries.length, total: plan.total, contentHash: plan.contentHash }
+    : { icons: plan.icons.length };
   console.log(JSON.stringify({ status: 'derived', slice, fileKey, ledger: path, ...detail, options: plan.options, out: values.out }));
 }
 

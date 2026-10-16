@@ -13,9 +13,9 @@ const LAYOUT_DEFAULTS = {
   layoutMode: 'NONE', layoutSizingHorizontal: 'FIXED', layoutSizingVertical: 'FIXED', primaryAxisAlignItems: 'MIN', counterAxisAlignItems: 'MIN',
   paddingTop: 0, paddingRight: 0, paddingBottom: 0, paddingLeft: 0, itemSpacing: 0, minWidth: null, maxWidth: null, minHeight: null, maxHeight: null,
   topLeftRadius: 0, topRightRadius: 0, bottomLeftRadius: 0, bottomRightRadius: 0, strokeWeight: 1, strokeAlign: 'INSIDE', strokes: [], effects: [],
-  opacity: 1, visible: true, textAutoResize: 'NONE',
+  opacity: 1, visible: true, textAutoResize: 'NONE', dashPattern: [], gridRowGap: 0, gridColumnGap: 0,
 };
-const PAINT_LISTS = { strokes: 1, effects: 1 };
+const PAINT_LISTS = { strokes: 1, effects: 1, dashPattern: 1 };
 const BINDABLE = new Set(['width', 'height', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'itemSpacing', 'minWidth', 'maxWidth',
   'minHeight', 'maxHeight', 'topLeftRadius', 'topRightRadius', 'bottomLeftRadius', 'bottomRightRadius', 'strokeWeight', 'opacity']);
 const clone = x => JSON.parse(JSON.stringify(x));
@@ -102,6 +102,14 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
       this._values[modeId] = storeValue(this.resolvedType, value);
     }
     remove() { w('variable.remove', this.id); variables.delete(this.id); }
+    // The value for a node: the mode its nearest ancestor sets for the collection, else the default; aliases followed.
+    resolveForConsumer(node) {
+      let mode = null;
+      for (let n = node; n && n.type; n = n.parent) if (n._modes && n._modes[this.variableCollectionId]) { mode = n._modes[this.variableCollectionId]; break; }
+      const value = this._values[mode || collections.get(this.variableCollectionId).defaultModeId];
+      if (value && value.type === 'VARIABLE_ALIAS') return variables.get(value.id).resolveForConsumer(node);
+      return { value: clone(value), resolvedType: this.resolvedType };
+    }
   }
 
   // The variable's value in its collection's default mode, following aliases.
@@ -159,8 +167,58 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
       this._x = x; this._y = y; this.width = width; this.height = height; this._fills = []; this._description = '';
       this._constraints = { horizontal: 'MIN', vertical: 'MIN' };
       this._p = { ...LAYOUT_DEFAULTS }; this._bound = {};
+      this._anchor = [-1, -1]; this._rows = []; this._cols = []; this._refs = null; this._modes = {};
       nodes.set(this.id, this);
     }
+    // ---- grid auto layout (probed live in #32): switching to GRID unplaces every child (anchors -1); a child
+    // appended later flows into the first free cell; placing a child on a taken cell throws ----
+    get gridRowAnchorIndex() { return this._anchor[0]; }
+    get gridColumnAnchorIndex() { return this._anchor[1]; }
+    get gridRowCount() { return this._rows.length; }
+    set gridRowCount(n) {
+      if (this.children.some(c => c._anchor[0] >= n)) throw new Error(`mock: a child sits in a row past ${n}`);
+      w('node.gridRowCount', this.id, n); this._rows = Array.from({ length: n }, (_, i) => this._rows[i] || { type: 'FLEX', value: 1 });
+    }
+    get gridColumnCount() { return this._cols.length; }
+    set gridColumnCount(n) {
+      if (this.children.some(c => c._anchor[1] >= n)) throw new Error(`mock: a child sits in a column past ${n}`);
+      w('node.gridColumnCount', this.id, n); this._cols = Array.from({ length: n }, (_, i) => this._cols[i] || { type: 'FLEX', value: 1 });
+    }
+    get gridRowSizes() { return clone(this._rows); }
+    set gridRowSizes(v) { if (v.length !== this._rows.length) throw new Error('mock: gridRowSizes length'); w('node.gridRowSizes', this.id, v); this._rows = v.map(x => ({ value: 1, ...x })); }
+    get gridColumnSizes() { return clone(this._cols); }
+    set gridColumnSizes(v) { if (v.length !== this._cols.length) throw new Error('mock: gridColumnSizes length'); w('node.gridColumnSizes', this.id, v); this._cols = v.map(x => ({ value: 1, ...x })); }
+    _taken(r, c, but) { return this.children.find(k => k !== but && k._anchor[0] === r && k._anchor[1] === c) || null; }
+    setGridChildPosition(r, c) {
+      const g = this.parent;
+      if (!g || g._p.layoutMode !== 'GRID') throw new Error('mock: setGridChildPosition needs a GRID parent');
+      if (r < 0 || c < 0 || r >= g.gridRowCount || c >= g.gridColumnCount) throw new Error(`mock: cell ${r},${c} is outside the grid`);
+      if (g._taken(r, c, this)) throw new Error("in setGridChildPosition: Cannot set grid child position: Can't place child at this position because it is occupied by another node");
+      w('setGridChildPosition', this.id, r, c); this._anchor = [r, c];
+    }
+    // ---- component properties ----
+    _owner() { for (let n = this; n && n.type; n = n.parent) if (n.type === 'COMPONENT') return n.parent && n.parent.type === 'COMPONENT_SET' ? n.parent : n; return null; }
+    get componentPropertyReferences() { return this._refs ? { ...this._refs } : null; }
+    set componentPropertyReferences(v) {
+      const owner = this._owner();
+      for (const [f, key] of Object.entries(v)) {
+        if (!['characters', 'visible', 'mainComponent'].includes(f)) throw new Error(`mock: reference field ${f}`);
+        const d = owner && owner._props[key];
+        if (!d) throw new Error(`mock: no component property ${key}`);
+        if ({ characters: 'TEXT', visible: 'BOOLEAN', mainComponent: 'INSTANCE_SWAP' }[f] !== d.type) throw new Error(`mock: ${f} cannot follow a ${d.type} property`);
+        if (f === 'characters' && this.type !== 'TEXT') throw new Error('mock: characters references need a TEXT node');
+        if (f === 'mainComponent' && this.type !== 'INSTANCE') throw new Error('mock: mainComponent references need an INSTANCE');
+      }
+      w('node.componentPropertyReferences', this.id, v); this._refs = { ...v };
+    }
+    // ---- explicit variable modes ----
+    get explicitVariableModes() { return { ...this._modes }; }
+    setExplicitVariableModeForCollection(col, modeId) {
+      const c = collections.get(typeof col === 'string' ? col : col.id);
+      c._mode(modeId);
+      w('setExplicitVariableMode', this.id, c.id, modeId); this._modes[c.id] = modeId;
+    }
+    clearExplicitVariableModeForCollection(col) { const id = typeof col === 'string' ? col : col.id; w('clearExplicitVariableMode', this.id, id); delete this._modes[id]; }
     get boundVariables() { return clone(this._bound); }
     // Binds a FLOAT variable to a node field (or unbinds it with null); the field takes the variable's value.
     setBoundVariable(field, variable) {
@@ -190,10 +248,20 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
     get description() { return this._description; }
     set description(v) { w('node.description', this.id, v); this._description = v; }
     get removed() { return !nodes.has(this.id); }
-    appendChild(child) {
+    appendChild(child) { this.insertChild(this.children.length, child); }
+    insertChild(index, child) {
       w('appendChild', this.id, child.id);
-      if (child.parent) child.parent.children = child.parent.children.filter(n => n !== child);
-      child.parent = this; this.children.push(child);
+      if (this.type === 'COMPONENT_SET' && child.type !== 'COMPONENT') throw new Error('mock: a component set holds only components');
+      const from = child.parent;
+      if (from) from.children = from.children.filter(n => n !== child);
+      child.parent = this; this.children.splice(Math.min(index, this.children.length), 0, child);
+      if (from !== this) child._anchor = [-1, -1];
+      if (from !== this && this._p.layoutMode === 'GRID') {
+        for (let i = 0; i < this.gridRowCount * this.gridColumnCount; i++) {
+          const r = Math.floor(i / this.gridColumnCount), c = i % this.gridColumnCount;
+          if (!this._taken(r, c, child)) { child._anchor = [r, c]; break; }
+        }
+      }
     }
     resize(width, height) {
       w('resize', this.id, width, height);
@@ -213,28 +281,80 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
   }
   for (const [k, v] of Object.entries(LAYOUT_DEFAULTS)) {
     Object.defineProperty(SceneNode.prototype, k, {
-      get() { return k in PAINT_LISTS ? clone(this._p[k]) : this._p[k]; },
+      get() {
+        // Probed live (#32): a hidden child of an auto layout reports FILL sizing as FIXED; the fill is still
+        // there, as layoutGrow (main axis) and layoutAlign STRETCH (cross axis).
+        if ((k === 'layoutSizingHorizontal' || k === 'layoutSizingVertical') && this._p[k] === 'FILL' && this._p.visible === false) return 'FIXED';
+        return k in PAINT_LISTS ? clone(this._p[k]) : this._p[k];
+      },
       set(v) {
         if (k === 'layoutSizingHorizontal' || k === 'layoutSizingVertical') {
           if (v === 'HUG' && this._p.layoutMode === 'NONE' && this.type !== 'TEXT') throw new Error(`mock: HUG needs auto layout on ${this.name}`);
           if (v === 'FILL' && (!this.parent || !this.parent._p || this.parent._p.layoutMode === 'NONE')) throw new Error(`mock: FILL needs an auto layout parent for ${this.name}`);
         }
-        if (k === 'layoutMode' && !['NONE', 'HORIZONTAL', 'VERTICAL'].includes(v)) throw new Error(`mock: layoutMode ${v}`);
+        if (k === 'layoutMode' && !['NONE', 'HORIZONTAL', 'VERTICAL', 'GRID'].includes(v)) throw new Error(`mock: layoutMode ${v}`);
+        if (k === 'layoutMode' && v === 'GRID' && this._p.layoutMode !== 'GRID') {
+          for (const c of this.children) c._anchor = [-1, -1];
+          if (!this._rows.length) { this._rows = [{ type: 'FLEX', value: 1 }, { type: 'FLEX', value: 1 }]; this._cols = [{ type: 'FLEX', value: 1 }, { type: 'FLEX', value: 1 }]; }
+        }
         w(`node.${k}`, this.id, v);
         delete this._bound[k];
         this._p[k] = typeof v === 'number' ? f32(v) : k in PAINT_LISTS ? clone(v) : v;
       },
     });
   }
+  Object.defineProperty(SceneNode.prototype, 'layoutGrow', { get() {
+    const dir = this.parent && this.parent._p && this.parent._p.layoutMode;
+    return this._p[dir === 'VERTICAL' ? 'layoutSizingVertical' : 'layoutSizingHorizontal'] === 'FILL' ? 1 : 0;
+  } });
+  Object.defineProperty(SceneNode.prototype, 'layoutAlign', { get() {
+    const dir = this.parent && this.parent._p && this.parent._p.layoutMode;
+    return this._p[dir === 'VERTICAL' ? 'layoutSizingHorizontal' : 'layoutSizingVertical'] === 'FILL' ? 'STRETCH' : 'INHERIT';
+  } });
   // fills live in _fills (the icons slice's snapshot reads them); strokes and effects in _p.
   class Page extends SceneNode {
     constructor(name) { super('PAGE', name); this.loaded = false; }
     async loadAsync() { this.loaded = true; }
   }
+  // Component properties live on a component set, or on a component outside one (probed live in #32: keys
+  // are "<name>#<id>"; a variant's definitions can only be read from its set).
+  const propsKit = {
+    get componentPropertyDefinitions() {
+      if (this.type === 'COMPONENT' && this.parent && this.parent.type === 'COMPONENT_SET') throw new Error('mock: read componentPropertyDefinitions from the component set');
+      const out = clone(this._props);
+      if (this.type === 'COMPONENT_SET') {
+        const axes = {};
+        for (const c of this.children) for (const part of c.name.split(', ')) { const [k, v] = part.split('='); axes[k] = axes[k] || []; if (!axes[k].includes(v)) axes[k].push(v); }
+        for (const [k, vals] of Object.entries(axes)) out[k] = { type: 'VARIANT', defaultValue: vals[0], variantOptions: vals };
+      }
+      return out;
+    },
+    addComponentProperty(name, type, defaultValue, options) {
+      if (!['TEXT', 'BOOLEAN', 'INSTANCE_SWAP'].includes(type)) throw new Error(`mock: property type ${type}`);
+      if (type === 'INSTANCE_SWAP' && (nodes.get(defaultValue) || {}).type !== 'COMPONENT') throw new Error('mock: an INSTANCE_SWAP default is a component id');
+      const key = `${name}#${next++}:0`;
+      w('addComponentProperty', this.id, key);
+      this._props[key] = { type, defaultValue, ...(options && options.preferredValues ? { preferredValues: clone(options.preferredValues) } : {}) };
+      return key;
+    },
+    editComponentProperty(key, change) {
+      if (!this._props[key]) throw new Error(`mock: no property ${key}`);
+      w('editComponentProperty', this.id, key, change);
+      if ('defaultValue' in change) this._props[key].defaultValue = change.defaultValue;
+      if ('preferredValues' in change) this._props[key].preferredValues = clone(change.preferredValues);
+      return key;
+    },
+  };
   class Component extends SceneNode {
-    constructor(name, box) { super('COMPONENT', name, box); this.key = createKey(this.id); }
+    constructor(name, box) { super('COMPONENT', name, box); this.key = createKey(this.id); this._props = {}; }
     createInstance() { const i = new Instance(this); w('createInstance', i.id, this.id); figma.currentPage.appendChild(i); return i; }
   }
+  class ComponentSet extends SceneNode {
+    constructor() { super('COMPONENT_SET', 'Component 1'); this.key = createKey(this.id); this._props = {}; }
+    // the variant in the top-left cell, else the first child
+    get defaultVariant() { return this._taken(0, 0, null) || this.children[0] || null; }
+  }
+  for (const K of [Component, ComponentSet]) Object.defineProperties(K.prototype, Object.getOwnPropertyDescriptors(propsKit));
   // An instance holds copies of its main component's children; swapComponent replaces them.
   class Instance extends SceneNode {
     constructor(main) { super('INSTANCE', main.name, { width: main.width, height: main.height }); this._main = main; this._copy(); }
@@ -248,6 +368,14 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
       this.children = this._main.children.map(c => copy(c, this));
     }
     get mainComponent() { throw new Error('mock: in dynamic-page mode, use getMainComponentAsync'); }
+    get componentProperties() {
+      const values = this._values || {};
+      return Object.fromEntries(Object.entries(this._main._props).map(([k, d]) => [k, { type: d.type, value: k in values ? values[k] : d.defaultValue }]));
+    }
+    setProperties(values) {
+      for (const k of Object.keys(values)) if (!this._main._props[k]) throw new Error(`mock: no property ${k}`);
+      w('setProperties', this.id, values); this._values = { ...(this._values || {}), ...values };
+    }
     async getMainComponentAsync() { return nodes.has(this._main.id) ? this._main : null; }
     swapComponent(main) {
       w('swapComponent', this.id, main.id);
@@ -352,6 +480,14 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
       for (const n of list) { nodes.delete(n.id); n.parent.children = n.parent.children.filter(c => c !== n); }
       v.parent = host; host.children.push(v);
       return v;
+    },
+    combineAsVariants(list, parent) {
+      if (!list.length || list.some(n => n.type !== 'COMPONENT')) throw new Error('mock: combineAsVariants needs components');
+      const set = new ComponentSet();
+      w('combineAsVariants', set.id, list.map(n => n.id));
+      parent.appendChild(set);
+      for (const n of list) set.appendChild(n);
+      return set;
     },
     async loadFontAsync(font) { w('loadFont', `${font.family}/${font.style}`); fonts.add(`${font.family}/${font.style}`); },
     async getLocalTextStylesAsync() { return [...styles.values()]; },
