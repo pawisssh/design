@@ -276,12 +276,12 @@ function branchOf(text, from, to, cond) {
 
 // ---------- line index ----------
 
-function lineStarts(text) {
+export function lineStarts(text) {
   const out = [0];
   for (let i = 0; i < text.length; i++) if (text[i] === '\n') out.push(i + 1);
   return out;
 }
-function lineOf(starts, offset) {
+export function lineOf(starts, offset) {
   let lo = 0, hi = starts.length - 1;
   while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (starts[mid] <= offset) lo = mid; else hi = mid - 1; }
   return lo;

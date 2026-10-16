@@ -1,0 +1,49 @@
+body {
+  margin: 0;
+  background-color: #ffffff;
+  color: #161616;
+}
+
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.title {
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 400;
+}
+
+.members {
+  list-style: none;
+  padding: 0;
+  background-color: #f4f4f4;
+}
+
+.member {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+}
+
+.role {
+  color: #525252;
+}
+
+.invite {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field {
+  background-color: #f4f4f4;
+  border-bottom: 1px solid #8d8d8d;
+  padding: 0 16px;
+}
+
+.notice {
+  color: #198038;
+}
