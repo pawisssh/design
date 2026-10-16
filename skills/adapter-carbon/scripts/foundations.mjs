@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // The Carbon Adapter's foundations step (#28): the Carbon foundations document, generated from the pinned
-// Carbon sources plus the union of every Contract's token closure. Never edit its output by hand.
+// Carbon sources. It carries the whole theme (#108, ADR 0006): every themes.json token, the whole palette, every
+// layout.json group and every @carbon/type style, plus the component tokens of each family that has a Contract.
+// The Contracts' token closure is recorded and checked against it. Never edit its output by hand.
 //
 //   node skills/adapter-carbon/scripts/foundations.mjs [--contracts <dir>] [--sources <dir>] [-o <file>]
 //
@@ -34,19 +36,27 @@ const FILE = {
   styles: 'packages/type/src/styles.ts',
 };
 const ALPHA_REASON = 'alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA';
+const HEX_REASON = 'DTCG colour object ({colorSpace, components, hex}), not a palette alias; its hex is kept exact';
+const FLUID_REASON = 'viewport-relative: Figma has no vw unit, so this STRING holds the CSS text, for code and matching; it binds to nothing';
+const DEPRECATED_REASON = 'deprecated in @carbon/layout ("replaced by the spacing scale, do not use in new work"); scopes [] keep it out of Figma\'s pickers';
 
-// Layout groups carried whole, regardless of the closure: an owner can only bind a variable that exists, so
-// the picker must offer the whole scale (#8 base loop). Colours, Type and Primitives stay closure-only until the
-// document carries the whole theme (#108, ADR 0006); the document no longer records this list (#107).
-const FULL_SCALES = ['size', 'spacing'];
+// Component token files, by Component Family. A family's tokens are emitted only when the family has a Contract.
+const COMPONENTS = { button: FILE.button };
 // DTCG layout group -> [Figma group, scopes]. Figma has no PADDING scope; GAP covers padding and gap (#27).
+// Fluid spacing is a STRING (no Figma unit for vw), bound by nothing. A deprecated token gets scopes [].
 const LAYOUT_GROUP = {
   spacing: ['Spacing', ['GAP']],
+  'fluid-spacing': ['Fluid spacing', []],
+  container: ['Container', ['WIDTH_HEIGHT']],
   size: ['Size', ['WIDTH_HEIGHT']],
   'icon-size': ['Icon size', ['WIDTH_HEIGHT']],
   'border-radius': ['Border radius', ['CORNER_RADIUS']],
+  layout: ['Layout', ['GAP']],
 };
-const FONT_STYLE = { 300: 'Light', 400: 'Regular', 600: 'SemiBold' }; // IBM Plex Sans style per weight
+const FONT_STYLE = { 300: 'Light', 400: 'Regular', 600: 'SemiBold' }; // IBM Plex Sans, Mono and Serif style per weight
+// Where the compiled @carbon/styles CSS, which is what Carbon ships and what codeSyntax names, differs from
+// styles.ts at the pinned commit. The document takes the CSS value and says so; any other difference still fails.
+const TYPE_CSS_DIFFERS = { 'expressive-heading-01-line-height': '1.42857', 'heading-07-line-height': '1.19' };
 
 const fail = msg => { throw new Error(msg); };
 const byKey = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -83,10 +93,14 @@ function flattenLayout(doc) {
 /** colors.json: white, blue > 60, blue > 60Hover -> keys white, blue.60, blue.60Hover. */
 function palette(doc) {
   const out = {};
+  const hex = (key, v) => {
+    if (typeof v !== 'string' || !/^#[0-9a-f]{6}$/i.test(v)) fail(`palette ${key}: cannot read ${JSON.stringify(v)} as a 6-digit hex`);
+    out[key] = v.toLowerCase();
+  };
   for (const [k, v] of Object.entries(doc)) {
     if (k.startsWith('$')) continue;
-    if ('$value' in v) out[k] = v.$value.toLowerCase();
-    else for (const [step, node] of Object.entries(v)) if (!step.startsWith('$')) out[`${k}.${step}`] = node.$value.toLowerCase();
+    if ('$value' in v) hex(k, v.$value);
+    else for (const [step, node] of Object.entries(v)) if (!step.startsWith('$')) hex(`${k}.${step}`, node.$value);
   }
   return out;
 }
@@ -103,21 +117,22 @@ const rgbaCss = (hex, alpha) => {
   return `rgba(${r}, ${gr}, ${b}, ${formatG(alpha)})`;
 };
 
-function layoutPx(node) {
+function layoutPx(name, node) {
   const v = node.$value;
   const conv = ((node.$extensions || {})['carbon.layout'] || {}).converter;
-  let px, how;
-  if (conv === 'miniUnits') [px, how] = [v * 8, `${formatG(v)} miniUnits x 8`];
-  else if (conv === 'rem') [px, how] = [v, `${formatG(v)}px (rem converter)`];
-  else if (typeof v === 'string' && v.endsWith('rem')) [px, how] = [parseFloat(v) * 16, `${v} x 16`];
-  else if (typeof v === 'string' && v.endsWith('px')) [px, how] = [parseFloat(v), v];
-  else fail(`unknown layout unit ${JSON.stringify(node)}`);
-  return [px, how];
+  const unit = typeof v === 'string' && /^(\d+(?:\.\d+)?)(rem|px)$/.exec(v);
+  if (conv === 'miniUnits' && Number.isFinite(v)) return [v * 8, `${formatG(v)} miniUnits x 8`];
+  if (conv === 'rem' && Number.isFinite(v)) return [v, `${formatG(v)}px (rem converter)`];
+  if (!conv && unit && unit[2] === 'rem') return [parseFloat(unit[1]) * 16, `${v} x 16`];
+  if (!conv && unit) return [parseFloat(unit[1]), v];
+  fail(`layout token ${name}: cannot read ${JSON.stringify(v)}${conv ? ` with the ${conv} converter` : ''}`);
 }
 
-// @carbon/type has no DTCG file: read the TypeScript exports. Only the forms the body styles use are
-// understood (`export const x = <literal or identifier>;`, objects of rem(scaleNN) / identifier / number /
-// px(n)); anything else fails rather than being guessed.
+// @carbon/type has no DTCG file: read the TypeScript exports. Only these forms are understood: `export const
+// x = <literal or identifier>;`, and style objects whose top-level fields are fontFamily (a fontFamily.ts
+// export), fontSize (rem(scaleNN)), fontWeight (a fontWeight.ts export), lineHeight (a number), letterSpacing
+// (a number or px(n)) and breakpoints (ignored: a Figma Text Style has one value per field, so fluid styles keep
+// their base values). Anything else fails, naming the export, rather than being guessed.
 function typeSource(files) {
   const consts = text => {
     const out = {};
@@ -127,39 +142,70 @@ function typeSource(files) {
   const scale = consts(files[FILE.scale]);
   const weight = consts(files[FILE.fontWeight]);
   const styles = consts(files[FILE.styles]);
-  const famStack = consts(files[FILE.fontFamily]).sans;
-  const fam = famStack && /^"'([^']+)'/.exec(famStack);
-  if (!fam) fail(`${FILE.fontFamily}: cannot read the first family of \`sans\``);
+  const stacks = consts(files[FILE.fontFamily]);
+  const firstFamily = key => {
+    const m = stacks[key] && /^"'([^']+)'/.exec(stacks[key]);
+    return m ? m[1] : fail(`${FILE.fontFamily}: cannot read the first family of \`${key}\``);
+  };
   const num = (expr, at) => (/^-?\d+(\.\d+)?$/.test(expr) ? Number(expr) : fail(`${at}: "${expr}" is not a number`));
-
-  function style(token) {
-    const id = token.replace(/-(\w)/g, (_, c) => c.toUpperCase()); // body-compact-01 -> bodyCompact01
-    if (!styles[id]) return null;
-    let target = id;
-    if (/^\w+$/.test(styles[id])) target = styles[id]; // bodyCompact01 = bodyShort01
-    const body = styles[target] && /^\{([\s\S]*)\}$/.exec(styles[target]);
-    if (!body) fail(`${FILE.styles}#${target}: not an object literal`);
-    const at = `${FILE.styles}#${target}`;
-    const fields = Object.fromEntries(body[1].split(',').map(s => s.trim()).filter(Boolean).map(s => {
+  // bodyCompact01 -> body-compact-01, helperText01 -> helper-text-01
+  const kebab = id => id.replace(/([a-z])([A-Z])/g, '$1-$2').replace(/([a-zA-Z])(\d)/g, '$1-$2').toLowerCase();
+  // An object's top-level `key: value` pairs, split on commas outside nested braces.
+  const topFields = body => {
+    const parts = [];
+    let depth = 0, cur = '';
+    for (const ch of body) {
+      if (ch === '{') depth++;
+      else if (ch === '}') depth--;
+      if (ch === ',' && depth === 0) { parts.push(cur); cur = ''; } else cur += ch;
+    }
+    parts.push(cur);
+    return Object.fromEntries(parts.map(s => s.trim()).filter(Boolean).map(s => {
       const i = s.indexOf(':');
       return [s.slice(0, i).trim(), s.slice(i + 1).trim()];
     }));
-    const known = ['fontSize', 'fontWeight', 'lineHeight', 'letterSpacing'];
-    if (Object.keys(fields).sort().join() !== [...known].sort().join()) fail(`${at}: fields ${Object.keys(fields)} are not ${known}`);
+  };
+
+  // A style object is named by the current alias that points at it (bodyCompact01 = bodyShort01), else by itself.
+  const current = {};
+  for (const [id, expr] of Object.entries(styles)) {
+    if (!/^\w+$/.test(expr)) continue;
+    if (!(styles[expr] || '').startsWith('{')) fail(`${FILE.styles}#${id}: alias of ${expr}, which is not a style object`);
+    if (current[expr]) fail(`${FILE.styles}#${expr}: aliased by both ${current[expr]} and ${id}`);
+    current[expr] = id;
+  }
+  const out = {};
+  for (const [target, expr] of Object.entries(styles)) {
+    if (/^\w+$/.test(expr)) continue;
+    const at = `${FILE.styles}#${target}`;
+    const body = /^\{([\s\S]*)\}$/.exec(expr);
+    if (!body) fail(`${at}: not an object literal`);
+    const fields = topFields(body[1]);
+    const unread = Object.keys(fields).filter(k => !['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing', 'breakpoints'].includes(k));
+    if (unread.length) fail(`${at}: field ${unread.join(', ')} is not one the Adapter reads`);
+    for (const k of ['fontSize', 'lineHeight', 'letterSpacing']) if (!(k in fields)) fail(`${at}: no ${k}`);
+    const family = fields.fontFamily || 'sans';
+    if (!stacks[family]) fail(`${at}: fontFamily "${family}" is not a fontFamily.ts export`);
     const size = /^rem\((scale\d+)\)$/.exec(fields.fontSize);
     if (!size || !scale[size[1]]) fail(`${at}: fontSize "${fields.fontSize}" is not rem(scaleNN)`);
-    if (!weight[fields.fontWeight]) fail(`${at}: fontWeight "${fields.fontWeight}" is not a fontWeight.ts export`);
+    // helperText01/02 set no fontWeight: they inherit the form item's regular (#90)
+    const inherited = !('fontWeight' in fields);
+    const weightKey = inherited ? 'regular' : fields.fontWeight;
+    if (!weight[weightKey]) fail(`${at}: fontWeight "${weightKey}" is not a fontWeight.ts export`);
     const ls = /^px\((.+)\)$/.exec(fields.letterSpacing);
-    return {
+    const id = current[target] || target;
+    out[kebab(id)] = {
       source: `${at}${target === id ? '' : ` (${id} = ${target})`}`,
-      fontFamily: fam[1],
+      family, fontFamily: firstFamily(family),
       fontSize: num(scale[size[1]], at), fontSizeFrom: `rem(${size[1]}), ${size[1]} = ${scale[size[1]]}`,
-      fontWeight: num(weight[fields.fontWeight], at), fontWeightFrom: `fontWeight.ts ${fields.fontWeight}`,
+      fontWeight: num(weight[weightKey], at), inherited,
+      fontWeightFrom: inherited ? 'not set in styles.ts; inherits regular from the form item' : `fontWeight.ts ${weightKey}`,
       lineHeight: num(fields.lineHeight, at),
       letterSpacing: ls ? num(ls[1], at) : num(fields.letterSpacing, at),
+      fluid: 'breakpoints' in fields,
     };
   }
-  return { style };
+  return { styles: out, firstFamily };
 }
 
 // ---------- compiled CSS ----------
@@ -206,8 +252,15 @@ export function generate({ sources, contracts }) {
   const users = t => [...(usedBy[t] || [])].sort(byKey);
 
   const files = sources.files;
-  const comps = flattenTheme(JSON.parse(files[FILE.button]), FILE.button);
+  const families = new Set(contracts.map(c => c.contract.family.key));
+  const comps = {};
+  for (const [family, file] of Object.entries(COMPONENTS)) {
+    if (!families.has(family)) continue;
+    for (const [k, e] of Object.entries(flattenTheme(JSON.parse(files[file]), file))) comps[k] = { ...e, family };
+  }
   const themes = flattenTheme(JSON.parse(files[FILE.themes]), FILE.themes);
+  const definedTwice = Object.keys(comps).filter(k => k in themes);
+  if (definedTwice.length) fail(`tokens in both themes.json and a component file: ${definedTwice.join(', ')}`);
   const layout = flattenLayout(JSON.parse(files[FILE.layout]));
   const pal = palette(JSON.parse(files[FILE.colors]));
   const type = typeSource(files);
@@ -216,8 +269,7 @@ export function generate({ sources, contracts }) {
   const variables = {};
   const textStyles = {};
   const notes = [];
-  const checks = { css: 0, cssMissing: [], sass: 0 };
-  const primitives = new Set();
+  const checks = { css: 0, cssMissing: [], cssDiffers: [], sass: 0 };
 
   const codeSyntax = name => {
     if (css.props.has(name)) return { WEB: `var(--cds-${name})` };
@@ -229,39 +281,37 @@ export function generate({ sources, contracts }) {
     return { WEB: sass };
   };
 
-  // 2. Theme: theme and component colours in the closure
-  const styleTokens = [];
-  const unknown = [];
-  for (const t of tokens) {
-    if (comps[t] || themes[t] || layout[t]) continue;
-    if (type.style(t)) styleTokens.push(t);
-    else unknown.push(t);
-  }
+  // every closure token must be something Carbon defines
+  const unknown = tokens.filter(t => !comps[t] && !themes[t] && !layout[t] && !type.styles[t]);
   if (unknown.length) fail(`tokens not found in the Carbon sources: ${unknown.join(', ')}`);
 
-  for (const name of tokens.filter(t => comps[t] || themes[t])) {
-    const { node, source, group } = comps[name] || themes[name];
+  // 2. Theme: every themes.json token, and the component tokens of each family that has a Contract
+  for (const name of [...Object.keys(themes), ...Object.keys(comps)].sort(byKey)) {
+    const { node, source, group, family } = comps[name] || themes[name];
     const mods = (node.$extensions['org.carbon'] || {}).alphaModifiers || {};
     const values = {};
     for (const [mode] of MODES) {
-      let v = node.$extensions['carbon.themes'][mode];
+      let v = (node.$extensions['carbon.themes'] || {})[mode];
       let alpha = mods[mode];
-      if (v && typeof v === 'object') [v, alpha] = [v.value, v.alpha];
-      if (typeof v !== 'string') fail(`${name}/${mode}: no carbon.themes value in ${source}`);
-      if (v.startsWith('{')) {
-        const key = paletteKey(v);
-        if (!(key in pal)) fail(`${name}/${mode}: palette ${key} missing`);
-        if (alpha === undefined) {
-          values[mode] = { alias: key, resolved: pal[key] };
-          primitives.add(key);
-        } else {
-          values[mode] = { raw: pal[key], alpha, resolved: rgbaCss(pal[key], alpha), from: { alias: key, alpha }, level: 'info', reason: ALPHA_REASON };
-        }
+      if (v && typeof v === 'object' && 'hex' in v) {
+        if (typeof v.hex !== 'string' || !/^#[0-9a-f]{6}$/i.test(v.hex)) fail(`${name}/${mode}: cannot read the colour object ${JSON.stringify(v)} in ${source}`);
+        const hex = v.hex.toLowerCase();
+        values[mode] = { value: hex, resolved: hex, level: 'info', reason: HEX_REASON };
       } else {
-        const lit = v.toLowerCase();
-        const near = Object.keys(pal).filter(k => Math.abs(parseInt(pal[k].slice(1), 16) - parseInt(lit.slice(1), 16)) <= 2);
-        values[mode] = { value: lit, resolved: lit, level: 'info',
-          reason: `DTCG literal, not a palette alias; kept exact (nearest primitive ${near.map(k => `${k} ${pal[k]}`).join(', ') || 'none'} differs)` };
+        if (v && typeof v === 'object') [v, alpha] = [v.value, v.alpha];
+        if (typeof v !== 'string') fail(`${name}/${mode}: cannot read the carbon.themes value ${JSON.stringify((node.$extensions['carbon.themes'] || {})[mode])} in ${source}`);
+        if (v.startsWith('{')) {
+          const key = paletteKey(v);
+          if (!(key in pal)) fail(`${name}/${mode}: palette ${key} missing`);
+          if (alpha === undefined) values[mode] = { alias: key, resolved: pal[key] };
+          else values[mode] = { raw: pal[key], alpha, resolved: rgbaCss(pal[key], alpha), from: { alias: key, alpha }, level: 'info', reason: ALPHA_REASON };
+        } else {
+          if (!/^#[0-9a-f]{6}$/i.test(v)) fail(`${name}/${mode}: cannot read the literal "${v}" in ${source}`);
+          const lit = v.toLowerCase();
+          const near = Object.keys(pal).filter(k => Math.abs(parseInt(pal[k].slice(1), 16) - parseInt(lit.slice(1), 16)) <= 2);
+          values[mode] = { value: lit, resolved: lit, level: 'info',
+            reason: `DTCG literal, not a palette alias; kept exact (nearest primitive ${near.map(k => `${k} ${pal[k]}`).join(', ') || 'none'} differs)` };
+        }
       }
       const cssV = (css.blocks[mode] || {})[name];
       if (cssV === undefined) checks.cssMissing.push(`${name}/${mode}`);
@@ -269,46 +319,78 @@ export function generate({ sources, contracts }) {
       else checks.css++;
     }
     variables[name] = { collection: 'theme', name: `${title(group)}/${name}`, type: 'COLOR', source,
-      scopes: themeScopes(group, name), codeSyntax: codeSyntax(name), values, usedBy: users(name) };
+      scopes: themeScopes(group, name), codeSyntax: codeSyntax(name), values, usedBy: users(name), ...(family ? { family } : {}) };
   }
 
-  // 3. Layout: full spacing and size scales plus closure tokens
-  for (const name of Object.keys(layout).filter(t => usedBy[t] || FULL_SCALES.includes(layout[t].group)).sort(byKey)) {
+  // 3. Layout: every layout.json group
+  for (const name of Object.keys(layout).sort(byKey)) {
     const { group, node, source } = layout[name];
     if (!LAYOUT_GROUP[group]) fail(`layout token ${name}: group ${group} has no Figma mapping`);
-    const [figGroup, scopes] = LAYOUT_GROUP[group];
-    const [px, how] = layoutPx(node);
-    const emitted = css.first(name); // spacing-* is emitted as rem; size, icon-size and border-radius are Sass-only
+    const [figGroup, groupScopes] = LAYOUT_GROUP[group];
+    const emitted = css.first(name); // spacing-* and fluid-spacing-* are emitted; the other groups are Sass-only
+    if (group === 'fluid-spacing') {
+      const v = node.$value;
+      if (typeof v !== 'string' || !/^(0|\d+(\.\d+)?vw)$/.test(v)) fail(`layout token ${name}: cannot read the fluid value ${JSON.stringify(v)}`);
+      if (emitted !== v) fail(`CSS mismatch ${name}: document ${v}, CSS ${emitted}`);
+      checks.css++;
+      variables[name] = { collection: 'layout', name: `${figGroup}/${name}`, type: 'STRING', source, scopes: groupScopes,
+        codeSyntax: codeSyntax(name), values: { default: { value: v, from: 'layout.json $value, as CSS', level: 'info', reason: FLUID_REASON } }, usedBy: users(name) };
+      continue;
+    }
+    const [px, how] = layoutPx(name, node);
     if (emitted !== null) {
       if (!emitted.endsWith('rem') || parseFloat(emitted) * 16 !== px) fail(`CSS mismatch ${name}: document ${px}px, CSS ${emitted}`);
       checks.css++;
     }
-    variables[name] = { collection: 'layout', name: `${figGroup}/${name}`, type: 'FLOAT', source, scopes,
-      codeSyntax: codeSyntax(name), values: { default: { value: px, from: how } }, usedBy: users(name) };
+    const deprecated = ((node.$extensions || {})['carbon.layout'] || {}).deprecated === true;
+    variables[name] = { collection: 'layout', name: `${figGroup}/${name}`, type: 'FLOAT', source, scopes: deprecated ? [] : groupScopes,
+      codeSyntax: codeSyntax(name), values: { default: { value: px, from: how, ...(deprecated ? { level: 'info', reason: DEPRECATED_REASON } : {}) } }, usedBy: users(name) };
   }
 
-  // 4. Primitives: only the palette entries some Theme mode aliases
-  for (const key of [...primitives].sort(byKey))
+  // 4. Primitives: the whole palette
+  for (const key of Object.keys(pal).sort(byKey))
     variables[key] = { collection: 'primitives', name: primitiveName(key), type: 'COLOR',
       source: `${FILE.colors}#/${key.replace('.', '/')}`, scopes: [], hidden: true, values: { default: { value: pal[key] } } };
 
-  // 5. Type variables and Text Styles
-  const fam = 'font-family-sans';
-  if (styleTokens.length) {
-    variables[fam] = { collection: 'type', name: `Font family/${fam}`, type: 'STRING', source: `${FILE.fontFamily}#sans`,
+  // 5. Type variables and Text Styles: every style, one font-family variable per family they use
+  const styleNames = Object.keys(type.styles).sort(byKey);
+  for (const family of [...new Set(styleNames.map(s => type.styles[s].family))].sort(byKey)) {
+    const fam = `font-family-${family}`;
+    const familyStyles = styleNames.filter(s => type.styles[s].family === family);
+    variables[fam] = { collection: 'type', name: `Font family/${fam}`, type: 'STRING', source: `${FILE.fontFamily}#${family}`,
       scopes: ['FONT_FAMILY'], codeSyntax: {},
-      values: { default: { value: type.style(styleTokens[0]).fontFamily, from: 'first family of the sans stack' } },
-      usedBy: [...new Set(styleTokens.flatMap(users))].sort(byKey) };
-    notes.push({ level: 'info', at: `variables.${fam}.codeSyntax`,
-      message: 'Carbon emits no font-family custom property for body styles (they inherit); codeSyntax left empty.' });
+      values: { default: { value: type.firstFamily(family), from: `first family of the ${family} stack` } },
+      usedBy: [...new Set(familyStyles.flatMap(users))].sort(byKey) };
+    notes.push({ level: 'info', at: `variables.${fam}.codeSyntax`, message: family === 'sans'
+      ? 'Carbon emits no font-family custom property for body styles (they inherit); codeSyntax left empty.'
+      : `Carbon emits the family per style (--cds-${familyStyles[0]}-font-family), not as one custom property; codeSyntax left empty.` });
   }
-  for (const s of styleTokens) {
-    const t = type.style(s);
-    if (!FONT_STYLE[t.fontWeight]) fail(`${s}: no IBM Plex Sans style for weight ${t.fontWeight}`);
-    const lhPx = Math.round(t.lineHeight * t.fontSize);
+  for (const s of styleNames) {
+    const t = type.styles[s];
+    if (!FONT_STYLE[t.fontWeight]) fail(`${s}: no IBM Plex style for weight ${t.fontWeight}`);
+    const fam = `font-family-${t.family}`;
+    const famCss = css.first(`${s}-font-family`);
+    if (famCss !== null) {
+      const first = /^'([^']+)'/.exec(famCss);
+      if (!first || first[1] !== t.fontFamily) fail(`CSS mismatch ${s}-font-family: document ${t.fontFamily}, CSS ${famCss}`);
+      checks.css++;
+    } else if (t.family !== 'sans') fail(`${s}: no --cds-${s}-font-family in the compiled CSS for its ${t.family} family`);
+
+    let ratio = t.lineHeight;
+    const lhName = `${s}-line-height`;
+    if (lhName in TYPE_CSS_DIFFERS) {
+      const lhCss = css.first(lhName);
+      if (lhCss !== TYPE_CSS_DIFFERS[lhName] || lhCss === formatG(t.lineHeight))
+        fail(`${lhName}: the recorded CSS difference (${TYPE_CSS_DIFFERS[lhName]}) no longer holds: CSS ${lhCss}, styles.ts ${t.lineHeight}`);
+      ratio = Number(lhCss);
+      checks.cssDiffers.push(lhName);
+      notes.push({ level: 'warning', at: `variables.${lhName}`,
+        message: `styles.ts (${t.source}) has lineHeight ${t.lineHeight}, but the compiled CSS emits ${lhCss}; the document takes the CSS.` });
+    }
+    const lhPx = Math.round(ratio * t.fontSize);
     const fields = [
       ['font-size', 'fontSize', t.fontSize, t.fontSizeFrom, ['FONT_SIZE'], `${formatG(t.fontSize / 16)}rem`],
-      ['line-height', 'lineHeight', lhPx, `${t.lineHeight} x ${t.fontSize} = ${(t.lineHeight * t.fontSize).toFixed(4)}, rounded`, ['LINE_HEIGHT'], formatG(t.lineHeight)],
+      ['line-height', 'lineHeight', lhPx, `${ratio} x ${t.fontSize} = ${(ratio * t.fontSize).toFixed(4)}, rounded`, ['LINE_HEIGHT'], formatG(ratio)],
       ['font-weight', 'fontWeight', t.fontWeight, t.fontWeightFrom, ['FONT_WEIGHT'], String(t.fontWeight)],
       ['letter-spacing', 'letterSpacing', t.letterSpacing, 'px', ['LETTER_SPACING'], t.letterSpacing ? `${formatG(t.letterSpacing)}px` : '0'],
     ];
@@ -317,16 +399,27 @@ export function generate({ sources, contracts }) {
     for (const [suffix, field, value, from, scopes, cssExpect] of fields) {
       const vname = `${s}-${suffix}`;
       const emitted = css.first(vname);
+      if (field === 'fontWeight' && t.inherited && emitted === null) {
+        notes.push({ level: 'info', at: `textStyles.${s}.fontWeight`,
+          message: `styles.ts sets no fontWeight and the compiled CSS emits no --cds-${vname}: the style inherits regular (${t.fontWeight}) from the form item, so it has no font-weight variable.` });
+        continue;
+      }
       if (emitted !== cssExpect) fail(`CSS mismatch ${vname}: expected ${cssExpect}, CSS ${emitted}`);
-      checks.css++;
+      const differs = checks.cssDiffers.includes(vname);
+      if (!differs) checks.css++;
+      const extra = differs ? { level: 'warning', reason: `styles.ts has ${t.lineHeight}; the compiled CSS, which codeSyntax names, emits ${ratio}` }
+        : field === 'fontWeight' && t.inherited ? { level: 'info', reason: `styles.ts sets no fontWeight; the style inherits regular, and the compiled CSS emits ${emitted}` } : {};
       variables[vname] = { collection: 'type', name: `${group}/${vname}`, type: 'FLOAT', source: t.source, scopes,
-        codeSyntax: codeSyntax(vname), values: { default: { value, from } }, usedBy: users(s) };
+        codeSyntax: codeSyntax(vname), values: { default: { value, from, ...extra } }, usedBy: users(s) };
       binds[field] = vname;
     }
     textStyles[s] = { name: `${group}/${s}`, source: t.source, fontFamily: t.fontFamily, fontStyle: FONT_STYLE[t.fontWeight],
       fontSize: t.fontSize, lineHeight: { unit: 'PIXELS', value: lhPx }, fontWeight: t.fontWeight,
       letterSpacing: { unit: 'PIXELS', value: t.letterSpacing }, binds, usedBy: users(s) };
   }
+  const fluid = styleNames.filter(s => type.styles[s].fluid);
+  notes.push({ level: 'info', at: 'textStyles',
+    message: `${fluid.length} fluid styles (${fluid.join(', ')}) carry their base values; their styles.ts breakpoints are ignored, because a Text Style has one value per field. The compiled CSS custom properties hold the same base values.` });
 
   // uniqueness: one flat-name namespace across variables and Text Styles; unique Figma names
   const clash = Object.keys(variables).filter(k => k in textStyles);
@@ -358,10 +451,10 @@ export function generate({ sources, contracts }) {
     ],
     variables: Object.fromEntries(Object.entries(variables).sort(([ka, a], [kb, b]) =>
       COLLECTIONS.indexOf(a.collection) - COLLECTIONS.indexOf(b.collection) || byKey(ka, kb))),
-    textStyles,
+    textStyles: Object.fromEntries(Object.entries(textStyles).sort(([a], [b]) => byKey(a, b))),
     checks: {
       css: { against: `@carbon/styles@${CARBON.packages['@carbon/styles'].version} css/styles.css`,
-        sha256: `sha256:${sources.css.sha256}`, matched: checks.css, missing: checks.cssMissing },
+        sha256: `sha256:${sources.css.sha256}`, matched: checks.css, missing: checks.cssMissing, differs: [...checks.cssDiffers].sort(byKey) },
       sass: { against: `@carbon/layout@${CARBON.packages['@carbon/layout'].version} scss/generated`, matched: checks.sass },
       scopes: { by: 'skills/contract/scripts/contract.mjs validate, rule 6', contracts: contracts.length, errors: 0 },
     },

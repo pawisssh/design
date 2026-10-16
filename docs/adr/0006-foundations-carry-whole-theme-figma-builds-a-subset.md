@@ -12,4 +12,4 @@ To-design does not build all of it in Figma. By default it builds the closure pl
 
 ## Status
 
-To-design side built in [#107](https://github.com/pawisssh/design/issues/107): the schema drops `fullScales`, and To-design builds the selected subset, chunked by group over the cap. The whole-theme generator is [#108](https://github.com/pawisssh/design/issues/108); until it lands, the Carbon Adapter generates the closure plus full `spacing-*` and `size-*` scales, which is exactly the default subset.
+To-design side built in [#107](https://github.com/pawisssh/design/issues/107): the schema drops `fullScales`, and To-design builds the selected subset, chunked by group over the cap. Carbon side built in [#108](https://github.com/pawisssh/design/issues/108): the Carbon document carries 683 variables and 36 Text Styles, and its default subset is still the 75 variables and 2 Text Styles the Button-only document had.
