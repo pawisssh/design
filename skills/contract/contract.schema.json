@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pawisssh/design/skills/contract/contract.schema.json",
+  "title": "Contract (component.json), schemaVersion 1",
+  "description": "Structure of a Contract. The cross-field rules (patterns name real axes, the expansion equals expectedCount, every selected variant resolves, tokens sit inside their variable's scopes, approval matches) are in validate() of scripts/contract.mjs; see references/contract-schema.md#validation.",
+  "type": "object",
+  "required": ["schemaVersion", "family", "source", "axes", "excluded", "selection", "anatomy", "properties", "layout", "paint", "subComponents", "dependencies", "figma", "code"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "family": {
+      "type": "object",
+      "required": ["key", "name", "description"],
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+        "name": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["codeLibrary", "adapter", "repository", "tag", "commit", "packages", "files", "snapshotId"],
+      "properties": {
+        "codeLibrary": { "type": "string" },
+        "adapter": { "type": "string" },
+        "repository": { "type": "string" },
+        "tag": { "type": "string" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "packages": { "type": "object", "additionalProperties": { "type": "string" } },
+        "files": { "type": "object", "additionalProperties": { "$ref": "#/$defs/sha256" } },
+        "snapshotId": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "axes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/axis" } },
+    "excluded": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["match", "reason", "evidence"],
+        "properties": {
+          "match": { "$ref": "#/$defs/pattern" },
+          "reason": { "type": "string", "minLength": 1 },
+          "evidence": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+        }
+      }
+    },
+    "selection": {
+      "type": "object",
+      "required": ["status", "omit", "expectedCount", "approval"],
+      "properties": {
+        "status": { "enum": ["draft", "approved"] },
+        "omit": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["match"],
+            "properties": { "match": { "$ref": "#/$defs/pattern" }, "reason": { "type": "string" } }
+          }
+        },
+        "expectedCount": { "type": "integer", "minimum": 1 },
+        "approval": {
+          "anyOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["by", "at", "snapshotId", "contentHash"],
+              "properties": {
+                "by": { "const": "owner" },
+                "at": { "type": "string" },
+                "snapshotId": { "$ref": "#/$defs/sha256" },
+                "contentHash": { "$ref": "#/$defs/sha256" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "anatomy": { "$ref": "#/$defs/node" },
+    "properties": { "type": "array", "items": { "$ref": "#/$defs/property" } },
+    "layout": { "type": "array", "items": { "$ref": "#/$defs/rule" } },
+    "paint": { "type": "array", "items": { "$ref": "#/$defs/rule" } },
+    "icons": {
+      "type": "object",
+      "required": ["source", "default", "preferred"],
+      "properties": {
+        "source": { "type": "object", "required": ["package", "version", "path"] },
+        "default": { "type": "string" },
+        "preferred": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+      }
+    },
+    "subComponents": { "type": "array", "items": { "type": "object", "required": ["name", "tier", "anatomy"], "properties": { "name": { "type": "string", "pattern": "^_" }, "tier": { "enum": ["item", "base"] } } } },
+    "dependencies": {
+      "type": "object",
+      "required": ["families", "fonts"],
+      "properties": {
+        "families": { "type": "array", "items": { "type": "object", "required": ["key", "contract"] } },
+        "fonts": { "type": "array", "items": { "type": "object", "required": ["family", "styles"] } }
+      }
+    },
+    "figma": {
+      "type": "object",
+      "required": ["page", "componentSetName", "description", "header", "grid"],
+      "properties": {
+        "header": { "type": "object", "required": ["type", "title", "namespace"] },
+        "grid": {
+          "type": "object",
+          "required": ["columns", "rows"],
+          "properties": { "columns": { "type": "array", "items": { "type": "string" } }, "rows": { "type": "array", "items": { "type": "string" } } }
+        }
+      }
+    },
+    "code": {
+      "type": "object",
+      "required": ["framework", "package", "component", "import", "alwaysEmit"],
+      "properties": { "alwaysEmit": { "type": "array", "items": { "type": "string" } } }
+    },
+    "notes": { "type": "array", "items": { "$ref": "#/$defs/note" } }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "axis": {
+      "type": "object",
+      "required": ["key", "label", "default", "defaultSource", "values"],
+      "properties": {
+        "key": { "type": "string" },
+        "label": { "type": "string" },
+        "default": { "type": "string" },
+        "defaultSource": { "type": "string" },
+        "canonical": { "type": "boolean" },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["key", "label"],
+            "properties": {
+              "key": { "type": "string" },
+              "label": { "type": "string", "pattern": "^[^=,]+$" },
+              "code": { "type": ["object", "null"] },
+              "css": { "type": "string" }
+            }
+          }
+        },
+        "dropped": { "type": "array", "items": { "type": "object", "required": ["key", "reason", "evidence"] } }
+      }
+    },
+    "pattern": {
+      "description": "Axis key to a value key (string) or any of several (array). A missing axis matches every value.",
+      "type": "object",
+      "additionalProperties": { "anyOf": [{ "type": "string" }, { "type": "array", "minItems": 1, "items": { "type": "string" } }] }
+    },
+    "node": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[^/.]+$" },
+        "type": { "enum": ["COMPONENT", "FRAME", "TEXT", "INSTANCE"] },
+        "role": { "type": "string" },
+        "instanceOf": { "type": "string", "pattern": "^(icon|family|sub):.+$" },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/node" } }
+      }
+    },
+    "property": {
+      "type": "object",
+      "required": ["key", "label", "type", "default", "binds"],
+      "properties": {
+        "key": { "type": "string" },
+        "label": { "type": "string" },
+        "type": { "enum": ["TEXT", "BOOLEAN", "INSTANCE_SWAP"] },
+        "binds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["node", "field"],
+            "properties": { "match": { "$ref": "#/$defs/pattern" }, "node": { "type": "string" }, "field": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": ["match", "set"],
+      "properties": {
+        "match": { "$ref": "#/$defs/pattern" },
+        "set": {
+          "description": "Anatomy node name (or <instance>/<layer> path) to fields.",
+          "type": "object",
+          "additionalProperties": { "type": "object", "additionalProperties": { "$ref": "#/$defs/fieldValue" } }
+        }
+      }
+    },
+    "fieldValue": {
+      "anyOf": [
+        { "type": "string", "description": "a keyword: none, hug, fill, fixed, row, column, start, center, end, space-between, inside, …" },
+        { "type": "number" },
+        { "$ref": "#/$defs/token" },
+        { "$ref": "#/$defs/raw" },
+        { "type": "object", "required": ["sameAs"], "properties": { "sameAs": { "type": "string", "pattern": "^.+\\.[A-Za-z]+$" } } },
+        { "type": "array", "items": { "$ref": "#/$defs/effect" } }
+      ]
+    },
+    "token": {
+      "type": "object",
+      "required": ["token"],
+      "properties": {
+        "token": { "type": "string", "description": "the Code Library's flat token name, never a Figma id" },
+        "by": { "const": "owner" },
+        "was": { "$ref": "#/$defs/previous" }
+      }
+    },
+    "raw": {
+      "type": "object",
+      "required": ["raw", "level", "reason"],
+      "properties": {
+        "raw": { "type": ["number", "string"] },
+        "level": { "enum": ["info", "warning"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "by": { "const": "owner" },
+        "was": { "$ref": "#/$defs/previous" }
+      }
+    },
+    "previous": {
+      "description": "An owner edit's replaced value: {token} or {raw}. History only; ignored by closure and raw checks.",
+      "type": "object",
+      "anyOf": [{ "required": ["token"] }, { "required": ["raw"] }]
+    },
+    "effect": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["inner-shadow", "drop-shadow"] },
+        "spread": { "$ref": "#/$defs/fieldValue" },
+        "blur": { "$ref": "#/$defs/fieldValue" },
+        "x": { "$ref": "#/$defs/fieldValue" },
+        "y": { "$ref": "#/$defs/fieldValue" },
+        "color": { "$ref": "#/$defs/fieldValue" }
+      }
+    },
+    "note": {
+      "type": "object",
+      "required": ["level", "message"],
+      "properties": { "level": { "enum": ["info", "warning", "verify"] }, "at": { "type": "string" }, "message": { "type": "string" } }
+    }
+  }
+}
