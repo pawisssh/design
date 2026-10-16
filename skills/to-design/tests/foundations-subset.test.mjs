@@ -275,3 +275,18 @@ test('binding a token this file has not built cannot be carried until its group 
   assert.equal(refused.problem, `token "${token}" is not built in this file: add group ${doc.variables[token].name.split('/')[0]} (ledger.mjs groups --add) and rebuild foundations`);
   assert.equal(edit.problem, undefined);
 });
+
+test('a Mode selector and a COLOR value\'s from.css stay out of the package; the core needs neither', async () => {
+  const doc = JSON.parse(DOC_TEXT);
+  doc.collections.find(c => c.key === 'theme').modes.forEach(m => { m.selector = `.cds--${m.key}`; });
+  doc.variables.background.values.white.from = { css: 'var(--cds-background, #ffffff)' };
+  const docText = JSON.stringify(doc, null, 2) + '\n';
+  const { plan } = pack({ docText });
+  const text = JSON.stringify(plan.foundations);
+  assert.ok(!text.includes('"selector":') && !text.includes('"css":'));
+  const a = mockFigma({ fileKey: FILE_KEY });
+  const b = mockFigma({ fileKey: FILE_KEY });
+  await call(a, { docText });
+  await call(b);
+  assert.deepEqual(a.snapshot(), b.snapshot());
+});

@@ -22,8 +22,8 @@ import { anatomyTree, baseProps, defaultProps, expectedBase, expectedVariant, ic
 import { defaultLedgerPath, emptyLedger, readLedger } from './ledger.mjs';
 import { assertRecorded, CALL_BUDGET, chunks, chunkState, selectedGroups, selection, subsetDocument } from './foundations-subset.mjs';
 
-// Fields only a reviewer reads. The core never needs them, so the package leaves them out.
-const REVIEW_ONLY = { document: ['source', 'closure', 'checks', 'notes'], entry: ['source', 'usedBy'], value: ['from', 'reason', 'level', 'resolved'] };
+// Fields the core never needs, so the package leaves them out: the reviewer's, and a Mode's selector (To-preview and To-handoff read it).
+const REVIEW_ONLY = { document: ['source', 'closure', 'checks', 'notes'], entry: ['source', 'usedBy'], value: ['from', 'reason', 'level', 'resolved'], mode: ['selector'] };
 const omit = (obj, keys) => Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
 const mapValues = (obj, fn) => Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, fn(v)]));
 
@@ -31,6 +31,7 @@ const mapValues = (obj, fn) => Object.fromEntries(Object.entries(obj).map(([k, v
 export function stripReviewFields(doc) {
   return {
     ...omit(doc, REVIEW_ONLY.document),
+    collections: doc.collections.map(c => ({ ...c, modes: c.modes.map(m => omit(m, REVIEW_ONLY.mode)) })),
     variables: mapValues(doc.variables, v => ({ ...omit(v, REVIEW_ONLY.entry), values: mapValues(v.values, x => omit(x, REVIEW_ONLY.value)) })),
     textStyles: mapValues(doc.textStyles, s => omit(s, REVIEW_ONLY.entry)),
   };
