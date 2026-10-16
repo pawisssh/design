@@ -1,10 +1,12 @@
 // validateHandoff (#56, #64): handoff.schema.json (the JSON Schema keyword subset it uses), then the
 // cross-field rules a schema cannot say: tuples against the Contract or Proposal axes, every token a theme
 // token (never a Primitive or a component token), copy, value and question references, the five standard
-// states, and no usage of a retired Proposal.
+// states, no usage of a retired Proposal, and an approval that matches the content (a test approval only
+// under .scratch/).
 import { readFileSync } from 'node:fs';
+import { handoffContentHash } from './hash.mjs';
 import { STANDARD_STATES } from './recognise.mjs';
-import { stateAxisOf } from './system.mjs';
+import { TEST_APPROVER, inScratch, stateAxisOf } from './system.mjs';
 
 const SCHEMA = JSON.parse(readFileSync(new URL('../handoff.schema.json', import.meta.url), 'utf8'));
 
@@ -137,5 +139,20 @@ export function validateHandoff(handoff, system) {
   if (h.source && h.source.contracts) for (const k of Object.keys(h.source.contracts)) if (!contracts[k]) err('source', 'source.contracts', `source.contracts: no Contract "${k}" in ${system.key}`);
   if (h.source && h.source.modes) for (const [m, key] of Object.entries(h.source.modes))
     if (!foundations.collections.some(c => c.modes.some(x => x.key === key))) err('mode', 'source.modes', `source.modes.${m}: unknown Foundations mode "${key}"`);
+  checkApproval(h, system, err);
   return { ok: errors.length === 0, errors };
+}
+
+// Sign-off (#116): approved <=> an approval, which names this content and revision. A test approval is valid
+// only in a Design System under <repo>/.scratch/: outside it, only the owner signs off.
+function checkApproval(h, system, err) {
+  const a = h.approval;
+  if (h.status === 'approved' && !a) return err('approval', 'approval', 'approval: an approved Handoff needs an approval {by, at, revision, contentHash}');
+  if (h.status === 'pending' && a) return err('approval', 'approval', 'approval: a pending Handoff has `approval: null`');
+  if (!a || typeof a !== 'object') return;
+  if (a.by === TEST_APPROVER && !inScratch(system.dir))
+    err('approval', 'approval.by', `approval.by: "${TEST_APPROVER}" is a test approval, valid only under .scratch/; only the owner signs off a Handoff`);
+  const hash = handoffContentHash(h);
+  if (a.contentHash !== hash) err('approval', 'approval.contentHash', `approval.contentHash ${a.contentHash} does not match the Handoff's ${hash}: it changed since sign-off`);
+  if (a.revision !== h.revision) err('approval', 'approval.revision', `approval.revision ${a.revision} does not match revision ${h.revision}`);
 }
