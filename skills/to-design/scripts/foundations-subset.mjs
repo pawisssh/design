@@ -2,14 +2,21 @@
 // a Design Library holds the closure (what Contracts use), the groups the owner selected (Spacing and Size by
 // default, kept in the ledger's `foundationsGroups`), and every alias and Text Style bind target they reach.
 
-/** The groups a file builds when its ledger names none. */
+/** The groups a file builds when its ledger names none, where the document has them (shadcn has no Size). */
 export const DEFAULT_GROUPS = ['Size', 'Spacing'];
 
 /** A variable's or Text Style's group: the first segment of its Figma name (`Spacing/spacing-05` is in Spacing). */
 export const groupOf = entry => entry.name.split('/')[0];
 
-/** The groups a file builds: the ledger's list, else the default. */
-export const selectedGroups = ledger => (ledger && ledger.foundationsGroups) || DEFAULT_GROUPS;
+/**
+ * The groups a file builds: the ledger's list, else the default groups `doc` has. A group the owner named stays in
+ * even when the document lacks it, so `selection` refuses it by name.
+ */
+export function selectedGroups(ledger, doc) {
+  if (ledger && ledger.foundationsGroups) return ledger.foundationsGroups;
+  const known = new Set([...Object.values(doc.variables), ...Object.values(doc.textStyles)].map(groupOf));
+  return DEFAULT_GROUPS.filter(g => known.has(g));
+}
 
 /** Every name an entry needs built with it: alias targets of a variable, bind targets of a Text Style. */
 const targetsOf = (doc, name) => doc.variables[name]

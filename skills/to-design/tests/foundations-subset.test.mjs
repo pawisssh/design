@@ -15,6 +15,7 @@ import { DEFAULT_GROUPS, reach, selection, subsetDocument } from '../scripts/fou
 import { mockFigma, runPackage } from './mock-figma.mjs';
 
 const DOC_TEXT = readFileSync(new URL('../../../design-systems/carbon/carbon.foundations.json', import.meta.url), 'utf8');
+const SHADCN_TEXT = readFileSync(new URL('../../../design-systems/shadcn/shadcn.foundations.json', import.meta.url), 'utf8');
 const CORE = new URL('../assets/builder-core.js', import.meta.url).pathname;
 const PACKAGER = new URL('../scripts/package_native_builder.py', import.meta.url).pathname;
 const FILE_KEY = 'MOCKFILEKEY';
@@ -309,4 +310,21 @@ test('a Mode selector, a COLOR value\'s from.css and a component token\'s family
   await call(a, { docText });
   await call(b);
   assert.deepEqual(a.snapshot(), b.snapshot());
+});
+
+test('a document without a default group builds the closure and the default groups it has (shadcn: Spacing only)', () => {
+  const doc = JSON.parse(SHADCN_TEXT);
+  const { plan } = foundationsPlan(SHADCN_TEXT, null, { fileKey: FILE_KEY, at: AT });
+  assert.deepEqual(doc.closure.tokens, []);
+  const spacing = Object.keys(doc.variables).filter(n => doc.variables[n].name.startsWith('Spacing/'));
+  assert.equal(spacing.length, 35);
+  assert.deepEqual(Object.keys(plan.foundations.variables), spacing);
+  assert.deepEqual(plan.foundations.textStyles, {});
+  assert.deepEqual(setGroups(null, FILE_KEY, doc).foundationsGroups, ['Spacing']);
+});
+
+test('a group the owner names that the document does not have is still refused by name', () => {
+  const ledger = { ...setGroups(null, FILE_KEY, JSON.parse(SHADCN_TEXT)), foundationsGroups: ['Size'] };
+  assert.throws(() => foundationsPlan(SHADCN_TEXT, ledger, { fileKey: FILE_KEY, at: AT }), /no variable or Text Style is in group Size/);
+  assert.throws(() => setGroups(null, FILE_KEY, JSON.parse(SHADCN_TEXT), { add: ['Size'] }), /no variable or Text Style is in group Size/);
 });
