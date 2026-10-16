@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pawisssh/design/skills/to-handoff/handoff.schema.json",
+  "title": "Handoff (handoff.json), schemaVersion 1",
+  "description": "One feature's Handoff (#56), with the amendments of #60, #61, #62, #64, #80, #93 and #97. Stored at design-systems/<ds>/handoffs/<feature-key>/handoff.json. Cross-field rules (tuples against Contract or Proposal axes, tokens against the Foundations document, copy/value/question references, the five standard states, no usage of a retired Proposal) are in validateHandoff() of scripts/handoff.mjs.",
+  "type": "object",
+  "required": ["schemaVersion", "revision", "status", "approval", "feature", "source", "screens", "copy", "values", "acceptance", "openQuestions"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "revision": { "type": "integer", "description": "Counts content changes: +1 only on a write whose contentHash differs (#64). Not part of contentHash." },
+    "status": { "enum": ["pending", "approved"], "description": "Sign-off state (#64); every write resets it to pending. Not part of contentHash." },
+    "approval": {
+      "description": "Written by the owner's approve step, never by generate. Not part of contentHash.",
+      "anyOf": [
+        { "type": "null" },
+        { "type": "object", "required": ["by", "at", "revision", "contentHash"], "properties": {
+          "by": { "const": "owner" }, "at": { "type": "string" }, "revision": { "type": "integer" }, "contentHash": { "$ref": "#/$defs/sha256" } } }
+      ]
+    },
+    "feature": {
+      "type": "object",
+      "required": ["key", "name", "goal"],
+      "description": "#56 feature; feature.status is dropped (#64), so a Handoff has one status.",
+      "not": { "required": ["status"] },
+      "properties": {
+        "key": { "$ref": "#/$defs/key" },
+        "name": { "type": "string", "minLength": 1 },
+        "owner": { "type": "string" },
+        "goal": { "type": "string", "minLength": 1 },
+        "scope": { "type": "array", "items": { "type": "string" } },
+        "nonGoals": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["input", "kind", "prototype", "designSystem", "contracts", "proposals", "foundations", "modes"],
+      "properties": {
+        "input": { "const": "prototype" },
+        "kind": { "enum": ["html-file", "react-next", "react-vite"] },
+        "prototype": {
+          "type": "object",
+          "required": ["files", "snapshotId"],
+          "description": "#64 pins: every file the static reader read, keyed by path relative to the Prototype root. `dirty` is only meaningful beside a `commit`.",
+          "properties": {
+            "repo": { "type": "string" },
+            "commit": { "type": "string" },
+            "dirty": { "type": "boolean" },
+            "files": { "type": "object", "additionalProperties": { "$ref": "#/$defs/sha256" } },
+            "snapshotId": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        "designSystem": { "$ref": "#/$defs/key" },
+        "contracts": { "type": "object", "additionalProperties": { "type": "object", "required": ["snapshotId", "contentHash"], "properties": {
+          "snapshotId": { "$ref": "#/$defs/sha256" }, "contentHash": { "$ref": "#/$defs/sha256" } } } },
+        "proposals": { "type": "object", "additionalProperties": { "$ref": "#/$defs/sha256" } },
+        "foundations": { "type": "object", "required": ["documentHash", "usedHash"], "properties": {
+          "documentHash": { "$ref": "#/$defs/sha256" }, "usedHash": { "$ref": "#/$defs/sha256" } } },
+        "modes": { "type": "object", "description": "Prototype mode -> Foundations mode key (#61), e.g. {\"light\": \"white\"}.", "additionalProperties": { "type": "string" } },
+        "notes": { "type": "array", "items": { "$ref": "#/$defs/note" } },
+        "ignored": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "screens": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/screen" } },
+    "copy": { "type": "object", "additionalProperties": { "type": "object", "required": ["text"], "properties": {
+      "text": { "type": "string" }, "placeholder": { "const": true }, "at": { "type": "string" } } } },
+    "values": { "type": "array", "items": { "$ref": "#/$defs/offSystem" } },
+    "acceptance": { "type": "array", "items": { "type": "object", "required": ["id", "screen", "state", "given", "when", "then", "by"], "properties": {
+      "id": { "$ref": "#/$defs/key" }, "screen": { "type": "string" }, "state": { "type": "string" },
+      "given": { "type": "string" }, "when": { "type": "string" }, "then": { "type": "string" }, "by": { "enum": ["agent", "owner"] } } } },
+    "openQuestions": { "type": "array", "items": { "type": "object", "required": ["id", "kind", "to", "text"], "properties": {
+      "id": { "type": "string", "pattern": "^q-[a-z0-9-]+$" },
+      "kind": { "enum": ["font", "mode-map", "breakpoint", "no-contract", "off-axis", "missing-state", "stand-in", "prop"] },
+      "to": { "enum": ["owner", "developer"] },
+      "text": { "type": "string", "minLength": 1 },
+      "answer": { "anyOf": [ { "type": "null" }, { "type": "string" } ] } } } },
+    "flow": { "type": "array", "items": { "type": "object", "required": ["from", "trigger", "to"], "properties": {
+      "from": { "type": "string" }, "trigger": { "type": "string" }, "to": { "type": "string" }, "source": { "enum": ["mock", "simulated", "missing"] } } } },
+    "interactions": { "type": "object", "description": "Per-usage notes on hover, focus, keyboard and motion, keyed by usage id.", "additionalProperties": { "type": "string" } },
+    "data": { "type": "array", "items": { "type": "object", "required": ["id", "source"], "properties": {
+      "id": { "$ref": "#/$defs/key" }, "source": { "enum": ["mock", "simulated", "real"] }, "shape": { "type": "string" },
+      "note": { "type": "string" }, "question": { "type": "string" }, "at": { "type": "string" } } } },
+    "a11y": { "type": "object", "properties": {
+      "focusOrder": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
+      "landmarks": { "type": "object", "additionalProperties": { "type": "string" } },
+      "labels": { "type": "object", "additionalProperties": { "$ref": "#/$defs/copyRef" } } } },
+    "tokensToAdd": { "type": "object", "description": "DTCG tokens with per-mode values, for developers to add; never written back.", "additionalProperties": { "type": "object", "required": ["$type", "$value"] } }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "key": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "copyRef": { "type": "string", "pattern": "^copy:.+$" },
+    "valueRef": { "type": "string", "pattern": "^value:.+$" },
+    "at": { "type": "string", "description": "file:line:col, relative to the Prototype root", "pattern": "^[^:]+:\\d+:\\d+$" },
+    "ats": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/at" } },
+    "note": { "type": "object", "required": ["level", "text"], "properties": { "level": { "enum": ["info", "warning"] }, "text": { "type": "string" } } },
+    "tuple": { "type": "object", "additionalProperties": { "type": "string" } },
+    "states": { "type": "array", "description": "The screen states this item shows in, when not all of them.", "items": { "type": "string" } },
+    "match": {
+      "description": "How a value matched (#61): exact {token}, a tied pick {token, candidates, by}, near {token, match, raw, delta, candidates, by}, or Off-system {value}.",
+      "type": "object",
+      "properties": {
+        "token": { "type": "string" },
+        "textStyle": { "type": "string" },
+        "match": { "const": "near" },
+        "delta": { "type": "number" },
+        "candidates": { "type": "array", "items": { "type": "string" } },
+        "by": { "const": "agent" },
+        "value": { "$ref": "#/$defs/valueRef" },
+        "via": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "style": {
+      "type": "object",
+      "required": ["property", "raw", "at"],
+      "properties": {
+        "property": { "type": "string" },
+        "raw": { "type": "string" },
+        "at": { "$ref": "#/$defs/ats" },
+        "token": { "type": "string" }, "match": { "const": "near" }, "delta": { "type": "number" },
+        "candidates": { "type": "array", "items": { "type": "string" } }, "by": { "const": "agent" },
+        "value": { "$ref": "#/$defs/valueRef" }, "via": { "type": "array", "items": { "type": "string" } }
+      },
+      "anyOf": [ { "required": ["token"] }, { "required": ["value"] } ]
+    },
+    "text": {
+      "type": "object",
+      "required": ["copy", "at"],
+      "properties": {
+        "copy": { "type": "string" },
+        "at": { "$ref": "#/$defs/at" },
+        "states": { "$ref": "#/$defs/states" },
+        "style": { "type": "object", "properties": {
+          "textStyle": { "type": "string" }, "match": { "const": "near" }, "delta": { "type": "number" },
+          "candidates": { "type": "array", "items": { "type": "string" } }, "by": { "const": "agent" },
+          "raw": { "type": "object" }, "value": { "$ref": "#/$defs/valueRef" },
+          "partial": { "type": "object", "additionalProperties": { "$ref": "#/$defs/match" } } } }
+      }
+    },
+    "usage": {
+      "type": "object",
+      "required": ["id", "at"],
+      "properties": {
+        "id": { "$ref": "#/$defs/key" },
+        "contract": { "type": "string" },
+        "proposal": { "type": "string" },
+        "tuple": { "$ref": "#/$defs/tuple" },
+        "state": { "type": "string", "description": "An authored State value only (its Contract code is not null), such as disabled (#62)." },
+        "properties": { "type": "object", "additionalProperties": { "type": "string" } },
+        "items": { "type": "array", "description": "A Repeated child per item (#93), mirroring code.itemProp.", "items": { "type": "object", "required": ["properties", "at"], "properties": {
+          "properties": { "type": "object", "additionalProperties": { "type": "string" } }, "at": { "$ref": "#/$defs/at" } } } },
+        "match": { "type": "object", "required": ["by"], "properties": {
+          "by": { "enum": ["import", "agent", "retired"] }, "via": { "enum": ["library", "element"] },
+          "candidates": { "type": "array", "items": { "$ref": "#/$defs/tuple" } }, "proposal": { "type": "string" } } },
+        "offAxis": { "type": "array", "items": { "type": "object", "required": ["property", "raw", "reason", "question"], "properties": {
+          "property": { "type": "string" }, "raw": { "type": "string" }, "reason": { "type": "string" }, "question": { "type": "string" } } } },
+        "raw": { "type": "object", "required": ["element"], "properties": { "element": { "type": "string" } } },
+        "reason": { "type": "string", "minLength": 1 },
+        "question": { "type": "string" },
+        "in": { "type": "string", "description": "The nearest enclosing usage (#97)." },
+        "modes": { "type": "object", "description": "A Mode differing from the page's (#97).", "additionalProperties": { "type": "string" } },
+        "states": { "$ref": "#/$defs/states" },
+        "at": { "$ref": "#/$defs/at" }
+      },
+      "anyOf": [
+        { "required": ["contract", "tuple"] },
+        { "required": ["proposal"] },
+        { "required": ["raw", "reason"] }
+      ]
+    },
+    "region": {
+      "type": "object",
+      "required": ["id", "styles", "text", "usages"],
+      "properties": {
+        "id": { "$ref": "#/$defs/key" },
+        "landmark": { "anyOf": [ { "type": "null" }, { "type": "string" } ] },
+        "overlay": { "const": true },
+        "shell": { "const": true, "description": "The document shell (html, body and the mount element), not a region of the feature's own." },
+        "states": { "$ref": "#/$defs/states" },
+        "responsive": { "type": "object", "additionalProperties": { "type": "string" } },
+        "at": { "$ref": "#/$defs/at" },
+        "styles": { "type": "array", "items": { "$ref": "#/$defs/style" } },
+        "text": { "type": "array", "items": { "$ref": "#/$defs/text" } },
+        "usages": { "type": "array", "items": { "$ref": "#/$defs/usage" } }
+      }
+    },
+    "state": {
+      "anyOf": [
+        { "const": "n/a" },
+        { "type": "object", "required": ["missing", "question"], "properties": { "missing": { "const": true }, "question": { "type": "string" } } },
+        { "type": "object", "required": ["na", "reason"], "properties": { "na": { "const": true }, "reason": { "type": "string" } } },
+        { "type": "object", "required": ["content"], "properties": {
+          "content": { "type": "string" },
+          "trigger": { "type": "string" },
+          "usageStates": { "type": "object", "additionalProperties": { "type": "object", "properties": {
+            "state": { "type": "string" }, "properties": { "type": "object", "additionalProperties": { "type": "string" } } } } },
+          "screenshots": { "type": "object", "additionalProperties": { "anyOf": [ { "type": "string" }, { "type": "object", "required": ["missing", "reason"] } ] } } } }
+      ]
+    },
+    "screen": {
+      "type": "object",
+      "required": ["id", "name", "breakpoints", "regions", "states"],
+      "properties": {
+        "id": { "$ref": "#/$defs/key" },
+        "name": { "type": "string" },
+        "at": { "type": "string" },
+        "breakpoints": { "type": "array", "items": { "type": "string" } },
+        "regions": { "type": "array", "items": { "$ref": "#/$defs/region" } },
+        "states": { "type": "object", "required": ["default", "loading", "empty", "error", "success"], "additionalProperties": { "$ref": "#/$defs/state" } }
+      }
+    },
+    "offSystem": {
+      "type": "object",
+      "required": ["id", "raw", "role", "reason", "nearest", "at"],
+      "properties": {
+        "id": { "$ref": "#/$defs/key" },
+        "raw": { "type": "object", "additionalProperties": { "type": "string" } },
+        "role": { "type": "string" },
+        "reason": { "type": "string", "minLength": 1 },
+        "nearest": { "type": "array", "items": { "type": "object", "required": ["token"], "properties": {
+          "token": { "type": "string" }, "delta": { "type": "number" }, "value": { "type": "number" } } } },
+        "primitive": { "type": "string" },
+        "at": { "$ref": "#/$defs/ats" }
+      }
+    }
+  }
+}

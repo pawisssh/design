@@ -815,8 +815,8 @@ export function contentHash(contract) {
   return 'sha256:' + sha256(canonical(c));
 }
 
-// Canonical JSON: object keys sorted, no whitespace.
-function canonical(v) {
+/** Canonical JSON: object keys sorted at every level, no whitespace. The text every content hash is taken over. */
+export function canonical(v) {
   if (Array.isArray(v)) return `[${v.map(canonical).join(',')}]`;
   if (isObj(v)) return `{${Object.keys(v).sort().map(k => `${JSON.stringify(k)}:${canonical(v[k])}`).join(',')}}`;
   return JSON.stringify(v);
