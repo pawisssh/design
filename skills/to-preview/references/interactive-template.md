@@ -27,7 +27,7 @@ It should refuse to render when the installed packages differ from `contract.sou
 
 **Cards.** The grid follows the IBM UI Icon Library (Community) grid: 200×200 cards with shared 1px borders and no gap, at most 6 columns, in Contract axis order with no group headings. `catalogCard(specimen, {contract, baseId, sourceLabel, h})` builds one card through the node factory `h(tag, props, ...children)`:
 
-- top-left, the axis values only (`Primary / Extra Small / Enabled`), with the full variant name as the tooltip;
+- top-left, the axis values only (`Primary / Extra Small / Enabled`), with the full variant name as the tooltip. A value label the agent drafted (an `axes.<axis>.values.<value>.label` entry `by: "agent"` in the Contract's [`drafted`](../../contract/references/contract-schema.md#drafted-values) table) is marked `.tp-drafted`, in italics with a dotted underline and an asterisk, and the tooltip ends `(drafted: Size)`. An owner-corrected label is not marked. To-preview only flags it; the owner approves it with the Contract;
 - top-right, the selection checkbox, labelled with the full variant name and locked on the Base Component; the name and checkbox share one `<label>`, so clicking the name toggles it;
 - the specimen host, centred; an unchecked card's specimen is dimmed to 40%;
 - the footer, `Source` and `sourceLabel`, or `Base Component` on the base card.
