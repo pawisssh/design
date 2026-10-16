@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import sys
@@ -23,14 +24,9 @@ def package(core, plan, state):
     families = selection.get("selectedFamilies")
     if not isinstance(families, list) or not families or not all(isinstance(value, str) and value.strip() for value in families) or len(families) != len(set(families)):
         raise ValueError("Selection must contain unique selected families")
-    seen = set()
     for row in selection["entries"]:
-        if not isinstance(row, dict) or row.get("familyId") not in families or not isinstance(row.get("properties"), dict) or not isinstance(row.get("themeId"), str) or not row["themeId"]:
+        if not isinstance(row, dict) or row.get("familyId") not in families or not isinstance(row.get("properties"), dict):
             raise ValueError("Invalid selected specimen")
-        identifier = row.get("specimenId")
-        if not isinstance(identifier, str) or not identifier or identifier in seen:
-            raise ValueError("Selection specimen IDs must be unique and nonempty")
-        seen.add(identifier)
     if not isinstance(state, dict):
         raise ValueError("State must be an object")
     if state.get("fileKey") and plan.get("fileKey") and state["fileKey"] != plan["fileKey"]:
@@ -42,6 +38,15 @@ def package(core, plan, state):
     mcp = common + "return await buildComponentSets(figma, BUILD_PLAN, BUILD_STATE);\n"
     standalone = "(async () => {\n" + common + "  const result = await buildComponentSets(figma, BUILD_PLAN, BUILD_STATE);\n  console.log(JSON.stringify(result, null, 2));\n  return result;\n})().catch(error => { console.error(error); throw error; });\n"
     return mcp, standalone, identity
+
+
+def package_path(path):
+    """Path of the package relative to the project dir, as the hook resolves it."""
+    root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path.cwd()).resolve()
+    relative = Path(os.path.relpath(path.resolve(), root)).as_posix()
+    if relative == ".." or relative.startswith("../") or re.search(r"\s", relative):
+        raise ValueError(f"Package path must be inside the project dir {root} and contain no whitespace: {relative}")
+    return relative
 
 
 def main():
@@ -56,14 +61,20 @@ def main():
         plan = json.loads(args.plan.read_text())
         state = json.loads(args.state.read_text()) if args.state else {}
         mcp, standalone, identity = package(core, plan, state)
+        mcp_path = args.output / "build-components.mcp.js"
+        stub_path = package_path(mcp_path)
+        mcp_bytes = mcp.encode()
+        file_sha = hashlib.sha256(mcp_bytes).hexdigest()
         args.output.mkdir(parents=True, exist_ok=True)
-        (args.output / "build-components.mcp.js").write_text(mcp)
+        mcp_path.write_bytes(mcp_bytes)
         (args.output / "build-components.js").write_text(standalone)
-        (args.output / "script-package.json").write_text(json.dumps({"schemaVersion": 1, "inputHash": identity, "snapshotId": plan["snapshotId"], "execution": "not-run", "files": ["build-components.mcp.js", "build-components.js"]}, indent=2))
+        (args.output / "script-package.json").write_text(json.dumps({"schemaVersion": 1, "inputHash": identity, "fileSha256": file_sha, "snapshotId": plan["snapshotId"], "execution": "not-run", "files": ["build-components.mcp.js", "build-components.js"]}, indent=2))
     except (OSError, ValueError, TypeError) as error:
         print(json.dumps({"status": "invalid-input", "error": str(error)}))
         return 2
-    print(json.dumps({"status": "packaged", "inputHash": identity, "output": str(args.output), "execution": "not-run"}))
+    # The use_figma package hook swaps this stub for the verified file (see hooks/use-figma-package.mjs).
+    stub = f'/*@package {stub_path} sha256={file_sha}*/ throw new Error("package not injected");'
+    print(json.dumps({"status": "packaged", "inputHash": identity, "fileSha256": file_sha, "chars": len(mcp), "output": str(args.output), "execution": "not-run", "stub": stub}))
     return 0
 
 
