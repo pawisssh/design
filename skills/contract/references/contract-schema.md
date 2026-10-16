@@ -2,9 +2,9 @@
 
 Answer for [#7](https://github.com/pawisssh/design/issues/7), part of map [#1](https://github.com/pawisssh/design/issues/1). The vocabulary follows `GLOSSARY.md`: Code Library, Design Library, Component Family, Property Axis, Base Component, Sub-component, Component Set, Contract, Adapter.
 
-The Contract is the library-neutral, canonical and readable description of one Component Family. The Adapter for a Code Library writes it, the owner approves it once, at the end of To-design's base loop, and the To-design builder reads it. (The approval shape in [Selection](#selection) is updated in #24.) This is one file per Component Family. Compaction for `use_figma` is the packager's job ([#12](https://github.com/pawisssh/design/issues/12), #18); the Contract itself is never compacted.
+The Contract is the library-neutral, canonical and readable description of one Component Family. The Adapter for a Code Library writes it, the owner approves it once, at the end of To-design's base loop (see [Approval](#approval)), and the To-design builder reads it. This is one file per Component Family. Compaction for `use_figma` is the packager's job ([#12](https://github.com/pawisssh/design/issues/12), #18); the Contract itself is never compacted.
 
-Worked example: [`button.component.json`](../../../design-systems/carbon/contracts/button.component.json), Carbon React Button at `v11.118.0`. Checker: the research expander `docs/contract/tools/expand_contract.py` on branch `research/skills-split` (`python3 docs/contract/tools/expand_contract.py <contract> --table`), replaced by the shared Contract module in #24. Mapping from today's artifacts: [`mapping.md`](mapping.md).
+Worked example: [`button.component.json`](../../../design-systems/carbon/contracts/button.component.json), Carbon React Button at `v11.118.0`. Formal schema: [`contract.schema.json`](../contract.schema.json). Checker: the shared Contract module [`scripts/contract.mjs`](../scripts/contract.mjs), from the command line `node skills/contract/scripts/check.mjs <contract> [--table]`. Mapping from today's artifacts: [`mapping.md`](mapping.md).
 
 ## Top level
 
@@ -38,7 +38,7 @@ Worked example: [`button.component.json`](../../../design-systems/carbon/contrac
 - **Order.** The array order is the Figma property order. Each `values` array order is the grid order. The first value is not the default unless `default` says so.
 - **`default`.** Required. `defaultSource` records where the default came from (code, SCSS, canonical, or owner). The tuple of all defaults is the Base Component, and it must be in the selection.
 - **`code`.** The props that this value means in code. `{}` means "the default render". `null` means "no code counterpart". A value may map to several props (`lg-expressive` → `size="lg"` + `isExpressive`). An optional `css` field records the pseudo-class for State values.
-- **`canonical: true`** marks the State axis. Its value keys come from the fixed set `enabled, hover, active, focus, disabled` (labels `Enabled`…`Disabled`). The Adapter keeps only the states the CSS defines for the family, and the owner may edit that list at approval. The builder never adds a state.
+- **`canonical: true`** marks the State axis. Its value keys come from the fixed set `enabled, hover, active, focus, disabled` (labels `Enabled`…`Disabled`). The Adapter keeps only the states the CSS defines for the family. The owner changes that list only through an explicit Contract edit; To-preview edits only `selection.omit` (#21). The builder never adds a state.
 - **`dropped`** (optional) records code values the Adapter removed, with `reason` and `evidence` (for example the type-only `danger--primary`).
 
 Themes are not an axis. They are Figma Variable modes, defined once per Design System in the foundations document (separate ticket).
@@ -61,10 +61,45 @@ Themes are not an axis. They are Figma Variable modes, defined once per Design S
 "selection": { "status": "draft", "omit": [ { "match": { "size": "2xl", "kind": "danger--ghost" }, "reason": "owner: not used" } ], "expectedCount": 240, "approval": null }
 ```
 
-- The selected set = cartesian product of `axes` − `excluded` − `selection.omit`. The Contract never stores the expanded tuple list. The packager expands it, and #18 compacts it.
+- The selected set = cartesian product of `axes` − `excluded` − `selection.omit`. The Contract never stores the expanded tuple list. `expand()` derives it, and #18 compacts it for the package.
 - `expectedCount` is a checksum. Tools reject the Contract when the expansion gives a different count.
-- `status` is `draft` or `approved`. `approval` is `{by, at, snapshotId}` once approved. Execution authorisation is not stored here.
+- `status` is `draft` or `approved`. `approval` is `null` while draft and `{by, at, snapshotId, contentHash}` once approved (see [Approval](#approval)). Execution authorisation is not stored here.
 - The default tuple must be selected. To start from a different Base Component, change `axes[].default` and set `defaultSource: "owner"`.
+- To-preview's export is an omit patch, `{family, snapshotId, omit: [pattern], expectedCount}`. It is the whole owner omit list, so `applyOmit()` replaces `selection.omit` with it (each pattern becomes `{match}`, keeping the `reason` of a pattern that was already there) rather than adding to it, so a combination the owner re-checks drops out of the list. The agent then validates and asserts that the expanded set equals the checked combinations. To-preview edits only `selection.omit` and `expectedCount` and never writes an approval.
+
+### Approval
+
+```jsonc
+"selection": {
+  "status": "approved",
+  "omit": [],
+  "expectedCount": 245,
+  "approval": { "by": "owner", "at": "2026-10-16T09:00:00Z",
+                "snapshotId": "<= source.snapshotId>",
+                "contentHash": "sha256:<canonical Contract without selection.status and selection.approval>" }
+}
+```
+
+- There is one approval, at the end of To-design's base loop, after the agent has shown the clean readback of the Base Component, every edit with its blast radius and shields, and the tweaks the Contract cannot carry. Only an explicit "approve" from the owner in chat counts. Silence, Figma state and inference never do. To-preview never approves.
+- Only the owner approves (`by: "owner"`). An orchestrator may approve on the owner's behalf only in a prototype, never for a build into the owner's Design Library, so a committed Contract always carries `by: "owner"`.
+- `contentHash` is `sha256:` of the canonical JSON (keys sorted, no whitespace, UTF-8) of the whole Contract with `selection.status` and `selection.approval` removed. `contentHash()` computes it and `approve()` writes the block.
+- An approval is valid only when `snapshotId` equals `source.snapshotId` and `contentHash` equals the Contract's current hash. A source change or any edit after approval voids it.
+- **Every Contract write** (an omit patch, an owner edit, an Adapter re-run, a hand edit) resets `status: "draft"` and `approval: null` (`asDraft()`). An edited Contract is never treated as approved.
+- Approval lives only in the Contract. Figma cannot hold it: `setPluginData` is unsupported in `use_figma`, and `sharedPluginData` is public.
+
+### Owner edits
+
+A tweak the owner makes to the Base Component in Figma lands **in place**, on the rule that last set that field for the Base Component tuple (`resolve().from` names it). It is never a later-wins override and never a Base-only patch. The edited value carries `by: "owner"` and the replaced value under `was`:
+
+```jsonc
+"gap":        { "token": "spacing-06", "by": "owner", "was": { "token": "spacing-07" } }
+"paddingTop": { "raw": 14, "level": "warning", "reason": "owner tweak", "by": "owner", "was": { "raw": 15 } }
+```
+
+- A tweak to a bound variable becomes a token edit. A typed number becomes a raw `warning`. Tokens are read only from `boundVariables`, and a typed number that equals exactly one token is offered as that token, never swapped in silently.
+- `was` is history, not a live value: the token closure and the raw `level`/`reason` check skip it.
+- The agent asks first when the rule is shared by other variants (blast radius). There is no top-level edit log. A derived raw that an edit made stale gets a `verify` note, not a recompute. Tweaks the Contract cannot express (for example `letterSpacing`, a structure change) become `notes` at level `warning` and block approval: `approve()` refuses and rule 8 rejects an approved Contract while one is open.
+- An Adapter re-run keeps `by: "owner"` values and reports a conflict when the source value also changed (merge mechanics not yet specified).
 
 ## Anatomy
 
@@ -109,6 +144,8 @@ Themes are not an axis. They are Figma Variable modes, defined once per Design S
 | `"none"` | No paint (CSS `transparent`). Neither raw nor a warning. |
 | `{ "sameAs": "Label.fill" }` | Copy another node's resolved value (CSS `currentColor`). It is resolved after all rules. |
 
+A `token` or `raw` value may also carry `by: "owner"` and `was` (see [Owner edits](#owner-edits)).
+
 A token whose *mode value* is raw in Figma (the alpha entries, `button-danger-hover` from #9) is still a `token` reference in the Contract. Rawness inside a mode belongs to the foundations, not to the Contract.
 
 ## Icons
@@ -139,20 +176,23 @@ These are computed from the Contract, never written into it:
 - the expanded variant tuples and specimen ids
 - Figma ids and keys, which live in the builder ledger
 
-The research expander prints the derived closure. For Button it adds `spacing-07` to #9's list. It also shows that Button does not use `spacing-10`, `icon-primary` (the ghost icon renders `link-primary`, checked by render in #20), `icon-on-color-disabled`, `background-selected`, `layer-selected-disabled`, `button-separator` or the skeleton tokens.
+`closure()` derives the token closure: the tokens (variables and Text Styles) that the selected variants resolve to, after `sameAs`, skipping `was`. A token used only by omitted variants, or only by a value a later rule always overrides, is not in it. For Button it is 38 tokens, which adds `spacing-07` to #9's list. It also shows that Button does not use `spacing-10`, `icon-primary` (the ghost icon renders `link-primary`, checked by render in #20), `icon-on-color-disabled`, `background-selected`, `layer-selected-disabled`, `button-separator` or the skeleton tokens.
 
 ## Validation
 
+`validate(contract, foundations)` checks these rules and returns `{ok, errors: [{rule, at, message}]}`. It first checks the structure that the rules rely on (rule `"schema"`); [`contract.schema.json`](../contract.schema.json) is the full formal structure.
+
 1. `schemaVersion` is known, and the axis, value and property keys are unique. Labels are unique per axis, Title Case, and contain no `=` or `,`.
 2. Every axis has a `default` that is one of its values. The default tuple is selected.
-3. Every pattern names known axes and values. Every exclusion has `reason` and `evidence`.
+3. Every pattern (`excluded`, `selection.omit`, rules, property `binds`) names known axes and values. Every exclusion has `reason` and `evidence`. Every rule and bind names an anatomy node, or an `<INSTANCE node>/<layer>` path such as `Glyph/Vector`.
 4. The expansion equals `selection.expectedCount`.
-5. Every selected variant resolves every required field for every anatomy node, and gets exactly one bind per property.
-6. Every `raw` value has `level` and `reason`, and every `token` exists in the foundations.
-7. Every `instanceOf` and `dependencies.families` target exists and is built first.
+5. Every selected variant resolves every required field for every anatomy node, every `sameAs` resolves, and every variant gets exactly one bind per property. Required fields are, per anatomy node type: COMPONENT `direction`, `padding*`, `gap`, `fill`, `stroke`; TEXT `textStyle`, `fill`; FRAME `width`, `height`. On top of these, a field that any rule sets for a node is required for that node in every selected variant, so the builder never falls back to a Figma default (for Button this makes every field of the first layout and paint rules required everywhere, plus `minHeight` on every size).
+6. Every `raw` value has `level` (`info` or `warning`) and `reason`. Every token a selected variant uses exists in the foundations document (`textStyle` in `textStyles`, every other field in `variables`) and is used inside that variable's `scopes`. The scope a field needs: `padding*` and `gap` → `GAP` (Figma has no padding scope, #27); `width`, `height`, `min*`, `max*` → `WIDTH_HEIGHT`; `radius` → `CORNER_RADIUS`; `strokeWeight` → `STROKE_FLOAT`; `stroke` → `STROKE_COLOR`; effect `color` → `EFFECT_COLOR`; `fill` → `TEXT_FILL` on a TEXT node, `SHAPE_FILL` on an `<instance>/<layer>` path, `FRAME_FILL` otherwise (`ALL_FILLS` covers all three). Uses are checked after `sameAs`, so `Glyph/Vector` checks the label colour as `SHAPE_FILL`. `was` is skipped.
+7. Every `instanceOf` target is declared: `icon:*` needs `icons` (whose `default` is in `preferred`), `family:<key>` needs `dependencies.families`, `sub:<name>` needs `subComponents`. That each target is built first is enforced by the builder's build order, not by `validate`.
+8. `status` is `draft` with `approval: null`, or `approved` with an [approval](#approval) by the owner whose `snapshotId` and `contentHash` both match, and no `warning` note (an uncarried owner tweak) is open.
 
 ## Versioning
 
 - `schemaVersion` is an integer. Adding an optional field does not change it. Renaming, removing or changing the meaning of a field increments it, and tools reject a version they do not know.
-- Source drift is tracked separately, through `source.tag`, `commit`, `packages` and `snapshotId`. To upgrade Carbon, re-run the Adapter and approve the selection again.
-- A formal JSON Schema file (`contract.schema.json`) and validator are build work carried into the spec.
+- Source drift is tracked separately, through `source.tag`, `commit`, `packages` and `snapshotId`. To upgrade Carbon, re-run the Adapter, run the base loop and approve again.
+- The formal JSON Schema is [`contract.schema.json`](../contract.schema.json). A breaking change updates it, `validate()` and this document together.
