@@ -125,7 +125,7 @@ A tweak the owner makes to the Base Component in Figma lands **in place**, on th
 |---|---|
 | `TEXT` | `default`, `binds: [{node, field: "characters"}]`, `code: {prop}` |
 | `BOOLEAN` | `default`, `binds: [{match?, node, field: "visible"}]`, `code: {prop, whenFalse}` |
-| `INSTANCE_SWAP` | `default: "icon:default"`, `preferred: "icon:preferred"`, `binds: [{node, field: "mainComponent"}]`, `code: {prop, valueFrom}` |
+| `INSTANCE_SWAP` | `default: "icon:default"`, `preferred: "icon:preferred"`, `binds: [{node, field: "mainComponent"}]`, `code: {prop, valueFrom}`; for a slot a Slot axis shows and hides (#88): `code: {child, valueFrom, visibleWhen: {axis}}`, the slot rendered as a child where the axis value is filled |
 
 - `binds` may differ per variant through `match`. Every selected variant must get exactly one bind per property. Button uses this so that the `Icon` BOOLEAN hides `Glyph` (the slot keeps its space) on kinds that reserve the end padding, and hides the whole `Icon` slot on ghost kinds. Figma supports this: one set-level property referenced by different nodes in different variants keeps every reference and its instance value across variant switches (checked in #20).
 - `label` is the Figma property name. `key` is the stable id.
