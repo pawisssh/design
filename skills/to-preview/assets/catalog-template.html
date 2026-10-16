@@ -35,12 +35,12 @@
 <script>
 (() => {
   "use strict";
-  // To-preview shell over one Contract. catalog = {contract, modes, forces, source, specimens}; see scripts/catalog.mjs.
+  // To-preview shell over one Contract. catalog = {contract, modes, forces, sourceLabel, specimens}; see scripts/catalog.mjs.
   // Checked = kept in the Contract; unchecked = omitted. The Base Component is locked on.
   const $ = id => document.getElementById(id);
   let model, catalog, renderer, mode, filters = {}, rendered = false;
-  const element = (tag, text) => { const node = document.createElement(tag); if (text !== undefined) node.textContent = text; return node; };
-  const h = (tag, props, ...children) => {
+  // Node factory for the page and the cards: props are DOM properties, `dataset` and `aria-*` attributes.
+  const h = (tag, props = {}, ...children) => {
     const node = document.createElement(tag);
     for (const [key, value] of Object.entries(props)) {
       if (key === "dataset") Object.assign(node.dataset, value);
@@ -67,19 +67,19 @@
   function controls() {
     $("filters").replaceChildren();
     for (const axis of catalog.contract.axes) {
-      const label = element("label", axis.label), select = element("select");
+      const label = h("label", {}, axis.label), select = h("select");
       select.append(new Option("All", ""));
       for (const value of axis.values) select.append(new Option(value.label, value.key));
       select.onchange = () => { filters[axis.key] = select.value; filterGrid(); };
       label.append(select); $("filters").append(label);
     }
     for (const [text, value] of [["Check visible", true], ["Uncheck visible", false]]) {
-      const button = element("button", text); button.onclick = () => { model.selectMatching(filters, value); summary(); }; $("filters").append(button);
+      const button = h("button", {}, text); button.onclick = () => { model.selectMatching(filters, value); summary(); }; $("filters").append(button);
     }
     if (catalog.modes.length > 1) {
       // Display only: swaps the theme class on the page, so the specimens and the card chrome follow it;
       // nothing re-renders and the selection is untouched.
-      const label = element("label", "Theme"), select = element("select");
+      const label = h("label", {}, "Theme"), select = h("select");
       for (const m of catalog.modes) select.append(new Option(m.label, m.key));
       select.onchange = () => { document.body.classList.remove(modeClass(mode)); mode = select.value; document.body.classList.add(modeClass(mode)); };
       label.append(select); $("filters").append(label);
@@ -121,7 +121,7 @@
     const forceFor = specimen => catalog.forces.filter(f => specimen.tuple[f.axis] === f.value).map(f => "tp-force-" + f.pseudo.slice(1));
     try {
       for (const specimen of model.specimens.values()) {
-        const { card, checkbox, host } = catalogCard(specimen, { contract: catalog.contract, baseId: model.baseId, source: catalog.source, h });
+        const { card, checkbox, host } = catalogCard(specimen, { contract: catalog.contract, baseId: model.baseId, sourceLabel: catalog.sourceLabel, h });
         checkbox.onchange = () => { model.select(specimen.id, checkbox.checked); summary(); };
         $("grid").append(card);
         const renderedIn = mode;
@@ -137,7 +137,7 @@
   }
 
   function download(name, data) {
-    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" })), link = element("a");
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" })), link = h("a");
     link.href = url; link.download = name; document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   function selection() {

@@ -8,8 +8,8 @@
 //   skills/adapter-<source.adapter>/scripts/preview.mjs (previewRenderer(contract) -> {render, stylesheet, modeClass}).
 //   To-preview itself knows no Code Library.
 // - A State value whose `code` is null is forced in the page through the CSS pseudo-class in its `css`.
-// - Cards (#45): each specimen is a card whose footer names its source, the Contract's Code Library package
-//   and pinned version (`@carbon/react 1.118.0`).
+// - Cards (#45): see references/interactive-template.md. The footer's sourceLabel is the Contract's Code
+//   Library package and its pinned version (`@carbon/react 1.118.0`).
 // - Theme: a display-only toggle over the foundations document's multi-mode collection; the first mode
 //   is the default, and export needs only that every checked specimen rendered in it.
 // The foundations document defaults to the single *.foundations.json next to the contracts folder; the page
@@ -46,12 +46,12 @@ export function buildCatalog({ contract, foundations, renderer }) {
 
   const version = contract.source.packages[contract.code.package];
   if (!version) throw new Error(`source.packages pins no version of ${contract.code.package}`);
-  const source = `${contract.code.package} ${version}`;
+  const sourceLabel = `${contract.code.package} ${version}`;
 
   const specimens = {};
   for (const s of new Selection(contract, contractModule).specimens.values()) specimens[s.id] = renderer.render(s.tuple);
 
-  const data = JSON.stringify({ contract, modes, forces, source, specimens }).replace(/</g, '\\u003c');
+  const data = JSON.stringify({ contract, modes, forces, sourceLabel, specimens }).replace(/</g, '\\u003c');
   // Inline the shared module as a classic script: strip `export` and expose what the page uses.
   const contractScript = `window.Contract = (function () {\n"use strict";\n${readFileSync(new URL('../../contract/scripts/contract.mjs', import.meta.url), 'utf8').replace(/^export /gm, '')}\nreturn { matches, expand, baseTuple, tupleKey, variantName, applyOmit };\n})();`;
   const script = text => `<script>\n${text.replace(/<\/script/gi, '<\\/script')}\n</script>`;

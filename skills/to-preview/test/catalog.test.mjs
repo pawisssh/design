@@ -52,12 +52,12 @@ test('States without code props are forced through their CSS pseudo-class', () =
 });
 
 test('the card footer source is the Code Library package and its pinned version, from the Contract', () => {
-  assert.equal(embedded(buildCatalog({ contract: button, foundations, renderer: stub })).source, '@carbon/react 1.118.0');
+  assert.equal(embedded(buildCatalog({ contract: button, foundations, renderer: stub })).sourceLabel, '@carbon/react 1.118.0');
   const bumped = JSON.parse(JSON.stringify(button));
   bumped.source.packages['@carbon/react'] = '9.9.9';
   bumped.selection.status = 'draft';
   bumped.selection.approval = null;
-  assert.equal(embedded(buildCatalog({ contract: bumped, foundations, renderer: stub })).source, '@carbon/react 9.9.9');
+  assert.equal(embedded(buildCatalog({ contract: bumped, foundations, renderer: stub })).sourceLabel, '@carbon/react 9.9.9');
 });
 
 test('an invalid Contract gets no catalog', () => {

@@ -14,7 +14,7 @@ const model = new Selection(button, contractModule);
 
 const h = (tag, props, ...children) => ({ tag, props: props || {}, children });
 const text = node => (typeof node === 'string' ? node : node.children.map(text).join(''));
-const card = id => catalogCard(model.specimen(id), { contract: button, baseId: model.baseId, source: '@carbon/react 1.118.0', h });
+const card = id => catalogCard(model.specimen(id), { contract: button, baseId: model.baseId, sourceLabel: '@carbon/react 1.118.0', h });
 
 test('a card is name and checkbox on top, the specimen host, then the footer', () => {
   const { card: node, checkbox, host } = card('danger|xs|hover');
@@ -23,6 +23,7 @@ test('a card is name and checkbox on top, the specimen host, then the footer', (
   assert.equal(node.props.dataset.id, 'danger|xs|hover');
   const [head, specimen, footer] = node.children;
   assert.equal(node.children.length, 3);
+  assert.equal(head.tag, 'label', 'clicking the name toggles the checkbox');
   assert.equal(head.props.className, 'tp-card-head');
   assert.equal(head.children[1], checkbox, 'the checkbox sits top-right, after the name');
   assert.equal(specimen, host);
