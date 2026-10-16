@@ -25,12 +25,12 @@ Output for Button: 38 closure tokens, 75 variables (20 Primitives, 24 Theme, 22 
 |---|---|---|
 | `schemaVersion` | yes | Integer, `1`. Same rule as the Contract: an additive optional field keeps it; a rename, removal or change of meaning bumps it. |
 | `designSystem` | yes | `{key, name}`. `key` names the file (`carbon.foundations.json`) and the ledger section. |
-| `source` | yes | Same shape as the Contract's `source`: `codeLibrary`, `adapter`, `repository`, `tag`, `commit`, `packages`, `files {path: sha256:…}`, `snapshotId`. `files` lists every file the Adapter read for foundations, and `snapshotId` is computed over it the same way as the Contract's. It includes `colors.json` and `scale.ts`, which are not in Button's Contract. |
+| `source` | yes | Same shape as the Contract's `source`: `codeLibrary`, `adapter`, `repository`, `tag`, `commit`, `packages`, `files {path: sha256:…}`, `snapshotId`. `files` lists every file the Adapter read for foundations, and `snapshotId` is computed over it the same way as the Contract's. It includes `colors.json` and `scale.ts`, which are not in Button's Contract. The Generic Adapter reads a consumer's project, which has no repository, tag or commit: its `source` is `codeLibrary`, `adapter: "generic"`, `packages` (the pinned tool versions), `files` (paths relative to the project) and `snapshotId`. |
 | `closure` | yes | A record of what Contracts use, not the document's scope (#107). `contracts: [{family, path, snapshotId}]` is the Contracts this document was derived from. `tokens` is the sorted union of their token references, including `textStyle` references. To-design builds the closure in every Design Library file (see [To-design builds a subset](#to-design-builds-a-subset)). |
 | `collections` | yes | Ordered list `{key, name, modes: [{key, label, selector?}], hidden?}`. The first mode is the default. `selector` is the CSS that switches to the mode (`[data-carbon-theme="g100"]`, `.cds--layer-two`, later `.dark`). It is review-only: To-preview reads it, and the build plan strips it. |
 | `variables` | yes | Map from flat name to variable. See [Variables](#variables). The order is collection order, then tokens by name, which is also the creation order (aliases need their targets first). |
 | `textStyles` | yes (may be `{}`) | Map from flat name to Text Style. See [Text Styles](#text-styles). |
-| `checks` | yes | Evidence from generation: a CSS cross-check (`against`, `sha256`, `matched`, `missing`), a Sass fallback check (`against`, `matched`) and the scope check (`by`, the validator and rule that ran; `contracts`, how many Contracts it checked; `errors`, always 0, since generation fails otherwise). |
+| `checks` | yes | Evidence from generation: a CSS cross-check (`against`, `sha256`, `matched`, `missing`), a Sass fallback check (`against`, `matched`) and the scope check (`by`, the validator and rule that ran; `contracts`, how many Contracts it checked; `errors`, always 0, since generation fails otherwise). The Generic Adapter records `css` (`against` the project's CSS file, `converted`: mode values through the shared converter), `compiled` (`against` the pinned Tailwind, `matched`: utilities whose compiled declaration equals the document) and `scopes`. |
 | `notes` | no | `{level: info|warning|verify, at, message}`, as in the Contract. |
 
 ## Collections and modes
@@ -43,6 +43,13 @@ The Carbon collections as today's generator emits them (the closure plus full Sp
 | `theme` | `Theme` | `white` White, `g10` Gray 10, `g90` Gray 90, `g100` Gray 100 | Theme and `button-*` component tokens (#9). |
 | `layout` | `Layout` | `default` | Spacing and Size (full scales), Icon size and Border radius (closure only). |
 | `type` | `Type` | `default` | The variables that Text Styles bind. |
+
+The shadcn collections, from the Generic Adapter ([`adapter-generic`](../../adapter-generic/SKILL.md), #118):
+
+| key | name | modes | Content |
+|---|---|---|---|
+| `theme` | `Theme` | `light` Light (`:root`), `dark` Dark (`.dark`) | Every colour custom property of the project's global CSS. Component tokens (`sidebar-*`, `chart-*`) carry `family`. |
+| `layout` | `Layout` | `default` | `Spacing/spacing-<step>` (Tailwind's classic scale over `--spacing`) and `Radius/radius-<k>` (the `@theme --radius-*` steps over `--radius`). |
 
 - **Modes are keyed by the Code Library's theme key** (`white`, `g10`, `g90`, `g100`), not by the Figma label. `label` is the Figma mode name, so renaming a label never breaks values or the ledger, the same rule as Contract axis values. The Adapter iterates this fixed list, so extra DTCG keys such as `button-separator`'s `fallback` are ignored.
 - Single-mode collections use the mode key `default` (label `Default`).
@@ -85,8 +92,10 @@ The Carbon collections as today's generator emits them (the closure plus full Sp
 |---|---|---|
 | `{alias, resolved}` | Alias to any variable earlier in document order, by its flat name: a Primitive, or a Theme token for a Layer token. `resolved` is the final colour. The builder core today accepts only a target in an earlier collection, so a same-collection alias (a Synthesized token, ADR 0009) waits on a core change. | `createVariableAlias(target)` |
 | `{raw, alpha, resolved, from, level, reason}` | The source value is an alias plus alpha (`{value, alpha}` in `themes.json`, `org.carbon.alphaModifiers` in `button.json`). It is flattened to RGBA because a Figma alias cannot carry alpha. `from` keeps the source alias. | `{r, g, b, a}` |
-| any COLOR form with `from.css` | Optional. The value's source text as CSS (a custom property's declared value). Review-only, like the rest of `from`. | as the form |
-| `{value, resolved?, level?, reason?}` | A literal that is the token's own source value: palette hexes, layout px, type numbers, and `button-danger-hover` `#b81921`. In the Theme collection a `value` always carries `level` and `reason`, because Theme is otherwise alias-only. `button-danger-hover` is kept exact; the nearest primitive, `red.60Hover` `#b81922`, is off by one. | literal |
+| `{raw, alpha, resolved, from: {css}, level?, reason?}` | A literal colour with alpha below 1 (shadcn dark `--border: oklch(1 0 0 / 10%)`). The builder writes alpha only from `raw`, so a literal with alpha takes this form too; there is no alias, and `level`/`reason` appear only when clipped. | `{r, g, b, a}` |
+| any COLOR form with `from.css` | Optional. The value's source text as CSS (a custom property's declared value). Review-only, like the rest of `from`. A value the shared converter clipped into sRGB carries `level: "info"`, `reason: "outside sRGB, clipped per channel"` (#70 §5). | as the form |
+| `{value, resolved?, level?, reason?}` | A literal that is the token's own source value: palette hexes, layout px, type numbers, and `button-danger-hover` `#b81921`. In a Theme collection whose source is aliases (Carbon), a `value` always carries `level` and `reason`, because that Theme is otherwise alias-only. `button-danger-hover` is kept exact; the nearest primitive, `red.60Hover` `#b81922`, is off by one. A Code Library whose theme is literal CSS (shadcn) writes every Theme value as a literal with `from.css`, and `level`/`reason` only when clipped. | literal |
+| FLOAT with `from: {multiplier, factor}` | A step of a scale over one CSS multiplier: `spacing-1_5` is 1.5 × `--spacing`, `radius-sm` 0.6 × `--radius`. The multiplier itself is not a variable (#70 §3). | literal |
 
 - `resolved` is present on every COLOR mode value. It is written in the same notation as the compiled CSS (`#0f62fe`, `rgba(141, 141, 141, 0.3)`), so the generator can compare it against each `.cds--<theme>` block, and To-preview can use it without resolving aliases.
 - FLOAT values are px. `from` records the conversion: `spacing-*` is in miniUnits (×8), `size-*` is px with a rem converter, `icon-size-*` is a `"1rem"` string (×16), and `border-radius-00` is `"0px"`.
@@ -122,6 +131,7 @@ Scopes only filter Figma's picker. The Plugin API binds a variable regardless of
 | Type variables | `var(--cds-body-compact-01-font-size)`, `-line-height`, `-font-weight`, `-letter-spacing` | emitted |
 | `font-family-sans` | `{}` | body styles inherit the family; there is no custom property |
 | Primitives | none | hidden, never shown in Dev Mode |
+| shadcn (Generic Adapter) | whatever Tailwind compiles for the variable's utility: `var(--primary)` (`bg-primary`), `calc(var(--spacing) * 1.5)` (`p-1.5`), `1px` (`p-px`), `0px` (`p-0`), `calc(var(--radius) * 0.6)` (`rounded-sm`, inlined by `@theme inline`) | the codeSyntax is what a developer's compiled CSS says, so a reference match by codeSyntax hits (#70 §3) |
 
 ## Text Styles
 
@@ -222,7 +232,7 @@ Identity is the flat name, carried through the ledger id. Figma names and labels
 
 ## Where it lives
 
-- This schema sits in the shared Contract skill (`skills/contract/references/`), next to the Contract schema. The generator is in the Carbon Adapter skill (`skills/adapter-carbon/scripts/foundations.mjs`, #28).
+- This schema sits in the shared Contract skill (`skills/contract/references/`), next to the Contract schema. The generators are in the Adapter skills: `skills/adapter-carbon/scripts/foundations.mjs` (#28) and `skills/adapter-generic/scripts/foundations.mjs` (shadcn, #118).
 - A real instance is one `<designSystem.key>.foundations.json` per Design System, kept next to that Design System's Contracts in `design-systems/<designSystem.key>/` (layout set by [#21](https://github.com/pawisssh/design/issues/21)).
 - The ledger sits at `.scratch/to-design/<fileKey>.ledger.json`. It is gitignored and there is one per Design Library file. Foundations stay local to the Component Set file for the pilot (#9). Publishing them as a separate library stays in map fog; then a single foundations file would hold the ledger section and consumers would bind by variable key.
 
@@ -238,4 +248,4 @@ Identity is the flat name, carried through the ledger id. Figma names and labels
 4. Every Sass codeSyntax fallback exists in `@carbon/layout`.
 5. Every Contract passes rule 6 of the shared module's `validate()` against the generated document, so every Contract use (fill on FRAME, TEXT or vector; stroke; effect colour; padding or gap; min height or size; radius) is inside the bound variable's scopes.
 6. Figma names are unique. No flat name is both a variable and a Text Style.
-7. Every Theme mode value that is not an alias carries `level` and `reason`.
+7. Every Theme mode value that is not an alias carries `level` and `reason` (Carbon, whose Theme is alias-based; the Generic Adapter's literal Theme values carry them only when clipped).

@@ -18,4 +18,6 @@ jobs:
           node-version: 22
       # Without the pinned Carbon sources and preview packages, 22 adapter-carbon tests skip.
       - run: node skills/adapter-carbon/scripts/sources.mjs
+      # Without the pinned Tailwind, TypeScript and shadcn stylesheets, 19 adapter-generic tests skip.
+      - run: node skills/adapter-generic/scripts/sources.mjs
       - run: npm test
