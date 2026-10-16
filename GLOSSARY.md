@@ -61,7 +61,7 @@ The description of a Component Family that does not exist in the Code Library ye
 _Avoid_: Draft Contract, proposed Contract, custom component
 
 **Foundations document**:
-The generated description of a Design System's shared tokens and themes, which every Contract in that Design System refers to. One per Design System.
+The generated description of the Code Library's whole theme (every shared token and mode it defines, used by a Contract or not), which every Contract in that Design System refers to. One per Design System.
 _Avoid_: Tokens file, theme file, variables JSON
 
 ## Handoffs
