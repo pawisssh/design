@@ -251,6 +251,15 @@ A value that neither the source nor a rule here states is drafted by an agent. T
 
 Tests: `node --test skills/adapter-generic/test/*.test.mjs`. They skip, saying so, until the tools are fetched.
 
+## To-handoff
+
+[`scripts/handoff-adapter.mjs`](scripts/handoff-adapter.mjs) is what To-handoff reads (spec #102 "Adapter interface"):
+- **Role groups.** Every colour role pools the `Color` group; gap, padding and margin pool `Spacing`, and border-radius `Radius`. Chart, Sidebar and family tokens never match.
+- **Surfaces.** The mode map compares the page with `background` and the first container with `card`.
+- **Breakpoints.** The `--breakpoint-*` of the pinned tailwindcss theme.css: `sm` 640, `md` 768, `lg` 1024, `xl` 1280, `2xl` 1536.
+- **`checkContract`.** A Contract written mid-run passes the shared Contract rules and the component step's snapshot pin: adapter `generic`, the document's Code Library and packages, every file it read outside the Code Library folder at the same hash, and the family's own component file.
+- **Renderer.** `available()` is false and `renderer()` throws until #123's renderer lands.
+
 ## Moving a pin
 
 Change `TOOLS` in `sources.mjs` (the version and its registry `integrity`). The Adapter refuses a project whose lockfile resolves another version of a `stylesheet` package (`shadcn`, `tailwindcss`, `tw-animate-css`), because the compiled cross-check must run the Tailwind the project runs. `source.packages` records those three. After the change, regenerate the document.

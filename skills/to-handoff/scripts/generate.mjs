@@ -721,7 +721,9 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     ];
     question({
       id: 'q-font', kind: 'font', to: 'owner',
-      text: `The Prototype ${sets.join(' and ')}; the Text Styles use ${common}${bind ? ` (${bind})` : ''}. Use ${common}?`,
+      text: common
+        ? `The Prototype ${sets.join(' and ')}; the Text Styles use ${common}${bind ? ` (${bind})` : ''}. Use ${common}?`
+        : `The Prototype ${sets.join(' and ')}; ${system.key} has no Text Styles to name a font. Which font should the Text Styles use?`,
     });
   }
   const medias = [...new Set(rules.filter(r => r.media).map(r => r.media))];
