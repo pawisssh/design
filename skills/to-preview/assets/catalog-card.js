@@ -20,7 +20,7 @@
     const title = specimen.name + (flagged.length ? ` (drafted: ${flagged.join(", ")})` : "");
     const checkbox = h("input", { type: "checkbox", "aria-label": specimen.name, ...(base ? { disabled: true, title: "The Base Component is locked on" } : {}) });
     const host = h("div", { className: "tp-specimen", dataset: { key: specimen.id } });
-    const footer = base ? [h("span", {}, "Base Component")] : [h("span", {}, "Source"), h("span", {}, sourceLabel)];
+    const footer = base ? [h("span", {}, "Base Component")] : [h("span", {}, "Source"), h("span", { title: sourceLabel }, sourceLabel)];
     const card = h("section", { className: "tp-cell", dataset: { id: specimen.id } },
       h("label", { className: "tp-card-head" }, h("span", { className: "tp-card-name", title }, ...values), checkbox),
       host,
