@@ -71,6 +71,7 @@ const SIZE_FIELDS = ['width', 'height'];
 const FRAME_FIELDS = [...SIZE_FIELDS, 'visible'];
 // A part hugs or fills inside its own Auto Layout, so it carries a direction too (#124).
 const PART_FIELDS = ['direction', ...SIZE_FIELDS];
+const SLOT_PART_FIELDS = ['direction', ...FRAME_FIELDS];
 // Logical sides, start before end, order a family's slot frames; any other slot follows them by key.
 const SIDES = ['inline-start', 'inline-end'];
 // CSS properties a Contract field carries; any other utility is reported, not carried.
@@ -540,7 +541,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   PAINT_FIELDS.forEach(f => { values.paint[f] = []; });
   // A frame per icon slot, then per part; a part that is no slot always shows, so it has no visibility.
   const frameFields = Object.fromEntries([...icons.map(s => [s.node, FRAME_FIELDS]),
-    ...placed.map(p => [p.node, slots.some(s => s.part === p) ? ['direction', ...FRAME_FIELDS] : PART_FIELDS])]);
+    ...placed.map(p => [p.node, slots.some(s => s.part === p) ? SLOT_PART_FIELDS : PART_FIELDS])]);
   const frameValues = Object.fromEntries(Object.entries(frameFields).map(([n, fs]) => [n, Object.fromEntries(fs.map(f => [f, []]))]));
   const uses = new Map(); // placeholder JSON -> the rules that set it, per Mode
   const json = v => JSON.stringify(v);
@@ -645,7 +646,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   if (icons.length)
     notes.push({ level: 'info', at: 'anatomy', message: `${list(icons.map(s => s.node))}: a frame per Slot axis (#121, ADR 0011), shown where its slot is filled and sized by ${list([...sizing].sort(byKey))}. A consumer size-* class on the svg overrides that size, off-axis (#62). Each frame stands in for the slot's icon, an INSTANCE with an INSTANCE_SWAP whose code.visibleWhen names its axis, which the agent tier does not draft yet.` });
   if (placed.length)
-    notes.push({ level: 'info', at: 'anatomy', message: `${list(placed.map(p => p.node))}: the exported parts (${list(placed.map(p => p.name))}), each a FRAME under ${Name} in source order, whatever nesting a consumer gives them. Of each part only its direction (a flex part's own, else a column), its width and height (its own width or height utility; else fill where ${Name} stretches it, hug otherwise) are read, and its visibility where ${Name} styles its presence (a Slot axis). Its own layout, paint and text are not drafted yet.` });
+    notes.push({ level: 'info', at: 'anatomy', message: `${list(placed.map(p => p.node))}: the exported parts (${list(placed.map(p => p.name))}), each a FRAME under ${Name} in source order, whatever nesting a consumer gives them. Of each part only its direction (a flex part's own, else a column), its width and height (its own width or height utility; else fill where ${Name} stretches it, hug otherwise) are read, and its visibility where ${Name} styles its presence (a Slot axis). Its own padding, gap, alignment, paint and text are not drafted yet.` });
   for (const p of parts.filter(outOfFlow))
     notes.push({ level: 'info', at: 'anatomy', message: `${p.name} (${file}:${p.line}): position ${p.position.decls.position} (${p.position.candidate}) takes it out of the flow Auto Layout lays out, so the anatomy leaves it out.` });
   if (strokeFromBase)
