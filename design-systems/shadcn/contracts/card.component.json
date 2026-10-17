@@ -84,11 +84,11 @@
       },
       {
         "name": "Title",
-        "type": "FRAME"
+        "type": "TEXT"
       },
       {
         "name": "Description",
-        "type": "FRAME"
+        "type": "TEXT"
       },
       {
         "name": "Action",
@@ -104,7 +104,38 @@
       }
     ]
   },
-  "properties": [],
+  "properties": [
+    {
+      "key": "title",
+      "label": "Title",
+      "type": "TEXT",
+      "default": "Card title",
+      "binds": [
+        {
+          "node": "Title",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "child": "CardTitle"
+      }
+    },
+    {
+      "key": "description",
+      "label": "Description",
+      "type": "TEXT",
+      "default": "Card description",
+      "binds": [
+        {
+          "node": "Description",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "child": "CardDescription"
+      }
+    }
+  ],
   "layout": [
     {
       "match": {},
@@ -140,14 +171,32 @@
           "height": "hug"
         },
         "Title": {
-          "direction": "column",
           "width": "fill",
-          "height": "hug"
+          "height": "hug",
+          "textStyle": {
+            "raw": {
+              "fontSize": 16,
+              "lineHeight": 22,
+              "fontWeight": 500
+            },
+            "level": "warning",
+            "reason": "text-base font-size 16px; leading-snug line-height 22px; font-medium font-weight 500; the Foundations document has no Text Styles yet (#160)"
+          },
+          "textResize": "height"
         },
         "Description": {
-          "direction": "column",
           "width": "fill",
-          "height": "hug"
+          "height": "hug",
+          "textStyle": {
+            "raw": {
+              "fontSize": 14,
+              "lineHeight": 20,
+              "fontWeight": 400
+            },
+            "level": "warning",
+            "reason": "text-sm font-size 14px; text-sm line-height 20px; font-weight 400 (no utility); the Foundations document has no Text Styles yet (#160)"
+          },
+          "textResize": "height"
         },
         "Action": {
           "direction": "column",
@@ -210,6 +259,16 @@
               }
             }
           ]
+        },
+        "Title": {
+          "fill": {
+            "token": "card-foreground"
+          }
+        },
+        "Description": {
+          "fill": {
+            "token": "muted-foreground"
+          }
         }
       }
     }
@@ -257,6 +316,11 @@
     },
     {
       "level": "info",
+      "at": "anatomy",
+      "message": "Text layers (#166), each a TEXT node with a TEXT property: Title: CardTitle's children (code.child CardTitle); Description: CardDescription's children (code.child CardDescription). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Card, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value."
+    },
+    {
+      "level": "info",
       "at": "components/ui/card.tsx",
       "message": "data-[size=sm]:[--card-spacing:--spacing(3)], data-[size=sm]:has-data-[slot=card-footer]:pb-0, group/card: under size \"sm\". size is a prop of Card that no axis reads (only a cva variant is an axis), so every variant renders its default \"default\". Not carried."
     },
@@ -273,7 +337,7 @@
     {
       "level": "info",
       "at": "components/ui/card.tsx",
-      "message": "text-card-foreground, text-sm: Text utilities; text styles, the label and the anatomy beyond the root are not drafted yet (agent tier). Not carried."
+      "message": "text-card-foreground, text-sm: Text utilities: read only into the text layers' textStyle and fill (see the anatomy notes), not carried on the root."
     },
     {
       "level": "info",
@@ -296,6 +360,20 @@
         "components/ui/card.tsx:L4 Card calls no cva; the Contract's axes: card-footer (2), state (1)"
       ],
       "fingerprint": "sha256:518c0609e96b8656aff98570be0c41cedc59240e46332f7d835933e06def3570"
+    },
+    "properties.description.default": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/card.tsx:L48 exports CardDescription, a part that sets its own text style: the Description layer"
+      ],
+      "fingerprint": "sha256:ed562a5b69dde1cc19fa403c873526f95118a6ba8a6c934f523bde683c64879c"
+    },
+    "properties.title.default": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/card.tsx:L35 exports CardTitle, a part that sets its own text style: the Title layer"
+      ],
+      "fingerprint": "sha256:8d60a241b9179a16b6adb053bb60b55e3f383e7c8e24bc6c85e42310b7ab492c"
     }
   }
 }

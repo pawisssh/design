@@ -131,7 +131,7 @@ test('each has-data-[icon=…] slot becomes a Slot axis over a frame the root ho
     { key: 'none', label: 'False', filled: false, code: {}, css: ':not(:has([data-icon="inline-start"]))' },
     { key: 'icon-inline-start', label: 'True', filled: true, code: {}, css: ':has([data-icon="inline-start"])' }]);
   assert.deepEqual(anatomy, { name: 'Button', type: 'COMPONENT', children: [
-    { name: 'Icon Inline Start', type: 'FRAME', role: 'icon' }, { name: 'Icon Inline End', type: 'FRAME', role: 'icon' }] });
+    { name: 'Icon Inline Start', type: 'FRAME', role: 'icon' }, { name: 'Label', type: 'TEXT' }, { name: 'Icon Inline End', type: 'FRAME', role: 'icon' }] });
 });
 
 test('a filled slot sets its padding exactly; the frame is the svg size and shows where its slot is filled', { skip }, async () => {
@@ -167,7 +167,7 @@ test('generate writes the draft Contract against the Foundations document of the
   assert.deepEqual(validate(contract, committed).errors, []);
   assert.deepEqual([contract.selection.status, contract.selection.approval], ['draft', null]);
   assert.equal(expand(contract).length, contract.selection.expectedCount);
-  assert.deepEqual(contract.anatomy.children.map(n => [n.name, n.type]), [['Icon Inline Start', 'FRAME'], ['Icon Inline End', 'FRAME']]);
+  assert.deepEqual(contract.anatomy.children.map(n => [n.name, n.type]), [['Icon Inline Start', 'FRAME'], ['Label', 'TEXT'], ['Icon Inline End', 'FRAME']]);
   assert.equal(contract.source.adapter, 'generic');
   assert.deepEqual(Object.keys(contract.source.files), ['app/globals.css', 'components.json', BUTTON, 'package-lock.json']);
   const at = (variantKey, state, invalid = 'valid', expanded = 'collapsed') =>

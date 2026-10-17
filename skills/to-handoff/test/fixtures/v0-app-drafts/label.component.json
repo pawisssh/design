@@ -53,9 +53,10 @@
   },
   "anatomy": {
     "name": "Label",
-    "type": "COMPONENT"
+    "type": "COMPONENT",
+    "children": [{ "name": "Text", "type": "TEXT" }]
   },
-  "properties": [],
+  "properties": [{ "key": "text", "label": "Text", "type": "TEXT", "default": "Label", "binds": [{ "node": "Text", "field": "characters" }], "code": { "prop": "children" } }],
   "layout": [
     {
       "match": {},
@@ -81,6 +82,18 @@
           "gap": {
             "token": "spacing-2"
           }
+        },
+        "Text": {
+          "textStyle": {
+            "raw": {
+              "fontSize": 14,
+              "lineHeight": 14,
+              "fontWeight": 500
+            },
+            "level": "warning",
+            "reason": "text-sm font-size 14px; leading-none line-height 14px; font-medium font-weight 500; the Foundations document has no Text Styles yet (#160)"
+          },
+          "textResize": "width-and-height"
         }
       }
     }
@@ -94,6 +107,11 @@
           "stroke": "none",
           "opacity": { "raw": 1, "level": "info", "reason": "no opacity utility" },
           "effects": []
+        },
+        "Text": {
+          "fill": {
+            "token": "foreground"
+          }
         }
       }
     }
@@ -129,13 +147,18 @@
   "notes": [
     {
       "level": "info",
+      "at": "anatomy",
+      "message": "Text layers (#166), each a TEXT node with a TEXT property: Text: Label's children (code.prop children). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Label, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value. The Text layer is hidden where Label has a fixed width (an icon size), which is sized for its icon."
+    },
+    {
+      "level": "info",
       "at": "components/ui/label.tsx",
       "message": "group-data-[disabled=true]:opacity-50, group-data-[disabled=true]:pointer-events-none, peer-disabled:cursor-not-allowed, peer-disabled:opacity-50: Under a condition no tuple decides (a negation, or two states at once). Not carried."
     },
     {
       "level": "info",
       "at": "components/ui/label.tsx",
-      "message": "font-medium, leading-none, text-sm: Text utilities; text styles, the label and the anatomy beyond the root are not drafted yet (agent tier). Not carried."
+      "message": "font-medium, leading-none, text-sm: Text utilities: read only into the text layers' textStyle and fill (see the anatomy notes), not carried on the root."
     },
     {
       "level": "info",
@@ -158,6 +181,13 @@
         "components/ui/label.tsx:L7 Label calls no cva; the Contract's axes: state (1)"
       ],
       "fingerprint": "sha256:77e9d9991cd9a7e0d37b08416fcef2ba9904efa86fefbfa3bc2a8f9bf525354f"
+    },
+    "properties.text.default": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/label.tsx:L7 Label renders its children as text: the Text layer"
+      ],
+      "fingerprint": "sha256:a7fa926e467184c49d71a29a4a98287a617069c570b33936746223ed7689aa71"
     }
   }
 }

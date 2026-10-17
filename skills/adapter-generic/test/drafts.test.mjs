@@ -29,7 +29,8 @@ const SIZE_VALUES = ['default', 'icon', 'icon-lg', 'icon-sm', 'icon-xs', 'lg', '
 const SIZE_KEYS = ['axes.size.label', ...SIZE_VALUES.map(v => `axes.size.values.${v}.label`)];
 const ATTRIBUTE_KEYS = ['axes.expanded.label', 'axes.invalid.label'];
 const FAMILY_KEYS = ['family.description', 'figma.grid'];
-const ALL_KEYS = [...SIZE_KEYS, ...VARIANT_KEYS, ...ATTRIBUTE_KEYS, ...FAMILY_KEYS].sort();
+const TEXT_KEYS = ['properties.label.default']; // the Label layer's default text (#166)
+const ALL_KEYS = [...SIZE_KEYS, ...VARIANT_KEYS, ...ATTRIBUTE_KEYS, ...FAMILY_KEYS, ...TEXT_KEYS].sort();
 
 // #65's simulated upgrades (prototype/generic-drafts make-v2.mjs and make-v3.mjs), as edits per file.
 const UPGRADE_1 = {
@@ -148,7 +149,7 @@ test('the CLI asks for drafts with exit code 2, writing the requests and no Cont
   const requests = join(dir, 'button.requests.json');
   const asked = spawnSync('node', [CLI, '--family', 'button', '-o', out, '--requests', requests], { encoding: 'utf8' });
   assert.equal(asked.status, 2, asked.stderr);
-  assert.match(asked.stdout, /20 Drafted values needed/);
+  assert.match(asked.stdout, /21 Drafted values needed/);
   assert.throws(() => readFileSync(out), /ENOENT/);
   const file = JSON.parse(readFileSync(requests, 'utf8'));
   assert.equal(file.family, 'button');
@@ -175,7 +176,7 @@ test('upgrade 2 (xs renamed xxs; Alert and Card edited): size labels and family-
   assert.equal(asked.contract, null);
   const reopened = [...SIZE_KEYS.filter(k => !k.includes('.xs.')), ...FAMILY_KEYS].sort();
   assert.deepEqual(sorted(asked.report), {
-    carried: [...VARIANT_KEYS, ...ATTRIBUTE_KEYS].sort(), reopened, vanished: ['axes.size.values.xs.label'], missing: ['axes.size.values.xxs.label'],
+    carried: [...VARIANT_KEYS, ...ATTRIBUTE_KEYS, ...TEXT_KEYS].sort(), reopened, vanished: ['axes.size.values.xs.label'], missing: ['axes.size.values.xxs.label'],
     owner: [], ownerCheck: [], unused: [] });
   assert.deepEqual(asked.requests.map(r => r.key).sort(), [...reopened, 'axes.size.values.xxs.label'].sort());
   const lg = asked.requests.find(r => r.key === 'axes.size.values.lg.label');

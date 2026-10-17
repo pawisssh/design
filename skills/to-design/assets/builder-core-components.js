@@ -200,6 +200,8 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const fields = Object.keys(L).concat(Object.keys(P)).sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
     for (const f of fields) {
       const want = f in L ? L[f] : P[f];
+      // A raw text style (the Generic Adapter's, before Foundations has Text Styles, #160) has no style to bind: unbuilt.
+      if (f === 'textStyle' && want && !isTok(want)) continue;
       if (eq(readField(n, f), idOf(f, want))) continue;
       if (f === 'textStyle') await n.setTextStyleIdAsync(want ? S[want.token] : '');
       else writeField(n, f, want);

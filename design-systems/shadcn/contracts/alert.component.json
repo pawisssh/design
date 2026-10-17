@@ -79,15 +79,46 @@
     "children": [
       {
         "name": "Title",
-        "type": "FRAME"
+        "type": "TEXT"
       },
       {
         "name": "Description",
-        "type": "FRAME"
+        "type": "TEXT"
       }
     ]
   },
-  "properties": [],
+  "properties": [
+    {
+      "key": "title",
+      "label": "Title",
+      "type": "TEXT",
+      "default": "Heads up",
+      "binds": [
+        {
+          "node": "Title",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "child": "AlertTitle"
+      }
+    },
+    {
+      "key": "description",
+      "label": "Description",
+      "type": "TEXT",
+      "default": "Something needs your attention.",
+      "binds": [
+        {
+          "node": "Description",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "child": "AlertDescription"
+      }
+    }
+  ],
   "layout": [
     {
       "match": {},
@@ -132,14 +163,32 @@
           "strokeAlign": "inside"
         },
         "Title": {
-          "direction": "column",
           "width": "fill",
-          "height": "hug"
+          "height": "hug",
+          "textStyle": {
+            "raw": {
+              "fontSize": 14,
+              "lineHeight": 20,
+              "fontWeight": 500
+            },
+            "level": "warning",
+            "reason": "text-sm font-size 14px; text-sm line-height 20px; font-medium font-weight 500; the Foundations document has no Text Styles yet (#160)"
+          },
+          "textResize": "height"
         },
         "Description": {
-          "direction": "column",
           "width": "fill",
-          "height": "hug"
+          "height": "hug",
+          "textStyle": {
+            "raw": {
+              "fontSize": 14,
+              "lineHeight": 20,
+              "fontWeight": 400
+            },
+            "level": "warning",
+            "reason": "text-sm font-size 14px; text-sm line-height 20px; font-weight 400 (no utility); the Foundations document has no Text Styles yet (#160)"
+          },
+          "textResize": "height"
         }
       }
     }
@@ -161,6 +210,33 @@
             "reason": "no opacity utility"
           },
           "effects": []
+        },
+        "Title": {
+          "fill": {
+            "token": "card-foreground"
+          }
+        },
+        "Description": {
+          "fill": {
+            "token": "muted-foreground"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "destructive"
+      },
+      "set": {
+        "Title": {
+          "fill": {
+            "token": "destructive"
+          }
+        },
+        "Description": {
+          "fill": {
+            "token": "alert-destructive-description-fill"
+          }
         }
       }
     }
@@ -208,6 +284,11 @@
     },
     {
       "level": "info",
+      "at": "anatomy",
+      "message": "Text layers (#166), each a TEXT node with a TEXT property: Title: AlertTitle's children (code.child AlertTitle); Description: AlertDescription's children (code.child AlertDescription). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Alert, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value."
+    },
+    {
+      "level": "info",
       "at": "Alert.stroke",
       "message": "No border-color utility colours Alert's border, so it takes its colour from app/globals.css's base layer: * { border-color: var(--border) }."
     },
@@ -229,7 +310,7 @@
     {
       "level": "info",
       "at": "components/ui/alert.tsx",
-      "message": "text-card-foreground, text-destructive, text-left, text-sm: Text utilities; text styles, the label and the anatomy beyond the root are not drafted yet (agent tier). Not carried."
+      "message": "text-card-foreground, text-destructive, text-left, text-sm: Text utilities: read only into the text layers' textStyle and fill (see the anatomy notes), not carried on the root."
     },
     {
       "level": "info",
@@ -273,6 +354,20 @@
         "components/ui/alert.tsx:L9 alertVariants variants; the Contract's axes: variant (2), state (1)"
       ],
       "fingerprint": "sha256:5c15da0b065b28b309f99010006e7af28d237fbc77f56b162fdd81d6bb844287"
+    },
+    "properties.description.default": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/alert.tsx:L49 exports AlertDescription, a part that sets its own text style: the Description layer"
+      ],
+      "fingerprint": "sha256:3f635e6e310a875814e4edd60a862fa2af3340fe0c890547114d2295bf6d0425"
+    },
+    "properties.title.default": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/alert.tsx:L36 exports AlertTitle, a part that sets its own text style: the Title layer"
+      ],
+      "fingerprint": "sha256:62518413ccd7d40a64293e0c813a120dbaa9656ce36d716e6786e29c6a7e0e06"
     }
   }
 }

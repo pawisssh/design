@@ -9,6 +9,8 @@
       "rows": [
         "card-footer"
       ]
-    }
+    },
+    "properties.description.default": "Card description",
+    "properties.title.default": "Card title"
   }
 }

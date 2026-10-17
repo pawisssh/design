@@ -38,9 +38,12 @@
 // - paint that differs by Mode, carries an opacity or mixes tokens (#120): a Synthesized token, a per-mode Theme
 //   component token the Contract binds as a plain {token}. The foundations step re-derives the same tokens through
 //   readFamily() and writes them into the Foundations document, which this step then requires to hold them.
-// What it leaves to later tickets, each in a note: text, the icon each slot frame stands for, each part's own
-// layout, paint and text (later agent-tier keys), any other `:has(…)` condition, and styling set by an ancestor
-// (ADR 0012).
+// - text layers (#166): a TEXT node with a TEXT property where the source says what the text is: the children of a
+//   root that sets its own text style (Button's Label), a provider's Value export's placeholder (SelectValue), or a
+//   part that sets its own text style and no layout (CardTitle). Each layer's text style is read raw (no Text Styles
+//   yet, #160) and its colour through the same paint rules; the default text is a Drafted value.
+// What it leaves to later tickets, each in a note: the icon each slot frame stands for, each part's own layout and
+// paint (later agent-tier keys), any other `:has(…)` condition, and styling set by an ancestor (ADR 0012).
 // Generation throws (the CLI exits 1 and writes nothing) on anything it cannot read exactly: compound variants, an
 // attribute state with no known state words, layout other than flex, a one-column grid or a plain box, an opacity or an effect's
 // shape that differs by Mode, relative colour syntax, a Synthesized name a Code Library token already has, or a
@@ -56,7 +59,7 @@ import { mergeDrafts, subjects } from './drafts.mjs';
 import { familyRoot, readSource } from './source.mjs';
 import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, hasTools, sha256, snapshotId } from './sources.mjs';
 import { build } from './tailwind.mjs';
-import { CLIPPED, evaluate, isSynthesized, literalForm, resolvedText, round } from './values.mjs';
+import { CLIPPED, evaluate, isSynthesized, lengthPx, literalForm, resolvedText, round } from './values.mjs';
 
 // Attribute states with known state words: the attribute becomes an axis, absent by default (#119).
 const ATTR_AXES = {
@@ -93,6 +96,12 @@ const PART_PROPS = ['width', 'height', 'align-self', 'justify-self', 'flex-grow'
 const PAINT_PROPS = ['background-color', 'border-color', 'opacity', '--tw-ring-shadow', '--tw-ring-color'];
 const TEXT_PROPS = ['color', 'font-size', 'line-height', 'font-weight', '--tw-font-weight', '--tw-leading', 'letter-spacing',
   '--tw-tracking', 'text-align', 'text-decoration-line', 'text-underline-offset', 'white-space'];
+// What a text layer reads (#166): its text style and colour, its own or inherited from the root.
+const FONT_PROPS = ['font-size', 'line-height', 'font-weight', '--tw-leading', 'color'];
+// Elements whose children are no text a designer types: a form control shows its value or placeholder.
+const NO_TEXT = new Set(['input', 'textarea', 'select', 'img', 'hr', 'br']);
+const TEXT_FIELDS = ['textStyle', 'textResize', 'visible'];
+const TEXT_PART_FIELDS = [...SIZE_FIELDS, 'textStyle', 'textResize'];
 const PADDING = {
   paddingTop: ['padding-top', 'padding-block', 'padding'], paddingRight: ['padding-right', 'padding-inline', 'padding'],
   paddingBottom: ['padding-bottom', 'padding-block', 'padding'], paddingLeft: ['padding-left', 'padding-inline', 'padding'],
@@ -114,6 +123,8 @@ const words = s => s.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1))
 const title = s => words(s).join(' ');
 const pascal = s => words(s).join('');
 const kebab = s => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+const camel = s => s.replace(/\s+(\w)/g, (_, c) => c.toUpperCase()).replace(/^\w/, c => c.toLowerCase());
+const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 const has = (rule, props) => props.some(p => p in rule.decls);
 const declOf = (rule, props) => rule.decls[props.find(p => p in rule.decls)];
 
@@ -261,6 +272,65 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   report.descendant = report.descendant.filter(c => !sizing.has(c));
   const content = ruled(sizing);
 
+  // 3b. Text layers (#166): each text a designer types is a TEXT node with a TEXT property, where the source says
+  //     what the text is: the children of a root that sets a text style itself (Button's Label), a provider's Value
+  //     export's placeholder (SelectValue), or a part that sets its own text style or colour and no layout of its own
+  //     (CardTitle). They are read in a pass of their own, never carried as the root's layout or paint, so no text
+  //     utility adds an axis or a state. Each node's text style and colour are its own rules, then what it inherits
+  //     from the root, then the page (the base layer's html and body rules).
+  const fontRule = r => FONT_PROPS.some(p => p in r.decls);
+  const rootFont = entries.flatMap(e => ruleOf[e.candidate].filter(r => !r.skip && fontRule(r)).map(r => ({ ...r, entry: e })));
+  // A rule the root writes for one of its parts (`*:data-[slot=alert-description]:text-destructive/90`), compiled to
+  // `:is(.x > *)[data-slot="…"]`: it matches the part itself, so it competes with the part's own rules.
+  const childSlot = r => { const m = /^:is\(\S+ > \*\)\[data-slot="([^"]+)"\]$/.exec(r.selector); return m && m[1]; };
+  const forPart = entries.flatMap(e => ruleOf[e.candidate].filter(r => r.skip === 'ancestor' && fontRule(r) && childSlot(r))
+    .map(r => ({ ...r, entry: e, slot: childSlot(r) })));
+  const ownFont = p => p.entries.flatMap(e => ruleOf[e.candidate].filter(r => !r.skip && !r.when.slot && !r.when.state && !r.when.props
+    && !Object.keys(r.when.attrs).length && fontRule(r)).map(r => ({ ...r, entry: e, own: true })));
+  const boxed = p => p.entries.some(e => ruleOf[e.candidate].some(r => LAYOUT_PROPS.some(q => q in r.decls)));
+  const texts = [];
+  const valueExport = provider && components.find(c => c.exported && c.name === `${Name}Value`);
+  if (valueExport)
+    texts.push({ node: 'Value', key: 'placeholder', label: 'Placeholder', kind: 'placeholder', name: valueExport.name, line: valueExport.line,
+      code: { child: valueExport.name, childProp: 'placeholder' }, own: [], rootAttrs: { 'data-placeholder': '' } });
+  else if (!provider && !placed.length && !NO_TEXT.has(root.element) && rootFont.some(r => 'font-size' in r.decls || 'font-weight' in r.decls)) {
+    // Named Label, or Text where the root is itself Label: rules address nodes by name.
+    const node = Name === 'Label' ? 'Text' : 'Label';
+    texts.push({ node, key: camel(node), label: node, kind: 'children', name: Name, line: root.line, code: { prop: 'children' }, own: [], rootAttrs: {} });
+  }
+  for (const p of placed) {
+    const own = ownFont(p);
+    if (!own.length || boxed(p) || slots.some(s => s.part === p)) continue;
+    texts.push({ node: p.node, key: camel(p.node), label: p.node, kind: 'part', name: p.name, line: p.line, code: { child: p.name },
+      own: [...own, ...forPart.filter(r => r.slot === p.slot)], rootAttrs: {}, part: p });
+  }
+  const textOf = Object.fromEntries(texts.map(n => [n.node, n]));
+  // A root rule for a text part's slot in a form the pass does not read is no silent default: it is a verify note.
+  const unreadText = texts.filter(n => n.part).flatMap(n => entries.flatMap(e => ruleOf[e.candidate]
+    .filter(r => fontRule(r) && r.selector.includes(`[data-slot="${n.part.slot}"]`) && !(r.skip === 'ancestor' && childSlot(r)))
+    .map(r => `${r.candidate} (${n.node})`)));
+  const baseRules = compiledRules(compiled, 'base');
+  const pageLine = baseRules.filter(r => /(^|,\s*)html(\s*,|$)/.test(r.selector) && 'line-height' in r.decls).pop();
+  const bodyColour = baseRules.filter(r => r.selector === 'body' && 'color' in r.decls).pop();
+  const theme = Object.assign({}, ...compiledRules(compiled, 'theme').map(r => r.decls));
+  // A text length or ratio (`var(--text-sm)`, `calc(1.25 / 0.875)`, `0.8rem`, `1.5`): each var() from `vars` (the
+  // custom properties in effect), else the theme layer, else its fallback. {px} or {ratio}.
+  function fontValue(text, vars, where) {
+    const t = text.trim();
+    const v = /^var\((--[\w-]+)(?:,\s*(.+))?\)$/.exec(t);
+    if (v) {
+      const got = vars[v[1]] !== undefined ? vars[v[1]] : theme[v[1]];
+      return got !== undefined ? fontValue(got, vars, where) : v[2] !== undefined ? fontValue(v[2], vars, where) : fail(`${where}: ${t} names no value`);
+    }
+    const div = /^calc\((.+)\/(.+)\)$/.exec(t);
+    if (div) {
+      const [a, b] = [fontValue(div[1], vars, where), fontValue(div[2], vars, where)];
+      if (a.ratio === undefined || b.ratio === undefined) fail(`${where}: ${t} divides a length; not read yet`);
+      return { ratio: a.ratio / b.ratio };
+    }
+    return /^-?\d*\.?\d+$/.test(t) ? { ratio: parseFloat(t) } : { px: lengthPx(t, where) };
+  }
+
   // 4. Axes: cva axes, attribute axes, the canonical State.
   const attrsUsed = new Set();
   const stateCss = {};
@@ -346,6 +416,16 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     if (w.slot && t[slotOf[w.slot]] === 'none') return false;
     return !w.props || Object.entries(w.props).every(([p, v]) => (p in fixed ? fixed[p] : t[p]) === v);
   };
+  // As applies(), for a text rule: an attribute with no axis applies only where the node's root carries it (a
+  // Trigger's `data-placeholder` while the Value shows its placeholder); a part's own rule is no cva class.
+  const textApplies = (r, t, mode, keep, attrs = {}) => {
+    const w = r.when;
+    if ((!r.own && !keep.has(r.entry)) || (w.mode && w.mode !== mode) || (w.state && w.state !== t.state)) return false;
+    for (const [a, v] of Object.entries(w.attrs))
+      if (ATTR_AXES[a] ? v !== 'true' || t[ATTR_AXES[a].key] !== ATTR_AXES[a].on : attrs[a] !== v) return false;
+    if (w.slot && (!(w.slot in slotOf) || t[slotOf[w.slot]] === 'none')) return false;
+    return !w.props || Object.entries(w.props).every(([p, v]) => (p in fixed ? fixed[p] : t[p]) === v);
+  };
 
   const env = {};
   for (const [k, v] of Object.entries(foundations.variables)) {
@@ -383,6 +463,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const usesBorder = live.some(r => 'border-width' in r.decls);
   const usesRadius = live.some(r => 'border-radius' in r.decls);
   const baseStroke = baseBorder && { candidate: '* (border-color)', decls: baseBorder.decls, entry: { base: true } };
+  const bodyText = bodyColour && { candidate: 'body (color)', decls: bodyColour.decls, entry: { base: true } };
   let strokeFromBase = false;
   const boxes = new Set(); // what gives each variant read as a plain box its display
   // Layout and paint of one variant in one Mode: {layout, paint, by: {field: winning rule}, frames: {node: {field}}}.
@@ -521,7 +602,42 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       const slot = slots.find(s => s.part === p);
       if (slot) f.visible = t[slot.key] !== 'none';
     }
-    return { layout, paint, by, frames };
+    // Each text layer: its text style as a raw value (the Foundations document has no Text Styles yet, #160) and its
+    // colour. A part keeps its size and wraps where it fills; the root's own text hugs, and is hidden where the root
+    // has a fixed width (an icon size: the box is sized for its icon, not for text).
+    const inks = {};
+    for (const n of Object.values(textOf)) {
+      const own = n.own.filter(r => textApplies(r, t, mode, keep));
+      const up = rootFont.filter(r => textApplies(r, t, mode, keep, n.rootAttrs));
+      const pick = prop => winner(own, [prop]) || winner(up, [prop]);
+      const lead = rs => { const r = winner(rs, ['--tw-leading']); return r ? { '--tw-leading': r.decls['--tw-leading'] } : {}; };
+      const where = r => `${r.candidate} (${at(r.entry)})`;
+      const sizeRule = pick('font-size');
+      const size = sizeRule ? fontValue(sizeRule.decls['font-size'], {}, where(sizeRule)) : { px: 16 };
+      if (size.px === undefined) fail(`${where(sizeRule)}: font-size ${sizeRule.decls['font-size']} is not a length`);
+      // A line-height is computed where it is set (with the --tw-leading in effect there) and inherited as a ratio or a length.
+      const ownLine = winner(own, ['line-height']);
+      const lineRule = ownLine || winner(up, ['line-height']);
+      const line = lineRule ? fontValue(lineRule.decls['line-height'], ownLine ? { ...lead(up), ...lead(own) } : lead(up), where(lineRule))
+        : pageLine ? fontValue(pageLine.decls['line-height'], {}, `${cssFile} @layer base ${pageLine.selector}`) : { ratio: 1.2 };
+      const lineHeight = round(line.px !== undefined ? line.px : line.ratio * size.px);
+      const weightRule = pick('font-weight');
+      const weight = weightRule ? fontValue(weightRule.decls['font-weight'], {}, where(weightRule)).ratio : 400;
+      const said = [
+        sizeRule ? `${sizeRule.candidate} font-size ${size.px}px` : 'font-size 16px (no utility: the browser default)',
+        lineRule ? `${lineRule.candidate} line-height ${lineHeight}px` : `line-height ${lineHeight}px (${pageLine ? `${pageLine.selector} line-height ${pageLine.decls['line-height']}` : 'no utility'})`,
+        weightRule ? `${weightRule.candidate} font-weight ${weight}` : 'font-weight 400 (no utility)',
+      ];
+      const f = frames[n.node] = n.part ? { width: frames[n.node].width, height: frames[n.node].height } : {};
+      f.textStyle = { raw: { fontSize: size.px, lineHeight, fontWeight: weight }, level: 'warning',
+        reason: `${said.join('; ')}; the Foundations document has no Text Styles yet (#160)` };
+      f.textResize = f.width === 'fill' ? 'height' : 'width-and-height';
+      if (n.kind === 'children') f.visible = !isObj(layout.width);
+      const r = winner(own, ['color']) || winner(up, ['color']) || bodyText
+        || fail(`${Name} (${variantName({ axes }, t)}): no colour for the ${n.node} text, and no color on body in ${cssFile}'s base layer`);
+      inks[n.node] = { fill: colour(r.decls.color, r), by: r };
+    }
+    return { layout, paint, by, frames, texts: inks };
   }
 
   // One Mode's value of a Synthesized token, as a Foundations value form: what the winning rule `r` sets there.
@@ -536,9 +652,9 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const evaluated = (text, r) => {
     try { return convert(text); } catch (e) { fail(`${r.candidate} (${at(r.entry)}): ${e.message}`); }
   };
-  function modeForm(value, r, field, mode) {
+  function modeForm(value, r, prop, mode) {
     if (value === 'none') return literalForm('transparent');
-    const text = r.decls[COLOUR_PROP[field]];
+    const text = r.decls[prop];
     let m = /^var\(--([\w-]+)\)$/.exec(text);
     if (m) return { alias: m[1], resolved: foundations.variables[m[1]].values[mode].resolved };
     m = /^color-mix\(in (\w+), var\(--([\w-]+)\) (\d*\.?\d+)%, transparent\)$/.exec(text);
@@ -557,21 +673,33 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const values = { layout: {}, paint: {} };
   LAYOUT_FIELDS.forEach(f => { values.layout[f] = []; });
   PAINT_FIELDS.forEach(f => { values.paint[f] = []; });
-  // A frame per icon slot, then per part; a part that is no slot always shows, so it has no visibility.
-  const frameFields = Object.fromEntries([...icons.map(s => [s.node, FRAME_FIELDS]),
-    ...placed.map(p => [p.node, slots.some(s => s.part === p) ? SLOT_PART_FIELDS : PART_FIELDS])]);
+  // The root's children in anatomy order: a provider's Value, the icon slots at the start, the root's own text, the
+  // other icon slots, then the parts, each a FRAME or a text layer. A frame per icon slot and per part; a part that is
+  // no slot always shows, so it has no visibility.
+  const rootTexts = texts.filter(n => !n.part);
+  const order = [...rootTexts.filter(n => n.kind === 'placeholder').map(n => n.node), ...icons.filter(s => side(s) === 0).map(s => s.node),
+    ...rootTexts.filter(n => n.kind === 'children').map(n => n.node), ...icons.filter(s => side(s) !== 0).map(s => s.node), ...placed.map(p => p.node)];
+  const fieldsOf = node => {
+    const n = textOf[node];
+    if (n) return n.part ? TEXT_PART_FIELDS : TEXT_FIELDS;
+    if (icons.some(s => s.node === node)) return FRAME_FIELDS;
+    return slots.some(s => s.part && s.part.node === node) ? SLOT_PART_FIELDS : PART_FIELDS;
+  };
+  const frameFields = Object.fromEntries(order.map(n => [n, fieldsOf(n)]));
+  const textPaint = Object.fromEntries(texts.map(n => [n.node, { fill: [] }]));
   const frameValues = Object.fromEntries(Object.entries(frameFields).map(([n, fs]) => [n, Object.fromEntries(fs.map(f => [f, []]))]));
   const uses = new Map(); // placeholder JSON -> the rules that set it, per Mode
   const json = v => JSON.stringify(v);
   const modeDiffers = (field, r, i) =>
     fail(`${Name}.${field}: ${r ? `${r.candidate} (${at(r.entry)})` : 'a value'} differs by mode (${modes[i].key}); only a colour may differ by Mode`);
-  const colourValue = (field, rendered, get) => {
+  // `by` gives each rendering's winning rule and `prop` the CSS property it sets: a text colour is `color`.
+  const colourValue = (field, rendered, get, by = x => x.by[field], prop = COLOUR_PROP[field]) => {
     const vals = rendered.map(get);
     if (!vals.some(v => v && v.mix) && vals.every(v => json(v) === json(vals[0]))) return vals[0];
-    const synth = Object.fromEntries(modes.map((m, i) => [m.key, modeForm(vals[i], rendered[i].by[field], field, m.key)]));
+    const synth = Object.fromEntries(modes.map((m, i) => [m.key, modeForm(vals[i], by(rendered[i]), prop, m.key)]));
     const key = json(synth);
     if (!uses.has(key)) uses.set(key, new Set());
-    rendered.forEach(x => { if (x.by[field]) uses.get(key).add(x.by[field]); });
+    rendered.forEach(x => { if (by(x)) uses.get(key).add(by(x)); });
     return { synth };
   };
   for (const t of tuples) {
@@ -595,11 +723,14 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     values.paint.stroke.push(colourValue('stroke', rendered, x => x.paint.stroke));
     values.paint.opacity.push(light.paint.opacity);
     values.paint.effects.push(light.paint.effects.map((e, n) => ({ ...e, color: colourValue('effects', rendered, x => x.paint.effects[n].color) })));
+    for (const n of texts) textPaint[n.node].fill.push(colourValue('fill', rendered, x => x.texts[n.node].fill, x => x.texts[n.node].by, 'color'));
   }
+  // A text layer every variant shows has no visibility.
+  for (const n of texts) if (frameValues[n.node].visible && frameValues[n.node].visible.every(v => v === true || v === undefined)) delete frameValues[n.node].visible;
   for (const f of LAYOUT_FIELDS) if (values.layout[f].every(v => v === undefined)) delete values.layout[f];
 
   // 7. Rules: per field, the fewest axes it depends on; the commonest value in `{}`, the rest as exceptions.
-  const byNode = { layout: { [Name]: values.layout, ...frameValues }, paint: { [Name]: values.paint } };
+  const byNode = { layout: { [Name]: values.layout, ...frameValues }, paint: { [Name]: values.paint, ...textPaint } };
   const layout = compress(axes, tuples, byNode.layout);
   const paint = compress(axes, tuples, byNode.paint);
   const check = { axes, layout, paint, properties: [] };
@@ -611,7 +742,8 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
           if (json(r[section][node][f]) !== json(vs[i]))
             fail(`internal: the ${section} rules do not reproduce ${node}.${f} at ${variantName(check, t)}`);
   });
-  const children = [...icons.map(s => ({ name: s.node, type: 'FRAME', role: 'icon' })), ...placed.map(p => ({ name: p.node, type: 'FRAME' }))];
+  const children = order.map(node => (textOf[node] ? { name: node, type: 'TEXT' }
+    : icons.some(s => s.node === node) ? { name: node, type: 'FRAME', role: 'icon' } : { name: node, type: 'FRAME' }));
   const anatomy = { name: Name, type: 'COMPONENT', ...(children.length && { children }) };
 
   // Each placeholder becomes a Synthesized token named by its rule (#70 §1): the family, the match's value keys in
@@ -619,23 +751,24 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const synthesized = {};
   const valueOrder = Object.fromEntries(axes.map(a => [a.key, a.values.map(v => v.key)]));
   const entryOrder = new Map(entries.map((e, i) => [e, i]));
-  const scopeAnatomy = { anatomy: { name: Name, type: 'COMPONENT' } };
+  const scopeAnatomy = { anatomy };
   for (const rule of paint)
     for (const [node, fields] of Object.entries(rule.set))
       for (const [field, value] of Object.entries(fields)) {
         const keys = axes.filter(a => a.key in rule.match)
           .map(a => [].concat(rule.match[a.key]).sort((x, y) => valueOrder[a.key].indexOf(x) - valueOrder[a.key].indexOf(y)).join('+'));
-        const name = (n, key) => [family, ...keys, ...(node === Name ? [] : [node]), n].join('-');
+        const name = n => [family, ...keys, ...(node === Name ? [] : [node.toLowerCase().replace(/\s+/g, '-')]), n].join('-');
         const bind = (v, n, scope) => {
           if (!v || !v.synth) return v;
           const flat = name(n);
           if (synthesized[flat]) fail(`internal: two rules name the Synthesized token ${flat}`);
-          const rules = [...uses.get(json(v.synth))].sort((x, y) => entryOrder.get(x.entry) - entryOrder.get(y.entry));
+          const index = r => (entryOrder.has(r.entry) ? entryOrder.get(r.entry) : entries.length);
+          const rules = [...uses.get(json(v.synth))].sort((x, y) => index(x) - index(y));
           const utilities = [...new Set(rules.map(r => r.candidate))].join(' ');
           const own = foundations.variables[flat];
           if (own && !isSynthesized(own))
             fail(`the Synthesized token ${flat} (${utilities}) collides with the Code Library token ${flat} (${own.source}); rename one`);
-          const lines = [...new Set(rules.map(r => r.entry.line))].sort((x, y) => x - y).join(',');
+          const lines = [...new Set(rules.map(r => r.entry.line).filter(Boolean))].sort((x, y) => x - y).join(',');
           synthesized[flat] = { collection: 'theme', name: `${Name}/${flat}`, type: 'COLOR', source: `synthesized: ${file}:${lines} ${utilities}`,
             scopes: [scope], codeSyntax: { WEB: utilities }, values: v.synth, usedBy: [family], family };
           return { token: flat };
@@ -657,7 +790,8 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     descendant: 'Styles a descendant other than a slot frame or a part; the anatomy below them is not drafted yet (agent tier). Not carried.',
     media: 'Under a media query no tuple decides. Not carried.',
     condition: 'Under a condition no tuple decides (a negation, or two states at once). Not carried.',
-    text: 'Text utilities; text styles, the label and the anatomy beyond the root are not drafted yet (agent tier). Not carried.',
+    text: texts.length ? 'Text utilities: read only into the text layers\' textStyle and fill (see the anatomy notes), not carried on the root.'
+      : 'Text utilities; text styles, the label and the anatomy beyond the root are not drafted yet (agent tier). Not carried.',
     other: 'No Contract field carries these properties. Not carried.',
     none: 'Compiles to no CSS (a group or peer marker).',
   };
@@ -667,6 +801,14 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     notes.push({ level: 'info', at: 'anatomy', message: `${list(placed.map(p => p.node))}: the exported parts (${list(placed.map(p => p.name))}), each a FRAME under ${Name} in source order, whatever nesting a consumer gives them. Of each part only its direction (a flex part's own, else a column), its width and height (its own width or height utility; else fill where ${Name} stretches it, hug otherwise) are read, and its visibility where ${Name} styles its presence (a Slot axis). Its own padding, gap, alignment, paint and text are not drafted yet.` });
   for (const p of parts.filter(outOfFlow))
     notes.push({ level: 'info', at: 'anatomy', message: `${p.name} (${file}:${p.line}): position ${p.position.decls.position} (${p.position.candidate}) takes it out of the flow Auto Layout lays out, so the anatomy leaves it out.` });
+  if (texts.length) {
+    const how = n => (n.kind === 'children' ? `${n.node}: ${Name}'s children (code.prop children)`
+      : n.kind === 'placeholder' ? `${n.node}: ${n.name}'s placeholder (code.child ${n.name}, childProp placeholder), coloured as ${Name}'s data-placeholder rules colour it, since the Trigger carries data-placeholder while no value is picked`
+      : `${n.node}: ${n.name}'s children (code.child ${n.name})`);
+    notes.push({ level: 'info', at: 'anatomy', message: `Text layers (#166), each a TEXT node with a TEXT property: ${texts.map(how).join('; ')}. Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from ${Name}, then ${cssFile}'s base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value.${texts.some(n => n.kind === 'children') ? ` The ${texts.find(n => n.kind === 'children').node} layer is hidden where ${Name} has a fixed width (an icon size), which is sized for its icon.` : ''}` });
+  }
+  if (unreadText.length)
+    notes.push({ level: 'verify', at: 'anatomy', message: `${list([...new Set(unreadText)])}: ${Name} styles a text part's text in a form the text pass does not read; check that part's textStyle and fill.` });
   if (boxes.size)
     notes.push({ level: 'info', at: `${Name}.layout`, message: `${root.name} is a plain box (${[...boxes].sort(byKey).join('; ')}), not a flex or grid container: read as a column Auto Layout with no gap, start-aligned, as a block stacks its children (#153). Its justify-, align-, gap and self-alignment utilities do nothing there.` });
   if (provider)
@@ -697,9 +839,12 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       prefixes: [...new Set(using.map(e => e.candidate.split(':').slice(0, -1).join(':')))].sort(byKey) };
   }
   const facts = { line: root.line, cva: root.cva, parts: exportedParts, variants: cv.keys, attributes,
+    texts: texts.map(n => ({ node: n.node, key: n.key, kind: n.kind, name: n.name, line: n.line, code: n.code })),
     ...(provider && { provider: { line: provider.line, element: provider.element, root: root.name } }) };
 
-  return { name: Name, file, files: sortedFiles, element: root.element, axes, anatomy, layout, paint,
+  // A TEXT property per text layer; its default is a Drafted value (drafts.mjs), the label until it is drafted.
+  const properties = texts.map(n => ({ key: n.key, label: n.label, type: 'TEXT', default: n.label, binds: [{ node: n.node, field: 'characters' }], code: n.code }));
+  return { name: Name, file, files: sortedFiles, element: root.element, axes, anatomy, properties, layout, paint,
     synthesized: Object.fromEntries(Object.keys(synthesized).sort(byKey).map(k => [k, synthesized[k]])),
     notes, omit, expectedCount, alias: `${ui}/${family}`, renderer, facts };
 }
@@ -831,7 +976,7 @@ export function contractFor(f, family, foundations) {
     excluded: [],
     selection: { status: 'draft', omit: f.omit, expectedCount: f.expectedCount, approval: null },
     anatomy: f.anatomy,
-    properties: [],
+    properties: f.properties,
     layout: f.layout,
     paint: f.paint,
     subComponents: [],

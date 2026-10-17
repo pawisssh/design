@@ -113,6 +113,7 @@ export function checkCoverage(contract, readback, ledger = null) {
 export function checkSample(contract, readback, ledger, foundations) {
   const byName = new Map(expand(contract).map(t => [variantName(contract, t), t]));
   const problems = [];
+  const unbuilt = new Set();
   const names = Object.keys(readback.sample || {});
   for (const name of names) {
     const raw = readback.sample[name];
@@ -120,12 +121,13 @@ export function checkSample(contract, readback, ledger, foundations) {
     if (!raw || !t) { problems.push({ what: raw ? 'extra' : 'missing', name }); continue; }
     const d = diff(contract, normalizeReadback(raw, ledger), foundations, defaultProps(contract), t);
     if (d.changes.length || d.unread.length) problems.push({ what: 'diff', name, changes: d.changes, unread: d.unread });
+    d.unbuilt.forEach(f => unbuilt.add(f));
     const wantRefs = refsOf(contract, t);
     if (!eqJ(raw.refs || {}, wantRefs)) problems.push({ what: 'wiring', name, want: wantRefs, got: raw.refs });
     const cell = cellOf(contract, t);
     if (!eqJ(raw.cell, cell)) problems.push({ what: 'cell', name, want: cell, got: raw.cell });
   }
-  return { ok: problems.length === 0 && names.length > 0, sampled: names.length, problems };
+  return { ok: problems.length === 0 && names.length > 0, sampled: names.length, problems, unbuilt: [...unbuilt].sort() };
 }
 
 // "#rrggbb" or "rgba(r, g, b, a)" -> "#rrggbb" or "#rrggbb/a", as the theme readback reports colours

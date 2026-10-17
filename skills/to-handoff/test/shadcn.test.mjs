@@ -105,7 +105,7 @@ test('generate: a family with no Contract is drafted mid-run by the Generic proc
     ['label', 'app/request-access-form.tsx:86:9', 'agent'],
     ['textarea', 'app/request-access-form.tsx:87:9', 'agent'],
   ]);
-  for (const [family, drafted] of [['input', 3], ['label', 2], ['select', 3], ['textarea', 3]]) {
+  for (const [family, drafted] of [['input', 3], ['label', 3], ['select', 4], ['textarea', 3]]) {
     const draft = fileURLToPath(new URL(`fixtures/v0-app-drafts/${family}.component.json`, import.meta.url));
     assert.equal(readFileSync(join(ds, `contracts/${family}.component.json`), 'utf8'), readFileSync(draft, 'utf8'), family);
     assert.ok(handoff.source.notes.some(n => n.text.startsWith(`\`${family}\` is a Contract the Adapter wrote mid-run at status draft (${drafted} Drafted values); its check passed.`)), family);

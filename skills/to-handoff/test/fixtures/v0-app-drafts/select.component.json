@@ -95,9 +95,32 @@
   },
   "anatomy": {
     "name": "Select",
-    "type": "COMPONENT"
+    "type": "COMPONENT",
+    "children": [
+      {
+        "name": "Value",
+        "type": "TEXT"
+      }
+    ]
   },
-  "properties": [],
+  "properties": [
+    {
+      "key": "placeholder",
+      "label": "Placeholder",
+      "type": "TEXT",
+      "default": "Select an option",
+      "binds": [
+        {
+          "node": "Value",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "child": "SelectValue",
+        "childProp": "placeholder"
+      }
+    }
+  ],
   "layout": [
     {
       "match": {},
@@ -142,6 +165,18 @@
             "reason": "border: border-width 1px; the Foundations document has no stroke-width variable"
           },
           "strokeAlign": "inside"
+        },
+        "Value": {
+          "textStyle": {
+            "raw": {
+              "fontSize": 14,
+              "lineHeight": 20,
+              "fontWeight": 400
+            },
+            "level": "warning",
+            "reason": "text-sm font-size 14px; text-sm line-height 20px; font-weight 400 (no utility); the Foundations document has no Text Styles yet (#160)"
+          },
+          "textResize": "width-and-height"
         }
       }
     }
@@ -163,6 +198,11 @@
             "reason": "no opacity utility"
           },
           "effects": []
+        },
+        "Value": {
+          "fill": {
+            "token": "muted-foreground"
+          }
         }
       }
     },
@@ -301,6 +341,11 @@
   },
   "notes": [
     {
+      "level": "info",
+      "at": "anatomy",
+      "message": "Text layers (#166), each a TEXT node with a TEXT property: Value: SelectValue's placeholder (code.child SelectValue, childProp placeholder), coloured as Select's data-placeholder rules colour it, since the Trigger carries data-placeholder while no value is picked. Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Select, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value."
+    },
+    {
       "level": "verify",
       "at": "anatomy",
       "message": "Select (components/ui/select.tsx:8) renders SelectPrimitive.Root, a provider with no box of its own, so this Contract is read from SelectTrigger (components/ui/select.tsx:33), the box a designer sees; code.component stays Select. In code, invalid is styled on SelectTrigger, not on Select. The other exports (SelectGroup, SelectValue, SelectContent, SelectLabel, SelectItem, SelectSeparator, SelectScrollUpButton, SelectScrollDownButton) render inside SelectTrigger or in the popup it opens, so none is a part, and the options a Usage lists (code.items, ADR 0013) are not drafted."
@@ -323,7 +368,7 @@
     {
       "level": "info",
       "at": "components/ui/select.tsx",
-      "message": "data-placeholder:text-muted-foreground, text-sm, whitespace-nowrap: Text utilities; text styles, the label and the anatomy beyond the root are not drafted yet (agent tier). Not carried."
+      "message": "data-placeholder:text-muted-foreground, text-sm, whitespace-nowrap: Text utilities: read only into the text layers' textStyle and fill (see the anatomy notes), not carried on the root."
     },
     {
       "level": "info",
@@ -353,6 +398,13 @@
         "components/ui/select.tsx:L33 SelectTrigger calls no cva; the Contract's axes: invalid (2), state (4)"
       ],
       "fingerprint": "sha256:1a1bf19ea99d8a9b435e062618008b772f0b83b7a73e3ec43673ac16bdb44406"
+    },
+    "properties.placeholder.default": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/select.tsx:L27 exports SelectValue, whose placeholder shows while no value is picked: the Value layer"
+      ],
+      "fingerprint": "sha256:9d95df385ddbe12e875460736e48401cea0417d9375538595b9a91bbe430ce4b"
     }
   }
 }

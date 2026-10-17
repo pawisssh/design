@@ -7,6 +7,7 @@
         "state"
       ],
       "rows": []
-    }
+    },
+    "properties.text.default": "Label"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 4,
+  "revision": 5,
   "status": "pending",
   "approval": null,
   "feature": {
@@ -33,11 +33,11 @@
     "contracts": {
       "alert": {
         "snapshotId": "sha256:26121ba66822ed1c1ac5705e0059e3fcccbd9e76ca761f36f4710d3fc58074e1",
-        "contentHash": "sha256:78d59f9d1189c5368f5cab8ed78a87e62a769cb1820c22d2fb5867d93726b64d"
+        "contentHash": "sha256:0dedbcf1912aa4c27353134fd304b5e7803b9e011c1ce426b962cbf3c3c9b3bf"
       },
       "button": {
         "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6",
-        "contentHash": "sha256:85832a1639608686b013fa35bbd77a3f5a2e3fc0155b014f2bcbfac946ac7b71"
+        "contentHash": "sha256:b9248aecc43e2174850000a179e9b80ddb782379a36caa10290653ba0a18fae4"
       },
       "input": {
         "snapshotId": "sha256:f9b01bacfe3e4ad85205c04e1c3ecff91f1a284700ca11902c2515be13f9c1f5",
@@ -45,11 +45,11 @@
       },
       "label": {
         "snapshotId": "sha256:160c2f58b3f8e1e4e8b236c549344a7c10eb73d1dd3253d92e3481309a972fdc",
-        "contentHash": "sha256:a583f4c85a55d70300c9dc9892f9fd1b9dc5e69922ce75a89cf865024ab384d1"
+        "contentHash": "sha256:00923f3e4b23a35166f8333d1cc01d28d54ff3fd424510dc548c6c765fcb9aed"
       },
       "select": {
         "snapshotId": "sha256:65b44cdfa0fbdfbeade787cba9f252cdff0b73c09e1de9d1a8c80e53a214de61",
-        "contentHash": "sha256:6498b8d793e9b8d869b3fe91f0bf7cccd24614790a64eaf4495344430373ab1f"
+        "contentHash": "sha256:bdad484583eed0f289c45bd30c79c652fa119c5cd9a6c9a1780eb4b38b83d89d"
       },
       "textarea": {
         "snapshotId": "sha256:f867108029e85e1d5e6f2f62e1f1279c393470acc7169848842f6712f91a1be1",
@@ -58,7 +58,7 @@
     },
     "proposals": {},
     "foundations": {
-      "documentHash": "sha256:ea8471727bdf4eb5b35f5b4eca24ce5da7c2a56d89b0c4a1e21eda3508a35a04",
+      "documentHash": "sha256:6fea3f08b2a5477d087f5589462a06653a8363e601ff4c3219edb0c1a0fdfaff",
       "usedHash": "sha256:ac8b6acde88f612a973024395f4fd7c858474021dee1e48177b0d65c5d6399d7"
     },
     "modes": {
@@ -71,7 +71,7 @@
       },
       {
         "level": "info",
-        "text": "`label` is a Contract the Adapter wrote mid-run at status draft (2 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
+        "text": "`label` is a Contract the Adapter wrote mid-run at status draft (3 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
       },
       {
         "level": "info",
@@ -79,7 +79,7 @@
       },
       {
         "level": "info",
-        "text": "`select` is a Contract the Adapter wrote mid-run at status draft (3 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
+        "text": "`select` is a Contract the Adapter wrote mid-run at status draft (4 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
       },
       {
         "level": "info",
@@ -181,6 +181,9 @@
               "tuple": {
                 "variant": "outline"
               },
+              "properties": {
+                "label": "copy:button-label"
+              },
               "match": {
                 "by": "import"
               },
@@ -195,6 +198,10 @@
               "tuple": {
                 "variant": "destructive"
               },
+              "properties": {
+                "title": "copy:alert-title",
+                "description": "copy:alert-description"
+              },
               "match": {
                 "by": "import"
               },
@@ -207,6 +214,9 @@
               "id": "label",
               "contract": "label",
               "tuple": {},
+              "properties": {
+                "text": "copy:label-text"
+              },
               "match": {
                 "by": "agent",
                 "via": "library"
@@ -237,6 +247,9 @@
               "id": "label-2",
               "contract": "label",
               "tuple": {},
+              "properties": {
+                "text": "copy:label-2-text"
+              },
               "match": {
                 "by": "agent",
                 "via": "library"
@@ -267,6 +280,9 @@
               "id": "label-3",
               "contract": "label",
               "tuple": {},
+              "properties": {
+                "text": "copy:label-3-text"
+              },
               "match": {
                 "by": "agent",
                 "via": "library"
@@ -282,6 +298,9 @@
               "id": "select",
               "contract": "select",
               "tuple": {},
+              "properties": {
+                "placeholder": "copy:select-placeholder"
+              },
               "match": {
                 "by": "agent",
                 "via": "library"
@@ -297,6 +316,9 @@
               "id": "label-4",
               "contract": "label",
               "tuple": {},
+              "properties": {
+                "text": "copy:label-4-text"
+              },
               "match": {
                 "by": "agent",
                 "via": "library"
@@ -327,6 +349,9 @@
               "id": "button-2",
               "contract": "button",
               "tuple": {},
+              "properties": {
+                "label": "copy:button-2-label"
+              },
               "match": {
                 "by": "import"
               },
@@ -343,6 +368,9 @@
               "tuple": {
                 "variant": "link",
                 "size": "sm"
+              },
+              "properties": {
+                "label": "copy:button-3-label"
               },
               "match": {
                 "by": "import"
@@ -386,7 +414,10 @@
           "trigger": "pending or status === \"loading\"",
           "usageStates": {
             "button-2": {
-              "state": "disabled"
+              "state": "disabled",
+              "properties": {
+                "label": "copy:button-2-label-loading"
+              }
             }
           },
           "screenshots": {
@@ -427,6 +458,50 @@
     }
   ],
   "copy": {
+    "button-label": {
+      "text": "Send another request",
+      "at": "app/request-access-form.tsx:49:11"
+    },
+    "alert-title": {
+      "text": "Something went wrong",
+      "at": "app/request-access-form.tsx:60:23"
+    },
+    "alert-description": {
+      "text": "We could not send your request. Try again.",
+      "at": "app/request-access-form.tsx:61:29"
+    },
+    "label-text": {
+      "text": "Full name",
+      "at": "app/request-access-form.tsx:65:31"
+    },
+    "label-2-text": {
+      "text": "Work email",
+      "at": "app/request-access-form.tsx:69:32"
+    },
+    "label-3-text": {
+      "text": "Team",
+      "at": "app/request-access-form.tsx:73:31"
+    },
+    "select-placeholder": {
+      "text": "Pick a team",
+      "at": "app/request-access-form.tsx:76:13"
+    },
+    "label-4-text": {
+      "text": "Why do you need access?",
+      "at": "app/request-access-form.tsx:86:33"
+    },
+    "button-2-label": {
+      "text": "Request access",
+      "at": "app/request-access-form.tsx:90:10"
+    },
+    "button-2-label-loading": {
+      "text": "Sending…",
+      "at": "app/request-access-form.tsx:90:10"
+    },
+    "button-3-label": {
+      "text": "Sign in",
+      "at": "app/page.tsx:34:34"
+    },
     "card-title": {
       "text": "Request workspace access",
       "at": "app/page.tsx:22:24"

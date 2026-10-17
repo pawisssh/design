@@ -10,6 +10,7 @@
       "rows": [
         "invalid"
       ]
-    }
+    },
+    "properties.placeholder.default": "Select an option"
   }
 }
