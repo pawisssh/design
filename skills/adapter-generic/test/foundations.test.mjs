@@ -52,8 +52,8 @@ test('two CLI runs write byte-identical documents', { skip }, () => {
   assert.equal(out[0], out[1]);
 });
 
-test('the committed shadcn foundations document is exactly what this step generates, with the Button, Card and Alert Synthesized tokens', { skip }, async () => {
-  assert.equal((await generate({ project: FIXTURE, families: ['alert', 'button', 'card'] })).text, read(COMMITTED));
+test('the committed shadcn foundations document is exactly what this step generates, with the Alert, Button, Card, Label and Textarea Synthesized tokens', { skip }, async () => {
+  assert.equal((await generate({ project: FIXTURE, families: ['alert', 'button', 'card', 'label', 'textarea'] })).text, read(COMMITTED));
 });
 
 test('light and dark values match the project CSS through the shared converter', { skip }, async () => {

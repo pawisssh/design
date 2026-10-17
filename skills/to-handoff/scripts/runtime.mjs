@@ -93,7 +93,8 @@ export async function run({ prototype, screens, breakpoints, depsDir = DEPS_DIR 
           if (!response.ok()) throw new Error(`GET ${url} returned ${response.status()}`);
           for (const step of s.steps) await perform(page, step);
           const absent = [];
-          for (const at of s.expect || []) if (!(await page.$(`[${ATTR}="${at}"], [${ATTR}$=" ${at}"]`))) absent.push(at);
+          // A component's site leads the chain its host carries (`<use site> <component file site>`): match any link.
+          for (const at of s.expect || []) if (!(await page.$(`[${ATTR}~="${at}"]`))) absent.push(at);
           if (absent.length) { shots[s.state][b.key] = { missing: true, reason: `the steps did not reach ${s.state}: ${absent.join(', ')} not on the page` }; continue; }
           const file = join(out, `${screen}.${s.state}.${b.key}.png`);
           await page.screenshot({ path: file, fullPage: true, animations: 'disabled' });

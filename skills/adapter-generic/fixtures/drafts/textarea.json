@@ -1,0 +1,15 @@
+{
+  "family": "textarea",
+  "drafts": {
+    "axes.invalid.label": "Invalid",
+    "family.description": "A multi-line text field whose invalid axis gives it a destructive border and ring, and whose state axis adds a focus ring or dims it when disabled.",
+    "figma.grid": {
+      "columns": [
+        "state"
+      ],
+      "rows": [
+        "invalid"
+      ]
+    }
+  }
+}

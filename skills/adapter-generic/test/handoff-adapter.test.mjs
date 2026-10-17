@@ -12,10 +12,10 @@ import { hasTools, toolDir } from '../scripts/sources.mjs';
 const SHADCN = fileURLToPath(new URL('../../../design-systems/shadcn/', import.meta.url));
 const noTools = !hasTools() && 'Generic Adapter tools missing: run node skills/adapter-generic/scripts/sources.mjs';
 
-test('To-handoff loads the shadcn Design System with this module as its Adapter, and all three Contracts', async () => {
+test('To-handoff loads the shadcn Design System with this module as its Adapter, and all five Contracts', async () => {
   const system = await loadDesignSystem(SHADCN);
   assert.equal(system.adapter.contractProcedure, adapter.contractProcedure);
-  assert.deepEqual(Object.keys(system.contracts).sort(), ['alert', 'button', 'card']);
+  assert.deepEqual(Object.keys(system.contracts).sort(), ['alert', 'button', 'card', 'label', 'textarea']);
   for (const name of ['roleGroups', 'surfaces', 'breakpoints', 'contractProcedure', 'checkContract', 'available', 'renderer'])
     assert.ok(system.adapter[name], name);
 });

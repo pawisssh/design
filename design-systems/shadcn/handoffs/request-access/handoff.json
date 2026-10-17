@@ -1,0 +1,521 @@
+{
+  "schemaVersion": 1,
+  "revision": 1,
+  "status": "pending",
+  "approval": null,
+  "feature": {
+    "key": "request-access",
+    "name": "Request access",
+    "goal": "Ask for access to a workspace, so an admin can approve it."
+  },
+  "source": {
+    "input": "prototype",
+    "kind": "react-next",
+    "prototype": {
+      "files": {
+        "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
+        "app/layout.tsx": "sha256:27471c24f05b096454dc3c3cc5ee4bc992eee8e5aedb6dc8e0b53c62148780f8",
+        "app/page.tsx": "sha256:dee906d9e5007717ffca7f94e1e7f29122c29e7b569e1502d4e84c1a4d23c2a8",
+        "app/request-access-form.tsx": "sha256:daf7b1d869be0d87bbad103dbd99eb3a5a6c92e8f5225720b24454d7a993d0c5",
+        "components/submit-button.tsx": "sha256:8b5853b35305df6ff916651f8ea1e8c1d1352ff2391466b2111029a3ab658fd1",
+        "components/ui/alert.tsx": "sha256:f253568242c1c69b343f12474002fdbe229f603158171c59e21c491ab79f2e6e",
+        "components/ui/button.tsx": "sha256:08e5f87833c5db8436e89337ebde0f776bcdbf649d3de69fb89be6441ca2e366",
+        "components/ui/card.tsx": "sha256:8ad3a18d36bda0598dc0e9aa96ea22854944d5443ee4946f1d173815e115375f",
+        "components/ui/input.tsx": "sha256:75418e030b2a54dd017ac0f4588db4bbdbabca7525e88bbc9d84cb3e18bcb905",
+        "components/ui/label.tsx": "sha256:344bde38b8531615dbf8e14af3895517c24d8ef6ce56ddeda7e2e6fe4b5d0c00",
+        "components/ui/select.tsx": "sha256:81ec673cb09a8f7586f6194eceeeb3701228be1c1582e65b094220ab9340f756",
+        "components/ui/sonner.tsx": "sha256:2dd975ad2170ba2570b00e58713dcbda90f26a7fffdaceb1ef7255f450c2d2a6",
+        "components/ui/textarea.tsx": "sha256:82601c91ffc6c727d924162c78d7cb853114bcced4e2eb922a68ca12d4239c0f"
+      },
+      "snapshotId": "sha256:4b294d0b16ab600455b84072c830fc529b05afe04d6bd1d06e8f03d91d82a2ae"
+    },
+    "designSystem": "shadcn",
+    "contracts": {
+      "alert": {
+        "snapshotId": "sha256:26121ba66822ed1c1ac5705e0059e3fcccbd9e76ca761f36f4710d3fc58074e1",
+        "contentHash": "sha256:93ffcea768660189a6aec33871e92a7516add34ede9f5083cbc2bc1ff14d481e"
+      },
+      "button": {
+        "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6",
+        "contentHash": "sha256:63cf726a7d861cb46e8422f0d923a78f29e33abbed58d3e7b4478bb38d63a138"
+      },
+      "label": {
+        "snapshotId": "sha256:160c2f58b3f8e1e4e8b236c549344a7c10eb73d1dd3253d92e3481309a972fdc",
+        "contentHash": "sha256:f7ec0e8ffe6f72b307d33bca57cc13137845ebc52afc9de07b74df05dfcda28b"
+      },
+      "textarea": {
+        "snapshotId": "sha256:f867108029e85e1d5e6f2f62e1f1279c393470acc7169848842f6712f91a1be1",
+        "contentHash": "sha256:ef21d3cb622e119ace69fb3bac33066bd3fced9475c415a441610ef3431e51ac"
+      }
+    },
+    "proposals": {},
+    "foundations": {
+      "documentHash": "sha256:40426fa5d53d3c8dc7eeed5bd3265a53f00dfa714ee7acfa9a1376797dab49c5",
+      "usedHash": "sha256:ac8b6acde88f612a973024395f4fd7c858474021dee1e48177b0d65c5d6399d7"
+    },
+    "modes": {
+      "light": "light"
+    },
+    "notes": [
+      {
+        "level": "info",
+        "text": "Single-mode Prototype: its page surface (#ffffff) map best to Light (Light ΔE 0, Dark ΔE 0.8552). The other Theme modes render unverified."
+      },
+      {
+        "level": "info",
+        "text": "`label` is a Contract the Adapter wrote mid-run at status draft (2 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
+      },
+      {
+        "level": "info",
+        "text": "`textarea` is a Contract the Adapter wrote mid-run at status draft (3 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
+      },
+      {
+        "level": "info",
+        "text": "Region `flex`: `Card` (@/components/ui/card, app/page.tsx:18:7) holds other Code Library usages, so it is read as a wrapper: its parts' styles and text stay in the region, and the usages inside it are their own."
+      }
+    ],
+    "ignored": [
+      "app/api/request-access/route.ts (API route)"
+    ]
+  },
+  "screens": [
+    {
+      "id": "index",
+      "name": "/",
+      "at": "app/page.tsx:17:5",
+      "breakpoints": [
+        "sm",
+        "md",
+        "lg",
+        "xl",
+        "2xl"
+      ],
+      "regions": [
+        {
+          "id": "shell",
+          "landmark": null,
+          "shell": true,
+          "at": "app/layout.tsx:27:5",
+          "styles": [],
+          "text": [],
+          "usages": []
+        },
+        {
+          "id": "flex",
+          "landmark": "main",
+          "at": "app/page.tsx:17:5",
+          "styles": [],
+          "text": [
+            {
+              "copy": "card-title",
+              "at": "app/page.tsx:22:24",
+              "style": {
+                "raw": {
+                  "fontSize": 16,
+                  "lineHeight": 22,
+                  "fontWeight": 500,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "card-description",
+              "at": "app/page.tsx:25:13",
+              "style": {
+                "raw": {
+                  "fontSize": 14,
+                  "lineHeight": 20,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "font-medium",
+              "at": "app/request-access-form.tsx:47:36",
+              "states": [
+                "success"
+              ],
+              "style": {
+                "raw": {
+                  "fontSize": 14,
+                  "lineHeight": 20,
+                  "fontWeight": 500,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "span",
+              "at": "app/page.tsx:32:17",
+              "style": {
+                "raw": {
+                  "fontSize": 12,
+                  "lineHeight": 16,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            }
+          ],
+          "usages": [
+            {
+              "id": "button",
+              "contract": "button",
+              "tuple": {
+                "variant": "outline"
+              },
+              "match": {
+                "by": "import"
+              },
+              "states": [
+                "success"
+              ],
+              "at": "app/request-access-form.tsx:48:9"
+            },
+            {
+              "id": "alert",
+              "contract": "alert",
+              "tuple": {
+                "variant": "destructive"
+              },
+              "match": {
+                "by": "import"
+              },
+              "states": [
+                "error"
+              ],
+              "at": "app/request-access-form.tsx:58:9"
+            },
+            {
+              "id": "label",
+              "contract": "label",
+              "tuple": {},
+              "match": {
+                "by": "agent",
+                "via": "library"
+              },
+              "states": [
+                "default",
+                "loading",
+                "error"
+              ],
+              "at": "app/request-access-form.tsx:65:9"
+            },
+            {
+              "id": "name",
+              "raw": {
+                "element": "Input[required]"
+              },
+              "reason": "shadcn ships Input, but this Design System has no input Contract, and the Generic Adapter could not write one mid-run",
+              "question": "q-no-contract-name",
+              "states": [
+                "default",
+                "loading",
+                "error"
+              ],
+              "at": "app/request-access-form.tsx:66:9"
+            },
+            {
+              "id": "label-2",
+              "contract": "label",
+              "tuple": {},
+              "match": {
+                "by": "agent",
+                "via": "library"
+              },
+              "states": [
+                "default",
+                "loading",
+                "error"
+              ],
+              "at": "app/request-access-form.tsx:69:9"
+            },
+            {
+              "id": "email",
+              "raw": {
+                "element": "Input[required]"
+              },
+              "reason": "shadcn ships Input, but this Design System has no input Contract, and the Generic Adapter could not write one mid-run",
+              "question": "q-no-contract-email",
+              "states": [
+                "default",
+                "loading",
+                "error"
+              ],
+              "at": "app/request-access-form.tsx:70:9"
+            },
+            {
+              "id": "label-3",
+              "contract": "label",
+              "tuple": {},
+              "match": {
+                "by": "agent",
+                "via": "library"
+              },
+              "states": [
+                "default",
+                "loading",
+                "error"
+              ],
+              "at": "app/request-access-form.tsx:73:9"
+            },
+            {
+              "id": "select",
+              "raw": {
+                "element": "Select"
+              },
+              "reason": "shadcn ships Select, but this Design System has no select Contract, and the Generic Adapter could not write one mid-run",
+              "properties": {
+                "text": "copy:select-text"
+              },
+              "question": "q-no-contract-select",
+              "states": [
+                "default",
+                "loading",
+                "error"
+              ],
+              "at": "app/request-access-form.tsx:74:9"
+            },
+            {
+              "id": "label-4",
+              "contract": "label",
+              "tuple": {},
+              "match": {
+                "by": "agent",
+                "via": "library"
+              },
+              "states": [
+                "default",
+                "loading",
+                "error"
+              ],
+              "at": "app/request-access-form.tsx:86:9"
+            },
+            {
+              "id": "reason",
+              "contract": "textarea",
+              "tuple": {},
+              "match": {
+                "by": "agent",
+                "via": "library"
+              },
+              "states": [
+                "default",
+                "loading",
+                "error"
+              ],
+              "at": "app/request-access-form.tsx:87:9"
+            },
+            {
+              "id": "button-2",
+              "contract": "button",
+              "tuple": {},
+              "match": {
+                "by": "import"
+              },
+              "states": [
+                "default",
+                "loading",
+                "error"
+              ],
+              "at": "components/submit-button.tsx:11:5"
+            },
+            {
+              "id": "button-3",
+              "contract": "button",
+              "tuple": {
+                "variant": "link",
+                "size": "sm"
+              },
+              "match": {
+                "by": "import"
+              },
+              "at": "app/page.tsx:33:11"
+            }
+          ]
+        },
+        {
+          "id": "toaster",
+          "landmark": null,
+          "at": "app/layout.tsx:32:9",
+          "styles": [],
+          "text": [],
+          "usages": [
+            {
+              "id": "toaster",
+              "raw": {
+                "element": "Toaster"
+              },
+              "reason": "shadcn ships Toaster, but this Design System has no sonner Contract, and the Generic Adapter could not write one mid-run",
+              "question": "q-no-contract-toaster",
+              "at": "app/layout.tsx:32:9"
+            }
+          ]
+        }
+      ],
+      "states": {
+        "default": {
+          "content": "every state condition is false; conditional content shown: .grid",
+          "screenshots": {
+            "sm": "screens/index.default.sm.png",
+            "md": "screens/index.default.md.png",
+            "lg": "screens/index.default.lg.png",
+            "xl": "screens/index.default.xl.png",
+            "2xl": "screens/index.default.2xl.png"
+          }
+        },
+        "loading": {
+          "content": "`pending` or `status === \"loading\"` is true; conditional content shown: .grid",
+          "trigger": "pending or status === \"loading\"",
+          "usageStates": {
+            "button-2": {
+              "state": "disabled"
+            }
+          },
+          "screenshots": {
+            "sm": "screens/index.loading.sm.png",
+            "md": "screens/index.loading.md.png",
+            "lg": "screens/index.loading.lg.png",
+            "xl": "screens/index.loading.xl.png",
+            "2xl": "screens/index.loading.2xl.png"
+          }
+        },
+        "empty": {
+          "missing": true,
+          "question": "q-state-empty"
+        },
+        "error": {
+          "content": "`status === \"error\"` is true; conditional content shown: .grid, alert",
+          "trigger": "status === \"error\"",
+          "screenshots": {
+            "sm": "screens/index.error.sm.png",
+            "md": "screens/index.error.md.png",
+            "lg": "screens/index.error.lg.png",
+            "xl": "screens/index.error.xl.png",
+            "2xl": "screens/index.error.2xl.png"
+          }
+        },
+        "success": {
+          "content": "`status === \"success\"` is true; conditional content shown: .flex",
+          "trigger": "status === \"success\"",
+          "screenshots": {
+            "sm": "screens/index.success.sm.png",
+            "md": "screens/index.success.md.png",
+            "lg": "screens/index.success.lg.png",
+            "xl": "screens/index.success.xl.png",
+            "2xl": "screens/index.success.2xl.png"
+          }
+        }
+      }
+    }
+  ],
+  "copy": {
+    "select-text": {
+      "text": "Design Engineering Research",
+      "at": "app/request-access-form.tsx:74:9"
+    },
+    "card-title": {
+      "text": "Request workspace access",
+      "at": "app/page.tsx:22:24"
+    },
+    "card-description": {
+      "text": "Tell us who you are and an admin will approve you within a day.",
+      "at": "app/page.tsx:25:13"
+    },
+    "font-medium": {
+      "text": "Thanks! Your request is in.",
+      "at": "app/request-access-form.tsx:47:36"
+    },
+    "span": {
+      "text": "Already a member?",
+      "at": "app/page.tsx:32:17"
+    }
+  },
+  "values": [],
+  "acceptance": [
+    {
+      "id": "form-shown",
+      "screen": "index",
+      "state": "default",
+      "given": "a visitor without access",
+      "when": "the page opens",
+      "then": "the form asks for name, work email, team and a reason",
+      "by": "agent"
+    },
+    {
+      "id": "sending",
+      "screen": "index",
+      "state": "loading",
+      "given": "a filled form",
+      "when": "Request access is pressed",
+      "then": "the button shows Sending… and is disabled",
+      "by": "agent"
+    },
+    {
+      "id": "send-fails",
+      "screen": "index",
+      "state": "error",
+      "given": "the request fails",
+      "when": "Request access is pressed",
+      "then": "an alert asks to try again",
+      "by": "agent"
+    },
+    {
+      "id": "sent",
+      "screen": "index",
+      "state": "success",
+      "given": "the request succeeds",
+      "when": "Request access is pressed",
+      "then": "a thank-you shows with a button to send another request",
+      "by": "agent"
+    }
+  ],
+  "openQuestions": [
+    {
+      "id": "q-no-contract-name",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`Input[required]` is an input with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family input: Input (Invalid=Valid, State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for input; run node skills/adapter-generic/scripts/components.mjs --family input and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-email",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`Input[required]` is an input with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family input: Input (Invalid=Valid, State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for input; run node skills/adapter-generic/scripts/components.mjs --family input and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-select",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`Select` is a select with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family select: Select (State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for select; run node skills/adapter-generic/scripts/components.mjs --family select and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-toaster",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`Toaster` is a sonner with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family sonner: components/ui/sonner.tsx exports no Sonner. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for sonner; run node skills/adapter-generic/scripts/components.mjs --family sonner and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-state-empty",
+      "kind": "missing-state",
+      "to": "owner",
+      "text": "The Prototype has no empty state: no condition reads like empty. What should the screen show?",
+      "answer": null
+    },
+    {
+      "id": "q-font",
+      "kind": "font",
+      "to": "owner",
+      "text": "The Prototype loads Geist from next/font/google (app/layout.tsx:2:10), Geist_Mono from next/font/google (app/layout.tsx:2:17); shadcn has no Text Styles to name a font. Which font should the Text Styles use?",
+      "answer": null
+    }
+  ],
+  "flow": [],
+  "data": [],
+  "ownerDecisions": {}
+}

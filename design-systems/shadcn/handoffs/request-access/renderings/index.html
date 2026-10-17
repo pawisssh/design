@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Request access Handoff</title>
+<style>
+/*! tailwindcss v4.3.3 | MIT License | https://tailwindcss.com */
+@layer properties;
+@layer theme, base, components, utilities;
+@layer theme {
+  :root, :host {
+    --font-sans: var(--font-sans);
+    --spacing: 0.25rem;
+    --text-sm: 0.875rem;
+    --text-sm--line-height: calc(1.25 / 0.875);
+    --font-weight-medium: 500;
+    --default-font-family: var(--font-sans);
+    --default-mono-font-family: var(--font-geist-mono);
+  }
+}
+@layer base {
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 0 solid;
+  }
+  html, :host {
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+    font-family: var(--default-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji");
+    font-feature-settings: var(--default-font-feature-settings, normal);
+    font-variation-settings: var(--default-font-variation-settings, normal);
+    -webkit-tap-highlight-color: transparent;
+  }
+  hr {
+    height: 0;
+    color: inherit;
+    border-top-width: 1px;
+  }
+  abbr:where([title]) {
+    -webkit-text-decoration: underline dotted;
+    text-decoration: underline dotted;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+  a {
+    color: inherit;
+    -webkit-text-decoration: inherit;
+    text-decoration: inherit;
+  }
+  b, strong {
+    font-weight: bolder;
+  }
+  code, kbd, samp, pre {
+    font-family: var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+    font-feature-settings: var(--default-mono-font-feature-settings, normal);
+    font-variation-settings: var(--default-mono-font-variation-settings, normal);
+    font-size: 1em;
+  }
+  small {
+    font-size: 80%;
+  }
+  sub, sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+  }
+  sub {
+    bottom: -0.25em;
+  }
+  sup {
+    top: -0.5em;
+  }
+  table {
+    text-indent: 0;
+    border-color: inherit;
+    border-collapse: collapse;
+  }
+  :-moz-focusring:where(:not(iframe)) {
+    outline: auto;
+  }
+  progress {
+    vertical-align: baseline;
+  }
+  summary {
+    display: list-item;
+  }
+  ol, ul, menu {
+    list-style: none;
+  }
+  img, svg, video, canvas, audio, iframe, embed, object {
+    display: block;
+    vertical-align: middle;
+  }
+  img, video {
+    max-width: 100%;
+    height: auto;
+  }
+  button, input, select, optgroup, textarea, ::file-selector-button {
+    font: inherit;
+    font-feature-settings: inherit;
+    font-variation-settings: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    border-radius: 0;
+    background-color: transparent;
+    opacity: 1;
+  }
+  :where(select:is([multiple], [size])) optgroup {
+    font-weight: bolder;
+  }
+  :where(select:is([multiple], [size])) optgroup option {
+    padding-inline-start: 20px;
+  }
+  ::file-selector-button {
+    margin-inline-end: 4px;
+  }
+  ::placeholder {
+    opacity: 1;
+  }
+  @supports (not (-webkit-appearance: -apple-pay-button))  or (contain-intrinsic-size: 1px) {
+    ::placeholder {
+      color: currentcolor;
+      
+        color: color-mix(in oklab, currentcolor 50%, transparent);
+      
+    }
+  }
+  textarea {
+    resize: vertical;
+  }
+  ::-webkit-search-decoration {
+    -webkit-appearance: none;
+  }
+  ::-webkit-date-and-time-value {
+    min-height: 1lh;
+    text-align: inherit;
+  }
+  ::-webkit-datetime-edit {
+    display: inline-flex;
+  }
+  ::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+  }
+  ::-webkit-datetime-edit, ::-webkit-datetime-edit-year-field, ::-webkit-datetime-edit-month-field, ::-webkit-datetime-edit-day-field, ::-webkit-datetime-edit-hour-field, ::-webkit-datetime-edit-minute-field, ::-webkit-datetime-edit-second-field, ::-webkit-datetime-edit-millisecond-field, ::-webkit-datetime-edit-meridiem-field {
+    padding-block: 0;
+  }
+  ::-webkit-calendar-picker-indicator {
+    line-height: 1;
+  }
+  :-moz-ui-invalid {
+    box-shadow: none;
+  }
+  button, input:where([type="button"], [type="reset"], [type="submit"]), ::file-selector-button {
+    appearance: button;
+  }
+  ::-webkit-inner-spin-button, ::-webkit-outer-spin-button {
+    height: auto;
+  }
+  [hidden]:where(:not([hidden="until-found"])) {
+    display: none !important;
+  }
+}
+@layer utilities {
+  .absolute {
+    position: absolute;
+  }
+  .relative {
+    position: relative;
+  }
+  .top-2 {
+    top: calc(var(--spacing) * 2);
+  }
+  .right-2 {
+    right: calc(var(--spacing) * 2);
+  }
+  .grid {
+    display: grid;
+  }
+  .w-full {
+    width: 100%;
+  }
+  .gap-0\.5 {
+    gap: calc(var(--spacing) * 0.5);
+  }
+  .rounded-lg {
+    border-radius: var(--radius);
+  }
+  .border {
+    border-style: var(--tw-border-style);
+    border-width: 1px;
+  }
+  .bg-card {
+    background-color: var(--card);
+  }
+  .px-2\.5 {
+    padding-inline: calc(var(--spacing) * 2.5);
+  }
+  .py-2 {
+    padding-block: calc(var(--spacing) * 2);
+  }
+  .text-left {
+    text-align: left;
+  }
+  .text-sm {
+    font-size: var(--text-sm);
+    line-height: var(--tw-leading, var(--text-sm--line-height));
+  }
+  .font-medium {
+    --tw-font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-medium);
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-card-foreground {
+    color: var(--card-foreground);
+  }
+  .text-destructive {
+    color: var(--destructive);
+  }
+  .text-muted-foreground {
+    color: var(--muted-foreground);
+  }
+  .group-has-\[\>svg\]\/alert\:col-start-2:is(:where(.group\/alert):has( > svg) *) {
+    grid-column-start: 2;
+  }
+  .has-data-\[slot\=alert-action\]\:relative:has([data-slot="alert-action"]) {
+    position: relative;
+  }
+  .has-data-\[slot\=alert-action\]\:pr-18:has([data-slot="alert-action"]) {
+    padding-right: calc(var(--spacing) * 18);
+  }
+  .has-\[\>svg\]\:grid-cols-\[auto_1fr\]:has( > svg) {
+    grid-template-columns: auto 1fr;
+  }
+  .has-\[\>svg\]\:gap-x-2:has( > svg) {
+    column-gap: calc(var(--spacing) * 2);
+  }
+  :is(.\*\:data-\[slot\=alert-description\]\:text-destructive\/90 > *)[data-slot="alert-description"] {
+    color: var(--destructive);
+    
+      color: color-mix(in oklab, var(--destructive) 90%, transparent);
+    
+  }
+  @media (width >= 48rem) {
+    .md\:text-pretty {
+      text-wrap: pretty;
+    }
+  }
+  .\[\&_a\]\:underline a {
+    text-decoration-line: underline;
+  }
+  .\[\&_a\]\:underline-offset-3 a {
+    text-underline-offset: 3px;
+  }
+  @media (hover: hover) {
+    .\[\&_a\]\:hover\:text-foreground a:hover {
+      color: var(--foreground);
+    }
+  }
+  .\[\&_p\:not\(\:last-child\)\]\:mb-4 p:not(:last-child) {
+    margin-bottom: calc(var(--spacing) * 4);
+  }
+  :is(.\*\:\[svg\]\:row-span-2 > *):is(svg) {
+    grid-row: span 2 / span 2;
+  }
+  :is(.\*\:\[svg\]\:translate-y-0\.5 > *):is(svg) {
+    --tw-translate-y: calc(var(--spacing) * 0.5);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+  :is(.\*\:\[svg\]\:text-current > *):is(svg) {
+    color: currentcolor;
+  }
+  :is(.\*\:\[svg\:not\(\[class\*\=\'size-\'\]\)\]\:size-4 > *):is(svg:not([class*='size-'])) {
+    width: calc(var(--spacing) * 4);
+    height: calc(var(--spacing) * 4);
+  }
+}
+@property --tw-animation-delay {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0s;
+}
+@property --tw-animation-direction {
+  syntax: "*";
+  inherits: false;
+  initial-value: normal;
+}
+@property --tw-animation-duration {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-animation-fill-mode {
+  syntax: "*";
+  inherits: false;
+  initial-value: none;
+}
+@property --tw-animation-iteration-count {
+  syntax: "*";
+  inherits: false;
+  initial-value: 1;
+}
+@property --tw-enter-blur {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
+@property --tw-enter-opacity {
+  syntax: "*";
+  inherits: false;
+  initial-value: 1;
+}
+@property --tw-enter-rotate {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
+@property --tw-enter-scale {
+  syntax: "*";
+  inherits: false;
+  initial-value: 1;
+}
+@property --tw-enter-translate-x {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
+@property --tw-enter-translate-y {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
+@property --tw-exit-blur {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
+@property --tw-exit-opacity {
+  syntax: "*";
+  inherits: false;
+  initial-value: 1;
+}
+@property --tw-exit-rotate {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
+@property --tw-exit-scale {
+  syntax: "*";
+  inherits: false;
+  initial-value: 1;
+}
+@property --tw-exit-translate-x {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
+@property --tw-exit-translate-y {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
+@property --scroll-fade-t {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-b {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-s {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-e {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-mask {
+  syntax: "*";
+  inherits: false;
+}
+@property --shimmer-angle {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 20deg;
+}
+@property --shimmer-image {
+  syntax: "*";
+  inherits: false;
+}
+@property --shimmer-text-fill {
+  syntax: "*";
+  inherits: false;
+}
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+  }
+}
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: var(--ring);
+    
+      outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
+    
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+  html {
+    font-family: var(--font-sans);
+  }
+}
+@property --tw-border-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
+}
+@property --tw-font-weight {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-translate-x {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
+@property --tw-translate-y {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
+@property --tw-translate-z {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
+@layer properties {
+  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
+    :root, :host {
+      --shimmer-angle: 20deg;
+    }
+    *, ::before, ::after, ::backdrop {
+      --tw-border-style: solid;
+      --tw-font-weight: initial;
+      --tw-translate-x: 0;
+      --tw-translate-y: 0;
+      --tw-translate-z: 0;
+      --tw-animation-delay: 0s;
+      --tw-animation-direction: normal;
+      --tw-animation-duration: initial;
+      --tw-animation-fill-mode: none;
+      --tw-animation-iteration-count: 1;
+      --tw-enter-blur: 0;
+      --tw-enter-opacity: 1;
+      --tw-enter-rotate: 0;
+      --tw-enter-scale: 1;
+      --tw-enter-translate-x: 0;
+      --tw-enter-translate-y: 0;
+      --tw-exit-blur: 0;
+      --tw-exit-opacity: 1;
+      --tw-exit-rotate: 0;
+      --tw-exit-scale: 1;
+      --tw-exit-translate-x: 0;
+      --tw-exit-translate-y: 0;
+      --scroll-fade-t: 0px;
+      --scroll-fade-b: 0px;
+      --scroll-fade-s: 0px;
+      --scroll-fade-e: 0px;
+      --scroll-fade-mask: initial;
+      --shimmer-image: initial;
+      --shimmer-text-fill: initial;
+    }
+  }
+}
+
+</style>
+<style>
+:root { --ink: #161616; --muted: #525252; --line: #e0e0e0; --bg: #ffffff; --soft: #f4f4f4; --warn: #8a3800; --bad: #a2191f; --bad-soft: #fff1f1; --bad-line: #ffd7d9; }
+body.page { margin: 0; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: var(--ink); background: var(--bg); }
+.top { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; padding: 12px 16px; background: var(--bg); border-bottom: 1px solid var(--line); }
+.top h1 { font-size: 20px; margin: 0; } .stamp { margin: 0; color: var(--muted); font-size: 14px; }
+.unverified { margin: 0; color: var(--warn); font-size: 14px; }
+nav.groups { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 8px 16px; border-bottom: 1px solid var(--line); font-size: 14px; }
+main.doc { max-width: 1100px; margin: 0 auto; padding: 16px; }
+section.group { margin: 32px 0; } section.group > h2 { font-size: 18px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text-align: left; vertical-align: top; padding: 4px 8px; border-bottom: 1px solid var(--line); }
+.table-wrap { overflow-x: auto; }
+.flag { display: inline-block; white-space: nowrap; font-size: 12px; padding: 0 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.card { border: 1px solid var(--line); padding: 12px; min-width: 0; } .card h3 { margin: 0 0 4px; font-size: 16px; } .card p { margin: 4px 0; font-size: 13px; color: var(--muted); }
+.specimen, .states-row { padding: 16px; margin: 8px 0; background: var(--cds-background, #fff); color: var(--cds-text-primary, #161616); }
+.states-row { display: flex; flex-wrap: wrap; gap: 12px; } .states-row figure { margin: 0; } .states-row figcaption { font-size: 12px; margin-bottom: 4px; }
+.snippet { width: 100%; box-sizing: border-box; font: 12px/1.5 'IBM Plex Mono', ui-monospace, monospace; border: 1px solid var(--line); padding: 8px; resize: vertical; }
+.proposal-box, .raw-box { display: flex; gap: 4px; align-items: center; padding: 8px; border: 1px dashed var(--muted); }
+.chip { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--soft); font-size: 10px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; } .tab { padding: 6px 12px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; } .tab[aria-selected="true"] { border-color: var(--ink); }
+.shots { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; } .shot { margin: 0; flex: 0 1 240px; min-width: 0; } .shot figcaption { font-size: 12px; margin-bottom: 4px; }
+.shots img, .matrix img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); } .matrix td { min-width: 96px; max-width: 200px; }
+.slot { min-height: 96px; padding: 8px; display: grid; place-items: center; text-align: center; border: 1px dashed var(--muted); color: var(--muted); font-size: 12px; }
+.hatch { background: repeating-linear-gradient(45deg, var(--bad-soft) 0 6px, var(--bad-line) 6px 12px); color: var(--bad); }
+.swatch { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--line); vertical-align: middle; margin-right: 4px; }
+.not-specified { color: var(--muted); } a.flag { color: inherit; text-decoration: none; } .counts { font-size: 13px; } .note { font-size: 13px; }
+.doc h3 { font-size: 15px; font-weight: 600; margin: 16px 0 4px; } .raw-box code { font-size: 12px; }
+</style>
+</head>
+<body class="page">
+<header class="top">
+<h1>Request access</h1>
+<p class="stamp">r1 · 07f3629ba377 · pending sign-off</p>
+<label>Mode <select id="mode"><option value="light" data-class="mode-light" selected>Light</option><option value="dark" data-class="dark">Dark</option></select></label>
+<p class="unverified" id="unverified" hidden>Unverified: the Prototype maps only light → Light.</p>
+</header>
+<nav class="groups"><a href="#overview">Overview</a><a href="#look">Needs a look (14)</a><a href="#states">States</a><a href="#usages">Components</a><a href="#tokens">Tokens &amp; values</a><a href="#copy">Copy &amp; questions</a></nav>
+<main class="doc">
+<section class="group" id="overview"><h2>Overview</h2>
+<p>Ask for access to a workspace, so an admin can approve it.</p>
+
+
+
+<div class="table-wrap"><table><tr><td>Contract <code>alert</code></td><td><code>93ffcea76866</code></td></tr><tr><td>Contract <code>button</code></td><td><code>63cf726a7d86</code></td></tr><tr><td>Contract <code>label</code></td><td><code>f7ec0e8ffe6f</code></td></tr><tr><td>Contract <code>textarea</code></td><td><code>ef21d3cb622e</code></td></tr><tr><td>Prototype <code>app/globals.css</code>, <code>app/layout.tsx</code>, <code>app/page.tsx</code>, <code>app/request-access-form.tsx</code>, <code>components/submit-button.tsx</code>, <code>components/ui/alert.tsx</code>, <code>components/ui/button.tsx</code>, <code>components/ui/card.tsx</code>, <code>components/ui/input.tsx</code>, <code>components/ui/label.tsx</code>, <code>components/ui/select.tsx</code>, <code>components/ui/sonner.tsx</code>, <code>components/ui/textarea.tsx</code></td><td><code>4b294d0b16ab</code></td></tr><tr><td>Foundations (used)</td><td><code>ac8b6acde88f</code></td></tr></table></div>
+<p class="note">info: Single-mode Prototype: its page surface (#ffffff) map best to Light (Light ΔE 0, Dark ΔE 0.8552). The other Theme modes render unverified.</p><p class="note">info: `label` is a Contract the Adapter wrote mid-run at status draft (2 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not.</p><p class="note">info: `textarea` is a Contract the Adapter wrote mid-run at status draft (3 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not.</p><p class="note">info: Region `flex`: `Card` (@/components/ui/card, app/page.tsx:18:7) holds other Code Library usages, so it is read as a wrapper: its parts' styles and text stay in the region, and the usages inside it are their own.</p>
+<section class="optional"><h3>flow</h3><table><tr><th>from</th><th>trigger</th><th>to</th><th>source</th></tr></table></section>
+<section class="optional"><h3>interactions</h3><p class="not-specified">Not specified · this Handoff has no <code>interactions</code></p></section>
+<section class="optional"><h3>data</h3><ul></ul></section>
+<section class="optional"><h3>a11y</h3><p class="not-specified">Not specified · this Handoff has no <code>a11y</code></p></section>
+<section class="optional"><h3>tokensToAdd</h3><p class="not-specified">Not specified · this Handoff has no <code>tokensToAdd</code></p></section>
+</section>
+<section class="group" id="look"><h2>Needs a look</h2>
+<p class="counts"><span class="flag" data-g="◇">◇ agent pick</span> 5 · <span class="flag" data-g="∅">∅ no Contract</span> 4 · <span class="flag" data-g="!">! missing state</span> 1 · <span class="flag" data-g="◐">◐ Contract draft, not approved</span> 4</p>
+<div class="table-wrap"><table><tr><th>flag</th><th>what</th><th>why</th><th>where</th></tr>
+<tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>label</code> → <code>label</code> </td><td>recognised by the agent (library)</td><td>app/request-access-form.tsx:65:9</td></tr>
+<tr><td><span class="flag" data-g="∅">∅ no Contract</span></td><td><code>name</code> (<code>Input[required]</code>)</td><td>shadcn ships Input, but this Design System has no input Contract, and the Generic Adapter could not write one mid-run <a class="flag" data-g="?" href="#q-no-contract-name">? q-no-contract-name</a></td><td>app/request-access-form.tsx:66:9</td></tr>
+<tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>label-2</code> → <code>label</code> </td><td>recognised by the agent (library)</td><td>app/request-access-form.tsx:69:9</td></tr>
+<tr><td><span class="flag" data-g="∅">∅ no Contract</span></td><td><code>email</code> (<code>Input[required]</code>)</td><td>shadcn ships Input, but this Design System has no input Contract, and the Generic Adapter could not write one mid-run <a class="flag" data-g="?" href="#q-no-contract-email">? q-no-contract-email</a></td><td>app/request-access-form.tsx:70:9</td></tr>
+<tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>label-3</code> → <code>label</code> </td><td>recognised by the agent (library)</td><td>app/request-access-form.tsx:73:9</td></tr>
+<tr><td><span class="flag" data-g="∅">∅ no Contract</span></td><td><code>select</code> (<code>Select</code>)</td><td>shadcn ships Select, but this Design System has no select Contract, and the Generic Adapter could not write one mid-run <a class="flag" data-g="?" href="#q-no-contract-select">? q-no-contract-select</a></td><td>app/request-access-form.tsx:74:9</td></tr>
+<tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>label-4</code> → <code>label</code> </td><td>recognised by the agent (library)</td><td>app/request-access-form.tsx:86:9</td></tr>
+<tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>reason</code> → <code>textarea</code> </td><td>recognised by the agent (library)</td><td>app/request-access-form.tsx:87:9</td></tr>
+<tr><td><span class="flag" data-g="∅">∅ no Contract</span></td><td><code>toaster</code> (<code>Toaster</code>)</td><td>shadcn ships Toaster, but this Design System has no sonner Contract, and the Generic Adapter could not write one mid-run <a class="flag" data-g="?" href="#q-no-contract-toaster">? q-no-contract-toaster</a></td><td>app/layout.tsx:32:9</td></tr>
+<tr><td><span class="flag" data-g="◐">◐ Contract draft, not approved</span></td><td><code>alert</code> Contract draft, not approved</td><td>5 Drafted values; the owner approves it through To-design's base loop, not this sign-off</td><td>app/request-access-form.tsx:58:9</td></tr>
+<tr><td><span class="flag" data-g="◐">◐ Contract draft, not approved</span></td><td><code>button</code> Contract draft, not approved</td><td>20 Drafted values; the owner approves it through To-design's base loop, not this sign-off</td><td>app/request-access-form.tsx:48:9, components/submit-button.tsx:11:5, app/page.tsx:33:11</td></tr>
+<tr><td><span class="flag" data-g="◐">◐ Contract draft, not approved</span></td><td><code>label</code> Contract draft, not approved</td><td>2 Drafted values; the owner approves it through To-design's base loop, not this sign-off</td><td>app/request-access-form.tsx:65:9, app/request-access-form.tsx:69:9, app/request-access-form.tsx:73:9, app/request-access-form.tsx:86:9</td></tr>
+<tr><td><span class="flag" data-g="◐">◐ Contract draft, not approved</span></td><td><code>textarea</code> Contract draft, not approved</td><td>3 Drafted values; the owner approves it through To-design's base loop, not this sign-off</td><td>app/request-access-form.tsx:87:9</td></tr>
+<tr><td><span class="flag" data-g="!">! missing state</span></td><td>empty state</td><td>The Prototype has no empty state: no condition reads like empty. What should the screen show? <a class="flag" data-g="?" href="#q-state-empty">? q-state-empty</a></td><td>app/page.tsx:17:5</td></tr>
+</table></div>
+</section>
+<section class="group" id="states"><h2>States · /</h2>
+<div class="table-wrap"><table class="matrix"><tr><th>state</th><th>sm</th><th>md</th><th>lg</th><th>xl</th><th>2xl</th></tr>
+<tr><th>default</th><td><a href="../screens/index.default.sm.png"><img src="../screens/index.default.sm.png" alt="default at sm" loading="lazy"></a></td><td><a href="../screens/index.default.md.png"><img src="../screens/index.default.md.png" alt="default at md" loading="lazy"></a></td><td><a href="../screens/index.default.lg.png"><img src="../screens/index.default.lg.png" alt="default at lg" loading="lazy"></a></td><td><a href="../screens/index.default.xl.png"><img src="../screens/index.default.xl.png" alt="default at xl" loading="lazy"></a></td><td><a href="../screens/index.default.2xl.png"><img src="../screens/index.default.2xl.png" alt="default at 2xl" loading="lazy"></a></td></tr>
+<tr><th>loading</th><td><a href="../screens/index.loading.sm.png"><img src="../screens/index.loading.sm.png" alt="loading at sm" loading="lazy"></a></td><td><a href="../screens/index.loading.md.png"><img src="../screens/index.loading.md.png" alt="loading at md" loading="lazy"></a></td><td><a href="../screens/index.loading.lg.png"><img src="../screens/index.loading.lg.png" alt="loading at lg" loading="lazy"></a></td><td><a href="../screens/index.loading.xl.png"><img src="../screens/index.loading.xl.png" alt="loading at xl" loading="lazy"></a></td><td><a href="../screens/index.loading.2xl.png"><img src="../screens/index.loading.2xl.png" alt="loading at 2xl" loading="lazy"></a></td></tr>
+<tr><th>empty</th><td class="hatch" colspan="5"><span class="flag" data-g="!">! missing state</span> The Prototype has no empty state: no condition reads like empty. What should the screen show? <a class="flag" data-g="?" href="#q-state-empty">? q-state-empty</a></td></tr>
+<tr><th>error</th><td><a href="../screens/index.error.sm.png"><img src="../screens/index.error.sm.png" alt="error at sm" loading="lazy"></a></td><td><a href="../screens/index.error.md.png"><img src="../screens/index.error.md.png" alt="error at md" loading="lazy"></a></td><td><a href="../screens/index.error.lg.png"><img src="../screens/index.error.lg.png" alt="error at lg" loading="lazy"></a></td><td><a href="../screens/index.error.xl.png"><img src="../screens/index.error.xl.png" alt="error at xl" loading="lazy"></a></td><td><a href="../screens/index.error.2xl.png"><img src="../screens/index.error.2xl.png" alt="error at 2xl" loading="lazy"></a></td></tr>
+<tr><th>success</th><td><a href="../screens/index.success.sm.png"><img src="../screens/index.success.sm.png" alt="success at sm" loading="lazy"></a></td><td><a href="../screens/index.success.md.png"><img src="../screens/index.success.md.png" alt="success at md" loading="lazy"></a></td><td><a href="../screens/index.success.lg.png"><img src="../screens/index.success.lg.png" alt="success at lg" loading="lazy"></a></td><td><a href="../screens/index.success.xl.png"><img src="../screens/index.success.xl.png" alt="success at xl" loading="lazy"></a></td><td><a href="../screens/index.success.2xl.png"><img src="../screens/index.success.2xl.png" alt="success at 2xl" loading="lazy"></a></td></tr>
+</table></div>
+<div class="tabs" role="tablist"><button type="button" class="tab" data-state="default" aria-selected="true">default</button><button type="button" class="tab" data-state="loading" aria-selected="false">loading</button><button type="button" class="tab" data-state="empty" aria-selected="false">empty !</button><button type="button" class="tab" data-state="error" aria-selected="false">error</button><button type="button" class="tab" data-state="success" aria-selected="false">success</button></div>
+<div class="panel" data-panel="default"><h3>default</h3><p>every state condition is false; conditional content shown: .grid</p>
+
+<div class="shots"><figure class="shot"><figcaption>sm</figcaption><a href="../screens/index.default.sm.png"><img src="../screens/index.default.sm.png" alt="default at sm" loading="lazy"></a></figure><figure class="shot"><figcaption>md</figcaption><a href="../screens/index.default.md.png"><img src="../screens/index.default.md.png" alt="default at md" loading="lazy"></a></figure><figure class="shot"><figcaption>lg</figcaption><a href="../screens/index.default.lg.png"><img src="../screens/index.default.lg.png" alt="default at lg" loading="lazy"></a></figure><figure class="shot"><figcaption>xl</figcaption><a href="../screens/index.default.xl.png"><img src="../screens/index.default.xl.png" alt="default at xl" loading="lazy"></a></figure><figure class="shot"><figcaption>2xl</figcaption><a href="../screens/index.default.2xl.png"><img src="../screens/index.default.2xl.png" alt="default at 2xl" loading="lazy"></a></figure></div></div>
+<div class="panel" data-panel="loading" hidden><h3>loading</h3><p>`pending` or `status === &quot;loading&quot;` is true; conditional content shown: .grid</p><p>Trigger: <code>pending or status === &quot;loading&quot;</code></p>
+<ul><li><code>button-2</code> is <code>disabled</code></li></ul>
+<div class="shots"><figure class="shot"><figcaption>sm</figcaption><a href="../screens/index.loading.sm.png"><img src="../screens/index.loading.sm.png" alt="loading at sm" loading="lazy"></a></figure><figure class="shot"><figcaption>md</figcaption><a href="../screens/index.loading.md.png"><img src="../screens/index.loading.md.png" alt="loading at md" loading="lazy"></a></figure><figure class="shot"><figcaption>lg</figcaption><a href="../screens/index.loading.lg.png"><img src="../screens/index.loading.lg.png" alt="loading at lg" loading="lazy"></a></figure><figure class="shot"><figcaption>xl</figcaption><a href="../screens/index.loading.xl.png"><img src="../screens/index.loading.xl.png" alt="loading at xl" loading="lazy"></a></figure><figure class="shot"><figcaption>2xl</figcaption><a href="../screens/index.loading.2xl.png"><img src="../screens/index.loading.2xl.png" alt="loading at 2xl" loading="lazy"></a></figure></div></div>
+<div class="panel" data-panel="empty" hidden><h3>empty</h3><p><span class="flag" data-g="!">! missing state</span> The Prototype has no empty state: no condition reads like empty. What should the screen show? <a class="flag" data-g="?" href="#q-state-empty">? q-state-empty</a></p></div>
+<div class="panel" data-panel="error" hidden><h3>error</h3><p>`status === &quot;error&quot;` is true; conditional content shown: .grid, alert</p><p>Trigger: <code>status === &quot;error&quot;</code></p>
+
+<div class="shots"><figure class="shot"><figcaption>sm</figcaption><a href="../screens/index.error.sm.png"><img src="../screens/index.error.sm.png" alt="error at sm" loading="lazy"></a></figure><figure class="shot"><figcaption>md</figcaption><a href="../screens/index.error.md.png"><img src="../screens/index.error.md.png" alt="error at md" loading="lazy"></a></figure><figure class="shot"><figcaption>lg</figcaption><a href="../screens/index.error.lg.png"><img src="../screens/index.error.lg.png" alt="error at lg" loading="lazy"></a></figure><figure class="shot"><figcaption>xl</figcaption><a href="../screens/index.error.xl.png"><img src="../screens/index.error.xl.png" alt="error at xl" loading="lazy"></a></figure><figure class="shot"><figcaption>2xl</figcaption><a href="../screens/index.error.2xl.png"><img src="../screens/index.error.2xl.png" alt="error at 2xl" loading="lazy"></a></figure></div></div>
+<div class="panel" data-panel="success" hidden><h3>success</h3><p>`status === &quot;success&quot;` is true; conditional content shown: .flex</p><p>Trigger: <code>status === &quot;success&quot;</code></p>
+
+<div class="shots"><figure class="shot"><figcaption>sm</figcaption><a href="../screens/index.success.sm.png"><img src="../screens/index.success.sm.png" alt="success at sm" loading="lazy"></a></figure><figure class="shot"><figcaption>md</figcaption><a href="../screens/index.success.md.png"><img src="../screens/index.success.md.png" alt="success at md" loading="lazy"></a></figure><figure class="shot"><figcaption>lg</figcaption><a href="../screens/index.success.lg.png"><img src="../screens/index.success.lg.png" alt="success at lg" loading="lazy"></a></figure><figure class="shot"><figcaption>xl</figcaption><a href="../screens/index.success.xl.png"><img src="../screens/index.success.xl.png" alt="success at xl" loading="lazy"></a></figure><figure class="shot"><figcaption>2xl</figcaption><a href="../screens/index.success.2xl.png"><img src="../screens/index.success.2xl.png" alt="success at 2xl" loading="lazy"></a></figure></div></div>
+<h3>Acceptance</h3>
+<ul><li><code>form-shown</code> (default): given a visitor without access, when the page opens, then the form asks for name, work email, team and a reason · agent</li><li><code>sending</code> (loading): given a filled form, when Request access is pressed, then the button shows Sending… and is disabled · agent</li><li><code>send-fails</code> (error): given the request fails, when Request access is pressed, then an alert asks to try again · agent</li><li><code>sent</code> (success): given the request succeeds, when Request access is pressed, then a thank-you shows with a button to send another request · agent</li></ul>
+</section>
+<section class="group" id="usages"><h2>Components</h2>
+<div class="cards">
+<article class="card" id="usage-button">
+<header><h3>button</h3><p><code>button</code> variant=outline · flex · app/request-access-form.tsx:48:9 · shows in success</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="◐">◐ Contract draft, not approved</span></p></header>
+<div class="specimen mode-root mode-light" data-mode-root><button data-slot="button" data-variant="outline" data-size="default" class="group/button inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*=&#x27;size-&#x27;])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"></button></div>
+
+<textarea class="snippet" readonly wrap="off" rows="2">import { Button } from "@/components/ui/button"
+<Button variant="outline" /></textarea>
+
+
+</article>
+<article class="card" id="usage-alert">
+<header><h3>alert</h3><p><code>alert</code> variant=destructive · flex · app/request-access-form.tsx:58:9 · shows in error</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="◐">◐ Contract draft, not approved</span></p></header>
+<div class="specimen mode-root mode-light" data-mode-root><div data-slot="alert" role="alert" class="group/alert relative grid w-full gap-0.5 rounded-lg border px-2.5 py-2 text-left text-sm has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[&gt;svg]:grid-cols-[auto_1fr] has-[&gt;svg]:gap-x-2 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg:not([class*=&#x27;size-&#x27;])]:size-4 bg-card text-destructive *:data-[slot=alert-description]:text-destructive/90 *:[svg]:text-current"><div data-slot="alert-title" class="font-medium group-has-[&gt;svg]/alert:col-start-2 [&amp;_a]:underline [&amp;_a]:underline-offset-3 [&amp;_a]:hover:text-foreground">Title</div><div data-slot="alert-description" class="text-sm text-balance text-muted-foreground md:text-pretty [&amp;_a]:underline [&amp;_a]:underline-offset-3 [&amp;_a]:hover:text-foreground [&amp;_p:not(:last-child)]:mb-4">Description</div></div></div>
+
+<textarea class="snippet" readonly wrap="off" rows="2">import { Alert } from "@/components/ui/alert"
+<Alert variant="destructive" /></textarea>
+
+
+</article>
+<article class="card" id="usage-label">
+<header><h3>label</h3><p><code>label</code>  · flex · app/request-access-form.tsx:65:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="◐">◐ Contract draft, not approved</span> <span class="flag" data-g="◇">◇ agent pick</span></p></header>
+<div class="specimen mode-root mode-light" data-mode-root><label data-slot="label" class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"></label></div>
+
+<textarea class="snippet" readonly wrap="off" rows="2">import { Label } from "@/components/ui/label"
+<Label /></textarea>
+
+
+</article>
+<article class="card" id="usage-name">
+<header><h3>name</h3><p>raw element · flex · app/request-access-form.tsx:66:9 · shows in default, loading, error</p><p><span class="flag" data-g="∅">∅ no Contract</span></p></header>
+<div class="specimen mode-root mode-light" data-mode-root><div class="raw-box"><code>Input[required]</code> </div></div>
+
+
+
+<p class="note">`Input[required]` is an input with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family input: Input (Invalid=Valid, State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for input; run node skills/adapter-generic/scripts/components.mjs --family input and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff. <a class="flag" data-g="?" href="#q-no-contract-name">? q-no-contract-name</a></p>
+</article>
+<article class="card" id="usage-label-2">
+<header><h3>label-2</h3><p><code>label</code>  · flex · app/request-access-form.tsx:69:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="◐">◐ Contract draft, not approved</span> <span class="flag" data-g="◇">◇ agent pick</span></p></header>
+<div class="specimen mode-root mode-light" data-mode-root><label data-slot="label" class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"></label></div>
+
+<textarea class="snippet" readonly wrap="off" rows="2">import { Label } from "@/components/ui/label"
+<Label /></textarea>
+
+
+</article>
+<article class="card" id="usage-email">
+<header><h3>email</h3><p>raw element · flex · app/request-access-form.tsx:70:9 · shows in default, loading, error</p><p><span class="flag" data-g="∅">∅ no Contract</span></p></header>
+<div class="specimen mode-root mode-light" data-mode-root><div class="raw-box"><code>Input[required]</code> </div></div>
+
+
+
+<p class="note">`Input[required]` is an input with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family input: Input (Invalid=Valid, State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for input; run node skills/adapter-generic/scripts/components.mjs --family input and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff. <a class="flag" data-g="?" href="#q-no-contract-email">? q-no-contract-email</a></p>
+</article>
+<article class="card" id="usage-label-3">
+<header><h3>label-3</h3><p><code>label</code>  · flex · app/request-access-form.tsx:73:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="◐">◐ Contract draft, not approved</span> <span class="flag" data-g="◇">◇ agent pick</span></p></header>
+<div class="specimen mode-root mode-light" data-mode-root><label data-slot="label" class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"></label></div>
+
+<textarea class="snippet" readonly wrap="off" rows="2">import { Label } from "@/components/ui/label"
+<Label /></textarea>
+
+
+</article>
+<article class="card" id="usage-select">
+<header><h3>select</h3><p>raw element · flex · app/request-access-form.tsx:74:9 · shows in default, loading, error</p><p><span class="flag" data-g="∅">∅ no Contract</span></p></header>
+<div class="specimen mode-root mode-light" data-mode-root><div class="raw-box"><code>Select</code> Design Engineering Research</div></div>
+
+
+
+<p class="note">`Select` is a select with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family select: Select (State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for select; run node skills/adapter-generic/scripts/components.mjs --family select and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff. <a class="flag" data-g="?" href="#q-no-contract-select">? q-no-contract-select</a></p>
+</article>
+<article class="card" id="usage-label-4">
+<header><h3>label-4</h3><p><code>label</code>  · flex · app/request-access-form.tsx:86:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="◐">◐ Contract draft, not approved</span> <span class="flag" data-g="◇">◇ agent pick</span></p></header>
+<div class="specimen mode-root mode-light" data-mode-root><label data-slot="label" class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"></label></div>
+
+<textarea class="snippet" readonly wrap="off" rows="2">import { Label } from "@/components/ui/label"
+<Label /></textarea>
+
+
+</article>
+<article class="card" id="usage-reason">
+<header><h3>reason</h3><p><code>textarea</code>  · flex · app/request-access-form.tsx:87:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="◐">◐ Contract draft, not approved</span> <span class="flag" data-g="◇">◇ agent pick</span></p></header>
+<div class="specimen mode-root mode-light" data-mode-root><textarea data-slot="textarea" class="flex field-sizing-content min-h-16 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"></textarea></div>
+
+<textarea class="snippet" readonly wrap="off" rows="2">import { Textarea } from "@/components/ui/textarea"
+<Textarea /></textarea>
+
+
+</article>
+<article class="card" id="usage-button-2">
+<header><h3>button-2</h3><p><code>button</code>  · flex · components/submit-button.tsx:11:5 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="◐">◐ Contract draft, not approved</span></p></header>
+<div class="specimen mode-root mode-light" data-mode-root><button data-slot="button" data-variant="default" data-size="default" class="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*=&#x27;size-&#x27;])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"></button></div>
+<div class="states-row mode-root mode-light" data-mode-root><figure><figcaption>loading · disabled</figcaption><button data-slot="button" data-variant="default" data-size="default" class="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*=&#x27;size-&#x27;])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2" disabled=""></button></figure></div>
+<textarea class="snippet" readonly wrap="off" rows="2">import { Button } from "@/components/ui/button"
+<Button /></textarea>
+
+
+</article>
+<article class="card" id="usage-button-3">
+<header><h3>button-3</h3><p><code>button</code> variant=link size=sm · flex · app/page.tsx:33:11</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="◐">◐ Contract draft, not approved</span></p></header>
+<div class="specimen mode-root mode-light" data-mode-root><button data-slot="button" data-variant="link" data-size="sm" class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 text-primary underline-offset-4 hover:underline h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&amp;_svg:not([class*=&#x27;size-&#x27;])]:size-3.5"></button></div>
+
+<textarea class="snippet" readonly wrap="off" rows="2">import { Button } from "@/components/ui/button"
+<Button variant="link" size="sm" /></textarea>
+
+
+</article>
+<article class="card" id="usage-toaster">
+<header><h3>toaster</h3><p>raw element · toaster · app/layout.tsx:32:9</p><p><span class="flag" data-g="∅">∅ no Contract</span></p></header>
+<div class="specimen mode-root mode-light" data-mode-root><div class="raw-box"><code>Toaster</code> </div></div>
+
+
+
+<p class="note">`Toaster` is a sonner with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family sonner: components/ui/sonner.tsx exports no Sonner. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for sonner; run node skills/adapter-generic/scripts/components.mjs --family sonner and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff. <a class="flag" data-g="?" href="#q-no-contract-toaster">? q-no-contract-toaster</a></p>
+</article>
+</div>
+</section>
+<section class="group" id="tokens"><h2>Tokens &amp; values</h2>
+<h3>Styles</h3>
+<div class="table-wrap"><table><tr><th>region</th><th>property</th><th>raw</th><th>token or value</th><th></th><th>where</th></tr>
+
+</table></div>
+<h3>Text</h3>
+<div class="table-wrap"><table><tr><th>region</th><th>text</th><th>Text Style</th><th></th><th>where</th></tr>
+<tr><td>flex</td><td>“Request workspace access”</td><td>Off-system</td><td><span class="flag" data-g="≠">≠ Off-system</span></td><td>app/page.tsx:22:24</td></tr>
+<tr><td>flex</td><td>“Tell us who you are and an admin will approve you within a day.”</td><td>Off-system</td><td><span class="flag" data-g="≠">≠ Off-system</span></td><td>app/page.tsx:25:13</td></tr>
+<tr><td>flex</td><td>“Thanks! Your request is in.”</td><td>Off-system</td><td><span class="flag" data-g="≠">≠ Off-system</span></td><td>app/request-access-form.tsx:47:36 · success</td></tr>
+<tr><td>flex</td><td>“Already a member?”</td><td>Off-system</td><td><span class="flag" data-g="≠">≠ Off-system</span></td><td>app/page.tsx:32:17</td></tr>
+</table></div>
+<h3>Off-system values</h3>
+<div class="table-wrap"><table><tr><th>id</th><th>raw</th><th>role</th><th>reason</th><th>nearest</th></tr>
+
+</table></div>
+</section>
+<section class="group" id="copy"><h2>Copy &amp; questions</h2>
+<div class="table-wrap"><table><tr><th>id</th><th>text</th><th>where</th></tr>
+<tr><td><code>select-text</code></td><td>Design Engineering Research</td><td>app/request-access-form.tsx:74:9</td></tr>
+<tr><td><code>card-title</code></td><td>Request workspace access</td><td>app/page.tsx:22:24</td></tr>
+<tr><td><code>card-description</code></td><td>Tell us who you are and an admin will approve you within a day.</td><td>app/page.tsx:25:13</td></tr>
+<tr><td><code>font-medium</code></td><td>Thanks! Your request is in.</td><td>app/request-access-form.tsx:47:36</td></tr>
+<tr><td><code>span</code></td><td>Already a member?</td><td>app/page.tsx:32:17</td></tr>
+</table></div>
+<h3>Open questions</h3>
+<ul><li id="q-no-contract-name"><code>q-no-contract-name</code> · no-contract · to owner: `Input[required]` is an input with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family input: Input (Invalid=Valid, State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for input; run node skills/adapter-generic/scripts/components.mjs --family input and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.</li>
+<li id="q-no-contract-email"><code>q-no-contract-email</code> · no-contract · to owner: `Input[required]` is an input with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family input: Input (Invalid=Valid, State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for input; run node skills/adapter-generic/scripts/components.mjs --family input and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.</li>
+<li id="q-no-contract-select"><code>q-no-contract-select</code> · no-contract · to owner: `Select` is a select with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family select: Select (State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for select; run node skills/adapter-generic/scripts/components.mjs --family select and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.</li>
+<li id="q-no-contract-toaster"><code>q-no-contract-toaster</code> · no-contract · to owner: `Toaster` is a sonner with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family sonner: components/ui/sonner.tsx exports no Sonner. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for sonner; run node skills/adapter-generic/scripts/components.mjs --family sonner and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.</li>
+<li id="q-state-empty"><code>q-state-empty</code> · missing-state · to owner: The Prototype has no empty state: no condition reads like empty. What should the screen show?</li>
+<li id="q-font"><code>q-font</code> · font · to owner: The Prototype loads Geist from next/font/google (app/layout.tsx:2:10), Geist_Mono from next/font/google (app/layout.tsx:2:17); shadcn has no Text Styles to name a font. Which font should the Text Styles use?</li></ul>
+</section>
+</main>
+<script>
+(function () {
+  var mode = document.getElementById('mode');
+  var note = document.getElementById('unverified');
+  if (mode) mode.addEventListener('change', function () {
+    var opt = mode.options[mode.selectedIndex];
+    var classes = Array.prototype.map.call(mode.options, function (o) { return o.getAttribute('data-class'); });
+    document.querySelectorAll('[data-mode-root]').forEach(function (el) {
+      classes.forEach(function (c) { el.classList.remove(c); });
+      el.classList.add(opt.getAttribute('data-class'));
+    });
+    note.hidden = mode.value === "light";
+  });
+  document.querySelectorAll('.tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.tab').forEach(function (t) { t.setAttribute('aria-selected', String(t === tab)); });
+      document.querySelectorAll('.panel').forEach(function (p) { p.hidden = p.getAttribute('data-panel') !== tab.getAttribute('data-state'); });
+    });
+  });
+})();
+</script>
+</body>
+</html>

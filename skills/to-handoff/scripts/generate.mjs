@@ -235,11 +235,13 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   // that passes the Adapter's check is used in this run and written into contracts/ once nothing is open; one
   // that fails, can't be read or can't be written falls back to a raw usage plus an open question.
   const drafts = new Map();
+  // An Adapter's procedure may name the family as `<family>`.
+  const procedureFor = family => adapter.contractProcedure.replaceAll('<family>', family);
   const draftOf = family => {
     if (drafts.has(family)) return drafts.get(family);
     const answer = d.ask(`contract:${family}`, {
       kind: 'contract-draft', candidates: [],
-      question: `\`${family}\` has no Contract in ${system.key}. ${adapter.contractProcedure}. Write the whole family at status draft with its Drafted values, then answer {path} with the file, or {unwritable: reason}.`,
+      question: `\`${family}\` has no Contract in ${system.key}. ${procedureFor(family)}. Write the whole family at status draft with its Drafted values, then answer {path} with the file, or {unwritable: reason}.`,
     }, a => (a && (typeof a.path === 'string' && a.path || typeof a.unwritable === 'string' && a.unwritable) ? null : 'a draft answer is {path} or {unwritable: reason}'));
     let result = null;
     if (answer && answer.unwritable) result = { failed: answer.unwritable };
@@ -352,8 +354,17 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const usageStates = Object.fromEntries(present.map(s => [s, {}]));
 
     const recognised = [];
-    const visit = el => {
+    // A Code Library component holding another module's components (a Card around a form) is walked like a wrapper,
+    // with its own parts, so the usages inside it are their own (#125). Its look stays in the region; a note names it.
+    const containers = new Map();
+    const holdsOtherModule = el => { let found = false; walk(el, x => { if (x !== el && x.component && x.component.module !== el.component.module) found = true; }); return found; };
+    const visit = (el, through = new Set()) => {
       if (el.type !== 'element' || consumed.has(el)) return;
+      if (el.component && (through.has(el.component.module) || holdsOtherModule(el))) {
+        if (!through.has(el.component.module)) containers.set(el, el.component);
+        for (const c of el.children) visit(c, new Set([...through, el.component.module]));
+        return;
+      }
       const contract = el.component && el.component.kind === 'ds' && contractOfImport(el.component);
       // A Design System import is its Contract by import (#62): the tuple is its props through each axis value's code.
       if (contract) {
@@ -362,7 +373,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       } else {
         // Another library component is decided by its signature, once per signature; a plain element by its own.
         const cand = el.component ? { kind: 'element', sig: librarySignature(el), library: true } : candidateOf(el, rules);
-        if (!cand) { for (const c of el.children) visit(c); return; }
+        if (!cand) { for (const c of el.children) visit(c, through); return; }
         const key = `recognise:${cand.sig}`;
         const answer = resolveDraftAnswer(d.ask(key, {
           kind: 'recognise', question: `What is \`${cand.sig}\` ("${elementText(el, atomsIn('default')).slice(0, 40)}")?`, candidates: families,
@@ -420,7 +431,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
         if (answer.noContract) {
           u.question = question({
             id: `q-no-contract-${id}`, kind: 'no-contract', to: 'owner',
-            text: `\`${cand.sig}\` is a ${answer.noContract} with no Contract in ${system.key} yet${answer.failed ? `, and the Adapter could not write one mid-run: ${answer.failed}` : ''}. ${adapter.contractProcedure}, then re-run To-handoff.`,
+            text: `\`${cand.sig}\` is ${/^[aeiou]/i.test(answer.noContract) ? 'an' : 'a'} ${answer.noContract} with no Contract in ${system.key} yet${answer.failed ? `, and the Adapter could not write one mid-run: ${answer.failed}` : ''}. ${procedureFor(answer.noContract)}, then re-run To-handoff.`,
           });
         }
       }
@@ -545,6 +556,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       if (shell) elements.push(...g.els);
       else for (const root of g.els) walk(root, el => { if (!consumed.has(el)) elements.push(el); });
       for (const el of elements) {
+        if (containers.has(el)) notes.push({ level: 'info', text: `Region \`${r.id}\`: \`${el.tag}\` (${containers.get(el).module}, ${at(el.offset)}) holds other Code Library usages, so it is read as a wrapper: its parts' styles and text stay in the region, and the usages inside it are their own.` });
         const u = usages.get(el);
         if (u) {
           r.usages.push(u);
@@ -721,7 +733,9 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     ];
     question({
       id: 'q-font', kind: 'font', to: 'owner',
-      text: `The Prototype ${sets.join(' and ')}; the Text Styles use ${common}${bind ? ` (${bind})` : ''}. Use ${common}?`,
+      text: common
+        ? `The Prototype ${sets.join(' and ')}; the Text Styles use ${common}${bind ? ` (${bind})` : ''}. Use ${common}?`
+        : `The Prototype ${sets.join(' and ')}; ${system.key} has no Text Styles to name a font. Which font should the Text Styles use?`,
     });
   }
   const medias = [...new Set(rules.filter(r => r.media).map(r => r.media))];

@@ -18,9 +18,11 @@
       "components/ui/alert.tsx": "sha256:f253568242c1c69b343f12474002fdbe229f603158171c59e21c491ab79f2e6e",
       "components/ui/button.tsx": "sha256:08e5f87833c5db8436e89337ebde0f776bcdbf649d3de69fb89be6441ca2e366",
       "components/ui/card.tsx": "sha256:8ad3a18d36bda0598dc0e9aa96ea22854944d5443ee4946f1d173815e115375f",
+      "components/ui/label.tsx": "sha256:344bde38b8531615dbf8e14af3895517c24d8ef6ce56ddeda7e2e6fe4b5d0c00",
+      "components/ui/textarea.tsx": "sha256:82601c91ffc6c727d924162c78d7cb853114bcced4e2eb922a68ca12d4239c0f",
       "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
     },
-    "snapshotId": "sha256:c6acdf9913ad650ceac8b2b05291cdd62541a95a00528ac6bcf4cbe5d43374c3"
+    "snapshotId": "sha256:59efc28f873d8c646b344b4a9af133533ffa5a77b027ab8b2be25787924ab838"
   },
   "closure": {
     "contracts": [
@@ -38,6 +40,16 @@
         "family": "card",
         "path": "design-systems/shadcn/contracts/card.component.json",
         "snapshotId": "sha256:cdadc6b87cc40b244dfebf8d8c0ede671b1f1759c65db52c8c8eae0bd476a031"
+      },
+      {
+        "family": "label",
+        "path": "design-systems/shadcn/contracts/label.component.json",
+        "snapshotId": "sha256:160c2f58b3f8e1e4e8b236c549344a7c10eb73d1dd3253d92e3481309a972fdc"
+      },
+      {
+        "family": "textarea",
+        "path": "design-systems/shadcn/contracts/textarea.component.json",
+        "snapshotId": "sha256:f867108029e85e1d5e6f2f62e1f1279c393470acc7169848842f6712f91a1be1"
       }
     ],
     "tokens": [
@@ -61,6 +73,7 @@
       "button-secondary-hover-fill",
       "card",
       "card-effect",
+      "input",
       "muted",
       "primary",
       "radius-lg",
@@ -71,13 +84,21 @@
       "spacing-0_5",
       "spacing-1",
       "spacing-1_5",
+      "spacing-2",
       "spacing-3",
       "spacing-3_5",
       "spacing-4",
       "spacing-6",
       "spacing-7",
       "spacing-8",
-      "spacing-9"
+      "spacing-9",
+      "textarea-disabled-fill",
+      "textarea-fill",
+      "textarea-focus-effect",
+      "textarea-invalid-effect",
+      "textarea-invalid-focus-effect",
+      "textarea-invalid-focus-stroke",
+      "textarea-invalid-stroke"
     ]
   },
   "collections": [
@@ -556,7 +577,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "textarea"
+      ]
     },
     "muted": {
       "collection": "theme",
@@ -778,7 +801,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "textarea"
       ]
     },
     "secondary": {
@@ -1748,6 +1772,269 @@
       ],
       "family": "card"
     },
+    "textarea-disabled-fill": {
+      "collection": "theme",
+      "name": "Textarea/textarea-disabled-fill",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/textarea.tsx:9 disabled:bg-input/50 dark:disabled:bg-input/80",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "disabled:bg-input/50 dark:disabled:bg-input/80"
+      },
+      "values": {
+        "light": {
+          "raw": "#e5e5e5",
+          "alpha": 0.5,
+          "resolved": "rgba(229, 229, 229, 0.5)",
+          "from": {
+            "alias": "input",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "disabled:bg-input/50: input at 50%, flattened to RGBA since a Figma alias cannot carry alpha"
+        },
+        "dark": {
+          "raw": "#ffffff",
+          "alpha": 0.12,
+          "resolved": "rgba(255, 255, 255, 0.12)",
+          "from": {
+            "alias": "input",
+            "alpha": 0.8
+          },
+          "level": "info",
+          "reason": "dark:disabled:bg-input/80: input at 80%, flattened to RGBA since a Figma alias cannot carry alpha"
+        }
+      },
+      "usedBy": [
+        "textarea"
+      ],
+      "family": "textarea"
+    },
+    "textarea-fill": {
+      "collection": "theme",
+      "name": "Textarea/textarea-fill",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/textarea.tsx:9 bg-transparent dark:bg-input/30",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "bg-transparent dark:bg-input/30"
+      },
+      "values": {
+        "light": {
+          "raw": "#000000",
+          "alpha": 0,
+          "resolved": "rgba(0, 0, 0, 0)",
+          "from": {
+            "css": "transparent"
+          }
+        },
+        "dark": {
+          "raw": "#ffffff",
+          "alpha": 0.045,
+          "resolved": "rgba(255, 255, 255, 0.045)",
+          "from": {
+            "alias": "input",
+            "alpha": 0.3
+          },
+          "level": "info",
+          "reason": "dark:bg-input/30: input at 30%, flattened to RGBA since a Figma alias cannot carry alpha"
+        }
+      },
+      "usedBy": [
+        "textarea"
+      ],
+      "family": "textarea"
+    },
+    "textarea-focus-effect": {
+      "collection": "theme",
+      "name": "Textarea/textarea-focus-effect",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/textarea.tsx:9 focus-visible:ring-ring/50",
+      "scopes": [
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "focus-visible:ring-ring/50"
+      },
+      "values": {
+        "light": {
+          "raw": "#a1a1a1",
+          "alpha": 0.5,
+          "resolved": "rgba(161, 161, 161, 0.5)",
+          "from": {
+            "alias": "ring",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "focus-visible:ring-ring/50: ring at 50%, flattened to RGBA since a Figma alias cannot carry alpha"
+        },
+        "dark": {
+          "raw": "#737373",
+          "alpha": 0.5,
+          "resolved": "rgba(115, 115, 115, 0.5)",
+          "from": {
+            "alias": "ring",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "focus-visible:ring-ring/50: ring at 50%, flattened to RGBA since a Figma alias cannot carry alpha"
+        }
+      },
+      "usedBy": [
+        "textarea"
+      ],
+      "family": "textarea"
+    },
+    "textarea-invalid-effect": {
+      "collection": "theme",
+      "name": "Textarea/textarea-invalid-effect",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/textarea.tsx:9 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
+      "scopes": [
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40"
+      },
+      "values": {
+        "light": {
+          "raw": "#e7000b",
+          "alpha": 0.2,
+          "resolved": "rgba(231, 0, 11, 0.2)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.2
+          },
+          "level": "info",
+          "reason": "aria-invalid:ring-destructive/20: destructive at 20%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.4,
+          "resolved": "rgba(255, 100, 103, 0.4)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.4
+          },
+          "level": "info",
+          "reason": "dark:aria-invalid:ring-destructive/40: destructive at 40%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "textarea"
+      ],
+      "family": "textarea"
+    },
+    "textarea-invalid-focus-effect": {
+      "collection": "theme",
+      "name": "Textarea/textarea-invalid-focus-effect",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/textarea.tsx:9 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
+      "scopes": [
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40"
+      },
+      "values": {
+        "light": {
+          "raw": "#e7000b",
+          "alpha": 0.2,
+          "resolved": "rgba(231, 0, 11, 0.2)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.2
+          },
+          "level": "info",
+          "reason": "aria-invalid:ring-destructive/20: destructive at 20%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.4,
+          "resolved": "rgba(255, 100, 103, 0.4)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.4
+          },
+          "level": "info",
+          "reason": "dark:aria-invalid:ring-destructive/40: destructive at 40%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "textarea"
+      ],
+      "family": "textarea"
+    },
+    "textarea-invalid-focus-stroke": {
+      "collection": "theme",
+      "name": "Textarea/textarea-invalid-focus-stroke",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/textarea.tsx:9 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "aria-invalid:border-destructive dark:aria-invalid:border-destructive/50"
+      },
+      "values": {
+        "light": {
+          "alias": "destructive",
+          "resolved": "#e7000b"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.5,
+          "resolved": "rgba(255, 100, 103, 0.5)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "dark:aria-invalid:border-destructive/50: destructive at 50%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "textarea"
+      ],
+      "family": "textarea"
+    },
+    "textarea-invalid-stroke": {
+      "collection": "theme",
+      "name": "Textarea/textarea-invalid-stroke",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/textarea.tsx:9 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "aria-invalid:border-destructive dark:aria-invalid:border-destructive/50"
+      },
+      "values": {
+        "light": {
+          "alias": "destructive",
+          "resolved": "#e7000b"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.5,
+          "resolved": "rgba(255, 100, 103, 0.5)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "dark:aria-invalid:border-destructive/50: destructive at 50%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "textarea"
+      ],
+      "family": "textarea"
+    },
     "radius-2xl": {
       "collection": "layout",
       "name": "Radius/radius-2xl",
@@ -1836,7 +2123,8 @@
       },
       "usedBy": [
         "alert",
-        "button"
+        "button",
+        "textarea"
       ]
     },
     "radius-md": {
@@ -1930,7 +2218,9 @@
       },
       "usedBy": [
         "button",
-        "card"
+        "card",
+        "label",
+        "textarea"
       ]
     },
     "spacing-0_5": {
@@ -2144,7 +2434,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "label"
+      ]
     },
     "spacing-20": {
       "collection": "layout",
@@ -2749,7 +3041,7 @@
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
-      "contracts": 3,
+      "contracts": 5,
       "errors": 0
     }
   },

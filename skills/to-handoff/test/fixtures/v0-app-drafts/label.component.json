@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "label",
+    "name": "Label",
+    "description": "A short medium-weight text label that names a form control, in one enabled state."
+  },
+  "source": {
+    "codeLibrary": "shadcn/ui",
+    "adapter": "generic",
+    "packages": {
+      "@/components/ui/label": "sha256:344bde38b8531615dbf8e14af3895517c24d8ef6ce56ddeda7e2e6fe4b5d0c00",
+      "class-variance-authority": "0.7.1",
+      "cn": "0.5.0",
+      "radix-ui": "1.8.1",
+      "react": "19.1.0",
+      "react-dom": "19.1.0",
+      "shadcn": "4.22.0",
+      "tailwindcss": "4.3.3",
+      "tw-animate-css": "1.4.0"
+    },
+    "files": {
+      "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
+      "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
+      "components/ui/label.tsx": "sha256:344bde38b8531615dbf8e14af3895517c24d8ef6ce56ddeda7e2e6fe4b5d0c00",
+      "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
+    },
+    "snapshotId": "sha256:160c2f58b3f8e1e4e8b236c549344a7c10eb73d1dd3253d92e3481309a972fdc"
+  },
+  "axes": [
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        {
+          "key": "enabled",
+          "label": "Enabled",
+          "code": {}
+        }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 1,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Label",
+    "type": "COMPONENT"
+  },
+  "properties": [],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Label": {
+          "direction": "row",
+          "width": "fill",
+          "height": "hug",
+          "alignMain": "start",
+          "alignCross": "center",
+          "paddingTop": {
+            "token": "spacing-0"
+          },
+          "paddingRight": {
+            "token": "spacing-0"
+          },
+          "paddingBottom": {
+            "token": "spacing-0"
+          },
+          "paddingLeft": {
+            "token": "spacing-0"
+          },
+          "gap": {
+            "token": "spacing-2"
+          }
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Label": {
+          "fill": "none",
+          "stroke": "none",
+          "opacity": { "raw": 1, "level": "info", "reason": "no opacity utility" },
+          "effects": []
+        }
+      }
+    }
+  ],
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": []
+  },
+  "figma": {
+    "page": "Label",
+    "componentSetName": "Label",
+    "description": "shadcn/ui Label (components/ui/label.tsx).",
+    "header": {
+      "type": "Component",
+      "title": "Label",
+      "namespace": "@/components/ui/label"
+    },
+    "grid": {
+      "columns": [
+        "state"
+      ],
+      "rows": []
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@/components/ui/label",
+    "component": "Label",
+    "import": "import { Label } from \"@/components/ui/label\"",
+    "alwaysEmit": []
+  },
+  "notes": [
+    {
+      "level": "info",
+      "at": "components/ui/label.tsx",
+      "message": "group-data-[disabled=true]:opacity-50, group-data-[disabled=true]:pointer-events-none, peer-disabled:cursor-not-allowed, peer-disabled:opacity-50: Under a condition no tuple decides (a negation, or two states at once). Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/label.tsx",
+      "message": "font-medium, leading-none, text-sm: Text utilities; text styles, the label and the anatomy beyond the root are not drafted yet (agent tier). Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/label.tsx",
+      "message": "select-none: No Contract field carries these properties. Not carried."
+    }
+  ],
+  "drafted": {
+    "family.description": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/label.tsx:L7 exports Label, rendered as <LabelPrimitive.Root>",
+        "components/ui/label.tsx:L7 Label calls no cva; the Contract's axes: state (1)"
+      ],
+      "fingerprint": "sha256:77e9d9991cd9a7e0d37b08416fcef2ba9904efa86fefbfa3bc2a8f9bf525354f"
+    },
+    "figma.grid": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/label.tsx:L7 Label calls no cva; the Contract's axes: state (1)"
+      ],
+      "fingerprint": "sha256:77e9d9991cd9a7e0d37b08416fcef2ba9904efa86fefbfa3bc2a8f9bf525354f"
+    }
+  }
+}
