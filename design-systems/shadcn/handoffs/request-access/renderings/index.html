@@ -590,7 +590,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <body class="page">
 <header class="top">
 <h1>Request access</h1>
-<p class="stamp">r7 · 554c0eeb150f · pending sign-off</p>
+<p class="stamp">r8 · 128d4f43f710 · signed off</p>
 <label>Mode <select id="mode"><option value="light" data-class="mode-light" selected>Light</option><option value="dark" data-class="dark">Dark</option></select></label>
 <p class="unverified" id="unverified" hidden>Unverified: the Prototype maps only light → Light.</p>
 </header>
@@ -800,9 +800,9 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <tr><td><code>span</code></td><td>Already a member?</td><td>app/page.tsx:32:17</td></tr>
 </table></div>
 <h3>Open questions</h3>
-<ul><li id="q-prop-name"><code>q-prop-name</code> · prop · to owner: `Input` at app/request-access-form.tsx:66:9 sets required=&quot;&quot;, which is no input axis or property. Which value is it, or does the Contract need it?</li>
-<li id="q-prop-email"><code>q-prop-email</code> · prop · to owner: `Input` at app/request-access-form.tsx:70:9 sets required=&quot;&quot;, which is no input axis or property. Which value is it, or does the Contract need it?</li>
-<li id="q-prop-reason"><code>q-prop-reason</code> · prop · to owner: `Textarea` at app/request-access-form.tsx:87:9 sets rows=&quot;3&quot;, which is no textarea axis or property. Which value is it, or does the Contract need it?</li>
+<ul><li id="q-prop-name"><code>q-prop-name</code> · prop · to owner: `Input` at app/request-access-form.tsx:66:9 sets required=&quot;&quot;, which is no input axis or property. Which value is it, or does the Contract need it? <strong>Code-only: required is form validation and changes nothing the Input shows, so the Input Contract needs no axis or property for it.</strong></li>
+<li id="q-prop-email"><code>q-prop-email</code> · prop · to owner: `Input` at app/request-access-form.tsx:70:9 sets required=&quot;&quot;, which is no input axis or property. Which value is it, or does the Contract need it? <strong>Code-only: required is form validation and changes nothing the Input shows, so the Input Contract needs no axis or property for it.</strong></li>
+<li id="q-prop-reason"><code>q-prop-reason</code> · prop · to owner: `Textarea` at app/request-access-form.tsx:87:9 sets rows=&quot;3&quot;, which is no textarea axis or property. Which value is it, or does the Contract need it? <strong>Code-only: the Textarea sizes to its content (field-sizing-content) from a min-h-16 floor, so rows changes nothing it shows; the Textarea Contract needs no axis or property for it.</strong></li>
 <li id="q-no-contract-toaster"><code>q-no-contract-toaster</code> · no-contract · to owner: `Toaster` is a sonner with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family sonner: Toaster (State=Enabled) is not a flex or grid container or a plain box (display: not set, element Sonner); only Auto Layout is read. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for sonner; run node skills/adapter-generic/scripts/components.mjs --family sonner and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff. <strong>Toaster stays raw: engineering calls sonner's toast(); it is not a Figma component.</strong></li>
 <li id="q-state-empty"><code>q-state-empty</code> · missing-state · to owner: The Prototype has no empty state: no condition reads like empty. What should the screen show? <strong>Does not apply: the screen is a form and has no empty state.</strong></li>
 <li id="q-font"><code>q-font</code> · font · to owner: The Prototype loads Geist from next/font/google (app/layout.tsx:2:10), Geist_Mono from next/font/google (app/layout.tsx:2:17); the Text Styles use Geist. Use Geist? <strong>Geist and Geist Mono, as the Prototype loads them.</strong></li></ul>

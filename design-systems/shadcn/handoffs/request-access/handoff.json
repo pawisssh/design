@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": 7,
-  "status": "pending",
-  "approval": null,
+  "revision": 8,
+  "status": "approved",
+  "approval": { "by": "owner", "at": "2026-10-17T21:21:22.701Z", "revision": 8, "contentHash": "sha256:128d4f43f71005b6b70dd8cf714f1b679ee8ba80aa1ba2333d7e6b092e6ff65f" },
   "feature": {
     "key": "request-access",
     "name": "Request access",
@@ -552,21 +552,24 @@
       "kind": "prop",
       "to": "owner",
       "text": "`Input` at app/request-access-form.tsx:66:9 sets required=\"\", which is no input axis or property. Which value is it, or does the Contract need it?",
-      "answer": null
+      "answer": "Code-only: required is form validation and changes nothing the Input shows, so the Input Contract needs no axis or property for it.",
+      "by": "owner"
     },
     {
       "id": "q-prop-email",
       "kind": "prop",
       "to": "owner",
       "text": "`Input` at app/request-access-form.tsx:70:9 sets required=\"\", which is no input axis or property. Which value is it, or does the Contract need it?",
-      "answer": null
+      "answer": "Code-only: required is form validation and changes nothing the Input shows, so the Input Contract needs no axis or property for it.",
+      "by": "owner"
     },
     {
       "id": "q-prop-reason",
       "kind": "prop",
       "to": "owner",
       "text": "`Textarea` at app/request-access-form.tsx:87:9 sets rows=\"3\", which is no textarea axis or property. Which value is it, or does the Contract need it?",
-      "answer": null
+      "answer": "Code-only: the Textarea sizes to its content (field-sizing-content) from a min-h-16 floor, so rows changes nothing it shows; the Textarea Contract needs no axis or property for it.",
+      "by": "owner"
     },
     {
       "id": "q-no-contract-toaster",
@@ -601,6 +604,15 @@
     },
     "question:q-no-contract-toaster": {
       "answer": "Toaster stays raw: engineering calls sonner's toast(); it is not a Figma component."
+    },
+    "question:q-prop-email": {
+      "answer": "Code-only: required is form validation and changes nothing the Input shows, so the Input Contract needs no axis or property for it."
+    },
+    "question:q-prop-name": {
+      "answer": "Code-only: required is form validation and changes nothing the Input shows, so the Input Contract needs no axis or property for it."
+    },
+    "question:q-prop-reason": {
+      "answer": "Code-only: the Textarea sizes to its content (field-sizing-content) from a min-h-16 floor, so rows changes nothing it shows; the Textarea Contract needs no axis or property for it."
     },
     "question:q-state-empty": {
       "answer": "Does not apply: the screen is a form and has no empty state."

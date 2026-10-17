@@ -107,5 +107,17 @@
   "question:q-no-contract-toaster": {
     "by": "owner",
     "answer": "Toaster stays raw: engineering calls sonner's toast(); it is not a Figma component."
+  },
+  "question:q-prop-name": {
+    "by": "owner",
+    "answer": "Code-only: required is form validation and changes nothing the Input shows, so the Input Contract needs no axis or property for it."
+  },
+  "question:q-prop-email": {
+    "by": "owner",
+    "answer": "Code-only: required is form validation and changes nothing the Input shows, so the Input Contract needs no axis or property for it."
+  },
+  "question:q-prop-reason": {
+    "by": "owner",
+    "answer": "Code-only: the Textarea sizes to its content (field-sizing-content) from a min-h-16 floor, so rows changes nothing it shows; the Textarea Contract needs no axis or property for it."
   }
 }
