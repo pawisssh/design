@@ -1,0 +1,358 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "select",
+    "name": "Select",
+    "description": "The closed trigger of a dropdown that picks one option, whose invalid axis gives it a destructive border and ring, and whose state axis tints it on hover, adds a focus ring or dims it when disabled."
+  },
+  "source": {
+    "codeLibrary": "shadcn/ui",
+    "adapter": "generic",
+    "packages": {
+      "@/components/ui/select": "sha256:81ec673cb09a8f7586f6194eceeeb3701228be1c1582e65b094220ab9340f756",
+      "class-variance-authority": "0.7.1",
+      "cn": "0.5.0",
+      "lucide-react": "1.58.0",
+      "radix-ui": "1.8.1",
+      "react": "19.1.0",
+      "react-dom": "19.1.0",
+      "shadcn": "4.22.0",
+      "tailwindcss": "4.3.3",
+      "tw-animate-css": "1.4.0"
+    },
+    "files": {
+      "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
+      "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
+      "components/ui/select.tsx": "sha256:81ec673cb09a8f7586f6194eceeeb3701228be1c1582e65b094220ab9340f756",
+      "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
+    },
+    "snapshotId": "sha256:65b44cdfa0fbdfbeade787cba9f252cdff0b73c09e1de9d1a8c80e53a214de61"
+  },
+  "axes": [
+    {
+      "key": "invalid",
+      "label": "Invalid",
+      "default": "valid",
+      "defaultSource": "aria-invalid absent: Select renders without it",
+      "values": [
+        {
+          "key": "valid",
+          "label": "Valid",
+          "code": {},
+          "css": ":not([aria-invalid=\"true\"])"
+        },
+        {
+          "key": "invalid",
+          "label": "Invalid",
+          "code": {
+            "aria-invalid": true
+          },
+          "css": "[aria-invalid=\"true\"]"
+        }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        {
+          "key": "enabled",
+          "label": "Enabled",
+          "code": {}
+        },
+        {
+          "key": "hover",
+          "label": "Hover",
+          "code": null,
+          "css": ":hover"
+        },
+        {
+          "key": "focus",
+          "label": "Focus",
+          "code": null,
+          "css": ":focus-visible"
+        },
+        {
+          "key": "disabled",
+          "label": "Disabled",
+          "code": {
+            "disabled": true
+          },
+          "css": ":disabled"
+        }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 8,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Select",
+    "type": "COMPONENT"
+  },
+  "properties": [],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Select": {
+          "direction": "row",
+          "width": "hug",
+          "height": {
+            "token": "spacing-8"
+          },
+          "alignMain": "space-between",
+          "alignCross": "center",
+          "paddingTop": {
+            "raw": 9,
+            "level": "info",
+            "reason": "derived: py-2 padding-block calc(var(--spacing) * 2) = 8px + 1px border (an inside stroke takes no layout space)"
+          },
+          "paddingRight": {
+            "raw": 9,
+            "level": "info",
+            "reason": "derived: pr-2 padding-right calc(var(--spacing) * 2) = 8px + 1px border (an inside stroke takes no layout space)"
+          },
+          "paddingBottom": {
+            "raw": 9,
+            "level": "info",
+            "reason": "derived: py-2 padding-block calc(var(--spacing) * 2) = 8px + 1px border (an inside stroke takes no layout space)"
+          },
+          "paddingLeft": {
+            "raw": 11,
+            "level": "info",
+            "reason": "derived: pl-2.5 padding-left calc(var(--spacing) * 2.5) = 10px + 1px border (an inside stroke takes no layout space)"
+          },
+          "gap": {
+            "token": "spacing-1_5"
+          },
+          "radius": {
+            "token": "radius-lg"
+          },
+          "strokeWeight": {
+            "raw": 1,
+            "level": "info",
+            "reason": "border: border-width 1px; the Foundations document has no stroke-width variable"
+          },
+          "strokeAlign": "inside"
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Select": {
+          "fill": {
+            "token": "select-fill"
+          },
+          "stroke": {
+            "token": "input"
+          },
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "no opacity utility"
+          },
+          "effects": []
+        }
+      }
+    },
+    {
+      "match": {
+        "invalid": "invalid"
+      },
+      "set": {
+        "Select": {
+          "stroke": {
+            "token": "select-invalid-stroke"
+          },
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "spread": {
+                "raw": 3,
+                "level": "info",
+                "reason": "aria-invalid:ring-3: a 3px ring (box-shadow 0 0 0 3px); no effect-spread variable"
+              },
+              "color": {
+                "token": "select-invalid-effect"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "hover"
+      },
+      "set": {
+        "Select": {
+          "fill": {
+            "token": "select-hover-fill"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus"
+      },
+      "set": {
+        "Select": {
+          "stroke": {
+            "token": "ring"
+          },
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "spread": {
+                "raw": 3,
+                "level": "info",
+                "reason": "focus-visible:ring-3: a 3px ring (box-shadow 0 0 0 3px); no effect-spread variable"
+              },
+              "color": {
+                "token": "select-focus-effect"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "disabled"
+      },
+      "set": {
+        "Select": {
+          "opacity": {
+            "raw": 0.5,
+            "level": "info",
+            "reason": "disabled:opacity-50: opacity 50%; the Foundations document has no opacity variable"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "invalid": "invalid",
+        "state": "focus"
+      },
+      "set": {
+        "Select": {
+          "stroke": {
+            "token": "select-invalid-focus-stroke"
+          },
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "spread": {
+                "raw": 3,
+                "level": "info",
+                "reason": "aria-invalid:ring-3: a 3px ring (box-shadow 0 0 0 3px); no effect-spread variable"
+              },
+              "color": {
+                "token": "select-invalid-focus-effect"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": []
+  },
+  "figma": {
+    "page": "Select",
+    "componentSetName": "Select",
+    "description": "shadcn/ui Select (components/ui/select.tsx).",
+    "header": {
+      "type": "Component",
+      "title": "Select",
+      "namespace": "@/components/ui/select"
+    },
+    "grid": {
+      "columns": [
+        "state"
+      ],
+      "rows": [
+        "invalid"
+      ]
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@/components/ui/select",
+    "component": "Select",
+    "import": "import { Select } from \"@/components/ui/select\"",
+    "alwaysEmit": []
+  },
+  "notes": [
+    {
+      "level": "verify",
+      "at": "anatomy",
+      "message": "Select (components/ui/select.tsx:8) renders SelectPrimitive.Root, a provider with no box of its own, so this Contract is read from SelectTrigger (components/ui/select.tsx:33), the box a designer sees; code.component stays Select. In code, invalid is styled on SelectTrigger, not on Select. The other exports (SelectGroup, SelectValue, SelectContent, SelectLabel, SelectItem, SelectSeparator, SelectScrollUpButton, SelectScrollDownButton) render inside SelectTrigger or in the popup it opens, so none is a part, and the options a Usage lists (code.items, ADR 0013) are not drafted."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/select.tsx",
+      "message": "data-[size=sm]:h-7, data-[size=sm]:rounded-[min(var(--radius-md),10px)]: under size \"sm\". size is a prop of SelectTrigger that no axis reads (only a cva variant is an axis), so every variant renders its default \"default\". Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/select.tsx",
+      "message": "*:data-[slot=select-value]:flex, *:data-[slot=select-value]:gap-1.5, *:data-[slot=select-value]:items-center, *:data-[slot=select-value]:line-clamp-1: Styled by an ancestor; that is a Mode or the parent's Contract (ADR 0012). Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/select.tsx",
+      "message": "[&_svg:not([class*='size-'])]:size-4, [&_svg]:pointer-events-none, [&_svg]:shrink-0: Styles a descendant other than a slot frame or a part; the anatomy below them is not drafted yet (agent tier). Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/select.tsx",
+      "message": "data-placeholder:text-muted-foreground, text-sm, whitespace-nowrap: Text utilities; text styles, the label and the anatomy beyond the root are not drafted yet (agent tier). Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/select.tsx",
+      "message": "disabled:cursor-not-allowed, outline-none, select-none, transition-colors: No Contract field carries these properties. Not carried."
+    }
+  ],
+  "drafted": {
+    "axes.invalid.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/select.tsx:L46 aria-invalid:border-destructive styles [aria-invalid=\"true\"]; prefixes aria-invalid, dark:aria-invalid"
+      ],
+      "fingerprint": "sha256:b514d8e286761c45e3cd9af0cfbca247bdf3f5800ce484252a12dca14b984ba0"
+    },
+    "family.description": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/select.tsx:L8 exports Select, rendered as <SelectPrimitive.Root>, a provider with no box; read from SelectTrigger (L33), rendered as <SelectPrimitive.Trigger>",
+        "components/ui/select.tsx:L33 SelectTrigger calls no cva; the Contract's axes: invalid (2), state (4)"
+      ],
+      "fingerprint": "sha256:1a1bf19ea99d8a9b435e062618008b772f0b83b7a73e3ec43673ac16bdb44406"
+    },
+    "figma.grid": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/select.tsx:L33 SelectTrigger calls no cva; the Contract's axes: invalid (2), state (4)"
+      ],
+      "fingerprint": "sha256:1a1bf19ea99d8a9b435e062618008b772f0b83b7a73e3ec43673ac16bdb44406"
+    }
+  }
+}

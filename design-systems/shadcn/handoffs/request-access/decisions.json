@@ -21,10 +21,10 @@
     "draft": "select",
     "tuple": {},
     "via": "library",
-    "reason": "shadcn ships Select, but this Design System has no select Contract, and the Generic Adapter could not write one mid-run"
+    "reason": "shadcn ships Select, but this Design System has no select Contract, and the Generic Adapter's mid-run draft did not pass"
   },
   "contract:select": {
-    "unwritable": "node skills/adapter-generic/scripts/components.mjs --family select drafts it, but the Generic preview renderer cannot render it: components/ui/select.tsx imports lucide-react, which skills/adapter-generic/preview/package.json does not pin"
+    "path": "skills/to-handoff/test/fixtures/v0-app-drafts/select.component.json"
   },
   "recognise:Textarea[rows=3]": {
     "draft": "textarea",
@@ -131,5 +131,17 @@
         "expect": "svg.text-emerald-600"
       }
     ]
+  },
+  "question:q-state-empty": {
+    "by": "owner",
+    "answer": "Does not apply: the screen is a form and has no empty state."
+  },
+  "question:q-font": {
+    "by": "owner",
+    "answer": "Geist and Geist Mono, as the Prototype loads them."
+  },
+  "question:q-no-contract-toaster": {
+    "by": "owner",
+    "answer": "Toaster stays raw: engineering calls sonner's toast(); it is not a Figma component."
   }
 }

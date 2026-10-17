@@ -18,7 +18,7 @@ jobs:
           node-version: 22
       # Without the pinned Carbon sources and preview packages, 42 adapter-carbon tests skip.
       - run: node skills/adapter-carbon/scripts/sources.mjs
-      # Without the pinned Tailwind, TypeScript, shadcn stylesheets and preview packages, 105 adapter-generic tests skip.
+      # Without the pinned Tailwind, TypeScript, shadcn stylesheets and preview packages, 106 adapter-generic tests skip.
       - run: node skills/adapter-generic/scripts/sources.mjs
       # Without its packages, the to-handoff tests skip; the runtime tests, and adapter-generic's catalog
       # measurements, use the runner's Chrome.

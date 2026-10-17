@@ -88,23 +88,24 @@ test('generate: the v0 Prototype is a valid Handoff; each shadcn Button and the 
   const alerts = result.handoff.screens[0].regions.flatMap(r => r.usages).filter(u => u.contract === 'alert');
   assert.deepEqual(alerts.map(u => [u.at, u.match.by, u.tuple]), [['app/request-access-form.tsx:58:9', 'import', { variant: 'destructive' }]]);
   // Card holds other Code Library usages, so it is descended and its Contract goes unused (#151).
-  assert.deepEqual(Object.keys(result.handoff.source.contracts), ['alert', 'button', 'input', 'label', 'textarea']);
+  assert.deepEqual(Object.keys(result.handoff.source.contracts), ['alert', 'button', 'input', 'label', 'select', 'textarea']);
 });
 
 test('generate: a family with no Contract is drafted mid-run by the Generic procedure, used, and written into contracts/ as the Adapter wrote it', { skip: noTs }, async () => {
   const ds = shadcnDesignSystem();
   const { handoff } = await generate({ prototype: V0, designSystem: ds, decisions: DECISIONS });
   const usages = handoff.screens[0].regions.flatMap(r => r.usages);
-  assert.deepEqual(usages.filter(u => ['input', 'label', 'textarea'].includes(u.contract)).map(u => [u.contract, u.at, u.match.by]), [
+  assert.deepEqual(usages.filter(u => ['input', 'label', 'select', 'textarea'].includes(u.contract)).map(u => [u.contract, u.at, u.match.by]), [
     ['label', 'app/request-access-form.tsx:65:9', 'agent'],
     ['input', 'app/request-access-form.tsx:66:9', 'agent'],
     ['label', 'app/request-access-form.tsx:69:9', 'agent'],
     ['input', 'app/request-access-form.tsx:70:9', 'agent'],
     ['label', 'app/request-access-form.tsx:73:9', 'agent'],
+    ['select', 'app/request-access-form.tsx:74:9', 'agent'],
     ['label', 'app/request-access-form.tsx:86:9', 'agent'],
     ['textarea', 'app/request-access-form.tsx:87:9', 'agent'],
   ]);
-  for (const [family, drafted] of [['input', 3], ['label', 2], ['textarea', 3]]) {
+  for (const [family, drafted] of [['input', 3], ['label', 2], ['select', 3], ['textarea', 3]]) {
     const draft = fileURLToPath(new URL(`fixtures/v0-app-drafts/${family}.component.json`, import.meta.url));
     assert.equal(readFileSync(join(ds, `contracts/${family}.component.json`), 'utf8'), readFileSync(draft, 'utf8'), family);
     assert.ok(handoff.source.notes.some(n => n.text.startsWith(`\`${family}\` is a Contract the Adapter wrote mid-run at status draft (${drafted} Drafted values); its check passed.`)), family);
@@ -114,7 +115,7 @@ test('generate: a family with no Contract is drafted mid-run by the Generic proc
 test('generate: a family the Generic Adapter cannot write mid-run is raw, with a question that says why', { skip: noTs }, async () => {
   const { handoff } = await generate({ prototype: V0, designSystem: shadcnDesignSystem(), decisions: DECISIONS });
   const usages = handoff.screens[0].regions.flatMap(r => r.usages);
-  for (const [element, family, why] of [['Select', 'select', 'preview renderer cannot render it: .*imports lucide-react'], ['Toaster', 'sonner', 'Toaster .* is not a flex or grid container']]) {
+  for (const [element, family, why] of [['Toaster', 'sonner', 'Toaster .* is not a flex or grid container']]) {
     const u = usages.find(x => x.raw && x.raw.element === element);
     assert.ok(u, element);
     const q = handoff.openQuestions.find(x => x.id === u.question);
@@ -136,7 +137,9 @@ test('render: the Rendering shows each Contract usage as the project\'s own comp
   assert.match(card('label'), /<label data-slot="label"/);
   assert.match(card('reason'), /<textarea data-slot="textarea"/);
   for (const id of ['name', 'email']) assert.match(card(id), /<input data-slot="input"/, id);
-  for (const id of ['select', 'toaster']) assert.match(card(id), /data-g="∅"/, id);
+  // A provider family renders its Root around the Trigger (#153).
+  assert.match(card('select'), /<button type="button" role="combobox"[^>]*data-slot="select-trigger"/);
+  assert.match(card('toaster'), /data-g="∅"/);
   assert.match(html, /<option value="dark" data-class="dark">Dark<\/option>/, 'Dark applies as its selector\'s class');
   assert.ok(html.includes(result.contentHash.slice(7, 19)));
   assert.match(html, /pending sign-off/);

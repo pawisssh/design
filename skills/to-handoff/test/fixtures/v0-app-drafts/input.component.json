@@ -12,6 +12,7 @@
       "@/components/ui/input": "sha256:75418e030b2a54dd017ac0f4588db4bbdbabca7525e88bbc9d84cb3e18bcb905",
       "class-variance-authority": "0.7.1",
       "cn": "0.5.0",
+      "lucide-react": "1.58.0",
       "radix-ui": "1.8.1",
       "react": "19.1.0",
       "react-dom": "19.1.0",

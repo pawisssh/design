@@ -11,7 +11,9 @@
 //                      the variant shows is a child, in anatomy order: an icon slot an <svg> carrying the attribute
 //                      its Slot axis tests (`data-icon="inline-start"`), a part its exported component (CardHeader for
 //                      the Header node) holding its layer name. A node the variant hides (`visible: false`) is not rendered. The
-//                      Contract has no properties yet, so `properties` changes nothing;
+//                      Contract has no properties yet, so `properties` changes nothing. A provider family (Select,
+//                      whose Root has no box, #153) renders its Root around its Trigger, which takes the props and
+//                      the children, and holds the family's Value export with the family name as its placeholder;
 //   stylesheet         the project's global CSS compiled by the pinned Tailwind over every class of the component
 //                      files the render loads, Preflight and the base layer included;
 //   modeClass(modeKey) the class for a Mode whose foundations entry has no `selector`: the default Mode (light,
@@ -28,7 +30,7 @@ import { createRequire } from 'node:module';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolve } from '../../contract/scripts/contract.mjs';
-import { readSource } from './source.mjs';
+import { familyRoot, readSource } from './source.mjs';
 import { DEFAULT_DIR, FIXTURE, REPO_ROOT, hasTools, sha256, toolDir } from './sources.mjs';
 import { build } from './tailwind.mjs';
 
@@ -119,6 +121,11 @@ export async function previewRenderer(contract, { project = FIXTURE, dir = PREVI
   const componentFile = fileOf(join(project, alias.slice(2)));
   const library = load(componentFile);
   const Component = library[contract.code.component] || fail(`${alias} has no export ${contract.code.component}`);
+  // A provider (Select: SelectPrimitive.Root, no box) is rendered around the Trigger the Contract was read from.
+  const { provider, root } = familyRoot(readSource(readFileSync(componentFile, 'utf8'), relative(project, componentFile), { tools }).components,
+    contract.code.component, relative(project, componentFile));
+  const Trigger = provider && (library[root.name] || fail(`${alias} has no export ${root.name}`));
+  const Value = provider && library[`${contract.code.component}Value`];
   const React = req('react');
   const { renderToStaticMarkup } = req('react-dom/server');
 
@@ -168,7 +175,9 @@ export async function previewRenderer(contract, { project = FIXTURE, dir = PREVI
       }
       const { layout } = resolve(contract, full);
       const children = (contract.anatomy.children || []).filter(n => !layout[n.name] || layout[n.name].visible !== false).map((n, i) => child(n, i));
-      return renderToStaticMarkup(React.createElement(Component, props, ...children));
+      if (!provider) return renderToStaticMarkup(React.createElement(Component, props, ...children));
+      const value = Value ? [React.createElement(Value, { key: 'value', placeholder: contract.family.name })] : [];
+      return renderToStaticMarkup(React.createElement(Component, null, React.createElement(Trigger, props, ...value, ...children)));
     },
   };
 }

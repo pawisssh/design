@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 3,
+  "revision": 4,
   "status": "pending",
   "approval": null,
   "feature": {
@@ -33,28 +33,32 @@
     "contracts": {
       "alert": {
         "snapshotId": "sha256:26121ba66822ed1c1ac5705e0059e3fcccbd9e76ca761f36f4710d3fc58074e1",
-        "contentHash": "sha256:93ffcea768660189a6aec33871e92a7516add34ede9f5083cbc2bc1ff14d481e"
+        "contentHash": "sha256:78d59f9d1189c5368f5cab8ed78a87e62a769cb1820c22d2fb5867d93726b64d"
       },
       "button": {
         "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6",
-        "contentHash": "sha256:63cf726a7d861cb46e8422f0d923a78f29e33abbed58d3e7b4478bb38d63a138"
+        "contentHash": "sha256:85832a1639608686b013fa35bbd77a3f5a2e3fc0155b014f2bcbfac946ac7b71"
       },
       "input": {
         "snapshotId": "sha256:f9b01bacfe3e4ad85205c04e1c3ecff91f1a284700ca11902c2515be13f9c1f5",
-        "contentHash": "sha256:82af840f7b9f7be0bc886be55eed1215dfd0afd29fdc7b8ab72025bb1831e3c7"
+        "contentHash": "sha256:65a5b2403301c58a0a5150fa4e9773ba3be8de976569d9a0c86b77abf41d237d"
       },
       "label": {
         "snapshotId": "sha256:160c2f58b3f8e1e4e8b236c549344a7c10eb73d1dd3253d92e3481309a972fdc",
-        "contentHash": "sha256:f7ec0e8ffe6f72b307d33bca57cc13137845ebc52afc9de07b74df05dfcda28b"
+        "contentHash": "sha256:a583f4c85a55d70300c9dc9892f9fd1b9dc5e69922ce75a89cf865024ab384d1"
+      },
+      "select": {
+        "snapshotId": "sha256:65b44cdfa0fbdfbeade787cba9f252cdff0b73c09e1de9d1a8c80e53a214de61",
+        "contentHash": "sha256:6498b8d793e9b8d869b3fe91f0bf7cccd24614790a64eaf4495344430373ab1f"
       },
       "textarea": {
         "snapshotId": "sha256:f867108029e85e1d5e6f2f62e1f1279c393470acc7169848842f6712f91a1be1",
-        "contentHash": "sha256:ef21d3cb622e119ace69fb3bac33066bd3fced9475c415a441610ef3431e51ac"
+        "contentHash": "sha256:362ec584466b9625772db3508683f6e70386bd6d4e298347ae6d79e385712934"
       }
     },
     "proposals": {},
     "foundations": {
-      "documentHash": "sha256:5956c88e859c74caa74fb11efc8273f4e483a453a656d8b9926c3c41b09fdad5",
+      "documentHash": "sha256:ea8471727bdf4eb5b35f5b4eca24ce5da7c2a56d89b0c4a1e21eda3508a35a04",
       "usedHash": "sha256:ac8b6acde88f612a973024395f4fd7c858474021dee1e48177b0d65c5d6399d7"
     },
     "modes": {
@@ -72,6 +76,10 @@
       {
         "level": "info",
         "text": "`input` is a Contract the Adapter wrote mid-run at status draft (3 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
+      },
+      {
+        "level": "info",
+        "text": "`select` is a Contract the Adapter wrote mid-run at status draft (3 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
       },
       {
         "level": "info",
@@ -272,14 +280,12 @@
             },
             {
               "id": "select",
-              "raw": {
-                "element": "Select"
+              "contract": "select",
+              "tuple": {},
+              "match": {
+                "by": "agent",
+                "via": "library"
               },
-              "reason": "shadcn ships Select, but this Design System has no select Contract, and the Generic Adapter could not write one mid-run",
-              "properties": {
-                "text": "copy:select-text"
-              },
-              "question": "q-no-contract-select",
               "states": [
                 "default",
                 "loading",
@@ -421,10 +427,6 @@
     }
   ],
   "copy": {
-    "select-text": {
-      "text": "Design Engineering Research",
-      "at": "app/request-access-form.tsx:74:9"
-    },
     "card-title": {
       "text": "Request workspace access",
       "at": "app/page.tsx:22:24"
@@ -483,35 +485,41 @@
   ],
   "openQuestions": [
     {
-      "id": "q-no-contract-select",
-      "kind": "no-contract",
-      "to": "owner",
-      "text": "`Select` is a select with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family select drafts it, but the Generic preview renderer cannot render it: components/ui/select.tsx imports lucide-react, which skills/adapter-generic/preview/package.json does not pin. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for select; run node skills/adapter-generic/scripts/components.mjs --family select and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
-      "answer": null
-    },
-    {
       "id": "q-no-contract-toaster",
       "kind": "no-contract",
       "to": "owner",
       "text": "`Toaster` is a sonner with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family sonner: Toaster (State=Enabled) is not a flex or grid container or a plain box (display: not set, element Sonner); only Auto Layout is read. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for sonner; run node skills/adapter-generic/scripts/components.mjs --family sonner and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
-      "answer": null
+      "answer": "Toaster stays raw: engineering calls sonner's toast(); it is not a Figma component.",
+      "by": "owner"
     },
     {
       "id": "q-state-empty",
       "kind": "missing-state",
       "to": "owner",
       "text": "The Prototype has no empty state: no condition reads like empty. What should the screen show?",
-      "answer": null
+      "answer": "Does not apply: the screen is a form and has no empty state.",
+      "by": "owner"
     },
     {
       "id": "q-font",
       "kind": "font",
       "to": "owner",
       "text": "The Prototype loads Geist from next/font/google (app/layout.tsx:2:10), Geist_Mono from next/font/google (app/layout.tsx:2:17); shadcn has no Text Styles to name a font. Which font should the Text Styles use?",
-      "answer": null
+      "answer": "Geist and Geist Mono, as the Prototype loads them.",
+      "by": "owner"
     }
   ],
   "flow": [],
   "data": [],
-  "ownerDecisions": {}
+  "ownerDecisions": {
+    "question:q-font": {
+      "answer": "Geist and Geist Mono, as the Prototype loads them."
+    },
+    "question:q-no-contract-toaster": {
+      "answer": "Toaster stays raw: engineering calls sonner's toast(); it is not a Figma component."
+    },
+    "question:q-state-empty": {
+      "answer": "Does not apply: the screen is a form and has no empty state."
+    }
+  }
 }

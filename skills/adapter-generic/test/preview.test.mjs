@@ -54,6 +54,16 @@ test('a Card renders its exported parts as its anatomy nodes; the footer only wh
   assert.match(render({ 'card-footer': 'card-footer' }), /<div data-slot="card-footer"[^>]*>Footer<\/div>/);
 });
 
+test('a provider family renders its Root around its Trigger, which takes the props and holds the Value', { skip }, async () => {
+  const { render } = await rendererOf('select');
+  const html = render({});
+  assert.match(html, /^<button type="button" role="combobox"[^>]*data-slot="select-trigger" data-size="default"[^>]*><span data-slot="select-value"[^>]*>Select<\/span><svg[^>]*lucide-chevron-down/);
+  assert.doesNotMatch(html, /aria-invalid="/);
+  const off = render({ invalid: 'invalid', state: 'disabled' });
+  assert.match(off, /aria-invalid="true"/);
+  assert.match(off, /<button[^>]*disabled=""/);
+});
+
 test('the stylesheet is the compiled project CSS with no @supports guard, the dark Mode its .dark class, light inert', { skip }, async () => {
   const { stylesheet, modeClass } = await rendererOf('button');
   assert.ok(stylesheet.includes('.dark'));
