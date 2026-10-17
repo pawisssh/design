@@ -148,7 +148,7 @@
     {
       "level": "info",
       "at": "anatomy",
-      "message": "Text layers (#162), each a TEXT node with a TEXT property: Text: Label's children (code.prop children). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Label, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value. The Text layer is hidden where Label has a fixed width (an icon size), which is sized for its icon."
+      "message": "Text layers (#166), each a TEXT node with a TEXT property: Text: Label's children (code.prop children). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Label, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value. The Text layer is hidden where Label has a fixed width (an icon size), which is sized for its icon."
     },
     {
       "level": "info",

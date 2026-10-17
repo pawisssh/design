@@ -29,7 +29,7 @@ const SIZE_VALUES = ['default', 'icon', 'icon-lg', 'icon-sm', 'icon-xs', 'lg', '
 const SIZE_KEYS = ['axes.size.label', ...SIZE_VALUES.map(v => `axes.size.values.${v}.label`)];
 const ATTRIBUTE_KEYS = ['axes.expanded.label', 'axes.invalid.label'];
 const FAMILY_KEYS = ['family.description', 'figma.grid'];
-const TEXT_KEYS = ['properties.label.default']; // the Label layer's default text (#162)
+const TEXT_KEYS = ['properties.label.default']; // the Label layer's default text (#166)
 const ALL_KEYS = [...SIZE_KEYS, ...VARIANT_KEYS, ...ATTRIBUTE_KEYS, ...FAMILY_KEYS, ...TEXT_KEYS].sort();
 
 // #65's simulated upgrades (prototype/generic-drafts make-v2.mjs and make-v3.mjs), as edits per file.

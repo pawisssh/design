@@ -200,7 +200,7 @@ A slot whose presence changes the root ([ADR 0011](../../docs/adr/0011-slot-depe
 
 ### Text layers
 
-Each text a designer types is a TEXT node with a TEXT property (#162), where the source says what the text is. Each is read in a pass of its own, after layout and paint, so no text utility adds an axis, a state or a twin.
+Each text a designer types is a TEXT node with a TEXT property (#166), where the source says what the text is. Each is read in a pass of its own, after layout and paint, so no text utility adds an axis, a state or a twin.
 
 - **Which nodes.**
 
@@ -210,7 +210,7 @@ Each text a designer types is a TEXT node with a TEXT property (#162), where the
   | A provider's `<Name>Value` export (#153): SelectValue | `Value` | `placeholder` | `{child: "SelectValue", childProp: "placeholder"}` |
   | A part that sets its own text style or colour and no layout of its own, and is no slot: CardTitle, CardDescription, AlertTitle, AlertDescription | the part's node, a TEXT in place of its FRAME | the node in camelCase | `{child: "<Export>"}` |
 
-  `code.child` names the child component whose text the property is, and `code.childProp` one prop of it ([contract schema](../contract/references/contract-schema.md), rule 3). That form is an [assumption] of #162.
+  `code.child` names the child component whose text the property is, and `code.childProp` one prop of it ([contract schema](../contract/references/contract-schema.md), rule 3). That form is an [assumption] of #166.
 - **Text style.** `textStyle` is `{raw: {fontSize, lineHeight, fontWeight}}` at level `warning`, its reason naming each utility and #160: the Foundations document has no Text Styles yet. A value is the node's own rules, then the root rules that target the part (`*:data-[slot=…]:…`, compiled to `:is(.x > *)[data-slot="…"]`), then the root's own rules, which the node inherits, then the base layer (`html` line-height 1.5). A `leading-*` line height is a ratio over the font size. `textResize` is `height` where the layer fills across (a part in its column), else `width-and-height` (a root's Label hugs).
 - **Colour.** The node's `fill` comes from the same cascade, through the same paint rules as the root: a plain token, or a Synthesized token named after the node (`alert-destructive-description-fill`, scope `TEXT_FILL`). With no colour utility it is the base layer's `body` colour.
 - **Visibility.** A root's Label is hidden where the root has a fixed width, the icon sizes, which are sized for their icon. A part's text layer always shows.
@@ -245,7 +245,7 @@ A value that neither the source nor a rule here states is drafted by an agent. T
   | `axes.<cva axis>.label`, `axes.<cva axis>.values.<value>.label` | the line of the axis or value key | the axis's value keys |
   | `axes.<attribute axis>.label` | the first utility that styles the attribute | the variant prefixes of its utilities (`aria-invalid`, `dark:aria-invalid`) |
   | `family.description`, `figma.grid` | the root export and the cva variants | every axis's key, value keys and default; the exported parts |
-  | `properties.<key>.default`, a text layer's default text (#162) | the line of the root, the part or the Value export | the layer, the property key and its `code`, not the text style, so a class change does not reopen the copy |
+  | `properties.<key>.default`, a text layer's default text (#166) | the line of the root, the part or the Value export | the layer, the property key and its `code`, not the text style, so a class change does not reopen the copy |
 
   Slot and State axis labels and an attribute axis's value labels (its state words) are rules, so they are not drafted.
 - **Placeholders.** The Foundations step builds the Contract only for its closure, without drafts. That Contract keeps placeholders: Title Case labels, `size` across in the grid, and a description that names the source file.

@@ -378,7 +378,7 @@ test('`code.items` names a Repeated child, and an `itemProp` property shows one 
   formRejects(e, 3, 'only a TEXT property can show a Repeated child prop');
 });
 
-test('a TEXT `code.child` names a child component, with an optional `childProp`, and no `prop` or `itemProp` (#162)', () => {
+test('a TEXT `code.child` names a child component, with an optional `childProp`, and no `prop` or `itemProp` (#166)', () => {
   const ok = textInput();
   ok.properties[0].code = { child: 'FormLabel' };
   assert.deepEqual(contract.validate(ok, formFoundations).errors.filter(e => e.rule === 3), []);

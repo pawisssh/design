@@ -285,7 +285,7 @@
     {
       "level": "info",
       "at": "anatomy",
-      "message": "Text layers (#162), each a TEXT node with a TEXT property: Title: AlertTitle's children (code.child AlertTitle); Description: AlertDescription's children (code.child AlertDescription). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Alert, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value."
+      "message": "Text layers (#166), each a TEXT node with a TEXT property: Title: AlertTitle's children (code.child AlertTitle); Description: AlertDescription's children (code.child AlertDescription). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Alert, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value."
     },
     {
       "level": "info",

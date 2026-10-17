@@ -317,7 +317,7 @@
     {
       "level": "info",
       "at": "anatomy",
-      "message": "Text layers (#162), each a TEXT node with a TEXT property: Title: CardTitle's children (code.child CardTitle); Description: CardDescription's children (code.child CardDescription). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Card, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value."
+      "message": "Text layers (#166), each a TEXT node with a TEXT property: Title: CardTitle's children (code.child CardTitle); Description: CardDescription's children (code.child CardDescription). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Card, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value."
     },
     {
       "level": "info",

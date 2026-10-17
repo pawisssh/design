@@ -10,7 +10,7 @@
 //                      renders like Enabled: the page forces it through its CSS pseudo-class). Each anatomy node
 //                      the variant shows is a child, in anatomy order: an icon slot an <svg> carrying the attribute
 //                      its Slot axis tests (`data-icon="inline-start"`), a part its exported component (CardHeader for
-//                      the Header node) holding its layer name, a text layer its TEXT property's text (#162): the
+//                      the Header node) holding its layer name, a text layer its TEXT property's text (#166): the
 //                      root's own children (Button's Label), a part's children (CardTitle), or the Value export's
 //                      placeholder. With no `properties` (a catalog specimen) each text is its default; with them, a
 //                      key's value, '' included (a Handoff sends '' for text its Prototype does not show), and the

@@ -343,7 +343,7 @@
     {
       "level": "info",
       "at": "anatomy",
-      "message": "Text layers (#162), each a TEXT node with a TEXT property: Value: SelectValue's placeholder (code.child SelectValue, childProp placeholder), coloured as Select's data-placeholder rules colour it, since the Trigger carries data-placeholder while no value is picked. Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Select, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value."
+      "message": "Text layers (#166), each a TEXT node with a TEXT property: Value: SelectValue's placeholder (code.child SelectValue, childProp placeholder), coloured as Select's data-placeholder rules colour it, since the Trigger carries data-placeholder while no value is picked. Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Select, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value."
     },
     {
       "level": "verify",

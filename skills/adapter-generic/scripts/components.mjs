@@ -38,7 +38,7 @@
 // - paint that differs by Mode, carries an opacity or mixes tokens (#120): a Synthesized token, a per-mode Theme
 //   component token the Contract binds as a plain {token}. The foundations step re-derives the same tokens through
 //   readFamily() and writes them into the Foundations document, which this step then requires to hold them.
-// - text layers (#162): a TEXT node with a TEXT property where the source says what the text is: the children of a
+// - text layers (#166): a TEXT node with a TEXT property where the source says what the text is: the children of a
 //   root that sets its own text style (Button's Label), a provider's Value export's placeholder (SelectValue), or a
 //   part that sets its own text style and no layout (CardTitle). Each layer's text style is read raw (no Text Styles
 //   yet, #160) and its colour through the same paint rules; the default text is a Drafted value.
@@ -96,7 +96,7 @@ const PART_PROPS = ['width', 'height', 'align-self', 'justify-self', 'flex-grow'
 const PAINT_PROPS = ['background-color', 'border-color', 'opacity', '--tw-ring-shadow', '--tw-ring-color'];
 const TEXT_PROPS = ['color', 'font-size', 'line-height', 'font-weight', '--tw-font-weight', '--tw-leading', 'letter-spacing',
   '--tw-tracking', 'text-align', 'text-decoration-line', 'text-underline-offset', 'white-space'];
-// What a text layer reads (#162): its text style and colour, its own or inherited from the root.
+// What a text layer reads (#166): its text style and colour, its own or inherited from the root.
 const FONT_PROPS = ['font-size', 'line-height', 'font-weight', '--tw-leading', 'color'];
 // Elements whose children are no text a designer types: a form control shows its value or placeholder.
 const NO_TEXT = new Set(['input', 'textarea', 'select', 'img', 'hr', 'br']);
@@ -272,7 +272,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   report.descendant = report.descendant.filter(c => !sizing.has(c));
   const content = ruled(sizing);
 
-  // 3b. Text layers (#162): each text a designer types is a TEXT node with a TEXT property, where the source says
+  // 3b. Text layers (#166): each text a designer types is a TEXT node with a TEXT property, where the source says
   //     what the text is: the children of a root that sets a text style itself (Button's Label), a provider's Value
   //     export's placeholder (SelectValue), or a part that sets its own text style or colour and no layout of its own
   //     (CardTitle). They are read in a pass of their own, never carried as the root's layout or paint, so no text
@@ -805,7 +805,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     const how = n => (n.kind === 'children' ? `${n.node}: ${Name}'s children (code.prop children)`
       : n.kind === 'placeholder' ? `${n.node}: ${n.name}'s placeholder (code.child ${n.name}, childProp placeholder), coloured as ${Name}'s data-placeholder rules colour it, since the Trigger carries data-placeholder while no value is picked`
       : `${n.node}: ${n.name}'s children (code.child ${n.name})`);
-    notes.push({ level: 'info', at: 'anatomy', message: `Text layers (#162), each a TEXT node with a TEXT property: ${texts.map(how).join('; ')}. Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from ${Name}, then ${cssFile}'s base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value.${texts.some(n => n.kind === 'children') ? ` The ${texts.find(n => n.kind === 'children').node} layer is hidden where ${Name} has a fixed width (an icon size), which is sized for its icon.` : ''}` });
+    notes.push({ level: 'info', at: 'anatomy', message: `Text layers (#166), each a TEXT node with a TEXT property: ${texts.map(how).join('; ')}. Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from ${Name}, then ${cssFile}'s base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value.${texts.some(n => n.kind === 'children') ? ` The ${texts.find(n => n.kind === 'children').node} layer is hidden where ${Name} has a fixed width (an icon size), which is sized for its icon.` : ''}` });
   }
   if (unreadText.length)
     notes.push({ level: 'verify', at: 'anatomy', message: `${list([...new Set(unreadText)])}: ${Name} styles a text part's text in a form the text pass does not read; check that part's textStyle and fill.` });

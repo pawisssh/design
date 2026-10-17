@@ -465,7 +465,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
           const options = el.children.filter(x => x.type === 'element' && x.tag === 'option');
           if (options.length) out.items = options.map((o, n) => ({ properties: { [p.key]: addCopy(`${id}-${kebab(p.key)}-${n + 1}`, elementText(o, atomsIn('default')), o.offset) }, at: at(o.offset) }));
         } else if (c.child) {
-          // The text of a child component the usage writes (<AlertTitle>), or one of its props (SelectValue's placeholder), at any depth (#162).
+          // The text of a child component the usage writes (<AlertTitle>), or one of its props (SelectValue's placeholder), at any depth (#166).
           let kid = null;
           walk(el, x => { if (!kid && x !== el && x.type === 'element' && (x.tag === c.child || (x.component && x.component.export === c.child))) kid = x; });
           if (kid && c.childProp && typeof kid.attrs[c.childProp] === 'string') props[p.key] = addCopy(`${id}-${kebab(p.key)}`, kid.attrs[c.childProp], kid.offset);

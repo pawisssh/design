@@ -33,11 +33,11 @@
     "contracts": {
       "alert": {
         "snapshotId": "sha256:26121ba66822ed1c1ac5705e0059e3fcccbd9e76ca761f36f4710d3fc58074e1",
-        "contentHash": "sha256:206d2e5f908c1ee93d269daca1852c073761fc815d1e2a62767627640bc14b9f"
+        "contentHash": "sha256:0dedbcf1912aa4c27353134fd304b5e7803b9e011c1ce426b962cbf3c3c9b3bf"
       },
       "button": {
         "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6",
-        "contentHash": "sha256:b1ebf30322b596174b560bc9891884db9eb699a0ca8da2eecf33865ee1834b7d"
+        "contentHash": "sha256:b9248aecc43e2174850000a179e9b80ddb782379a36caa10290653ba0a18fae4"
       },
       "input": {
         "snapshotId": "sha256:f9b01bacfe3e4ad85205c04e1c3ecff91f1a284700ca11902c2515be13f9c1f5",
@@ -45,11 +45,11 @@
       },
       "label": {
         "snapshotId": "sha256:160c2f58b3f8e1e4e8b236c549344a7c10eb73d1dd3253d92e3481309a972fdc",
-        "contentHash": "sha256:a138c8ca09c8bae9904a30793c60b4b5ff09db12d5075f434f5a7f00e09b86a8"
+        "contentHash": "sha256:00923f3e4b23a35166f8333d1cc01d28d54ff3fd424510dc548c6c765fcb9aed"
       },
       "select": {
         "snapshotId": "sha256:65b44cdfa0fbdfbeade787cba9f252cdff0b73c09e1de9d1a8c80e53a214de61",
-        "contentHash": "sha256:4655285cb964f3383a6fc6241706dceb06c635f5dcf4ccb7f698ef472c8758d3"
+        "contentHash": "sha256:bdad484583eed0f289c45bd30c79c652fa119c5cd9a6c9a1780eb4b38b83d89d"
       },
       "textarea": {
         "snapshotId": "sha256:f867108029e85e1d5e6f2f62e1f1279c393470acc7169848842f6712f91a1be1",

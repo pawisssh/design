@@ -41,7 +41,7 @@ test('Card has no cva: its root className is its one variant, with a Slot axis f
   assert.equal(card.expectedCount, 2);
 });
 
-test('Card\'s exported parts are nodes under the root, named by their data-slot without the family prefix, in source order; a part that sets its own text style is TEXT (#162)', { skip }, async () => {
+test('Card\'s exported parts are nodes under the root, named by their data-slot without the family prefix, in source order; a part that sets its own text style is TEXT (#166)', { skip }, async () => {
   const { anatomy } = await read('card');
   assert.equal(anatomy.name, 'Card');
   const text = ['Title', 'Description'];
@@ -49,7 +49,7 @@ test('Card\'s exported parts are nodes under the root, named by their data-slot 
     .map(name => ({ name, type: text.includes(name) ? 'TEXT' : 'FRAME' })));
 });
 
-test('Card\'s text parts are TEXT properties mapped to their child component, each layer\'s style read raw until Foundations has Text Styles (#162, #160)', { skip }, async () => {
+test('Card\'s text parts are TEXT properties mapped to their child component, each layer\'s style read raw until Foundations has Text Styles (#166, #160)', { skip }, async () => {
   const card = await read('card');
   assert.deepEqual(card.properties.map(p => [p.key, p.type, p.binds, p.code]), [
     ['title', 'TEXT', [{ node: 'Title', field: 'characters' }], { child: 'CardTitle' }],
@@ -185,7 +185,7 @@ test('a family file with no export named after the family is read through its on
   const project = variant('components/ui/label.tsx', t => t.replaceAll('Label(', 'FieldLabel(').replace('export { Label }', 'export { FieldLabel }'));
   const doc = (await library({ project, families: ['label'] })).doc;
   const drafts = JSON.parse(readFileSync(new URL('../fixtures/drafts/label.json', import.meta.url), 'utf8')).drafts;
-  // the root is no longer named Label, so its text layer is Label, keyed label, not Text (#162)
+  // the root is no longer named Label, so its text layer is Label, keyed label, not Text (#166)
   const { contract } = await generate({ project, family: 'label', foundations: doc, drafts: { ...drafts, 'properties.label.default': drafts['properties.text.default'] } });
   assert.equal(contract.family.key, 'label');
   assert.deepEqual(contract.anatomy.children, [{ name: 'Label', type: 'TEXT' }]);
@@ -258,7 +258,7 @@ test('Select is a provider with no box: it is read from SelectTrigger, with no p
   const doc = (await library({ project: FIXTURE, families: ['select'] })).doc;
   const select = await readFamily({ project: FIXTURE, family: 'select', foundations: doc });
   assert.deepEqual(select.anatomy, { name: 'Select', type: 'COMPONENT', children: [{ name: 'Value', type: 'TEXT' }] },
-    'no part: the other exports render inside the Trigger or in its popup; SelectValue\'s placeholder is the Value layer (#162)');
+    'no part: the other exports render inside the Trigger or in its popup; SelectValue\'s placeholder is the Value layer (#166)');
   assert.deepEqual(select.properties.map(p => [p.key, p.binds, p.code]),
     [['placeholder', [{ node: 'Value', field: 'characters' }], { child: 'SelectValue', childProp: 'placeholder' }]]);
   assert.deepEqual(select.axes.map(a => [a.key, a.values.map(v => v.key)]), [['invalid', ['valid', 'invalid']], ['state', ['enabled', 'hover', 'focus', 'disabled']]]);

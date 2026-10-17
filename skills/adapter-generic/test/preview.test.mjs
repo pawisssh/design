@@ -34,7 +34,7 @@ test('the Base Button is the project\'s own <button>, its cva classes merged by 
   assert.match(html, /^<button data-slot="button" data-variant="default" data-size="default" class="[^"]*bg-primary[^"]*h-8[^"]*">Button<\/button>$/);
 });
 
-test('a TEXT property renders the text it is given, an empty string too; the default only where it is not given (#162)', { skip }, async () => {
+test('a TEXT property renders the text it is given, an empty string too; the default only where it is not given (#166)', { skip }, async () => {
   const { render } = await rendererOf('button');
   assert.match(render({}, { label: 'Send' }), />Send<\/button>$/);
   assert.match(render({}, { label: '' }), /"><\/button>$/);
@@ -59,7 +59,7 @@ test('a Card renders its exported parts as its anatomy nodes; the footer only wh
     assert.match(none, new RegExp(`data-slot="${slot}"`), slot);
   assert.doesNotMatch(none, /data-slot="card-footer"/);
   assert.match(render({ 'card-footer': 'card-footer' }), /<div data-slot="card-footer"[^>]*>Footer<\/div>/);
-  assert.match(none, /<div data-slot="card-title"[^>]*>Card title<\/div>/, 'a text part holds its TEXT property (#162)');
+  assert.match(none, /<div data-slot="card-title"[^>]*>Card title<\/div>/, 'a text part holds its TEXT property (#166)');
   assert.match(render({ 'card-footer': 'none' }, { description: 'Due Friday' }), /<div data-slot="card-description"[^>]*>Due Friday<\/div>/);
 });
 

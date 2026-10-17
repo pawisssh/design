@@ -374,7 +374,7 @@ function checkCode(c, err) {
     else if (!isObj(items) || !Array.isArray(items.props) || !items.props.includes(ip)) err(3, at, `"${ip}" is not one of code.items.props`);
   }
   // A TEXT property with `code.child` is the text of a child component (CardTitle), or with `childProp` one of its
-  // props (SelectValue's placeholder): not a prop of the component itself (#162).
+  // props (SelectValue's placeholder): not a prop of the component itself (#166).
   for (const p of c.properties) {
     if (p.type !== 'TEXT' || !isObj(p.code) || p.code.child === undefined) continue;
     const at = `properties.${p.key}.code`;
