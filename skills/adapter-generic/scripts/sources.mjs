@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Pinned tools for the Generic Adapter (#118), and the one place that fetches them.
 //   node skills/adapter-generic/scripts/sources.mjs [--dir <dir>]   fetch into .scratch/adapter-generic/tools
+// The command also fetches the preview renderer's packages (preview.mjs) into .scratch/adapter-generic/preview.
 //
 // Each npm tarball is checked against its registry sha512 `integrity`, and only the named members are extracted
-// with `tar`. Nothing is installed and no lifecycle script runs. The one thing ever executed is Tailwind's
-// compiler (tailwind.mjs), over the consumer project's CSS. shadcn and tw-animate-css are read as stylesheets only:
+// with `tar`. Nothing is installed and no lifecycle script runs. The reading tier executes only Tailwind's
+// compiler (tailwind.mjs), over the consumer project's CSS; the preview renderer runs the project's components. shadcn and tw-animate-css are read as stylesheets only:
 // the fixture's CSS imports them. Downloads are untrusted data and live in gitignored scratch.
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -102,6 +103,9 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const dir = await fetchTools(values.dir || DEFAULT_DIR);
     console.log(`${Object.entries(TOOLS).map(([n, p]) => `${n}@${p.version}`).join(', ')} in ${dir}`);
     console.log('Generic Adapter tools OK');
+    // The preview renderer's pinned React packages (#123), so one fetch step readies every test. A child process:
+    // preview.mjs imports this module, so importing it here would wait on itself.
+    execFileSync(process.execPath, [fileURLToPath(new URL('./preview.mjs', import.meta.url))], { stdio: 'inherit' });
   } catch (e) {
     console.error(`FAIL: ${e.message}`);
     process.exit(1);

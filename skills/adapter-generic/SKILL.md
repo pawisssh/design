@@ -7,7 +7,7 @@ description: Generic Adapter for shadcn/ui-style Code Libraries, from a consumer
 
 The Adapter for Code Libraries a consumer installs as source and themes with CSS custom properties and Tailwind v4, starting with shadcn/ui (spec [#103](https://github.com/pawisssh/design/issues/103)). It is a sibling of the [Carbon Adapter](../adapter-carbon/SKILL.md) with the same outputs. What a Foundations document must contain is defined in the shared [`contract`](../contract/SKILL.md) skill's [foundations schema](../contract/references/foundations-schema.md); this skill only knows how to read the project.
 
-Today it has the exact tier: the Foundations step ([#118](https://github.com/pawisssh/design/issues/118)), the component step ([#119](https://github.com/pawisssh/design/issues/119)), Synthesized tokens ([#120](https://github.com/pawisssh/design/issues/120)) and Slot axes ([#121](https://github.com/pawisssh/design/issues/121)), and the agent tier's first keys ([#122](https://github.com/pawisssh/design/issues/122)): axis and value labels, the Figma grid and the family description. The rest of the agent tier and the preview renderer are later tickets.
+Today it has the exact tier: the Foundations step ([#118](https://github.com/pawisssh/design/issues/118)), the component step ([#119](https://github.com/pawisssh/design/issues/119)), Synthesized tokens ([#120](https://github.com/pawisssh/design/issues/120)) and Slot axes ([#121](https://github.com/pawisssh/design/issues/121)), and the agent tier's first keys ([#122](https://github.com/pawisssh/design/issues/122)): axis and value labels, the Figma grid and the family description. It reads Button, Card and Alert, and has a [preview renderer](#4-preview-renderer) and a To-handoff module ([#123](https://github.com/pawisssh/design/issues/123)). The rest of the agent tier is later tickets.
 
 ## Inputs
 
@@ -25,9 +25,9 @@ node skills/adapter-generic/scripts/sources.mjs
 - `shadcn` and `tw-animate-css` are read only as stylesheets, because the project's CSS imports them.
 - `typescript` is read only as a parser: the component step reads each component file's AST and never type-checks or runs it.
 
-Done when it prints `Generic Adapter tools OK`.
+The command then fetches the [preview renderer](#4-preview-renderer)'s packages. Done when it prints `Generic Adapter tools OK` and `Generic preview packages OK`.
 
-The one thing ever executed is Tailwind's own compiler, over the project's CSS ([`scripts/tailwind.mjs`](scripts/tailwind.mjs)):
+The reading tier (steps 2 and 3) executes only Tailwind's own compiler, over the project's CSS ([`scripts/tailwind.mjs`](scripts/tailwind.mjs)):
 
 - `compile()` from the pinned `tailwindcss` runs with no bundler.
 - A plain file loader resolves each `@import`:
@@ -130,10 +130,12 @@ node skills/adapter-generic/scripts/components.mjs --family <key> [--project <di
 
 It reads one component family of the project, `<ui alias>/<key>.tsx`, and writes the draft Contract `design-systems/shadcn/contracts/<key>.component.json`. It checks the Contract with [`contract.mjs`](../contract/scripts/contract.mjs) `validate` and writes it with [`io.mjs`](../contract/scripts/io.mjs) `writeJson`. A rerun writes nothing when nothing changed. The seams are `readFamily({project, family, foundations})` (the exact-tier reading, with the family's Synthesized tokens) and `generate({project, family, foundations, prior, drafts})`, which merges the [Drafted values](#agent-tier-drafted-values).
 
-- **Snapshot.** The Foundations document must be from this project's snapshot: every file in its `source.files` must hash the same, or the step fails with "another snapshot". The Contract's `source.files` are the document's, minus other families' component files, plus its own.
+- **Snapshot.** The Foundations document must be from this project's snapshot: every file in its `source.files` must hash the same, or the step fails with "another snapshot". The Contract's `source.files` are the document's, minus other families' component files, plus its own. Its `source.packages` are the document's plus the component's import path, pinned to its file's hash (`"@/components/ui/card": "sha256:…"`): the component is a project module, not a package, and To-preview reads `source.packages[code.package]`.
 - **Synthesized tokens.** The document must hold exactly the family's Synthesized tokens as its source reads now, and a closure entry with the Contract's `snapshotId`. Otherwise the step fails, naming the tokens and the fix: regenerate with `foundations.mjs --family <key>`.
-- **Source** ([`scripts/source.mjs`](scripts/source.mjs)). From the TypeScript AST: every `cva(base, {variants, defaultVariants, compoundVariants})` and every top-level function component, with its element (also through `const Comp = asChild ? Slot.Root : "button"`), `data-slot`, the attributes it sets from props (`data-size={size}`), its destructured defaults and its class lists, each with its line. The root is the export named after the family (`button` → `Button`). A family without a cva, or with `compoundVariants`, fails.
-- **Cascade** ([`scripts/cascade.mjs`](scripts/cascade.mjs)). Every class is compiled with Tailwind in one `build()`. Only the utilities layer is read, and an `@supports` branch replaces the fallback it guards. Each rule is sorted by its compiled selector:
+- **Source** ([`scripts/source.mjs`](scripts/source.mjs)). From the TypeScript AST: every `cva(base, {variants, defaultVariants, compoundVariants})` and every top-level function component, with its element (also through `const Comp = asChild ? Slot.Root : "button"`), `data-slot`, the attributes it sets from props (`data-size={size}`), its destructured defaults and its class lists, each with its line. The root is the export named after the family (`button` → `Button`). A family with `compoundVariants` fails.
+- **A root with no cva** (Card) is one variant: its className is its base. A prop it sets as an attribute that no axis reads (Card's `data-size={size}`) keeps its default, and its rules under another value are a note, not carried.
+- **Parts.** Every other exported component is a part (CardHeader, AlertTitle): a FRAME under the root named by its `data-slot` in Title Case (`Card Header`), in source order, whatever its real nesting. Only its size is read: `width` and `height` from its own utilities, else across the root's direction it fills where the root stretches and its `align-self` allows (`self-start` hugs), and along it hugs unless it grows. A part with `position: absolute` or `fixed` (AlertAction) is left out, with its slot utilities, in a note. A `has-data-[slot=<part>]` rule is a [Slot axis](#slot-axes) over that part, so Card Footer shows only where its axis is filled.
+- **Cascade** ([`scripts/cascade.mjs`](scripts/cascade.mjs)). Every class is compiled with Tailwind in one `build()`. The utilities layer is read, and the base layer only for its `*` border colour. An `@supports` branch replaces the fallback it guards. A custom property a utility sets on the root (`--card-spacing`) is substituted where a length reads it. Each rule is sorted by its compiled selector:
   - a Mode, from `:is(<mode selector> *)`;
   - a canonical state: `:hover` (inside `@media (hover: hover)`), `:focus-visible` and `:focus` → `focus`, `:active`, and `:disabled` with its other spellings `[aria-disabled="true"]` and `[data-disabled]`;
   - an attribute the component sets from a prop (`[data-size="sm"]`), which is that prop's value;
@@ -164,10 +166,11 @@ In order: each cva variant axis, then the attribute axes, then the Slot axes, th
 
 | CSS | Field |
 |---|---|
-| `display: flex` or `inline-flex`, `flex-direction` | `direction` (anything else fails) |
-| `justify-content`, `align-items` | `alignMain`, `alignCross` |
-| `width`, `height` | `width`, `height`; absent is `hug` |
-| `gap` | `gap`; absent is `spacing-0` |
+| `display: flex` or `inline-flex`, `flex-direction` | `direction` |
+| `display: grid` or `inline-grid` with no `grid-template-columns` and a row flow | `direction: column`; explicit columns or a column flow fail, naming the utility |
+| `justify-content`, `align-items` (a grid: `align-content`, `justify-items`) | `alignMain`, `alignCross` |
+| `width`, `height` | `width`, `height`; `100%` is `fill`. Absent width is `fill` for a block-level root (`flex`, `grid`) and `hug` for an inline one; absent height is `hug` |
+| `gap` (a grid: `row-gap`; a flex row: `column-gap`) | `gap`; absent is `spacing-0` |
 | `padding*` | `padding*`, plus the border width as a derived `info` raw, because an inside stroke takes no layout space |
 | `border-radius` | `radius` |
 | `border-width` | `strokeWeight` (raw), `strokeAlign: inside` |
@@ -176,11 +179,11 @@ In order: each cva variant axis, then the attribute axes, then the Slot axes, th
 | `--tw-ring-shadow` + `--tw-ring-color` | `effects`: one `drop-shadow` with the ring width as `spread` |
 
 - **Lengths.** A length is the Foundations variable whose `codeSyntax.WEB` is the compiled text and whose scopes cover the field. Otherwise it is evaluated to px (`var`, `calc`, `min`, `max`) as an `info` raw that names the utility.
+- **Base border.** A border with no `border-color` utility takes the project's base layer `* { border-color }` (`border-border`), with a note.
 - **Colours.** `var(--<name>)` is that COLOR variable. A literal goes through [`color.mjs`](../contract/scripts/color.mjs) `convert` and is a `warning` raw. A colour that differs by Mode, carries an opacity or is a `color-mix` is a [Synthesized token](#synthesized-tokens).
 - **Rules.** For each field, the step finds the fewest axes its value depends on. The Base Component's value goes in `{}`. Rules follow fewest axes first, then in axis order, and a later rule wins. A rule is added where the rules so far give its anchor (that value combination, every other axis at its default) the wrong value, and that value holds for at least half of the anchor and its neighbours one axis away. A rule over every remaining axis is always added when needed. Rules on the same axes are merged while two differ in one axis alone. A self-check confirms `resolve()` gives back every variant.
 - **Fails:**
   - layout, an opacity or an effect's shape (anything but its colour) that differs by Mode, naming the utility;
-  - a border with no `border-color` utility, which would take the base layer's colour;
   - a ring with no colour.
 
 ### Slot axes
@@ -242,15 +245,33 @@ A value that neither the source nor a rule here states is drafted by an agent. T
 - **Notes.** Each of these gets an `info` note, and none is carried:
   - `:has(…)` conditions other than `:has([<attr>="<value>"])`, such as `has-[>svg]`;
   - ancestor styling such as `in-data-[slot=button-group]` (ADR 0012);
-  - descendant styling other than a slot frame's svg size, such as `[&_svg]:shrink-0`, plus text utilities and parts other than the root and its slot frames (a later agent-tier ticket);
+  - descendant styling other than a slot frame's svg size, such as `[&_svg]:shrink-0`, plus text utilities and a part's paint, padding and layout (a later agent-tier ticket);
   - other media queries and conditions;
   - utilities no field carries;
   - classes that compile to no CSS.
-- **Defaults.** The anatomy is the root and its slot frames, and `properties` is `[]`.
+- **Defaults.** The anatomy is the root, its icon slot frames and its parts, and `properties` is `[]`.
 - **Agent tier.** Layer names and the anatomy below the root, each slot's icon (an INSTANCE with an INSTANCE_SWAP, `icons.default` and `code.visibleWhen: {axis}`), properties, text styles and excluded combinations are not drafted yet.
 
-Tests: `node --test skills/adapter-generic/test/*.test.mjs`. They skip, saying so, until the tools are fetched.
+## 4. Preview renderer
+
+[`scripts/preview.mjs`](scripts/preview.mjs) is the renderer To-preview finds by convention, and [`scripts/handoff-adapter.mjs`](scripts/handoff-adapter.mjs) hands the same renderer to To-handoff, with the rest of #102's Adapter interface. `previewRenderer(contract)` resolves to:
+
+- `render(tuple, properties)`: the project's own component, rendered with `react-dom/server` `renderToStaticMarkup`. A missing axis takes its default, and each axis value's `code` props are set. Each anatomy node the variant shows is a child, in anatomy order: an icon slot an `<svg>` carrying the attribute its Slot axis tests, a part its exported component holding its layer name. A node the resolved layout hides (`visible: false`) is not rendered. The Contract has no properties yet.
+- `stylesheet`: the project's global CSS compiled by the pinned Tailwind over every class of the component files the render loads, Preflight and the base layer included. Tailwind's `@supports (color: color-mix(…))` guards are unwrapped, because To-preview's state forcing does not read inside `@supports`.
+- `modeClass(mode)`: `mode-<key>`, used only for Light, which records no selector. Dark switches by its `selector`, `.dark`.
+
+Unlike the reading tier, it runs code: the project's component files, transpiled with the pinned TypeScript, and the packages they import. Those are pinned in [`preview/package.json`](preview/package.json) and its lockfile, at the versions the fixture's lockfile resolves, and installed with `npm ci --ignore-scripts` into gitignored `.scratch/adapter-generic/preview/`. A bare import the file does not pin fails. It refuses when a project file is not the Contract's snapshot, or when an installed package's version differs from the project's lockfile.
+
+```
+node skills/to-preview/scripts/catalog.mjs design-systems/shadcn/contracts/button.component.json
+```
+
+The To-handoff module's `roleGroups` match colours to `Color` and `Sidebar` tokens, lengths to `Spacing` and radii to `Radius`. Its surfaces are `background` and `card`, its breakpoints Tailwind's `--breakpoint-*`, and `checkContract` holds a Contract to the Design System's package pins and file hashes.
+
+Tests: `node --test skills/adapter-generic/test/*.test.mjs`. They skip, saying so, until the tools are fetched; the catalog measurements also need To-handoff's browser (`node skills/to-handoff/scripts/deps.mjs`).
 
 ## Moving a pin
 
 Change `TOOLS` in `sources.mjs` (the version and its registry `integrity`). The Adapter refuses a project whose lockfile resolves another version of a `stylesheet` package (`shadcn`, `tailwindcss`, `tw-animate-css`), because the compiled cross-check must run the Tailwind the project runs. `source.packages` records those three. After the change, regenerate the document.
+
+The preview renderer's packages are pinned in [`preview/package.json`](preview/package.json) and its lockfile, which must resolve every package at the version the project's lockfile does: the renderer refuses otherwise, naming the package. To move one, change it in the project, then in `preview/package.json`, and run `npm install --package-lock-only --ignore-scripts` in `preview/`.
