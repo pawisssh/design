@@ -37,9 +37,9 @@ function variant(edit) {
 const byKey = axes => Object.fromEntries(axes.map(a => [a.key, a]));
 const tok = token => ({ token });
 
-test('Button axes: cva variant and size, the attribute axes, then the canonical State the CSS defines', { skip }, async () => {
+test('Button axes: cva variant and size, the attribute axes, the Slot axes, then the canonical State the CSS defines', { skip }, async () => {
   const { axes } = await button();
-  assert.deepEqual(axes.map(a => a.key), ['variant', 'size', 'invalid', 'expanded', 'state']);
+  assert.deepEqual(axes.map(a => a.key), ['variant', 'size', 'invalid', 'expanded', 'icon-inline-start', 'icon-inline-end', 'state']);
   const a = byKey(axes);
   assert.deepEqual(a.variant.values.map(v => [v.key, v.label]), [['default', 'Default'], ['outline', 'Outline'],
     ['secondary', 'Secondary'], ['ghost', 'Ghost'], ['destructive', 'Destructive'], ['link', 'Link']]);
@@ -66,7 +66,7 @@ test('aria-invalid becomes the invalid axis: state words, absent by default, css
 test('aria-disabled folds into disabled, with both selectors in css and no new axis', { skip }, async () => {
   const project = variant(t => t.replace('disabled:opacity-50', 'disabled:opacity-50 aria-disabled:opacity-50'));
   const { axes } = await readFamily({ project, family: 'button', foundations });
-  assert.deepEqual(axes.map(a => a.key), ['variant', 'size', 'invalid', 'expanded', 'state']);
+  assert.deepEqual(axes.map(a => a.key), ['variant', 'size', 'invalid', 'expanded', 'icon-inline-start', 'icon-inline-end', 'state']);
   assert.equal(byKey(axes).state.values.find(v => v.key === 'disabled').css, ':disabled, [aria-disabled="true"]');
 });
 
@@ -74,22 +74,23 @@ test('the selection omits expanded where no class styles aria-expanded: those va
   const { expectedCount, omit, notes } = await button();
   assert.deepEqual(omit.map(o => o.match), [{ variant: ['default', 'destructive', 'link'], expanded: 'expanded' }]);
   assert.match(omit[0].reason, /no aria-expanded utility/);
-  assert.equal(expectedCount, 6 * 8 * 2 * 2 * 4 - 3 * 8 * 2 * 4);
-  assert.ok(!notes.some(n => n.level === 'verify' && /ADR 0004/.test(n.message)), 'under ~600 after the omit: no warning');
+  // the two Slot axes multiply by 4: a filled slot is no twin, even in an icon size, where its frame still shows
+  assert.equal(expectedCount, (6 * 8 * 2 * 2 * 4 - 3 * 8 * 2 * 4) * 2 * 2);
+  assert.ok(notes.some(n => n.level === 'verify' && /2304 variants/.test(n.message) && /ADR 0004/.test(n.message)), 'past ~600: reported');
 });
 
 test('past ADR 0004\'s ~600 variants after the omit, it is reported, not cut', { skip }, async () => {
   // The base styles aria-expanded, so every variant does.
   const project = variant(text => text.replace('"group/button ', '"aria-expanded:bg-muted group/button '));
   const { expectedCount, omit, notes } = await readFamily({ project, family: 'button', foundations });
-  assert.deepEqual([expectedCount, omit], [768, []]);
-  assert.ok(notes.some(n => n.level === 'verify' && /768 variants/.test(n.message) && /ADR 0004/.test(n.message)));
+  assert.deepEqual([expectedCount, omit], [768 * 2 * 2, []]);
+  assert.ok(notes.some(n => n.level === 'verify' && /3072 variants/.test(n.message) && /ADR 0004/.test(n.message)));
 });
 
 test('Button layout per size matches its compiled CSS, the 1px border added to each padding', { skip }, async () => {
   const fam = await button();
   const c = { axes: fam.axes, layout: fam.layout, paint: [], properties: [] };
-  const at = size => resolve(c, { variant: 'default', size, invalid: 'valid', expanded: 'collapsed', state: 'enabled' }).layout.Button;
+  const at = size => resolve(c, { variant: 'default', size, invalid: 'valid', expanded: 'collapsed', 'icon-inline-start': 'none', 'icon-inline-end': 'none', state: 'enabled' }).layout.Button;
   const raw = n => ({ raw: n, level: 'info' });
   const strip = v => (v && v.raw !== undefined ? { raw: v.raw, level: v.level } : v);
   const expect = {
@@ -120,9 +121,44 @@ test('cn() is modelled: a later class drops an earlier one it covers, and a font
   assert.match(cn.message, /text-\[0\.8rem\] drops text-sm/);
 });
 
-test('layout is the same in every State, attribute and variant value: the rules hang off size only', { skip }, async () => {
+test('each has-data-[icon=…] slot becomes a Slot axis over a frame the root holds (#121)', { skip }, async () => {
+  const { axes, anatomy } = await button();
+  assert.deepEqual(axes.map(a => a.key), ['variant', 'size', 'invalid', 'expanded', 'icon-inline-start', 'icon-inline-end', 'state']);
+  const start = byKey(axes)['icon-inline-start'];
+  assert.deepEqual([start.label, start.slot, start.default], ['Icon Inline Start', 'Icon Inline Start', 'none']);
+  assert.deepEqual(start.values, [
+    { key: 'none', label: 'False', filled: false, code: {}, css: ':not(:has([data-icon="inline-start"]))' },
+    { key: 'icon-inline-start', label: 'True', filled: true, code: {}, css: ':has([data-icon="inline-start"])' }]);
+  assert.deepEqual(anatomy, { name: 'Button', type: 'COMPONENT', children: [
+    { name: 'Icon Inline Start', type: 'FRAME', role: 'icon' }, { name: 'Icon Inline End', type: 'FRAME', role: 'icon' }] });
+});
+
+test('a filled slot sets its padding exactly; the frame is the svg size and shows where its slot is filled', { skip }, async () => {
+  const fam = await button();
+  const c = { axes: fam.axes, layout: fam.layout, paint: [], properties: [] };
+  const at = (size, start = 'none', end = 'none') =>
+    resolve(c, { variant: 'default', size, invalid: 'valid', expanded: 'collapsed', 'icon-inline-start': start, 'icon-inline-end': end, state: 'enabled' }).layout;
+  const pads = l => [l.Button.paddingLeft.raw, l.Button.paddingRight.raw];
+  // [empty, start filled, end filled, both]: CSS padding + the 1px border
+  const expect = { default: [11, 9], xs: [9, 7], sm: [11, 7], lg: [11, 9], icon: [1, 1], 'icon-xs': [1, 1], 'icon-sm': [1, 1], 'icon-lg': [1, 1] };
+  for (const [size, [empty, filled]] of Object.entries(expect)) {
+    assert.deepEqual(pads(at(size)), [empty, empty], `${size} empty`);
+    assert.deepEqual(pads(at(size, 'icon-inline-start')), [filled, empty], `${size} inline-start`);
+    assert.deepEqual(pads(at(size, 'none', 'icon-inline-end')), [empty, filled], `${size} inline-end`);
+    assert.deepEqual(pads(at(size, 'icon-inline-start', 'icon-inline-end')), [filled, filled], `${size} both`);
+  }
+  assert.match(at('default', 'icon-inline-start').Button.paddingLeft.reason, /has-data-\[icon=inline-start\]:pl-2/);
+  const frame = { default: 'spacing-4', xs: 'spacing-3', sm: 'spacing-3_5', lg: 'spacing-4', icon: 'spacing-4', 'icon-xs': 'spacing-3', 'icon-sm': 'spacing-4', 'icon-lg': 'spacing-4' };
+  for (const [size, token] of Object.entries(frame)) {
+    const l = at(size, 'icon-inline-start');
+    assert.deepEqual([l['Icon Inline Start'].width, l['Icon Inline Start'].height], [tok(token), tok(token)], size);
+    assert.deepEqual([l['Icon Inline Start'].visible, l['Icon Inline End'].visible], [true, false], size);
+  }
+});
+
+test('layout is the same in every State, attribute and variant value: the rules hang off size and the Slot axes only', { skip }, async () => {
   const { layout } = await button();
-  assert.ok(layout.every(r => Object.keys(r.match).every(k => k === 'size')), JSON.stringify(layout.map(r => r.match)));
+  assert.ok(layout.every(r => Object.keys(r.match).every(k => ['size', 'icon-inline-start', 'icon-inline-end'].includes(k))), JSON.stringify(layout.map(r => r.match)));
 });
 
 test('generate writes the draft Contract against the Foundations document of the same run: it validates', { skip }, async () => {
@@ -130,11 +166,11 @@ test('generate writes the draft Contract against the Foundations document of the
   assert.deepEqual(validate(contract, committed).errors, []);
   assert.deepEqual([contract.selection.status, contract.selection.approval], ['draft', null]);
   assert.equal(expand(contract).length, contract.selection.expectedCount);
-  assert.deepEqual(contract.anatomy, { name: 'Button', type: 'COMPONENT' });
+  assert.deepEqual(contract.anatomy.children.map(n => [n.name, n.type]), [['Icon Inline Start', 'FRAME'], ['Icon Inline End', 'FRAME']]);
   assert.equal(contract.source.adapter, 'generic');
   assert.deepEqual(Object.keys(contract.source.files), ['app/globals.css', 'components.json', BUTTON, 'package-lock.json']);
   const at = (variantKey, state, invalid = 'valid', expanded = 'collapsed') =>
-    resolve(contract, { variant: variantKey, size: 'default', invalid, expanded, state }).paint.Button;
+    resolve(contract, { variant: variantKey, size: 'default', invalid, expanded, 'icon-inline-start': 'none', 'icon-inline-end': 'none', state }).paint.Button;
   assert.deepEqual(at('default', 'enabled').fill, tok('primary'));
   assert.equal(at('ghost', 'enabled').fill, 'none');
   assert.deepEqual(at('ghost', 'enabled', 'valid', 'expanded').fill, tok('muted'));

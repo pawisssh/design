@@ -143,6 +143,7 @@
         "default": { "type": "string" },
         "defaultSource": { "type": "string" },
         "canonical": { "type": "boolean" },
+        "slot": { "type": "string", "description": "a Slot axis (#121, ADR 0011): the non-root anatomy node whose presence this axis sets; each value says whether it fills it" },
         "values": {
           "type": "array",
           "minItems": 1,
@@ -153,7 +154,8 @@
               "key": { "type": "string" },
               "label": { "type": "string", "pattern": "^[^=,]+$" },
               "code": { "type": ["object", "null"] },
-              "css": { "type": "string" }
+              "css": { "type": "string" },
+              "filled": { "type": "boolean", "description": "on a Slot axis value only: whether the slot is filled" }
             }
           }
         },

@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "button",
+    "name": "Button",
+    "description": "Test fixture from the #88 prototype (prototype/slot-styling): shadcn/ui new-york-v4 Button with its icon slot as a Slot axis. Variant narrowed to default and outline; state narrowed to enabled, hover, disabled."
+  },
+  "source": {
+    "codeLibrary": "shadcn/ui",
+    "adapter": "shadcn-prototype",
+    "repository": "https://ui.shadcn.com (registry @shadcn, style new-york-v4, fetched with the shadcn 4.22.0 CLI on 2026-10-17)",
+    "packages": { "shadcn-ui-button": "registry 2026-10-17", "class-variance-authority": "0.7.1", "tailwindcss": "4.3.3" },
+    "files": { "registry/new-york-v4/ui/button.tsx": "sha256:79dd6f75f8136394442202d6b8b922fb269eaad0a5dba579397c9d5b41f893bb" },
+    "snapshotId": "sha256:79dd6f75f8136394442202d6b8b922fb269eaad0a5dba579397c9d5b41f893bb"
+  },
+  "axes": [
+    {
+      "key": "variant",
+      "label": "Variant",
+      "default": "default",
+      "defaultSource": "button.tsx defaultVariants.variant",
+      "values": [
+        { "key": "default", "label": "Default", "code": { "variant": "default" } },
+        { "key": "outline", "label": "Outline", "code": { "variant": "outline" } }
+      ]
+    },
+    {
+      "key": "size",
+      "label": "Size",
+      "default": "default",
+      "defaultSource": "button.tsx defaultVariants.size",
+      "values": [
+        { "key": "default", "label": "Default", "code": { "size": "default" } },
+        { "key": "xs", "label": "Xs", "code": { "size": "xs" } },
+        { "key": "sm", "label": "Sm", "code": { "size": "sm" } },
+        { "key": "lg", "label": "Lg", "code": { "size": "lg" } },
+        { "key": "icon", "label": "Icon", "code": { "size": "icon" } },
+        { "key": "icon-xs", "label": "Icon Xs", "code": { "size": "icon-xs" } },
+        { "key": "icon-sm", "label": "Icon Sm", "code": { "size": "icon-sm" } },
+        { "key": "icon-lg", "label": "Icon Lg", "code": { "size": "icon-lg" } }
+      ]
+    },
+    {
+      "key": "icon",
+      "label": "Icon",
+      "slot": "Icon",
+      "default": "none",
+      "defaultSource": "a Button renders the children it is given; with no svg child, no has-[>svg] utility applies",
+      "values": [
+        { "key": "none", "label": "False", "filled": false, "code": {}, "css": ":not(:has(>svg))" },
+        { "key": "icon", "label": "True", "filled": true, "code": {}, "css": ":has(>svg)" }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        { "key": "enabled", "label": "Enabled", "code": {} },
+        { "key": "hover", "label": "Hover", "code": null, "css": ":hover" },
+        { "key": "disabled", "label": "Disabled", "code": { "disabled": true }, "css": ":disabled" }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [
+      {
+        "match": { "size": ["icon", "icon-xs", "icon-sm", "icon-lg"], "icon": "none" },
+        "reason": "An icon-only size with no icon is an empty square. [assumption] omitted, not excluded, so the owner can re-include it in To-preview."
+      }
+    ],
+    "expectedCount": 72,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Button",
+    "type": "COMPONENT",
+    "children": [
+      { "name": "Icon", "type": "INSTANCE", "role": "icon", "instanceOf": "icon:default" },
+      { "name": "Label", "type": "TEXT", "role": "label" }
+    ]
+  },
+  "properties": [
+    {
+      "key": "label",
+      "label": "Label",
+      "type": "TEXT",
+      "default": "Button",
+      "binds": [{ "node": "Label", "field": "characters" }],
+      "code": { "prop": "children" }
+    },
+    {
+      "key": "swapIcon",
+      "label": "Swap icon",
+      "type": "INSTANCE_SWAP",
+      "default": "icon:default",
+      "binds": [{ "node": "Icon", "field": "mainComponent" }],
+      "code": { "child": "svg", "valueFrom": "icon", "visibleWhen": { "axis": "icon" } }
+    }
+  ],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Button": {
+          "direction": "row",
+          "width": "hug",
+          "height": { "token": "spacing-9" },
+          "alignMain": "center",
+          "alignCross": "center",
+          "paddingLeft": { "token": "spacing-4" },
+          "paddingRight": { "token": "spacing-4" },
+          "gap": { "token": "spacing-2" },
+          "paddingTop": { "token": "spacing-0" },
+          "paddingBottom": { "token": "spacing-0" },
+          "radius": { "token": "radius-md" },
+          "strokeWeight": { "raw": 1, "level": "info", "reason": "Tailwind `border` is 1px; only outline paints a stroke" },
+          "strokeAlign": "inside"
+        },
+        "Icon": { "width": { "token": "spacing-4" }, "height": { "token": "spacing-4" }, "visible": true },
+        "Label": { "textStyle": { "token": "text-sm-medium" }, "textResize": "width-and-height", "visible": true }
+      }
+    },
+    { "match": { "size": "default" }, "set": { "Button": { "paddingTop": { "token": "spacing-2" }, "paddingBottom": { "token": "spacing-2" } } } },
+    { "match": { "size": "xs" }, "set": { "Button": { "height": { "token": "spacing-6" }, "paddingLeft": { "token": "spacing-2" }, "paddingRight": { "token": "spacing-2" }, "gap": { "token": "spacing-1" } }, "Icon": { "width": { "token": "spacing-3" }, "height": { "token": "spacing-3" } }, "Label": { "textStyle": { "token": "text-xs-medium" } } } },
+    { "match": { "size": "sm" }, "set": { "Button": { "height": { "token": "spacing-8" }, "paddingLeft": { "token": "spacing-3" }, "paddingRight": { "token": "spacing-3" }, "gap": { "token": "spacing-1.5" } } } },
+    { "match": { "size": "lg" }, "set": { "Button": { "height": { "token": "spacing-10" }, "paddingLeft": { "token": "spacing-6" }, "paddingRight": { "token": "spacing-6" } } } },
+    {
+      "match": { "size": ["icon", "icon-xs", "icon-sm", "icon-lg"] },
+      "set": { "Button": { "paddingLeft": { "token": "spacing-0" }, "paddingRight": { "token": "spacing-0" } }, "Label": { "visible": false } }
+    },
+    { "match": { "size": "icon" }, "set": { "Button": { "width": { "token": "spacing-9" }, "height": { "token": "spacing-9" } } } },
+    { "match": { "size": "icon-xs" }, "set": { "Button": { "width": { "token": "spacing-6" }, "height": { "token": "spacing-6" } }, "Icon": { "width": { "token": "spacing-3" }, "height": { "token": "spacing-3" } } } },
+    { "match": { "size": "icon-sm" }, "set": { "Button": { "width": { "token": "spacing-8" }, "height": { "token": "spacing-8" } } } },
+    { "match": { "size": "icon-lg" }, "set": { "Button": { "width": { "token": "spacing-10" }, "height": { "token": "spacing-10" } } } },
+    { "match": { "icon": "none" }, "set": { "Icon": { "visible": false } } },
+    { "match": { "icon": "icon", "size": "default" }, "set": { "Button": { "paddingLeft": { "token": "spacing-3" }, "paddingRight": { "token": "spacing-3" } } } },
+    { "match": { "icon": "icon", "size": "xs" }, "set": { "Button": { "paddingLeft": { "token": "spacing-1.5" }, "paddingRight": { "token": "spacing-1.5" } } } },
+    { "match": { "icon": "icon", "size": "sm" }, "set": { "Button": { "paddingLeft": { "token": "spacing-2.5" }, "paddingRight": { "token": "spacing-2.5" } } } },
+    { "match": { "icon": "icon", "size": "lg" }, "set": { "Button": { "paddingLeft": { "token": "spacing-4" }, "paddingRight": { "token": "spacing-4" } } } }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Button": { "fill": "none", "stroke": "none", "effects": [], "opacity": { "raw": 1, "level": "info", "reason": "opaque unless disabled" } },
+        "Icon/Vector": { "stroke": { "sameAs": "Label.fill", "why": "lucide icons stroke with currentColor" } }
+      }
+    },
+    { "match": { "variant": "default" }, "set": { "Button": { "fill": { "token": "primary" } }, "Label": { "fill": { "token": "primary-foreground" } } } },
+    { "match": { "variant": "default", "state": "hover" }, "set": { "Button": { "fill": { "raw": "#171717e6", "level": "warning", "reason": "hover:bg-primary/90 is primary at 90% alpha; no token" } } } },
+    { "match": { "variant": "outline" }, "set": { "Button": { "fill": { "token": "background" }, "stroke": { "token": "border" } }, "Label": { "fill": { "token": "foreground" } } } },
+    { "match": { "variant": "outline", "state": "hover" }, "set": { "Button": { "fill": { "token": "accent" } }, "Label": { "fill": { "token": "accent-foreground" } } } },
+    { "match": { "state": "disabled" }, "set": { "Button": { "opacity": { "raw": 0.5, "level": "info", "reason": "disabled:opacity-50" } } } }
+  ],
+  "icons": {
+    "source": { "package": "lucide-react", "version": "1.58.0", "path": "dist/esm/icons/{key}.js" },
+    "default": "plus",
+    "preferred": ["plus", "arrow-right", "download", "trash-2", "x"]
+  },
+  "subComponents": [],
+  "dependencies": { "families": [], "fonts": [{ "family": "Inter", "styles": ["Medium"] }] },
+  "figma": {
+    "page": "Buttons",
+    "componentSetName": "Button",
+    "description": "shadcn/ui Button (#88 prototype fixture).",
+    "header": { "type": "Component", "title": "Button", "namespace": "@/components/ui/button" },
+    "grid": { "columns": ["size"], "rows": ["variant", "icon", "state"] }
+  },
+  "code": {
+    "framework": "react",
+    "package": "shadcn-ui-button",
+    "component": "Button",
+    "import": "import { Button } from '@/components/ui/button';",
+    "alwaysEmit": []
+  },
+  "notes": [
+    { "level": "info", "at": "axes.icon", "message": "Slot axis (#88): has-[>svg]:px-* in each text size is the only change the icon's presence makes, so the icon slot is a variant axis and its visibility a layout field." },
+    { "level": "info", "at": "layout.Icon", "message": "[&_svg]:pointer-events-none and [&_svg]:shrink-0 have no Figma field. [&_svg:not([class*='size-'])]:size-4 is the Icon size; a consumer size-* class overriding it is off-axis (#62)." },
+    { "level": "info", "at": "layout[size=icon*].Label", "message": "Icon-only sizes hide the Label. shadcn leaves the label to the consumer; the Adapter drafts the hide (by: agent) for the owner to confirm (#65)." }
+  ]
+}
