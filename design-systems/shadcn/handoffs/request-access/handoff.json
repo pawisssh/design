@@ -33,24 +33,24 @@
     "contracts": {
       "alert": {
         "snapshotId": "sha256:26121ba66822ed1c1ac5705e0059e3fcccbd9e76ca761f36f4710d3fc58074e1",
-        "contentHash": "sha256:8b3735bf2d260b6a7f5bda83c231114b1f459de8e35dfcff43e2f9657b4b3ef6"
+        "contentHash": "sha256:93ffcea768660189a6aec33871e92a7516add34ede9f5083cbc2bc1ff14d481e"
       },
       "button": {
         "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6",
-        "contentHash": "sha256:79aab79bc08bf80bb20def2475282d2acd6ecab3b29aae06cf6ea57cef1967a0"
+        "contentHash": "sha256:63cf726a7d861cb46e8422f0d923a78f29e33abbed58d3e7b4478bb38d63a138"
       },
       "label": {
         "snapshotId": "sha256:160c2f58b3f8e1e4e8b236c549344a7c10eb73d1dd3253d92e3481309a972fdc",
-        "contentHash": "sha256:1d0b85052adcd449dd2f2ee3e68ee8b02b496f0dd6113ab441ebf93662db09da"
+        "contentHash": "sha256:f7ec0e8ffe6f72b307d33bca57cc13137845ebc52afc9de07b74df05dfcda28b"
       },
       "textarea": {
         "snapshotId": "sha256:f867108029e85e1d5e6f2f62e1f1279c393470acc7169848842f6712f91a1be1",
-        "contentHash": "sha256:97ce0bc7ba1b29b3df92845c5f5183f266493b2172850f9431c5ba6eeacd2798"
+        "contentHash": "sha256:ef21d3cb622e119ace69fb3bac33066bd3fced9475c415a441610ef3431e51ac"
       }
     },
     "proposals": {},
     "foundations": {
-      "documentHash": "sha256:ccfa85679ef3956a36cb3a85499c32add1da86e0786c5432ef35495e2a83ade1",
+      "documentHash": "sha256:40426fa5d53d3c8dc7eeed5bd3265a53f00dfa714ee7acfa9a1376797dab49c5",
       "usedHash": "sha256:ac8b6acde88f612a973024395f4fd7c858474021dee1e48177b0d65c5d6399d7"
     },
     "modes": {

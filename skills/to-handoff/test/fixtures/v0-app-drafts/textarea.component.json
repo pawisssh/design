@@ -148,7 +148,7 @@
           "stroke": {
             "token": "input"
           },
-          "opacity": 1,
+          "opacity": { "raw": 1, "level": "info", "reason": "no opacity utility" },
           "effects": []
         }
       }
@@ -212,7 +212,7 @@
           "fill": {
             "token": "textarea-disabled-fill"
           },
-          "opacity": 0.5
+          "opacity": { "raw": 0.5, "level": "info", "reason": "disabled:opacity-50: opacity 50%; the Foundations document has no opacity variable" }
         }
       }
     },

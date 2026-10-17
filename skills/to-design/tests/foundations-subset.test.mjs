@@ -318,9 +318,9 @@ test('a document without a default group builds the closure and the default grou
   assert.ok(doc.closure.tokens.includes('button-outline-fill'), 'the closure holds the Button\'s Synthesized tokens (#120)');
   const spacing = Object.keys(doc.variables).filter(n => doc.variables[n].name.startsWith('Spacing/'));
   assert.equal(spacing.length, 35);
-  // the Code Library tokens a Synthesized value aliases (#124): `input` only through a Button alias, not in the closure
+  // the Code Library tokens a Synthesized value aliases (#124): `background` only through a Button alias, not in the closure
   const targets = [...new Set(Object.values(doc.variables).flatMap(v => Object.values(v.values).map(m => m.alias).filter(Boolean)))];
-  assert.ok(targets.includes('input') && !doc.closure.tokens.includes('input'));
+  assert.ok(targets.includes('background') && !doc.closure.tokens.includes('background'));
   assert.deepEqual(Object.keys(plan.foundations.variables).sort(), [...new Set([...doc.closure.tokens, ...spacing, ...targets])].sort());
   assert.deepEqual(plan.foundations.textStyles, {});
   assert.deepEqual(setGroups(null, FILE_KEY, doc).foundationsGroups, ['Spacing']);

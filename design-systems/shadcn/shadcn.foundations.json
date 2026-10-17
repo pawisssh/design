@@ -1982,13 +1982,8 @@
       },
       "values": {
         "light": {
-          "raw": "#e7000b",
-          "resolved": "#e7000b",
-          "from": {
-            "alias": "destructive"
-          },
-          "level": "info",
-          "reason": "aria-invalid:border-destructive: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124); outside sRGB, clipped per channel"
+          "alias": "destructive",
+          "resolved": "#e7000b"
         },
         "dark": {
           "raw": "#ff6467",
@@ -2020,13 +2015,8 @@
       },
       "values": {
         "light": {
-          "raw": "#e7000b",
-          "resolved": "#e7000b",
-          "from": {
-            "alias": "destructive"
-          },
-          "level": "info",
-          "reason": "aria-invalid:border-destructive: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124); outside sRGB, clipped per channel"
+          "alias": "destructive",
+          "resolved": "#e7000b"
         },
         "dark": {
           "raw": "#ff6467",

@@ -91,7 +91,7 @@
         "Label": {
           "fill": "none",
           "stroke": "none",
-          "opacity": 1,
+          "opacity": { "raw": 1, "level": "info", "reason": "no opacity utility" },
           "effects": []
         }
       }
