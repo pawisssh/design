@@ -13,11 +13,10 @@ import { generate as library } from '../scripts/foundations.mjs';
 import { FIXTURE, hasTools } from '../scripts/sources.mjs';
 import { approve, validate } from '../../contract/scripts/contract.mjs';
 import { writeJson } from '../../contract/scripts/io.mjs';
+import { committed, draft, draftText } from './button-draft.mjs';
 
 const root = new URL('../../../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, root), 'utf8');
-const COMMITTED_PATH = 'design-systems/shadcn/contracts/button.component.json';
-const committed = JSON.parse(read(COMMITTED_PATH));
 const foundations = JSON.parse(read('design-systems/shadcn/shadcn.foundations.json'));
 const draftsFile = name => new URL(`../fixtures/drafts/${name}`, import.meta.url).pathname;
 const drafts = name => JSON.parse(readFileSync(draftsFile(name), 'utf8')).drafts;
@@ -75,10 +74,10 @@ const v2 = () => (v2Run = v2Run || (async () => {
 
 const sorted = r => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, [...v].sort()]));
 
-test('from no prior Contract, the v1 drafts file gives the committed Button Contract: a draft, every entry the agent\'s', { skip }, async () => {
+test('from no prior Contract, the v1 drafts file gives the committed Button Contract as the Adapter drafted it: every entry the agent\'s', { skip }, async () => {
   const { contract, requests, report } = await generate({ project: FIXTURE, family: 'button', foundations, drafts: drafts('button.json') });
   assert.deepEqual(requests, []);
-  assert.deepEqual(contract, committed);
+  assert.deepEqual(contract, draft);
   assert.deepEqual([contract.selection.status, contract.selection.approval], ['draft', null]);
   assert.deepEqual(Object.keys(contract.drafted), ALL_KEYS);
   assert.deepEqual(report.missing.sort(), ALL_KEYS);
@@ -156,7 +155,7 @@ test('the CLI asks for drafts with exit code 2, writing the requests and no Cont
   assert.deepEqual(file.requests.map(r => r.key).sort(), ALL_KEYS);
   const done = spawnSync('node', [CLI, '--family', 'button', '-o', out, '--drafts', draftsFile('button.json')], { encoding: 'utf8' });
   assert.equal(done.status, 0, done.stderr);
-  assert.equal(readFileSync(out, 'utf8'), read(COMMITTED_PATH));
+  assert.equal(readFileSync(out, 'utf8'), draftText);
 });
 
 test('upgrade 1 (lg h-9 to h-10; Alert and Card edited): every Button entry carried verbatim, the Contract rewritten as a draft', { skip }, async () => {
@@ -255,7 +254,7 @@ test('an unchanged snapshot keeps the owner\'s omit patch: nothing is written un
   assert.equal(same.contract, prior);
   const rewritten = await generate({ project: FIXTURE, family: 'button', foundations, prior, rewrite: true });
   assert.equal(rewritten.unchanged, false);
-  assert.deepEqual(rewritten.contract, committed);
+  assert.deepEqual(rewritten.contract, draft);
 });
 
 test('an owner value the subject no longer accepts is reopened, anchored on it, and listed for a check', { skip }, async () => {

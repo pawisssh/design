@@ -12,6 +12,7 @@ import { generate, readFamily } from '../scripts/components.mjs';
 import { generate as library } from '../scripts/foundations.mjs';
 import { FIXTURE, hasTools } from '../scripts/sources.mjs';
 import { expand, resolve, validate } from '../../contract/scripts/contract.mjs';
+import { draftText } from './button-draft.mjs';
 
 const root = new URL('../../../', import.meta.url);
 const COMMITTED = new URL('design-systems/shadcn/shadcn.foundations.json', root);
@@ -200,7 +201,7 @@ test('two CLI runs from no prior Contract write byte-identical Contracts through
     return readFileSync(out, 'utf8');
   });
   assert.equal(runs[0], runs[1]);
-  assert.equal(runs[0], readFileSync(new URL('design-systems/shadcn/contracts/button.component.json', root), 'utf8'), 'the committed Contract');
+  assert.equal(runs[0], draftText, 'the committed Contract as the Adapter drafted it');
 });
 
 test('the CLI fails, writing nothing, when the Foundations document lacks the family\'s Synthesized tokens', { skip }, () => {

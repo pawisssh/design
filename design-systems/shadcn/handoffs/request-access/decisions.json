@@ -1,40 +1,4 @@
 {
-  "recognise:Label": {
-    "draft": "label",
-    "tuple": {},
-    "via": "library",
-    "reason": "shadcn ships Label, but this Design System has no label Contract, and the Generic Adapter's mid-run draft did not pass"
-  },
-  "contract:label": {
-    "path": "skills/to-handoff/test/fixtures/v0-app-drafts/label.component.json"
-  },
-  "recognise:Input[required]": {
-    "draft": "input",
-    "tuple": {},
-    "via": "library",
-    "reason": "shadcn ships Input, but this Design System has no input Contract, and the Generic Adapter's mid-run draft did not pass"
-  },
-  "contract:input": {
-    "path": "skills/to-handoff/test/fixtures/v0-app-drafts/input.component.json"
-  },
-  "recognise:Select": {
-    "draft": "select",
-    "tuple": {},
-    "via": "library",
-    "reason": "shadcn ships Select, but this Design System has no select Contract, and the Generic Adapter's mid-run draft did not pass"
-  },
-  "contract:select": {
-    "path": "skills/to-handoff/test/fixtures/v0-app-drafts/select.component.json"
-  },
-  "recognise:Textarea[rows=3]": {
-    "draft": "textarea",
-    "tuple": {},
-    "via": "library",
-    "reason": "shadcn ships Textarea, but this Design System has no textarea Contract, and the Generic Adapter's mid-run draft did not pass"
-  },
-  "contract:textarea": {
-    "path": "skills/to-handoff/test/fixtures/v0-app-drafts/textarea.component.json"
-  },
   "recognise:Toaster": {
     "draft": "sonner",
     "tuple": {},
