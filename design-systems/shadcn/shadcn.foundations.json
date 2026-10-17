@@ -60,14 +60,12 @@
       "button-destructive-focus-stroke",
       "button-destructive-hover-fill",
       "button-focus-effect",
-      "button-ghost-expanded-hover-fill",
       "button-ghost-hover-fill",
       "button-invalid-effect",
       "button-invalid-focus-effect",
       "button-invalid-focus-stroke",
       "button-invalid-stroke",
       "button-outline-expanded-fill",
-      "button-outline-expanded-hover-fill",
       "button-outline-fill",
       "button-outline-focus-stroke",
       "button-outline-hover-fill",
@@ -1368,64 +1366,21 @@
       ],
       "family": "button"
     },
-    "button-ghost-expanded-hover-fill": {
-      "collection": "theme",
-      "name": "Button/button-ghost-expanded-hover-fill",
-      "type": "COLOR",
-      "source": "synthesized: components/ui/button.tsx:17 aria-expanded:bg-muted dark:hover:bg-muted/50",
-      "scopes": [
-        "FRAME_FILL"
-      ],
-      "codeSyntax": {
-        "WEB": "aria-expanded:bg-muted dark:hover:bg-muted/50"
-      },
-      "values": {
-        "light": {
-          "raw": "#f5f5f5",
-          "resolved": "#f5f5f5",
-          "from": {
-            "alias": "muted"
-          },
-          "level": "info",
-          "reason": "aria-expanded:bg-muted: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
-        },
-        "dark": {
-          "raw": "#262626",
-          "alpha": 0.5,
-          "resolved": "rgba(38, 38, 38, 0.5)",
-          "from": {
-            "alias": "muted",
-            "alpha": 0.5
-          },
-          "level": "info",
-          "reason": "dark:hover:bg-muted/50: muted at 50%, flattened to RGBA since a Figma alias cannot carry alpha"
-        }
-      },
-      "usedBy": [
-        "button"
-      ],
-      "family": "button"
-    },
     "button-ghost-hover-fill": {
       "collection": "theme",
       "name": "Button/button-ghost-hover-fill",
       "type": "COLOR",
-      "source": "synthesized: components/ui/button.tsx:17 hover:bg-muted dark:hover:bg-muted/50",
+      "source": "synthesized: components/ui/button.tsx:17 hover:bg-muted aria-expanded:bg-muted dark:hover:bg-muted/50",
       "scopes": [
         "FRAME_FILL"
       ],
       "codeSyntax": {
-        "WEB": "hover:bg-muted dark:hover:bg-muted/50"
+        "WEB": "hover:bg-muted aria-expanded:bg-muted dark:hover:bg-muted/50"
       },
       "values": {
         "light": {
-          "raw": "#f5f5f5",
-          "resolved": "#f5f5f5",
-          "from": {
-            "alias": "muted"
-          },
-          "level": "info",
-          "reason": "hover:bg-muted: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+          "alias": "muted",
+          "resolved": "#f5f5f5"
         },
         "dark": {
           "raw": "#262626",
@@ -1537,13 +1492,8 @@
       },
       "values": {
         "light": {
-          "raw": "#e7000b",
-          "resolved": "#e7000b",
-          "from": {
-            "alias": "destructive"
-          },
-          "level": "info",
-          "reason": "aria-invalid:border-destructive: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124); outside sRGB, clipped per channel"
+          "alias": "destructive",
+          "resolved": "#e7000b"
         },
         "dark": {
           "raw": "#ff6467",
@@ -1575,13 +1525,8 @@
       },
       "values": {
         "light": {
-          "raw": "#e7000b",
-          "resolved": "#e7000b",
-          "from": {
-            "alias": "destructive"
-          },
-          "level": "info",
-          "reason": "aria-invalid:border-destructive: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124); outside sRGB, clipped per channel"
+          "alias": "destructive",
+          "resolved": "#e7000b"
         },
         "dark": {
           "raw": "#ff6467",
@@ -1613,13 +1558,8 @@
       },
       "values": {
         "light": {
-          "raw": "#f5f5f5",
-          "resolved": "#f5f5f5",
-          "from": {
-            "alias": "muted"
-          },
-          "level": "info",
-          "reason": "aria-expanded:bg-muted: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+          "alias": "muted",
+          "resolved": "#f5f5f5"
         },
         "dark": {
           "raw": "#ffffff",
@@ -1631,44 +1571,6 @@
           },
           "level": "info",
           "reason": "dark:bg-input/30: input at 30%, flattened to RGBA since a Figma alias cannot carry alpha"
-        }
-      },
-      "usedBy": [
-        "button"
-      ],
-      "family": "button"
-    },
-    "button-outline-expanded-hover-fill": {
-      "collection": "theme",
-      "name": "Button/button-outline-expanded-hover-fill",
-      "type": "COLOR",
-      "source": "synthesized: components/ui/button.tsx:13 aria-expanded:bg-muted dark:hover:bg-input/50",
-      "scopes": [
-        "FRAME_FILL"
-      ],
-      "codeSyntax": {
-        "WEB": "aria-expanded:bg-muted dark:hover:bg-input/50"
-      },
-      "values": {
-        "light": {
-          "raw": "#f5f5f5",
-          "resolved": "#f5f5f5",
-          "from": {
-            "alias": "muted"
-          },
-          "level": "info",
-          "reason": "aria-expanded:bg-muted: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
-        },
-        "dark": {
-          "raw": "#ffffff",
-          "alpha": 0.075,
-          "resolved": "rgba(255, 255, 255, 0.075)",
-          "from": {
-            "alias": "input",
-            "alpha": 0.5
-          },
-          "level": "info",
-          "reason": "dark:hover:bg-input/50: input at 50%, flattened to RGBA since a Figma alias cannot carry alpha"
         }
       },
       "usedBy": [
@@ -1689,13 +1591,8 @@
       },
       "values": {
         "light": {
-          "raw": "#ffffff",
-          "resolved": "#ffffff",
-          "from": {
-            "alias": "background"
-          },
-          "level": "info",
-          "reason": "bg-background: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+          "alias": "background",
+          "resolved": "#ffffff"
         },
         "dark": {
           "raw": "#ffffff",
@@ -1727,23 +1624,12 @@
       },
       "values": {
         "light": {
-          "raw": "#a1a1a1",
-          "resolved": "#a1a1a1",
-          "from": {
-            "alias": "ring"
-          },
-          "level": "info",
-          "reason": "focus-visible:border-ring: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+          "alias": "ring",
+          "resolved": "#a1a1a1"
         },
         "dark": {
-          "raw": "#ffffff",
-          "alpha": 0.15,
-          "resolved": "rgba(255, 255, 255, 0.15)",
-          "from": {
-            "alias": "input"
-          },
-          "level": "info",
-          "reason": "dark:border-input: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+          "alias": "input",
+          "resolved": "rgba(255, 255, 255, 0.15)"
         }
       },
       "usedBy": [
@@ -1755,22 +1641,17 @@
       "collection": "theme",
       "name": "Button/button-outline-hover-fill",
       "type": "COLOR",
-      "source": "synthesized: components/ui/button.tsx:13 hover:bg-muted dark:hover:bg-input/50",
+      "source": "synthesized: components/ui/button.tsx:13 hover:bg-muted aria-expanded:bg-muted dark:hover:bg-input/50",
       "scopes": [
         "FRAME_FILL"
       ],
       "codeSyntax": {
-        "WEB": "hover:bg-muted dark:hover:bg-input/50"
+        "WEB": "hover:bg-muted aria-expanded:bg-muted dark:hover:bg-input/50"
       },
       "values": {
         "light": {
-          "raw": "#f5f5f5",
-          "resolved": "#f5f5f5",
-          "from": {
-            "alias": "muted"
-          },
-          "level": "info",
-          "reason": "hover:bg-muted: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+          "alias": "muted",
+          "resolved": "#f5f5f5"
         },
         "dark": {
           "raw": "#ffffff",
@@ -1802,23 +1683,12 @@
       },
       "values": {
         "light": {
-          "raw": "#e5e5e5",
-          "resolved": "#e5e5e5",
-          "from": {
-            "alias": "border"
-          },
-          "level": "info",
-          "reason": "border-border: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+          "alias": "border",
+          "resolved": "#e5e5e5"
         },
         "dark": {
-          "raw": "#ffffff",
-          "alpha": 0.15,
-          "resolved": "rgba(255, 255, 255, 0.15)",
-          "from": {
-            "alias": "input"
-          },
-          "level": "info",
-          "reason": "dark:border-input: a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)"
+          "alias": "input",
+          "resolved": "rgba(255, 255, 255, 0.15)"
         }
       },
       "usedBy": [
