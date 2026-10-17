@@ -49,7 +49,7 @@ test('Card\'s exported parts are nodes under the root, named by their data-slot 
     .map(name => ({ name, type: text.includes(name) ? 'TEXT' : 'FRAME' })));
 });
 
-test('Card\'s text parts are TEXT properties mapped to their child component, each layer\'s style read raw until Foundations has Text Styles (#166, #160)', { skip }, async () => {
+test('Card\'s text parts are TEXT properties mapped to their child component; Description binds its Text Style, Title\'s leading-snug has none (#166, #160)', { skip }, async () => {
   const card = await read('card');
   assert.deepEqual(card.properties.map(p => [p.key, p.type, p.binds, p.code]), [
     ['title', 'TEXT', [{ node: 'Title', field: 'characters' }], { child: 'CardTitle' }],
@@ -57,8 +57,9 @@ test('Card\'s text parts are TEXT properties mapped to their child component, ea
   const { layout } = resolve(card, { 'card-footer': 'none', state: 'enabled' });
   assert.deepEqual(layout.Title.textStyle.raw, { fontSize: 16, lineHeight: 22, fontWeight: 500 });
   assert.equal(layout.Title.textStyle.level, 'warning');
-  assert.match(layout.Title.textStyle.reason, /leading-snug line-height 22px.*#160/);
-  assert.deepEqual(layout.Description.textStyle.raw, { fontSize: 14, lineHeight: 20, fontWeight: 400 });
+  assert.match(layout.Title.textStyle.reason, /leading-snug line-height 22px.*no Text Style: leading-snug sets a line height off the type scale/);
+  assert.doesNotMatch(layout.Title.textStyle.reason, /no Text Styles yet/);
+  assert.deepEqual(layout.Description.textStyle, tok('text-sm-normal'));
   assert.equal(layout.Title.textResize, 'height');
 });
 

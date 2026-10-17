@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 5,
+  "revision": 6,
   "status": "pending",
   "approval": null,
   "feature": {
@@ -32,34 +32,34 @@
     "designSystem": "shadcn",
     "contracts": {
       "alert": {
-        "snapshotId": "sha256:26121ba66822ed1c1ac5705e0059e3fcccbd9e76ca761f36f4710d3fc58074e1",
-        "contentHash": "sha256:0dedbcf1912aa4c27353134fd304b5e7803b9e011c1ce426b962cbf3c3c9b3bf"
+        "snapshotId": "sha256:cc58aa7a7e075c5897afc8c49324286cd81d8de528f4e39b242d080681b5ae2b",
+        "contentHash": "sha256:47a7a2df67cd5551599669f8d2efcf1c81e59d423ee5f2d010f55578175e4107"
       },
       "button": {
-        "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6",
-        "contentHash": "sha256:b9248aecc43e2174850000a179e9b80ddb782379a36caa10290653ba0a18fae4"
+        "snapshotId": "sha256:dd2a12ada2f95ba0193b0d483a36282e01a713a95ac0cc4329e6a9ea5f9439ae",
+        "contentHash": "sha256:5ab44d800fda935e7bcbe528800105a97d78ebf3a9acba9ecee9f4ad730956bd"
       },
       "input": {
-        "snapshotId": "sha256:f9b01bacfe3e4ad85205c04e1c3ecff91f1a284700ca11902c2515be13f9c1f5",
-        "contentHash": "sha256:65a5b2403301c58a0a5150fa4e9773ba3be8de976569d9a0c86b77abf41d237d"
+        "snapshotId": "sha256:2ccace5bd63cb30a132c3481b0a1285a287905946f7608f0497720c3fca29c41",
+        "contentHash": "sha256:e4ffaa65f6eb08c193143ddf7785d53fd4d3ee0b44c69e32ea3aff1df1bf80d5"
       },
       "label": {
-        "snapshotId": "sha256:160c2f58b3f8e1e4e8b236c549344a7c10eb73d1dd3253d92e3481309a972fdc",
-        "contentHash": "sha256:00923f3e4b23a35166f8333d1cc01d28d54ff3fd424510dc548c6c765fcb9aed"
+        "snapshotId": "sha256:2fbc63c58aa952937092b9110e4a6accddae11732a7699f62ac878d29aece9c5",
+        "contentHash": "sha256:501cef7842a2cd7da6cd789150363eae97e82db8eb203719afc457fa3df8a8d5"
       },
       "select": {
-        "snapshotId": "sha256:65b44cdfa0fbdfbeade787cba9f252cdff0b73c09e1de9d1a8c80e53a214de61",
-        "contentHash": "sha256:bdad484583eed0f289c45bd30c79c652fa119c5cd9a6c9a1780eb4b38b83d89d"
+        "snapshotId": "sha256:f6eb0fab52213eaeb11009572c63f5dd25343b01cc06d670b4a94417370c8e76",
+        "contentHash": "sha256:f808ade6ce2e706a7003f963ea9fe21d9b75b146e36184e171da3f3f33f35670"
       },
       "textarea": {
-        "snapshotId": "sha256:f867108029e85e1d5e6f2f62e1f1279c393470acc7169848842f6712f91a1be1",
-        "contentHash": "sha256:362ec584466b9625772db3508683f6e70386bd6d4e298347ae6d79e385712934"
+        "snapshotId": "sha256:64f0eeaa577420d90e356377fa81c2f9bdeabdf8b755e2cfb73aeb3544230f6d",
+        "contentHash": "sha256:71cfa478400165bd2d40077d078dda3743577c28b8051617f8b4bc4610792df4"
       }
     },
     "proposals": {},
     "foundations": {
-      "documentHash": "sha256:6fea3f08b2a5477d087f5589462a06653a8363e601ff4c3219edb0c1a0fdfaff",
-      "usedHash": "sha256:ac8b6acde88f612a973024395f4fd7c858474021dee1e48177b0d65c5d6399d7"
+      "documentHash": "sha256:9de3c77c8cc37d156f74c72aead593a9bd882ee914ae867100cec74d0cf40ee1",
+      "usedHash": "sha256:c1466dabf24f9b5b3b6a3fe8e9a9e58753e378415c19c338074c546161ab007c"
     },
     "modes": {
       "light": "light"
@@ -138,12 +138,7 @@
               "copy": "card-description",
               "at": "app/page.tsx:25:13",
               "style": {
-                "raw": {
-                  "fontSize": 14,
-                  "lineHeight": 20,
-                  "fontWeight": 400,
-                  "letterSpacing": 0
-                }
+                "textStyle": "text-sm-normal"
               }
             },
             {
@@ -153,24 +148,14 @@
                 "success"
               ],
               "style": {
-                "raw": {
-                  "fontSize": 14,
-                  "lineHeight": 20,
-                  "fontWeight": 500,
-                  "letterSpacing": 0
-                }
+                "textStyle": "text-sm-medium"
               }
             },
             {
               "copy": "span",
               "at": "app/page.tsx:32:17",
               "style": {
-                "raw": {
-                  "fontSize": 12,
-                  "lineHeight": 16,
-                  "fontWeight": 400,
-                  "letterSpacing": 0
-                }
+                "textStyle": "text-xs-normal"
               }
             }
           ],
@@ -579,7 +564,7 @@
       "id": "q-font",
       "kind": "font",
       "to": "owner",
-      "text": "The Prototype loads Geist from next/font/google (app/layout.tsx:2:10), Geist_Mono from next/font/google (app/layout.tsx:2:17); shadcn has no Text Styles to name a font. Which font should the Text Styles use?",
+      "text": "The Prototype loads Geist from next/font/google (app/layout.tsx:2:10), Geist_Mono from next/font/google (app/layout.tsx:2:17); the Text Styles use Geist. Use Geist?",
       "answer": "Geist and Geist Mono, as the Prototype loads them.",
       "by": "owner"
     }

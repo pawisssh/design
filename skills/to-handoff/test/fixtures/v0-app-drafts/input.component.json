@@ -22,11 +22,12 @@
     },
     "files": {
       "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
+      "app/layout.tsx": "sha256:27471c24f05b096454dc3c3cc5ee4bc992eee8e5aedb6dc8e0b53c62148780f8",
       "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
       "components/ui/input.tsx": "sha256:75418e030b2a54dd017ac0f4588db4bbdbabca7525e88bbc9d84cb3e18bcb905",
       "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
     },
-    "snapshotId": "sha256:f9b01bacfe3e4ad85205c04e1c3ecff91f1a284700ca11902c2515be13f9c1f5"
+    "snapshotId": "sha256:2ccace5bd63cb30a132c3481b0a1285a287905946f7608f0497720c3fca29c41"
   },
   "axes": [
     {

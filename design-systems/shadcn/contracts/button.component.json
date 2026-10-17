@@ -22,11 +22,12 @@
     },
     "files": {
       "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
+      "app/layout.tsx": "sha256:27471c24f05b096454dc3c3cc5ee4bc992eee8e5aedb6dc8e0b53c62148780f8",
       "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
       "components/ui/button.tsx": "sha256:08e5f87833c5db8436e89337ebde0f776bcdbf649d3de69fb89be6441ca2e366",
       "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
     },
-    "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6"
+    "snapshotId": "sha256:dd2a12ada2f95ba0193b0d483a36282e01a713a95ac0cc4329e6a9ea5f9439ae"
   },
   "axes": [
     {
@@ -380,13 +381,7 @@
         },
         "Label": {
           "textStyle": {
-            "raw": {
-              "fontSize": 14,
-              "lineHeight": 20,
-              "fontWeight": 500
-            },
-            "level": "warning",
-            "reason": "text-sm font-size 14px; text-sm line-height 20px; font-medium font-weight 500; the Foundations document has no Text Styles yet (#160)"
+            "token": "text-sm-medium"
           },
           "textResize": "width-and-height",
           "visible": true
@@ -457,13 +452,7 @@
         },
         "Label": {
           "textStyle": {
-            "raw": {
-              "fontSize": 12,
-              "lineHeight": 16,
-              "fontWeight": 500
-            },
-            "level": "warning",
-            "reason": "text-xs font-size 12px; text-xs line-height 16px; font-medium font-weight 500; the Foundations document has no Text Styles yet (#160)"
+            "token": "text-xs-medium"
           }
         }
       }
@@ -524,7 +513,7 @@
               "fontWeight": 500
             },
             "level": "warning",
-            "reason": "text-[0.8rem] font-size 12.8px; line-height 19.2px (html, :host line-height 1.5); font-medium font-weight 500; the Foundations document has no Text Styles yet (#160)"
+            "reason": "text-[0.8rem] font-size 12.8px; line-height 19.2px (html, :host line-height 1.5); font-medium font-weight 500; no Text Style: text-[0.8rem] is not a step of the type scale"
           }
         },
         "Icon Inline End": {
@@ -1119,7 +1108,7 @@
     {
       "level": "info",
       "at": "anatomy",
-      "message": "Text layers (#166), each a TEXT node with a TEXT property: Label: Button's children (code.prop children). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Button, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value. The Label layer is hidden where Button has a fixed width (an icon size), which is sized for its icon."
+      "message": "Text layers (#166), each a TEXT node with a TEXT property: Label: Button's children (code.prop children). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Button, then app/globals.css's base layer (html line-height, body color). Each binds the Text Style its size and weight utilities name where it holds those values, else its text style is raw, saying why (#160); the default text is a Drafted value. The Label layer is hidden where Button has a fixed width (an icon size), which is sized for its icon."
     },
     {
       "level": "info",

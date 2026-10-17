@@ -134,6 +134,17 @@ test('each has-data-[icon=…] slot becomes a Slot axis over a frame the root ho
     { name: 'Icon Inline Start', type: 'FRAME', role: 'icon' }, { name: 'Label', type: 'TEXT' }, { name: 'Icon Inline End', type: 'FRAME', role: 'icon' }] });
 });
 
+test('Button\'s Label binds the Text Style its size and weight utilities name; an arbitrary size stays raw (#160)', { skip }, async () => {
+  const f = await button();
+  const at = size => resolve({ properties: [], ...f }, { variant: 'default', size, invalid: 'valid', expanded: 'collapsed', 'icon-inline-start': 'none', 'icon-inline-end': 'none', state: 'enabled' }).layout.Label.textStyle;
+  assert.deepEqual(at('default'), tok('text-sm-medium'));
+  assert.deepEqual(at('xs'), tok('text-xs-medium'));
+  const sm = at('sm');
+  assert.deepEqual(sm.raw, { fontSize: 12.8, lineHeight: 19.2, fontWeight: 500 });
+  assert.equal(sm.level, 'warning');
+  assert.match(sm.reason, /no Text Style: text-\[0\.8rem\] is not a step of the type scale/);
+});
+
 test('a filled slot sets its padding exactly; the frame is the svg size and shows where its slot is filled', { skip }, async () => {
   const fam = await button();
   const c = { axes: fam.axes, layout: fam.layout, paint: [], properties: [] };
@@ -169,7 +180,7 @@ test('generate writes the draft Contract against the Foundations document of the
   assert.equal(expand(contract).length, contract.selection.expectedCount);
   assert.deepEqual(contract.anatomy.children.map(n => [n.name, n.type]), [['Icon Inline Start', 'FRAME'], ['Label', 'TEXT'], ['Icon Inline End', 'FRAME']]);
   assert.equal(contract.source.adapter, 'generic');
-  assert.deepEqual(Object.keys(contract.source.files), ['app/globals.css', 'components.json', BUTTON, 'package-lock.json']);
+  assert.deepEqual(Object.keys(contract.source.files), ['app/globals.css', 'app/layout.tsx', 'components.json', BUTTON, 'package-lock.json']);
   const at = (variantKey, state, invalid = 'valid', expanded = 'collapsed') =>
     resolve(contract, { variant: variantKey, size: 'default', invalid, expanded, 'icon-inline-start': 'none', 'icon-inline-end': 'none', state }).paint.Button;
   assert.deepEqual(at('default', 'enabled').fill, tok('primary'));

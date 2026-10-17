@@ -40,8 +40,9 @@
 //   readFamily() and writes them into the Foundations document, which this step then requires to hold them.
 // - text layers (#166): a TEXT node with a TEXT property where the source says what the text is: the children of a
 //   root that sets its own text style (Button's Label), a provider's Value export's placeholder (SelectValue), or a
-//   part that sets its own text style and no layout (CardTitle). Each layer's text style is read raw (no Text Styles
-//   yet, #160) and its colour through the same paint rules; the default text is a Drafted value.
+//   part that sets its own text style and no layout (CardTitle). Each layer binds the Text Style its size and weight
+//   utilities name where its values are that style's (#160), else is raw, and reads its colour through the same paint
+//   rules; the default text is a Drafted value.
 // What it leaves to later tickets, each in a note: the icon each slot frame stands for, each part's own layout and
 // paint (later agent-tier keys), any other `:has(…)` condition, and styling set by an ancestor (ADR 0012).
 // Generation throws (the CLI exits 1 and writes nothing) on anything it cannot read exactly: compound variants, an
@@ -94,10 +95,10 @@ const isVar = prop => /^--(?!tw-)/.test(prop);
 // A part's own utilities that size it in its parent's Auto Layout or give its own direction; the rest is not read yet.
 const PART_PROPS = ['width', 'height', 'align-self', 'justify-self', 'flex-grow', 'position', 'display', 'flex-direction'];
 const PAINT_PROPS = ['background-color', 'border-color', 'opacity', '--tw-ring-shadow', '--tw-ring-color'];
-const TEXT_PROPS = ['color', 'font-size', 'line-height', 'font-weight', '--tw-font-weight', '--tw-leading', 'letter-spacing',
+const TEXT_PROPS = ['color', 'font-family', 'font-size', 'line-height', 'font-weight', '--tw-font-weight', '--tw-leading', 'letter-spacing',
   '--tw-tracking', 'text-align', 'text-decoration-line', 'text-underline-offset', 'white-space'];
 // What a text layer reads (#166): its text style and colour, its own or inherited from the root.
-const FONT_PROPS = ['font-size', 'line-height', 'font-weight', '--tw-leading', 'color'];
+const FONT_PROPS = ['font-family', 'font-size', 'line-height', 'font-weight', '--tw-leading', 'color'];
 // Elements whose children are no text a designer types: a form control shows its value or placeholder.
 const NO_TEXT = new Set(['input', 'textarea', 'select', 'img', 'hr', 'br']);
 const TEXT_FIELDS = ['textStyle', 'textResize', 'visible'];
@@ -602,8 +603,8 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       const slot = slots.find(s => s.part === p);
       if (slot) f.visible = t[slot.key] !== 'none';
     }
-    // Each text layer: its text style as a raw value (the Foundations document has no Text Styles yet, #160) and its
-    // colour. A part keeps its size and wraps where it fills; the root's own text hugs, and is hidden where the root
+    // Each text layer: the Text Style its size and weight utilities name (#160), or a raw value where none holds its
+    // values, and its colour. A part keeps its size and wraps where it fills; the root's own text hugs, and is hidden where the root
     // has a fixed width (an icon size: the box is sized for its icon, not for text).
     const inks = {};
     for (const n of Object.values(textOf)) {
@@ -629,8 +630,19 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
         weightRule ? `${weightRule.candidate} font-weight ${weight}` : 'font-weight 400 (no utility)',
       ];
       const f = frames[n.node] = n.part ? { width: frames[n.node].width, height: frames[n.node].height } : {};
-      f.textStyle = { raw: { fontSize: size.px, lineHeight, fontWeight: weight }, level: 'warning',
-        reason: `${said.join('; ')}; the Foundations document has no Text Styles yet (#160)` };
+      const familyRule = pick('font-family');
+      const step = sizeRule && /^text-([a-z0-9]+)$/.exec(sizeRule.candidate);
+      const weightKey = weightRule ? (/^font-([a-z]+)$/.exec(weightRule.candidate) || [])[1] : 'normal';
+      const key = step && weightKey && `text-${step[1]}-${weightKey}`;
+      const style = key && foundations.textStyles[key];
+      const why = !sizeRule ? 'no font-size utility names a step of the type scale'
+        : !step || !Object.keys(foundations.textStyles).some(k => k.startsWith(`text-${step[1]}-`)) ? `${sizeRule.candidate} is not a step of the type scale`
+          : !style ? `${weightRule.candidate} is not a font weight of the theme`
+            : familyRule && familyRule.decls['font-family'] !== 'var(--font-sans)' ? `${familyRule.candidate} sets another font family than the Text Styles' ${style.fontFamily}`
+              : style.lineHeight.value !== lineHeight ? `${lineRule ? lineRule.candidate : 'the base layer'} sets a line height off the type scale (${step[0]} is ${style.lineHeight.value}px)`
+                : style.fontSize !== size.px || style.fontWeight !== weight ? `${key} holds ${style.fontSize}px at ${style.fontWeight}` : null;
+      f.textStyle = why === null ? { token: key } : { raw: { fontSize: size.px, lineHeight, fontWeight: weight }, level: 'warning',
+        reason: `${said.join('; ')}; no Text Style: ${why}` };
       f.textResize = f.width === 'fill' ? 'height' : 'width-and-height';
       if (n.kind === 'children') f.visible = !isObj(layout.width);
       const r = winner(own, ['color']) || winner(up, ['color']) || bodyText
@@ -805,7 +817,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     const how = n => (n.kind === 'children' ? `${n.node}: ${Name}'s children (code.prop children)`
       : n.kind === 'placeholder' ? `${n.node}: ${n.name}'s placeholder (code.child ${n.name}, childProp placeholder), coloured as ${Name}'s data-placeholder rules colour it, since the Trigger carries data-placeholder while no value is picked`
       : `${n.node}: ${n.name}'s children (code.child ${n.name})`);
-    notes.push({ level: 'info', at: 'anatomy', message: `Text layers (#166), each a TEXT node with a TEXT property: ${texts.map(how).join('; ')}. Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from ${Name}, then ${cssFile}'s base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value.${texts.some(n => n.kind === 'children') ? ` The ${texts.find(n => n.kind === 'children').node} layer is hidden where ${Name} has a fixed width (an icon size), which is sized for its icon.` : ''}` });
+    notes.push({ level: 'info', at: 'anatomy', message: `Text layers (#166), each a TEXT node with a TEXT property: ${texts.map(how).join('; ')}. Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from ${Name}, then ${cssFile}'s base layer (html line-height, body color). Each binds the Text Style its size and weight utilities name where it holds those values, else its text style is raw, saying why (#160); the default text is a Drafted value.${texts.some(n => n.kind === 'children') ? ` The ${texts.find(n => n.kind === 'children').node} layer is hidden where ${Name} has a fixed width (an icon size), which is sized for its icon.` : ''}` });
   }
   if (unreadText.length)
     notes.push({ level: 'verify', at: 'anatomy', message: `${list([...new Set(unreadText)])}: ${Name} styles a text part's text in a form the text pass does not read; check that part's textStyle and fill.` });

@@ -14,6 +14,7 @@
     },
     "files": {
       "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
+      "app/layout.tsx": "sha256:27471c24f05b096454dc3c3cc5ee4bc992eee8e5aedb6dc8e0b53c62148780f8",
       "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
       "components/ui/alert.tsx": "sha256:f253568242c1c69b343f12474002fdbe229f603158171c59e21c491ab79f2e6e",
       "components/ui/button.tsx": "sha256:08e5f87833c5db8436e89337ebde0f776bcdbf649d3de69fb89be6441ca2e366",
@@ -24,44 +25,44 @@
       "components/ui/textarea.tsx": "sha256:82601c91ffc6c727d924162c78d7cb853114bcced4e2eb922a68ca12d4239c0f",
       "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
     },
-    "snapshotId": "sha256:fe6d7f5fd98cdc54a725714b3bd92515415add8c64c6319853e235462ac2d55c"
+    "snapshotId": "sha256:db012b7a57f9902839a8fd5f3b403f0b1c8112c12348da32884306c0ad943f32"
   },
   "closure": {
     "contracts": [
       {
         "family": "alert",
         "path": "design-systems/shadcn/contracts/alert.component.json",
-        "snapshotId": "sha256:26121ba66822ed1c1ac5705e0059e3fcccbd9e76ca761f36f4710d3fc58074e1"
+        "snapshotId": "sha256:cc58aa7a7e075c5897afc8c49324286cd81d8de528f4e39b242d080681b5ae2b"
       },
       {
         "family": "button",
         "path": "design-systems/shadcn/contracts/button.component.json",
-        "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6"
+        "snapshotId": "sha256:dd2a12ada2f95ba0193b0d483a36282e01a713a95ac0cc4329e6a9ea5f9439ae"
       },
       {
         "family": "card",
         "path": "design-systems/shadcn/contracts/card.component.json",
-        "snapshotId": "sha256:cdadc6b87cc40b244dfebf8d8c0ede671b1f1759c65db52c8c8eae0bd476a031"
+        "snapshotId": "sha256:caab2c63c6b24a6a664d471916bb30854545180451155ea24fc81af19d3cd296"
       },
       {
         "family": "input",
         "path": "design-systems/shadcn/contracts/input.component.json",
-        "snapshotId": "sha256:f9b01bacfe3e4ad85205c04e1c3ecff91f1a284700ca11902c2515be13f9c1f5"
+        "snapshotId": "sha256:2ccace5bd63cb30a132c3481b0a1285a287905946f7608f0497720c3fca29c41"
       },
       {
         "family": "label",
         "path": "design-systems/shadcn/contracts/label.component.json",
-        "snapshotId": "sha256:160c2f58b3f8e1e4e8b236c549344a7c10eb73d1dd3253d92e3481309a972fdc"
+        "snapshotId": "sha256:2fbc63c58aa952937092b9110e4a6accddae11732a7699f62ac878d29aece9c5"
       },
       {
         "family": "select",
         "path": "design-systems/shadcn/contracts/select.component.json",
-        "snapshotId": "sha256:65b44cdfa0fbdfbeade787cba9f252cdff0b73c09e1de9d1a8c80e53a214de61"
+        "snapshotId": "sha256:f6eb0fab52213eaeb11009572c63f5dd25343b01cc06d670b4a94417370c8e76"
       },
       {
         "family": "textarea",
         "path": "design-systems/shadcn/contracts/textarea.component.json",
-        "snapshotId": "sha256:f867108029e85e1d5e6f2f62e1f1279c393470acc7169848842f6712f91a1be1"
+        "snapshotId": "sha256:64f0eeaa577420d90e356377fa81c2f9bdeabdf8b755e2cfb73aeb3544230f6d"
       }
     ],
     "tokens": [
@@ -125,6 +126,9 @@
       "spacing-7",
       "spacing-8",
       "spacing-9",
+      "text-sm-medium",
+      "text-sm-normal",
+      "text-xs-medium",
       "textarea-disabled-fill",
       "textarea-fill",
       "textarea-focus-effect",
@@ -3651,7 +3655,2006 @@
       "usedBy": []
     }
   },
-  "textStyles": {},
+  "textStyles": {
+    "text-xs-thin": {
+      "name": "Text/text-xs-thin",
+      "source": "tailwindcss@4.3.3 theme.css --text-xs --text-xs--line-height --font-weight-thin; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Thin",
+      "fontSize": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 16
+      },
+      "fontWeight": 100,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xs-extralight": {
+      "name": "Text/text-xs-extralight",
+      "source": "tailwindcss@4.3.3 theme.css --text-xs --text-xs--line-height --font-weight-extralight; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraLight",
+      "fontSize": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 16
+      },
+      "fontWeight": 200,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xs-light": {
+      "name": "Text/text-xs-light",
+      "source": "tailwindcss@4.3.3 theme.css --text-xs --text-xs--line-height --font-weight-light; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Light",
+      "fontSize": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 16
+      },
+      "fontWeight": 300,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xs-normal": {
+      "name": "Text/text-xs-normal",
+      "source": "tailwindcss@4.3.3 theme.css --text-xs --text-xs--line-height --font-weight-normal; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Regular",
+      "fontSize": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 16
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xs-medium": {
+      "name": "Text/text-xs-medium",
+      "source": "tailwindcss@4.3.3 theme.css --text-xs --text-xs--line-height --font-weight-medium; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Medium",
+      "fontSize": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 16
+      },
+      "fontWeight": 500,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": [
+        "button"
+      ]
+    },
+    "text-xs-semibold": {
+      "name": "Text/text-xs-semibold",
+      "source": "tailwindcss@4.3.3 theme.css --text-xs --text-xs--line-height --font-weight-semibold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "SemiBold",
+      "fontSize": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 16
+      },
+      "fontWeight": 600,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xs-bold": {
+      "name": "Text/text-xs-bold",
+      "source": "tailwindcss@4.3.3 theme.css --text-xs --text-xs--line-height --font-weight-bold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Bold",
+      "fontSize": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 16
+      },
+      "fontWeight": 700,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xs-extrabold": {
+      "name": "Text/text-xs-extrabold",
+      "source": "tailwindcss@4.3.3 theme.css --text-xs --text-xs--line-height --font-weight-extrabold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraBold",
+      "fontSize": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 16
+      },
+      "fontWeight": 800,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xs-black": {
+      "name": "Text/text-xs-black",
+      "source": "tailwindcss@4.3.3 theme.css --text-xs --text-xs--line-height --font-weight-black; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Black",
+      "fontSize": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 16
+      },
+      "fontWeight": 900,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-sm-thin": {
+      "name": "Text/text-sm-thin",
+      "source": "tailwindcss@4.3.3 theme.css --text-sm --text-sm--line-height --font-weight-thin; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Thin",
+      "fontSize": 14,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 20
+      },
+      "fontWeight": 100,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-sm-extralight": {
+      "name": "Text/text-sm-extralight",
+      "source": "tailwindcss@4.3.3 theme.css --text-sm --text-sm--line-height --font-weight-extralight; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraLight",
+      "fontSize": 14,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 20
+      },
+      "fontWeight": 200,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-sm-light": {
+      "name": "Text/text-sm-light",
+      "source": "tailwindcss@4.3.3 theme.css --text-sm --text-sm--line-height --font-weight-light; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Light",
+      "fontSize": 14,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 20
+      },
+      "fontWeight": 300,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-sm-normal": {
+      "name": "Text/text-sm-normal",
+      "source": "tailwindcss@4.3.3 theme.css --text-sm --text-sm--line-height --font-weight-normal; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Regular",
+      "fontSize": 14,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 20
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": [
+        "alert",
+        "card",
+        "select"
+      ]
+    },
+    "text-sm-medium": {
+      "name": "Text/text-sm-medium",
+      "source": "tailwindcss@4.3.3 theme.css --text-sm --text-sm--line-height --font-weight-medium; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Medium",
+      "fontSize": 14,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 20
+      },
+      "fontWeight": 500,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": [
+        "alert",
+        "button"
+      ]
+    },
+    "text-sm-semibold": {
+      "name": "Text/text-sm-semibold",
+      "source": "tailwindcss@4.3.3 theme.css --text-sm --text-sm--line-height --font-weight-semibold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "SemiBold",
+      "fontSize": 14,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 20
+      },
+      "fontWeight": 600,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-sm-bold": {
+      "name": "Text/text-sm-bold",
+      "source": "tailwindcss@4.3.3 theme.css --text-sm --text-sm--line-height --font-weight-bold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Bold",
+      "fontSize": 14,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 20
+      },
+      "fontWeight": 700,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-sm-extrabold": {
+      "name": "Text/text-sm-extrabold",
+      "source": "tailwindcss@4.3.3 theme.css --text-sm --text-sm--line-height --font-weight-extrabold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraBold",
+      "fontSize": 14,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 20
+      },
+      "fontWeight": 800,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-sm-black": {
+      "name": "Text/text-sm-black",
+      "source": "tailwindcss@4.3.3 theme.css --text-sm --text-sm--line-height --font-weight-black; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Black",
+      "fontSize": 14,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 20
+      },
+      "fontWeight": 900,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-base-thin": {
+      "name": "Text/text-base-thin",
+      "source": "tailwindcss@4.3.3 theme.css --text-base --text-base--line-height --font-weight-thin; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Thin",
+      "fontSize": 16,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 24
+      },
+      "fontWeight": 100,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-base-extralight": {
+      "name": "Text/text-base-extralight",
+      "source": "tailwindcss@4.3.3 theme.css --text-base --text-base--line-height --font-weight-extralight; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraLight",
+      "fontSize": 16,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 24
+      },
+      "fontWeight": 200,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-base-light": {
+      "name": "Text/text-base-light",
+      "source": "tailwindcss@4.3.3 theme.css --text-base --text-base--line-height --font-weight-light; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Light",
+      "fontSize": 16,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 24
+      },
+      "fontWeight": 300,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-base-normal": {
+      "name": "Text/text-base-normal",
+      "source": "tailwindcss@4.3.3 theme.css --text-base --text-base--line-height --font-weight-normal; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Regular",
+      "fontSize": 16,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 24
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-base-medium": {
+      "name": "Text/text-base-medium",
+      "source": "tailwindcss@4.3.3 theme.css --text-base --text-base--line-height --font-weight-medium; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Medium",
+      "fontSize": 16,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 24
+      },
+      "fontWeight": 500,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-base-semibold": {
+      "name": "Text/text-base-semibold",
+      "source": "tailwindcss@4.3.3 theme.css --text-base --text-base--line-height --font-weight-semibold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "SemiBold",
+      "fontSize": 16,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 24
+      },
+      "fontWeight": 600,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-base-bold": {
+      "name": "Text/text-base-bold",
+      "source": "tailwindcss@4.3.3 theme.css --text-base --text-base--line-height --font-weight-bold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Bold",
+      "fontSize": 16,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 24
+      },
+      "fontWeight": 700,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-base-extrabold": {
+      "name": "Text/text-base-extrabold",
+      "source": "tailwindcss@4.3.3 theme.css --text-base --text-base--line-height --font-weight-extrabold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraBold",
+      "fontSize": 16,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 24
+      },
+      "fontWeight": 800,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-base-black": {
+      "name": "Text/text-base-black",
+      "source": "tailwindcss@4.3.3 theme.css --text-base --text-base--line-height --font-weight-black; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Black",
+      "fontSize": 16,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 24
+      },
+      "fontWeight": 900,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-lg-thin": {
+      "name": "Text/text-lg-thin",
+      "source": "tailwindcss@4.3.3 theme.css --text-lg --text-lg--line-height --font-weight-thin; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Thin",
+      "fontSize": 18,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 100,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-lg-extralight": {
+      "name": "Text/text-lg-extralight",
+      "source": "tailwindcss@4.3.3 theme.css --text-lg --text-lg--line-height --font-weight-extralight; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraLight",
+      "fontSize": 18,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 200,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-lg-light": {
+      "name": "Text/text-lg-light",
+      "source": "tailwindcss@4.3.3 theme.css --text-lg --text-lg--line-height --font-weight-light; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Light",
+      "fontSize": 18,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 300,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-lg-normal": {
+      "name": "Text/text-lg-normal",
+      "source": "tailwindcss@4.3.3 theme.css --text-lg --text-lg--line-height --font-weight-normal; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Regular",
+      "fontSize": 18,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-lg-medium": {
+      "name": "Text/text-lg-medium",
+      "source": "tailwindcss@4.3.3 theme.css --text-lg --text-lg--line-height --font-weight-medium; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Medium",
+      "fontSize": 18,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 500,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-lg-semibold": {
+      "name": "Text/text-lg-semibold",
+      "source": "tailwindcss@4.3.3 theme.css --text-lg --text-lg--line-height --font-weight-semibold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "SemiBold",
+      "fontSize": 18,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 600,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-lg-bold": {
+      "name": "Text/text-lg-bold",
+      "source": "tailwindcss@4.3.3 theme.css --text-lg --text-lg--line-height --font-weight-bold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Bold",
+      "fontSize": 18,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 700,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-lg-extrabold": {
+      "name": "Text/text-lg-extrabold",
+      "source": "tailwindcss@4.3.3 theme.css --text-lg --text-lg--line-height --font-weight-extrabold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraBold",
+      "fontSize": 18,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 800,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-lg-black": {
+      "name": "Text/text-lg-black",
+      "source": "tailwindcss@4.3.3 theme.css --text-lg --text-lg--line-height --font-weight-black; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Black",
+      "fontSize": 18,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 900,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xl-thin": {
+      "name": "Text/text-xl-thin",
+      "source": "tailwindcss@4.3.3 theme.css --text-xl --text-xl--line-height --font-weight-thin; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Thin",
+      "fontSize": 20,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 100,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xl-extralight": {
+      "name": "Text/text-xl-extralight",
+      "source": "tailwindcss@4.3.3 theme.css --text-xl --text-xl--line-height --font-weight-extralight; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraLight",
+      "fontSize": 20,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 200,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xl-light": {
+      "name": "Text/text-xl-light",
+      "source": "tailwindcss@4.3.3 theme.css --text-xl --text-xl--line-height --font-weight-light; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Light",
+      "fontSize": 20,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 300,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xl-normal": {
+      "name": "Text/text-xl-normal",
+      "source": "tailwindcss@4.3.3 theme.css --text-xl --text-xl--line-height --font-weight-normal; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Regular",
+      "fontSize": 20,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xl-medium": {
+      "name": "Text/text-xl-medium",
+      "source": "tailwindcss@4.3.3 theme.css --text-xl --text-xl--line-height --font-weight-medium; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Medium",
+      "fontSize": 20,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 500,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xl-semibold": {
+      "name": "Text/text-xl-semibold",
+      "source": "tailwindcss@4.3.3 theme.css --text-xl --text-xl--line-height --font-weight-semibold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "SemiBold",
+      "fontSize": 20,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 600,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xl-bold": {
+      "name": "Text/text-xl-bold",
+      "source": "tailwindcss@4.3.3 theme.css --text-xl --text-xl--line-height --font-weight-bold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Bold",
+      "fontSize": 20,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 700,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xl-extrabold": {
+      "name": "Text/text-xl-extrabold",
+      "source": "tailwindcss@4.3.3 theme.css --text-xl --text-xl--line-height --font-weight-extrabold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraBold",
+      "fontSize": 20,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 800,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-xl-black": {
+      "name": "Text/text-xl-black",
+      "source": "tailwindcss@4.3.3 theme.css --text-xl --text-xl--line-height --font-weight-black; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Black",
+      "fontSize": 20,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "fontWeight": 900,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-2xl-thin": {
+      "name": "Text/text-2xl-thin",
+      "source": "tailwindcss@4.3.3 theme.css --text-2xl --text-2xl--line-height --font-weight-thin; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Thin",
+      "fontSize": 24,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 32
+      },
+      "fontWeight": 100,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-2xl-extralight": {
+      "name": "Text/text-2xl-extralight",
+      "source": "tailwindcss@4.3.3 theme.css --text-2xl --text-2xl--line-height --font-weight-extralight; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraLight",
+      "fontSize": 24,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 32
+      },
+      "fontWeight": 200,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-2xl-light": {
+      "name": "Text/text-2xl-light",
+      "source": "tailwindcss@4.3.3 theme.css --text-2xl --text-2xl--line-height --font-weight-light; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Light",
+      "fontSize": 24,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 32
+      },
+      "fontWeight": 300,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-2xl-normal": {
+      "name": "Text/text-2xl-normal",
+      "source": "tailwindcss@4.3.3 theme.css --text-2xl --text-2xl--line-height --font-weight-normal; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Regular",
+      "fontSize": 24,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 32
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-2xl-medium": {
+      "name": "Text/text-2xl-medium",
+      "source": "tailwindcss@4.3.3 theme.css --text-2xl --text-2xl--line-height --font-weight-medium; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Medium",
+      "fontSize": 24,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 32
+      },
+      "fontWeight": 500,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-2xl-semibold": {
+      "name": "Text/text-2xl-semibold",
+      "source": "tailwindcss@4.3.3 theme.css --text-2xl --text-2xl--line-height --font-weight-semibold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "SemiBold",
+      "fontSize": 24,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 32
+      },
+      "fontWeight": 600,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-2xl-bold": {
+      "name": "Text/text-2xl-bold",
+      "source": "tailwindcss@4.3.3 theme.css --text-2xl --text-2xl--line-height --font-weight-bold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Bold",
+      "fontSize": 24,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 32
+      },
+      "fontWeight": 700,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-2xl-extrabold": {
+      "name": "Text/text-2xl-extrabold",
+      "source": "tailwindcss@4.3.3 theme.css --text-2xl --text-2xl--line-height --font-weight-extrabold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraBold",
+      "fontSize": 24,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 32
+      },
+      "fontWeight": 800,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-2xl-black": {
+      "name": "Text/text-2xl-black",
+      "source": "tailwindcss@4.3.3 theme.css --text-2xl --text-2xl--line-height --font-weight-black; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Black",
+      "fontSize": 24,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 32
+      },
+      "fontWeight": 900,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-3xl-thin": {
+      "name": "Text/text-3xl-thin",
+      "source": "tailwindcss@4.3.3 theme.css --text-3xl --text-3xl--line-height --font-weight-thin; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Thin",
+      "fontSize": 30,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 36
+      },
+      "fontWeight": 100,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-3xl-extralight": {
+      "name": "Text/text-3xl-extralight",
+      "source": "tailwindcss@4.3.3 theme.css --text-3xl --text-3xl--line-height --font-weight-extralight; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraLight",
+      "fontSize": 30,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 36
+      },
+      "fontWeight": 200,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-3xl-light": {
+      "name": "Text/text-3xl-light",
+      "source": "tailwindcss@4.3.3 theme.css --text-3xl --text-3xl--line-height --font-weight-light; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Light",
+      "fontSize": 30,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 36
+      },
+      "fontWeight": 300,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-3xl-normal": {
+      "name": "Text/text-3xl-normal",
+      "source": "tailwindcss@4.3.3 theme.css --text-3xl --text-3xl--line-height --font-weight-normal; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Regular",
+      "fontSize": 30,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 36
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-3xl-medium": {
+      "name": "Text/text-3xl-medium",
+      "source": "tailwindcss@4.3.3 theme.css --text-3xl --text-3xl--line-height --font-weight-medium; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Medium",
+      "fontSize": 30,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 36
+      },
+      "fontWeight": 500,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-3xl-semibold": {
+      "name": "Text/text-3xl-semibold",
+      "source": "tailwindcss@4.3.3 theme.css --text-3xl --text-3xl--line-height --font-weight-semibold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "SemiBold",
+      "fontSize": 30,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 36
+      },
+      "fontWeight": 600,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-3xl-bold": {
+      "name": "Text/text-3xl-bold",
+      "source": "tailwindcss@4.3.3 theme.css --text-3xl --text-3xl--line-height --font-weight-bold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Bold",
+      "fontSize": 30,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 36
+      },
+      "fontWeight": 700,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-3xl-extrabold": {
+      "name": "Text/text-3xl-extrabold",
+      "source": "tailwindcss@4.3.3 theme.css --text-3xl --text-3xl--line-height --font-weight-extrabold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraBold",
+      "fontSize": 30,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 36
+      },
+      "fontWeight": 800,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-3xl-black": {
+      "name": "Text/text-3xl-black",
+      "source": "tailwindcss@4.3.3 theme.css --text-3xl --text-3xl--line-height --font-weight-black; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Black",
+      "fontSize": 30,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 36
+      },
+      "fontWeight": 900,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-4xl-thin": {
+      "name": "Text/text-4xl-thin",
+      "source": "tailwindcss@4.3.3 theme.css --text-4xl --text-4xl--line-height --font-weight-thin; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Thin",
+      "fontSize": 36,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 40
+      },
+      "fontWeight": 100,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-4xl-extralight": {
+      "name": "Text/text-4xl-extralight",
+      "source": "tailwindcss@4.3.3 theme.css --text-4xl --text-4xl--line-height --font-weight-extralight; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraLight",
+      "fontSize": 36,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 40
+      },
+      "fontWeight": 200,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-4xl-light": {
+      "name": "Text/text-4xl-light",
+      "source": "tailwindcss@4.3.3 theme.css --text-4xl --text-4xl--line-height --font-weight-light; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Light",
+      "fontSize": 36,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 40
+      },
+      "fontWeight": 300,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-4xl-normal": {
+      "name": "Text/text-4xl-normal",
+      "source": "tailwindcss@4.3.3 theme.css --text-4xl --text-4xl--line-height --font-weight-normal; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Regular",
+      "fontSize": 36,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 40
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-4xl-medium": {
+      "name": "Text/text-4xl-medium",
+      "source": "tailwindcss@4.3.3 theme.css --text-4xl --text-4xl--line-height --font-weight-medium; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Medium",
+      "fontSize": 36,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 40
+      },
+      "fontWeight": 500,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-4xl-semibold": {
+      "name": "Text/text-4xl-semibold",
+      "source": "tailwindcss@4.3.3 theme.css --text-4xl --text-4xl--line-height --font-weight-semibold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "SemiBold",
+      "fontSize": 36,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 40
+      },
+      "fontWeight": 600,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-4xl-bold": {
+      "name": "Text/text-4xl-bold",
+      "source": "tailwindcss@4.3.3 theme.css --text-4xl --text-4xl--line-height --font-weight-bold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Bold",
+      "fontSize": 36,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 40
+      },
+      "fontWeight": 700,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-4xl-extrabold": {
+      "name": "Text/text-4xl-extrabold",
+      "source": "tailwindcss@4.3.3 theme.css --text-4xl --text-4xl--line-height --font-weight-extrabold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraBold",
+      "fontSize": 36,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 40
+      },
+      "fontWeight": 800,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-4xl-black": {
+      "name": "Text/text-4xl-black",
+      "source": "tailwindcss@4.3.3 theme.css --text-4xl --text-4xl--line-height --font-weight-black; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Black",
+      "fontSize": 36,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 40
+      },
+      "fontWeight": 900,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-5xl-thin": {
+      "name": "Text/text-5xl-thin",
+      "source": "tailwindcss@4.3.3 theme.css --text-5xl --text-5xl--line-height --font-weight-thin; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Thin",
+      "fontSize": 48,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 48
+      },
+      "fontWeight": 100,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-5xl-extralight": {
+      "name": "Text/text-5xl-extralight",
+      "source": "tailwindcss@4.3.3 theme.css --text-5xl --text-5xl--line-height --font-weight-extralight; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraLight",
+      "fontSize": 48,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 48
+      },
+      "fontWeight": 200,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-5xl-light": {
+      "name": "Text/text-5xl-light",
+      "source": "tailwindcss@4.3.3 theme.css --text-5xl --text-5xl--line-height --font-weight-light; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Light",
+      "fontSize": 48,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 48
+      },
+      "fontWeight": 300,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-5xl-normal": {
+      "name": "Text/text-5xl-normal",
+      "source": "tailwindcss@4.3.3 theme.css --text-5xl --text-5xl--line-height --font-weight-normal; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Regular",
+      "fontSize": 48,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 48
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-5xl-medium": {
+      "name": "Text/text-5xl-medium",
+      "source": "tailwindcss@4.3.3 theme.css --text-5xl --text-5xl--line-height --font-weight-medium; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Medium",
+      "fontSize": 48,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 48
+      },
+      "fontWeight": 500,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-5xl-semibold": {
+      "name": "Text/text-5xl-semibold",
+      "source": "tailwindcss@4.3.3 theme.css --text-5xl --text-5xl--line-height --font-weight-semibold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "SemiBold",
+      "fontSize": 48,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 48
+      },
+      "fontWeight": 600,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-5xl-bold": {
+      "name": "Text/text-5xl-bold",
+      "source": "tailwindcss@4.3.3 theme.css --text-5xl --text-5xl--line-height --font-weight-bold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Bold",
+      "fontSize": 48,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 48
+      },
+      "fontWeight": 700,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-5xl-extrabold": {
+      "name": "Text/text-5xl-extrabold",
+      "source": "tailwindcss@4.3.3 theme.css --text-5xl --text-5xl--line-height --font-weight-extrabold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraBold",
+      "fontSize": 48,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 48
+      },
+      "fontWeight": 800,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-5xl-black": {
+      "name": "Text/text-5xl-black",
+      "source": "tailwindcss@4.3.3 theme.css --text-5xl --text-5xl--line-height --font-weight-black; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Black",
+      "fontSize": 48,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 48
+      },
+      "fontWeight": 900,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-6xl-thin": {
+      "name": "Text/text-6xl-thin",
+      "source": "tailwindcss@4.3.3 theme.css --text-6xl --text-6xl--line-height --font-weight-thin; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Thin",
+      "fontSize": 60,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 60
+      },
+      "fontWeight": 100,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-6xl-extralight": {
+      "name": "Text/text-6xl-extralight",
+      "source": "tailwindcss@4.3.3 theme.css --text-6xl --text-6xl--line-height --font-weight-extralight; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraLight",
+      "fontSize": 60,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 60
+      },
+      "fontWeight": 200,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-6xl-light": {
+      "name": "Text/text-6xl-light",
+      "source": "tailwindcss@4.3.3 theme.css --text-6xl --text-6xl--line-height --font-weight-light; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Light",
+      "fontSize": 60,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 60
+      },
+      "fontWeight": 300,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-6xl-normal": {
+      "name": "Text/text-6xl-normal",
+      "source": "tailwindcss@4.3.3 theme.css --text-6xl --text-6xl--line-height --font-weight-normal; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Regular",
+      "fontSize": 60,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 60
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-6xl-medium": {
+      "name": "Text/text-6xl-medium",
+      "source": "tailwindcss@4.3.3 theme.css --text-6xl --text-6xl--line-height --font-weight-medium; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Medium",
+      "fontSize": 60,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 60
+      },
+      "fontWeight": 500,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-6xl-semibold": {
+      "name": "Text/text-6xl-semibold",
+      "source": "tailwindcss@4.3.3 theme.css --text-6xl --text-6xl--line-height --font-weight-semibold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "SemiBold",
+      "fontSize": 60,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 60
+      },
+      "fontWeight": 600,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-6xl-bold": {
+      "name": "Text/text-6xl-bold",
+      "source": "tailwindcss@4.3.3 theme.css --text-6xl --text-6xl--line-height --font-weight-bold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Bold",
+      "fontSize": 60,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 60
+      },
+      "fontWeight": 700,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-6xl-extrabold": {
+      "name": "Text/text-6xl-extrabold",
+      "source": "tailwindcss@4.3.3 theme.css --text-6xl --text-6xl--line-height --font-weight-extrabold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraBold",
+      "fontSize": 60,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 60
+      },
+      "fontWeight": 800,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-6xl-black": {
+      "name": "Text/text-6xl-black",
+      "source": "tailwindcss@4.3.3 theme.css --text-6xl --text-6xl--line-height --font-weight-black; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Black",
+      "fontSize": 60,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 60
+      },
+      "fontWeight": 900,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-7xl-thin": {
+      "name": "Text/text-7xl-thin",
+      "source": "tailwindcss@4.3.3 theme.css --text-7xl --text-7xl--line-height --font-weight-thin; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Thin",
+      "fontSize": 72,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 72
+      },
+      "fontWeight": 100,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-7xl-extralight": {
+      "name": "Text/text-7xl-extralight",
+      "source": "tailwindcss@4.3.3 theme.css --text-7xl --text-7xl--line-height --font-weight-extralight; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraLight",
+      "fontSize": 72,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 72
+      },
+      "fontWeight": 200,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-7xl-light": {
+      "name": "Text/text-7xl-light",
+      "source": "tailwindcss@4.3.3 theme.css --text-7xl --text-7xl--line-height --font-weight-light; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Light",
+      "fontSize": 72,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 72
+      },
+      "fontWeight": 300,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-7xl-normal": {
+      "name": "Text/text-7xl-normal",
+      "source": "tailwindcss@4.3.3 theme.css --text-7xl --text-7xl--line-height --font-weight-normal; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Regular",
+      "fontSize": 72,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 72
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-7xl-medium": {
+      "name": "Text/text-7xl-medium",
+      "source": "tailwindcss@4.3.3 theme.css --text-7xl --text-7xl--line-height --font-weight-medium; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Medium",
+      "fontSize": 72,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 72
+      },
+      "fontWeight": 500,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-7xl-semibold": {
+      "name": "Text/text-7xl-semibold",
+      "source": "tailwindcss@4.3.3 theme.css --text-7xl --text-7xl--line-height --font-weight-semibold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "SemiBold",
+      "fontSize": 72,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 72
+      },
+      "fontWeight": 600,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-7xl-bold": {
+      "name": "Text/text-7xl-bold",
+      "source": "tailwindcss@4.3.3 theme.css --text-7xl --text-7xl--line-height --font-weight-bold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Bold",
+      "fontSize": 72,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 72
+      },
+      "fontWeight": 700,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-7xl-extrabold": {
+      "name": "Text/text-7xl-extrabold",
+      "source": "tailwindcss@4.3.3 theme.css --text-7xl --text-7xl--line-height --font-weight-extrabold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraBold",
+      "fontSize": 72,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 72
+      },
+      "fontWeight": 800,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-7xl-black": {
+      "name": "Text/text-7xl-black",
+      "source": "tailwindcss@4.3.3 theme.css --text-7xl --text-7xl--line-height --font-weight-black; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Black",
+      "fontSize": 72,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 72
+      },
+      "fontWeight": 900,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-8xl-thin": {
+      "name": "Text/text-8xl-thin",
+      "source": "tailwindcss@4.3.3 theme.css --text-8xl --text-8xl--line-height --font-weight-thin; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Thin",
+      "fontSize": 96,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 96
+      },
+      "fontWeight": 100,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-8xl-extralight": {
+      "name": "Text/text-8xl-extralight",
+      "source": "tailwindcss@4.3.3 theme.css --text-8xl --text-8xl--line-height --font-weight-extralight; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraLight",
+      "fontSize": 96,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 96
+      },
+      "fontWeight": 200,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-8xl-light": {
+      "name": "Text/text-8xl-light",
+      "source": "tailwindcss@4.3.3 theme.css --text-8xl --text-8xl--line-height --font-weight-light; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Light",
+      "fontSize": 96,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 96
+      },
+      "fontWeight": 300,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-8xl-normal": {
+      "name": "Text/text-8xl-normal",
+      "source": "tailwindcss@4.3.3 theme.css --text-8xl --text-8xl--line-height --font-weight-normal; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Regular",
+      "fontSize": 96,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 96
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-8xl-medium": {
+      "name": "Text/text-8xl-medium",
+      "source": "tailwindcss@4.3.3 theme.css --text-8xl --text-8xl--line-height --font-weight-medium; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Medium",
+      "fontSize": 96,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 96
+      },
+      "fontWeight": 500,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-8xl-semibold": {
+      "name": "Text/text-8xl-semibold",
+      "source": "tailwindcss@4.3.3 theme.css --text-8xl --text-8xl--line-height --font-weight-semibold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "SemiBold",
+      "fontSize": 96,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 96
+      },
+      "fontWeight": 600,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-8xl-bold": {
+      "name": "Text/text-8xl-bold",
+      "source": "tailwindcss@4.3.3 theme.css --text-8xl --text-8xl--line-height --font-weight-bold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Bold",
+      "fontSize": 96,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 96
+      },
+      "fontWeight": 700,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-8xl-extrabold": {
+      "name": "Text/text-8xl-extrabold",
+      "source": "tailwindcss@4.3.3 theme.css --text-8xl --text-8xl--line-height --font-weight-extrabold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraBold",
+      "fontSize": 96,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 96
+      },
+      "fontWeight": 800,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-8xl-black": {
+      "name": "Text/text-8xl-black",
+      "source": "tailwindcss@4.3.3 theme.css --text-8xl --text-8xl--line-height --font-weight-black; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Black",
+      "fontSize": 96,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 96
+      },
+      "fontWeight": 900,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-9xl-thin": {
+      "name": "Text/text-9xl-thin",
+      "source": "tailwindcss@4.3.3 theme.css --text-9xl --text-9xl--line-height --font-weight-thin; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Thin",
+      "fontSize": 128,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 128
+      },
+      "fontWeight": 100,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-9xl-extralight": {
+      "name": "Text/text-9xl-extralight",
+      "source": "tailwindcss@4.3.3 theme.css --text-9xl --text-9xl--line-height --font-weight-extralight; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraLight",
+      "fontSize": 128,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 128
+      },
+      "fontWeight": 200,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-9xl-light": {
+      "name": "Text/text-9xl-light",
+      "source": "tailwindcss@4.3.3 theme.css --text-9xl --text-9xl--line-height --font-weight-light; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Light",
+      "fontSize": 128,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 128
+      },
+      "fontWeight": 300,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-9xl-normal": {
+      "name": "Text/text-9xl-normal",
+      "source": "tailwindcss@4.3.3 theme.css --text-9xl --text-9xl--line-height --font-weight-normal; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Regular",
+      "fontSize": 128,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 128
+      },
+      "fontWeight": 400,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-9xl-medium": {
+      "name": "Text/text-9xl-medium",
+      "source": "tailwindcss@4.3.3 theme.css --text-9xl --text-9xl--line-height --font-weight-medium; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Medium",
+      "fontSize": 128,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 128
+      },
+      "fontWeight": 500,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-9xl-semibold": {
+      "name": "Text/text-9xl-semibold",
+      "source": "tailwindcss@4.3.3 theme.css --text-9xl --text-9xl--line-height --font-weight-semibold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "SemiBold",
+      "fontSize": 128,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 128
+      },
+      "fontWeight": 600,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-9xl-bold": {
+      "name": "Text/text-9xl-bold",
+      "source": "tailwindcss@4.3.3 theme.css --text-9xl --text-9xl--line-height --font-weight-bold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Bold",
+      "fontSize": 128,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 128
+      },
+      "fontWeight": 700,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-9xl-extrabold": {
+      "name": "Text/text-9xl-extrabold",
+      "source": "tailwindcss@4.3.3 theme.css --text-9xl --text-9xl--line-height --font-weight-extrabold; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "ExtraBold",
+      "fontSize": 128,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 128
+      },
+      "fontWeight": 800,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    },
+    "text-9xl-black": {
+      "name": "Text/text-9xl-black",
+      "source": "tailwindcss@4.3.3 theme.css --text-9xl --text-9xl--line-height --font-weight-black; app/globals.css @theme inline --font-sans",
+      "fontFamily": "Geist",
+      "fontStyle": "Black",
+      "fontSize": 128,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 128
+      },
+      "fontWeight": 900,
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "usedBy": []
+    }
+  },
   "checks": {
     "css": {
       "against": "app/globals.css",
@@ -3660,7 +5663,7 @@
     },
     "compiled": {
       "against": "tailwindcss@4.3.3 compile() over app/globals.css",
-      "matched": 73
+      "matched": 95
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
@@ -3672,22 +5675,27 @@
     {
       "level": "info",
       "at": "app/globals.css @theme inline --font-heading",
-      "message": "Font families are not carried: var(--font-sans) is set at runtime (next/font), not in the CSS."
+      "message": "--font-heading: var(--font-sans) is Geist."
     },
     {
       "level": "info",
       "at": "app/globals.css @theme inline --font-mono",
-      "message": "Font families are not carried: var(--font-geist-mono) is set at runtime (next/font), not in the CSS."
+      "message": "--font-mono: var(--font-geist-mono) is Geist Mono (next/font/google, app/layout.tsx:11), set at runtime by next/font."
     },
     {
-      "level": "info",
+      "level": "warning",
       "at": "app/globals.css @theme inline --font-sans",
-      "message": "Font families are not carried: var(--font-sans) is set at runtime (next/font), not in the CSS."
+      "message": "--font-sans: var(--font-sans) refers to itself, so a browser reads it as invalid and falls back to the system font. The Adapter takes the one next/font loader whose variable ends in -sans, --font-geist-sans: Geist (next/font/google, app/layout.tsx:6), the font the project loads (#125, #160)."
     },
     {
       "level": "info",
       "at": "variables",
-      "message": "Only the project's own CSS is read. Tailwind's default theme (its colour palette, fonts, shadows) is not carried."
+      "message": "Only the project's own CSS is read. Tailwind's default theme (its colour palette, shadows) is not carried, except its type scale and font weights, which the Text Styles hold."
+    },
+    {
+      "level": "verify",
+      "at": "textStyles",
+      "message": "fontStyle is the Figma style each weight is named by (Thin, ExtraLight, Light, Regular, Medium, SemiBold, Bold, ExtraBold, Black); not yet checked against the Geist styles Figma offers."
     },
     {
       "level": "info",

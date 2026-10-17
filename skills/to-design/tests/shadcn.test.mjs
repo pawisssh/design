@@ -69,8 +69,8 @@ for (const [c, count] of FAMILIES.map(c => [c, { button: 2304, card: 2, alert: 2
     assert.deepEqual(checkCoverage(c, coverage[c.family.key], ledger).problems, []);
   });
 
-const UNBUILT = { button: ['layout.Label.textStyle'], card: ['layout.Description.textStyle', 'layout.Title.textStyle'],
-  alert: ['layout.Description.textStyle', 'layout.Title.textStyle'] };
+// the text layers no Text Style fits stay raw and unbuilt (#160): Card Title's leading-snug; the sampled Button and Alert layers each bind one
+const UNBUILT = { button: [], card: ['layout.Title.textStyle'], alert: [] };
 for (const c of FAMILIES)
   test(`${c.family.name}: sampled variants read back as the Contract resolves them, and each paint follows its Mode`, async () => {
     const { call, ledger } = await built;
@@ -79,7 +79,6 @@ for (const c of FAMILIES)
     const read = await call(setsPlan(c, DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, mode: 'sample', sample, prototype: true }), COMPONENTS_CORE);
     const s = checkSample(c, read, ledger, JSON.parse(DOC_TEXT));
     assert.deepEqual(s.problems, []);
-    // each text layer's raw text style waits for Text Styles in the Foundations document (#160)
     assert.deepEqual(s.unbuilt, UNBUILT[c.family.key]);
     assert.equal(s.sampled, sample.length);
     const theme = await call(setsPlan(c, DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, mode: 'theme', sample, prototype: true }), COMPONENTS_CORE);

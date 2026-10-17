@@ -60,8 +60,19 @@ test('read: a relative import of the same file is the Contract package too', { s
   assert.deepEqual(submit.map(el => el.component.module), [BUTTON_PACKAGE]);
 });
 
-test('generate: with no Text Styles in the Design System, the font question names the loaded fonts and asks which to use', { skip: noTs }, async () => {
+test('generate: the font question names the loaded fonts and the font the shadcn Text Styles use (#160)', { skip: noTs }, async () => {
   const { handoff } = await generate({ prototype: V0, designSystem: shadcnDesignSystem(), decisions: DECISIONS });
+  assert.equal(handoff.openQuestions.find(q => q.id === 'q-font').text,
+    'The Prototype loads Geist from next/font/google (app/layout.tsx:2:10), Geist_Mono from next/font/google (app/layout.tsx:2:17); the Text Styles use Geist. Use Geist?');
+});
+
+test('generate: with no Text Styles in the Design System, the font question names the loaded fonts and asks which to use', { skip: noTs }, async () => {
+  const ds = shadcnDesignSystem();
+  const file = join(ds, 'shadcn.foundations.json');
+  const doc = JSON.parse(readFileSync(file, 'utf8'));
+  doc.textStyles = {};
+  writeFileSync(file, JSON.stringify(doc, null, 2) + '\n');
+  const { handoff } = await generate({ prototype: V0, designSystem: ds, decisions: DECISIONS });
   assert.equal(handoff.openQuestions.find(q => q.id === 'q-font').text,
     'The Prototype loads Geist from next/font/google (app/layout.tsx:2:10), Geist_Mono from next/font/google (app/layout.tsx:2:17); shadcn has no Text Styles to name a font. Which font should the Text Styles use?');
 });

@@ -139,3 +139,38 @@ export function familyRoot(components, Name, file) {
   if (!root) throw new Error(`${file}: ${named.name} renders ${named.element} with no classes, a provider with no box, and exports no ${named.name}Trigger to read instead`);
   return { named, provider: named, root };
 }
+
+/**
+ * The next/font loaders a layout file calls (#160): [{name, family, module, variable, line}] for each `const x =
+ * Font({variable: "--…"})` whose `Font` is imported from a `next/font/google` module. `family` is the Google font
+ * name (`Geist_Mono` -> "Geist Mono"). Nothing in the file is executed. A loader from another module (next/font/local
+ * names no family) is listed with `family: null`.
+ */
+export function readFontLoaders(text, file, { tools = DEFAULT_DIR } = {}) {
+  const ts = typescript(tools);
+  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const imported = {}; // local name -> {name, module}
+  for (const st of sf.statements) {
+    if (!ts.isImportDeclaration(st) || !/^next\/font\//.test(st.moduleSpecifier.text)) continue;
+    const clause = st.importClause;
+    if (clause && clause.name) imported[clause.name.text] = { name: clause.name.text, module: st.moduleSpecifier.text };
+    if (clause && clause.namedBindings && ts.isNamedImports(clause.namedBindings))
+      for (const e of clause.namedBindings.elements) imported[e.name.text] = { name: (e.propertyName || e.name).text, module: st.moduleSpecifier.text };
+  }
+  const out = [];
+  for (const st of sf.statements) {
+    if (!ts.isVariableStatement(st)) continue;
+    for (const d of st.declarationList.declarations) {
+      const call = d.initializer;
+      if (!call || !ts.isCallExpression(call) || !ts.isIdentifier(call.expression) || !imported[call.expression.text]) continue;
+      const opts = call.arguments[0];
+      const prop = opts && ts.isObjectLiteralExpression(opts)
+        && opts.properties.find(p => ts.isPropertyAssignment(p) && p.name.getText() === 'variable' && ts.isStringLiteral(p.initializer));
+      if (!prop) continue;
+      const { name, module } = imported[call.expression.text];
+      out.push({ name, family: module === 'next/font/google' ? name.replace(/_/g, ' ') : null, module, variable: prop.initializer.text,
+        line: sf.getLineAndCharacterOfPosition(d.getStart()).line + 1 });
+    }
+  }
+  return out;
+}
