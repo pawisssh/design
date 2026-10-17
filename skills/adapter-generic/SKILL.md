@@ -55,7 +55,7 @@ It reads the reference project and the fetched tools by default, and writes [`de
 | `:root` | `light` | Light (default) |
 | `.dark` | `dark` | Dark |
 
-- Dark records its `selector`, `.dark`. Light records none: `:root` is the page itself, and To-preview and To-handoff apply a Mode as one class (#109), so the renderer's `modeClass` gives Light an inert class.
+- Dark records its `selector`, `.dark`. Light records none, by the Foundations rule that a Mode with no `selector` is the one in force when no class applies (CSS `:root`). To-preview and To-handoff apply a Mode as one class (#109), so the renderer's `modeClass` gives Light an inert class.
 - A property that `.dark` does not declare inherits its `:root` value.
 - A property declared only in `.dark`, or under any other selector, gets a `warning` note and is not read.
 
