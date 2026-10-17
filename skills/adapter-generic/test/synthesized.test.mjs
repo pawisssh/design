@@ -49,21 +49,21 @@ test('Button gets #70\'s Synthesized tokens, each bound as a plain {token}', { s
   assert.deepEqual(at(fam, { invalid: 'invalid' }).effects[0].color, tok('button-invalid-effect'));
 });
 
-test('a token at an opacity multiplies its own alpha per Mode; a plain token is flattened, keeping the alias', { skip }, async () => {
+test('a token at an opacity multiplies its own alpha per Mode; a plain token is an alias in the same collection (#124)', { skip }, async () => {
   const v = (await button()).synthesized['button-outline-fill'].values;
   assert.deepEqual(Object.keys(v), ['light', 'dark']);
-  const { reason: lr, ...light } = v.light;
-  assert.deepEqual(light, { raw: '#ffffff', resolved: '#ffffff', from: { alias: 'background' }, level: 'info' });
-  assert.match(lr, /^bg-background: .*flattened.*#124/);
+  assert.deepEqual(v.light, { alias: 'background', resolved: '#ffffff' });
   const { reason: dr, ...dark } = v.dark;
   assert.deepEqual(dark, { raw: '#ffffff', alpha: 0.045, resolved: 'rgba(255, 255, 255, 0.045)', from: { alias: 'input', alpha: 0.3 }, level: 'info' },
     'dark input is 15% white: 0.15 x 0.3 = 0.045');
   assert.match(dr, /^dark:bg-input\/30: input at 30%/);
 });
 
-test('a flattened token that was clipped keeps the clip note', { skip }, async () => {
+test('an alias to a clipped token carries the target\'s resolved colour; the clip note stays on the target', { skip }, async () => {
   const { values } = (await button()).synthesized['button-invalid-stroke'];
-  assert.match(values.light.reason, /flattened.*; outside sRGB, clipped per channel$/);
+  const target = (await foundations()).variables.destructive.values.light;
+  assert.deepEqual(values.light, { alias: 'destructive', resolved: '#e7000b' });
+  assert.match(target.reason, /outside sRGB, clipped per channel$/);
 });
 
 test('a mix of tokens is evaluated per Mode over each token\'s own CSS', { skip }, async () => {

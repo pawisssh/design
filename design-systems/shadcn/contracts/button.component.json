@@ -673,7 +673,11 @@
             "token": "primary"
           },
           "stroke": "none",
-          "opacity": 1,
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "no opacity utility"
+          },
           "effects": []
         }
       }
@@ -786,7 +790,11 @@
       },
       "set": {
         "Button": {
-          "opacity": 0.5
+          "opacity": {
+            "raw": 0.5,
+            "level": "info",
+            "reason": "disabled:opacity-50: opacity 50%; the Foundations document has no opacity variable"
+          }
         }
       }
     },
@@ -948,20 +956,6 @@
     },
     {
       "match": {
-        "variant": "outline",
-        "expanded": "expanded",
-        "state": "hover"
-      },
-      "set": {
-        "Button": {
-          "fill": {
-            "token": "button-outline-expanded-hover-fill"
-          }
-        }
-      }
-    },
-    {
-      "match": {
         "variant": "secondary",
         "expanded": "expanded",
         "state": "hover"
@@ -970,20 +964,6 @@
         "Button": {
           "fill": {
             "token": "secondary"
-          }
-        }
-      }
-    },
-    {
-      "match": {
-        "variant": "ghost",
-        "expanded": "expanded",
-        "state": "hover"
-      },
-      "set": {
-        "Button": {
-          "fill": {
-            "token": "button-ghost-expanded-hover-fill"
           }
         }
       }
