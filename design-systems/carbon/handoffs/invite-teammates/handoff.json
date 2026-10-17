@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 1,
+  "revision": 2,
   "status": "pending",
   "approval": null,
   "feature": {
@@ -1108,6 +1108,13 @@
       "answer": null
     },
     {
+      "id": "q-state-error",
+      "kind": "missing-state",
+      "to": "owner",
+      "text": "The Prototype has no error state: no condition reads like error. What should the screen show?",
+      "answer": null
+    },
+    {
       "id": "q-font",
       "kind": "font",
       "to": "owner",
@@ -1118,14 +1125,7 @@
       "id": "q-breakpoint-max-width-640px",
       "kind": "breakpoint",
       "to": "owner",
-      "text": "@media (max-width: 640px) changes .actions, .actions .btn; the static reader has no viewport. Which Design System breakpoint is it, and what should change there?",
-      "answer": null
-    },
-    {
-      "id": "q-state-error",
-      "kind": "missing-state",
-      "to": "owner",
-      "text": "The Prototype has no error state: no condition reads like error. What should the screen show?",
+      "text": "@media (max-width: 640px) changes .actions, .actions .btn. In the screenshots it applies at sm (320px), not at md (672px), lg (1056px), xlg (1312px) or max (1584px); 640px falls between sm and md. Which Design System breakpoint is it, and what should change there?",
       "answer": null
     },
     {

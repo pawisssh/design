@@ -37427,7 +37427,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <body class="page">
 <header class="top">
 <h1>Invite teammates</h1>
-<p class="stamp">r1 · 89dc0ef2439a · pending sign-off</p>
+<p class="stamp">r2 · 355a8793661e · pending sign-off</p>
 <label>Mode <select id="mode"><option value="white" data-class="cds--white" selected>White</option><option value="g10" data-class="cds--g10">Gray 10</option><option value="g90" data-class="cds--g90">Gray 90</option><option value="g100" data-class="cds--g100">Gray 100</option></select></label>
 <p class="unverified" id="unverified" hidden>Unverified: the Prototype maps only light → White.</p>
 </header>
@@ -37665,9 +37665,9 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <li id="q-no-contract-role"><code>q-no-contract-role</code> · no-contract · to owner: `select` is a select with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.</li>
 <li id="q-off-axis-copy"><code>q-off-axis-copy</code> · off-axis · to owner: `copy` (button) sets background-color #198754, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?</li>
 <li id="q-no-contract-toast"><code>q-no-contract-toast</code> · no-contract · to owner: `div.toast[role=status]` is a toast-notification with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.</li>
-<li id="q-font"><code>q-font</code> · font · to owner: The Prototype sets font-family Inter, system-ui, sans-serif (index.html:13:21); the Text Styles use IBM Plex Sans (font-family-sans). Use IBM Plex Sans?</li>
-<li id="q-breakpoint-max-width-640px"><code>q-breakpoint-max-width-640px</code> · breakpoint · to owner: @media (max-width: 640px) changes .actions, .actions .btn; the static reader has no viewport. Which Design System breakpoint is it, and what should change there?</li>
 <li id="q-state-error"><code>q-state-error</code> · missing-state · to owner: The Prototype has no error state: no condition reads like error. What should the screen show?</li>
+<li id="q-font"><code>q-font</code> · font · to owner: The Prototype sets font-family Inter, system-ui, sans-serif (index.html:13:21); the Text Styles use IBM Plex Sans (font-family-sans). Use IBM Plex Sans?</li>
+<li id="q-breakpoint-max-width-640px"><code>q-breakpoint-max-width-640px</code> · breakpoint · to owner: @media (max-width: 640px) changes .actions, .actions .btn. In the screenshots it applies at sm (320px), not at md (672px), lg (1056px), xlg (1312px) or max (1584px); 640px falls between sm and md. Which Design System breakpoint is it, and what should change there?</li>
 <li id="q-data-invites"><code>q-data-invites</code> · stand-in · to developer: Where do the invites come from? `mockInvites` stands in for them.</li>
 <li id="q-data-send-invites"><code>q-data-send-invites</code> · stand-in · to developer: What does `sendInvites()` call, and how does it fail? The Prototype simulates it with a timer.</li></ul>
 </section>
