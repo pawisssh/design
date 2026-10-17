@@ -110,14 +110,21 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       cols[c.key] = { col, modes };
     }
 
+    // An alias target is in an earlier collection, or in the same one without a same-collection alias of its own: one
+    // hop, so the aliasing variables are created after the rest of their collection (#124). Figma keeps the old value
+    // without an error when an alias would close a cycle, so the rule is checked here.
     const vars = {};
+    const inner = flat => Object.values(F.variables[flat].values).some(val => val.alias != null &&
+      F.variables[val.alias] && F.variables[val.alias].collection === F.variables[flat].collection);
     for (const [flat, v] of Object.entries(F.variables)) {
       const c = cols[v.collection];
       if (!(v.collection in colIndex)) { conflict('variable', flat, 'unknown-collection'); continue; }
       if (!c) continue;
       for (const val of Object.values(v.values)) {
         const target = val.alias != null && F.variables[val.alias];
-        if (val.alias != null && (!target || colIndex[target.collection] >= colIndex[v.collection])) conflict('variable', flat, `alias-target:${val.alias}`);
+        const ok = target && (colIndex[target.collection] < colIndex[v.collection] ||
+          (target.collection === v.collection && !inner(val.alias)));
+        if (val.alias != null && !ok) conflict('variable', flat, `alias-target:${val.alias}`);
       }
       const id = prevVariables[flat] || (prevOrphans.variables[flat] && prevOrphans.variables[flat].id);
       let x = id ? varById.get(id) || null : null;
@@ -217,8 +224,8 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     };
     for (const c of F.collections) {
       const { col, modes } = cols[c.key];
-      for (const [flat, v] of Object.entries(F.variables)) {
-        if (v.collection !== c.key) continue;
+      const mine = Object.entries(F.variables).filter(([, v]) => v.collection === c.key);
+      for (const [flat, v] of mine.filter(([k]) => !inner(k)).concat(mine.filter(([k]) => inner(k)))) {
         let x = vars[flat];
         const isNew = !x;
         if (isNew) { x = figma.variables.createVariable(v.name, col, v.type); created.variables.push(flat); }

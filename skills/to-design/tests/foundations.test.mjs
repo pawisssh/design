@@ -396,3 +396,42 @@ test('ledger.mjs record --ledger writes the given ledger file, as every other To
   assert.equal(JSON.parse(run.stdout).ledger, at);
   assert.equal(JSON.parse(readFileSync(at, 'utf8')).foundations.documentHash, 'sha256:x');
 });
+
+// ---- same-collection aliases (#124) ----
+
+const SHADCN_TEXT = readFileSync(new URL('../../../design-systems/shadcn/shadcn.foundations.json', import.meta.url), 'utf8');
+const shadcnWith = edit => { const doc = JSON.parse(SHADCN_TEXT); edit(doc); return JSON.stringify(doc, null, 2) + '\n'; };
+
+test('a Synthesized value aliasing a Theme token earlier in its own collection builds as an alias per Mode, and a rerun changes nothing (#124)', async () => {
+  const docText = shadcnWith(doc => {
+    doc.variables['button-outline-stroke'].values = { light: { alias: 'border', resolved: '#e5e5e5' }, dark: { alias: 'input', resolved: 'rgba(255, 255, 255, 0.15)' } };
+  });
+  const mock = mockFigma({ fileKey: FILE_KEY });
+  const first = await call(mock, { docText });
+  assert.equal(first.summary.conflicts, 0, JSON.stringify(first.conflicts));
+  const v = name => byName(allVariables(mock), name);
+  const alias = name => ({ type: 'VARIABLE_ALIAS', id: v(name).id });
+  assert.deepEqual(v('Button/button-outline-stroke').values, [['Light', alias('Color/border')], ['Dark', alias('Color/input')]]);
+
+  mock.log.length = 0;
+  const second = await call(mock, { docText, ledger: ledgerAfter(first) });
+  assert.deepEqual({ created: second.summary.created, updated: second.summary.updated, conflicts: second.summary.conflicts }, { created: 0, updated: 0, conflicts: 0 });
+  assert.deepEqual(writes(mock), []);
+});
+
+test('a same-collection alias target that aliases within the collection itself (a chain, a cycle or the variable itself) is an alias-target conflict, and nothing changes (#124)', async () => {
+  const stroke = 'button-outline-stroke';
+  const cases = [
+    ['chain', { [stroke]: 'border', muted: stroke }, [['muted', stroke]]],
+    ['cycle', { [stroke]: 'muted', muted: stroke }, [['muted', stroke], [stroke, 'muted']]],
+    ['itself', { muted: 'muted' }, [['muted', 'muted']]],
+  ];
+  for (const [label, aliases, expected] of cases) {
+    const docText = shadcnWith(doc => { for (const [by, target] of Object.entries(aliases)) doc.variables[by].values.light = { alias: target, resolved: '#f5f5f5' }; });
+    const mock = mockFigma({ fileKey: FILE_KEY });
+    const result = await call(mock, { docText });
+    const got = result.conflicts.map(c => [c.name, c.reason]).sort();
+    assert.deepEqual(got, expected.map(([by, target]) => [by, `alias-target:${target}`]).sort(), label);
+    assert.deepEqual(writes(mock), [], label);
+  }
+});
