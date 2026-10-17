@@ -199,7 +199,7 @@ Paint the Foundations tokens cannot bind directly becomes a Synthesized token (#
 
 - **Name.** `<family>-<the rule's match values in axis order, a list joined by "+">[-<node>]-<field>`, with the node left out for the root and the field `fill`, `stroke`, `effect` or `effect-<n>`. The Figma name is `<Family>/<name>`, for example `Button/button-outline-fill`.
 - **Per-mode value.** Each Mode's winning utility is converted through [`color.mjs`](../contract/scripts/color.mjs), `color-mix` included:
-  - `var(--x)` is flattened to that token's own value in the Mode: `{raw, alpha?, resolved, from: {alias: "x"}}` with an `info` reason. This is the #103 fallback: the builder core does not bind an alias within one collection yet (#124). `from.alias` keeps the alias so a later pass can bind it instead.
+  - `var(--x)` is an alias to that token in the same collection: `{alias: "x", resolved}`, with `resolved` the token's own value in the Mode. The builder core binds it one hop deep (#124); a Code Library Theme token is never an alias itself, so the hop always holds.
   - `x / N` (Tailwind's `color-mix(in oklab, var(--x) N%, transparent)`) is that value with its alpha multiplied by N%: `{raw, alpha, resolved, from: {alias, alpha}}`, because a Figma alias cannot carry alpha. Dark `bg-input/30` over a 15% white `--input` is alpha 0.045.
   - Any other `color-mix` is evaluated over each token's CSS in that Mode: `{raw, alpha?, resolved, from: {mix}}`.
   - A literal is the literal form, and `none` is transparent black.

@@ -318,7 +318,9 @@ test('a document without a default group builds the closure and the default grou
   assert.ok(doc.closure.tokens.includes('button-outline-fill'), 'the closure holds the Button\'s Synthesized tokens (#120)');
   const spacing = Object.keys(doc.variables).filter(n => doc.variables[n].name.startsWith('Spacing/'));
   assert.equal(spacing.length, 35);
-  assert.deepEqual(Object.keys(plan.foundations.variables).sort(), [...new Set([...doc.closure.tokens, ...spacing])].sort());
+  const targets = ['background', 'border', 'destructive', 'input'];
+  assert.ok(targets.every(t => !doc.closure.tokens.includes(t)), 'Code Library tokens only a Synthesized alias reaches (#124)');
+  assert.deepEqual(Object.keys(plan.foundations.variables).sort(), [...new Set([...doc.closure.tokens, ...spacing, ...targets])].sort());
   assert.deepEqual(plan.foundations.textStyles, {});
   assert.deepEqual(setGroups(null, FILE_KEY, doc).foundationsGroups, ['Spacing']);
 });

@@ -942,20 +942,6 @@
     },
     {
       "match": {
-        "variant": "outline",
-        "expanded": "expanded",
-        "state": "hover"
-      },
-      "set": {
-        "Button": {
-          "fill": {
-            "token": "button-outline-expanded-hover-fill"
-          }
-        }
-      }
-    },
-    {
-      "match": {
         "variant": "secondary",
         "expanded": "expanded",
         "state": "hover"
@@ -964,20 +950,6 @@
         "Button": {
           "fill": {
             "token": "secondary"
-          }
-        }
-      }
-    },
-    {
-      "match": {
-        "variant": "ghost",
-        "expanded": "expanded",
-        "state": "hover"
-      },
-      "set": {
-        "Button": {
-          "fill": {
-            "token": "button-ghost-expanded-hover-fill"
           }
         }
       }

@@ -422,9 +422,9 @@ test('a Synthesized value aliasing a Theme token earlier in its own collection b
 test('a same-collection alias target that aliases within the collection itself (a chain, a cycle or the variable itself) is an alias-target conflict, and nothing changes (#124)', async () => {
   const stroke = 'button-outline-stroke';
   const cases = [
-    ['chain', { [stroke]: 'border', muted: stroke }, [['muted', stroke]]],
-    ['cycle', { [stroke]: 'muted', muted: stroke }, [['muted', stroke], [stroke, 'muted']]],
-    ['itself', { muted: 'muted' }, [['muted', 'muted']]],
+    ['chain', { [stroke]: 'border', secondary: stroke }, [['secondary', stroke]]],
+    ['cycle', { [stroke]: 'secondary', secondary: stroke }, [['secondary', stroke], [stroke, 'secondary']]],
+    ['itself', { secondary: 'secondary' }, [['secondary', 'secondary']]],
   ];
   for (const [label, aliases, expected] of cases) {
     const docText = shadcnWith(doc => { for (const [by, target] of Object.entries(aliases)) doc.variables[by].values.light = { alias: target, resolved: '#f5f5f5' }; });

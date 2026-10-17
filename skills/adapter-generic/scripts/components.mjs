@@ -402,10 +402,9 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   }
 
   // One Mode's value of a Synthesized token, as a Foundations value form: what the winning rule `r` sets there.
-  // A Theme token is flattened to its value in that Mode, keeping the alias in `from`: the builder core does not bind
-  // an alias within one collection yet, so this is #103's fallback until #124's probe and a core change. An opacity
-  // or a mix is evaluated over each token's own CSS in that Mode, so a token's alpha multiplies (0.15 x 0.3 = 0.045).
-  const FLATTENED = 'a Theme token, flattened: the builder core does not bind an alias within one collection yet (#103 fallback, #124)';
+  // A Theme token is an alias to it in the same collection, which the builder core binds one hop deep (#124). An
+  // opacity or a mix is evaluated over each token's own CSS in that Mode, so a token's alpha multiplies
+  // (0.15 x 0.3 = 0.045), and flattened to RGBA, since a Figma alias cannot carry alpha.
   const cssOf = (name, r, mode) => {
     const v = foundations.variables[name];
     if (!v || v.type !== 'COLOR') fail(`${r.candidate} (${at(r.entry)}): var(--${name}) is not a Foundations colour`);
@@ -418,11 +417,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     if (value === 'none') return literalForm('transparent');
     const text = r.decls[COLOUR_PROP[field]];
     let m = /^var\(--([\w-]+)\)$/.exec(text);
-    if (m) {
-      const t = foundations.variables[m[1]].values[mode];
-      return { raw: t.raw || t.value, ...(t.alpha !== undefined && { alpha: t.alpha }), resolved: t.resolved, from: { alias: m[1] },
-        level: 'info', reason: `${r.candidate}: ${FLATTENED}${t.reason === CLIPPED ? `; ${CLIPPED}` : ''}` };
-    }
+    if (m) return { alias: m[1], resolved: foundations.variables[m[1]].values[mode].resolved };
     m = /^color-mix\(in (\w+), var\(--([\w-]+)\) (\d*\.?\d+)%, transparent\)$/.exec(text);
     const c = evaluated(text.replace(/var\(--([\w-]+)\)/g, (_, name) => cssOf(name, r, mode)), r);
     const clipped = c.clipped ? `; ${CLIPPED}` : '';
