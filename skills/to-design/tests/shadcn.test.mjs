@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { approve, expand } from '../../contract/scripts/contract.mjs';
-import { foundationsPlan, PER_CALL, setsPlan } from '../scripts/build-plan.mjs';
+import { foundationsPlan, setsPlan } from '../scripts/build-plan.mjs';
 import { checkCoverage, checkSample, checkTheme } from '../scripts/coverage.mjs';
 import { recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
@@ -52,8 +52,8 @@ async function buildAll() {
     await call(foundationsPlan(DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, chunk }), CORE);
   const coverage = {};
   for (const c of FAMILIES) {
-    for (let batch = 0; batch * PER_CALL < expand(c).length; batch++)
-      await call(setsPlan(c, DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, batch, prototype: true }), COMPONENTS_CORE);
+    // the first build step by step (#168): loose batches, the combine, the place calls
+    for (let d; (d = setsPlan(c, DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, next: true, prototype: true }));) await call(d, COMPONENTS_CORE);
     coverage[c.family.key] = await call(setsPlan(c, DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, mode: 'coverage', prototype: true }), COMPONENTS_CORE);
   }
   return { mock, ledger, coverage, call };

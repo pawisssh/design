@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { applyOmit, approve, asDraft, expand, variantName } from '../../contract/scripts/contract.mjs';
-import { basePlan, decodeEntries, foundationsPlan, iconsPlan, PER_CALL, setsPlan } from '../scripts/build-plan.mjs';
+import { basePlan, decodeEntries, foundationsPlan, iconsPlan, setsPlan } from '../scripts/build-plan.mjs';
 import { checkCoverage, checkSample, checkTheme } from '../scripts/coverage.mjs';
 import { diff, normalizeBaseResult } from '../scripts/base-loop.mjs';
 import { pruneList, recordResult } from '../scripts/ledger.mjs';
@@ -68,10 +68,16 @@ async function sets(env, options = {}, { contract = BUTTON, drop = false } = {})
   return { plan, result, out, switches };
 }
 
+// A family's build: the first build step by step (--next: loose batches, the combine, the place calls, #168), or,
+// once the set is built, every append batch (a rerun or an update).
 async function buildAll(env, contract = BUTTON, options = {}) {
   const runs = [];
-  const of = Math.ceil(expand(contract).length / (options.perCall || PER_CALL));
-  for (let batch = 0; batch !== of; batch++) runs.push(await sets(env, { batch, ...options }, { contract }));
+  const derive = o => setsPlan(contract, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, ...options, ...o });
+  const rec = env.ledger.sets && env.ledger.sets[contract.family.key];
+  if (rec && rec.set && rec.placed !== false) {
+    const { of } = derive({ batch: 0 }).plan.options;
+    for (let batch = 0; batch !== of; batch++) runs.push(await sets(env, { batch, ...options }, { contract }));
+  } else while (derive({ next: true })) runs.push(await sets(env, { next: true, ...options }, { contract }));
   return runs;
 }
 
@@ -93,7 +99,8 @@ test('the selection is axis-ordered tuples that decode back to the expansion, fr
   const env = await setup();
   const tuples = expand(BUTTON);
   const seen = [];
-  for (let batch = 0; batch !== Math.ceil(TOTAL / PER_CALL); batch++) {
+  const { of } = setsPlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT }).plan.options;
+  for (let batch = 0; batch !== of; batch++) {
     const { plan } = setsPlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, batch, at: AT });
     assert.deepEqual(plan.selection.axes, ['kind', 'size', 'state']);
     for (const { index, tuple } of decodeEntries(plan, BUTTON)) { assert.deepEqual(tuple, tuples[index]); seen.push(index); }
@@ -412,11 +419,11 @@ test('inside its set the Base Component is built and read at the property defaul
 
 test('after a lost connection the ledger is reconciled before the retry, and nothing duplicates', async () => {
   const env = await setup();
-  await sets(env, { batch: 0 });
+  const { plan } = await sets(env, { batch: 0 });
   await sets(env, { batch: 1 }, { drop: true }); // committed in the file, result lost
   const lost = env.ledger.sets.button.variants.filter(Boolean).length;
   const { result } = await sets(env, { mode: 'reconcile' });
-  assert.equal(result.summary.found, 2 * PER_CALL);
+  assert.equal(result.summary.found, 2 * plan.options.perCall, 'the loose variants, found by name on the page');
   assert.ok(env.ledger.sets.button.variants.filter(Boolean).length > lost);
   const retry = await sets(env, { batch: 1 });
   assert.equal(retry.result.summary.created, 0);
@@ -447,24 +454,25 @@ test('the coverage check matches every Prop=Value label, cell and wiring; a samp
   assert.deepEqual((await setNode(env)).parent.parent.explicitVariableModes, {});
 });
 
-test('the first batch holds the Base Component; a first batch lost before its ledger is found again through the base', async () => {
+test('a first loose batch lost before its ledger is found again by a reconcile, and the retry creates nothing', async () => {
   const env = await setup();
-  env.mock.log.length = 0;
-  const early = await sets(env, { batch: 1 });
-  assert.equal(early.result.summary.conflicts, 1);
-  assert.match(early.result.conflicts[0].reason, /base-first/);
-  assert.deepEqual(writes(env.mock), [], 'a conflict stops before the first change');
-  assert.deepEqual(env.ledger.sets, {});
-  await sets(env, { batch: 0 }, { drop: true });
+  const base = env.ledger.bases.button.id;
+  const lost = await sets(env, { batch: 1 }, { drop: true }); // any batch may go first: the Base Component waits on the page
   assert.deepEqual(env.ledger.sets, {}, 'the result was lost');
-  const blind = await sets(env, { batch: 0 });
+  const per = lost.plan.options.perCall;
+  const loose = () => env.mock.figma.root.children.find(p => p.name === 'Buttons').children.filter(n => n.type === 'COMPONENT');
+  assert.equal(loose().length, per + 1, 'the batch and the Base Component, loose on the page');
+  env.mock.log.length = 0;
+  const blind = await sets(env, { batch: 1 });
   assert.ok(blind.result.summary.conflicts > 0, 'a retry without the ledger stops on what the lost call made');
-  assert.equal(blind.result.summary.created, 0);
+  assert.deepEqual(writes(env.mock), [], 'a conflict stops before the first change');
   const rec = await sets(env, { mode: 'reconcile' });
-  assert.equal(rec.result.summary.found, PER_CALL, JSON.stringify(rec.result));
-  const retry = await sets(env, { batch: 0 });
+  assert.equal(rec.result.summary.found, per + 1, JSON.stringify(rec.result));
+  const retry = await sets(env, { batch: 1 });
   assert.deepEqual([retry.result.summary.created, retry.result.made], [0, []]);
-  assert.equal((await setNode(env)).children.length, PER_CALL);
+  assert.equal(loose().length, per + 1);
+  await buildAll(env);
+  assert.equal((await setNode(env)).defaultVariant.id, base);
   const pages = env.mock.figma.root.children.map(p => p.name);
   assert.deepEqual(pages.filter(n => n === 'Buttons').length, 1);
   assert.deepEqual(pages.filter(n => n === 'Templates').length, 1);
@@ -475,7 +483,8 @@ test('a family without a Base Component (the 539-variant slope set) builds besid
   await buildAll(env);
   const slope = slopeContract();
   const runs = await buildAll(env, slope, { prototype: true });
-  assert.equal(runs.length, Math.ceil(539 / PER_CALL));
+  const of = runs[0].plan.options.of;
+  assert.deepEqual(runs.map(r => r.plan.options.phase || r.plan.options.mode), [...Array(of).fill('loose'), 'combine', 'place']);
   for (const { out } of runs) assert.ok(out.chars < 50000, `${out.chars} chars`);
   assert.equal(env.ledger.sets['button-slope'].variants.filter(Boolean).length, 539);
   assert.equal(env.ledger.sets.button.variants.length, TOTAL, 'the Button section is kept');
@@ -498,7 +507,7 @@ test('every token-backed value is bound: a fill typed raw by hand fails the them
   const t = checkTheme(BUTTON, (await sets(env, { mode: 'theme', sample: [index] })).result, DOC);
   assert.deepEqual(t.problems.map(p => [p.what, p.at]), [['unbound', 'Button.fill']]);
   const runs = await buildAll(env);
-  assert.deepEqual(runs.map(r => r.result.summary.updated), runs.map((r, i) => (i === Math.floor(index / PER_CALL) ? 1 : 0)));
+  assert.deepEqual(runs.map(r => r.result.summary.updated), runs.map((r, i) => (i === Math.floor(index / r.plan.options.perCall) ? 1 : 0)));
   assert.deepEqual((await buildAll(env)).map(r => r.result.summary.updated), runs.map(() => 0));
   assert.deepEqual(checkTheme(BUTTON, (await sets(env, { mode: 'theme', sample: [index] })).result, DOC).problems, []);
 });

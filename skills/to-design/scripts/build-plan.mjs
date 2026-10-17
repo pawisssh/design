@@ -10,8 +10,8 @@
 //   node skills/to-design/scripts/build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir>
 //        [--adopt] [--read-only] [--page <name>] [--ledger <path>]
 //   node skills/to-design/scripts/build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir>
-//        [--mode build|reconcile|coverage|sample|theme|prune-preview|prune] [--batch N] [--per-call N] [--sample i,j] [--prune-list <prune.json>]
-//        [--adopt] [--prototype] [--page <name>] [--ledger <path>]
+//        [--next | --mode build|combine|place|reconcile|coverage|sample|theme|prune-preview|prune] [--batch N] [--per-call N] [--budget ms]
+//        [--sample i,j] [--prune-list <prune.json>] [--adopt] [--prototype] [--page <name>] [--ledger <path>]
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve as resolvePath, sep } from 'node:path';
@@ -185,17 +185,36 @@ export function basePlan(contract, docText, ledger, { fileKey, adopt = false, re
 // ---------- component sets (#32) ----------
 
 /**
- * Variants per build call. Measured live (#32): see SKILL.md "Component Sets" for the slope and why this
+ * Variants per build call, at most. Measured live (#32): see SKILL.md "Component Sets" for the slope and why this
  * ceiling keeps each call well under the connection limit and the package under use_figma's 50,000 chars.
  */
 export const PER_CALL = 49;
+/**
+ * Variants per append call into a set of `total` (#168, ADR 0004): an append costs about 1.8 ms × per call × set
+ * size, kept under about 45 s.
+ */
+export const appendPerCall = total => Math.max(1, Math.min(PER_CALL, Math.floor(45000 / (1.8 * total))));
+/**
+ * The largest first build (#168): its one combine call measured 46.9 s at 2304 variants and grows about with the
+ * square of the set, so about 3,000 variants (≈ 80 s) nears the ~2 min call ceiling.
+ */
+export const MAX_COMBINE = 3000;
+/** A place call's time budget (ms): it stops after the first change past it, and the next place call resumes. */
+export const PLACE_BUDGET = 45000;
+/**
+ * A sets call's plan + state JSON, at most (chars): use_figma's 50,000 less the packaged components core and
+ * its wrapper (tests/bprime.test.mjs measures them).
+ */
+export const SETS_BUDGET = 13600;
+// a reconcile window: its entries carry no fragments
+const RECONCILE_PER_CALL = 500;
 // The Component Header template every family page's Header is an instance of (one per file):
 // TEXT properties with their font style and size.
 export const TEMPLATES = {
   page: 'Templates',
   header: { name: 'Component Header', fields: [['Type', 'Regular', 14], ['Title', 'SemiBold', 42], ['Namespace', 'Regular', 14]] },
 };
-const SET_MODES = ['build', 'reconcile', 'coverage', 'sample', 'theme', 'prune-preview', 'prune'];
+const SET_MODES = ['build', 'combine', 'place', 'reconcile', 'coverage', 'sample', 'theme', 'prune-preview', 'prune'];
 
 // The approval gate: an approved Contract that validates. `prototype` also lets through the one error a
 // prototype approval raises (rule 8, by: PROTOTYPE_APPROVER), and nothing else.
@@ -251,23 +270,32 @@ export function entrySpec(plan, entry) {
 
 /**
  * A sets slice's plan and state (#32): one call for a family's Component Set, from the approved Contract.
- * Modes: `build` (batch `batch` of `perCall` variants, in expansion order), `reconcile` (read only: the
- * ledger section rebuilt from what the file holds, after a lost connection), `coverage` (read only: every
- * variant's name, grid cell and property wiring), `sample` and `theme` (read only: full values, or the
- * resolved colours per mode, of the variants at the expansion indexes `sample`), `prune-preview` (read only:
- * every ledger orphan with its instance count in the file) and `prune` (deletes the orphans on `prune`, the
- * owner-confirmed list {variant name: instance count from the preview}; #67).
+ * A family's first build (#168, ADR 0004) runs `build` batches in the loose phase (each variant a loose component
+ * on the page), then one `combine` call (combineAsVariants over them all, nothing else), then `place` calls (the
+ * set's grid, properties and every variant's cell and property wiring, under a time budget, each resuming where
+ * the last stopped). Once placed, `build` batches append into the set (re-runs and updates). `next` derives the
+ * family's next step from the ledger, or returns null when it is built.
+ * Other modes read only: `reconcile` (the ledger section rebuilt from what the file holds, after a lost
+ * connection; windowed by `batch`), `coverage` (every variant's name, grid cell and property wiring), `sample` and
+ * `theme` (full values, or the resolved colours per mode, of the variants at the expansion indexes `sample`),
+ * `prune-preview` (every ledger orphan with its instance count in the file); `prune` deletes the orphans on
+ * `prune`, the owner-confirmed list {variant name: instance count from the preview} (#67).
+ * Per call: loose batches take up to PER_CALL (flat in set size); appends take appendPerCall(total), or up to
+ * PER_CALL when every variant in the window has a recorded id (an update-free re-run); both shrink until every
+ * window's plan and state fit SETS_BUDGET.
  * Entries are axis-ordered tuples [index, value positions..., wiring, fragments...]. The plan asserts they
  * decode back to the expansion and resolve to what the Contract resolves; the core never matches rules.
- * Options: fileKey (required), mode, batch, perCall, sample, prune, adopt, prototype, page, at.
+ * Options: fileKey (required), mode, next, batch, perCall, budget, sample, prune, adopt, prototype, page, at.
  */
 export function setsPlan(contract, docText, ledger, {
-  fileKey, mode = 'build', batch = 0, perCall = PER_CALL, sample = [], prune = null, adopt = false, prototype = false, page = null, at = new Date().toISOString(),
+  fileKey, mode = 'build', next = false, batch, perCall, budget = PLACE_BUDGET, sample = [], prune = null, adopt = false, prototype = false, page = null,
+  at = new Date().toISOString(),
 } = {}) {
   if (!fileKey) throw new Error('fileKey is required');
   if (!SET_MODES.includes(mode)) throw new Error(`mode must be one of ${SET_MODES.join(', ')}`);
   if ((mode === 'prune') !== !!prune) throw new Error('prune takes a prune list (--prune-list), and only the prune mode does');
   if (!ledger || ledger.fileKey !== fileKey) throw new Error(`no ledger for ${fileKey}: build foundations and icons first`);
+  if (perCall != null && (!Number.isInteger(perCall) || perCall < 1 || perCall > PER_CALL)) throw new Error(`--per-call takes 1..${PER_CALL}: at most ${PER_CALL} per call`);
   const doc = JSON.parse(docText);
   checkApproved(contract, doc, prototype);
   const f = ledger.foundations;
@@ -275,44 +303,25 @@ export function setsPlan(contract, docText, ledger, {
   if (f.documentHash !== documentHash(docText)) throw new Error(`the foundations document changed since the last foundations build (${f.documentHash}); rebuild foundations first`);
   const family = contract.family.key;
   const tuples = expand(contract);
+  const total = tuples.length;
   const axes = contract.axes.map(a => a.key);
   const base = baseTuple(contract);
+  const hash = contentHash(contract);
+
+  // The family's phase, from its ledger record: no set yet (the first build), combined but not placed, or built.
+  const rec = ledger.sets && ledger.sets[family];
+  const ids = rec && rec.contentHash === hash && Array.isArray(rec.variants) && rec.variants.length === total ? rec.variants : [];
+  const combined = !!(rec && rec.set);
+  const unplaced = combined && rec.placed === false;
+  if (!combined && (next || mode === 'build' || mode === 'combine') && total > MAX_COMBINE)
+    throw new Error(`a first build of ${family} combines its ${total} variants in one call, above MAX_COMBINE (${MAX_COMBINE}): the combine measured 46.9 s at 2304 and grows with the square (about ${Math.round(46.9 * (total / 2304) ** 2)} s here), near the ~2 min call ceiling`);
   const { frags, wirings, refs } = fragmentsOf(contract, tuples);
-
-  const of = Math.ceil(tuples.length / perCall);
-  let picked;
-  if (mode === 'build') {
-    if (!Number.isInteger(batch) || batch < 0 || batch >= of) throw new Error(`batch must be 0..${of - 1} (${tuples.length} variants, ${perCall} per call)`);
-    picked = tuples.map((_, i) => i).slice(batch * perCall, (batch + 1) * perCall);
-  } else if (mode === 'reconcile') picked = tuples.map((_, i) => i);
-  else if (mode === 'coverage' || mode.startsWith('prune')) picked = [];
-  else {
-    if (!sample.length || sample.some(i => !Number.isInteger(i) || i < 0 || i >= tuples.length)) throw new Error(`sample must list expansion indexes 0..${tuples.length - 1}`);
-    picked = [...new Set(sample)];
-  }
-  const full = mode !== 'reconcile';
+  const ax = k => contract.axes.findIndex(a => a.key === k);
   const pos = (t, k) => contract.axes.find(a => a.key === k).values.findIndex(v => v.key === t[k]);
-  const entries = picked.map(i => [i, ...axes.map(k => pos(tuples[i], k)), ...(full ? [refs[i].p, ...refs[i].frags] : [])]);
-  const P = {};
-  const usedFrags = {};
-  if (full) for (const i of picked) { P[refs[i].p] = wirings[refs[i].p]; for (const id of refs[i].frags) usedFrags[id] = frags[id]; }
-
-  // tokens -> ids, only those the picked fragments use
-  const variables = {};
-  const textStyles = {};
-  const use = (field, x) => {
-    if (Array.isArray(x)) return x.forEach(e => Object.entries(e).forEach(([k, y]) => use(k, y)));
-    if (!x || typeof x !== 'object' || !('token' in x)) return;
-    const [map, have] = field === 'textStyle' ? [textStyles, f.textStyles] : [variables, f.variables];
-    if (!have[x.token]) throw new Error(`${x.token} is not in the ledger's foundations`);
-    map[x.token] = have[x.token];
-  };
-  for (const [, , fields] of Object.values(usedFrags)) for (const [k, x] of Object.entries(fields)) use(k, x);
+  // a tuple's index in the axis-value product, in Contract order
+  const productIndex = t => contract.axes.reduce((m, a) => m * a.values.length + a.values.findIndex(v => v.key === t[a.key]), 0);
+  const product = contract.axes.reduce((m, a) => m * a.values.length, 1);
   const fontFamily = ((contract.dependencies.fonts || [])[0] || {}).family || 'Inter';
-  const fonts = new Set((contract.dependencies.fonts || []).flatMap(ft => ft.styles.map(s => JSON.stringify({ family: ft.family, style: s }))));
-  for (const t of Object.keys(textStyles)) fonts.add(JSON.stringify({ family: doc.textStyles[t].fontFamily, style: doc.textStyles[t].fontStyle }));
-  for (const [, style] of TEMPLATES.header.fields) fonts.add(JSON.stringify({ family: fontFamily, style }));
-
   const props = contract.properties.map(p => {
     const o = { key: p.key, name: p.label, type: p.type, default: p.default };
     if (p.type === 'INSTANCE_SWAP') {
@@ -327,50 +336,174 @@ export function setsPlan(contract, docText, ledger, {
     if (!comps[key]) throw new Error(`icon ${key} is not in the ledger: build icons first`);
     icons[key] = { id: comps[key].id, key: comps[key].key };
   }
-  const ax = k => contract.axes.findIndex(a => a.key === k);
-  // The whole selection, for a build or reconcile call to tell the variants it dropped (#67): bit i (hex, 4 per digit) is
-  // tuple i of the axis-value product, in Contract order.
-  const bits = new Array(Math.ceil(contract.axes.reduce((m, a) => m * a.values.length, 1) / 4)).fill(0);
-  for (const t of tuples) { const i = contract.axes.reduce((m, a) => m * a.values.length + a.values.findIndex(v => v.key === t[a.key]), 0); bits[i >> 2] |= 1 << (i & 3); }
-  const plan = {
-    schemaVersion: 1,
-    slice: 'sets',
-    fileKey,
-    page: page || contract.figma.page,
-    at,
-    options: { mode, adopt: !!adopt, ...(mode === 'build' ? { batch, of, perCall } : {}), ...(prune ? { prune } : {}) },
-    family,
-    designSystem: doc.designSystem.key,
-    snapshotId: contract.source.snapshotId,
-    contentHash: contentHash(contract),
-    documentHash: f.documentHash,
-    total: tuples.length,
-    baseIndex: tuples.findIndex(t => axes.every(k => t[k] === base[k])),
-    set: {
-      name: contract.figma.componentSetName,
-      description: contract.figma.description,
-      header: contract.figma.header,
-      // value labels in Contract order; `order` lists value positions default first, so the default variant sits top-left
-      axes: contract.axes.map(a => {
-        const d = a.values.findIndex(v => v.key === a.default);
-        return { label: a.label, values: a.values.map(v => v.label), order: [d, ...a.values.map((_, i) => i).filter(i => i !== d)] };
-      }),
-      grid: { columns: contract.figma.grid.columns.map(ax), rows: contract.figma.grid.rows.map(ax) },
-    },
-    templates: { page: TEMPLATES.page, fontFamily, header: TEMPLATES.header },
-    tree: anatomyTree(contract.anatomy),
-    fonts: [...fonts].sort().map(x => JSON.parse(x)),
-    props,
-    P,
-    frags: usedFrags,
-    selection: { schemaVersion: 1, axes, entries, ...(mode === 'build' || mode === 'reconcile' ? { member: bits.map(b => b.toString(16)).join('') } : {}) },
+
+  // The plan and state for the picked expansion indexes, but the state's ledger record (`sets`), which is added last.
+  function assemble(picked, mode, options) {
+    const full = mode !== 'reconcile';
+    const entries = picked.map(i => [i, ...axes.map(k => pos(tuples[i], k)), ...(full ? [refs[i].p, ...refs[i].frags] : [])]);
+    const P = {};
+    const usedFrags = {};
+    if (full) for (const i of picked) { P[refs[i].p] = wirings[refs[i].p]; for (const id of refs[i].frags) usedFrags[id] = frags[id]; }
+    // tokens -> ids, only those the picked fragments use
+    const variables = {};
+    const textStyles = {};
+    const use = (field, x) => {
+      if (Array.isArray(x)) return x.forEach(e => Object.entries(e).forEach(([k, y]) => use(k, y)));
+      if (!x || typeof x !== 'object' || !('token' in x)) return;
+      const [map, have] = field === 'textStyle' ? [textStyles, f.textStyles] : [variables, f.variables];
+      if (!have[x.token]) throw new Error(`${x.token} is not in the ledger's foundations`);
+      map[x.token] = have[x.token];
+    };
+    for (const [, , fields] of Object.values(usedFrags)) for (const [k, x] of Object.entries(fields)) use(k, x);
+    const fonts = new Set((contract.dependencies.fonts || []).flatMap(ft => ft.styles.map(s => JSON.stringify({ family: ft.family, style: s }))));
+    for (const t of Object.keys(textStyles)) fonts.add(JSON.stringify({ family: doc.textStyles[t].fontFamily, style: doc.textStyles[t].fontStyle }));
+    for (const [, style] of TEMPLATES.header.fields) fonts.add(JSON.stringify({ family: fontFamily, style }));
+    // The whole selection, for a call to tell the variants it dropped (#67) and the combine to find every loose
+    // variant: bit i (hex, 4 per digit) is tuple i of the axis-value product, in Contract order.
+    let member = null;
+    if (['build', 'reconcile', 'combine', 'place'].includes(mode)) {
+      const bits = new Array(Math.ceil(product / 4)).fill(0);
+      for (const t of tuples) { const i = productIndex(t); bits[i >> 2] |= 1 << (i & 3); }
+      member = bits.map(b => b.toString(16)).join('');
+    }
+    const plan = {
+      schemaVersion: 1,
+      slice: 'sets',
+      fileKey,
+      page: page || contract.figma.page,
+      at,
+      options: { mode, adopt: !!adopt, ...options, ...(prune ? { prune } : {}) },
+      family,
+      designSystem: doc.designSystem.key,
+      snapshotId: contract.source.snapshotId,
+      contentHash: hash,
+      documentHash: f.documentHash,
+      total,
+      baseIndex: tuples.findIndex(t => axes.every(k => t[k] === base[k])),
+      set: {
+        name: contract.figma.componentSetName,
+        description: contract.figma.description,
+        header: contract.figma.header,
+        // value labels in Contract order; `order` lists value positions default first, so the default variant sits top-left
+        axes: contract.axes.map(a => {
+          const d = a.values.findIndex(v => v.key === a.default);
+          return { label: a.label, values: a.values.map(v => v.label), order: [d, ...a.values.map((_, i) => i).filter(i => i !== d)] };
+        }),
+        grid: { columns: contract.figma.grid.columns.map(ax), rows: contract.figma.grid.rows.map(ax) },
+      },
+      templates: { page: TEMPLATES.page, fontFamily, header: TEMPLATES.header },
+      tree: anatomyTree(contract.anatomy),
+      fonts: [...fonts].sort().map(x => JSON.parse(x)),
+      props,
+      P,
+      frags: usedFrags,
+      selection: { schemaVersion: 1, axes, entries, ...(member ? { member } : {}) },
+    };
+    // A place call settles every variant: its property wiring, and its root's `fill` sizing (a loose component on the
+    // page has no auto layout parent to fill). Per product index, a base-36 index into the distinct kinds, '-' unselected.
+    if (mode === 'place') {
+      const kinds = [];
+      const seen = new Map();
+      const cells = new Array(product).fill('-');
+      tuples.forEach((t, i) => {
+        const root = {};
+        for (const id of refs[i].frags) {
+          const [sec, node, fields] = frags[id];
+          if (sec === 'layout' && node === plan.tree.name) for (const k of ['width', 'height']) if (fields[k] === 'fill') root[k] = 'fill';
+        }
+        const kind = { refs: wirings[refs[i].p].refs, root };
+        const k = JSON.stringify(kind);
+        if (!seen.has(k)) { seen.set(k, kinds.length); kinds.push(kind); }
+        cells[productIndex(t)] = seen.get(k).toString(36);
+      });
+      if (kinds.length > 36) throw new Error(`${family} has ${kinds.length} distinct wirings and root sizes: a place plan holds at most 36`);
+      plan.settle = { kinds, at: cells.join('') };
+    }
+    const bases = ledger.bases && ledger.bases[family] ? { [family]: ledger.bases[family] } : {};
+    return { plan, state: { schemaVersion: 1, fileKey, variables, textStyles, icons, bases, sets: {}, templates: ledger.templates || null } };
+  }
+
+  // Per call: the largest n up to `start` whose every window fits SETS_BUDGET, counting the family's ledger record and
+  // the header template at their largest (ids of 11 chars, 20 per variant id), so batch boundaries never move as the
+  // ledger fills.
+  const ID = '00000:00000';
+  const recordBound = JSON.stringify({ [family]: { page: ID, section: ID, set: { id: ID, key: 'k'.repeat(40), name: contract.figma.componentSetName },
+    props: Object.fromEntries(props.map(p => [p.key, `${p.name}#${ID}`])), variants: {}, total, snapshotId: contract.source.snapshotId, contentHash: hash,
+    documentHash: f.documentHash, builtAt: at, placed: false } }).length + JSON.stringify({ header: { page: ID, id: ID, key: 'k'.repeat(40) } }).length;
+  const windows = n => Array.from({ length: Math.ceil(total / n) }, (_, b) => tuples.map((_, i) => i).slice(b * n, (b + 1) * n));
+  const fits = n => windows(n).every(w => {
+    const { plan, state } = assemble(w, 'build', { phase: 'loose', batch: 0, of: 0, perCall: n });
+    return JSON.stringify(plan).length + JSON.stringify(state).length - JSON.stringify(state.templates).length + recordBound + 20 * w.length <= SETS_BUDGET;
+  });
+  const sized = {};
+  const perCallFor = phase => {
+    if (sized[phase]) return sized[phase];
+    let n = phase === 'append' ? appendPerCall(total) : PER_CALL;
+    while (n > 1 && !fits(n)) n--;
+    return (sized[phase] = n);
   };
+  const firstGap = n => windows(n).findIndex(w => w.some(i => !ids[i]));
+
+  if (next) {
+    if (mode !== 'build') throw new Error('--next derives the next step itself: give it no --mode');
+    if (!combined) {
+      const b = firstGap(perCall || perCallFor('loose'));
+      if (b === -1) mode = 'combine'; else batch = b;
+    } else if (unplaced) mode = 'place';
+    else {
+      const b = firstGap(perCall || perCallFor('append'));
+      if (b === -1) return null;
+      batch = b;
+    }
+  }
+  if (mode === 'combine') {
+    if (combined) throw new Error(`the ${family} set is combined already: place it (--mode place) or build batches`);
+    const gap = tuples.filter((_, i) => !ids[i]).length;
+    if (gap) throw new Error(`combine: ${gap} of ${total} loose variants are not recorded in the ledger: build their batches first (--next)`);
+  }
+  if (mode === 'place' && !combined) throw new Error(`the ${family} set is not combined yet: build its loose batches and the combine first (--next)`);
+
+  let picked;
+  let options = {};
+  if (mode === 'build') {
+    if (unplaced) throw new Error(`the ${family} set is combined but not placed: run --mode place (or --next) until it reports placed, then build batches`);
+    const phase = combined ? 'append' : 'loose';
+    const n = perCall || perCallFor(phase);
+    const of = Math.ceil(total / n);
+    if (batch == null) batch = 0;
+    if (!Number.isInteger(batch) || batch < 0 || batch >= of) throw new Error(`batch must be 0..${of - 1} (${total} variants, ${n} per call)`);
+    picked = windows(n)[batch];
+    // above appendPerCall, only an update-free re-run: every variant in the window is in the set already
+    const cap = appendPerCall(total);
+    if (phase === 'append' && n > cap) {
+      const miss = picked.filter(i => !ids[i]).length;
+      if (miss) throw new Error(`--per-call ${n} is above ${cap} for a set of ${total}, which only an update-free re-run may take: ${miss} of its ${picked.length} variants ${miss === 1 ? 'has' : 'have'} no recorded id`);
+    }
+    options = { phase, batch, of, perCall: n };
+  } else if (mode === 'reconcile') {
+    picked = tuples.map((_, i) => i);
+    if (batch != null) {
+      const n = perCall || RECONCILE_PER_CALL;
+      const of = Math.ceil(total / n);
+      if (!Number.isInteger(batch) || batch < 0 || batch >= of) throw new Error(`batch must be 0..${of - 1} (${total} variants, ${n} per reconcile call)`);
+      picked = windows(n)[batch];
+      options = { batch, of, perCall: n };
+    }
+  } else if (['combine', 'place', 'coverage'].includes(mode) || mode.startsWith('prune')) {
+    picked = [];
+    if (mode === 'place') options = { budget };
+  } else {
+    if (!sample.length || sample.some(i => !Number.isInteger(i) || i < 0 || i >= total)) throw new Error(`sample must list expansion indexes 0..${total - 1}`);
+    picked = [...new Set(sample)];
+  }
+  const { plan, state } = assemble(picked, mode, options);
+  const { entries } = plan.selection;
   // The entries decode back to the expansion, and each resolves to what the Contract resolves.
   const decoded = decodeEntries(plan, contract);
   decoded.forEach(({ index, tuple }) => {
     if (axes.some(k => tuple[k] !== tuples[index][k])) throw new Error(`entry ${index} decodes to ${variantName(contract, tuple)}, not ${variantName(contract, tuples[index])}`);
   });
-  if (full)
+  if (mode !== 'reconcile')
     entries.forEach((e, n) => {
       const r = resolve(contract, decoded[n].tuple);
       const spec = entrySpec(plan, e);
@@ -379,36 +512,37 @@ export function setsPlan(contract, docText, ledger, {
         if (JSON.stringify(spec[sec]) !== JSON.stringify(Object.fromEntries(Object.entries(r[sec]).map(([node, { visible, ...fl }]) => [node, stripFields(fl)]))))
           throw new Error(`entry ${e[0]} does not resolve to the Contract's ${sec}`);
     });
-  const bases = ledger.bases && ledger.bases[family] ? { [family]: ledger.bases[family] } : {};
   // The family's ledger record, with the variant ids of this call's entries only: a call carries no other ids.
-  const rec = ledger.sets && ledger.sets[family];
-  const sets = {};
   if (rec) {
     // Ids are recorded by expansion index, and another Contract may expand differently (an omit edit shifts the
     // indexes), so they are carried only for the Contract the set was built from; otherwise the core finds each
-    // variant by name in the set.
-    const ids = {};
-    if (rec.contentHash === plan.contentHash) for (const i of picked) if (rec.variants && rec.variants[i]) ids[i] = rec.variants[i];
+    // variant by name in the set (or loose on the page).
+    const carried = {};
+    for (const i of picked) if (ids[i]) carried[i] = ids[i];
     // A tuple the selection takes back reuses its orphan's id (#67). The other orphans stay in the ledger:
     // a build package carries none of them.
     const { orphans = {}, ...kept } = rec;
-    for (const i of picked) { const o = orphans[variantName(contract, tuples[i])]; if (o && !ids[i]) ids[i] = o.id; }
-    sets[family] = { ...kept, variants: ids };
+    for (const i of picked) { const o = orphans[variantName(contract, tuples[i])]; if (o && !carried[i]) carried[i] = o.id; }
+    state.sets[family] = { ...kept, variants: carried };
     // the prune modes read the orphans, by name, and work only on a set every batch was rebuilt from this Contract;
     // coverage reads their ids, to tell an orphan from a node under its name
-    if (mode.startsWith('prune') || mode === 'coverage') sets[family].orphans = Object.fromEntries(Object.entries(orphans).map(([n, o]) => [n, o.id]));
+    if (mode.startsWith('prune') || mode === 'coverage') state.sets[family].orphans = Object.fromEntries(Object.entries(orphans).map(([n, o]) => [n, o.id]));
   }
   if (mode.startsWith('prune') && (!rec || rec.contentHash !== plan.contentHash || !(rec.variants || [null]).every(Boolean)))
     throw new Error(`the ${family} set is not built from this Contract yet: rebuild every batch first, then preview or prune its orphans`);
-  return { plan, state: { schemaVersion: 1, fileKey, variables, textStyles, icons, bases, sets, templates: ledger.templates || null } };
+  const size = JSON.stringify(plan).length + JSON.stringify(state).length;
+  if (size > SETS_BUDGET)
+    throw new Error(`the ${mode} plan and state take ${size} chars, above SETS_BUDGET (${SETS_BUDGET}) next to the core: ${mode === 'reconcile' ? 'reconcile by --batch' : 'lower --per-call'}`);
+  return { plan, state };
 }
 
 const USAGE = [
   'usage: build-plan.mjs foundations --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--prune a,b] [--page <name>] [--chunk N] [--ledger <path>]',
   '       build-plan.mjs icons --contract <component.json> [--contract ...] --icons-dir <package dir> --file-key <key> --out <dir> [--adopt] [--page <name>] [--ledger <path>]',
   '       build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--read-only] [--page <name>] [--ledger <path>]',
-  '       build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--mode build|reconcile|coverage|sample|theme|prune-preview|prune]',
-  '                      [--batch N] [--per-call N] [--sample i,j] [--prune-list <prune.json> (mode prune)] [--adopt] [--prototype (a Contract under .scratch only)] [--page <name>] [--ledger <path>]',
+  '       build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir>',
+  '                      [--next | --mode build|combine|place|reconcile|coverage|sample|theme|prune-preview|prune] [--batch N] [--per-call N] [--budget ms (mode place)]',
+  '                      [--sample i,j] [--prune-list <prune.json> (mode prune)] [--adopt] [--prototype (a Contract under .scratch only)] [--page <name>] [--ledger <path>]',
 ].join('\n');
 
 function main() {
@@ -418,7 +552,8 @@ function main() {
       doc: { type: 'string' }, 'file-key': { type: 'string' }, out: { type: 'string' }, ledger: { type: 'string' },
       adopt: { type: 'boolean', default: false }, prune: { type: 'string', default: '' }, page: { type: 'string' },
       contract: { type: 'string', multiple: true }, 'icons-dir': { type: 'string' }, 'read-only': { type: 'boolean', default: false },
-      mode: { type: 'string', default: 'build' }, batch: { type: 'string', default: '0' }, 'per-call': { type: 'string' }, sample: { type: 'string', default: '' },
+      mode: { type: 'string', default: 'build' }, batch: { type: 'string' }, 'per-call': { type: 'string' }, sample: { type: 'string', default: '' },
+      next: { type: 'boolean', default: false }, budget: { type: 'string' },
       prototype: { type: 'boolean', default: false }, 'prune-list': { type: 'string' }, chunk: { type: 'string', default: '1' },
     },
   });
@@ -443,11 +578,12 @@ function main() {
     console.error(`--prune-list is for ${pruneFile.family} in ${pruneFile.fileKey}: a sets prune of that family and file only`);
     process.exit(2);
   }
-  const { plan, state } = slice === 'sets'
+  const derived = slice === 'sets'
     ? setsPlan(JSON.parse(readFileSync(values.contract[0], 'utf8')), readFileSync(values.doc, 'utf8'), readLedger(path), {
-      fileKey, mode: values.mode, batch: Number(values.batch), adopt: values.adopt, prototype: values.prototype, prune: pruneFile && pruneFile.prune,
-      sample: values.sample ? values.sample.split(',').map(Number) : [],
-      ...(values['per-call'] ? { perCall: Number(values['per-call']) } : {}), ...(values.page ? { page: values.page } : {}),
+      fileKey, mode: values.mode, next: values.next, adopt: values.adopt, prototype: values.prototype, prune: pruneFile && pruneFile.prune,
+      sample: values.sample ? values.sample.split(',').map(Number) : [], ...(values.batch != null ? { batch: Number(values.batch) } : {}),
+      ...(values['per-call'] ? { perCall: Number(values['per-call']) } : {}), ...(values.budget != null ? { budget: Number(values.budget) } : {}),
+      ...(values.page ? { page: values.page } : {}),
     })
     : slice === 'base'
     ? basePlan(JSON.parse(readFileSync(values.contract[0], 'utf8')), readFileSync(values.doc, 'utf8'), readLedger(path), {
@@ -460,6 +596,9 @@ function main() {
     : iconsPlan(values.contract.map(p => JSON.parse(readFileSync(p, 'utf8'))), values['icons-dir'], readLedger(path), {
       fileKey, adopt: values.adopt, ...(values.page ? { page: values.page } : {}),
     });
+  // --next on a family whose set is built and every id recorded: nothing to derive
+  if (!derived) { console.log(JSON.stringify({ status: 'built', slice, fileKey, ledger: path })); return; }
+  const { plan, state } = derived;
   mkdirSync(values.out, { recursive: true });
   writeFileSync(join(values.out, 'plan.json'), JSON.stringify(plan, null, 2) + '\n');
   writeFileSync(join(values.out, 'state.json'), JSON.stringify(state, null, 2) + '\n');

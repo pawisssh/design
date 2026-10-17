@@ -349,7 +349,11 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const byName = mode === 'reconcile' || opts.adopt;
     const conflicts = [];
     const conflict = (kind, name, reason, id) => conflicts.push(id ? { kind, name, reason, id } : { kind, name, reason });
+    // a build is one phase of the family's build (#168): loose (the first build's batches, loose components on the
+    // page), or append (into the set the combine made); combine and place are modes of their own
+    const phase = mode === 'build' ? opts.phase || 'append' : mode;
     const report = { slice: 'sets', fileKey: plan.fileKey, family: fam, mode };
+    if (mode === 'build') report.phase = phase;
     if (opts.batch != null) report.batch = [opts.batch, opts.of];
     const A = plan.set.axes;
     const G = plan.set.grid;
@@ -416,17 +420,18 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       if (same && !byName) conflict('template', plan.templates.header.name, 'unowned', same.id);
       else tpl = same;
     }
+    // a variant lives in the set, or loose on the page before the combine
+    const home = set || page;
     const kids = {};
-    if (set) for (const k of set.children) kids[k.name] = k;
+    if (home) for (const k of home.children) if (k.type === 'COMPONENT') kids[k.name] = k;
     const found = {};
     for (const e of E) {
       let node = prev && prev.variants ? await get(prev.variants[e[0]]) : null;
-      if (node && (node.type !== 'COMPONENT' || !set || !node.parent || node.parent.id !== set.id)) node = null;
+      if (node && (node.type !== 'COMPONENT' || !home || !node.parent || node.parent.id !== home.id)) node = null;
       if (!node && e[0] === plan.baseIndex && baseNode && baseNode.type === 'COMPONENT') node = baseNode;
       if (!node) node = kids[nameOf(e.slice(1))] || null;
       found[e[0]] = node;
     }
-    const total = plan.total;
     // this call's variant ids by expansion index; the ledger merges them into the family's list (state carries only these)
     const variants = {};
     const propKeys = () => {
@@ -435,16 +440,41 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       for (const p of plan.props) out[p.key] = Object.keys(defs).find(k => k.split('#')[0] === p.name && defs[k].type === p.type) || null;
       return out;
     };
-    const ledger = props => {
+    // `placed`: false from the first loose batch until a place call settles every cell and wiring
+    const ledger = (props, placed) => {
       const sets = {};
-      sets[fam] = { page: page && page.id, section: section && section.id, set: set && { id: set.id, key: set.key, name: set.name }, props, variants, total,
+      if (placed === undefined && prev) placed = prev.placed;
+      sets[fam] = { page: page && page.id, section: section && section.id, set: set && { id: set.id, key: set.key, name: set.name }, props, variants, total: plan.total,
         snapshotId: plan.snapshotId, contentHash: plan.contentHash, documentHash: plan.documentHash, builtAt: plan.at };
+      if (placed !== undefined) sets[fam].placed = placed;
       const out = { sets };
       if (tpl) out.templates = Object.assign({}, state.templates || {}, { header: { page: tplPage.id, id: tpl.id, key: tpl.key } });
       return out;
     };
-    // the set grows from the Base Component, so the batch that makes the set holds it
-    if (mode === 'build' && !set && baseNode && !E.some(e => e[0] === plan.baseIndex)) conflict('base', baseRec.name, 'base-first: the first batch holds the Base Component');
+    if (phase === 'loose' && set) conflict('set', plan.set.name, 'combined: record the combine result, then place (build-plan --next)', set.id);
+    if ((phase === 'append' || phase === 'place') && !set) conflict('set', plan.set.name, 'not-combined: build the loose batches and the combine first (build-plan --next)');
+    // the combine takes every selected variant, loose on the page by name: one missing or named twice stops it
+    const pool = [];
+    if (phase === 'combine' && !set) {
+      const nv = A.map(a => a.values.length);
+      const loose = {};
+      for (const k of page ? page.children : []) if (k.type === 'COMPONENT') (loose[k.name] = loose[k.name] || []).push(k);
+      let miss = 0;
+      let first = null;
+      let dups = 0;
+      for (let p = 0, all = nv.reduce((m, x) => m * x, 1); p !== all; p++) {
+        if (!((parseInt(plan.selection.member[p >> 2], 16) >> (p & 3)) & 1)) continue;
+        const vals = [];
+        for (let a = nAx - 1, q = p; a >= 0; a--) { vals[a] = q % nv[a]; q = Math.floor(q / nv[a]); }
+        const n = nameOf(vals);
+        const got = loose[n] || [];
+        if (!got.length) { miss++; first = first || n; continue; }
+        if (got.length > 1 && dups++ < 5) conflict('variant', n, 'duplicate: ' + got.length + ' loose components with this name on the page');
+        if (baseNode && got[0].id === baseNode.id) pool.unshift(got[0]); else pool.push(got[0]);
+      }
+      if (dups > 5) conflict('variant', plan.set.name, 'duplicate: ' + dups + ' names in all');
+      if (miss) conflict('set', plan.set.name, 'incomplete: ' + miss + ' of ' + (pool.length + miss) + ' variants are not on the page (' + first + '): re-run their loose batches');
+    }
     const stop = () => Object.assign(report, { summary: { created: 0, updated: 0, conflicts: conflicts.length }, conflicts });
     if (conflicts.length) return stop();
 
@@ -471,6 +501,8 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     }
     // variants the whole selection no longer holds (#67): never deleted here; the ledger keeps the ones it
     // recorded as orphans, and the rest stay extra
+    // set children not in the cell their name gives
+    const unplaced = () => set.children.filter(k => { const v = parse(k.name); const t = v && cellOf(v); return t && (k.gridRowAnchorIndex !== t[0] || k.gridColumnAnchorIndex !== t[1]); }).length;
     const drops = () => {
       const out = [];
       for (const k of set ? set.children : []) {
@@ -484,9 +516,10 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       let hits = 0;
       for (const e of E) { const n = found[e[0]]; variants[e[0]] = n ? n.id : null; if (n) hits++; }
       const dropped = drops();
-      return Object.assign(report, { summary: { found: hits, absent: E.length - hits, set: !!set, dropped: dropped.length, conflicts: 0 }, dropped, ledger: ledger(propKeys()) });
+      const placed = !!set && set.layoutMode === 'GRID' && !unplaced();
+      return Object.assign(report, { summary: { found: hits, absent: E.length - hits, set: !!set, placed, dropped: dropped.length, conflicts: 0 }, dropped, ledger: ledger(propKeys(), placed) });
     }
-    if (mode !== 'build') {
+    if (mode !== 'build' && mode !== 'combine' && mode !== 'place') {
       if (!set) { conflict('set', plan.set.name, 'not-built'); return stop(); }
       return Object.assign(report, await readSet(mode));
     }
@@ -494,7 +527,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const specs = E.map(specOf);
     await loadRefs(specs, conflict);
     for (const p of plan.props) if (p.type === 'INSTANCE_SWAP') await loadRefs([{ layout: {}, paint: {}, swap: [p.default].concat(p.preferred).reduce((m, k, i) => { m['p' + i] = k; return m; }, {}) }], conflict);
-    checkTree(specs[0] || { tree: plan.tree, swap: {} }, conflict);
+    if (E.length) checkTree(specs[0], conflict);
     if (conflicts.length) return stop();
 
     // -- apply --
@@ -561,17 +594,51 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     setp(content, 'layoutSizingHorizontal', 'FILL', 'Content');
     setp(content, 'layoutSizingVertical', 'HUG', 'Content');
 
-    // the set: the Base Component (or the first variant) combined, then grown one variant at a time
-    const fresh = [];
-    if (!set) {
-      const first = E.find(e => e[0] === plan.baseIndex) || E[0];
-      let seed = found[first[0]];
-      if (!seed) { seed = found[first[0]] = figma.createComponent(); fresh.push(seed.id); }
-      setp(seed, 'name', nameOf(first.slice(1)), 'variant');
-      if (!seed.parent || seed.parent.id !== page.id) page.appendChild(seed);
-      set = figma.combineAsVariants([seed], page);
-      made.push('set');
+    const tally = () => Object.keys(counts).reduce((m, k) => m + counts[k], 0);
+
+    // loose (#168, ADR 0004): the first build's variants, each made as a loose component on the page, named by its
+    // tuple; their property wiring waits for the set's properties, and a root that fills its parent waits for the
+    // set's grid: the place calls do both
+    if (phase === 'loose') {
+      const unfilled = s => {
+        const r = s.layout[s.tree.name];
+        if (!r) return s;
+        const L = {};
+        for (const f of Object.keys(r)) if (r[f] !== 'fill') L[f] = r[f];
+        const lay = Object.assign({}, s.layout);
+        lay[s.tree.name] = L;
+        return Object.assign({}, s, { layout: lay });
+      };
+      let fresh = 0;
+      for (let i = 0; i !== E.length; i++) {
+        let node = found[E[i][0]];
+        if (!node) { node = figma.createComponent(); fresh++; }
+        if (!node.parent || node.parent.id !== page.id) page.appendChild(node);
+        setp(node, 'name', nameOf(E[i].slice(1)), 'variant');
+        if (ensureTree(specs[i], node)) touch('variant', 'layers');
+        await applySpec(unfilled(specs[i]), node, touch, missing);
+        variants[E[i][0]] = node.id;
+      }
+      return Object.assign(report, { summary: { created: fresh, updated: tally(), variants: E.length, missing: missing.length, conflicts: 0 },
+        made, updated: counts, missing, conflicts, ledger: ledger({}, false) });
     }
+    // combine: one combineAsVariants over every loose variant, the Base Component first, and the set moved into
+    // Content; nothing else, since the call's time grows with the square of the set. A set already there (a combine
+    // whose result was lost) is adopted as it is.
+    if (phase === 'combine') {
+      let kept = null;
+      if (!set) {
+        const ids = pool.map(n => n.id).sort().join();
+        set = figma.combineAsVariants(pool, page);
+        made.push('set');
+        content.appendChild(set);
+        set.name = plan.set.name;
+        kept = set.children.map(k => k.id).sort().join() === ids;
+      }
+      return Object.assign(report, { summary: { created: 0, updated: 0, variants: set.children.length, idsKept: kept, conflicts: 0 },
+        made, missing, conflicts, ledger: ledger(propKeys(), false) });
+    }
+
     if (!set.parent || set.parent.id !== content.id) content.appendChild(set);
     setp(set, 'name', plan.set.name, 'set');
     setp(set, 'description', plan.set.description, 'set');
@@ -630,7 +697,19 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       if (node.gridRowAnchorIndex >= 0) cell[at2(node.gridRowAnchorIndex, node.gridColumnAnchorIndex)] = node;
     };
 
-    let createdCount = fresh.length;
+    // a layer's references to the set's properties, by property key
+    const wire = (node, refs) => {
+      for (const n of Object.keys(refs)) {
+        const want = {};
+        for (const f of Object.keys(refs[n])) want[f] = keys[refs[n][f]];
+        const layer = find({ tree: plan.tree }, node, n);
+        if (!layer) { missing.push(n); continue; }
+        if (!eq(layer.componentPropertyReferences || {}, want)) { layer.componentPropertyReferences = want; touch(n, 'references'); }
+      }
+    };
+
+    // append: each variant joins the set, takes its cell, then its content
+    let createdCount = 0;
     for (let i = 0; i !== E.length; i++) {
       const e = E[i];
       const spec = specs[i];
@@ -641,26 +720,39 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       place(node, target[0], target[1]);
       setp(node, 'name', nameOf(e.slice(1)), 'variant');
       if (ensureTree(spec, node)) touch('variant', 'layers');
-      for (const n of Object.keys(spec.refs)) {
-        const want = {};
-        for (const f of Object.keys(spec.refs[n])) want[f] = keys[spec.refs[n][f]];
-        const layer = find(spec, node, n);
-        if (!layer) { missing.push(n); continue; }
-        if (!eq(layer.componentPropertyReferences || {}, want)) { layer.componentPropertyReferences = want; touch(n, 'references'); }
-      }
+      wire(node, spec.refs);
       await applySpec(spec, node, touch, missing);
       variants[e[0]] = node.id;
     }
-    // a parked child, or one a hand left out of place, goes back to the cell its name gives
-    for (let pass = parked.splice(0).concat(set.children); pass.length; pass = parked.splice(0)) {
-      for (const k of pass) { const vals = parse(k.name); if (vals) { const t = cellOf(vals); place(k, t[0], t[1]); } }
+    // a parked child, or one a hand left out of place, goes back to the cell its name gives. A place call also wires
+    // each child and fills its root (plan.settle: per axis-value product index, a base-36 index into its kinds, '-'
+    // when unselected), and stops after the first change past its time budget; the next place call resumes there.
+    const W = phase === 'place' ? plan.settle : null;
+    let cut = false;
+    settle: for (let pass = parked.splice(0).concat(set.children); pass.length; pass = parked.splice(0)) {
+      for (const k of pass) {
+        const vals = parse(k.name);
+        if (!vals) continue;
+        const before = tally();
+        const c = W && W.at[vals.reduce((m, x, a) => m * A[a].values.length + x, 0)];
+        if (c && c !== '-') {
+          const w = W.kinds[parseInt(c, 36)];
+          wire(k, w.refs);
+          const lay = {};
+          lay[plan.tree.name] = w.root;
+          await writeFields({ tree: plan.tree, layout: lay, paint: {} }, plan.tree.name, k, touch, missing);
+        }
+        const t = cellOf(vals);
+        place(k, t[0], t[1]);
+        if (W && opts.budget != null && tally() > before && Date.now() - t0 > opts.budget) { cut = true; break settle; }
+      }
     }
-    if (set.gridRowCount !== R && !set.children.some(k => k.gridRowAnchorIndex >= R)) set.gridRowCount = R;
+    if (!cut && set.gridRowCount !== R && !set.children.some(k => k.gridRowAnchorIndex >= R)) set.gridRowCount = R;
     const dropped = drops();
-    const upd = Object.keys(counts).reduce((m, k) => m + counts[k], 0);
+    const summary = { created: createdCount, updated: tally(), variants: set.children.length, missing: missing.length, dropped: dropped.length, conflicts: 0 };
+    if (W) Object.assign(summary, { placed: !cut, left: unplaced() });
     return Object.assign(report, {
-      summary: { created: createdCount, updated: upd, variants: set.children.length, missing: missing.length, dropped: dropped.length, conflicts: 0 },
-      made, updated: counts, missing, dropped, conflicts, defaultVariant: set.defaultVariant ? set.defaultVariant.name : null, ledger: ledger(keys),
+      summary, made, updated: counts, missing, dropped, conflicts, defaultVariant: set.defaultVariant ? set.defaultVariant.name : null, ledger: ledger(keys, W ? !cut : true),
     });
 
     // -- readbacks: coverage (names, cells, wiring), sample (full values), theme (colours per mode) --
