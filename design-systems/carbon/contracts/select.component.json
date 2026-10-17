@@ -1,0 +1,1221 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "select",
+    "name": "Select",
+    "description": "Native single-select dropdown with a label, optional helper text and an invalid or warning message. Its options are SelectItem children the feature supplies. Inline and Fluid variants are out of this draft."
+  },
+  "source": {
+    "codeLibrary": "Carbon React",
+    "adapter": "carbon",
+    "repository": "https://github.com/carbon-design-system/carbon",
+    "tag": "v11.118.0",
+    "commit": "44f90d8d6b24889af06cee1422ceb37f58e40bed",
+    "packages": {
+      "@carbon/react": "1.118.0",
+      "@carbon/styles": "1.117.0",
+      "@carbon/themes": "11.83.0",
+      "@carbon/layout": "11.61.0",
+      "@carbon/type": "11.69.0",
+      "@carbon/colors": "11.60.0",
+      "@carbon/icons": "11.90.0",
+      "@carbon/icons-react": "11.90.0"
+    },
+    "files": {
+      "packages/layout/src/dtcg/layout.json": "sha256:b337e0e6c8ee8be4845f0a8b2fa0320930bd2999ffbd53c83748afb12723e821",
+      "packages/react/src/components/Select/Select.tsx": "sha256:c0d8c181cfbf544776c63d0489a5f146a1e1ffbb8bc134755c791cbb5228d088",
+      "packages/react/src/components/SelectItem/SelectItem.tsx": "sha256:deca12a317f5096a764ead88569eb1f1fa2931a50fb86eeb4a4c3eb481c255c8",
+      "packages/react/src/internal/useNormalizedInputProps.tsx": "sha256:dc13ed8486b181d25e14f6a1b3dac54677559a1b38b5867156bd94080a58573c",
+      "packages/styles/scss/_layer.scss": "sha256:dd0b522522b50f473f5de993002046afcdead321d81a8e9a32da53ecb54522df",
+      "packages/styles/scss/components/form/_form.scss": "sha256:fbdd993d1e165e67e71c77109cd10e08bbe623f05be694a259492ec8e2295308",
+      "packages/styles/scss/components/select/_select.scss": "sha256:bb26c97ef0f5df3154759fbc7c2401c34968f591432552b20f31964b602e54d9",
+      "packages/styles/scss/utilities/_focus-outline.scss": "sha256:7a14398aaed4189dbfaf5778450efe17e2da7dff4a17f09a6bd7bbe649a48c78",
+      "packages/themes/src/dtcg/themes.json": "sha256:7f1febe786830b88b26db78e3e573b1cfe2ca9af546ecac54708719df1330ac8",
+      "packages/type/src/styles.ts": "sha256:c6a491d1233ad3af8cfc08681a86780f2a1a2b1865cdac5eb9375dcb556fbbdf"
+    },
+    "snapshotId": "sha256:6d36c2b22a7ad32899a5080c48e270fa4578beff8edef845236b574d4c60b2ff"
+  },
+  "axes": [
+    {
+      "key": "size",
+      "label": "Size",
+      "default": "md",
+      "defaultSource": "_select.scss L50 layout.use('size', $default: 'md', $min: 'xs', $max: 'lg'); React has no default",
+      "values": [
+        {
+          "key": "xs",
+          "label": "Extra Small",
+          "code": {
+            "size": "xs"
+          }
+        },
+        {
+          "key": "sm",
+          "label": "Small",
+          "code": {
+            "size": "sm"
+          }
+        },
+        {
+          "key": "md",
+          "label": "Medium",
+          "code": {
+            "size": "md"
+          }
+        },
+        {
+          "key": "lg",
+          "label": "Large",
+          "code": {
+            "size": "lg"
+          }
+        }
+      ]
+    },
+    {
+      "key": "validation",
+      "label": "Validation",
+      "default": "none",
+      "defaultSource": "Select.tsx L161, L167: invalid and warn default to false",
+      "values": [
+        {
+          "key": "none",
+          "label": "None",
+          "code": {}
+        },
+        {
+          "key": "invalid",
+          "label": "Invalid",
+          "code": {
+            "invalid": true
+          }
+        },
+        {
+          "key": "warn",
+          "label": "Warning",
+          "code": {
+            "warn": true
+          }
+        }
+      ]
+    },
+    {
+      "key": "readOnly",
+      "label": "Read Only",
+      "default": "editable",
+      "defaultSource": "Select.tsx L165: readOnly has no default (undefined)",
+      "values": [
+        {
+          "key": "editable",
+          "label": "Editable",
+          "code": {}
+        },
+        {
+          "key": "read-only",
+          "label": "Read-only",
+          "code": {
+            "readOnly": true
+          }
+        }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        {
+          "key": "enabled",
+          "label": "Enabled",
+          "code": {}
+        },
+        {
+          "key": "hover",
+          "label": "Hover",
+          "code": null,
+          "css": ":hover"
+        },
+        {
+          "key": "focus",
+          "label": "Focus",
+          "code": null,
+          "css": ":focus"
+        },
+        {
+          "key": "disabled",
+          "label": "Disabled",
+          "code": {
+            "disabled": true
+          },
+          "css": ":disabled"
+        }
+      ]
+    }
+  ],
+  "excluded": [
+    {
+      "match": {
+        "readOnly": "read-only",
+        "validation": [
+          "invalid",
+          "warn"
+        ]
+      },
+      "reason": "readOnly overrides invalid and warn",
+      "evidence": [
+        "useNormalizedInputProps.tsx L70, L72: invalid: !readOnly && …, warn: !readOnly && …"
+      ]
+    },
+    {
+      "match": {
+        "readOnly": "read-only",
+        "state": "disabled"
+      },
+      "reason": "readOnly overrides disabled",
+      "evidence": [
+        "useNormalizedInputProps.tsx L69: disabled: !readOnly && disabled"
+      ]
+    },
+    {
+      "match": {
+        "state": "disabled",
+        "validation": [
+          "invalid",
+          "warn"
+        ]
+      },
+      "reason": "disabled overrides invalid and warn",
+      "evidence": [
+        "useNormalizedInputProps.tsx L70, L72: invalid: … && !disabled && invalid, warn: … && !disabled && warn"
+      ]
+    }
+  ],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 52,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Select",
+    "type": "COMPONENT",
+    "children": [
+      {
+        "name": "Label",
+        "type": "TEXT",
+        "role": "label"
+      },
+      {
+        "name": "Field group",
+        "type": "FRAME",
+        "children": [
+          {
+            "name": "Field",
+            "type": "FRAME",
+            "role": "input",
+            "children": [
+              {
+                "name": "Box",
+                "type": "FRAME",
+                "children": [
+                  {
+                    "name": "Value",
+                    "type": "TEXT",
+                    "role": "value"
+                  },
+                  {
+                    "name": "Invalid icon",
+                    "type": "INSTANCE",
+                    "role": "icon",
+                    "instanceOf": "icon:warning--filled"
+                  },
+                  {
+                    "name": "Warn icon",
+                    "type": "INSTANCE",
+                    "role": "icon",
+                    "instanceOf": "icon:warning--alt--filled"
+                  },
+                  {
+                    "name": "Chevron",
+                    "type": "INSTANCE",
+                    "role": "icon",
+                    "instanceOf": "icon:chevron--down"
+                  }
+                ]
+              },
+              {
+                "name": "Underline",
+                "type": "FRAME"
+              }
+            ]
+          },
+          {
+            "name": "Helper",
+            "type": "TEXT",
+            "role": "helper-text"
+          },
+          {
+            "name": "Invalid text",
+            "type": "TEXT",
+            "role": "validation-message"
+          },
+          {
+            "name": "Warn text",
+            "type": "TEXT",
+            "role": "validation-message"
+          }
+        ]
+      }
+    ]
+  },
+  "properties": [
+    {
+      "key": "label",
+      "label": "Label",
+      "type": "TEXT",
+      "default": "Label",
+      "binds": [
+        {
+          "node": "Label",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "labelText"
+      }
+    },
+    {
+      "key": "value",
+      "label": "Value",
+      "type": "TEXT",
+      "default": "Option 1",
+      "binds": [
+        {
+          "node": "Value",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "itemProp": "text"
+      }
+    },
+    {
+      "key": "helperText",
+      "label": "Helper text",
+      "type": "TEXT",
+      "default": "Helper text",
+      "binds": [
+        {
+          "node": "Helper",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "helperText"
+      }
+    },
+    {
+      "key": "invalidText",
+      "label": "Invalid text",
+      "type": "TEXT",
+      "default": "Error message",
+      "binds": [
+        {
+          "node": "Invalid text",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "invalidText"
+      }
+    },
+    {
+      "key": "warnText",
+      "label": "Warn text",
+      "type": "TEXT",
+      "default": "Warning message",
+      "binds": [
+        {
+          "node": "Warn text",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "warnText"
+      }
+    }
+  ],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Select": {
+          "direction": "column",
+          "width": "fill",
+          "height": "hug",
+          "alignMain": "start",
+          "alignCross": "start",
+          "paddingTop": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the form item has no padding"
+          },
+          "paddingRight": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the form item has no padding"
+          },
+          "paddingBottom": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the form item has no padding"
+          },
+          "paddingLeft": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the form item has no padding"
+          },
+          "gap": {
+            "token": "spacing-03"
+          }
+        },
+        "Label": {
+          "textStyle": {
+            "token": "label-01"
+          },
+          "textResize": "width-and-height"
+        },
+        "Field group": {
+          "direction": "column",
+          "width": "fill",
+          "height": "hug",
+          "gap": {
+            "token": "spacing-02"
+          }
+        },
+        "Field": {
+          "direction": "column",
+          "width": "fill",
+          "height": "hug",
+          "strokeWeight": {
+            "raw": 2,
+            "level": "warning",
+            "reason": "outline: 2px with outline-offset: -2px (focus-outline mixin); no design token"
+          },
+          "strokeAlign": "inside",
+          "gap": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the underline is the select's bottom border, flush with the box"
+          }
+        },
+        "Box": {
+          "direction": "row",
+          "width": "fill",
+          "alignCross": "center",
+          "paddingLeft": {
+            "token": "spacing-05"
+          },
+          "paddingRight": {
+            "token": "spacing-05"
+          },
+          "gap": {
+            "token": "spacing-05"
+          }
+        },
+        "Value": {
+          "textStyle": {
+            "token": "body-compact-01"
+          },
+          "width": "fill",
+          "textResize": "height"
+        },
+        "Invalid icon": {
+          "width": {
+            "token": "icon-size-01"
+          },
+          "height": {
+            "token": "icon-size-01"
+          },
+          "visible": false
+        },
+        "Warn icon": {
+          "width": {
+            "token": "icon-size-01"
+          },
+          "height": {
+            "token": "icon-size-01"
+          },
+          "visible": false
+        },
+        "Chevron": {
+          "width": {
+            "token": "icon-size-01"
+          },
+          "height": {
+            "token": "icon-size-01"
+          }
+        },
+        "Underline": {
+          "width": "fill",
+          "height": {
+            "raw": 1,
+            "level": "warning",
+            "reason": "border-block-end: 1px is a constant with no design token"
+          }
+        },
+        "Helper": {
+          "textStyle": {
+            "token": "helper-text-01"
+          },
+          "width": "fill",
+          "textResize": "height",
+          "visible": true
+        },
+        "Invalid text": {
+          "textStyle": {
+            "token": "helper-text-01"
+          },
+          "width": "fill",
+          "textResize": "height",
+          "visible": false
+        },
+        "Warn text": {
+          "textStyle": {
+            "token": "helper-text-01"
+          },
+          "width": "fill",
+          "textResize": "height",
+          "visible": false
+        }
+      }
+    },
+    {
+      "match": {
+        "validation": "invalid"
+      },
+      "set": {
+        "Box": {
+          "gap": {
+            "token": "spacing-03"
+          }
+        },
+        "Invalid icon": {
+          "visible": true
+        },
+        "Invalid text": {
+          "visible": true
+        },
+        "Helper": {
+          "visible": false
+        }
+      }
+    },
+    {
+      "match": {
+        "validation": "warn"
+      },
+      "set": {
+        "Box": {
+          "gap": {
+            "token": "spacing-03"
+          }
+        },
+        "Warn icon": {
+          "visible": true
+        },
+        "Warn text": {
+          "visible": true
+        },
+        "Helper": {
+          "visible": false
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "xs"
+      },
+      "set": {
+        "Box": {
+          "height": {
+            "raw": 23,
+            "level": "info",
+            "reason": "derived: size-xs (24) − 1px bottom border (box-sizing: border-box)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "sm"
+      },
+      "set": {
+        "Box": {
+          "height": {
+            "raw": 31,
+            "level": "info",
+            "reason": "derived: size-sm (32) − 1px bottom border"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "md"
+      },
+      "set": {
+        "Box": {
+          "height": {
+            "raw": 39,
+            "level": "info",
+            "reason": "derived: size-md (40) − 1px bottom border"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "lg"
+      },
+      "set": {
+        "Box": {
+          "height": {
+            "raw": 47,
+            "level": "info",
+            "reason": "derived: size-lg (48) − 1px bottom border"
+          }
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Select": {
+          "fill": "none",
+          "stroke": "none"
+        },
+        "Label": {
+          "fill": {
+            "token": "text-secondary"
+          }
+        },
+        "Field": {
+          "fill": {
+            "token": "field"
+          },
+          "stroke": "none"
+        },
+        "Value": {
+          "fill": {
+            "token": "text-primary"
+          }
+        },
+        "Invalid icon/Vector": {
+          "fill": {
+            "token": "support-error"
+          }
+        },
+        "Warn icon/Vector": {
+          "fill": {
+            "token": "support-warning"
+          }
+        },
+        "Chevron/Vector": {
+          "fill": {
+            "token": "icon-primary"
+          }
+        },
+        "Underline": {
+          "fill": {
+            "token": "border-strong"
+          }
+        },
+        "Helper": {
+          "fill": {
+            "token": "text-helper"
+          }
+        },
+        "Invalid text": {
+          "fill": {
+            "token": "text-error"
+          }
+        },
+        "Warn text": {
+          "fill": {
+            "token": "text-primary"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "validation": "invalid"
+      },
+      "set": {
+        "Field": {
+          "stroke": {
+            "token": "support-error"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "hover"
+      },
+      "set": {
+        "Field": {
+          "fill": {
+            "token": "field-hover"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "readOnly": "read-only"
+      },
+      "set": {
+        "Field": {
+          "fill": "none"
+        },
+        "Underline": {
+          "fill": {
+            "token": "border-subtle"
+          }
+        },
+        "Chevron/Vector": {
+          "fill": {
+            "token": "icon-disabled"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus"
+      },
+      "set": {
+        "Field": {
+          "stroke": {
+            "token": "focus"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "disabled"
+      },
+      "set": {
+        "Label": {
+          "fill": {
+            "token": "text-disabled"
+          }
+        },
+        "Value": {
+          "fill": {
+            "token": "text-disabled"
+          }
+        },
+        "Chevron/Vector": {
+          "fill": {
+            "token": "icon-disabled"
+          }
+        },
+        "Underline": {
+          "fill": "none"
+        },
+        "Helper": {
+          "fill": {
+            "token": "text-disabled"
+          }
+        }
+      }
+    }
+  ],
+  "icons": {
+    "source": {
+      "package": "@carbon/icons",
+      "version": "11.90.0",
+      "path": "svg/16/{key}.svg",
+      "fallback": "svg/32/{key}.svg"
+    },
+    "default": "chevron--down",
+    "preferred": [
+      "chevron--down"
+    ]
+  },
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": [
+      {
+        "family": "IBM Plex Sans",
+        "styles": [
+          "Regular"
+        ]
+      }
+    ]
+  },
+  "figma": {
+    "page": "Selects",
+    "componentSetName": "Select",
+    "description": "Carbon React Select (@carbon/react 1.118.0). Draft: not yet built or reviewed in Figma.",
+    "header": {
+      "type": "Component",
+      "title": "Select",
+      "namespace": "@carbon/react"
+    },
+    "grid": {
+      "columns": [
+        "size"
+      ],
+      "rows": [
+        "validation",
+        "readOnly",
+        "state"
+      ]
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@carbon/react",
+    "component": "Select",
+    "import": "import { Select, SelectItem } from '@carbon/react';",
+    "required": [
+      "id"
+    ],
+    "items": {
+      "component": "SelectItem",
+      "props": [
+        "value",
+        "text"
+      ]
+    },
+    "alwaysEmit": [
+      "size"
+    ],
+    "alwaysEmitWhy": "A Select without size inherits the nearest <Layout size>; emit size explicitly so the snippet matches the variant."
+  },
+  "notes": [
+    {
+      "level": "verify",
+      "at": "anatomy.Warn icon",
+      "message": "WarningAltFilled is two-tone: _select.scss L204-L207 paints its inner path (path[fill]) $black-100 while the outer path takes $support-warning. Icons are one flattened Vector (#13), so the Design Library shows a support-warning triangle with the mark cut out instead of a black mark. Its key exists only in svg/32 at @carbon/icons 11.90.0, so it resolves through the fallback."
+    },
+    {
+      "level": "info",
+      "at": "anatomy.Invalid text",
+      "message": "useNormalizedInputProps.tsx L79-L99 renders invalidText when invalid and warnText when warn, in the same .cds--form-requirement, and Select.tsx L369 drops helperText for either. The Contract keeps one TEXT node and one property per message, shown by `visible` rules (#93), so each property names one code prop."
+    },
+    {
+      "level": "info",
+      "at": "properties.value",
+      "message": "The Value text is the selected SelectItem's text (SelectItem.tsx L61). The options are children the feature supplies (code.items, ADR 0013); the Contract shows one, and a Handoff's Usage lists them."
+    },
+    {
+      "level": "info",
+      "at": "layout.Box.gap",
+      "message": "Carbon positions the chevron at inset-inline-end $spacing-05 (_select.scss L170) and the status icon at $spacing-08 (L185), both absolutely, and reserves room with padding-inline-end $spacing-09 (L67), or $spacing-10 with a status icon (L141-L144). In Auto Layout that is right padding $spacing-05 plus a $spacing-05 gap before the 16px chevron, closing to $spacing-03 when the status icon shows."
+    },
+    {
+      "level": "info",
+      "at": "layout.Field.strokeWeight",
+      "message": "Carbon draws the focus and invalid outline on the select (_select.scss L121-L125 focus-outline('outline'); _form.scss L120-L126 focus-outline('invalid') only :not(:focus)) with outline-offset: -2px, so it covers the bottom border. The Contract puts the stroke on Field, which holds both Box and Underline. Invalid and focused shows the focus outline."
+    },
+    {
+      "level": "info",
+      "at": "paint[readOnly=read-only]",
+      "message": "Read-only keeps a transparent field on hover: .cds--select--readonly .cds--select-input (_select.scss L297-L305) sets background after the :hover rule (L87) at equal specificity."
+    },
+    {
+      "level": "info",
+      "at": "paint[state=disabled]",
+      "message": "_select.scss L127-L133 styles :disabled and :hover:disabled the same, with a transparent bottom border, so the Underline has no fill; L136-L139 greys the label and helper text."
+    },
+    {
+      "level": "info",
+      "at": "family",
+      "message": "Left out of this draft: inline (labels beside the field), hideLabel/noLabel, the decorator/AI label slot, the deprecated light prop, SelectItemGroup, the v12 border-radius and gradient border behind enable-v12-release, and the Fluid variant."
+    }
+  ],
+  "drafted": {
+    "anatomy.Box": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L235-L237 and L301-L313 select.cds--select-input"
+      ],
+      "fingerprint": "sha256:c79341fcdedf4a85667d1bed10dd59ea6eab05584b8e560660d09d1bde5ce873"
+    },
+    "anatomy.Chevron": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L315 ChevronDown with .cds--select__arrow"
+      ],
+      "fingerprint": "sha256:22314dc7a17c95f7e35a0a45a465a048aeb38bfd2315897e744497a9ace0049a"
+    },
+    "anatomy.Field": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L349-L354 div.cds--select-input__wrapper"
+      ],
+      "fingerprint": "sha256:a1a4ccfdd142deb4c8028ecdb8af0381064421c0cb751befdae383b9d99ef8cf"
+    },
+    "anatomy.Field group": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L329 div.cds--select holds the wrapper and the message; no element of its own"
+      ],
+      "fingerprint": "sha256:3fa7b7fa0169c68115df0cf307463624e9d15961cf79898d954f0b8b5898a61e"
+    },
+    "anatomy.Helper": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L243-L249 div.cds--form__helper-text"
+      ],
+      "fingerprint": "sha256:8e54ac4269bb97370ad1e5e423154daa7292e20e04a4d0aa9958bc3476634f71"
+    },
+    "anatomy.Invalid icon": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L316-L318 WarningFilled with .cds--select__invalid-icon"
+      ],
+      "fingerprint": "sha256:ecbe1c98289dea95754bfd0485c99cccb3d1d35623897a8695986a01ac68327f"
+    },
+    "anatomy.Invalid text": {
+      "by": "agent",
+      "evidence": [
+        "useNormalizedInputProps.tsx:L81-L88 div.cds--form-requirement holding invalidText"
+      ],
+      "fingerprint": "sha256:c3f80bdeb024b2fe96d969ca826aca54797c7e37a0d1a456d6f7594eeabca4aa"
+    },
+    "anatomy.Label": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L331-L337 label.cds--label from labelText"
+      ],
+      "fingerprint": "sha256:b423073215e5d4da5e948f2b9cb23d8e78b250aa873f86674f42c6cbdef06b79"
+    },
+    "anatomy.Underline": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L59 the select's border-block-end; no element of its own"
+      ],
+      "fingerprint": "sha256:20846dee5df6aa98499f5e00a5e8b6bd94bccb95ee1c1b4016d155f7e95e4e3d"
+    },
+    "anatomy.Value": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L301-L313 the select's selected option text; no element of its own"
+      ],
+      "fingerprint": "sha256:ef5f2e8722bbe5f000063849948728272ad0633afb550e06531b01d66177d965"
+    },
+    "anatomy.Warn icon": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L319-L323 WarningAltFilled with .cds--select__invalid-icon--warning"
+      ],
+      "fingerprint": "sha256:7f960da74db86c35bb29de7ed46edb720b475f83a308118eb483f5727f273bfa"
+    },
+    "anatomy.Warn text": {
+      "by": "agent",
+      "evidence": [
+        "useNormalizedInputProps.tsx:L91-L98 div.cds--form-requirement holding warnText"
+      ],
+      "fingerprint": "sha256:1204f78ab8ef99d613e7080dd49584bb5fec113894ab19160b37751cbe152fe7"
+    },
+    "axes.readOnly.label": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L124 readOnly prop"
+      ],
+      "fingerprint": "sha256:ffe1055fce98a2644f3eb269a8166b86a1f87f1902fb35b339256b25b87ff7d7"
+    },
+    "axes.readOnly.values.editable.label": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L124 readOnly prop"
+      ],
+      "fingerprint": "sha256:ffe1055fce98a2644f3eb269a8166b86a1f87f1902fb35b339256b25b87ff7d7"
+    },
+    "axes.readOnly.values.read-only.label": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L124 readOnly prop"
+      ],
+      "fingerprint": "sha256:ffe1055fce98a2644f3eb269a8166b86a1f87f1902fb35b339256b25b87ff7d7"
+    },
+    "axes.size.label": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L50 layout.use('size') gives the xs–lg scale; the labels are Carbon's docs names"
+      ],
+      "fingerprint": "sha256:dfaa586df1d1592a37783ceef6e26866ff0477b3a4e5fb79c332b2a26a8ce31e"
+    },
+    "axes.size.values.lg.label": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L50 layout.use('size') gives the xs–lg scale; the labels are Carbon's docs names"
+      ],
+      "fingerprint": "sha256:dfaa586df1d1592a37783ceef6e26866ff0477b3a4e5fb79c332b2a26a8ce31e"
+    },
+    "axes.size.values.md.label": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L50 layout.use('size') gives the xs–lg scale; the labels are Carbon's docs names"
+      ],
+      "fingerprint": "sha256:dfaa586df1d1592a37783ceef6e26866ff0477b3a4e5fb79c332b2a26a8ce31e"
+    },
+    "axes.size.values.sm.label": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L50 layout.use('size') gives the xs–lg scale; the labels are Carbon's docs names"
+      ],
+      "fingerprint": "sha256:dfaa586df1d1592a37783ceef6e26866ff0477b3a4e5fb79c332b2a26a8ce31e"
+    },
+    "axes.size.values.xs.label": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L50 layout.use('size') gives the xs–lg scale; the labels are Carbon's docs names"
+      ],
+      "fingerprint": "sha256:dfaa586df1d1592a37783ceef6e26866ff0477b3a4e5fb79c332b2a26a8ce31e"
+    },
+    "axes.validation.label": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L89 and L140 invalid and warn props, one axis because useNormalizedInputProps.tsx:L72 makes them exclusive"
+      ],
+      "fingerprint": "sha256:2736a75865b58dc20eb7d7a3c1f8f3d2d41257efd959813d510371c2f621920c"
+    },
+    "axes.validation.values.invalid.label": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L89 and L140 invalid and warn props, one axis because useNormalizedInputProps.tsx:L72 makes them exclusive"
+      ],
+      "fingerprint": "sha256:2736a75865b58dc20eb7d7a3c1f8f3d2d41257efd959813d510371c2f621920c"
+    },
+    "axes.validation.values.none.label": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L89 and L140 invalid and warn props, one axis because useNormalizedInputProps.tsx:L72 makes them exclusive"
+      ],
+      "fingerprint": "sha256:2736a75865b58dc20eb7d7a3c1f8f3d2d41257efd959813d510371c2f621920c"
+    },
+    "axes.validation.values.warn.label": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L89 and L140 invalid and warn props, one axis because useNormalizedInputProps.tsx:L72 makes them exclusive"
+      ],
+      "fingerprint": "sha256:2736a75865b58dc20eb7d7a3c1f8f3d2d41257efd959813d510371c2f621920c"
+    },
+    "code.alwaysEmit": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L227-L228 the size class; without size the nearest <Layout size> applies"
+      ],
+      "fingerprint": "sha256:859104b1fe905d4ce81df3f2c96079c2c45e791aca50a270e32bba492646ca0c"
+    },
+    "family.description": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L39-L146 SelectProps: label, helper text, invalid and warn messages; SelectItem.tsx:L32-L37 text and value"
+      ],
+      "fingerprint": "sha256:859104b1fe905d4ce81df3f2c96079c2c45e791aca50a270e32bba492646ca0c"
+    },
+    "figma.description": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L148 Select at @carbon/react 1.118.0"
+      ],
+      "fingerprint": "sha256:859104b1fe905d4ce81df3f2c96079c2c45e791aca50a270e32bba492646ca0c"
+    },
+    "figma.grid": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L50 size is the widest axis, so it is the columns"
+      ],
+      "fingerprint": "sha256:859104b1fe905d4ce81df3f2c96079c2c45e791aca50a270e32bba492646ca0c"
+    },
+    "figma.page": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L148 Select; the page name follows the Button Contract's plural"
+      ],
+      "fingerprint": "sha256:859104b1fe905d4ce81df3f2c96079c2c45e791aca50a270e32bba492646ca0c"
+    },
+    "layout.Box.alignCross": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L165-L171 the chevron spans block-size: 100% and centres its glyph; center is judged"
+      ],
+      "fingerprint": "sha256:e7cce276d1e14b1a72669cc05cf92ac6e284ec92e963d2093fbd73a315d091ff"
+    },
+    "layout.Box.direction": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L47 .cds--select-input is a select, not a flex box; row is judged to put Value and the icons in flow"
+      ],
+      "fingerprint": "sha256:e7cce276d1e14b1a72669cc05cf92ac6e284ec92e963d2093fbd73a315d091ff"
+    },
+    "layout.Field group.height": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L29 .cds--select sets no height; hug is judged"
+      ],
+      "fingerprint": "sha256:c54165869fb0cccc3b87967951623127bb1619d48ff02a724f97c9ec587b0b93"
+    },
+    "layout.Field.direction": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L40 .cds--select-input__wrapper is a flex row holding the select; column is judged because the Contract splits the select into Box over Underline"
+      ],
+      "fingerprint": "sha256:2e9a7b32e09cad194a0df8faa9bb393409934d4ed8149e787915a291690ddf61"
+    },
+    "layout.Field.height": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L40 .cds--select-input__wrapper sets no height; hug is judged"
+      ],
+      "fingerprint": "sha256:2e9a7b32e09cad194a0df8faa9bb393409934d4ed8149e787915a291690ddf61"
+    },
+    "layout.Helper.textResize": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L221 .cds--form__helper-text wraps at inline-size: 100%; height is judged"
+      ],
+      "fingerprint": "sha256:963abcd51a47a355ad79ea0c0a7be369728e6ddd8c4adf1ac92b615ca716d3e9"
+    },
+    "layout.Invalid text.textResize": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L213 .cds--form-requirement wraps (overflow-wrap: break-word); height is judged"
+      ],
+      "fingerprint": "sha256:a70d918f52261649f4fc6deccf0de1c97aa4c3c881ecf0b7bb22d9d29029486b"
+    },
+    "layout.Invalid text.width": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L205 .cds--form-requirement sets no width; fill is judged"
+      ],
+      "fingerprint": "sha256:a70d918f52261649f4fc6deccf0de1c97aa4c3c881ecf0b7bb22d9d29029486b"
+    },
+    "layout.Label.textResize": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L41 .cds--label is inline-block with no width; width-and-height is judged"
+      ],
+      "fingerprint": "sha256:a5183c880e37291b7803ec6910a89b8c1ced0fb24c7fdc234947caf5f41aa838"
+    },
+    "layout.Select.height": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L29 .cds--form-item sets no height; hug is judged"
+      ],
+      "fingerprint": "sha256:a99d20026d7228c3f7cb053c0229f0bfb1f8da95ff413b484630a04c1ad77e98"
+    },
+    "layout.Select.width": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L37 .cds--select is inline-size: 100%; fill is judged for a form field"
+      ],
+      "fingerprint": "sha256:a99d20026d7228c3f7cb053c0229f0bfb1f8da95ff413b484630a04c1ad77e98"
+    },
+    "layout.Underline.width": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L59 the bottom border spans the select; fill is judged"
+      ],
+      "fingerprint": "sha256:22f1ce7447c5122b394e9e815077439a7804bf4355f38103d40e0584223a6df8"
+    },
+    "layout.Value.textResize": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L68 text-overflow: ellipsis on one line; height is judged"
+      ],
+      "fingerprint": "sha256:0297c9acb675a5a3de7e699449fea7442d800009118bde34016f8353d5857005"
+    },
+    "layout.Value.width": {
+      "by": "agent",
+      "evidence": [
+        "_select.scss:L63 the select text fills the select; fill is judged"
+      ],
+      "fingerprint": "sha256:0297c9acb675a5a3de7e699449fea7442d800009118bde34016f8353d5857005"
+    },
+    "layout.Warn text.textResize": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L213 .cds--form-requirement wraps (overflow-wrap: break-word); height is judged"
+      ],
+      "fingerprint": "sha256:26da18dd6b2036e35a267808fc4ccc9e7034a17308b6ec6791b6d4a60cd4393b"
+    },
+    "layout.Warn text.width": {
+      "by": "agent",
+      "evidence": [
+        "_form.scss:L205 .cds--form-requirement sets no width; fill is judged"
+      ],
+      "fingerprint": "sha256:26da18dd6b2036e35a267808fc4ccc9e7034a17308b6ec6791b6d4a60cd4393b"
+    },
+    "properties.helperText.default": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L69 helperText prop"
+      ],
+      "fingerprint": "sha256:c430909c5ab23b1334b36b5e9381ed3ae824a78e1ff39bb9c2873931f3e24aab"
+    },
+    "properties.helperText.label": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L69 helperText prop"
+      ],
+      "fingerprint": "sha256:c430909c5ab23b1334b36b5e9381ed3ae824a78e1ff39bb9c2873931f3e24aab"
+    },
+    "properties.invalidText.default": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L94 invalidText prop"
+      ],
+      "fingerprint": "sha256:2619be530fe99c4855c301d006bd8c1b1df2729029162f0d2db208ff06036ca3"
+    },
+    "properties.invalidText.label": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L94 invalidText prop"
+      ],
+      "fingerprint": "sha256:2619be530fe99c4855c301d006bd8c1b1df2729029162f0d2db208ff06036ca3"
+    },
+    "properties.label.default": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L99, L155 labelText prop, default 'Select'"
+      ],
+      "fingerprint": "sha256:415658b55739e3f95b8664de395ddac81eb34d97de73a73cae13b251827b34e9"
+    },
+    "properties.label.label": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L99 labelText prop"
+      ],
+      "fingerprint": "sha256:415658b55739e3f95b8664de395ddac81eb34d97de73a73cae13b251827b34e9"
+    },
+    "properties.warnText.default": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L145 warnText prop"
+      ],
+      "fingerprint": "sha256:3b689cdc956e367ec19e24b59728429680e20de9372a7ee446b8e14b2d7a20d6"
+    },
+    "properties.warnText.label": {
+      "by": "agent",
+      "evidence": [
+        "Select.tsx:L145 warnText prop"
+      ],
+      "fingerprint": "sha256:3b689cdc956e367ec19e24b59728429680e20de9372a7ee446b8e14b2d7a20d6"
+    }
+  }
+}

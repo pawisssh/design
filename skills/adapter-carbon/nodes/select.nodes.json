@@ -1,0 +1,15 @@
+{
+  "Select": "select form-item",
+  "Label": "label",
+  "Field group": { "of": "Select" },
+  "Field": "select-input__wrapper",
+  "Box": "select-input",
+  "Value": { "of": "Box" },
+  "Invalid icon": "select__invalid-icon",
+  "Warn icon": "select__invalid-icon:warn",
+  "Chevron": "select__arrow",
+  "Underline": { "of": "Box" },
+  "Helper": "form__helper-text",
+  "Invalid text": "form-requirement:invalid",
+  "Warn text": "form-requirement:warn"
+}
