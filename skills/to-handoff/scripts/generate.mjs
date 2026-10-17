@@ -727,7 +727,12 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   const medias = [...new Set(rules.filter(r => r.media).map(r => r.media))];
   for (const m of medias) {
     const sel = rules.filter(r => r.media === m).map(r => r.selector);
-    question({ id: `q-breakpoint-${kebab(m)}`, kind: 'breakpoint', to: 'owner', text: `@media ${m} changes ${sel.join(', ')}; the static reader has no viewport. Which Design System breakpoint is it, and what should change there?` });
+    // A runtime run rendered at every breakpoint's width: say where the query applies there (#146).
+    const seen = rt.reason ? null : mediaAtBreakpoints(m, breakpoints);
+    question({
+      id: `q-breakpoint-${kebab(m)}`, kind: 'breakpoint', to: 'owner',
+      text: `@media ${m} changes ${sel.join(', ')}${seen ? `. ${seen}` : '; the static reader has no viewport'}. Which Design System breakpoint is it, and what should change there?`,
+    });
   }
   const data = [];
   for (const m of sim.mocks) {
@@ -879,6 +884,37 @@ function importTuple(def, el) {
 }
 
 const propText = v => (typeof v === 'string' ? JSON.stringify(v) : `{${(v.parts || []).map(p => p.expr || p).join('')}}`);
+
+// ---------- media queries at the breakpoints ----------
+
+const listOf = (xs, word) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} ${word} ${xs[xs.length - 1]}` : xs[0]);
+const labelOf = b => `${b.key} (${b.width}px)`;
+
+/**
+ * What the screenshots show of a media query: the breakpoints it applies at and, for one width threshold, the two it
+ * falls between. A query that tests more than px min-/max-width names the breakpoints the screenshots were taken at.
+ */
+export function mediaAtBreakpoints(media, breakpoints) {
+  const tests = [];
+  for (const part of media.split(/\s+and\s+/i).map(p => p.trim())) {
+    if (/^(only\s+)?(screen|all)$/i.test(part)) continue;
+    const t = /^\(\s*(min|max)-width\s*:\s*(\d+(?:\.\d+)?)px\s*\)$/i.exec(part);
+    if (!t) return `The screenshots were taken at ${listOf(breakpoints.map(labelOf), 'and')}`;
+    tests.push({ min: t[1].toLowerCase() === 'min', px: Number(t[2]) });
+  }
+  const applies = b => tests.every(t => (t.min ? b.width >= t.px : b.width <= t.px));
+  const on = breakpoints.filter(applies), off = breakpoints.filter(b => !applies(b));
+  const where = !off.length ? 'it applies at every breakpoint'
+    : !on.length ? `it applies at none of ${listOf(off.map(labelOf), 'or')}`
+    : `it applies at ${listOf(on.map(labelOf), 'and')}, not at ${listOf(off.map(labelOf), 'or')}`;
+  if (tests.length !== 1) return `In the screenshots ${where}`;
+  const { px } = tests[0];
+  const exact = breakpoints.find(b => b.width === px), below = breakpoints.filter(b => b.width < px).pop(), above = breakpoints.find(b => b.width > px);
+  const between = exact ? `${px}px is ${exact.key}'s width`
+    : below && above ? `${px}px falls between ${below.key} and ${above.key}`
+    : above ? `${px}px is below ${above.key}` : `${px}px is above ${below.key}`;
+  return `In the screenshots ${where}; ${between}`;
+}
 
 // ---------- the runtime reader's results ----------
 

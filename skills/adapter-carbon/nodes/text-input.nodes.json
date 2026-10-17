@@ -1,0 +1,14 @@
+{
+  "Text input": "text-input-wrapper form-item",
+  "Label": "label",
+  "Field group": "text-input__field-outer-wrapper",
+  "Field": "text-input__field-wrapper",
+  "Box": "text-input",
+  "Value": { "of": "Box" },
+  "Invalid icon": "text-input__invalid-icon",
+  "Warn icon": "text-input__invalid-icon:warn",
+  "Underline": { "of": "Box" },
+  "Helper": "form__helper-text",
+  "Invalid text": "form-requirement:invalid",
+  "Warn text": "form-requirement:warn"
+}

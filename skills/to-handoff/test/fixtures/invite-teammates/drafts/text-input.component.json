@@ -769,77 +769,77 @@
       "evidence": [
         "TextInput.tsx:L227 input.cds--text-input"
       ],
-      "fingerprint": "sha256:a5ccd090503e9e5f0ddc699bd97099b15a5f5b5b45b66796a75bc1943211b12e"
+      "fingerprint": "sha256:529006540d34e3978abe95044e8f95c103b2ae9e51f40100b73c8b5dc3182f5f"
     },
     "anatomy.Field": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L293 div.cds--text-input__field-wrapper"
       ],
-      "fingerprint": "sha256:2fc7babd3938c2c318028f6f856ba8e74fd028e5230b872ded76e1259818c361"
+      "fingerprint": "sha256:cea4a9446a2a3383bd3ce339b4033a9b0823733533c7de7bf23ee452f13703ca"
     },
     "anatomy.Field group": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L287 div.cds--text-input__field-outer-wrapper"
       ],
-      "fingerprint": "sha256:180a0420608ac0992f2ff80267660808f86dcbbffe19ce421e8920e72b8b1a93"
+      "fingerprint": "sha256:43c9679a4201fc9b7328ccee8ae445ac2381d23a6c9274008c9c4bc5b2b070f0"
     },
     "anatomy.Helper": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L282 div.cds--form__helper-text"
       ],
-      "fingerprint": "sha256:759833432ac301907ef4e8096444da0c74d05de2048451c93ce6c4d0fb949112"
+      "fingerprint": "sha256:2ac931a3321c7f8e32836e8665ec8639d6e51e320c61c822c2190566a15bac6a"
     },
     "anatomy.Invalid icon": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L301 svg.cds--text-input__invalid-icon when invalid"
       ],
-      "fingerprint": "sha256:85440ce46be37aca972728adeae76c4d46e23960a75faa199ca2f83f84afead2"
+      "fingerprint": "sha256:7fce4f4ed81dc7feb13e9b1064f2259bb22665d85107f00f1306b1781d622d49"
     },
     "anatomy.Invalid text": {
       "by": "agent",
       "evidence": [
-        "_form.scss:L147 div.cds--form-requirement holding invalidText"
+        "useNormalizedInputProps.tsx:L81-L88 div.cds--form-requirement holding invalidText"
       ],
-      "fingerprint": "sha256:3dc9ea41a1a3d2b2cac6fb3ed59c4e0cc04af814f29f0b4681af0bbd83115b50"
+      "fingerprint": "sha256:c5963b6980e38fe9f56e11536e902b0c63b206de076f68d6506abfe2eece5788"
     },
     "anatomy.Label": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L276 label.cds--label"
       ],
-      "fingerprint": "sha256:ee67536ebaf7cd93dbbfa88c54924f845d2e2936589b955cacde407c7d5beb5e"
+      "fingerprint": "sha256:07d08cb5dd74696f197de2b76efa394d50d32909546083a56963ceacc98af3ef"
     },
     "anatomy.Underline": {
       "by": "agent",
       "evidence": [
         "_text-input.scss:L46 the input's bottom border; no element of its own"
       ],
-      "fingerprint": "sha256:4c26028ea5b76afaca5c199f026fb53915f6d0656f7bc6bacbbaf1496bc17ef2"
+      "fingerprint": "sha256:a46d8c4be926a8239ae6e86f8b4a75e3f891108801868c7035f1907d2af268e2"
     },
     "anatomy.Value": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L227 the input's value; no element of its own"
       ],
-      "fingerprint": "sha256:bcc7daa69936262eb0127fb5cbb7f2f1b537fb293242e0e4fe96dcac219d71a0"
+      "fingerprint": "sha256:e9eb1c5a5059644c69493059d6eefa31761e29440ad69ff79042b68a64b3dbe5"
     },
     "anatomy.Warn icon": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L303 svg.cds--text-input__invalid-icon--warning when warn"
       ],
-      "fingerprint": "sha256:d18a65859012f9248c1e1b90ccd24870506dfc7b3c2981848808b76cf124c9e7"
+      "fingerprint": "sha256:9d26c14901893814a0ea58278305affb66e0d5b5b9834ec9bff7fbed48eb1254"
     },
     "anatomy.Warn text": {
       "by": "agent",
       "evidence": [
-        "_form.scss:L147 div.cds--form-requirement holding warnText"
+        "useNormalizedInputProps.tsx:L91-L98 div.cds--form-requirement holding warnText"
       ],
-      "fingerprint": "sha256:d086ad8d050a354fc364ee9d258d88ed988ff0be58dff23894bf3005b3f05902"
+      "fingerprint": "sha256:af869e9b9745cc18a9b12ebf9b7530d8058fa6567cf42c9f071a999513fa8e1e"
     },
     "axes.readOnly.label": {
       "by": "agent",
@@ -970,240 +970,191 @@
     "layout.Box.alignCross": {
       "by": "agent",
       "evidence": [
-        "_text-input.scss:L35 .cds--text-input: no declaration sets alignCross; judged for Auto Layout"
+        "_text-input.scss:L106-L108 the icon is centred by inset-block-start: 50% and translateY(-50%); center is judged"
       ],
-      "fingerprint": "sha256:d31dfd5bc139ca58fc49be0b489cc0048efde23bd6574e2d6d52c6e5115b9a47"
+      "fingerprint": "sha256:62bd41e69d4b7473da4bb208cb661a5033f2d39d9fd8d8cc13c870d9cc5c607f"
     },
     "layout.Box.direction": {
       "by": "agent",
       "evidence": [
-        "_text-input.scss:L35 .cds--text-input: no declaration sets direction; judged for Auto Layout"
+        "_text-input.scss:L35 .cds--text-input is an input, not a flex box; row is judged to put Value and the icon in flow"
       ],
-      "fingerprint": "sha256:d31dfd5bc139ca58fc49be0b489cc0048efde23bd6574e2d6d52c6e5115b9a47"
-    },
-    "layout.Box.width": {
-      "by": "agent",
-      "evidence": [
-        "_text-input.scss:L35 .cds--text-input: no declaration sets width; judged for Auto Layout"
-      ],
-      "fingerprint": "sha256:d31dfd5bc139ca58fc49be0b489cc0048efde23bd6574e2d6d52c6e5115b9a47"
-    },
-    "layout.Field group.direction": {
-      "by": "agent",
-      "evidence": [
-        "_text-input.scss:L302 .cds--text-input__field-outer-wrapper: no declaration sets direction; judged for Auto Layout"
-      ],
-      "fingerprint": "sha256:2def2ce964e0c87908872476d960c279b744660979d8b67c1a80d921b7aa49f4"
+      "fingerprint": "sha256:62bd41e69d4b7473da4bb208cb661a5033f2d39d9fd8d8cc13c870d9cc5c607f"
     },
     "layout.Field group.height": {
       "by": "agent",
       "evidence": [
-        "_text-input.scss:L302 .cds--text-input__field-outer-wrapper: no declaration sets height; judged for Auto Layout"
+        "_text-input.scss:L302 .cds--text-input__field-outer-wrapper sets no height; hug is judged"
       ],
-      "fingerprint": "sha256:2def2ce964e0c87908872476d960c279b744660979d8b67c1a80d921b7aa49f4"
-    },
-    "layout.Field group.width": {
-      "by": "agent",
-      "evidence": [
-        "_text-input.scss:L302 .cds--text-input__field-outer-wrapper: no declaration sets width; judged for Auto Layout"
-      ],
-      "fingerprint": "sha256:2def2ce964e0c87908872476d960c279b744660979d8b67c1a80d921b7aa49f4"
+      "fingerprint": "sha256:0f1105f2632d1656682224d0b5a476d89d17d6c4549efa22b5a947a96db49187"
     },
     "layout.Field.direction": {
       "by": "agent",
       "evidence": [
-        "_text-input.scss:L96 .cds--text-input__field-wrapper: no declaration sets direction; judged for Auto Layout"
+        "_text-input.scss:L96 .cds--text-input__field-wrapper is a flex row holding the input; column is judged because the Contract splits the input into Box over Underline"
       ],
-      "fingerprint": "sha256:41a496854a688062aa16b43d076d3d89b7f64d6ce96869e338c4e711f29e3f22"
+      "fingerprint": "sha256:29a922ba4281e96dd634fa67d59f2c44d8c6c5aa4ea725a850f7c8787dc00a51"
     },
     "layout.Field.height": {
       "by": "agent",
       "evidence": [
-        "_text-input.scss:L96 .cds--text-input__field-wrapper: no declaration sets height; judged for Auto Layout"
+        "_text-input.scss:L96 .cds--text-input__field-wrapper sets no height; hug is judged"
       ],
-      "fingerprint": "sha256:41a496854a688062aa16b43d076d3d89b7f64d6ce96869e338c4e711f29e3f22"
-    },
-    "layout.Field.width": {
-      "by": "agent",
-      "evidence": [
-        "_text-input.scss:L96 .cds--text-input__field-wrapper: no declaration sets width; judged for Auto Layout"
-      ],
-      "fingerprint": "sha256:41a496854a688062aa16b43d076d3d89b7f64d6ce96869e338c4e711f29e3f22"
+      "fingerprint": "sha256:29a922ba4281e96dd634fa67d59f2c44d8c6c5aa4ea725a850f7c8787dc00a51"
     },
     "layout.Helper.textResize": {
       "by": "agent",
       "evidence": [
-        "_form.scss:L217 .cds--form__helper-text: no declaration sets textResize; judged for Auto Layout"
+        "_form.scss:L221 .cds--form__helper-text wraps at inline-size: 100%; height is judged"
       ],
-      "fingerprint": "sha256:5f59856697d76418b4ca193716e15c7aef710d6561439918fbe223746da15490"
-    },
-    "layout.Helper.width": {
-      "by": "agent",
-      "evidence": [
-        "_form.scss:L217 .cds--form__helper-text: no declaration sets width; judged for Auto Layout"
-      ],
-      "fingerprint": "sha256:5f59856697d76418b4ca193716e15c7aef710d6561439918fbe223746da15490"
+      "fingerprint": "sha256:88ddfd085bda08a270ccb7c61319fea104ccc8b327bc9ac6012c00213d159611"
     },
     "layout.Invalid text.textResize": {
       "by": "agent",
       "evidence": [
-        "_form.scss:L147 .cds--form-requirement: no declaration sets textResize; judged for Auto Layout"
+        "_form.scss:L213 .cds--form-requirement wraps (overflow-wrap: break-word); height is judged"
       ],
-      "fingerprint": "sha256:14608e6a2eb8db9c9a5866ebf6b47d8e3d287e298f0b2f93ae62ade8308f821d"
+      "fingerprint": "sha256:69660fc72d01d04e5a22f00bafd27ad025a440c47bc77126f2ba1a08c5020d79"
     },
     "layout.Invalid text.width": {
       "by": "agent",
       "evidence": [
-        "_form.scss:L147 .cds--form-requirement: no declaration sets width; judged for Auto Layout"
+        "_form.scss:L205 .cds--form-requirement sets no width; fill is judged"
       ],
-      "fingerprint": "sha256:14608e6a2eb8db9c9a5866ebf6b47d8e3d287e298f0b2f93ae62ade8308f821d"
+      "fingerprint": "sha256:69660fc72d01d04e5a22f00bafd27ad025a440c47bc77126f2ba1a08c5020d79"
     },
     "layout.Label.textResize": {
       "by": "agent",
       "evidence": [
-        "_form.scss:L41 .cds--label: no declaration sets textResize; judged for Auto Layout"
+        "_form.scss:L41 .cds--label is inline-block with no width; width-and-height is judged"
       ],
-      "fingerprint": "sha256:daebe8b1df5a1cd768f90ce382f720ce56f3bc684be1b3070a554bb473afac30"
-    },
-    "layout.Text input.alignCross": {
-      "by": "agent",
-      "evidence": [
-        "TextInput.tsx:L267 .cds--text-input-wrapper: no declaration sets alignCross; judged for Auto Layout"
-      ],
-      "fingerprint": "sha256:1af503d159d3cbc97e4170c42d19d35a8b5ddb49365151f525ba00a50daab7d4"
+      "fingerprint": "sha256:d8931ec8c2c0e83ee47082dff68139ddec6523e8ee43d196cf7f578bb0f39c8c"
     },
     "layout.Text input.alignMain": {
       "by": "agent",
       "evidence": [
-        "TextInput.tsx:L267 .cds--text-input-wrapper: no declaration sets alignMain; judged for Auto Layout"
+        "_form.scss:L29 .cds--form-item sets no justify-content; start is judged"
       ],
-      "fingerprint": "sha256:1af503d159d3cbc97e4170c42d19d35a8b5ddb49365151f525ba00a50daab7d4"
-    },
-    "layout.Text input.direction": {
-      "by": "agent",
-      "evidence": [
-        "TextInput.tsx:L267 .cds--text-input-wrapper: no declaration sets direction; judged for Auto Layout"
-      ],
-      "fingerprint": "sha256:1af503d159d3cbc97e4170c42d19d35a8b5ddb49365151f525ba00a50daab7d4"
+      "fingerprint": "sha256:09ad3bf2999d1864fc1c0d9c2aac7370fcce7899eb582bae855865818b3093af"
     },
     "layout.Text input.height": {
       "by": "agent",
       "evidence": [
-        "TextInput.tsx:L267 .cds--text-input-wrapper: no declaration sets height; judged for Auto Layout"
+        "_form.scss:L29 .cds--form-item sets no height; hug is judged"
       ],
-      "fingerprint": "sha256:1af503d159d3cbc97e4170c42d19d35a8b5ddb49365151f525ba00a50daab7d4"
+      "fingerprint": "sha256:09ad3bf2999d1864fc1c0d9c2aac7370fcce7899eb582bae855865818b3093af"
     },
     "layout.Text input.width": {
       "by": "agent",
       "evidence": [
-        "TextInput.tsx:L267 .cds--text-input-wrapper: no declaration sets width; judged for Auto Layout"
+        "_form.scss:L36 .cds--form-item is flex: 1 1 auto inside its parent; fill is judged for a form field"
       ],
-      "fingerprint": "sha256:1af503d159d3cbc97e4170c42d19d35a8b5ddb49365151f525ba00a50daab7d4"
+      "fingerprint": "sha256:09ad3bf2999d1864fc1c0d9c2aac7370fcce7899eb582bae855865818b3093af"
     },
     "layout.Underline.width": {
       "by": "agent",
       "evidence": [
-        "_text-input.scss:L35 .cds--text-input: no declaration sets width; judged for Auto Layout"
+        "_text-input.scss:L46 the bottom border spans the input; fill is judged"
       ],
-      "fingerprint": "sha256:ea201725045c7f62f262d4208bf02a1dc2fa4ea1c39dc0e476ae9b9a2385fab6"
+      "fingerprint": "sha256:b182a005f8434cd4b6416f64273aed7c8798342b347373d554cb199ce2d67e0d"
     },
     "layout.Value.textResize": {
       "by": "agent",
       "evidence": [
-        "_text-input.scss:L35 .cds--text-input: no declaration sets textResize; judged for Auto Layout"
+        "_text-input.scss:L35 .cds--text-input sets no wrapping; height is judged"
       ],
-      "fingerprint": "sha256:426937d771369bf8b66c8d15f9e3a8cddf2ccaae5e7ae90e2825c3219081e6d3"
+      "fingerprint": "sha256:c584a19ec7a3e90dbfd7bcc80abaa312528f8a97ba94339af68821b6d769642b"
     },
     "layout.Value.width": {
       "by": "agent",
       "evidence": [
-        "_text-input.scss:L35 .cds--text-input: no declaration sets width; judged for Auto Layout"
+        "_text-input.scss:L35 the input text fills the input; fill is judged"
       ],
-      "fingerprint": "sha256:426937d771369bf8b66c8d15f9e3a8cddf2ccaae5e7ae90e2825c3219081e6d3"
+      "fingerprint": "sha256:c584a19ec7a3e90dbfd7bcc80abaa312528f8a97ba94339af68821b6d769642b"
     },
     "layout.Warn text.textResize": {
       "by": "agent",
       "evidence": [
-        "_form.scss:L147 .cds--form-requirement: no declaration sets textResize; judged for Auto Layout"
+        "_form.scss:L213 .cds--form-requirement wraps (overflow-wrap: break-word); height is judged"
       ],
-      "fingerprint": "sha256:e9d7a1d1b62ce5e4b69db7b432254ecec365b000a5a9f9ae471656dbcc0386f1"
+      "fingerprint": "sha256:332ee3301799bbf912f6abbdf55aaafa65d13daddb7e8f26f7f03d7a3bdaddf5"
     },
     "layout.Warn text.width": {
       "by": "agent",
       "evidence": [
-        "_form.scss:L147 .cds--form-requirement: no declaration sets width; judged for Auto Layout"
+        "_form.scss:L205 .cds--form-requirement sets no width; fill is judged"
       ],
-      "fingerprint": "sha256:e9d7a1d1b62ce5e4b69db7b432254ecec365b000a5a9f9ae471656dbcc0386f1"
+      "fingerprint": "sha256:332ee3301799bbf912f6abbdf55aaafa65d13daddb7e8f26f7f03d7a3bdaddf5"
     },
     "properties.helperText.default": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L67 helperText prop"
       ],
-      "fingerprint": "sha256:e455b6666d700edc3b380f477824fe52fb4d915d079ff900f35974cadd84bbfb"
+      "fingerprint": "sha256:23bd987a6c0a3b08f50ef1e788ca0a5ddcada8bc83661de844618d9f4504ab5a"
     },
     "properties.helperText.label": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L67 helperText prop"
       ],
-      "fingerprint": "sha256:e455b6666d700edc3b380f477824fe52fb4d915d079ff900f35974cadd84bbfb"
+      "fingerprint": "sha256:23bd987a6c0a3b08f50ef1e788ca0a5ddcada8bc83661de844618d9f4504ab5a"
     },
     "properties.invalidText.default": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L92 invalidText prop"
       ],
-      "fingerprint": "sha256:68b4d8a988edf7c3a36bbf6750645c89f69c972ef04758edfda2687f305bc688"
+      "fingerprint": "sha256:857ead04336154f731abe833d6eac1818b411f548f05928c5137c579aed044d1"
     },
     "properties.invalidText.label": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L92 invalidText prop"
       ],
-      "fingerprint": "sha256:68b4d8a988edf7c3a36bbf6750645c89f69c972ef04758edfda2687f305bc688"
+      "fingerprint": "sha256:857ead04336154f731abe833d6eac1818b411f548f05928c5137c579aed044d1"
     },
     "properties.label.default": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L98 labelText prop"
       ],
-      "fingerprint": "sha256:c2601e15b90199a109438c3f1cc9dcb07a476e9f23ecb61511e5691352955784"
+      "fingerprint": "sha256:1f86ba8438e33c7e78f96ab1d5ae2205291a4317256d3bfbb2b99a85cc0386b7"
     },
     "properties.label.label": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L98 labelText prop"
       ],
-      "fingerprint": "sha256:c2601e15b90199a109438c3f1cc9dcb07a476e9f23ecb61511e5691352955784"
+      "fingerprint": "sha256:1f86ba8438e33c7e78f96ab1d5ae2205291a4317256d3bfbb2b99a85cc0386b7"
     },
     "properties.placeholder.default": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L128 placeholder prop"
       ],
-      "fingerprint": "sha256:180b88beffa507eeaaf615e1c6865eb2a529d0cea14c72782043b11d4e73958f"
+      "fingerprint": "sha256:39888156ab29b130678ee31f5cc1a296fa9b43667052db05d5b01ad362543bc7"
     },
     "properties.placeholder.label": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L128 placeholder prop"
       ],
-      "fingerprint": "sha256:180b88beffa507eeaaf615e1c6865eb2a529d0cea14c72782043b11d4e73958f"
+      "fingerprint": "sha256:39888156ab29b130678ee31f5cc1a296fa9b43667052db05d5b01ad362543bc7"
     },
     "properties.warnText.default": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L164 warnText prop"
       ],
-      "fingerprint": "sha256:e8cf099f9b0a9c3911a5e8bfff503aed9210bbe3397eb5d91c4229cb2ae75e9e"
+      "fingerprint": "sha256:5fc714c8e6383a29d982930de80e93c8c3fee3ef72383962a0d83466f60778dd"
     },
     "properties.warnText.label": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L164 warnText prop"
       ],
-      "fingerprint": "sha256:e8cf099f9b0a9c3911a5e8bfff503aed9210bbe3397eb5d91c4229cb2ae75e9e"
+      "fingerprint": "sha256:5fc714c8e6383a29d982930de80e93c8c3fee3ef72383962a0d83466f60778dd"
     }
   }
 }
