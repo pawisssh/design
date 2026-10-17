@@ -373,6 +373,15 @@ function checkCode(c, err) {
     if (p.type !== 'TEXT') err(3, at, 'only a TEXT property can show a Repeated child prop');
     else if (!isObj(items) || !Array.isArray(items.props) || !items.props.includes(ip)) err(3, at, `"${ip}" is not one of code.items.props`);
   }
+  // A TEXT property with `code.child` is the text of a child component (CardTitle), or with `childProp` one of its
+  // props (SelectValue's placeholder): not a prop of the component itself (#162).
+  for (const p of c.properties) {
+    if (p.type !== 'TEXT' || !isObj(p.code) || p.code.child === undefined) continue;
+    const at = `properties.${p.key}.code`;
+    if (typeof p.code.child !== 'string' || !p.code.child) err(3, `${at}.child`, '`code.child` names the child component');
+    if (p.code.childProp !== undefined && (typeof p.code.childProp !== 'string' || !p.code.childProp)) err(3, `${at}.childProp`, '`code.childProp` names one prop of the child');
+    if (p.code.prop !== undefined || p.code.itemProp !== undefined) err(3, at, 'a TEXT property is `code.prop`, `code.itemProp` or `code.child`, not two of them');
+  }
 }
 
 // Rule 2's first half: every axis default is one of its values.

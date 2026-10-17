@@ -198,6 +198,25 @@ A slot whose presence changes the root ([ADR 0011](../../docs/adr/0011-slot-depe
 - **Frame.** Each slot node is a FRAME (role `icon`) whose `width` and `height` come from the descendant svg size utilities (`[&_svg:not([class*='size-'])]:size-4`, `size-3` in xs and icon-xs, `size-3.5` in sm), merged as `cn()` merges them, and whose `visible` is the axis value's `filled`. A note says that a consumer `size-*` class on the svg overrides the size (off-axis) and that the frame stands in for the icon instance and its INSTANCE_SWAP with `code.visibleWhen: {axis}`, which are left for a later agent-tier ticket: the exact tier has no icon to name as `icons.default`. Other descendant utilities (`[&_svg]:shrink-0`) stay notes.
 - **Fails:** a slot selector with an empty value; a slot no svg size utility sizes; a frame size that differs by Mode.
 
+### Text layers
+
+Each text a designer types is a TEXT node with a TEXT property (#162), where the source says what the text is. Each is read in a pass of its own, after layout and paint, so no text utility adds an axis, a state or a twin.
+
+- **Which nodes.**
+
+  | Source | Node | Property | `code` |
+  |---|---|---|---|
+  | A root with no parts that sets its own font size or weight, and is no form control (`input`, `textarea`, `select`): Button | `Label`, or `Text` where the root is itself named Label | `label` (`text`) | `{prop: "children"}` |
+  | A provider's `<Name>Value` export (#153): SelectValue | `Value` | `placeholder` | `{child: "SelectValue", childProp: "placeholder"}` |
+  | A part that sets its own text style or colour and no layout of its own, and is no slot: CardTitle, CardDescription, AlertTitle, AlertDescription | the part's node, a TEXT in place of its FRAME | the node in camelCase | `{child: "<Export>"}` |
+
+  `code.child` names the child component whose text the property is, and `code.childProp` one prop of it ([contract schema](../contract/references/contract-schema.md), rule 3). That form is an [assumption] of #162.
+- **Text style.** `textStyle` is `{raw: {fontSize, lineHeight, fontWeight}}` at level `warning`, its reason naming each utility and #160: the Foundations document has no Text Styles yet. A value is the node's own rules, then the root rules that target the part (`*:data-[slot=…]:…`, compiled to `:is(.x > *)[data-slot="…"]`), then the root's own rules, which the node inherits, then the base layer (`html` line-height 1.5). A `leading-*` line height is a ratio over the font size. `textResize` is `height` where the layer fills across (a part in its column), else `width-and-height` (a root's Label hugs).
+- **Colour.** The node's `fill` comes from the same cascade, through the same paint rules as the root: a plain token, or a Synthesized token named after the node (`alert-destructive-description-fill`, scope `TEXT_FILL`). With no colour utility it is the base layer's `body` colour.
+- **Visibility.** A root's Label is hidden where the root has a fixed width, the icon sizes, which are sized for their icon. A part's text layer always shows.
+- **Default text.** The property's `default` is a Drafted value, keyed `properties.<key>.default` (see the table below).
+- **Notes.** An `info` note on `anatomy` lists the text layers and what each reads. A root rule for a text part in a form the pass does not read is a `verify` note naming it.
+
 ### Synthesized tokens
 
 Paint the Foundations tokens cannot bind directly becomes a Synthesized token (#70, #120): a per-mode COLOR in the `theme` collection that the Contract binds as a plain `{token}`. That is paint that differs by Mode (`bg-background dark:bg-input/30`), a token at an opacity (`bg-primary/80`) or a `color-mix` of tokens. A value that is the same plain token in every Mode stays that token.
@@ -226,6 +245,7 @@ A value that neither the source nor a rule here states is drafted by an agent. T
   | `axes.<cva axis>.label`, `axes.<cva axis>.values.<value>.label` | the line of the axis or value key | the axis's value keys |
   | `axes.<attribute axis>.label` | the first utility that styles the attribute | the variant prefixes of its utilities (`aria-invalid`, `dark:aria-invalid`) |
   | `family.description`, `figma.grid` | the root export and the cva variants | every axis's key, value keys and default; the exported parts |
+  | `properties.<key>.default`, a text layer's default text (#162) | the line of the root, the part or the Value export | the layer, the property key and its `code`, not the text style, so a class change does not reopen the copy |
 
   Slot and State axis labels and an attribute axis's value labels (its state words) are rules, so they are not drafted.
 - **Placeholders.** The Foundations step builds the Contract only for its closure, without drafts. That Contract keeps placeholders: Title Case labels, `size` across in the grid, and a description that names the source file.
@@ -250,18 +270,18 @@ A value that neither the source nor a rule here states is drafted by an agent. T
 - **Notes.** Each of these gets an `info` note, and none is carried:
   - `:has(…)` conditions other than `:has([<attr>="<value>"])`, such as `has-[>svg]`;
   - ancestor styling such as `in-data-[slot=button-group]` (ADR 0012);
-  - descendant styling other than a slot frame's svg size, such as `[&_svg]:shrink-0`, plus text utilities and a part's paint, padding and layout (a later agent-tier ticket);
+  - descendant styling other than a slot frame's svg size, such as `[&_svg]:shrink-0`, plus a part's paint, padding and layout (a later agent-tier ticket);
   - other media queries and conditions;
   - utilities no field carries;
   - classes that compile to no CSS.
-- **Defaults.** The anatomy is the root, its icon slot frames and its parts, and `properties` is `[]`.
-- **Agent tier.** The anatomy below the slot frames and parts (a part's own children, text and paint), each slot's icon (an INSTANCE with an INSTANCE_SWAP, `icons.default` and `code.visibleWhen: {axis}`), properties, text styles and excluded combinations are not drafted yet.
+- **Defaults.** The anatomy is the root, its icon slot frames, its text layers and its parts, and `properties` holds only the text layers' TEXT properties.
+- **Agent tier.** The anatomy below the slot frames and parts (a frame part's own children, text and paint), each slot's icon (an INSTANCE with an INSTANCE_SWAP, `icons.default` and `code.visibleWhen: {axis}`), other properties, bound Text Styles (#160) and excluded combinations are not drafted yet.
 
 ## 4. Preview renderer
 
 [`scripts/preview.mjs`](scripts/preview.mjs) is the renderer To-preview finds by convention, and [`scripts/handoff-adapter.mjs`](scripts/handoff-adapter.mjs) hands the same renderer to To-handoff, with the rest of #102's Adapter interface. `previewRenderer(contract)` resolves to:
 
-- `render(tuple, properties)`: the project's own component, rendered with `react-dom/server` `renderToStaticMarkup`. A missing axis takes its default, and each axis value's `code` props are set. Each anatomy node the variant shows is a child, in anatomy order: an icon slot an `<svg>` carrying the attribute its Slot axis tests, a part its exported component holding its layer name. A node the resolved layout hides (`visible: false`) is not rendered. A provider family (Select) renders its Root around the Trigger it was read from: the Trigger takes the props and the children, and holds the family's `<Name>Value` export with the family name as its placeholder. The Contract has no properties yet.
+- `render(tuple, properties)`: the project's own component, rendered with `react-dom/server` `renderToStaticMarkup`. A missing axis takes its default, and each axis value's `code` props are set. Each anatomy node the variant shows is a child, in anatomy order: an icon slot an `<svg>` carrying the attribute its Slot axis tests, a frame part its exported component holding its layer name, a text layer its TEXT property's text (`code.prop: "children"` as text, `code.child` as that component holding it). A node the resolved layout hides (`visible: false`) is not rendered. A TEXT property takes the value it is given in `properties`, `""` included, and its `default` where it is not given. A provider family (Select) renders its Root around the Trigger it was read from: the Trigger takes the props and the children, and holds the family's `<Name>Value` export with its placeholder property's text, or the family name where it has none.
 - `stylesheet`: the project's global CSS compiled by the pinned Tailwind over every class of the component files the render loads, Preflight and the base layer included. Tailwind's `@supports (color: color-mix(…))` guards are unwrapped, because To-preview's state forcing does not read inside `@supports`.
 - `modeClass(mode)`: `mode-<key>`, used only for Light, which records no selector. Dark switches by its `selector`, `.dark`.
 

@@ -41,11 +41,25 @@ test('Card has no cva: its root className is its one variant, with a Slot axis f
   assert.equal(card.expectedCount, 2);
 });
 
-test('Card\'s exported parts are FRAME nodes under the root, named by their data-slot without the family prefix, in source order', { skip }, async () => {
+test('Card\'s exported parts are nodes under the root, named by their data-slot without the family prefix, in source order; a part that sets its own text style is TEXT (#162)', { skip }, async () => {
   const { anatomy } = await read('card');
   assert.equal(anatomy.name, 'Card');
+  const text = ['Title', 'Description'];
   assert.deepEqual(anatomy.children, ['Header', 'Title', 'Description', 'Action', 'Content', 'Footer']
-    .map(name => ({ name, type: 'FRAME' })));
+    .map(name => ({ name, type: text.includes(name) ? 'TEXT' : 'FRAME' })));
+});
+
+test('Card\'s text parts are TEXT properties mapped to their child component, each layer\'s style read raw until Foundations has Text Styles (#162, #160)', { skip }, async () => {
+  const card = await read('card');
+  assert.deepEqual(card.properties.map(p => [p.key, p.type, p.binds, p.code]), [
+    ['title', 'TEXT', [{ node: 'Title', field: 'characters' }], { child: 'CardTitle' }],
+    ['description', 'TEXT', [{ node: 'Description', field: 'characters' }], { child: 'CardDescription' }]]);
+  const { layout } = resolve(card, { 'card-footer': 'none', state: 'enabled' });
+  assert.deepEqual(layout.Title.textStyle.raw, { fontSize: 16, lineHeight: 22, fontWeight: 500 });
+  assert.equal(layout.Title.textStyle.level, 'warning');
+  assert.match(layout.Title.textStyle.reason, /leading-snug line-height 22px.*#160/);
+  assert.deepEqual(layout.Description.textStyle.raw, { fontSize: 14, lineHeight: 20, fontWeight: 400 });
+  assert.equal(layout.Title.textResize, 'height');
 });
 
 test('Card layout: a block flex column fills across; gap and padding resolve --card-spacing to spacing-4; a filled footer drops the bottom padding', { skip }, async () => {
@@ -75,11 +89,8 @@ test('each Card part fills the column across and hugs down; Action is self-start
 test('a part hugs inside its own Auto Layout: a flex part (CardFooter) is a row, a grid or block part a column (#124)', { skip }, async () => {
   const card = await read('card');
   const { layout } = resolve(card, { 'card-footer': 'card-footer', state: 'enabled' });
-  assert.deepEqual(['Header', 'Title', 'Description', 'Action', 'Content', 'Footer'].map(p => layout[p].direction),
-    ['column', 'column', 'column', 'column', 'column', 'row']);
-  const alert = await read('alert');
-  const a = resolve(alert, { variant: 'default', state: 'enabled' }).layout;
-  assert.deepEqual([a['Title'].direction, a['Description'].direction], ['column', 'column']);
+  assert.deepEqual(['Header', 'Action', 'Content', 'Footer'].map(p => layout[p].direction), ['column', 'column', 'column', 'row']);
+  assert.deepEqual([layout['Title'].direction, layout['Description'].direction], [undefined, undefined], 'a TEXT layer has no Auto Layout');
 });
 
 test('Card\'s size prop is read by no axis: its data-[size=sm] utilities are a note, not carried', { skip }, async () => {
@@ -133,7 +144,7 @@ test('Alert\'s border colour comes from the project\'s base layer (* { border-bo
 
 test('Alert\'s parts: Title and Description fill the grid\'s one column; the absolute Alert Action is left out, with its slot utilities', { skip }, async () => {
   const alert = await read('alert');
-  assert.deepEqual(alert.anatomy.children, [{ name: 'Title', type: 'FRAME' }, { name: 'Description', type: 'FRAME' }]);
+  assert.deepEqual(alert.anatomy.children, [{ name: 'Title', type: 'TEXT' }, { name: 'Description', type: 'TEXT' }]);
   const { layout } = resolve(alert, { variant: 'default', state: 'enabled' });
   assert.deepEqual([layout['Title'].width, layout['Title'].height], ['fill', 'hug']);
   const note = alert.notes.find(n => /AlertAction/.test(n.message) && /absolute/.test(n.message));
@@ -158,12 +169,13 @@ test('the Card and Alert variants each resolve every part', { skip }, async () =
 
 // ---------- the agent tier on a family with no cva ----------
 
-test('a family with no cva drafts its description and grid only, evidenced by the root\'s line', { skip }, async () => {
+test('a family with no cva drafts its description, grid and text defaults only, the family-wide keys evidenced by the root\'s line', { skip }, async () => {
   const doc = (await library({ project: FIXTURE, families: ['card'] })).doc;
   const { contract, requests } = await generate({ project: FIXTURE, family: 'card', foundations: doc });
   assert.equal(contract, null);
-  assert.deepEqual(requests.map(r => r.key), ['family.description', 'figma.grid']);
-  for (const r of requests) assert.ok(r.evidence.every(e => e.startsWith('components/ui/card.tsx:L4 ')), r.key);
+  assert.deepEqual(requests.map(r => r.key), ['family.description', 'figma.grid', 'properties.description.default', 'properties.title.default']);
+  for (const r of requests.filter(r => !r.key.startsWith('properties.'))) assert.ok(r.evidence.every(e => e.startsWith('components/ui/card.tsx:L4 ')), r.key);
+  assert.match(requests.find(r => r.key === 'properties.title.default').evidence[0], /^components\/ui\/card\.tsx:L\d+ exports CardTitle, a part that sets its own text style: the Title layer$/);
   assert.match(requests.find(r => r.key === 'figma.grid').evidence[0], /no cva; the Contract's axes: card-footer \(2\), state \(1\)/);
 });
 
@@ -173,8 +185,10 @@ test('a family file with no export named after the family is read through its on
   const project = variant('components/ui/label.tsx', t => t.replaceAll('Label(', 'FieldLabel(').replace('export { Label }', 'export { FieldLabel }'));
   const doc = (await library({ project, families: ['label'] })).doc;
   const drafts = JSON.parse(readFileSync(new URL('../fixtures/drafts/label.json', import.meta.url), 'utf8')).drafts;
-  const { contract } = await generate({ project, family: 'label', foundations: doc, drafts });
+  // the root is no longer named Label, so its text layer is Label, keyed label, not Text (#162)
+  const { contract } = await generate({ project, family: 'label', foundations: doc, drafts: { ...drafts, 'properties.label.default': drafts['properties.text.default'] } });
   assert.equal(contract.family.key, 'label');
+  assert.deepEqual(contract.anatomy.children, [{ name: 'Label', type: 'TEXT' }]);
   assert.equal(contract.code.component, 'FieldLabel');
   assert.equal(contract.code.import, 'import { FieldLabel } from "@/components/ui/label"');
   assert.equal(contract.anatomy.name, 'FieldLabel');
@@ -240,10 +254,13 @@ test('Input drafts its invalid label, description and grid; with fixtures/drafts
   assert.equal(contentHash(drafted), contentHash(committed));
 });
 
-test('Select is a provider with no box: it is read from SelectTrigger, with no parts, and says so', { skip }, async () => {
+test('Select is a provider with no box: it is read from SelectTrigger, with no parts but its Value text, and says so', { skip }, async () => {
   const doc = (await library({ project: FIXTURE, families: ['select'] })).doc;
   const select = await readFamily({ project: FIXTURE, family: 'select', foundations: doc });
-  assert.deepEqual(select.anatomy, { name: 'Select', type: 'COMPONENT' }, 'no part: the other exports render inside the Trigger or in its popup');
+  assert.deepEqual(select.anatomy, { name: 'Select', type: 'COMPONENT', children: [{ name: 'Value', type: 'TEXT' }] },
+    'no part: the other exports render inside the Trigger or in its popup; SelectValue\'s placeholder is the Value layer (#162)');
+  assert.deepEqual(select.properties.map(p => [p.key, p.binds, p.code]),
+    [['placeholder', [{ node: 'Value', field: 'characters' }], { child: 'SelectValue', childProp: 'placeholder' }]]);
   assert.deepEqual(select.axes.map(a => [a.key, a.values.map(v => v.key)]), [['invalid', ['valid', 'invalid']], ['state', ['enabled', 'hover', 'focus', 'disabled']]]);
   assert.deepEqual(select.facts.provider, { line: 8, element: 'SelectPrimitive.Root', root: 'SelectTrigger' });
   const root = resolve(select, { invalid: 'valid', state: 'enabled' }).layout.Select;
@@ -257,7 +274,7 @@ test('Select reaches the Drafted values, evidenced by the provider and its Trigg
   const doc = (await library({ project: FIXTURE, families: ['select'] })).doc;
   const { contract, requests } = await generate({ project: FIXTURE, family: 'select', foundations: doc });
   assert.equal(contract, null);
-  assert.deepEqual(requests.map(r => r.key), ['axes.invalid.label', 'family.description', 'figma.grid']);
+  assert.deepEqual(requests.map(r => r.key), ['axes.invalid.label', 'family.description', 'figma.grid', 'properties.placeholder.default']);
   assert.deepEqual(requests.find(r => r.key === 'family.description').evidence, [
     'components/ui/select.tsx:L8 exports Select, rendered as <SelectPrimitive.Root>, a provider with no box; read from SelectTrigger (L33), rendered as <SelectPrimitive.Trigger>',
     "components/ui/select.tsx:L33 SelectTrigger calls no cva; the Contract's axes: invalid (2), state (4)"]);

@@ -65,6 +65,7 @@
       }
     ],
     "tokens": [
+      "alert-destructive-description-fill",
       "border",
       "button-default-hover-fill",
       "button-destructive-fill",
@@ -85,6 +86,9 @@
       "button-secondary-hover-fill",
       "card",
       "card-effect",
+      "card-foreground",
+      "destructive",
+      "foreground",
       "input",
       "input-disabled-fill",
       "input-fill",
@@ -94,11 +98,14 @@
       "input-invalid-focus-stroke",
       "input-invalid-stroke",
       "muted",
+      "muted-foreground",
       "primary",
+      "primary-foreground",
       "radius-lg",
       "radius-xl",
       "ring",
       "secondary",
+      "secondary-foreground",
       "select-fill",
       "select-focus-effect",
       "select-hover-fill",
@@ -345,7 +352,10 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "alert",
+        "card"
+      ]
     },
     "chart-1": {
       "collection": "theme",
@@ -540,7 +550,10 @@
           "reason": "outside sRGB, clipped per channel"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "alert",
+        "button"
+      ]
     },
     "foreground": {
       "collection": "theme",
@@ -571,7 +584,10 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button",
+        "label"
+      ]
     },
     "input": {
       "collection": "theme",
@@ -671,7 +687,11 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "alert",
+        "card",
+        "select"
+      ]
     },
     "popover": {
       "collection": "theme",
@@ -797,7 +817,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "ring": {
       "collection": "theme",
@@ -897,7 +919,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "sidebar": {
       "collection": "theme",
@@ -1155,6 +1179,46 @@
       },
       "usedBy": [],
       "family": "sidebar"
+    },
+    "alert-destructive-description-fill": {
+      "collection": "theme",
+      "name": "Alert/alert-destructive-description-fill",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/alert.tsx:12 *:data-[slot=alert-description]:text-destructive/90",
+      "scopes": [
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "*:data-[slot=alert-description]:text-destructive/90"
+      },
+      "values": {
+        "light": {
+          "raw": "#e7000b",
+          "alpha": 0.9,
+          "resolved": "rgba(231, 0, 11, 0.9)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.9
+          },
+          "level": "info",
+          "reason": "*:data-[slot=alert-description]:text-destructive/90: destructive at 90%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.9,
+          "resolved": "rgba(255, 100, 103, 0.9)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.9
+          },
+          "level": "info",
+          "reason": "*:data-[slot=alert-description]:text-destructive/90: destructive at 90%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "alert"
+      ],
+      "family": "alert"
     },
     "button-default-hover-fill": {
       "collection": "theme",

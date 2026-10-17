@@ -6,7 +6,9 @@
 // - each cva axis's label and its values' labels (fingerprint: the axis's value keys);
 // - each attribute axis's label (fingerprint: its utilities' variant prefixes); its value labels are state words;
 // - `figma.grid` and `family.description` (fingerprint, family-wide: every axis's key, value keys and default, and
-//   the family's exported parts; compound variants fail the exact tier, so there are none to pin).
+//   the family's exported parts; compound variants fail the exact tier, so there are none to pin);
+// - each TEXT property's default text (#162; fingerprint: the layer, the property key and its code mapping, not the
+//   text's style, so a class change does not reopen the copy).
 // Slot and State axis labels are made by rule (#121, #6), so they are not drafted.
 import { canonical, draftedValue } from '../../contract/scripts/contract.mjs';
 import { sha256 } from './sources.mjs';
@@ -55,6 +57,14 @@ export function subjects(f, contract) {
     out.push({ key: `axes.${axis}.label`, fingerprint: fingerprint({ kind: 'attribute', axis, attr: a.attr, prefixes: a.prefixes }),
       check: text(`axes.${axis}.label`), brief: axisBrief(axis),
       evidence: [at(a.line, `${a.candidate} styles [${a.attr}="true"]; prefixes ${a.prefixes.join(', ')}`)] });
+  for (const n of facts.texts || []) {
+    const what = n.kind === 'children' ? `${n.name} renders its children as text: the ${n.node} layer`
+      : n.kind === 'placeholder' ? `exports ${n.name}, whose placeholder shows while no value is picked: the ${n.node} layer`
+      : `exports ${n.name}, a part that sets its own text style: the ${n.node} layer`;
+    out.push({ key: `properties.${n.key}.default`, fingerprint: fingerprint({ kind: 'text', node: n.node, key: n.key, code: n.code }),
+      check: text(`properties.${n.key}.default`), evidence: [at(n.line, what)],
+      brief: `The default text of the ${n.node} layer: what a designer sees before they type their own. Short, generic copy in the voice of the component's documentation, in sentence case.` });
+  }
   const family = fingerprint({ kind: 'family', axes: contract.axes.map(a => ({ key: a.key, values: a.values.map(v => v.key), default: a.default })), parts: facts.parts });
   const axisList = contract.axes.map(a => `${a.key} (${a.values.length})`).join(', ');
   const p = facts.provider;

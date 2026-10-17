@@ -74,15 +74,17 @@ export function normalizeBaseResult(result, ledger) {
 /**
  * Diff a normalized Base Component readback against what the Contract resolves to for the Base Component
  * (or for `tuple`, a variant of the set). `props` defaults to the readback's `specimen` (see baseProps).
- * Returns {name, changes, unread}: each change is {kind, section, node, field, from, to, why?} with kind
+ * Returns {name, changes, unread, unbuilt}: each change is {kind, section, node, field, from, to, why?} with kind
  * `token-edit` (the owner bound a variable), `raw-edit` (a typed value), `detached` (a binding lost while the
  * value stayed, which a rebuild restores) or `unmapped` (a tweak the Contract cannot carry, `why` says which).
- * `unread` lists the expected fields the readback does not report. Effects are compared in order.
+ * `unread` lists the expected fields the readback does not report, and `unbuilt` the raw text styles the builder
+ * does not write until the Foundations document has Text Styles (#160). Effects are compared in order.
  */
 export function diff(contract, readback, foundations, props = baseProps(contract, readback.specimen === 'set'), tuple = baseTuple(contract)) {
   const exp = expectedVariant(contract, tuple, props);
   const changes = [];
   const unread = [];
+  const unbuilt = [];
   const unmapped = (reason, section, node, field, from, to) =>
     changes.push({ kind: 'unmapped', section, node, field, from, to, why: UNMAPPED[reason][0], reason });
 
@@ -98,6 +100,8 @@ export function diff(contract, readback, foundations, props = baseProps(contract
         if (!read || !(field in read)) { unread.push(`${section}.${node}.${field}`); continue; }
         const got = read[field];
         if (same(want, got)) continue;
+        // a raw text style the builder does not write until Foundations has Text Styles (#160)
+        if (field === 'textStyle' && isRaw(want) && got == null) { unbuilt.push(`${section}.${node}.${field}`); continue; }
         if (isToken(got) && got.token === null) unmapped('foreign', section, node, field, want, got);
         else if (isToken(got)) changes.push({ kind: 'token-edit', section, node, field, from: want, to: got });
         else if (isRaw(got)) {
@@ -129,7 +133,7 @@ export function diff(contract, readback, foundations, props = baseProps(contract
       if (!readback[part] || !(node in readback[part])) { unread.push(`${part}.${node}`); continue; }
       if (readback[part][node] !== want) unmapped('property', part, node, part === 'visible' ? 'visible' : part === 'text' ? 'characters' : 'mainComponent', want, readback[part][node]);
     }
-  return { name: exp.name, changes, unread };
+  return { name: exp.name, changes, unread, unbuilt };
 }
 
 // ---------- proposals: where each tweak lands, and what else it changes ----------

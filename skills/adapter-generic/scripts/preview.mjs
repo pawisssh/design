@@ -10,10 +10,14 @@
 //                      renders like Enabled: the page forces it through its CSS pseudo-class). Each anatomy node
 //                      the variant shows is a child, in anatomy order: an icon slot an <svg> carrying the attribute
 //                      its Slot axis tests (`data-icon="inline-start"`), a part its exported component (CardHeader for
-//                      the Header node) holding its layer name. A node the variant hides (`visible: false`) is not rendered. The
-//                      Contract has no properties yet, so `properties` changes nothing. A provider family (Select,
-//                      whose Root has no box, #153) renders its Root around its Trigger, which takes the props and
-//                      the children, and holds the family's Value export with the family name as its placeholder;
+//                      the Header node) holding its layer name, a text layer its TEXT property's text (#162): the
+//                      root's own children (Button's Label), a part's children (CardTitle), or the Value export's
+//                      placeholder. With no `properties` (a catalog specimen) each text is its default; with them, a
+//                      key's value, '' included (a Handoff sends '' for text its Prototype does not show), and the
+//                      default only for a key it leaves out. A node the variant hides (`visible: false`) is not
+//                      rendered. A provider family (Select, whose Root has no box, #153) renders its Root around its
+//                      Trigger, which takes the props and the children, and holds the family's Value export with its
+//                      placeholder (the family name where the Contract has no placeholder property);
 //   stylesheet         the project's global CSS compiled by the pinned Tailwind over every class of the component
 //                      files the render loads, Preflight and the base layer included;
 //   modeClass(modeKey) the class for a Mode whose foundations entry has no `selector`: the default Mode (light,
@@ -146,9 +150,18 @@ export async function previewRenderer(contract, { project = FIXTURE, dir = PREVI
   }
   const stylesheet = unguard(await build(readFileSync(join(project, cssFile), 'utf8'), [...candidates].sort(), { base: join(project, cssFile, '..'), tools }));
 
-  // Each anatomy child as an element: an icon slot an <svg> with its Slot axis's attribute, a part its component.
+  // Each anatomy child as an element: an icon slot an <svg> with its Slot axis's attribute, a part its component, a
+  // text layer its text.
   const slotAxis = node => contract.axes.find(a => a.slot === node);
-  const child = (node, key) => {
+  const textProp = node => (contract.properties || []).find(p => p.type === 'TEXT' && (p.binds || []).some(b => b.node === node && b.field === 'characters'));
+  const child = (node, key, text) => {
+    const tp = node.type === 'TEXT' && textProp(node.name);
+    if (tp && tp.code && tp.code.prop === 'children') return text(tp);
+    if (tp && tp.code && tp.code.childProp) return null; // the Value export's prop, set where the provider renders it
+    if (tp && tp.code && tp.code.child) {
+      const Part = library[tp.code.child] || fail(`${alias} has no export ${tp.code.child} for the ${node.name} node`);
+      return React.createElement(Part, { key }, text(tp));
+    }
     const axis = slotAxis(node.name);
     if (node.role === 'icon') {
       const css = axis && axis.values.find(v => v.filled).css;
@@ -165,7 +178,8 @@ export async function previewRenderer(contract, { project = FIXTURE, dir = PREVI
   return {
     stylesheet,
     modeClass: mode => `mode-${mode}`,
-    render(tuple /* , properties: the Contract has no properties yet */) {
+    render(tuple, properties) {
+      const text = p => (properties && properties[p.key] !== undefined ? properties[p.key] : p.default);
       const full = {};
       for (const axis of contract.axes) full[axis.key] = tuple[axis.key] === undefined ? axis.default : tuple[axis.key];
       const props = {};
@@ -174,9 +188,11 @@ export async function previewRenderer(contract, { project = FIXTURE, dir = PREVI
         Object.assign(props, value.code || {});
       }
       const { layout } = resolve(contract, full);
-      const children = (contract.anatomy.children || []).filter(n => !layout[n.name] || layout[n.name].visible !== false).map((n, i) => child(n, i));
+      const children = (contract.anatomy.children || []).filter(n => !layout[n.name] || layout[n.name].visible !== false)
+        .map((n, i) => child(n, i, text)).filter(c => c !== null);
       if (!provider) return renderToStaticMarkup(React.createElement(Component, props, ...children));
-      const value = Value ? [React.createElement(Value, { key: 'value', placeholder: contract.family.name })] : [];
+      const placeholder = (contract.properties || []).find(p => p.type === 'TEXT' && p.code && p.code.childProp === 'placeholder');
+      const value = Value ? [React.createElement(Value, { key: 'value', placeholder: placeholder ? text(placeholder) : contract.family.name })] : [];
       return renderToStaticMarkup(React.createElement(Component, null, React.createElement(Trigger, props, ...value, ...children)));
     },
   };

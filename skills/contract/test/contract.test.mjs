@@ -378,6 +378,23 @@ test('`code.items` names a Repeated child, and an `itemProp` property shows one 
   formRejects(e, 3, 'only a TEXT property can show a Repeated child prop');
 });
 
+test('a TEXT `code.child` names a child component, with an optional `childProp`, and no `prop` or `itemProp` (#162)', () => {
+  const ok = textInput();
+  ok.properties[0].code = { child: 'FormLabel' };
+  assert.deepEqual(contract.validate(ok, formFoundations).errors.filter(e => e.rule === 3), []);
+  ok.properties[0].code = { child: 'FormLabel', childProp: 'text' };
+  assert.deepEqual(contract.validate(ok, formFoundations).errors.filter(e => e.rule === 3), []);
+  const a = textInput();
+  a.properties[0].code = { child: '' };
+  formRejects(a, 3, 'properties.label.code.child', '`code.child` names the child component');
+  const b = textInput();
+  b.properties[0].code = { child: 'FormLabel', childProp: 3 };
+  formRejects(b, 3, '`code.childProp` names one prop of the child');
+  const c = textInput();
+  c.properties[0].code = { child: 'FormLabel', prop: 'labelText' };
+  formRejects(c, 3, 'not two of them');
+});
+
 test('the icon list adds every fixed `icon:<key>` an INSTANCE names, after default and preferred, each once', () => {
   assert.deepEqual(contract.icons(textInput()), ['warning--filled', 'warning--alt--filled']);
   assert.deepEqual(contract.icons(select()), ['chevron--down', 'warning--filled', 'warning--alt--filled']);

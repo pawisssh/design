@@ -297,13 +297,33 @@
         "role": "icon"
       },
       {
+        "name": "Label",
+        "type": "TEXT"
+      },
+      {
         "name": "Icon Inline End",
         "type": "FRAME",
         "role": "icon"
       }
     ]
   },
-  "properties": [],
+  "properties": [
+    {
+      "key": "label",
+      "label": "Label",
+      "type": "TEXT",
+      "default": "Button",
+      "binds": [
+        {
+          "node": "Label",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "children"
+      }
+    }
+  ],
   "layout": [
     {
       "match": {},
@@ -357,6 +377,19 @@
             "token": "spacing-4"
           },
           "visible": false
+        },
+        "Label": {
+          "textStyle": {
+            "raw": {
+              "fontSize": 14,
+              "lineHeight": 20,
+              "fontWeight": 500
+            },
+            "level": "warning",
+            "reason": "text-sm font-size 14px; text-sm line-height 20px; font-medium font-weight 500; the Foundations document has no Text Styles yet (#160)"
+          },
+          "textResize": "width-and-height",
+          "visible": true
         },
         "Icon Inline End": {
           "width": {
@@ -421,6 +454,17 @@
             "level": "info",
             "reason": "derived: px-2 padding-inline calc(var(--spacing) * 2) = 8px + 1px border (an inside stroke takes no layout space)"
           }
+        },
+        "Label": {
+          "textStyle": {
+            "raw": {
+              "fontSize": 12,
+              "lineHeight": 16,
+              "fontWeight": 500
+            },
+            "level": "warning",
+            "reason": "text-xs font-size 12px; text-xs line-height 16px; font-medium font-weight 500; the Foundations document has no Text Styles yet (#160)"
+          }
         }
       }
     },
@@ -470,6 +514,17 @@
           },
           "height": {
             "token": "spacing-3_5"
+          }
+        },
+        "Label": {
+          "textStyle": {
+            "raw": {
+              "fontSize": 12.8,
+              "lineHeight": 19.2,
+              "fontWeight": 500
+            },
+            "level": "warning",
+            "reason": "text-[0.8rem] font-size 12.8px; line-height 19.2px (html, :host line-height 1.5); font-medium font-weight 500; the Foundations document has no Text Styles yet (#160)"
           }
         },
         "Icon Inline End": {
@@ -533,6 +588,9 @@
           "gap": {
             "token": "spacing-0"
           }
+        },
+        "Label": {
+          "visible": false
         }
       }
     },
@@ -680,6 +738,11 @@
             "reason": "no opacity utility"
           },
           "effects": []
+        },
+        "Label": {
+          "fill": {
+            "token": "primary-foreground"
+          }
         }
       }
     },
@@ -700,12 +763,32 @@
     },
     {
       "match": {
+        "variant": [
+          "outline",
+          "ghost"
+        ]
+      },
+      "set": {
+        "Label": {
+          "fill": {
+            "token": "foreground"
+          }
+        }
+      }
+    },
+    {
+      "match": {
         "variant": "secondary"
       },
       "set": {
         "Button": {
           "fill": {
             "token": "secondary"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "secondary-foreground"
           }
         }
       }
@@ -731,6 +814,23 @@
         "Button": {
           "fill": {
             "token": "button-destructive-fill"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "destructive"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "link"
+      },
+      "set": {
+        "Label": {
+          "fill": {
+            "token": "primary"
           }
         }
       }
@@ -1018,6 +1118,11 @@
     },
     {
       "level": "info",
+      "at": "anatomy",
+      "message": "Text layers (#162), each a TEXT node with a TEXT property: Label: Button's children (code.prop children). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Button, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value. The Label layer is hidden where Button has a fixed width (an icon size), which is sized for its icon."
+    },
+    {
+      "level": "info",
       "at": "components/ui/button.tsx",
       "message": "in-data-[slot=button-group]:rounded-lg: Styled by an ancestor; that is a Mode or the parent's Contract (ADR 0012). Not carried."
     },
@@ -1034,7 +1139,7 @@
     {
       "level": "info",
       "at": "components/ui/button.tsx",
-      "message": "aria-expanded:text-foreground, aria-expanded:text-secondary-foreground, font-medium, hover:text-foreground, hover:underline, text-[0.8rem], text-destructive, text-primary, text-primary-foreground, text-secondary-foreground, text-sm, text-xs, underline-offset-4, whitespace-nowrap: Text utilities; text styles, the label and the anatomy beyond the root are not drafted yet (agent tier). Not carried."
+      "message": "aria-expanded:text-foreground, aria-expanded:text-secondary-foreground, font-medium, hover:text-foreground, hover:underline, text-[0.8rem], text-destructive, text-primary, text-primary-foreground, text-secondary-foreground, text-sm, text-xs, underline-offset-4, whitespace-nowrap: Text utilities: read only into the text layers' textStyle and fill (see the anatomy notes), not carried on the root."
     },
     {
       "level": "info",
@@ -1193,6 +1298,13 @@
         "components/ui/button.tsx:L10 buttonVariants variants; the Contract's axes: variant (6), size (8), invalid (2), expanded (2), icon-inline-start (2), icon-inline-end (2), state (4)"
       ],
       "fingerprint": "sha256:804498718cf447b62c186ae04298168694f0cd399e18c4ff9855d7c5f8e2ba2c"
+    },
+    "properties.label.default": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L43 Button renders its children as text: the Label layer"
+      ],
+      "fingerprint": "sha256:2bb74f409bbe1af724d45ffd78705271ab6e234c441321770bedd95091fd5789"
     }
   }
 }

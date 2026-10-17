@@ -12,6 +12,8 @@
       "rows": [
         "variant"
       ]
-    }
+    },
+    "properties.description.default": "Something needs your attention.",
+    "properties.title.default": "Heads up"
   }
 }

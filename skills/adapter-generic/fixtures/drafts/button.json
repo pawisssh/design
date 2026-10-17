@@ -32,6 +32,7 @@
         "icon-inline-start",
         "icon-inline-end"
       ]
-    }
+    },
+    "properties.label.default": "Button"
   }
 }
