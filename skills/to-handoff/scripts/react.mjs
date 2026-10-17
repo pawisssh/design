@@ -55,8 +55,8 @@ export function codeLibraryDir(root, ts, kind = reactKind(root), paths = compile
 /**
  * readReact(root, {depsDir, packages}) -> {kind, title, files, at, rules, standIns, fonts, screens, uiDir, ignored}.
  * `packages` are the Design System's code packages (each Contract's `code.package`): their components are
- * leaves. `screens` is [{id, name, route, offset, root, mount}], `files` the files read (relative paths), `fonts`
- * the next/font and geist/font imports [{module, name, offset}]. On Next, a loading.tsx, error.tsx or not-found.tsx
+ * leaves, and a package that resolves to a project file is that file under any import of it. `screens` is
+ * [{id, name, route, offset, root, mount}], `files` the files read (relative paths), `fonts` the next/font and geist/font imports [{module, name, offset}]. On Next, a loading.tsx, error.tsx or not-found.tsx
  * boundary is a condition named by its file, true for the boundary's tree and false for what it wraps.
  */
 export function readReact(root, { depsDir, packages = [] } = {}) {
@@ -80,6 +80,8 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
     for (const b of bases) for (const c of [b, ...EXTS.map(e => b + e), ...EXTS.map(e => `${b}/index${e}`)]) if (isFile(c)) return posix.normalize(c);
     return null;
   };
+  // A Contract package that is a project file (shadcn's `@/components/ui/button`) is that file however it is imported.
+  const packageFiles = new Map(packages.map(p => [resolveFile('', p), p]).filter(([file]) => file));
   const css = rel => {
     if (!rel || space.has(rel)) return;
     const f = space.add(rel, readFileSync(join(root, rel), 'utf8'));
@@ -143,6 +145,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
     const exp = imp.export === '*' ? member : member ? `${imp.export}.${member}` : imp.export;
     const file = resolveFile(s.rel, imp.module);
     if (file) {
+      if (packageFiles.has(file)) return { leaf: { module: packageFiles.get(file), export: exp, kind: 'ds', file } };
       if (file.startsWith(uiDir)) return { leaf: { module: imp.module, export: exp, kind: 'ui', file } };
       return member ? { transparent: true } : { app: { file, export: exp } };
     }
