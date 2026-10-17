@@ -321,8 +321,12 @@ test('a document without a default group builds the closure and the default grou
   // the Code Library tokens a Synthesized value aliases (#124): `background` only through a Button alias, not in the closure
   const targets = [...new Set(Object.values(doc.variables).flatMap(v => Object.values(v.values).map(m => m.alias).filter(Boolean)))];
   assert.ok(targets.includes('background') && !doc.closure.tokens.includes('background'));
-  assert.deepEqual(Object.keys(plan.foundations.variables).sort(), [...new Set([...doc.closure.tokens, ...spacing, ...targets])].sort());
-  assert.deepEqual(plan.foundations.textStyles, {});
+  // the closure's Text Styles (#160) are Text Styles, not variables; the rest of the 117 are in no group the owner chose
+  const styles = doc.closure.tokens.filter(t => doc.textStyles[t]);
+  assert.deepEqual(styles, ['text-sm-medium', 'text-sm-normal', 'text-xs-medium']);
+  assert.deepEqual(Object.keys(plan.foundations.variables).sort(),
+    [...new Set([...doc.closure.tokens.filter(t => !doc.textStyles[t]), ...spacing, ...targets])].sort());
+  assert.deepEqual(Object.keys(plan.foundations.textStyles).sort(), styles);
   assert.deepEqual(setGroups(null, FILE_KEY, doc).foundationsGroups, ['Spacing']);
 });
 

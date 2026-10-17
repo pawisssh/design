@@ -22,11 +22,12 @@
     },
     "files": {
       "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
+      "app/layout.tsx": "sha256:27471c24f05b096454dc3c3cc5ee4bc992eee8e5aedb6dc8e0b53c62148780f8",
       "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
       "components/ui/textarea.tsx": "sha256:82601c91ffc6c727d924162c78d7cb853114bcced4e2eb922a68ca12d4239c0f",
       "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
     },
-    "snapshotId": "sha256:f867108029e85e1d5e6f2f62e1f1279c393470acc7169848842f6712f91a1be1"
+    "snapshotId": "sha256:64f0eeaa577420d90e356377fa81c2f9bdeabdf8b755e2cfb73aeb3544230f6d"
   },
   "axes": [
     {
@@ -149,7 +150,11 @@
           "stroke": {
             "token": "input"
           },
-          "opacity": { "raw": 1, "level": "info", "reason": "no opacity utility" },
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "no opacity utility"
+          },
           "effects": []
         }
       }
@@ -213,7 +218,11 @@
           "fill": {
             "token": "textarea-disabled-fill"
           },
-          "opacity": { "raw": 0.5, "level": "info", "reason": "disabled:opacity-50: opacity 50%; the Foundations document has no opacity variable" }
+          "opacity": {
+            "raw": 0.5,
+            "level": "info",
+            "reason": "disabled:opacity-50: opacity 50%; the Foundations document has no opacity variable"
+          }
         }
       }
     },

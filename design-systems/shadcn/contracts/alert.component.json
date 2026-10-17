@@ -22,11 +22,12 @@
     },
     "files": {
       "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
+      "app/layout.tsx": "sha256:27471c24f05b096454dc3c3cc5ee4bc992eee8e5aedb6dc8e0b53c62148780f8",
       "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
       "components/ui/alert.tsx": "sha256:f253568242c1c69b343f12474002fdbe229f603158171c59e21c491ab79f2e6e",
       "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
     },
-    "snapshotId": "sha256:26121ba66822ed1c1ac5705e0059e3fcccbd9e76ca761f36f4710d3fc58074e1"
+    "snapshotId": "sha256:cc58aa7a7e075c5897afc8c49324286cd81d8de528f4e39b242d080681b5ae2b"
   },
   "axes": [
     {
@@ -166,13 +167,7 @@
           "width": "fill",
           "height": "hug",
           "textStyle": {
-            "raw": {
-              "fontSize": 14,
-              "lineHeight": 20,
-              "fontWeight": 500
-            },
-            "level": "warning",
-            "reason": "text-sm font-size 14px; text-sm line-height 20px; font-medium font-weight 500; the Foundations document has no Text Styles yet (#160)"
+            "token": "text-sm-medium"
           },
           "textResize": "height"
         },
@@ -180,13 +175,7 @@
           "width": "fill",
           "height": "hug",
           "textStyle": {
-            "raw": {
-              "fontSize": 14,
-              "lineHeight": 20,
-              "fontWeight": 400
-            },
-            "level": "warning",
-            "reason": "text-sm font-size 14px; text-sm line-height 20px; font-weight 400 (no utility); the Foundations document has no Text Styles yet (#160)"
+            "token": "text-sm-normal"
           },
           "textResize": "height"
         }
@@ -285,7 +274,7 @@
     {
       "level": "info",
       "at": "anatomy",
-      "message": "Text layers (#166), each a TEXT node with a TEXT property: Title: AlertTitle's children (code.child AlertTitle); Description: AlertDescription's children (code.child AlertDescription). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Alert, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value."
+      "message": "Text layers (#166), each a TEXT node with a TEXT property: Title: AlertTitle's children (code.child AlertTitle); Description: AlertDescription's children (code.child AlertDescription). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Alert, then app/globals.css's base layer (html line-height, body color). Each binds the Text Style its size and weight utilities name where it holds those values, else its text style is raw, saying why (#160); the default text is a Drafted value."
     },
     {
       "level": "info",

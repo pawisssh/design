@@ -162,7 +162,7 @@ test('a colour declared only in :root holds the same value in Dark', { skip }, a
 
 test('source pins the project files read, with snapshotId and the versions the project resolves', { skip }, async () => {
   const { source, closure, checks } = (await run()).doc;
-  const files = ['app/globals.css', 'components.json', 'package-lock.json'];
+  const files = ['app/globals.css', 'app/layout.tsx', 'components.json', 'package-lock.json'];
   assert.deepEqual(Object.keys(source.files), files);
   for (const f of files) assert.equal(source.files[f], `sha256:${sha256(readFileSync(join(FIXTURE, f)))}`);
   assert.equal(source.snapshotId, snapshotId(source.files));
@@ -170,8 +170,63 @@ test('source pins the project files read, with snapshotId and the versions the p
   assert.deepEqual(source.packages, { shadcn: '4.22.0', tailwindcss: '4.3.3', 'tw-animate-css': '1.4.0' });
   assert.deepEqual(closure, { contracts: [], tokens: [] });
   assert.deepEqual(Object.keys(checks), ['css', 'compiled'], 'no scope check until a Contract exists');
-  assert.equal(checks.compiled.matched, 73); // 31 colours, 7 radius steps and 35 spacing steps
+  assert.equal(checks.compiled.matched, 95); // 31 colours, 7 radius steps, 35 spacing steps, 13 text sizes and 9 weights
   assert.equal(checks.css.converted, 62); // 31 colours x 2 modes
+});
+
+// A copy of the fixture project with its root layout rewritten by `edit`.
+function layoutVariant(edit) {
+  const dir = variant(css => css);
+  writeFileSync(join(dir, 'app/layout.tsx'), edit(readFileSync(join(dir, 'app/layout.tsx'), 'utf8')));
+  return dir;
+}
+
+test('Text Styles: Tailwind\'s type scale at each of its weights, in the family next/font loads for --font-sans (#160)', { skip }, async () => {
+  const { textStyles } = (await run()).doc;
+  assert.equal(Object.keys(textStyles).length, 13 * 9);
+  assert.deepEqual(Object.keys(textStyles).slice(0, 3), ['text-xs-thin', 'text-xs-extralight', 'text-xs-light']);
+  assert.deepEqual(textStyles['text-sm-medium'], {
+    name: 'Text/text-sm-medium',
+    source: 'tailwindcss@4.3.3 theme.css --text-sm --text-sm--line-height --font-weight-medium; app/globals.css @theme inline --font-sans',
+    fontFamily: 'Geist', fontStyle: 'Medium', fontSize: 14, lineHeight: { unit: 'PIXELS', value: 20 }, fontWeight: 500,
+    letterSpacing: { unit: 'PERCENT', value: 0 }, usedBy: [],
+  });
+  assert.deepEqual([textStyles['text-xs-normal'].fontSize, textStyles['text-xs-normal'].lineHeight.value, textStyles['text-xs-normal'].fontStyle], [12, 16, 'Regular']);
+  assert.deepEqual([textStyles['text-9xl-black'].fontSize, textStyles['text-9xl-black'].lineHeight.value, textStyles['text-9xl-black'].fontStyle], [128, 128, 'Black']);
+  for (const s of Object.values(textStyles)) assert.equal(s.fontFamily, 'Geist');
+});
+
+test('Text Styles: a step\'s --letter-spacing sets the tracking, an em value as a percentage; a step with none is 0%', { skip }, async () => {
+  const project = variant(css => css.replace('@theme inline {', '@theme inline {\n  --text-sm--letter-spacing: -0.025em;'));
+  const { textStyles } = (await run(project)).doc;
+  assert.deepEqual(textStyles['text-sm-medium'].letterSpacing, { unit: 'PERCENT', value: -2.5 });
+  assert.match(textStyles['text-sm-medium'].source, /app\/globals\.css @theme inline --text-sm--letter-spacing/);
+  assert.deepEqual(textStyles['text-xs-medium'].letterSpacing, { unit: 'PERCENT', value: 0 });
+});
+
+test('fonts: a theme font that refers to itself takes the loader of the same role, with a warning; --font-mono is its loader\'s family', { skip }, async () => {
+  const { notes } = (await run()).doc;
+  const self = notes.find(n => n.at === 'app/globals.css @theme inline --font-sans');
+  assert.equal(self.level, 'warning');
+  assert.match(self.message, /refers to itself.*--font-geist-sans.*Geist \(next\/font\/google, app\/layout\.tsx:6\)/);
+  const mono = notes.find(n => n.at === 'app/globals.css @theme inline --font-mono');
+  assert.equal(mono.level, 'info');
+  assert.match(mono.message, /Geist Mono/);
+  assert.ok(notes.some(n => n.level === 'verify' && n.at === 'textStyles' && /fontStyle/.test(n.message)));
+  assert.ok(!notes.some(n => /Font families are not carried/.test(n.message)));
+});
+
+test('fonts: a loader that sets --font-sans itself names the family, with no warning', { skip }, async () => {
+  const project = layoutVariant(t => t.replace('import { Geist, Geist_Mono }', 'import { Inter, Geist_Mono }')
+    .replace('Geist({\n  variable: "--font-geist-sans"', 'Inter({\n  variable: "--font-sans"'));
+  const { doc } = await run(project);
+  assert.equal(doc.textStyles['text-sm-medium'].fontFamily, 'Inter');
+  assert.ok(!doc.notes.some(n => n.at === 'app/globals.css @theme inline --font-sans' && n.level === 'warning'));
+});
+
+test('fonts: a --font-sans no loader fills fails, naming it', { skip }, async () => {
+  const project = layoutVariant(t => t.replace('variable: "--font-geist-sans"', 'variable: "--font-body"'));
+  await assert.rejects(run(project), /--font-sans.*no next\/font loader/);
 });
 
 test('relative colour syntax fails, naming the property', { skip }, async () => {

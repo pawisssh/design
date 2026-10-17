@@ -102,7 +102,28 @@ Every variable with a utility is compiled with Tailwind in one `build()`: `bg-<n
 - Its declaration is the `codeSyntax.WEB`, for example `calc(var(--spacing) * 1.5)`, `calc(var(--radius) * 0.6)`, `1px` or `0px`.
 - A COLOR must compile to `var(--<name>)`.
 - A FLOAT's compiled expression is evaluated to px and must equal the document value.
-- `checks.compiled.matched` counts them, and a mismatch fails generation.
+- Each Text Style's two utilities, `text-<k>` and `font-<w>`, are compiled too. `text-<k>` must compile to `var(--text-<k>)` and `var(--tw-leading, var(--text-<k>--line-height))`, plus the step's `letter-spacing` where it has one. `font-<w>` must compile to `var(--font-weight-<w>)`.
+- `checks.compiled.matched` counts them (95 for the fixture: 31 colours, 7 radius steps, 35 spacing steps, 13 sizes and 9 weights), and a mismatch fails generation.
+
+### Text Styles
+
+`textStyles` holds one Text Style per step of the type scale at each font weight (#160): 13 steps × 9 weights = 117 for the fixture.
+
+- **Steps and weights.** Each `--text-<k>` (not `--text-shadow-*`) with its `--text-<k>--line-height`, and each `--font-weight-<w>`. They come from the pinned `tailwindcss/theme.css`, and a project `@theme` value replaces Tailwind's own.
+- **Naming.** The flat name is `text-<k>-<w>` (`text-sm-medium`), the Figma name `Text/text-<k>-<w>`. `source` names each property read.
+- **Values.**
+  - `fontSize` is the step in px.
+  - `lineHeight` is px: a ratio (`calc(1.25 / 0.875)`) times the size, or a length.
+  - `fontWeight` is the weight, and `fontStyle` the Figma style it is named by (400 Regular, 500 Medium, …). A `verify` note says the style names are not yet checked against the fonts Figma offers.
+  - `letterSpacing` is a step's `--text-<k>--letter-spacing`, an `em` value as a percentage, else `0%`, the browser's `normal`.
+- **Family.** Every style takes the family `--font-sans` names. The project's `@theme` font is resolved this way:
+  1. a literal stack gives its first family;
+  2. else `var(--x)`, where the root layout (`app/layout.tsx`, or `src/app/`, `.jsx`) has a `next/font/google` loader with `variable: "--x"`, gives that loader's font (`Geist_Mono` → Geist Mono);
+  3. else `var(--font-<other>)` follows that theme font;
+  4. else a font that refers to itself (`--font-sans: var(--font-sans)`, as the fixture has it) takes the one loader whose variable ends in the same role, `-sans`, with a warning: a browser reads the self-reference as invalid and shows the system font. For the fixture that is `--font-geist-sans`, Geist, the font the owner answered for (#125);
+  5. else generation fails, naming the property and the loaders it found.
+- **Not bound.** A Text Style has no `binds`: no Type collection is generated, so its fields are literals.
+- The root layout is in `source.files`, so editing the loaders makes the document and every Contract stale.
 
 ### Role table
 
@@ -111,15 +132,15 @@ Every variable with a utility is compiled with Tailwind in one `build()`: `bg-<n
 | `--color-<k>: var(--<name>)` | COLOR | `ALL_FILLS`, `EFFECT_COLOR`, `STROKE_COLOR`: every Tailwind colour feeds `bg-`, `text-`, `border-`, `ring-` and `shadow-` | `bg-<k>` |
 | `--radius-<k>` | FLOAT | `CORNER_RADIUS` | `rounded-<k>` |
 | `--spacing` | (multiplier) | steps: `GAP`, `WIDTH_HEIGHT` | `p-<step>` |
-| `--font-<k>` | not carried | info note: the fixture's fonts are set at runtime by next/font | |
+| `--font-<k>` | the Text Styles' family | `--font-sans` is every style's family; each other font gets an info note naming its family | |
+| `--text-<k>`, `--font-weight-<w>` | Text Styles | (see [Text Styles](#text-styles)) | `text-<k>`, `font-<w>` |
 | anything else | not carried | warning note | |
 
 A literal `@theme --color-*` (not `var(…)`) gets a warning note and is not carried yet.
 
 ### Not carried (notes in the document)
 
-- **Tailwind's default theme.** Its palette, fonts and shadows are not carried. Only the project's own CSS is read.
-- **Fonts.** In the fixture, `--font-sans` and `--font-mono` refer to next/font variables set at runtime.
+- **Tailwind's default theme.** Its palette and shadows are not carried, and its font stacks name no font. Only its type scale and font weights are read, into the Text Styles.
 
 ## 3. Component step
 
@@ -211,7 +232,7 @@ Each text a designer types is a TEXT node with a TEXT property (#166), where the
   | A part that sets its own text style or colour and no layout of its own, and is no slot: CardTitle, CardDescription, AlertTitle, AlertDescription | the part's node, a TEXT in place of its FRAME | the node in camelCase | `{child: "<Export>"}` |
 
   `code.child` names the child component whose text the property is, and `code.childProp` one prop of it ([contract schema](../contract/references/contract-schema.md), rule 3). That form is an [assumption] of #166.
-- **Text style.** `textStyle` is `{raw: {fontSize, lineHeight, fontWeight}}` at level `warning`, its reason naming each utility and #160: the Foundations document has no Text Styles yet. A value is the node's own rules, then the root rules that target the part (`*:data-[slot=…]:…`, compiled to `:is(.x > *)[data-slot="…"]`), then the root's own rules, which the node inherits, then the base layer (`html` line-height 1.5). A `leading-*` line height is a ratio over the font size. `textResize` is `height` where the layer fills across (a part in its column), else `width-and-height` (a root's Label hugs).
+- **Text style.** `textStyle` is `{token: "text-<k>-<w>"}`, the Text Style its `text-<k>` and `font-<w>` utilities name (no weight utility is `normal`), where that style holds the layer's size, line height and weight and the layer sets no other font family (#160). Otherwise it is `{raw: {fontSize, lineHeight, fontWeight}}` at level `warning`, its reason naming each utility and why no Text Style fits: a size off the type scale (Button `sm`'s `text-[0.8rem]`), or a line height the step does not hold (CardTitle's `leading-snug`, Label's `leading-none`). A value is the node's own rules, then the root rules that target the part (`*:data-[slot=…]:…`, compiled to `:is(.x > *)[data-slot="…"]`), then the root's own rules, which the node inherits, then the base layer (`html` line-height 1.5). A `leading-*` line height is a ratio over the font size. `textResize` is `height` where the layer fills across (a part in its column), else `width-and-height` (a root's Label hugs).
 - **Colour.** The node's `fill` comes from the same cascade, through the same paint rules as the root: a plain token, or a Synthesized token named after the node (`alert-destructive-description-fill`, scope `TEXT_FILL`). With no colour utility it is the base layer's `body` colour.
 - **Visibility.** A root's Label is hidden where the root has a fixed width, the icon sizes, which are sized for their icon. A part's text layer always shows.
 - **Default text.** The property's `default` is a Drafted value, keyed `properties.<key>.default` (see the table below).
@@ -275,7 +296,7 @@ A value that neither the source nor a rule here states is drafted by an agent. T
   - utilities no field carries;
   - classes that compile to no CSS.
 - **Defaults.** The anatomy is the root, its icon slot frames, its text layers and its parts, and `properties` holds only the text layers' TEXT properties.
-- **Agent tier.** The anatomy below the slot frames and parts (a frame part's own children, text and paint), each slot's icon (an INSTANCE with an INSTANCE_SWAP, `icons.default` and `code.visibleWhen: {axis}`), other properties, bound Text Styles (#160) and excluded combinations are not drafted yet.
+- **Agent tier.** The anatomy below the slot frames and parts (a frame part's own children, text and paint), each slot's icon (an INSTANCE with an INSTANCE_SWAP, `icons.default` and `code.visibleWhen: {axis}`), other properties and excluded combinations are not drafted yet.
 
 ## 4. Preview renderer
 

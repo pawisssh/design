@@ -22,11 +22,12 @@
     },
     "files": {
       "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
+      "app/layout.tsx": "sha256:27471c24f05b096454dc3c3cc5ee4bc992eee8e5aedb6dc8e0b53c62148780f8",
       "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
       "components/ui/label.tsx": "sha256:344bde38b8531615dbf8e14af3895517c24d8ef6ce56ddeda7e2e6fe4b5d0c00",
       "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
     },
-    "snapshotId": "sha256:160c2f58b3f8e1e4e8b236c549344a7c10eb73d1dd3253d92e3481309a972fdc"
+    "snapshotId": "sha256:2fbc63c58aa952937092b9110e4a6accddae11732a7699f62ac878d29aece9c5"
   },
   "axes": [
     {
@@ -54,9 +55,30 @@
   "anatomy": {
     "name": "Label",
     "type": "COMPONENT",
-    "children": [{ "name": "Text", "type": "TEXT" }]
+    "children": [
+      {
+        "name": "Text",
+        "type": "TEXT"
+      }
+    ]
   },
-  "properties": [{ "key": "text", "label": "Text", "type": "TEXT", "default": "Label", "binds": [{ "node": "Text", "field": "characters" }], "code": { "prop": "children" } }],
+  "properties": [
+    {
+      "key": "text",
+      "label": "Text",
+      "type": "TEXT",
+      "default": "Label",
+      "binds": [
+        {
+          "node": "Text",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "children"
+      }
+    }
+  ],
   "layout": [
     {
       "match": {},
@@ -91,7 +113,7 @@
               "fontWeight": 500
             },
             "level": "warning",
-            "reason": "text-sm font-size 14px; leading-none line-height 14px; font-medium font-weight 500; the Foundations document has no Text Styles yet (#160)"
+            "reason": "text-sm font-size 14px; leading-none line-height 14px; font-medium font-weight 500; no Text Style: leading-none sets a line height off the type scale (text-sm is 20px)"
           },
           "textResize": "width-and-height"
         }
@@ -105,7 +127,11 @@
         "Label": {
           "fill": "none",
           "stroke": "none",
-          "opacity": { "raw": 1, "level": "info", "reason": "no opacity utility" },
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "no opacity utility"
+          },
           "effects": []
         },
         "Text": {
@@ -148,7 +174,7 @@
     {
       "level": "info",
       "at": "anatomy",
-      "message": "Text layers (#166), each a TEXT node with a TEXT property: Text: Label's children (code.prop children). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Label, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value. The Text layer is hidden where Label has a fixed width (an icon size), which is sized for its icon."
+      "message": "Text layers (#166), each a TEXT node with a TEXT property: Text: Label's children (code.prop children). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Label, then app/globals.css's base layer (html line-height, body color). Each binds the Text Style its size and weight utilities name where it holds those values, else its text style is raw, saying why (#160); the default text is a Drafted value. The Text layer is hidden where Label has a fixed width (an icon size), which is sized for its icon."
     },
     {
       "level": "info",

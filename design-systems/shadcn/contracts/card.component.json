@@ -22,11 +22,12 @@
     },
     "files": {
       "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
+      "app/layout.tsx": "sha256:27471c24f05b096454dc3c3cc5ee4bc992eee8e5aedb6dc8e0b53c62148780f8",
       "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
       "components/ui/card.tsx": "sha256:8ad3a18d36bda0598dc0e9aa96ea22854944d5443ee4946f1d173815e115375f",
       "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
     },
-    "snapshotId": "sha256:cdadc6b87cc40b244dfebf8d8c0ede671b1f1759c65db52c8c8eae0bd476a031"
+    "snapshotId": "sha256:caab2c63c6b24a6a664d471916bb30854545180451155ea24fc81af19d3cd296"
   },
   "axes": [
     {
@@ -180,7 +181,7 @@
               "fontWeight": 500
             },
             "level": "warning",
-            "reason": "text-base font-size 16px; leading-snug line-height 22px; font-medium font-weight 500; the Foundations document has no Text Styles yet (#160)"
+            "reason": "text-base font-size 16px; leading-snug line-height 22px; font-medium font-weight 500; no Text Style: leading-snug sets a line height off the type scale (text-base is 24px)"
           },
           "textResize": "height"
         },
@@ -188,13 +189,7 @@
           "width": "fill",
           "height": "hug",
           "textStyle": {
-            "raw": {
-              "fontSize": 14,
-              "lineHeight": 20,
-              "fontWeight": 400
-            },
-            "level": "warning",
-            "reason": "text-sm font-size 14px; text-sm line-height 20px; font-weight 400 (no utility); the Foundations document has no Text Styles yet (#160)"
+            "token": "text-sm-normal"
           },
           "textResize": "height"
         },
@@ -317,7 +312,7 @@
     {
       "level": "info",
       "at": "anatomy",
-      "message": "Text layers (#166), each a TEXT node with a TEXT property: Title: CardTitle's children (code.child CardTitle); Description: CardDescription's children (code.child CardDescription). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Card, then app/globals.css's base layer (html line-height, body color). The text style is raw until the Foundations document has Text Styles (#160); the default text is a Drafted value."
+      "message": "Text layers (#166), each a TEXT node with a TEXT property: Title: CardTitle's children (code.child CardTitle); Description: CardDescription's children (code.child CardDescription). Each one's text style (font-size, line-height, font-weight) and colour are its own utilities, then what it inherits from Card, then app/globals.css's base layer (html line-height, body color). Each binds the Text Style its size and weight utilities name where it holds those values, else its text style is raw, saying why (#160); the default text is a Drafted value."
     },
     {
       "level": "info",

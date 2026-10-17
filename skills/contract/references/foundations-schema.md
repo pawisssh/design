@@ -52,6 +52,8 @@ The shadcn collections, from the Generic Adapter ([`adapter-generic`](../../adap
 | `theme` | `Theme` | `light` Light (`:root`), `dark` Dark (`.dark`) | Every colour custom property of the project's global CSS. Component tokens (`sidebar`, `sidebar-*`, `chart-*`) carry `family`. Then each Component Family's Synthesized tokens (#120, ADR 0009): `Button/button-outline-fill` and the rest, with `family` and `source: "synthesized: <file>:<lines> <utilities>"`. |
 | `layout` | `Layout` | `default` | `Spacing/spacing-<step>` (Tailwind's classic scale over `--spacing`) and `Radius/radius-<k>` (the `@theme --radius-*` steps over `--radius`). |
 
+shadcn has no Type collection. Its 117 Text Styles, `Text/text-<k>-<w>`, are Tailwind's type scale at each font weight in the family `--font-sans` names (Geist, through next/font), with literal fields and no `binds` (#160). See the [Generic Adapter's Text Styles](../../adapter-generic/SKILL.md#text-styles).
+
 - **Modes are keyed by the Code Library's theme key** (`white`, `g10`, `g90`, `g100`), not by the Figma label. `label` is the Figma mode name, so renaming a label never breaks values or the ledger, the same rule as Contract axis values. The Adapter iterates this fixed list, so extra DTCG keys such as `button-separator`'s `fallback` are ignored.
 - Single-mode collections use the mode key `default` (label `Default`).
 - A Layer variable takes its Figma group from its level-one target (`Field/field`, `Border/border-subtle`), so a group selected for a subset build brings its Layer tokens with it. Layer is built after Theme, because its aliases need their targets first.
@@ -157,6 +159,7 @@ Scopes only filter Figma's picker. The Plugin API binds a variable regardless of
 ```
 
 - The map key is the flat name a Contract uses in `textStyle: {token}`. Text Styles live in their own map. A name may not appear in both `variables` and `textStyles`, so the builder resolves `textStyle` through `textStyles` and every other field through `variables`.
+- `binds` is optional. A style without it (shadcn's, #160) is literals only, and `letterSpacing` may be `PERCENT` (`0%`, the browser's `normal`).
 - The literal fields are what the builder writes first, so the style is correct even before the binds are applied. `binds` then attaches the Type variables (`TextStyle.setBoundVariable`).
 - Type variable flat names are Carbon's own custom property names (`body-compact-01-font-size`). One shared STRING variable per family serves every style of that family: `font-family-sans`, `font-family-mono` (`code-*`) and `font-family-serif` (`fluid-quotation-*`), each holding the first family of Carbon's stack.
 - **All 36 `@carbon/type` styles** are emitted, each under the current name an alias points at (`bodyCompact01 = bodyShort01` → `body-compact-01`; `heading07 = productiveHeading07` → `heading-07`), or its own name when no alias does. Legacy names (`body-short-01`) are not emitted; a Contract that uses one fails generation as not found.
