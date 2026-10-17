@@ -234,7 +234,9 @@ export async function generate({ project, families = [], drafts = [], tools = DE
     },
     closure: { contracts: [], tokens: [] },
     collections: [
-      { key: 'theme', name: 'Theme', modes: MODES.map(([selector, key, label]) => ({ key, label, selector })) },
+      // The default Mode is the page itself (`:root`), so only the others record the class that switches to them:
+      // To-preview and To-handoff apply a Mode as one class (#109).
+      { key: 'theme', name: 'Theme', modes: MODES.map(([selector, key, label], i) => ({ key, label, ...(i && { selector }) })) },
       { key: 'layout', name: 'Layout', modes: [{ key: 'default', label: 'Default' }] },
     ],
     variables: ordered(variables),
