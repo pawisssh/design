@@ -27,8 +27,9 @@ const skip = hasTools() ? false : 'Generic Adapter tools missing: run node skill
 const VARIANT_KEYS = ['axes.variant.label', ...['default', 'destructive', 'ghost', 'link', 'outline', 'secondary'].map(v => `axes.variant.values.${v}.label`)];
 const SIZE_VALUES = ['default', 'icon', 'icon-lg', 'icon-sm', 'icon-xs', 'lg', 'sm', 'xs'];
 const SIZE_KEYS = ['axes.size.label', ...SIZE_VALUES.map(v => `axes.size.values.${v}.label`)];
+const ATTRIBUTE_KEYS = ['axes.expanded.label', 'axes.invalid.label'];
 const FAMILY_KEYS = ['family.description', 'figma.grid'];
-const ALL_KEYS = [...SIZE_KEYS, ...VARIANT_KEYS, ...FAMILY_KEYS].sort();
+const ALL_KEYS = [...SIZE_KEYS, ...VARIANT_KEYS, ...ATTRIBUTE_KEYS, ...FAMILY_KEYS].sort();
 
 // #65's simulated upgrades (prototype/generic-drafts make-v2.mjs and make-v3.mjs), as edits per file.
 const UPGRADE_1 = {
@@ -40,7 +41,7 @@ const UPGRADE_2 = {
   'components/ui/button.tsx': t => t.replace('        xs: ', '        xxs: '),
   'components/ui/alert.tsx': t => t.replace(' has-[>svg]:grid-cols-[auto_1fr]', ''),
   'components/ui/card.tsx': t => t
-    .replace('function CardContent(', 'function CardMedia({ className, ...props }: React.ComponentProps<"div">) {\n  return <div data-slot="card-media" className={cn("overflow-hidden", className)} {...props} />\n}\n\nfunction CardContent(')
+    .replace('function CardContent(', 'function CardMedia({ className, ...props }: React.ComponentProps<"div">) {\n  return <div data-slot="card-media" className={cn("aspect-video w-full overflow-hidden", className)} {...props} />\n}\n\nfunction CardContent(')
     .replace('  CardHeader,\n', '  CardHeader,\n  CardMedia,\n')
     .replace('"flex items-center rounded-b-xl', '"flex flex-col items-center rounded-b-xl')
     .replace('font-heading text-base leading-snug', 'font-heading text-lg leading-snug'),
@@ -91,9 +92,19 @@ test('from no prior Contract, the v1 drafts file gives the committed Button Cont
   assert.deepEqual(validate(contract, foundations).errors, []);
 });
 
-test('the exact-tier axis labels stay rule-made: attribute, Slot and State axes are not drafted', { skip }, () => {
-  for (const key of ['invalid', 'expanded', 'icon-inline-start', 'icon-inline-end', 'state'])
+test('rule-made labels are not drafted: Slot and State axes, and the attribute axes\' state-word values', { skip }, () => {
+  for (const key of ['icon-inline-start', 'icon-inline-end', 'state'])
     assert.ok(!Object.keys(committed.drafted).some(k => k.startsWith(`axes.${key}.`)), key);
+  for (const key of ['invalid', 'expanded'])
+    assert.ok(!Object.keys(committed.drafted).some(k => k.startsWith(`axes.${key}.values.`)), key);
+});
+
+test('evidence cites the line of the key it is drafted from', { skip }, () => {
+  const at = key => committed.drafted[key].evidence[0];
+  assert.match(at('axes.size.label'), /^components\/ui\/button\.tsx:L22 buttonVariants variants\.size: "default", "xs"/);
+  assert.match(at('axes.size.values.default.label'), /:L23 size "default" in buttonVariants variants$/);
+  assert.match(at('axes.size.values.icon-xs.label'), /:L29 size "icon-xs"/);
+  assert.match(at('axes.invalid.label'), /aria-invalid:\S+ styles \[aria-invalid="true"\]; prefixes .*aria-invalid/);
 });
 
 test('with no prior Contract and no drafts, every subject is requested and no Contract is made', { skip }, async () => {
@@ -137,7 +148,7 @@ test('the CLI asks for drafts with exit code 2, writing the requests and no Cont
   const requests = join(dir, 'button.requests.json');
   const asked = spawnSync('node', [CLI, '--family', 'button', '-o', out, '--requests', requests], { encoding: 'utf8' });
   assert.equal(asked.status, 2, asked.stderr);
-  assert.match(asked.stdout, /18 Drafted values needed/);
+  assert.match(asked.stdout, /20 Drafted values needed/);
   assert.throws(() => readFileSync(out), /ENOENT/);
   const file = JSON.parse(readFileSync(requests, 'utf8'));
   assert.equal(file.family, 'button');
@@ -164,11 +175,12 @@ test('upgrade 2 (xs renamed xxs; Alert and Card edited): size labels and family-
   assert.equal(asked.contract, null);
   const reopened = [...SIZE_KEYS.filter(k => !k.includes('.xs.')), ...FAMILY_KEYS].sort();
   assert.deepEqual(sorted(asked.report), {
-    carried: VARIANT_KEYS.slice().sort(), reopened, vanished: ['axes.size.values.xs.label'], missing: ['axes.size.values.xxs.label'],
+    carried: [...VARIANT_KEYS, ...ATTRIBUTE_KEYS].sort(), reopened, vanished: ['axes.size.values.xs.label'], missing: ['axes.size.values.xxs.label'],
     owner: [], ownerCheck: [], unused: [] });
   assert.deepEqual(asked.requests.map(r => r.key).sort(), [...reopened, 'axes.size.values.xxs.label'].sort());
   const lg = asked.requests.find(r => r.key === 'axes.size.values.lg.label');
   assert.equal(lg.prior, 'Large');
+  assert.match(lg.fingerprint, /^sha256:[0-9a-f]{64}$/);
   assert.match(lg.brief, /keep it unless the new evidence contradicts it/i);
   assert.deepEqual(asked.requests.find(r => r.key === 'figma.grid').prior, prior.figma.grid);
   assert.equal(asked.requests.find(r => r.key === 'axes.size.values.xxs.label').prior, undefined);
@@ -232,4 +244,26 @@ test('drafts for another family are refused by the CLI', { skip }, () => {
   const r = spawnSync('node', [CLI, '--family', 'button', '-o', join(dir, 'out.json'), '--drafts', file], { encoding: 'utf8' });
   assert.equal(r.status, 1);
   assert.match(r.stderr, /drafts for "card", not "button"/);
+});
+
+test('an unchanged snapshot keeps the owner\'s omit patch: nothing is written unless --rewrite applies the Adapter\'s rules', { skip }, async () => {
+  const prior = structuredClone(committed);
+  prior.selection.omit = [...prior.selection.omit, { match: { variant: 'link', size: 'icon-lg' } }];
+  const same = await generate({ project: FIXTURE, family: 'button', foundations, prior });
+  assert.equal(same.unchanged, true);
+  assert.equal(same.contract, prior);
+  const rewritten = await generate({ project: FIXTURE, family: 'button', foundations, prior, rewrite: true });
+  assert.equal(rewritten.unchanged, false);
+  assert.deepEqual(rewritten.contract, committed);
+});
+
+test('an owner value the subject no longer accepts is reopened, anchored on it, and listed for a check', { skip }, async () => {
+  const prior = structuredClone(committed);
+  prior.figma.grid = { columns: ['state'], rows: ['variant', 'size'] };
+  prior.drafted['figma.grid'] = { by: 'owner', was: committed.figma.grid };
+  const { contract, report, requests } = await generate({ project: FIXTURE, family: 'button', foundations, prior });
+  assert.equal(contract, null);
+  assert.deepEqual(report.reopened, ['figma.grid']);
+  assert.deepEqual(report.ownerCheck, ['figma.grid']);
+  assert.deepEqual(requests.map(r => [r.key, r.prior]), [['figma.grid', prior.figma.grid]]);
 });

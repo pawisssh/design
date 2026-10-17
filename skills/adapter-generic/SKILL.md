@@ -125,7 +125,7 @@ A literal `@theme --color-*` (not `var(…)`) gets a warning note and is not car
 
 ```
 node skills/adapter-generic/scripts/components.mjs --family <key> [--project <dir>] [--foundations <file>] [--tools <dir>] [-o <file>]
-  [--drafts <file>] [--requests <file>]
+  [--drafts <file>] [--requests <file>] [--rewrite]
 ```
 
 It reads one component family of the project, `<ui alias>/<key>.tsx`, and writes the draft Contract `design-systems/shadcn/contracts/<key>.component.json`. It checks the Contract with [`contract.mjs`](../contract/scripts/contract.mjs) `validate` and writes it with [`io.mjs`](../contract/scripts/io.mjs) `writeJson`. A rerun writes nothing when nothing changed. The seams are `readFamily({project, family, foundations})` (the exact-tier reading, with the family's Synthesized tokens) and `generate({project, family, foundations, prior, drafts})`, which merges the [Drafted values](#agent-tier-drafted-values).
@@ -218,19 +218,23 @@ A value that neither the source nor a rule here states is drafted by an agent. T
 
   | Key | Evidence | Fingerprint pins |
   |---|---|---|
-  | `axes.<cva axis>.label`, `axes.<cva axis>.values.<value>.label` | the cva line of the value | the axis's value keys |
-  | `family.description`, `figma.grid` | the root export and the cva call | every axis's key, value keys and default; the exported parts |
+  | `axes.<cva axis>.label`, `axes.<cva axis>.values.<value>.label` | the line of the axis or value key | the axis's value keys |
+  | `axes.<attribute axis>.label` | the first utility that styles the attribute | the variant prefixes of its utilities (`aria-invalid`, `dark:aria-invalid`) |
+  | `family.description`, `figma.grid` | the root export and the cva variants | every axis's key, value keys and default; the exported parts |
 
-  Attribute, Slot and State axis labels are rules, so they are not drafted. The Title Case labels, the `size`-across grid and the description naming the source file only fill the Contract that the Foundations step builds for its closure.
+  Slot and State axis labels and an attribute axis's value labels (its state words) are rules, so they are not drafted.
+- **Placeholders.** The Foundations step builds the Contract only for its closure, without drafts. That Contract keeps placeholders: Title Case labels, `size` across in the grid, and a description that names the source file.
 - **A run** reads the prior Contract at `-o` and, per key:
-  - an owner entry is kept with its value. When the snapshot changed it is also listed under `ownerCheck`, because an owner entry has no fingerprint to show whether its evidence moved;
+  - an owner entry is kept with its value. When the snapshot changed it is also listed under `ownerCheck`, because an owner entry has no fingerprint to show whether its evidence moved. An owner value the key no longer accepts, such as a grid without a new axis, is reopened and listed under `ownerCheck`;
   - an agent entry whose fingerprint is unchanged is carried verbatim;
   - a moved fingerprint reopens the entry, and a key with no entry is missing. Each takes its value from `--drafts`, or is requested;
-  - a prior entry whose subject is gone, such as a renamed axis value's label, is dropped and listed as vanished.
-- **Requests.** While one is open, the CLI writes no Contract. It writes `{family, requests: [{key, evidence, brief, prior}]}` to `--requests` (default `.scratch/adapter-generic/drafts/<key>.requests.json`) and exits 2. A reopened request carries `prior` and asks to keep it unless the new evidence contradicts it. The agent answers with a drafts file, `{"family": "<key>", "drafts": {"<key>": <value>}}`, and the step runs again with `--drafts <file>`.
+  - a prior entry whose subject is gone, such as a renamed axis value's label, is dropped and listed as vanished. An owner entry is dropped too, since every key must name a value (rule 9).
+  - a carried entry keeps its evidence verbatim, line numbers included, so a line that moved without moving the fingerprint is not rewritten.
+- **Requests.** While one is open, the CLI writes no Contract. It writes `{family, requests: [{key, evidence, fingerprint, brief, prior}]}` to `--requests` (default `.scratch/adapter-generic/drafts/<key>.requests.json`) and exits 2. A reopened request carries `prior` and asks to keep it unless the new evidence contradicts it. The agent answers with a drafts file, `{"family": "<key>", "drafts": {"<key>": <value>}}`, and the step runs again with `--drafts <file>`.
   - A label or a description is a non-empty string. A grid is `{columns, rows}`, naming every axis exactly once with at least one column. Anything else fails, naming the key.
   - A draft that no open key takes is reported as unused.
-- **Unchanged.** When the merged Contract has the prior's `contentHash`, the CLI prints `unchanged` and writes nothing, so an approval stands. Otherwise the Contract is written as a draft (`approval: null`).
+- **Unchanged.** On the prior's snapshot with no Drafted value reopened, missing or vanished, or when the merged Contract has the prior's `contentHash`, the CLI prints `unchanged` and writes nothing. The owner's omit patch, a tweak and the approval stand. Otherwise the Contract is written as a draft (`approval: null`).
+  - `--rewrite` writes on an unchanged snapshot anyway, to apply a change of the Adapter's own rules. It still carries the Drafted values.
 - **Button.** The committed Contract was drafted from [`fixtures/drafts/button.json`](fixtures/drafts/button.json). It stays a draft until the owner approves it in To-design's base loop.
 
 ### Left for later tickets

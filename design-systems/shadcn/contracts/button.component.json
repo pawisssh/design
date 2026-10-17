@@ -1066,17 +1066,31 @@
     }
   ],
   "drafted": {
+    "axes.expanded.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L13 aria-expanded:bg-muted styles [aria-expanded=\"true\"]; prefixes aria-expanded"
+      ],
+      "fingerprint": "sha256:201decbe1d204298e374e708de68f630dca7e99a9b55ad4a9f27c244a2d5c54c"
+    },
+    "axes.invalid.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L7 aria-invalid:border-destructive styles [aria-invalid=\"true\"]; prefixes aria-invalid, dark:aria-invalid"
+      ],
+      "fingerprint": "sha256:b514d8e286761c45e3cd9af0cfbca247bdf3f5800ce484252a12dca14b984ba0"
+    },
     "axes.size.label": {
       "by": "agent",
       "evidence": [
-        "components/ui/button.tsx:L24 buttonVariants variants.size: \"default\", \"xs\", \"sm\", \"lg\", \"icon\", \"icon-xs\", \"icon-sm\", \"icon-lg\""
+        "components/ui/button.tsx:L22 buttonVariants variants.size: \"default\", \"xs\", \"sm\", \"lg\", \"icon\", \"icon-xs\", \"icon-sm\", \"icon-lg\""
       ],
       "fingerprint": "sha256:f4ba0a5a7168c7a535475b5f011c828aea59267bea2aeb26fc35483c8b83a588"
     },
     "axes.size.values.default.label": {
       "by": "agent",
       "evidence": [
-        "components/ui/button.tsx:L24 size \"default\" in buttonVariants variants"
+        "components/ui/button.tsx:L23 size \"default\" in buttonVariants variants"
       ],
       "fingerprint": "sha256:f4ba0a5a7168c7a535475b5f011c828aea59267bea2aeb26fc35483c8b83a588"
     },
@@ -1090,14 +1104,14 @@
     "axes.size.values.icon-sm.label": {
       "by": "agent",
       "evidence": [
-        "components/ui/button.tsx:L32 size \"icon-sm\" in buttonVariants variants"
+        "components/ui/button.tsx:L31 size \"icon-sm\" in buttonVariants variants"
       ],
       "fingerprint": "sha256:f4ba0a5a7168c7a535475b5f011c828aea59267bea2aeb26fc35483c8b83a588"
     },
     "axes.size.values.icon-xs.label": {
       "by": "agent",
       "evidence": [
-        "components/ui/button.tsx:L30 size \"icon-xs\" in buttonVariants variants"
+        "components/ui/button.tsx:L29 size \"icon-xs\" in buttonVariants variants"
       ],
       "fingerprint": "sha256:f4ba0a5a7168c7a535475b5f011c828aea59267bea2aeb26fc35483c8b83a588"
     },
@@ -1132,7 +1146,7 @@
     "axes.variant.label": {
       "by": "agent",
       "evidence": [
-        "components/ui/button.tsx:L11 buttonVariants variants.variant: \"default\", \"outline\", \"secondary\", \"ghost\", \"destructive\", \"link\""
+        "components/ui/button.tsx:L10 buttonVariants variants.variant: \"default\", \"outline\", \"secondary\", \"ghost\", \"destructive\", \"link\""
       ],
       "fingerprint": "sha256:2caa446def0f6d856508d57f6d4b923aabd172d50c1d9b5026cb8c3fd531c97a"
     },
@@ -1146,14 +1160,14 @@
     "axes.variant.values.destructive.label": {
       "by": "agent",
       "evidence": [
-        "components/ui/button.tsx:L19 variant \"destructive\" in buttonVariants variants"
+        "components/ui/button.tsx:L18 variant \"destructive\" in buttonVariants variants"
       ],
       "fingerprint": "sha256:2caa446def0f6d856508d57f6d4b923aabd172d50c1d9b5026cb8c3fd531c97a"
     },
     "axes.variant.values.ghost.label": {
       "by": "agent",
       "evidence": [
-        "components/ui/button.tsx:L17 variant \"ghost\" in buttonVariants variants"
+        "components/ui/button.tsx:L16 variant \"ghost\" in buttonVariants variants"
       ],
       "fingerprint": "sha256:2caa446def0f6d856508d57f6d4b923aabd172d50c1d9b5026cb8c3fd531c97a"
     },
@@ -1167,14 +1181,14 @@
     "axes.variant.values.outline.label": {
       "by": "agent",
       "evidence": [
-        "components/ui/button.tsx:L13 variant \"outline\" in buttonVariants variants"
+        "components/ui/button.tsx:L12 variant \"outline\" in buttonVariants variants"
       ],
       "fingerprint": "sha256:2caa446def0f6d856508d57f6d4b923aabd172d50c1d9b5026cb8c3fd531c97a"
     },
     "axes.variant.values.secondary.label": {
       "by": "agent",
       "evidence": [
-        "components/ui/button.tsx:L15 variant \"secondary\" in buttonVariants variants"
+        "components/ui/button.tsx:L14 variant \"secondary\" in buttonVariants variants"
       ],
       "fingerprint": "sha256:2caa446def0f6d856508d57f6d4b923aabd172d50c1d9b5026cb8c3fd531c97a"
     },
@@ -1182,14 +1196,14 @@
       "by": "agent",
       "evidence": [
         "components/ui/button.tsx:L43 exports Button, rendered as <button>",
-        "components/ui/button.tsx:L7 buttonVariants; the Contract's axes: variant (6), size (8), invalid (2), expanded (2), icon-inline-start (2), icon-inline-end (2), state (4)"
+        "components/ui/button.tsx:L10 buttonVariants variants; the Contract's axes: variant (6), size (8), invalid (2), expanded (2), icon-inline-start (2), icon-inline-end (2), state (4)"
       ],
       "fingerprint": "sha256:804498718cf447b62c186ae04298168694f0cd399e18c4ff9855d7c5f8e2ba2c"
     },
     "figma.grid": {
       "by": "agent",
       "evidence": [
-        "components/ui/button.tsx:L7 buttonVariants; the Contract's axes: variant (6), size (8), invalid (2), expanded (2), icon-inline-start (2), icon-inline-end (2), state (4)"
+        "components/ui/button.tsx:L10 buttonVariants variants; the Contract's axes: variant (6), size (8), invalid (2), expanded (2), icon-inline-start (2), icon-inline-end (2), state (4)"
       ],
       "fingerprint": "sha256:804498718cf447b62c186ae04298168694f0cd399e18c4ff9855d7c5f8e2ba2c"
     }

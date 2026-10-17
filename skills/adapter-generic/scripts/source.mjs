@@ -13,9 +13,10 @@ const loaded = {};
 const typescript = tools => (loaded[tools] = loaded[tools] || createRequire(import.meta.url)(join(toolDir('typescript', tools), 'lib/typescript.js')));
 
 /**
- * Read one component file. Returns {cvas: {name: {base, variants, defaults, compound}}, components: [...]}:
+ * Read one component file. Returns {cvas: {name: {base, variants, keys, defaults, compound}}, components: [...]}:
  * - a class list is {classes, line};
- * - `variants` is {axis: {value: classList}}, in source order; `compound` is [{match, classes, line}];
+ * - `variants` is {axis: {value: classList}}, in source order; `keys` is {axis: {line, values: {value: line}}}, the
+ *   lines of the keys themselves; `compound` is [{match, classes, line}];
  * - a component is {name, line, exported, element, slot, cva, attrs: {attr: {prop} | {value}}, defaults, unions,
  *   classes: [classList]}. `element` is the intrinsic tag, also through `const Comp = cond ? X : "button"`.
  */
@@ -25,8 +26,8 @@ export function readSource(text, file, { tools = DEFAULT_DIR } = {}) {
   const line = n => sf.getLineAndCharacterOfPosition(n.getStart()).line + 1;
   const literal = n => (n && (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) ? n.text : undefined);
   const keyOf = p => (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name) ? p.name.text : p.name.getText());
-  const members = n => (n && ts.isObjectLiteralExpression(n)
-    ? Object.fromEntries(n.properties.filter(ts.isPropertyAssignment).map(p => [keyOf(p), p.initializer])) : {});
+  const assignments = n => (n && ts.isObjectLiteralExpression(n) ? n.properties.filter(ts.isPropertyAssignment) : []);
+  const members = n => Object.fromEntries(assignments(n).map(p => [keyOf(p), p.initializer]));
   const classList = n => ({ classes: literal(n), line: line(n) });
   const valueOf = n => {
     if (literal(n) !== undefined) return literal(n);
@@ -51,6 +52,8 @@ export function readSource(text, file, { tools = DEFAULT_DIR } = {}) {
         const variants = {};
         for (const [axis, values] of Object.entries(members(c.variants)))
           variants[axis] = Object.fromEntries(Object.entries(members(values)).map(([k, v]) => [k, classList(v)]));
+        const keys = Object.fromEntries(assignments(c.variants).map(p =>
+          [keyOf(p), { line: line(p), values: Object.fromEntries(assignments(p.initializer).map(q => [keyOf(q), line(q)])) }]));
         const defaults = Object.fromEntries(Object.entries(members(c.defaultVariants)).map(([k, v]) => [k, valueOf(v)]));
         const compound = c.compoundVariants && ts.isArrayLiteralExpression(c.compoundVariants)
           ? c.compoundVariants.elements.map(el => {
@@ -60,7 +63,7 @@ export function readSource(text, file, { tools = DEFAULT_DIR } = {}) {
               classes: literal(cls), line: line(cls) };
           })
           : [];
-        cvas[d.name.text] = { base: classList(base), variants, defaults, compound };
+        cvas[d.name.text] = { base: classList(base), variants, keys, defaults, compound };
       }
     if (ts.isFunctionDeclaration(st) && st.name) components.push(readFunction(st));
   }

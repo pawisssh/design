@@ -4,12 +4,13 @@
 // Never edit its output by hand.
 //
 //   node skills/adapter-generic/scripts/components.mjs --family <key> [--project <dir>] [--foundations <file>]
-//     [--tools <dir>] [-o <file>] [--drafts <file>] [--requests <file>]
+//     [--tools <dir>] [-o <file>] [--drafts <file>] [--requests <file>] [--rewrite]
 //
 // The Contract at -o, when there is one, is the prior: its Drafted values are carried while their fingerprints hold.
 // A reopened or missing one is taken from --drafts ({"family", "drafts": {key: value}}); while one has no value, the
 // CLI writes the requests (default .scratch/adapter-generic/drafts/<family>.requests.json), no Contract, and exits 2.
-// When nothing changed it writes nothing, so an approval stands.
+// On the prior's snapshot with every Drafted value settled it writes nothing, so an approval stands; --rewrite
+// writes anyway, to apply a change of the Adapter's own rules.
 //
 // Defaults: the committed fixture project (sources.mjs FIXTURE), its Foundations document
 // design-systems/shadcn/shadcn.foundations.json, output design-systems/shadcn/contracts/<family>.component.json.
@@ -547,8 +548,16 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     notes.push({ level: 'verify', at: 'selection', message: `${expectedCount} variants: past ADR 0004's ~${VARIANT_LIMIT}. Only attribute twins are omitted and nothing else is cut; probe the build cost before building it, or narrow it with selection.omit.` });
 
   // The source facts the agent tier's evidence and fingerprints are drawn from (drafts.mjs).
-  const facts = { line: root.line, cva: root.cva, cvaLine: cv.base.line, parts: exportedParts,
-    variants: Object.fromEntries(Object.entries(cv.variants).map(([axis, values]) => [axis, Object.fromEntries(Object.entries(values).map(([v, l]) => [v, l.line]))])) };
+  // An attribute axis is evidenced by its first utility and pinned by its utilities' variant prefixes (`aria-invalid`,
+  // `dark:aria-invalid`), the set #65 names for state and attribute axes.
+  const attributes = {};
+  for (const [attr, ax] of Object.entries(ATTR_AXES)) {
+    if (!attrsUsed.has(attr)) continue;
+    const using = entries.filter(e => e.candidate.split(':').slice(0, -1).some(v => v === attr || v.startsWith(`${attr}=`)));
+    attributes[ax.key] = { attr, line: using[0].line, candidate: using[0].candidate,
+      prefixes: [...new Set(using.map(e => e.candidate.split(':').slice(0, -1).join(':')))].sort(byKey) };
+  }
+  const facts = { line: root.line, cva: root.cva, parts: exportedParts, variants: cv.keys, attributes };
 
   return { name: Name, file, files: sortedFiles, element: root.element, axes, anatomy, layout, paint,
     synthesized: Object.fromEntries(Object.keys(synthesized).sort(byKey).map(k => [k, synthesized[k]])),
@@ -703,9 +712,11 @@ export function contractFor(f, family, foundations) {
  * Throws when the document does not match, on a drafted value of the wrong shape, or when the Contract does not
  * validate.
  * @returns {contract, unchanged, report, requests, summary}: `contract` is null while a request is open, and is
- * `prior` itself when nothing it holds changed (`unchanged`), so a caller writes nothing and an approval stands.
+ * `prior` itself (`unchanged`) when it holds the same content, or when its snapshot is this one and no Drafted value
+ * reopened, went missing or vanished (ADR 0010: an unchanged snapshot writes nothing, so the owner's omit patch, a
+ * tweak and the approval stand). `rewrite` drops the second case, to apply a change of the Adapter's own rules.
  */
-export async function generate({ project, family, foundations, prior = null, drafts = {}, tools = DEFAULT_DIR }) {
+export async function generate({ project, family, foundations, prior = null, drafts = {}, rewrite = false, tools = DEFAULT_DIR }) {
   if (prior && prior.family.key !== family) fail(`the prior Contract is for "${prior.family.key}", not "${family}"`);
   const f = await readFamily({ project, family, foundations, tools });
   const json = v => JSON.stringify(v);
@@ -726,7 +737,9 @@ export async function generate({ project, family, foundations, prior = null, dra
   if (!contract) return { contract, unchanged: false, report, requests, summary };
   const { errors } = validate(contract, foundations);
   if (errors.length) fail(`the Contract does not validate:\n${errors.map(e => `  rule ${e.rule} ${e.at}: ${e.message}`).join('\n')}`);
-  const unchanged = prior !== null && contentHash(contract) === contentHash(prior);
+  const settled = !rewrite && prior !== null && prior.source.snapshotId === contract.source.snapshotId
+    && !report.reopened.length && !report.missing.length && !report.vanished.length;
+  const unchanged = settled || (prior !== null && contentHash(contract) === contentHash(prior));
   return { contract: unchanged ? prior : contract, unchanged, report, requests, summary };
 }
 
@@ -752,14 +765,15 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
       if (file.family !== family) fail(`--drafts holds drafts for "${file.family}", not "${family}"`);
       drafts = file.drafts;
     }
-    const { contract, unchanged, report, requests, summary } = await generate({ project, family, foundations, prior, drafts, tools });
+    const rewrite = args.includes('--rewrite');
+    const { contract, unchanged, report, requests, summary } = await generate({ project, family, foundations, prior, drafts, rewrite, tools });
     if (!contract) {
       writeJson(requestsPath, { family, requests });
       console.log([...summary, `${requests.length} Drafted values needed (reopened ${report.reopened.length}, missing ${report.missing.length}): wrote ${relative(process.cwd(), requestsPath)}`,
         `Draft each one, then run again with --drafts <file> holding {"family": "${family}", "drafts": {"<key>": <value>}}.`].join('\n'));
       process.exit(2);
     }
-    if (unchanged) console.log([...summary, `unchanged: ${relative(process.cwd(), out)} not written`, 'OK'].join('\n'));
+    if (unchanged) console.log([...summary, `unchanged: ${relative(process.cwd(), out)} not written (--rewrite applies a change of the Adapter's rules)`, 'OK'].join('\n'));
     else {
       writeJson(out, contract);
       console.log([...summary, `wrote ${relative(process.cwd(), out)}`, 'OK'].join('\n'));
