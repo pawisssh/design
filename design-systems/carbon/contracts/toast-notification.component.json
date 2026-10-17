@@ -85,10 +85,10 @@
   ],
   "excluded": [],
   "selection": {
-    "status": "draft",
+    "status": "approved",
     "omit": [],
     "expectedCount": 6,
-    "approval": null
+    "approval": { "by": "owner", "at": "2026-10-17T00:00:00Z", "snapshotId": "sha256:43954adf2ff1b4015bfe8fb98a58492ea6ec309e3f4f32a316d9003e9119ab8f", "contentHash": "sha256:80115c9a4a94214a3fe56b4a8cce2ec2d3f50c2611cc413f548897b18d750671" }
   },
   "anatomy": {
     "name": "Toast notification",
