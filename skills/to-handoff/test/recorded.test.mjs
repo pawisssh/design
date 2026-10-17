@@ -10,6 +10,7 @@ import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hasRuntime } from '../scripts/deps.mjs';
 import { generate, render } from '../scripts/handoff.mjs';
+import { rewriteJson } from '../../contract/scripts/io.mjs';
 import { PROTOTYPE, repo } from './helpers.mjs';
 
 const noRuntime = !hasRuntime() && 'runtime reader missing (packages or browser); run: node skills/to-handoff/scripts/deps.mjs';
@@ -50,7 +51,9 @@ for (const { ds, feature, prototype } of RECORDED) {
       assert.deepEqual(result.requests.map(r => r.key), [], 'the committed decisions answer every request');
       const old = JSON.parse(readFileSync(join(committed, 'handoff.json'), 'utf8'));
       // A fresh run is r1, pending; the stored revision, status and approval are history, outside the content.
-      const fresh = JSON.stringify({ ...result.handoff, revision: old.revision, status: old.status, approval: old.approval }, null, 2) + '\n';
+      // A Sign-off splices its status and approval into the pending text (io.mjs), so the fresh text gets them the same way.
+      const pending = JSON.stringify({ ...result.handoff, revision: old.revision }, null, 2) + '\n';
+      const fresh = rewriteJson(pending, { ...result.handoff, revision: old.revision, status: old.status, approval: old.approval });
       assert.equal(fresh, readFileSync(join(committed, 'handoff.json'), 'utf8'),
         `re-run: node skills/to-handoff/scripts/handoff.mjs generate <prototype> --ds design-systems/${ds} --decisions design-systems/${ds}/handoffs/${feature}/decisions.json`);
       // The Rendering stamps the revision, so it renders the fresh content under the stored one.
