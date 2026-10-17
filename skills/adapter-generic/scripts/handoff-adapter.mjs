@@ -33,8 +33,9 @@ export const breakpoints = [
 ];
 
 // The Contract-writing procedure To-handoff names for a family the project has with no Contract yet (#90): the
-// component step, which asks for its Drafted values, then the shared check.
-export const contractProcedure = 'Run node skills/adapter-generic/scripts/components.mjs --family <family> and draft the values it requests (skills/adapter-generic/SKILL.md), then run node skills/contract/scripts/check.mjs';
+// Foundations step with the new family beside the committed ones (the component step needs its Synthesized tokens
+// and closure entry), then the component step, which asks for its Drafted values, then the shared check.
+export const contractProcedure = 'Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for <family>; run node skills/adapter-generic/scripts/components.mjs --family <family> and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs';
 
 /**
  * The check a Contract written by `contractProcedure` must pass before To-handoff uses it: the shared Contract

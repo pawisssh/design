@@ -266,7 +266,7 @@ Unlike the reading tier, it runs code: the project's component files, transpiled
 node skills/to-preview/scripts/catalog.mjs design-systems/shadcn/contracts/button.component.json
 ```
 
-The To-handoff module's `roleGroups` match colours to `Color` and `Sidebar` tokens, lengths to `Spacing` and radii to `Radius`. Its surfaces are `background` and `card`, its breakpoints Tailwind's `--breakpoint-*`, and `checkContract` holds a Contract to the Design System's package pins and file hashes.
+The To-handoff module's `roleGroups` match colours to `Color` and `Sidebar` tokens, lengths to `Spacing` and radii to `Radius`. Its surfaces are `background` and `card`, its breakpoints Tailwind's `--breakpoint-*`, and `checkContract` holds a Contract to the Design System's package pins and file hashes. Its `contractProcedure`, for a family with no Contract yet, regenerates the Foundations document with `--family` for every committed family plus the new one (an explicit list replaces the default), then runs the component step with its drafts, then `check.mjs`.
 
 Tests: `node --test skills/adapter-generic/test/*.test.mjs`. They skip, saying so, until the tools are fetched; the catalog measurements also need To-handoff's browser (`node skills/to-handoff/scripts/deps.mjs`).
 
