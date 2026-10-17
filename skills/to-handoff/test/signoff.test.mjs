@@ -10,7 +10,7 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync,
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { proposalContentHash } from '../../contract/scripts/contract.mjs';
+import { approve as approveContract, proposalContentHash } from '../../contract/scripts/contract.mjs';
 import { hasDeps } from '../scripts/deps.mjs';
 import { approve, check, generate, handoffContentHash, loadDesignSystem, review, TEST_APPROVER, validateHandoff } from '../scripts/handoff.mjs';
 
@@ -38,7 +38,9 @@ const OWNER = {
 const SCRATCH = repo('.scratch/to-handoff-tests');
 after(() => rmSync(SCRATCH, { recursive: true, force: true }));
 
-function designSystem(base = SCRATCH) {
+// The form-controls fixtures are drafts. A draft Contract blocks Sign-off, so by default this Design System holds
+// them approved, as test inputs written only under .scratch/; `drafts` keeps the ones it names as drafts.
+function designSystem(base = SCRATCH, { drafts = [] } = {}) {
   mkdirSync(base, { recursive: true });
   const dir = mkdtempSync(join(base, 'ds-'));
   mkdirSync(join(dir, 'contracts'));
@@ -46,15 +48,17 @@ function designSystem(base = SCRATCH) {
   mkdirSync(join(dir, 'prototype'));
   copyFileSync(repo('design-systems/carbon/carbon.foundations.json'), join(dir, 'carbon.foundations.json'));
   copyFileSync(repo('design-systems/carbon/contracts/button.component.json'), join(dir, 'contracts/button.component.json'));
-  for (const f of ['text-input', 'select'])
-    copyFileSync(repo(`skills/contract/test/fixtures/form-controls/${f}.component.json`), join(dir, `contracts/${f}.component.json`));
+  for (const f of ['text-input', 'select']) {
+    const c = read(repo(`skills/contract/test/fixtures/form-controls/${f}.component.json`));
+    writeFileSync(join(dir, `contracts/${f}.component.json`), JSON.stringify(drafts.includes(f) ? c : approveContract(c, AT), null, 2) + '\n');
+  }
   copyFileSync(fixture('proposals/avatar-stack.proposal.json'), join(dir, 'proposals/avatar-stack.proposal.json'));
   copyFileSync(fixture('index.html'), join(dir, 'prototype/index.html'));
   return dir;
 }
 
-async function generated(decisions = { ...DECISIONS, ...OWNER }, base) {
-  const ds = designSystem(base);
+async function generated(decisions = { ...DECISIONS, ...OWNER }, base, options) {
+  const ds = designSystem(base, options);
   const prototype = join(ds, 'prototype/index.html');
   const result = await generate({ prototype, designSystem: ds, decisions });
   return { ds, prototype, result, handoffPath: result.path };
@@ -96,6 +100,19 @@ test('approve refuses while an owner question is open', { skip: noDeps }, async 
   const { ds, handoffPath } = await generated(DECISIONS);
   await assert.rejects(approve({ handoffPath, designSystem: ds, ...shown(ds, handoffPath), at: AT, test: true }), /open question to the owner: q-off-axis-email/);
   assert.ok(!existsSync(join(handoffPath, '../signed.json')));
+});
+
+test('a draft Contract the Handoff uses blocks sign-off: review lists it, approve refuses (Q21)', { skip: noDeps }, async () => {
+  const { ds, handoffPath } = await generated(undefined, undefined, { drafts: ['select'] });
+  const r = await review({ handoffPath, designSystem: ds });
+  assert.deepEqual(r.blocks, ['draft Contract select: the owner approves it before Sign-off']);
+  assert.match(r.text, /Blocks sign-off\n  draft Contract select: the owner approves it before Sign-off\n/);
+  await assert.rejects(approve({ handoffPath, designSystem: ds, ...shown(ds, handoffPath), at: AT, test: true }), /draft Contract select/);
+  assert.equal(read(handoffPath).status, 'pending');
+  assert.ok(!existsSync(join(handoffPath, '../signed.json')));
+  // Approved, it no longer blocks.
+  const all = await generated();
+  assert.deepEqual((await review({ handoffPath: all.handoffPath, designSystem: all.ds })).blocks, []);
 });
 
 test('approve refuses after a hash moved, a pending Proposal not shown, or a Proposal it does not use', { skip: noDeps }, async () => {
@@ -183,7 +200,7 @@ test('an owner decision whose key disappeared is dropped and listed', { skip: no
 });
 
 test('review prints the revision, hash, pins, agent marks, questions by addressee, Contracts, pending Proposals and the approve command', { skip: noDeps }, async () => {
-  const { ds, handoffPath } = await generated();
+  const { ds, handoffPath } = await generated(undefined, undefined, { drafts: ['text-input'] });
   // Another signed Handoff that pinned an older avatar-stack hash: this run's Proposal puts it into Drift.
   const other = read(handoffPath);
   other.feature.key = 'members';
@@ -209,7 +226,7 @@ test('review prints the revision, hash, pins, agent marks, questions by addresse
   assert.deepEqual(r.drifts, [{ handoff: 'members', proposal: 'avatar-stack' }]);
   assert.equal(r.approveCommand, `node skills/to-handoff/scripts/handoff.mjs approve ${handoffPath} --ds ${ds} --content-hash ${handoffContentHash(h)} --proposal avatar-stack=${proposalHash(ds)}`);
   assert.ok(r.text.includes(r.approveCommand));
-  assert.deepEqual(r.blocks, []);
+  assert.deepEqual(r.blocks, ['draft Contract text-input: the owner approves it before Sign-off']);
   const open = await generated(DECISIONS);
   assert.ok((await review({ handoffPath: open.handoffPath, designSystem: open.ds })).blocks.some(b => /q-font/.test(b)));
 });

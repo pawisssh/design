@@ -69,11 +69,16 @@ export function driftOf(handoff, system, prototype) {
   return drift;
 }
 
-/** What blocks sign-off (#64 §3): validation, an open question to the owner, a Design System pin that moved. */
+/**
+ * What blocks sign-off (#64 §3): validation, an open question to the owner, a draft Contract the Handoff uses
+ * (the Handoff takes its look from the Contract, so the owner approves it first), a Design System pin that moved.
+ */
 function blocksOf(handoff, system) {
   const blocks = [];
   for (const e of validateHandoff(handoff, system).errors) blocks.push(`validation [${e.rule}] ${e.message}`);
   for (const q of handoff.openQuestions || []) if (q.to === 'owner' && !q.answer) blocks.push(`open question to the owner: ${q.id}`);
+  for (const k of Object.keys((handoff.source && handoff.source.contracts) || {}))
+    if (system.contracts[k] && system.contracts[k].selection.status !== 'approved') blocks.push(`draft Contract ${k}: the owner approves it before Sign-off`);
   for (const d of driftOf(handoff, system)) blocks.push(`pinned ${d.kind === 'contract' ? 'Contract' : d.kind === 'proposal' ? 'Proposal' : 'Foundations'} ${d.key} moved: re-run To-handoff`);
   return blocks;
 }
