@@ -1,13 +1,13 @@
 ---
 name: to-handoff
-description: Turns a single-HTML-file Prototype into a validated Handoff (handoff.json) against a Design System's Foundations, Contracts and Proposals, plus a static HTML Rendering where Contract usages render as the real Code Library. Use when a vibe-coded prototype should become a developer handoff, and to review, sign off or check a Handoff for Drift. Sign-off is the owner's.
+description: Turns a Prototype (a single HTML file, or a React app on Next.js App Router or Vite + react-router) into a validated Handoff (handoff.json) against a Design System's Foundations, Contracts and Proposals, plus a static HTML Rendering where Contract usages render as the real Code Library. Use when a vibe-coded prototype should become a developer handoff, and to review, sign off or check a Handoff for Drift. Sign-off is the owner's.
 ---
 
 # To-handoff
 
-Reads one Prototype file, statically and then by rendering a scratch copy, and writes `design-systems/<ds>/handoffs/<feature-key>/handoff.json` and `renderings/index.html`. Every pick that could be a guess is a **decision** the agent answers in a `decisions.json`; with any decision open, generate writes nothing and returns the requests. To-handoff knows no Code Library: the Adapter named by the Foundations document's `source.adapter` supplies the role groups, the mode-map surfaces, the Contract-writing procedure and the renderer, in `skills/adapter-<adapter>/scripts/handoff-adapter.mjs`.
+Reads a Prototype (one HTML file, or a React app folder), statically and then by rendering a scratch copy, and writes `design-systems/<ds>/handoffs/<feature-key>/handoff.json` and `renderings/index.html`. Every pick that could be a guess is a **decision** the agent answers in a `decisions.json`; with any decision open, generate writes nothing and returns the requests. To-handoff knows no Code Library: the Adapter named by the Foundations document's `source.adapter` supplies the role groups, the mode-map surfaces, the Contract-writing procedure and the renderer, in `skills/adapter-<adapter>/scripts/handoff-adapter.mjs`.
 
-Out of scope so far: multi-file or React Prototypes as generate input (the runtime reader can already tag and build them; #114). The owner signs a Handoff off; the agent runs `approve` only on the owner's explicit "approve" in chat (section 5).
+Out of scope so far, for React Prototypes: compiling Tailwind or cva classes, icons as the icon property, layout regions recorded once across screens, and overlay flow transitions. The owner signs a Handoff off; the agent runs `approve` only on the owner's explicit "approve" in chat (section 5).
 
 ## 1. Fetch the reader's packages
 
@@ -20,7 +20,7 @@ It installs parse5, TypeScript 6 and playwright-core from `deps/package-lock.jso
 ## 2. Generate: ask, answer, re-run
 
 ```
-node skills/to-handoff/scripts/handoff.mjs generate <index.html> --ds design-systems/<ds> --decisions <decisions.json> [--static]
+node skills/to-handoff/scripts/handoff.mjs generate <index.html | app folder> --ds design-systems/<ds> --decisions <decisions.json> [--static]
 ```
 
 The runtime reader runs unless `--static` (`generate({runtime: true})` from code; the default there is static). See section 3.
@@ -55,6 +55,7 @@ What generate does without asking:
 - **States**: conditions shaped like loading, empty, error or success become those standard states. A standard state with no condition is `missing` and becomes a question. A ternary that sets a Contract State attribute (`disabled`) or swaps a usage's text becomes `usageStates`.
 - **Stand-ins**: `mock…` data, `setTimeout` work and placeholder copy are flagged, and each gets a developer question.
 - **Off-axis**: a Contract usage's own colour that its tuple does not paint becomes an `offAxis` entry and a question.
+- **React Prototypes** (`scripts/react.mjs`): a Next.js App Router app has a screen per `app/**/page.tsx` inside its layouts; a Vite app a screen per `<Route path>` or `createBrowserRouter` entry. JSX conditions, `.map` lists and boolean props read as the HTML reader's conditions, repeats and attribute holes, and app components are inlined. An import from a Contract's `code.package` with its `code.component` is that Contract **by import** (`match.by: "import"`, no decision): its tuple comes from each axis value's `code`, most keys winning, and an axis prop that maps to no value is a `prop` question. A Code Library component (`components.json` `aliases.ui`, else `components/ui/`) is decided once per `recognise:<Name>[prop=value]` signature, `via: "library"`; `asChild` lifts its only child. Next's `loading.tsx`, `error.tsx` and `not-found.tsx` are the loading, error and empty states of the pages under them. API routes, middleware, private and parallel-route folders are listed in `source.ignored`; `next/font` imports join the font question. With more than one screen, missing-state questions end in the screen id (`q-state-error-invite`) and flow states read `<screen>/<state>`. Above six routes, a `q-split` question asks whether to split the Prototype.
 
 The store writes only when the content changes. Each write bumps `revision` and leaves `status: "pending"` and `approval: null`. A re-run on the same inputs is byte-identical and reports `unchanged`. generate validates before it reports.
 
@@ -139,12 +140,12 @@ Otherwise it writes, in order:
 Any later content change from a re-run resets the Handoff to `pending`. A re-run that changes nothing leaves it signed.
 
 ```
-node skills/to-handoff/scripts/handoff.mjs check <handoff.json> --ds design-systems/<ds> --prototype <index.html>
+node skills/to-handoff/scripts/handoff.mjs check <handoff.json> --ds design-systems/<ds> --prototype <index.html | app folder>
 ```
 
 `check` computes Drift and never stores it. Drift is any of:
 
-- a Prototype file changed, added or removed;
+- a Prototype file changed, added or removed. For a React app folder, `check` re-hashes the pinned read set, so a file the app newly imports shows only after a re-generate;
 - a used Contract edited, its source moved, or gone;
 - a used Proposal changed, back to `pending` after sign-off, or gone;
 - the Foundations `usedHash` moved.
@@ -155,4 +156,4 @@ Adding another family's Contract moves only the informational `documentHash`, wh
 
 ## Tests
 
-`node --test skills/to-handoff/test/handoff.test.mjs` runs generate → validate → render on [test/fixtures/invite-teammates](test/fixtures/invite-teammates) with its fixed `decisions.json`, statically. `test/runtime.test.mjs` covers tagging, then the runtime reader on the same fixture: screenshots per state and breakpoint, computed metrics in the match, and a forced build failure. `test/signoff.test.mjs` runs the Sign-off lifecycle: owner answers as test inputs, refusals, a test approval, a re-run against `signed.json`, and Drift. Its Design Systems live under `.scratch/to-handoff-tests/` and are removed afterwards. No test writes anything under `design-systems/`.
+`node --test skills/to-handoff/test/handoff.test.mjs` runs generate → validate → render on [test/fixtures/invite-teammates](test/fixtures/invite-teammates) with its fixed `decisions.json`, statically. `test/runtime.test.mjs` covers tagging, then the runtime reader on the same fixture: screenshots per state and breakpoint, computed metrics in the match, and a forced build failure. `test/react.test.mjs` runs the React reader and generate on [test/fixtures/vite-app](test/fixtures/vite-app) and [test/fixtures/next-app](test/fixtures/next-app), each with its `decisions.json`; they are source plus lockfile, never installed by the static tests. `test/signoff.test.mjs` runs the Sign-off lifecycle: owner answers as test inputs, refusals, a test approval, a re-run against `signed.json`, and Drift. Its Design Systems live under `.scratch/to-handoff-tests/` and are removed afterwards. No test writes anything under `design-systems/`.

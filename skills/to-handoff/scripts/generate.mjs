@@ -556,7 +556,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       if (!present.includes(s)) {
         screenStates[s] = { missing: true, question: question({
           id: `q-state-${s}${multi ? `-${screenId}` : ''}`, kind: 'missing-state', to: 'owner',
-          text: `${multi ? `The ${screen.name} screen (${screen.route})` : 'The Prototype'} has no ${s} state: no condition reads like ${s}. What should the screen show?`,
+          text: `${multi ? `The ${screenId} screen (${screen.route})` : 'The Prototype'} has no ${s} state: no condition reads like ${s}. What should the screen show?`,
         }) };
         continue;
       }
@@ -652,7 +652,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const common = families.sort((a, b) => families.filter(x => x === b).length - families.filter(x => x === a).length || (a < b ? -1 : 1))[0];
     const bind = Object.values(foundations.textStyles).find(s => s.fontFamily === common)?.binds?.fontFamily;
     const sets = [
-      ...(fonts.length ? [`sets font-family ${[...new Set(fonts.map(f => f.value))].join('; ')} (${fonts.map(f => f.at).join(', ')})`] : []),
+      ...(fonts.length ? [`sets font-family ${[...new Set(fonts.map(f => f.value))].join('; ')} (${[...new Set(fonts.map(f => f.at))].join(', ')})`] : []),
       ...(doc.fonts.length ? [`loads ${doc.fonts.map(f => `${f.name} from ${f.module} (${at(f.offset)})`).join(', ')}`] : []),
     ];
     question({

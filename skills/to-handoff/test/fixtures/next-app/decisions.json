@@ -1,0 +1,56 @@
+{
+  "token:background-color:#ffffff": "background",
+  "token:color:#161616": "text-primary",
+  "token:background-color:#f4f4f4": "layer-01",
+  "token:border-color:#e0e0e0": "border-subtle-00",
+  "token:color:#525252": "text-secondary",
+  "token:font-size:16px": "body-02-font-size",
+  "textStyle:32/40/400/0": "heading-05",
+  "recognise:Button[size=sm]": {
+    "contract": "button",
+    "tuple": {
+      "kind": "primary",
+      "size": "sm"
+    },
+    "via": "library"
+  },
+  "recognise:Button": {
+    "contract": "button",
+    "tuple": {
+      "kind": "primary"
+    },
+    "via": "library"
+  },
+  "recognise:input.field[type=email]": {
+    "contract": "text-input",
+    "tuple": {
+      "size": "md"
+    },
+    "via": "element"
+  },
+  "recognise:p.problem[role=alert]": {
+    "noContract": "inline notification",
+    "reason": "An inline error message; carbon has no Notification Contract yet."
+  },
+  "feature": {
+    "goal": "Read the latest release notes and subscribe to updates by email."
+  },
+  "acceptance": [
+    {
+      "id": "notes-list",
+      "screen": "index",
+      "state": "default",
+      "given": "published releases",
+      "when": "the page opens",
+      "then": "each release shows its version, date and notes"
+    },
+    {
+      "id": "subscribe-fails",
+      "screen": "subscribe",
+      "state": "error",
+      "given": "the subscribe request fails",
+      "when": "Subscribe is pressed",
+      "then": "an alert asks to try again"
+    }
+  ]
+}

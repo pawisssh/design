@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// To-handoff (#102): a single-HTML-file Prototype -> a validated Handoff -> its HTML Rendering, and its Sign-off.
-//   node skills/to-handoff/scripts/handoff.mjs generate <index.html> --ds <design-systems/ds> --decisions <decisions.json> [--static]
+// To-handoff (#102): a Prototype (one HTML file or a React app folder, #114) -> a validated Handoff -> its HTML Rendering, and its Sign-off.
+//   node skills/to-handoff/scripts/handoff.mjs generate <index.html | app folder> --ds <design-systems/ds> --decisions <decisions.json> [--static]
 //   node skills/to-handoff/scripts/handoff.mjs validate <handoff.json> --ds <design-systems/ds>
 //   node skills/to-handoff/scripts/handoff.mjs render <handoff.json> --ds <design-systems/ds>
 //   node skills/to-handoff/scripts/handoff.mjs review <handoff.json> --ds <design-systems/ds>
 //   node skills/to-handoff/scripts/handoff.mjs approve <handoff.json> --ds <design-systems/ds> --content-hash <h> [--proposal <key>=<hash> …]
-//   node skills/to-handoff/scripts/handoff.mjs check <handoff.json> --ds <design-systems/ds> --prototype <index.html>
+//   node skills/to-handoff/scripts/handoff.mjs check <handoff.json> --ds <design-systems/ds> --prototype <index.html | app folder>
 //
 // generate runs the Prototype's scratch copy with the runtime reader (#113) for screenshots and computed text
 // metrics, unless --static; when the runtime cannot run, the Handoff is static-only and says why.
@@ -38,8 +38,8 @@ async function main(argv) {
   } });
   const [command, input] = positionals;
   if (!command || !input || !values.ds) {
-    console.error('usage: handoff.mjs generate <index.html> --ds <dir> --decisions <file> [--static] | validate|render|review <handoff.json> --ds <dir>'
-      + ' | approve <handoff.json> --ds <dir> --content-hash <h> [--proposal <key>=<hash> …] | check <handoff.json> --ds <dir> --prototype <index.html>');
+    console.error('usage: handoff.mjs generate <index.html | app folder> --ds <dir> --decisions <file> [--static] | validate|render|review <handoff.json> --ds <dir>'
+      + ' | approve <handoff.json> --ds <dir> --content-hash <h> [--proposal <key>=<hash> …] | check <handoff.json> --ds <dir> --prototype <index.html | app folder>');
     return 1;
   }
   if (command === 'generate') {
@@ -78,7 +78,7 @@ async function main(argv) {
     } catch (e) { console.error(e.message); return 1; }
   }
   if (command === 'check') {
-    if (!values.prototype) { console.error('check needs --prototype <index.html>: the Handoff pins its files, not where they live'); return 1; }
+    if (!values.prototype) { console.error('check needs --prototype <index.html | app folder>: the Handoff pins its files, not where they live'); return 1; }
     const r = await check({ handoffPath: input, designSystem: values.ds, prototype: values.prototype });
     console.log(r.verdict);
     for (const d of r.drift) console.log(`  ${d.kind} ${d.key}: ${d.change}`);

@@ -1,0 +1,36 @@
+{
+  "token:background-color:#ffffff": "background",
+  "token:color:#161616": "text-primary",
+  "token:background-color:#f4f4f4": "layer-01",
+  "token:color:#525252": "text-secondary",
+  "textStyle:32/40/400/0": "heading-05",
+  "token:font-size:16px": "body-02-font-size",
+  "recognise:input.field[type=email]": {
+    "contract": "text-input",
+    "tuple": {
+      "size": "md"
+    },
+    "via": "element"
+  },
+  "feature": {
+    "goal": "See the project members and invite a new one by email."
+  },
+  "acceptance": [
+    {
+      "id": "members-list",
+      "screen": "index",
+      "state": "default",
+      "given": "a project with members",
+      "when": "the page opens",
+      "then": "every member shows with their role"
+    },
+    {
+      "id": "invite-sends",
+      "screen": "invite",
+      "state": "loading",
+      "given": "a valid email",
+      "when": "Send invite is pressed",
+      "then": "the button shows Sending… and is disabled"
+    }
+  ]
+}
