@@ -357,10 +357,10 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     // A Code Library component holding another module's components (a Card around a form) is walked like a wrapper,
     // with its own parts, so the usages inside it are their own (#125). Its look stays in the region; a note names it.
     const containers = new Map();
-    const holdsOtherLibrary = el => { let found = false; walk(el, x => { if (x !== el && x.component && x.component.module !== el.component.module) found = true; }); return found; };
+    const holdsOtherModule = el => { let found = false; walk(el, x => { if (x !== el && x.component && x.component.module !== el.component.module) found = true; }); return found; };
     const visit = (el, through = new Set()) => {
       if (el.type !== 'element' || consumed.has(el)) return;
-      if (el.component && (through.has(el.component.module) || holdsOtherLibrary(el))) {
+      if (el.component && (through.has(el.component.module) || holdsOtherModule(el))) {
         if (!through.has(el.component.module)) containers.set(el, el.component);
         for (const c of el.children) visit(c, new Set([...through, el.component.module]));
         return;

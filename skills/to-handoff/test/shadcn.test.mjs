@@ -66,7 +66,7 @@ test('generate: with no Text Styles in the Design System, the font question name
     'The Prototype loads Geist from next/font/google (app/layout.tsx:2:10), Geist_Mono from next/font/google (app/layout.tsx:2:17); shadcn has no Text Styles to name a font. Which font should the Text Styles use?');
 });
 
-test('generate: a Code Library component holding another library\'s usages is walked like a wrapper, noted with its import', { skip: noTs }, async () => {
+test('generate: a Code Library component holding another module\'s components is walked like a wrapper, noted with its import', { skip: noTs }, async () => {
   const { handoff } = await generate({ prototype: V0, designSystem: shadcnDesignSystem(), decisions: DECISIONS });
   const usages = handoff.screens[0].regions.flatMap(r => r.usages);
   assert.equal(usages.find(u => u.raw && u.raw.element === 'Card'), undefined, 'Card is no usage');

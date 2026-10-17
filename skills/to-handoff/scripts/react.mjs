@@ -56,8 +56,8 @@ export function codeLibraryDir(root, ts, kind = reactKind(root), paths = compile
  * readReact(root, {depsDir, packages}) -> {kind, title, files, at, rules, standIns, fonts, screens, uiDir, ignored}.
  * `packages` are the Design System's code packages (each Contract's `code.package`): their components are
  * leaves, and a package that resolves to a project file is that file under any import of it. `screens` is
- * [{id, name, route, offset, root, mount}], `files` the files read (relative paths), `fonts` the next/font and geist/font imports [{module, name, offset}]. On Next, a loading.tsx, error.tsx or not-found.tsx
- * boundary is a condition named by its file, true for the boundary's tree and false for what it wraps.
+ * [{id, name, route, offset, root, mount}], `files` the files read (relative paths), `fonts` the next/font and
+ * geist/font imports [{module, name, offset}]. On Next, a loading.tsx, error.tsx or not-found.tsx boundary is a condition named by its file, true for the boundary's tree and false for what it wraps.
  */
 export function readReact(root, { depsDir, packages = [] } = {}) {
   const ts = loadTypescript(depsDir);
