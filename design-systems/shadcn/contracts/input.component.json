@@ -1,0 +1,337 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "input",
+    "name": "Input",
+    "description": "A single-line text field whose invalid axis gives it a destructive border and ring, and whose state axis adds a focus ring or dims it when disabled."
+  },
+  "source": {
+    "codeLibrary": "shadcn/ui",
+    "adapter": "generic",
+    "packages": {
+      "@/components/ui/input": "sha256:75418e030b2a54dd017ac0f4588db4bbdbabca7525e88bbc9d84cb3e18bcb905",
+      "class-variance-authority": "0.7.1",
+      "cn": "0.5.0",
+      "radix-ui": "1.8.1",
+      "react": "19.1.0",
+      "react-dom": "19.1.0",
+      "shadcn": "4.22.0",
+      "tailwindcss": "4.3.3",
+      "tw-animate-css": "1.4.0"
+    },
+    "files": {
+      "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
+      "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
+      "components/ui/input.tsx": "sha256:75418e030b2a54dd017ac0f4588db4bbdbabca7525e88bbc9d84cb3e18bcb905",
+      "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
+    },
+    "snapshotId": "sha256:f9b01bacfe3e4ad85205c04e1c3ecff91f1a284700ca11902c2515be13f9c1f5"
+  },
+  "axes": [
+    {
+      "key": "invalid",
+      "label": "Invalid",
+      "default": "valid",
+      "defaultSource": "aria-invalid absent: Input renders without it",
+      "values": [
+        {
+          "key": "valid",
+          "label": "Valid",
+          "code": {},
+          "css": ":not([aria-invalid=\"true\"])"
+        },
+        {
+          "key": "invalid",
+          "label": "Invalid",
+          "code": {
+            "aria-invalid": true
+          },
+          "css": "[aria-invalid=\"true\"]"
+        }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        {
+          "key": "enabled",
+          "label": "Enabled",
+          "code": {}
+        },
+        {
+          "key": "focus",
+          "label": "Focus",
+          "code": null,
+          "css": ":focus-visible"
+        },
+        {
+          "key": "disabled",
+          "label": "Disabled",
+          "code": {
+            "disabled": true
+          },
+          "css": ":disabled"
+        }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 6,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Input",
+    "type": "COMPONENT"
+  },
+  "properties": [],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Input": {
+          "direction": "column",
+          "width": "fill",
+          "height": {
+            "token": "spacing-8"
+          },
+          "alignMain": "start",
+          "alignCross": "start",
+          "paddingTop": {
+            "raw": 5,
+            "level": "info",
+            "reason": "derived: py-1 padding-block var(--spacing) = 4px + 1px border (an inside stroke takes no layout space)"
+          },
+          "paddingRight": {
+            "raw": 11,
+            "level": "info",
+            "reason": "derived: px-2.5 padding-inline calc(var(--spacing) * 2.5) = 10px + 1px border (an inside stroke takes no layout space)"
+          },
+          "paddingBottom": {
+            "raw": 5,
+            "level": "info",
+            "reason": "derived: py-1 padding-block var(--spacing) = 4px + 1px border (an inside stroke takes no layout space)"
+          },
+          "paddingLeft": {
+            "raw": 11,
+            "level": "info",
+            "reason": "derived: px-2.5 padding-inline calc(var(--spacing) * 2.5) = 10px + 1px border (an inside stroke takes no layout space)"
+          },
+          "gap": {
+            "token": "spacing-0"
+          },
+          "radius": {
+            "token": "radius-lg"
+          },
+          "strokeWeight": {
+            "raw": 1,
+            "level": "info",
+            "reason": "border: border-width 1px; the Foundations document has no stroke-width variable"
+          },
+          "strokeAlign": "inside"
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Input": {
+          "fill": {
+            "token": "input-fill"
+          },
+          "stroke": {
+            "token": "input"
+          },
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "no opacity utility"
+          },
+          "effects": []
+        }
+      }
+    },
+    {
+      "match": {
+        "invalid": "invalid"
+      },
+      "set": {
+        "Input": {
+          "stroke": {
+            "token": "input-invalid-stroke"
+          },
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "spread": {
+                "raw": 3,
+                "level": "info",
+                "reason": "aria-invalid:ring-3: a 3px ring (box-shadow 0 0 0 3px); no effect-spread variable"
+              },
+              "color": {
+                "token": "input-invalid-effect"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus"
+      },
+      "set": {
+        "Input": {
+          "stroke": {
+            "token": "ring"
+          },
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "spread": {
+                "raw": 3,
+                "level": "info",
+                "reason": "focus-visible:ring-3: a 3px ring (box-shadow 0 0 0 3px); no effect-spread variable"
+              },
+              "color": {
+                "token": "input-focus-effect"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "disabled"
+      },
+      "set": {
+        "Input": {
+          "fill": {
+            "token": "input-disabled-fill"
+          },
+          "opacity": {
+            "raw": 0.5,
+            "level": "info",
+            "reason": "disabled:opacity-50: opacity 50%; the Foundations document has no opacity variable"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "invalid": "invalid",
+        "state": "focus"
+      },
+      "set": {
+        "Input": {
+          "stroke": {
+            "token": "input-invalid-focus-stroke"
+          },
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "spread": {
+                "raw": 3,
+                "level": "info",
+                "reason": "aria-invalid:ring-3: a 3px ring (box-shadow 0 0 0 3px); no effect-spread variable"
+              },
+              "color": {
+                "token": "input-invalid-focus-effect"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": []
+  },
+  "figma": {
+    "page": "Input",
+    "componentSetName": "Input",
+    "description": "shadcn/ui Input (components/ui/input.tsx).",
+    "header": {
+      "type": "Component",
+      "title": "Input",
+      "namespace": "@/components/ui/input"
+    },
+    "grid": {
+      "columns": [
+        "state"
+      ],
+      "rows": [
+        "invalid"
+      ]
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@/components/ui/input",
+    "component": "Input",
+    "import": "import { Input } from \"@/components/ui/input\"",
+    "alwaysEmit": []
+  },
+  "notes": [
+    {
+      "level": "info",
+      "at": "Input.layout",
+      "message": "Input is a plain box (<input>: inline-block), not a flex or grid container: read as a column Auto Layout with no gap, start-aligned, as a block stacks its children (#153). Its justify-, align-, gap and self-alignment utilities do nothing there."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/input.tsx",
+      "message": "md:text-sm: Under a media query no tuple decides. Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/input.tsx",
+      "message": "file:bg-transparent, file:border-0, file:font-medium, file:h-6, file:inline-flex, file:text-foreground, file:text-sm, placeholder:text-muted-foreground: Under a condition no tuple decides (a negation, or two states at once). Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/input.tsx",
+      "message": "text-base: Text utilities; text styles, the label and the anatomy beyond the root are not drafted yet (agent tier). Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/input.tsx",
+      "message": "disabled:cursor-not-allowed, disabled:pointer-events-none, min-w-0, outline-none, transition-colors: No Contract field carries these properties. Not carried."
+    }
+  ],
+  "drafted": {
+    "axes.invalid.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/input.tsx:L10 aria-invalid:border-destructive styles [aria-invalid=\"true\"]; prefixes aria-invalid, dark:aria-invalid"
+      ],
+      "fingerprint": "sha256:b514d8e286761c45e3cd9af0cfbca247bdf3f5800ce484252a12dca14b984ba0"
+    },
+    "family.description": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/input.tsx:L4 exports Input, rendered as <input>",
+        "components/ui/input.tsx:L4 Input calls no cva; the Contract's axes: invalid (2), state (3)"
+      ],
+      "fingerprint": "sha256:5bb1bbe9bc896a5698b6bced9c2b0ff513d0177cfa8d41114de4acdb4a3e9827"
+    },
+    "figma.grid": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/input.tsx:L4 Input calls no cva; the Contract's axes: invalid (2), state (3)"
+      ],
+      "fingerprint": "sha256:5bb1bbe9bc896a5698b6bced9c2b0ff513d0177cfa8d41114de4acdb4a3e9827"
+    }
+  }
+}

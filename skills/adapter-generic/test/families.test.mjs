@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { generate, readFamily } from '../scripts/components.mjs';
 import { generate as library } from '../scripts/foundations.mjs';
 import { FIXTURE, hasTools } from '../scripts/sources.mjs';
-import { expand, resolve as resolveContract } from '../../contract/scripts/contract.mjs';
+import { contentHash, expand, resolve as resolveContract, validate } from '../../contract/scripts/contract.mjs';
 
 const skip = hasTools() ? false : 'Generic Adapter tools missing: run node skills/adapter-generic/scripts/sources.mjs';
 const foundations = skip ? null : (await library({ project: FIXTURE })).doc;
@@ -193,4 +193,75 @@ test('sonner.tsx exports Toaster alone: --family sonner reads it as the root, pa
     assert.match(e.message, /^Toaster \(State=Enabled\) is not a flex or grid container/);
     return true;
   });
+});
+
+// ---------- a plain-box root, and a provider read through its Trigger (#153) ----------
+
+const draftsOf = name => JSON.parse(readFileSync(new URL(`../fixtures/drafts/${name}.json`, import.meta.url), 'utf8')).drafts;
+
+test('Input is a plain box (<input>, no display utility): a column Auto Layout with no gap, start-aligned, filling across', { skip }, async () => {
+  const input = await read('input');
+  const root = resolve(input, { invalid: 'valid', state: 'enabled' }).layout.Input;
+  assert.equal(root.direction, 'column');
+  assert.equal(root.width, 'fill', 'w-full');
+  assert.deepEqual(root.height, tok('spacing-8'), 'h-8');
+  assert.deepEqual(root.gap, tok('spacing-0'));
+  assert.deepEqual([root.alignMain, root.alignCross], ['start', 'start']);
+  assert.deepEqual([root.paddingTop, root.paddingRight].map(p => p.raw), [5, 11], 'py-1 and px-2.5, each plus the 1px border');
+  assert.deepEqual(input.anatomy, { name: 'Input', type: 'COMPONENT' });
+  assert.ok(input.notes.some(n => n.at === 'Input.layout' && /plain box \(<input>: inline-block\)/.test(n.message)));
+});
+
+test('a root whose display utility is block reads as a plain box, its gap utility ignored', { skip }, async () => {
+  const project = variant('components/ui/input.tsx', t => t.replace('"h-8 w-full', '"block gap-2 h-8 w-full'));
+  const input = await readFamily({ project, family: 'input', foundations });
+  const root = resolve(input, { invalid: 'valid', state: 'enabled' }).layout.Input;
+  assert.equal(root.direction, 'column');
+  assert.deepEqual(root.gap, tok('spacing-0'), 'a block has no gap');
+  assert.ok(input.notes.some(n => /plain box \(block: block\)/.test(n.message)));
+});
+
+test('an inline root, or an element with no known box, fails: only Auto Layout is read', { skip }, async () => {
+  const inline = variant('components/ui/input.tsx', t => t.replace('"h-8 w-full', '"inline h-8 w-full'));
+  await assert.rejects(readFamily({ project: inline, family: 'input', foundations }), /not a flex or grid container or a plain box \(display: inline\)/);
+  const span = variant('components/ui/input.tsx', t => t.replace('<input', '<span'));
+  await assert.rejects(readFamily({ project: span, family: 'input', foundations }), /not a flex or grid container or a plain box \(display: not set, element span\)/);
+});
+
+test('Input drafts its invalid label, description and grid; with fixtures/drafts/input.json it writes the committed draft', { skip }, async () => {
+  const doc = (await library({ project: FIXTURE, families: ['input'] })).doc;
+  const { contract, requests } = await generate({ project: FIXTURE, family: 'input', foundations: doc });
+  assert.equal(contract, null);
+  assert.deepEqual(requests.map(r => r.key), ['axes.invalid.label', 'family.description', 'figma.grid']);
+  const drafted = (await generate({ project: FIXTURE, family: 'input', foundations: doc, drafts: draftsOf('input') })).contract;
+  assert.deepEqual(validate(drafted, doc).errors, []);
+  assert.deepEqual([drafted.selection.status, drafted.selection.approval], ['draft', null]);
+  const committed = JSON.parse(readFileSync(new URL('../../../design-systems/shadcn/contracts/input.component.json', import.meta.url), 'utf8'));
+  assert.equal(contentHash(drafted), contentHash(committed));
+});
+
+test('Select is a provider with no box: it is read from SelectTrigger, with no parts, and says so', { skip }, async () => {
+  const doc = (await library({ project: FIXTURE, families: ['select'] })).doc;
+  const select = await readFamily({ project: FIXTURE, family: 'select', foundations: doc });
+  assert.deepEqual(select.anatomy, { name: 'Select', type: 'COMPONENT' }, 'no part: the other exports render inside the Trigger or in its popup');
+  assert.deepEqual(select.axes.map(a => [a.key, a.values.map(v => v.key)]), [['invalid', ['valid', 'invalid']], ['state', ['enabled', 'hover', 'focus', 'disabled']]]);
+  assert.deepEqual(select.facts.provider, { line: 8, element: 'SelectPrimitive.Root', root: 'SelectTrigger' });
+  const root = resolve(select, { invalid: 'valid', state: 'enabled' }).layout.Select;
+  assert.deepEqual([root.direction, root.width, root.alignMain], ['row', 'hug', 'space-between'], 'SelectTrigger: flex w-fit justify-between');
+  const verify = select.notes.find(n => n.level === 'verify' && n.at === 'anatomy');
+  assert.match(verify.message, /renders SelectPrimitive\.Root, a provider with no box of its own, so this Contract is read from SelectTrigger \(components\/ui\/select\.tsx:33\)/);
+  assert.match(verify.message, /code\.component stays Select/);
+});
+
+test('Select reaches the Drafted values, evidenced by the provider and its Trigger; with fixtures/drafts/select.json it writes a valid draft', { skip }, async () => {
+  const doc = (await library({ project: FIXTURE, families: ['select'] })).doc;
+  const { contract, requests } = await generate({ project: FIXTURE, family: 'select', foundations: doc });
+  assert.equal(contract, null);
+  assert.deepEqual(requests.map(r => r.key), ['axes.invalid.label', 'family.description', 'figma.grid']);
+  assert.deepEqual(requests.find(r => r.key === 'family.description').evidence, [
+    'components/ui/select.tsx:L8 exports Select, rendered as <SelectPrimitive.Root>, a provider with no box; read from SelectTrigger (L33), rendered as <SelectPrimitive.Trigger>',
+    "components/ui/select.tsx:L33 SelectTrigger calls no cva; the Contract's axes: invalid (2), state (4)"]);
+  const drafted = (await generate({ project: FIXTURE, family: 'select', foundations: doc, drafts: draftsOf('select') })).contract;
+  assert.deepEqual(validate(drafted, doc).errors, []);
+  assert.deepEqual([drafted.code.component, drafted.selection.status, drafted.selection.approval, drafted.selection.expectedCount], ['Select', 'draft', null, 8]);
 });

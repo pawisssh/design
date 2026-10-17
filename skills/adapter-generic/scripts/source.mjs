@@ -121,3 +121,21 @@ export function readSource(text, file, { tools = DEFAULT_DIR } = {}) {
     return out;
   }
 }
+
+/**
+ * The component a family is read from, among `components` (readSource): {named, provider, root}. `named` is the export
+ * named after the family (Input), else the file's one exported component (sonner.tsx's Toaster, #154). When it renders
+ * a primitive's Root with no classes (Select: SelectPrimitive.Root), it is a provider with no box of its own:
+ * `provider` is it and `root` its exported Trigger (SelectTrigger), the box a designer sees (#153). Otherwise
+ * `provider` is null and `root` is `named`. Throws when no export is the family's, or the Trigger is missing.
+ */
+export function familyRoot(components, Name, file) {
+  const exports = components.filter(c => c.exported);
+  const named = exports.find(c => c.name === Name) || (exports.length === 1 ? exports[0] : null);
+  if (!named) throw new Error(exports.length ? `${file} exports no ${Name} but ${exports.length} components (${exports.map(c => c.name).join(', ')}): none is named after the family, so none is read as its root`
+    : `${file} exports no component`);
+  if (named.cva || named.classes.length || !/\.Root$/.test(named.element || '')) return { named, provider: null, root: named };
+  const root = components.find(c => c.name === `${named.name}Trigger` && c.exported);
+  if (!root) throw new Error(`${file}: ${named.name} renders ${named.element} with no classes, a provider with no box, and exports no ${named.name}Trigger to read instead`);
+  return { named, provider: named, root };
+}
