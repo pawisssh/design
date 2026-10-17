@@ -1,0 +1,1160 @@
+{
+  "schemaVersion": 1,
+  "revision": 5,
+  "status": "approved",
+  "approval": { "by": "owner", "at": "2026-10-17T19:38:20.503Z", "revision": 5, "contentHash": "sha256:9637786b38aaabafb372b013cfea045198673b167cca7127a49da17146caf5f9" },
+  "feature": {
+    "key": "invite-teammates",
+    "name": "Invite teammates",
+    "owner": "to confirm: the Prototype names no owning team",
+    "goal": "Let a workspace member invite teammates by email and pick their role.",
+    "scope": [
+      "invite one teammate at a time",
+      "see and remove pending invites",
+      "seat count"
+    ],
+    "nonGoals": [
+      "bulk invite",
+      "billing for extra seats"
+    ]
+  },
+  "source": {
+    "input": "prototype",
+    "kind": "html-file",
+    "prototype": {
+      "files": {
+        "index.html": "sha256:db25a78444092bd7bea593df8a34b9ad0c4d9022f7a1df022a7cb666d092fc9d"
+      },
+      "snapshotId": "sha256:9ad61d66347354a50128077d7f59c65a1675ac503485b36e9faccdd7eedeb494"
+    },
+    "designSystem": "carbon",
+    "contracts": {
+      "button": {
+        "snapshotId": "sha256:4c82c3cc7f2af6fa24fba39bb5e159c415b5691800130268c9d8903901164152",
+        "contentHash": "sha256:4a9e9f38d7a42ccfd0ea029241862365784bfe49b7f087e48ceee8ee07711bf5"
+      },
+      "select": {
+        "snapshotId": "sha256:6d36c2b22a7ad32899a5080c48e270fa4578beff8edef845236b574d4c60b2ff",
+        "contentHash": "sha256:34b5b1f0c09c68f8789ac006f6e89ec91beb0e3be947f2e8fcfbbc407087e167"
+      },
+      "text-input": {
+        "snapshotId": "sha256:1a5e61e829858c59e445d7febf9c44c5d920bae55ddd39de50851196f1502c4c",
+        "contentHash": "sha256:ffc567ffda43ccc993b609efd9111bb3d652edadddf331cf0bd9f77b67e8e151"
+      },
+      "toast-notification": {
+        "snapshotId": "sha256:43954adf2ff1b4015bfe8fb98a58492ea6ec309e3f4f32a316d9003e9119ab8f",
+        "contentHash": "sha256:80115c9a4a94214a3fe56b4a8cce2ec2d3f50c2611cc413f548897b18d750671"
+      }
+    },
+    "proposals": {
+      "avatar-stack": "sha256:28f70d094a1cc06d5b3cb7eb2d0d2e3335993227eb4816606f2f2a525389462e"
+    },
+    "foundations": {
+      "documentHash": "sha256:9f99c2066cc22e492d01bfc15814cdbd9ea347e47f4a6eb752d17b909315fb45",
+      "usedHash": "sha256:ce717a37dfd96773de2fea32a46d1e3c1f30d8c83a2c68994cc8f867a8b49959"
+    },
+    "modes": {
+      "light": "white"
+    },
+    "notes": [
+      {
+        "level": "info",
+        "text": "Single-mode Prototype: its page surface (#fafafa) and first container (.card #f4f4f4) map best to White (White ΔE 0.0149, Gray 10 ΔE 0.0508, Gray 90 ΔE 1.3391, Gray 100 ΔE 1.4834). The other Theme modes render unverified."
+      }
+    ]
+  },
+  "screens": [
+    {
+      "id": "invite-teammates",
+      "name": "Invite teammates",
+      "at": "index.html:42:1",
+      "breakpoints": [
+        "sm",
+        "md",
+        "lg",
+        "xlg",
+        "max"
+      ],
+      "regions": [
+        {
+          "id": "shell",
+          "landmark": "main",
+          "shell": true,
+          "at": "index.html:5:1",
+          "styles": [
+            {
+              "property": "background-color",
+              "raw": "#fafafa",
+              "at": [
+                "index.html:13:64"
+              ],
+              "token": "background",
+              "match": "near",
+              "delta": 0.0149,
+              "candidates": [
+                "background",
+                "field-02",
+                "layer-02"
+              ],
+              "by": "agent"
+            },
+            {
+              "property": "color",
+              "raw": "#161616",
+              "at": [
+                "index.html:13:85"
+              ],
+              "token": "text-primary",
+              "candidates": [
+                "icon-primary",
+                "text-primary"
+              ],
+              "by": "agent"
+            },
+            {
+              "property": "padding",
+              "raw": "32px",
+              "at": [
+                "index.html:14:44"
+              ],
+              "token": "spacing-07"
+            },
+            {
+              "property": "padding",
+              "raw": "16px",
+              "at": [
+                "index.html:14:44"
+              ],
+              "token": "spacing-05"
+            }
+          ],
+          "text": [],
+          "usages": []
+        },
+        {
+          "id": "header",
+          "landmark": null,
+          "at": "index.html:57:7",
+          "styles": [
+            {
+              "property": "margin",
+              "raw": "4px",
+              "at": [
+                "index.html:15:62"
+              ],
+              "token": "spacing-02"
+            },
+            {
+              "property": "color",
+              "raw": "#525252",
+              "at": [
+                "index.html:16:11"
+              ],
+              "token": "text-secondary",
+              "candidates": [
+                "icon-secondary",
+                "text-secondary"
+              ],
+              "by": "agent"
+            },
+            {
+              "property": "margin",
+              "raw": "16px",
+              "at": [
+                "index.html:16:87"
+              ],
+              "token": "spacing-05"
+            }
+          ],
+          "text": [
+            {
+              "copy": "h1",
+              "at": "index.html:57:11",
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "heading-03-font-size",
+                    "candidates": [
+                      "fluid-heading-03-font-size",
+                      "fluid-quotation-01-font-size",
+                      "heading-03-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 20,
+                  "lineHeight": 30,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "lead",
+              "at": "index.html:58:23",
+              "style": {
+                "textStyle": "body-compact-01",
+                "candidates": [
+                  "body-compact-01",
+                  "helper-text-02",
+                  "label-02",
+                  "legal-02"
+                ],
+                "by": "agent"
+              }
+            }
+          ],
+          "usages": []
+        },
+        {
+          "id": "promo",
+          "landmark": null,
+          "at": "index.html:59:7",
+          "styles": [
+            {
+              "property": "background-color",
+              "raw": "#edf5ff",
+              "at": [
+                "index.html:18:12"
+              ],
+              "value": "value:background-color-edf5ff"
+            },
+            {
+              "property": "color",
+              "raw": "#002d9c",
+              "at": [
+                "index.html:18:33"
+              ],
+              "value": "value:color-002d9c"
+            },
+            {
+              "property": "border-radius",
+              "raw": "8px",
+              "at": [
+                "index.html:18:49"
+              ],
+              "token": "border-radius-08"
+            },
+            {
+              "property": "padding",
+              "raw": "12px",
+              "at": [
+                "index.html:18:69"
+              ],
+              "token": "spacing-04"
+            },
+            {
+              "property": "padding",
+              "raw": "16px",
+              "at": [
+                "index.html:18:69"
+              ],
+              "token": "spacing-05"
+            },
+            {
+              "property": "margin-bottom",
+              "raw": "16px",
+              "at": [
+                "index.html:18:89"
+              ],
+              "token": "spacing-05"
+            }
+          ],
+          "text": [
+            {
+              "copy": "promo",
+              "at": "index.html:59:26",
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-01-font-size",
+                    "candidates": [
+                      "body-01-font-size",
+                      "body-compact-01-font-size",
+                      "caption-02-font-size",
+                      "code-02-font-size",
+                      "expressive-heading-01-font-size",
+                      "heading-01-font-size",
+                      "heading-compact-01-font-size",
+                      "helper-text-02-font-size",
+                      "label-02-font-size",
+                      "legal-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 14,
+                  "lineHeight": null,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            }
+          ],
+          "usages": []
+        },
+        {
+          "id": "card",
+          "landmark": null,
+          "at": "index.html:60:7",
+          "styles": [
+            {
+              "property": "background-color",
+              "raw": "#f4f4f4",
+              "at": [
+                "index.html:17:11"
+              ],
+              "token": "layer-01",
+              "candidates": [
+                "field-01",
+                "field-03",
+                "layer-01",
+                "layer-03",
+                "layer-background-02"
+              ],
+              "by": "agent"
+            },
+            {
+              "property": "border-color",
+              "raw": "var(--border)",
+              "at": [
+                "index.html:17:32"
+              ],
+              "token": "border-subtle-01",
+              "via": [
+                "--border"
+              ]
+            },
+            {
+              "property": "border-radius",
+              "raw": "8px",
+              "at": [
+                "index.html:17:65"
+              ],
+              "token": "border-radius-08"
+            },
+            {
+              "property": "padding",
+              "raw": "16px",
+              "at": [
+                "index.html:17:85"
+              ],
+              "token": "spacing-05"
+            },
+            {
+              "property": "gap",
+              "raw": "10px",
+              "at": [
+                "index.html:20:25",
+                "index.html:28:29"
+              ],
+              "value": "value:gap-10px"
+            },
+            {
+              "property": "gap",
+              "raw": "8px",
+              "at": [
+                "index.html:29:48"
+              ],
+              "token": "spacing-03"
+            },
+            {
+              "property": "margin",
+              "raw": "16px",
+              "at": [
+                "index.html:29:58"
+              ],
+              "token": "spacing-05"
+            },
+            {
+              "property": "margin",
+              "raw": "8px",
+              "at": [
+                "index.html:29:58"
+              ],
+              "token": "spacing-03"
+            },
+            {
+              "property": "color",
+              "raw": "#525252",
+              "at": [
+                "index.html:29:95",
+                "index.html:36:12"
+              ],
+              "token": "text-secondary",
+              "candidates": [
+                "icon-secondary",
+                "text-secondary"
+              ],
+              "by": "agent"
+            },
+            {
+              "property": "padding",
+              "raw": "8px",
+              "at": [
+                "index.html:34:76",
+                "index.html:36:45"
+              ],
+              "token": "spacing-03"
+            },
+            {
+              "property": "border-top-color",
+              "raw": "var(--border)",
+              "at": [
+                "index.html:34:92"
+              ],
+              "token": "border-subtle-01",
+              "via": [
+                "--border"
+              ]
+            },
+            {
+              "property": "margin-top",
+              "raw": "16px",
+              "at": [
+                "index.html:28:67"
+              ],
+              "token": "spacing-05"
+            }
+          ],
+          "text": [
+            {
+              "copy": "seats",
+              "at": "index.html:65:100",
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-01-font-size",
+                    "candidates": [
+                      "body-01-font-size",
+                      "body-compact-01-font-size",
+                      "caption-02-font-size",
+                      "code-02-font-size",
+                      "expressive-heading-01-font-size",
+                      "heading-01-font-size",
+                      "heading-compact-01-font-size",
+                      "helper-text-02-font-size",
+                      "label-02-font-size",
+                      "legal-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 14,
+                  "lineHeight": null,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "span",
+              "at": "index.html:66:88",
+              "states": [
+                "default",
+                "loading",
+                "success"
+              ],
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-01-font-size",
+                    "candidates": [
+                      "body-01-font-size",
+                      "body-compact-01-font-size",
+                      "caption-02-font-size",
+                      "code-02-font-size",
+                      "expressive-heading-01-font-size",
+                      "heading-01-font-size",
+                      "heading-compact-01-font-size",
+                      "helper-text-02-font-size",
+                      "label-02-font-size",
+                      "legal-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 14,
+                  "lineHeight": null,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "empty",
+              "at": "index.html:67:58",
+              "states": [
+                "empty"
+              ],
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-01-font-size",
+                    "candidates": [
+                      "body-01-font-size",
+                      "body-compact-01-font-size",
+                      "caption-02-font-size",
+                      "code-02-font-size",
+                      "expressive-heading-01-font-size",
+                      "heading-01-font-size",
+                      "heading-compact-01-font-size",
+                      "helper-text-02-font-size",
+                      "label-02-font-size",
+                      "legal-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 14,
+                  "lineHeight": null,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            }
+          ],
+          "usages": [
+            {
+              "id": "email",
+              "contract": "text-input",
+              "tuple": {
+                "size": "md"
+              },
+              "properties": {
+                "label": "copy:email-label",
+                "placeholder": "copy:email-placeholder",
+                "id": "email"
+              },
+              "match": {
+                "by": "agent",
+                "via": "element"
+              },
+              "offAxis": [
+                {
+                  "property": "background-color",
+                  "raw": "#ffffff",
+                  "reason": "`text-input` md none editable enabled paints no #ffffff in White",
+                  "question": "q-off-axis-email"
+                }
+              ],
+              "at": "index.html:62:62"
+            },
+            {
+              "id": "role",
+              "contract": "select",
+              "tuple": {
+                "size": "md"
+              },
+              "items": [
+                {
+                  "properties": {
+                    "value": "copy:role-value-1"
+                  },
+                  "at": "index.html:63:101"
+                },
+                {
+                  "properties": {
+                    "value": "copy:role-value-2"
+                  },
+                  "at": "index.html:63:124"
+                },
+                {
+                  "properties": {
+                    "value": "copy:role-value-3"
+                  },
+                  "at": "index.html:63:147"
+                }
+              ],
+              "properties": {
+                "label": "copy:role-label",
+                "id": "role"
+              },
+              "match": {
+                "by": "agent",
+                "via": "element"
+              },
+              "offAxis": [
+                {
+                  "property": "background-color",
+                  "raw": "#ffffff",
+                  "reason": "`select` md none editable enabled paints no #ffffff in White",
+                  "question": "q-off-axis-role"
+                }
+              ],
+              "at": "index.html:63:83"
+            },
+            {
+              "id": "avatars",
+              "proposal": "avatar-stack",
+              "tuple": {},
+              "items": [
+                {
+                  "properties": {
+                    "initials": "copy:avatars-initials-1"
+                  },
+                  "at": "index.html:65:49"
+                },
+                {
+                  "properties": {
+                    "initials": "copy:avatars-initials-2"
+                  },
+                  "at": "index.html:65:64"
+                },
+                {
+                  "properties": {
+                    "initials": "copy:avatars-initials-3"
+                  },
+                  "at": "index.html:65:79"
+                }
+              ],
+              "match": {
+                "by": "agent",
+                "via": "element"
+              },
+              "at": "index.html:65:28"
+            },
+            {
+              "id": "link-danger",
+              "contract": "button",
+              "tuple": {
+                "kind": "danger--ghost",
+                "size": "sm"
+              },
+              "properties": {
+                "label": "copy:link-danger-label"
+              },
+              "match": {
+                "by": "agent",
+                "via": "element"
+              },
+              "states": [
+                "default",
+                "loading",
+                "success"
+              ],
+              "at": "index.html:66:117"
+            },
+            {
+              "id": "copy",
+              "contract": "button",
+              "tuple": {
+                "kind": "secondary",
+                "size": "md"
+              },
+              "properties": {
+                "label": "copy:copy-label"
+              },
+              "match": {
+                "by": "agent",
+                "via": "library",
+                "candidates": [
+                  {
+                    "kind": "secondary",
+                    "size": "md"
+                  },
+                  {
+                    "kind": "primary",
+                    "size": "md"
+                  }
+                ]
+              },
+              "offAxis": [
+                {
+                  "property": "background-color",
+                  "raw": "#198754",
+                  "reason": "`button` secondary md enabled paints no #198754 in White",
+                  "question": "q-off-axis-copy"
+                }
+              ],
+              "at": "index.html:69:11"
+            },
+            {
+              "id": "cancel",
+              "contract": "button",
+              "tuple": {
+                "kind": "tertiary",
+                "size": "md"
+              },
+              "properties": {
+                "label": "copy:cancel-label"
+              },
+              "match": {
+                "by": "agent",
+                "via": "library"
+              },
+              "at": "index.html:70:11"
+            },
+            {
+              "id": "send",
+              "contract": "button",
+              "tuple": {
+                "kind": "primary",
+                "size": "md"
+              },
+              "properties": {
+                "label": "copy:send-label"
+              },
+              "match": {
+                "by": "agent",
+                "via": "library"
+              },
+              "at": "index.html:71:11"
+            }
+          ]
+        },
+        {
+          "id": "toast",
+          "landmark": null,
+          "overlay": true,
+          "states": [
+            "success"
+          ],
+          "at": "index.html:74:23",
+          "styles": [],
+          "text": [],
+          "usages": [
+            {
+              "id": "toast",
+              "contract": "toast-notification",
+              "tuple": {
+                "kind": "success"
+              },
+              "match": {
+                "by": "agent",
+                "via": "element"
+              },
+              "offAxis": [
+                {
+                  "property": "background-color",
+                  "raw": "#24a148",
+                  "reason": "`toast-notification` success paints no #24a148 in White",
+                  "question": "q-off-axis-toast"
+                }
+              ],
+              "states": [
+                "success"
+              ],
+              "at": "index.html:74:23"
+            }
+          ]
+        }
+      ],
+      "states": {
+        "default": {
+          "content": "every state condition is false; conditional content shown: li",
+          "usageStates": {
+            "send": {
+              "state": "disabled"
+            }
+          },
+          "screenshots": {
+            "sm": "screens/invite-teammates.default.sm.png",
+            "md": "screens/invite-teammates.default.md.png",
+            "lg": "screens/invite-teammates.default.lg.png",
+            "xlg": "screens/invite-teammates.default.xlg.png",
+            "max": "screens/invite-teammates.default.max.png"
+          }
+        },
+        "loading": {
+          "content": "`state.isSending` is true; conditional content shown: li",
+          "trigger": "sendInvites() sets state.isSending (simulated)",
+          "usageStates": {
+            "send": {
+              "state": "disabled",
+              "properties": {
+                "label": "copy:send-label-loading"
+              }
+            }
+          },
+          "screenshots": {
+            "sm": "screens/invite-teammates.loading.sm.png",
+            "md": "screens/invite-teammates.loading.md.png",
+            "lg": "screens/invite-teammates.loading.lg.png",
+            "xlg": "screens/invite-teammates.loading.xlg.png",
+            "max": "screens/invite-teammates.loading.max.png"
+          }
+        },
+        "empty": {
+          "content": "`state.invites.length === 0` is true; conditional content shown: .empty",
+          "trigger": "state.invites.length === 0",
+          "usageStates": {
+            "send": {
+              "state": "disabled"
+            }
+          },
+          "screenshots": {
+            "sm": "screens/invite-teammates.empty.sm.png",
+            "md": "screens/invite-teammates.empty.md.png",
+            "lg": "screens/invite-teammates.empty.lg.png",
+            "xlg": "screens/invite-teammates.empty.xlg.png",
+            "max": "screens/invite-teammates.empty.max.png"
+          }
+        },
+        "error": {
+          "missing": true,
+          "question": "q-state-error"
+        },
+        "success": {
+          "content": "`state.sent` is true; conditional content shown: li, toast",
+          "trigger": "sendInvites() sets state.sent after a 800ms timer (simulated)",
+          "usageStates": {
+            "send": {
+              "state": "disabled"
+            }
+          },
+          "screenshots": {
+            "sm": "screens/invite-teammates.success.sm.png",
+            "md": "screens/invite-teammates.success.md.png",
+            "lg": "screens/invite-teammates.success.lg.png",
+            "xlg": "screens/invite-teammates.success.xlg.png",
+            "max": "screens/invite-teammates.success.max.png"
+          }
+        }
+      }
+    }
+  ],
+  "copy": {
+    "email-label": {
+      "text": "Email",
+      "at": "index.html:62:30"
+    },
+    "email-placeholder": {
+      "text": "jane@example.com",
+      "placeholder": true,
+      "at": "index.html:62:62"
+    },
+    "role-label": {
+      "text": "Role",
+      "at": "index.html:63:53"
+    },
+    "role-value-1": {
+      "text": "Viewer",
+      "at": "index.html:63:101"
+    },
+    "role-value-2": {
+      "text": "Editor",
+      "at": "index.html:63:124"
+    },
+    "role-value-3": {
+      "text": "Admin",
+      "at": "index.html:63:147"
+    },
+    "avatars-initials-1": {
+      "text": "JD",
+      "at": "index.html:65:49"
+    },
+    "avatars-initials-2": {
+      "text": "JA",
+      "at": "index.html:65:64"
+    },
+    "avatars-initials-3": {
+      "text": "+1",
+      "at": "index.html:65:79"
+    },
+    "link-danger-label": {
+      "text": "Remove",
+      "at": "index.html:66:159"
+    },
+    "copy-label": {
+      "text": "Copy invite link",
+      "at": "index.html:69:53"
+    },
+    "cancel-label": {
+      "text": "Cancel",
+      "at": "index.html:70:65"
+    },
+    "send-label": {
+      "text": "Send invites",
+      "at": "index.html:71:106"
+    },
+    "send-label-loading": {
+      "text": "Sending…",
+      "at": "index.html:71:106"
+    },
+    "h1": {
+      "text": "Invite teammates",
+      "at": "index.html:57:11"
+    },
+    "lead": {
+      "text": "Teammates get an email with a link to join this workspace.",
+      "at": "index.html:58:23"
+    },
+    "promo": {
+      "text": "Lorem ipsum: invite 3 more people to unlock shared dashboards.",
+      "placeholder": true,
+      "at": "index.html:59:26"
+    },
+    "seats": {
+      "text": "{invites.length + 1} of 5 seats used",
+      "at": "index.html:65:100"
+    },
+    "span": {
+      "text": "{email} · {role}",
+      "at": "index.html:66:88"
+    },
+    "empty": {
+      "text": "No pending invites yet.",
+      "at": "index.html:67:58"
+    }
+  },
+  "values": [
+    {
+      "id": "background-color-edf5ff",
+      "raw": {
+        "light": "#edf5ff"
+      },
+      "role": "background-color",
+      "reason": "No Background, Layer, Field, Support token is within ΔE 0.02 of #edf5ff in White; the chroma guard dropped 5 grey candidates for a tinted colour",
+      "nearest": [
+        {
+          "token": "field-01",
+          "delta": 0.0159
+        },
+        {
+          "token": "field-03",
+          "delta": 0.0159
+        },
+        {
+          "token": "layer-01",
+          "delta": 0.0159
+        }
+      ],
+      "primitive": "blue.10",
+      "at": [
+        "index.html:18:12"
+      ]
+    },
+    {
+      "id": "color-002d9c",
+      "raw": {
+        "light": "#002d9c"
+      },
+      "role": "color",
+      "reason": "No Text, Link, Icon token is within ΔE 0.02 of #002d9c in White",
+      "nearest": [
+        {
+          "token": "link-primary-hover",
+          "delta": 0.0983
+        },
+        {
+          "token": "link-secondary",
+          "delta": 0.0983
+        },
+        {
+          "token": "icon-secondary",
+          "delta": 0.1989
+        }
+      ],
+      "primitive": "blue.80",
+      "at": [
+        "index.html:18:33"
+      ]
+    },
+    {
+      "id": "gap-10px",
+      "raw": {
+        "light": "10px"
+      },
+      "role": "gap",
+      "reason": "10px is between spacing-03 (8) and spacing-04 (12); no Spacing step within 1px",
+      "nearest": [
+        {
+          "token": "spacing-03",
+          "value": 8
+        },
+        {
+          "token": "spacing-04",
+          "value": 12
+        }
+      ],
+      "at": [
+        "index.html:20:25"
+      ]
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "send-disabled-until-email",
+      "screen": "invite-teammates",
+      "state": "default",
+      "given": "the email field is empty",
+      "when": "the screen shows",
+      "then": "Send invites is disabled",
+      "by": "agent"
+    },
+    {
+      "id": "sending",
+      "screen": "invite-teammates",
+      "state": "loading",
+      "given": "a valid email",
+      "when": "the member presses Send invites",
+      "then": "the button reads Sending… and stays disabled until the send finishes",
+      "by": "agent"
+    },
+    {
+      "id": "no-invites",
+      "screen": "invite-teammates",
+      "state": "empty",
+      "given": "no pending invites",
+      "when": "the screen shows",
+      "then": "the list reads No pending invites yet.",
+      "by": "agent"
+    },
+    {
+      "id": "sent",
+      "screen": "invite-teammates",
+      "state": "success",
+      "given": "a send that succeeds",
+      "when": "it finishes",
+      "then": "a status toast reads Invites sent and the invite joins the list",
+      "by": "agent"
+    }
+  ],
+  "openQuestions": [
+    {
+      "id": "q-off-axis-email",
+      "kind": "off-axis",
+      "to": "owner",
+      "text": "`email` (text-input) sets background-color #ffffff, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?",
+      "answer": "Keep the Contract's look.",
+      "by": "owner"
+    },
+    {
+      "id": "q-off-axis-role",
+      "kind": "off-axis",
+      "to": "owner",
+      "text": "`role` (select) sets background-color #ffffff, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?",
+      "answer": "Keep the Contract's look (field-01).",
+      "by": "owner"
+    },
+    {
+      "id": "q-off-axis-copy",
+      "kind": "off-axis",
+      "to": "owner",
+      "text": "`copy` (button) sets background-color #198754, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?",
+      "answer": "Keep the Contract's look, with the Kind the Prototype's tuple picked (secondary). No green variant.",
+      "by": "owner"
+    },
+    {
+      "id": "q-off-axis-toast",
+      "kind": "off-axis",
+      "to": "owner",
+      "text": "`toast` (toast-notification) sets background-color #24a148, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?",
+      "answer": "Keep the Contract's look: kind success, the dark toast. No green-fill variant.",
+      "by": "owner"
+    },
+    {
+      "id": "q-state-error",
+      "kind": "missing-state",
+      "to": "owner",
+      "text": "The Prototype has no error state: no condition reads like error. What should the screen show?",
+      "answer": "When sending invites fails, show a Carbon InlineNotification of kind error below the form, and keep the entered emails so the user can resend.",
+      "by": "owner"
+    },
+    {
+      "id": "q-font",
+      "kind": "font",
+      "to": "owner",
+      "text": "The Prototype sets font-family Inter, system-ui, sans-serif (index.html:13:21); the Text Styles use IBM Plex Sans (font-family-sans). Use IBM Plex Sans?",
+      "answer": "Use IBM Plex Sans.",
+      "by": "owner"
+    },
+    {
+      "id": "q-breakpoint-max-width-640px",
+      "kind": "breakpoint",
+      "to": "owner",
+      "text": "@media (max-width: 640px) changes .actions, .actions .btn. In the screenshots it applies at sm (320px), not at md (672px), lg (1056px), xlg (1312px) or max (1584px); 640px falls between sm and md. Which Design System breakpoint is it, and what should change there?",
+      "answer": "Treat it as below md (672px): under 672px the .actions buttons stack vertically at full width.",
+      "by": "owner"
+    },
+    {
+      "id": "q-data-invites",
+      "kind": "stand-in",
+      "to": "developer",
+      "text": "Where do the invites come from? `mockInvites` stands in for them.",
+      "answer": "Engineering owns this. It does not block Sign-off.",
+      "by": "owner"
+    },
+    {
+      "id": "q-data-send-invites",
+      "kind": "stand-in",
+      "to": "developer",
+      "text": "What does `sendInvites()` call, and how does it fail? The Prototype simulates it with a timer.",
+      "answer": "Engineering owns this. It does not block Sign-off.",
+      "by": "owner"
+    }
+  ],
+  "flow": [
+    {
+      "from": "default",
+      "trigger": "sendInvites()",
+      "to": "loading",
+      "source": "simulated"
+    },
+    {
+      "from": "loading",
+      "trigger": "800ms timer",
+      "to": "success",
+      "source": "simulated"
+    },
+    {
+      "from": "loading",
+      "trigger": "sendInvites() fails",
+      "to": "error",
+      "source": "missing"
+    }
+  ],
+  "data": [
+    {
+      "id": "invites",
+      "source": "mock",
+      "note": "`mockInvites` is mock data standing in for the invites",
+      "at": "index.html:45:9",
+      "question": "q-data-invites"
+    },
+    {
+      "id": "send-invites",
+      "source": "simulated",
+      "note": "`sendInvites()` simulates its work with a 800ms setTimeout",
+      "at": "index.html:50:3",
+      "question": "q-data-send-invites"
+    }
+  ],
+  "ownerDecisions": {
+    "question:q-breakpoint-max-width-640px": {
+      "answer": "Treat it as below md (672px): under 672px the .actions buttons stack vertically at full width."
+    },
+    "question:q-data-invites": {
+      "answer": "Engineering owns this. It does not block Sign-off.",
+      "to": "developer"
+    },
+    "question:q-data-send-invites": {
+      "answer": "Engineering owns this. It does not block Sign-off.",
+      "to": "developer"
+    },
+    "question:q-font": {
+      "answer": "Use IBM Plex Sans."
+    },
+    "question:q-off-axis-copy": {
+      "answer": "Keep the Contract's look, with the Kind the Prototype's tuple picked (secondary). No green variant."
+    },
+    "question:q-off-axis-email": {
+      "answer": "Keep the Contract's look."
+    },
+    "question:q-off-axis-role": {
+      "answer": "Keep the Contract's look (field-01)."
+    },
+    "question:q-off-axis-toast": {
+      "answer": "Keep the Contract's look: kind success, the dark toast. No green-fill variant."
+    },
+    "question:q-state-error": {
+      "answer": "When sending invites fails, show a Carbon InlineNotification of kind error below the form, and keep the entered emails so the user can resend."
+    }
+  }
+}
