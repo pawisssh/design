@@ -229,8 +229,15 @@ export function validate(contract, foundations) {
         }
   const gaps = {}; // problem text -> {at, tuples}, so one problem is reported once with its variant count
   const gap = (at, problem, t) => { (gaps[problem] = gaps[problem] || { at, tuples: [] }).tuples.push(t); };
+  const slotAxes = c.axes.filter(a => a.slot !== undefined);
   for (const t of selected) {
     const r = resolve(c, t);
+    // A Slot axis's node shows exactly where the tuple fills it (#121).
+    for (const a of slotAxes) {
+      const { filled } = a.values.find(v => v.key === t[a.key]);
+      const shown = r.layout[a.slot] && r.layout[a.slot].visible;
+      if (shown !== filled) gap(`layout ${a.slot}.visible`, `layout ${a.slot}.visible must be ${filled} where ${a.key} is ${t[a.key]}`, t);
+    }
     for (const section of SECTIONS)
       for (const [node, fields] of Object.entries(required[section]))
         for (const field of fields) {
@@ -318,6 +325,29 @@ function checkPatterns(c, err) {
     if (b.match) checkPattern(b.match, `properties.${p.key}.binds[${i}].match`);
     if (!anatomy[b.node]) err(3, `properties.${p.key}.binds[${i}]`, `unknown anatomy node "${b.node}"`);
   }));
+  // A Slot axis (#121, ADR 0011) names a non-root anatomy node; one value fills the slot and one leaves it empty.
+  for (const a of c.axes) {
+    const at = `axes.${a.key}`;
+    if (a.slot === undefined) {
+      if (a.values.some(v => 'filled' in v)) err(3, at, `\`filled\` is for a Slot axis, and ${a.key} names no \`slot\``);
+      continue;
+    }
+    if (!anatomy[a.slot] || a.slot === c.anatomy.name) err(3, `${at}.slot`, `slot "${a.slot}" is not a non-root anatomy node`);
+    if (a.canonical) err(3, at, `${a.key} is canonical; a Slot axis never is`);
+    if (a.values.some(v => typeof v.filled !== 'boolean')) err(3, at, 'every value of a Slot axis says whether it is `filled` (true or false)');
+    else if (a.values.length !== 2 || a.values.filter(v => v.filled).length !== 1) err(3, at, 'a Slot axis needs one filled and one empty value');
+  }
+  // An INSTANCE_SWAP whose node a Slot axis shows and hides says so in `code.visibleWhen: {axis}` (a string there
+  // names the BOOLEAN that shows it instead).
+  for (const p of c.properties || []) {
+    const when = p.code && p.code.visibleWhen;
+    if (!isObj(when)) continue;
+    const at = `properties.${p.key}.code.visibleWhen`;
+    const axis = c.axes.find(a => a.key === when.axis && a.slot !== undefined);
+    if (!axis) err(3, at, `visibleWhen names ${JSON.stringify(when.axis)}, which is not a Slot axis`);
+    else (p.binds || []).filter(b => b.node !== axis.slot)
+      .forEach(b => err(3, at, `Slot axis ${axis.key} shows "${axis.slot}", not "${b.node}"`));
+  }
   return domain;
 }
 

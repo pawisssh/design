@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "designSystem": { "key": "shadcn-prototype", "name": "shadcn/ui (PROTOTYPE, #88)" },
+  "source": {
+    "codeLibrary": "shadcn/ui",
+    "adapter": "shadcn-prototype",
+    "repository": "https://ui.shadcn.com (registry @shadcn, style new-york-v4)",
+    "packages": { "tailwindcss": "4.3.3" },
+    "snapshotId": "sha256:prototype"
+  },
+  "collections": [
+    { "key": "theme", "name": "Theme", "modes": [{ "key": "light", "label": "Light" }, { "key": "dark", "label": "Dark" }] },
+    { "key": "layout", "name": "Layout", "modes": [{ "key": "default", "label": "Default" }] }
+  ],
+  "variables": {
+    "spacing-0": { "collection": "layout", "name": "Spacing/0", "type": "FLOAT", "scopes": ["GAP", "WIDTH_HEIGHT"], "values": { "default": { "value": 0 } } },
+    "spacing-1": { "collection": "layout", "name": "Spacing/1", "type": "FLOAT", "scopes": ["GAP", "WIDTH_HEIGHT"], "values": { "default": { "value": 4 } } },
+    "spacing-1.5": { "collection": "layout", "name": "Spacing/1.5", "type": "FLOAT", "scopes": ["GAP", "WIDTH_HEIGHT"], "values": { "default": { "value": 6 } } },
+    "spacing-2": { "collection": "layout", "name": "Spacing/2", "type": "FLOAT", "scopes": ["GAP", "WIDTH_HEIGHT"], "values": { "default": { "value": 8 } } },
+    "spacing-2.5": { "collection": "layout", "name": "Spacing/2.5", "type": "FLOAT", "scopes": ["GAP", "WIDTH_HEIGHT"], "values": { "default": { "value": 10 } } },
+    "spacing-3": { "collection": "layout", "name": "Spacing/3", "type": "FLOAT", "scopes": ["GAP", "WIDTH_HEIGHT"], "values": { "default": { "value": 12 } } },
+    "spacing-4": { "collection": "layout", "name": "Spacing/4", "type": "FLOAT", "scopes": ["GAP", "WIDTH_HEIGHT"], "values": { "default": { "value": 16 } } },
+    "spacing-6": { "collection": "layout", "name": "Spacing/6", "type": "FLOAT", "scopes": ["GAP", "WIDTH_HEIGHT"], "values": { "default": { "value": 24 } } },
+    "spacing-8": { "collection": "layout", "name": "Spacing/8", "type": "FLOAT", "scopes": ["GAP", "WIDTH_HEIGHT"], "values": { "default": { "value": 32 } } },
+    "spacing-9": { "collection": "layout", "name": "Spacing/9", "type": "FLOAT", "scopes": ["GAP", "WIDTH_HEIGHT"], "values": { "default": { "value": 36 } } },
+    "spacing-10": { "collection": "layout", "name": "Spacing/10", "type": "FLOAT", "scopes": ["GAP", "WIDTH_HEIGHT"], "values": { "default": { "value": 40 } } },
+    "radius-md": { "collection": "layout", "name": "Radius/md", "type": "FLOAT", "scopes": ["CORNER_RADIUS"], "values": { "default": { "value": 8, "from": "calc(var(--radius) - 2px), --radius 0.625rem" } } },
+    "primary": { "collection": "theme", "name": "Color/primary", "type": "COLOR", "scopes": ["ALL_FILLS", "STROKE_COLOR"], "values": { "light": { "value": "#171717" }, "dark": { "value": "#e5e5e5" } } },
+    "primary-foreground": { "collection": "theme", "name": "Color/primary-foreground", "type": "COLOR", "scopes": ["ALL_FILLS", "STROKE_COLOR"], "values": { "light": { "value": "#fafafa" }, "dark": { "value": "#171717" } } },
+    "background": { "collection": "theme", "name": "Color/background", "type": "COLOR", "scopes": ["ALL_FILLS", "STROKE_COLOR"], "values": { "light": { "value": "#ffffff" }, "dark": { "value": "#0a0a0a" } } },
+    "foreground": { "collection": "theme", "name": "Color/foreground", "type": "COLOR", "scopes": ["ALL_FILLS", "STROKE_COLOR"], "values": { "light": { "value": "#0a0a0a" }, "dark": { "value": "#fafafa" } } },
+    "accent": { "collection": "theme", "name": "Color/accent", "type": "COLOR", "scopes": ["ALL_FILLS", "STROKE_COLOR"], "values": { "light": { "value": "#f5f5f5" }, "dark": { "value": "#262626" } } },
+    "accent-foreground": { "collection": "theme", "name": "Color/accent-foreground", "type": "COLOR", "scopes": ["ALL_FILLS", "STROKE_COLOR"], "values": { "light": { "value": "#171717" }, "dark": { "value": "#fafafa" } } },
+    "border": { "collection": "theme", "name": "Color/border", "type": "COLOR", "scopes": ["STROKE_COLOR"], "values": { "light": { "value": "#e5e5e5" }, "dark": { "value": "#ffffff1a" } } }
+  },
+  "textStyles": {
+    "text-sm-medium": { "name": "Text/sm medium", "fontFamily": "Inter", "fontStyle": "Medium", "fontSize": 14, "lineHeight": { "unit": "PIXELS", "value": 20 }, "fontWeight": 500 },
+    "text-xs-medium": { "name": "Text/xs medium", "fontFamily": "Inter", "fontStyle": "Medium", "fontSize": 12, "lineHeight": { "unit": "PIXELS", "value": 16 }, "fontWeight": 500 }
+  },
+  "notes": [
+    { "level": "info", "at": "", "message": "PROTOTYPE for #88, not a Design System. Only what the Button prototype binds; colours are the new-york-v4 neutral theme as hex." }
+  ]
+}

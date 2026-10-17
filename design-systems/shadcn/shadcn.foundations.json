@@ -56,6 +56,9 @@
       "spacing-0",
       "spacing-1",
       "spacing-1_5",
+      "spacing-3",
+      "spacing-3_5",
+      "spacing-4",
       "spacing-6",
       "spacing-7",
       "spacing-8",
@@ -2319,7 +2322,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "spacing-32": {
       "collection": "layout",
@@ -2388,7 +2393,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "spacing-4": {
       "collection": "layout",
@@ -2411,7 +2418,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "spacing-40": {
       "collection": "layout",

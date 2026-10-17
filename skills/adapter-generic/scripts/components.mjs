@@ -12,13 +12,16 @@
 // What it reads, for the family's root component (the export named after the family):
 // - axes: each cva variant axis, then an axis per attribute state the CSS styles (ATTR_AXES), then the canonical
 //   State from the CSS pseudo-classes. Every axis is fully selected.
+// - Slot axes (#121, ADR 0011): a slot whose presence (`has-data-[icon=inline-start]:pl-2`, compiled to
+//   `:has([data-icon="inline-start"])`) changes the root is an axis over a FRAME the root holds, shown where the slot
+//   is filled and sized by the svg size utilities (`[&_svg:not([class*='size-'])]:size-4`).
 // - layout and paint of the root node, per variant: the cva classes each variant renders, merged as `cn()` merges
 //   them, then the CSS cascade over their compiled rules (specificity, then output order).
 // - paint that differs by Mode, carries an opacity or mixes tokens (#120): a Synthesized token, a per-mode Theme
 //   component token the Contract binds as a plain {token}. The foundations step re-derives the same tokens through
 //   readFamily() and writes them into the Foundations document, which this step then requires to hold them.
-// What it leaves to later tickets, each in a note: text and anatomy beyond the root (#122), slot conditions (#121)
-// and styling set by an ancestor (ADR 0012).
+// What it leaves to later tickets, each in a note: text, the icon each slot frame stands for and the rest of the
+// anatomy (#122), any other `:has(…)` condition, and styling set by an ancestor (ADR 0012).
 // Generation throws (the CLI exits 1 and writes nothing) on anything it cannot read exactly: compound variants, an
 // attribute state with no known state words, layout, an opacity or an effect's shape that differs by Mode, relative
 // colour syntax, a Synthesized name a Code Library token already has, a border whose colour comes from the base
@@ -44,6 +47,12 @@ const STATES = ['hover', 'active', 'focus', 'disabled'];
 const STATE_CSS = [':hover', ':active', ':focus-visible', ':focus', ':disabled', '[aria-disabled="true"]', '[data-disabled]'];
 const NATIVE_DISABLED = new Set(['button', 'input', 'select', 'textarea', 'fieldset']);
 const VARIANT_LIMIT = 600; // ADR 0004
+// The content of a slot a Contract carries: an svg, sized unless the consumer sizes it (#121).
+const SLOT_CONTENT = /^svg(:not\(\[class\*='size-'\]\))?$/;
+const SIZE_FIELDS = ['width', 'height'];
+const FRAME_FIELDS = [...SIZE_FIELDS, 'visible'];
+// Logical sides, start before end, order a family's slot frames; any other slot follows them by key.
+const SIDES = ['inline-start', 'inline-end'];
 // CSS properties a Contract field carries; any other utility is reported, not carried.
 const LAYOUT_PROPS = ['display', 'flex-direction', 'justify-content', 'align-items', 'gap', 'width', 'height', 'border-radius',
   'border-width', 'padding', 'padding-inline', 'padding-block', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left'];
@@ -99,7 +108,7 @@ function variantsOf(candidate) {
 }
 
 /**
- * Read one family at the exact tier. Returns {name, file, files, axes, layout, paint, synthesized, notes, omit,
+ * Read one family at the exact tier. Returns {name, file, files, axes, anatomy, layout, paint, synthesized, notes, omit,
  * expectedCount}: `synthesized` maps each Synthesized token's flat name to its Foundations variable, by name, and
  * `paint` binds it as {token}. `foundations` need only hold the Code Library tokens. Throws on anything it cannot
  * read exactly (see the header).
@@ -160,7 +169,24 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     else if (props.some(p => LAYOUT_PROPS.includes(p) || PAINT_PROPS.includes(p))) carried.add(c);
     else report[props.some(p => TEXT_PROPS.includes(p)) ? 'text' : 'other'].push(c);
   }
-  const live = entries.filter(e => carried.has(e.candidate)).flatMap(e => ruleOf[e.candidate].map(r => ({ ...r, entry: e })));
+  const list = cs => cs.join(', ');
+  const ruled = carry => entries.filter(e => carry.has(e.candidate)).flatMap(e => ruleOf[e.candidate].map(r => ({ ...r, entry: e })));
+  const live = ruled(carried);
+  // A slot whose presence changes the root is a Slot axis over a frame the root holds (#121, ADR 0011); the svg size
+  // utilities size each frame, and any other descendant utility stays a note.
+  const side = s => (SIDES.includes(s.value) ? SIDES.indexOf(s.value) : SIDES.length);
+  const slots = [...new Set(live.map(r => r.when.slot).filter(Boolean))].map(sel => {
+    const [, attr, value] = /^\[([\w-]+)="([^"]*)"\]$/.exec(sel);
+    const utilities = [...new Set(live.filter(r => r.when.slot === sel).map(r => r.candidate))];
+    if (!value) fail(`${list(utilities)}: :has(${sel}) names no slot value`);
+    const key = `${attr.replace(/^data-/, '')}-${value}`;
+    return { sel, key, value, node: title(key), utilities };
+  }).sort((a, b) => side(a) - side(b) || byKey(a.key, b.key));
+  const slotOf = Object.fromEntries(slots.map(s => [s.sel, s.key]));
+  const sizing = new Set(slots.length ? report.descendant.filter(c => ruleOf[c].every(r => SLOT_CONTENT.test(r.target))
+    && [...propsOf(c)].every(p => SIZE_FIELDS.includes(p))) : []);
+  report.descendant = report.descendant.filter(c => !sizing.has(c));
+  const content = ruled(sizing);
 
   // 4. Axes: cva axes, attribute axes, the canonical State.
   const attrsUsed = new Set();
@@ -186,6 +212,11 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       axes.push({ key: ax.key, label: ax.label, default: ax.off, defaultSource: `${attr} absent: ${Name} renders without it`, values: [
         { key: ax.off, label: title(ax.off), code: {}, css: `:not([${attr}="true"])` },
         { key: ax.on, label: title(ax.on), code: { [attr]: true }, css: `[${attr}="true"]` }] });
+  for (const s of slots)
+    axes.push({ key: s.key, label: s.node, slot: s.node, default: 'none',
+      defaultSource: `${Name} renders the children it is given; with no ${s.sel} child, none of ${list(s.utilities)} applies`, values: [
+        { key: 'none', label: 'False', filled: false, code: {}, css: `:not(:has(${s.sel}))` },
+        { key: s.key, label: 'True', filled: true, code: {}, css: `:has(${s.sel})` }] });
   const stateValue = key => {
     const css = [...stateCss[key]].sort((a, b) => STATE_CSS.indexOf(a) - STATE_CSS.indexOf(b));
     let code = null;
@@ -239,6 +270,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     const w = r.when;
     if (!keep.has(r.entry) || (w.mode && w.mode !== mode) || (w.state && w.state !== t.state)) return false;
     if (Object.keys(w.attrs).some(a => t[ATTR_AXES[a].key] !== ATTR_AXES[a].on)) return false;
+    if (w.slot && t[slotOf[w.slot]] === 'none') return false;
     return !w.props || Object.entries(w.props).every(([p, v]) => t[p] === v);
   };
 
@@ -347,7 +379,17 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       by.ring = ring;
     }
     if (op) by.opacity = op;
-    return { layout, paint, by };
+    const frames = {};
+    const sizes = content.filter(r => applies(r, t, mode, keep));
+    for (const s of slots) {
+      const f = frames[s.node] = {};
+      for (const field of SIZE_FIELDS) {
+        const r = winner(sizes, [field]);
+        f[field] = r ? length(field, r, [field]).value : fail(`${Name} (${variantName({ axes }, t)}): no svg size utility sizes the ${s.node} slot`);
+      }
+      f.visible = t[s.key] !== 'none';
+    }
+    return { layout, paint, by, frames };
   }
 
   // One Mode's value of a Synthesized token, as a Foundations value form: what the winning rule `r` sets there.
@@ -388,6 +430,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const values = { layout: {}, paint: {} };
   LAYOUT_FIELDS.forEach(f => { values.layout[f] = []; });
   PAINT_FIELDS.forEach(f => { values.paint[f] = []; });
+  const frameValues = Object.fromEntries(slots.map(s => [s.node, Object.fromEntries(FRAME_FIELDS.map(f => [f, []]))]));
   const uses = new Map(); // placeholder JSON -> the rules that set it, per Mode
   const json = v => JSON.stringify(v);
   const modeDiffers = (field, r, i) =>
@@ -411,10 +454,13 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
           fail(`${Name}.${f}: ${r ? `${r.candidate} (${at(r.entry)})` : 'a value'} differs by mode (${modes[i].key}); layout is the same in every Mode`);
         }
       if (o.paint.opacity !== light.paint.opacity) modeDiffers('opacity', o.by.opacity || light.by.opacity, i);
+      if (json(o.frames) !== json(light.frames))
+        fail(`${Name}: a slot frame's svg size (${list([...sizing])}) differs by mode (${modes[i].key}); layout is the same in every Mode`);
       const shape = x => json(x.paint.effects.map(({ color, ...e }) => e));
       if (shape(o) !== shape(light)) modeDiffers('effects', o.by.ring || light.by.ring, i);
     });
     for (const f of LAYOUT_FIELDS) values.layout[f].push(light.layout[f]);
+    for (const s of slots) for (const f of FRAME_FIELDS) frameValues[s.node][f].push(light.frames[s.node][f]);
     values.paint.fill.push(colourValue('fill', rendered, x => x.paint.fill));
     values.paint.stroke.push(colourValue('stroke', rendered, x => x.paint.stroke));
     values.paint.opacity.push(light.paint.opacity);
@@ -423,16 +469,19 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   for (const f of LAYOUT_FIELDS) if (values.layout[f].every(v => v === undefined)) delete values.layout[f];
 
   // 7. Rules: per field, the fewest axes it depends on; the commonest value in `{}`, the rest as exceptions.
-  const layout = compress(axes, tuples, values.layout, Name);
-  const paint = compress(axes, tuples, values.paint, Name);
+  const byNode = { layout: { [Name]: values.layout, ...frameValues }, paint: { [Name]: values.paint } };
+  const layout = compress(axes, tuples, byNode.layout);
+  const paint = compress(axes, tuples, byNode.paint);
   const check = { axes, layout, paint, properties: [] };
   tuples.forEach((t, i) => {
     const r = resolve(check, t);
-    for (const [section, fields] of [['layout', values.layout], ['paint', values.paint]])
-      for (const [f, list] of Object.entries(fields))
-        if (json(r[section][Name][f]) !== json(list[i]))
-          fail(`internal: the ${section} rules do not reproduce ${Name}.${f} at ${variantName(check, t)}`);
+    for (const section of ['layout', 'paint'])
+      for (const [node, fields] of Object.entries(byNode[section]))
+        for (const [f, vs] of Object.entries(fields))
+          if (json(r[section][node][f]) !== json(vs[i]))
+            fail(`internal: the ${section} rules do not reproduce ${node}.${f} at ${variantName(check, t)}`);
   });
+  const anatomy = { name: Name, type: 'COMPONENT', ...(slots.length && { children: slots.map(s => ({ name: s.node, type: 'FRAME', role: 'icon' })) }) };
 
   // Each placeholder becomes a Synthesized token named by its rule (#70 §1): the family, the match's value keys in
   // axis order (an array's joined by "+"), the node unless it is the root, and the field.
@@ -467,12 +516,11 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
 
   // 8. Notes.
   const expectedCount = expand({ axes, excluded: [], selection: { omit } }).length;
-  const list = cs => cs.join(', ');
   const notes = [];
   if (drops.size)
     notes.push({ level: 'info', at: `${file} ${root.cva}`, message: `Each variant's classes are merged as cn() merges them, modelled (no package code runs): a later class drops an earlier one with the same variants whose CSS properties it covers, or that also sets font-size. Here: ${list([...drops].sort(byKey))}.` });
   const why = {
-    slot: 'Styled by what the component holds (:has); the slot axis is #121. Not carried.',
+    slot: 'Styled by what the component holds, in a :has() form other than :has([attr="value"]), the only one read as a Slot axis (#121). Not carried.',
     ancestor: 'Styled by an ancestor; that is a Mode or the parent\'s Contract (ADR 0012). Not carried.',
     descendant: 'Styles a descendant; anatomy beyond the root is the agent tier (#122). Not carried.',
     media: 'Under a media query no tuple decides. Not carried.',
@@ -481,6 +529,8 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     other: 'No Contract field carries these properties. Not carried.',
     none: 'Compiles to no CSS (a group or peer marker).',
   };
+  if (slots.length)
+    notes.push({ level: 'info', at: 'anatomy', message: `${list(slots.map(s => s.node))}: a frame per Slot axis (#121, ADR 0011), shown where its slot is filled and sized by ${list([...sizing].sort(byKey))}. A consumer size-* class on the svg overrides that size, off-axis (#62). Each frame stands in for the slot's icon, an INSTANCE with an INSTANCE_SWAP whose code.visibleWhen names its axis: the agent tier (#122).` });
   for (const kind of ['slot', 'ancestor', 'descendant', 'media', 'condition', 'text', 'other', 'none'])
     if (report[kind].length) notes.push({ level: 'info', at: file, message: `${list(report[kind])}: ${why[kind]}` });
   const exportedParts = components.filter(c => c.exported && c !== root).map(c => c.name);
@@ -489,14 +539,14 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   if (expectedCount > VARIANT_LIMIT)
     notes.push({ level: 'verify', at: 'selection', message: `${expectedCount} variants: past ADR 0004's ~${VARIANT_LIMIT}. Only attribute twins are omitted and nothing else is cut; probe the build cost before building it, or narrow it with selection.omit.` });
 
-  return { name: Name, file, files: sortedFiles, element: root.element, axes, layout, paint,
+  return { name: Name, file, files: sortedFiles, element: root.element, axes, anatomy, layout, paint,
     synthesized: Object.fromEntries(Object.keys(synthesized).sort(byKey).map(k => [k, synthesized[k]])),
     notes, omit, expectedCount, alias: `${ui}/${family}` };
 }
 
 /**
  * Rules for one section: [{match, set: {node: {field: value}}}], `{}` first, a later rule winning where two match
- * (contract.mjs resolve). `values` is {field: [value per tuple]}. Per field:
+ * (contract.mjs resolve). `byNode` is {node: {field: [value per tuple]}}, the root first. Per node and field:
  * - drop every axis the value does not depend on;
  * - `{}` holds the Base Component's value;
  * - then each match over the remaining axes, fewest axes first (axis order, then value order), takes the value of its
@@ -508,18 +558,19 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
  * - the matches over one set of axes that take the same value are merged while two differ in one axis alone.
  * Rule names depend on this (Synthesized tokens are named by their rule's match, #120).
  */
-function compress(axes, tuples, values, node) {
+function compress(axes, tuples, byNode) {
   const keys = axes.map(a => a.key);
   const base = Object.fromEntries(axes.map(a => [a.key, a.default]));
   const valueIndex = Object.fromEntries(axes.map(a => [a.key, a.values.map(v => v.key)]));
   const out = new Map();
-  const rule = match => {
+  const nodes = Object.keys(byNode);
+  const rule = (match, node) => {
     const k = JSON.stringify(match);
-    if (!out.has(k)) out.set(k, { match, set: { [node]: {} } });
-    return out.get(k).set[node];
+    if (!out.has(k)) out.set(k, { match, set: {} });
+    const set = out.get(k).set;
+    return (set[node] = set[node] || {});
   };
-  rule({});
-  for (const [field, list] of Object.entries(values)) {
+  for (const node of nodes) for (const [field, list] of Object.entries(byNode[node])) {
     const json = list.map(v => JSON.stringify(v));
     let dep = keys.slice();
     for (const k of keys) {
@@ -536,7 +587,7 @@ function compress(axes, tuples, values, node) {
     const actual = new Map();
     tuples.forEach((t, i) => { if (!actual.has(comboKey(t))) actual.set(comboKey(t), json[i]); });
     const baseJson = actual.get(comboKey(base));
-    rule({})[field] = JSON.parse(baseJson);
+    rule({}, node)[field] = JSON.parse(baseJson);
     const current = new Map([...actual.keys()].map(k => [k, baseJson]));
     const combos = [...actual.keys()].map(k => Object.fromEntries(k.split('\0').map((v, i) => [dep[i], v])));
     // Every set of the remaining axes, fewest first, then in axis order.
@@ -577,7 +628,7 @@ function compress(axes, tuples, values, node) {
           const vs = valueIndex[a].filter(v => r.match[a].includes(v));
           match[a] = vs.length === 1 ? vs[0] : vs;
         }
-        rule(match)[field] = JSON.parse(r.json);
+        rule(match, node)[field] = JSON.parse(r.json);
         for (const c of combos) if (subset.every(a => r.match[a].includes(c[a]))) current.set(comboKey(c), r.json);
       }
     }
@@ -598,9 +649,8 @@ function compress(axes, tuples, values, node) {
     }
     return 0;
   };
-  const fieldOrder = Object.keys(values);
-  return [...out.values()].sort(cmp).map(r => ({ match: r.match,
-    set: { [node]: Object.fromEntries(fieldOrder.filter(f => f in r.set[node]).map(f => [f, r.set[node][f]])) } }));
+  return [...out.values()].sort(cmp).map(r => ({ match: r.match, set: Object.fromEntries(nodes.filter(n => r.set[n])
+    .map(n => [n, Object.fromEntries(Object.keys(byNode[n]).filter(f => f in r.set[n]).map(f => [f, r.set[n][f]]))])) }));
 }
 
 /**
@@ -617,7 +667,7 @@ export function contractFor(f, family, foundations) {
     axes: f.axes,
     excluded: [],
     selection: { status: 'draft', omit: f.omit, expectedCount: f.expectedCount, approval: null },
-    anatomy: { name: f.name, type: 'COMPONENT' },
+    anatomy: f.anatomy,
     properties: [],
     layout: f.layout,
     paint: f.paint,

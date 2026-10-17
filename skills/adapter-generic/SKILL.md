@@ -7,7 +7,7 @@ description: Generic Adapter for shadcn/ui-style Code Libraries, from a consumer
 
 The Adapter for Code Libraries a consumer installs as source and themes with CSS custom properties and Tailwind v4, starting with shadcn/ui (spec [#103](https://github.com/pawisssh/design/issues/103)). It is a sibling of the [Carbon Adapter](../adapter-carbon/SKILL.md) with the same outputs. What a Foundations document must contain is defined in the shared [`contract`](../contract/SKILL.md) skill's [foundations schema](../contract/references/foundations-schema.md); this skill only knows how to read the project.
 
-Today it has the exact tier: the Foundations step ([#118](https://github.com/pawisssh/design/issues/118)), the component step ([#119](https://github.com/pawisssh/design/issues/119)) and Synthesized tokens ([#120](https://github.com/pawisssh/design/issues/120)). The slot axis ([#121](https://github.com/pawisssh/design/issues/121)), the agent tier ([#122](https://github.com/pawisssh/design/issues/122)) and the preview renderer are later tickets.
+Today it has the exact tier: the Foundations step ([#118](https://github.com/pawisssh/design/issues/118)), the component step ([#119](https://github.com/pawisssh/design/issues/119)), Synthesized tokens ([#120](https://github.com/pawisssh/design/issues/120)) and Slot axes ([#121](https://github.com/pawisssh/design/issues/121)). The agent tier ([#122](https://github.com/pawisssh/design/issues/122)) and the preview renderer are later tickets.
 
 ## Inputs
 
@@ -136,14 +136,15 @@ It reads one component family of the project, `<ui alias>/<key>.tsx`, and writes
   - a Mode, from `:is(<mode selector> *)`;
   - a canonical state: `:hover` (inside `@media (hover: hover)`), `:focus-visible` and `:focus` → `focus`, `:active`, and `:disabled` with its other spellings `[aria-disabled="true"]` and `[data-disabled]`;
   - an attribute the component sets from a prop (`[data-size="sm"]`), which is that prop's value;
-  - any other attribute (`[aria-invalid="true"]`), which must be in the attribute table below.
+  - any other attribute (`[aria-invalid="true"]`), which must be in the attribute table below;
+  - a filled slot, `:has([<attr>="<value>"])` (`has-data-[icon=inline-start]:pl-2`), which is a [Slot axis](#slot-axes). Any other `:has(…)` is noted, not carried.
 
   Specificity counts `:is`, `:not` and `:has` as their most specific argument and `:where` as nothing. The winner per property is the highest specificity, then the latest rule in the output.
 - **Merging.** Before the cascade, each variant's classes are merged the way `cn()` merges them. This is modelled; no package code runs. A later class drops an earlier one that has the same variants and whose CSS properties it covers (`rounded-[min(…)]` drops `rounded-lg`). It also drops an earlier class when both set a font size, as tailwind-merge's font-size group does (`text-[0.8rem]` drops `text-sm`). No other class group is modelled. The Contract notes each drop.
 
 ### Axes
 
-In order: each cva variant axis, then the attribute axes, then the canonical State.
+In order: each cva variant axis, then the attribute axes, then the Slot axes, then the canonical State.
 
 - **cva axes.** Keys and values are the code's, and labels are Title Case (`icon-xs` → `Icon Xs`). Each value's `code` is `{<axis>: <value>}`. The default comes from `defaultVariants`, or else from the destructured default.
 - **Attribute axes.** Each is absent by default:
@@ -154,8 +155,9 @@ In order: each cva variant axis, then the attribute axes, then the canonical Sta
   | `aria-expanded="true"` | `expanded` | `collapsed`, `expanded` |
 
   Any other attribute state fails, naming the utility.
+- **Slot axes.** See [Slot axes](#slot-axes).
 - **State.** `enabled`, then each of `hover`, `active`, `focus` and `disabled` that a carried rule uses. `css` lists the selectors the CSS uses for that state, joined with ", ". `disabled` is `{disabled: true}` on a native control, else the attribute.
-- **Selection.** An attribute axis changes only the variants whose classes style that attribute, so `selection.omit` drops its on value everywhere else: those variants would be twins of their off value. The omit is read from the source, never listed by hand. Button omits `expanded` for `variant` `default`, `destructive` and `link`, which have no `aria-expanded:` utility: 768 − 192 = 576 variants. Nothing else is cut. Past ADR 0004's ~600 variants after the omit, a `verify` note says so.
+- **Selection.** An attribute axis changes only the variants whose classes style that attribute, so `selection.omit` drops its on value everywhere else: those variants would be twins of their off value. The omit is read from the source, never listed by hand. Button omits `expanded` for `variant` `default`, `destructive` and `link`, which have no `aria-expanded:` utility: 768 − 192 = 576, and its two Slot axes make that 2304 variants. Nothing else is cut. Past ADR 0004's ~600 variants after the omit, a `verify` note says so, as it does for Button.
 
 ### Layout and paint of the root
 
@@ -180,6 +182,16 @@ In order: each cva variant axis, then the attribute axes, then the canonical Sta
   - a border with no `border-color` utility, which would take the base layer's colour;
   - a ring with no colour.
 
+### Slot axes
+
+A slot whose presence changes the root ([ADR 0011](../../docs/adr/0011-slot-dependent-styling-becomes-a-slot-axis.md), #121) is a Slot axis over a FRAME the root holds. Button's `has-data-[icon=inline-start]:pl-2` compiles to `:has([data-icon="inline-start"])`.
+
+- **Axis.** One per attribute selector a carried rule needs, keyed `<attr without data->-<value>` (`icon-inline-start`), labelled in Title Case, with `slot` the node of the same name (`Icon Inline Start`). Its values are `none` (`False`, `filled: false`, `css: :not(:has(…))`) and the key (`True`, `filled: true`, `css: :has(…)`), both with `code: {}`, and `none` is the default. Slots on the logical sides come start first, then end; any other slot follows by key.
+- **Padding.** A slot rule applies where its axis is filled, and wins the cascade by its specificity: Default `px-2.5` with `has-data-[icon=inline-start]:pl-2` is 10 → 8 px of CSS, recorded as 11 → 9 with the border; xs is 8 → 6 (9 → 7), sm 10 → 6 (11 → 7). The icon sizes have no slot utility, so their padding stays the same, but a filled slot still shows its frame there, so it is no twin. An icon size with both slots empty is an empty square; the exact tier cuts only twins, so it stays selected for the owner to omit in To-preview.
+- **Against ADR 0011.** The ADR's example is new-york-v4's single `has-[>svg]:px-3` slot (192 → 288 variants with the empty icon-only squares omitted). radix-nova marks its slots with `data-icon`, so Button has two Slot axes and 2304 variants, and `:has(>svg)`, which names no slot, stays a note.
+- **Frame.** Each slot node is a FRAME (role `icon`) whose `width` and `height` come from the descendant svg size utilities (`[&_svg:not([class*='size-'])]:size-4`, `size-3` in xs and icon-xs, `size-3.5` in sm), merged as `cn()` merges them, and whose `visible` is the axis value's `filled`. A note says that a consumer `size-*` class on the svg overrides the size (off-axis) and that the frame stands in for the icon instance and its INSTANCE_SWAP with `code.visibleWhen: {axis}`, which are the agent tier (#122): the exact tier has no icon to name as `icons.default`. Other descendant utilities (`[&_svg]:shrink-0`) stay notes.
+- **Fails:** a slot selector with an empty value; a slot no svg size utility sizes; a frame size that differs by Mode.
+
 ### Synthesized tokens
 
 Paint the Foundations tokens cannot bind directly becomes a Synthesized token (#70, #120): a per-mode COLOR in the `theme` collection that the Contract binds as a plain `{token}`. That is paint that differs by Mode (`bg-background dark:bg-input/30`), a token at an opacity (`bg-primary/80`) or a `color-mix` of tokens. A value that is the same plain token in every Mode stays that token.
@@ -200,13 +212,13 @@ Paint the Foundations tokens cannot bind directly becomes a Synthesized token (#
 ### Left for later tickets
 
 - **Notes.** Each of these gets an `info` note, and none is carried:
-  - slot conditions such as `has-data-[icon=…]` (#121);
+  - `:has(…)` conditions other than `:has([<attr>="<value>"])`, such as `has-[>svg]`;
   - ancestor styling such as `in-data-[slot=button-group]` (ADR 0012);
-  - descendant styling such as `[&_svg]`, plus text utilities and parts other than the root (#122);
+  - descendant styling other than a slot frame's svg size, such as `[&_svg]:shrink-0`, plus text utilities and parts other than the root and its slot frames (#122);
   - other media queries and conditions;
   - utilities no field carries;
   - classes that compile to no CSS.
-- **Defaults.** The anatomy is the root only, `properties` is `[]`, and `figma.grid` is a placeholder: `size` across, every other axis down.
+- **Defaults.** The anatomy is the root and its slot frames, `properties` is `[]`, and `figma.grid` is a placeholder: `size` across, every other axis down.
 
 Tests: `node --test skills/adapter-generic/test/*.test.mjs`. They skip, saying so, until the tools are fetched.
 

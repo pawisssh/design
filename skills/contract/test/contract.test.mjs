@@ -472,3 +472,84 @@ test('draftedKey writes the key a value at section, match, node and field is dra
   assert.equal(contract.draftedKey('layout', { size: ['lg', 'xl', '2xl'] }, 'Button', 'paddingTop'), 'layout{"size":["lg","xl","2xl"]}.Button.paddingTop');
   assert.equal(contract.draftedKey('paint', { state: 'hover', kind: 'ghost' }, 'Button', 'fill'), 'paint{"kind":"ghost","state":"hover"}.Button.fill');
 });
+
+// ---------- Slot axis (#121, ADR 0011), on the shadcn Button of the #88 prototype (prototype/slot-styling) ----------
+const slotButton = () => load('skills/contract/test/fixtures/slot-axis/button.component.json');
+const slotFoundations = load('skills/contract/test/fixtures/slot-axis/shadcn.foundations.json');
+const slotRejects = (c, rule, ...parts) => {
+  const result = contract.validate(c, slotFoundations);
+  assert.equal(result.ok, false, 'expected the Contract to be rejected');
+  assert.ok(result.errors.some(e => e.rule === rule && parts.every(p => e.message.includes(p))),
+    `no rule ${rule} error containing ${JSON.stringify(parts)}; got:\n${result.errors.map(e => `  [${e.rule}] ${e.message}`).join('\n')}`);
+};
+
+test('a shadcn Button with an Icon Slot axis is valid and expands to 72 variants', () => {
+  assert.deepEqual(contract.validate(slotButton(), slotFoundations), { ok: true, errors: [] });
+  assert.equal(contract.expand(slotButton()).length, 72);
+});
+
+test('the Slot axis value picks the padding: Default size is 16 empty, 12 filled', () => {
+  const c = slotButton();
+  const at = icon => contract.resolve(c, { variant: 'default', size: 'default', icon, state: 'enabled' }).layout;
+  assert.deepEqual([at('none').Button.paddingLeft.token, at('none').Icon.visible], ['spacing-4', false]);
+  assert.deepEqual([at('icon').Button.paddingLeft.token, at('icon').Icon.visible], ['spacing-3', true]);
+});
+
+test('rejects a Slot axis whose slot is not a non-root anatomy node (rule 3)', () => {
+  for (const slot of ['Button', 'Glyph']) {
+    const c = slotButton();
+    c.axes.find(a => a.key === 'icon').slot = slot;
+    slotRejects(c, 3, `slot "${slot}" is not a non-root anatomy node`);
+  }
+});
+
+test('rejects a Slot axis without one filled and one empty value (rule 3)', () => {
+  const both = slotButton();
+  both.axes.find(a => a.key === 'icon').values[0].filled = true;
+  slotRejects(both, 3, 'needs one filled and one empty value');
+  const unmarked = slotButton();
+  delete unmarked.axes.find(a => a.key === 'icon').values[1].filled;
+  slotRejects(unmarked, 3, 'every value of a Slot axis says whether it is `filled`');
+  const three = slotButton();
+  three.axes.find(a => a.key === 'icon').values.push({ key: 'two', label: 'Two', filled: true, code: {} });
+  slotRejects(three, 3, 'needs one filled and one empty value');
+});
+
+test('rejects `filled` on a value of an axis that names no slot (rule 3)', () => {
+  const c = slotButton();
+  c.axes.find(a => a.key === 'variant').values[0].filled = true;
+  slotRejects(c, 3, '`filled` is for a Slot axis, and variant names no `slot`');
+});
+
+test('rejects a canonical Slot axis (rule 3)', () => {
+  const c = slotButton();
+  c.axes.find(a => a.key === 'icon').canonical = true;
+  slotRejects(c, 3, 'icon is canonical; a Slot axis never is');
+});
+
+test('rejects a slot whose visible rule disagrees with the Slot axis (rule 5)', () => {
+  const c = slotButton();
+  c.layout = c.layout.filter(r => r.match.icon !== 'none');
+  slotRejects(c, 5, 'layout Icon.visible must be false where icon is none', 'in 24 selected variants');
+});
+
+test('rejects a BOOLEAN bound to a slot the Slot axis already shows and hides (rule 5)', () => {
+  const c = slotButton();
+  c.properties.push({ key: 'showIcon', label: 'Show icon', type: 'BOOLEAN', default: true, binds: [{ node: 'Icon', field: 'visible' }] });
+  slotRejects(c, 5, 'Icon.visible is set by a rule and bound to property showIcon');
+});
+
+test('an INSTANCE_SWAP visibleWhen names a Slot axis whose slot is the swapped node (rule 3)', () => {
+  const swap = c => c.properties.find(p => p.key === 'swapIcon');
+  const unknown = slotButton();
+  swap(unknown).code.visibleWhen = { axis: 'icons' };
+  slotRejects(unknown, 3, 'visibleWhen names "icons", which is not a Slot axis');
+  const plain = slotButton();
+  swap(plain).code.visibleWhen = { axis: 'size' };
+  slotRejects(plain, 3, 'visibleWhen names "size", which is not a Slot axis');
+  const other = slotButton();
+  other.anatomy.children.push({ name: 'End', type: 'INSTANCE', instanceOf: 'icon:default' });
+  other.layout[0].set.End = { visible: true };
+  swap(other).binds = [{ node: 'End', field: 'mainComponent' }];
+  slotRejects(other, 3, 'Slot axis icon shows "Icon", not "End"');
+});

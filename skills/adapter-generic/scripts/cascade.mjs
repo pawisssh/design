@@ -5,8 +5,9 @@
 //   `:disabled` with its other spellings `[aria-disabled="true"]` and `[data-disabled]`;
 // - an attribute condition: an attribute the component sets from its own prop (`[data-size="sm"]`) is that prop's
 //   value, and any other (`[aria-invalid="true"]`) is kept for the caller to sort;
-// - anything a tuple cannot decide is kept apart with its kind (`skip`): an ancestor (`:where(…) .x`), a slot
-//   (`:has(…)`), a descendant (`.x svg`), another media query, or another condition (`:not(…)`, two states).
+// - a filled slot, from `:has([<attr>="<value>"])` (shadcn `has-data-[icon=inline-start]`, #121), is kept for the caller;
+// - anything a tuple cannot decide is kept apart with its kind (`skip`): an ancestor (`:where(…) .x`), any other slot
+//   (`:has(>svg)`), a descendant (`.x svg`), another media query, or another condition (`:not(…)`, two states).
 // The winner for a property is the applicable rule with the highest specificity, then the latest in the output.
 
 const SUPPORTS = /^@supports\b/;
@@ -116,9 +117,10 @@ function pieces(s) {
  * The compiled rules of one utility `candidate`, each with its conditions.
  * `modes` is the Foundations document's Theme modes ([{key, selector}]); `attrs` maps an attribute the component
  * sets from a prop to that prop (`{"data-size": "size"}`).
- * Returns [{candidate, selector, decls, order, specificity, when: {mode, state, attrs, props?}, css, stateCss, skip?}]:
+ * Returns [{candidate, selector, decls, order, specificity, when: {mode, state, attrs, props?, slot?}, css, stateCss, skip?, target?}]:
  * `css` is the state and attribute part of the selector, `stateCss` its state part alone; `skip` names why a tuple
- * cannot decide the rule.
+ * cannot decide the rule, `target` the descendant a rule styles (`svg`), `when.slot` the attribute selector of the
+ * slot whose presence it needs.
  */
 export function candidateRules(rules, candidate, { modes = [], attrs = {} } = {}) {
   const cls = escapeClass(candidate);
@@ -137,12 +139,14 @@ export function candidateRules(rules, candidate, { modes = [], attrs = {} } = {}
       const mode = /^:is\((.+) \*\)$/.exec(p);
       const attr = /^\[([\w-]+)(?:="([^"]*)")?\]$/.exec(p);
       const pseudo = /^:([\w-]+)$/.exec(p);
+      const slot = /^:has\((\[[\w-]+="[^"]*"\])\)$/.exec(p);
       let state = null;
       if (mode && modes.some(m => m.selector === mode[1])) when.mode = modes.find(m => m.selector === mode[1]).key;
       else if (DISABLED_ATTRS.includes(p)) state = 'disabled';
       else if (pseudo && STATES[pseudo[1]]) state = STATES[pseudo[1]];
       else if (attr && attrs[attr[1]] && attr[2] !== undefined) props[attrs[attr[1]]] = attr[2];
       else if (attr) { when.attrs[attr[1]] = attr[2] === undefined ? '' : attr[2]; css.push(p); }
+      else if (slot && !when.slot) when.slot = slot[1];
       else skip = skip || (p.startsWith(':has(') ? 'slot' : 'condition');
       if (state) {
         if (when.state && when.state !== state) skip = skip || 'condition';
@@ -155,6 +159,7 @@ export function candidateRules(rules, candidate, { modes = [], attrs = {} } = {}
     if (Object.keys(props).length) when.props = props;
     const rule = { candidate, selector: r.selector, decls: r.decls, order: r.order, specificity: specificity(r.selector), when, css: css.join(''), stateCss: stateCss.join('') };
     if (skip) rule.skip = skip;
+    if (rest) rule.target = rest.trim();
     out.push(rule);
   }
   return out;
