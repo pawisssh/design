@@ -49,15 +49,16 @@ function parse(text) {
 }
 
 /**
- * The rules of Tailwind's utilities layer, in output order: [{selector, at: [at-rule], decls: {prop: value}, order}].
+ * The rules of one layer of Tailwind's output (`utilities` by default, or `base`), in output order:
+ * [{selector, at: [at-rule], decls: {prop: value}, order}].
  * An `@supports` branch is merged into the rule it guards, so its declaration replaces the fallback before it.
  */
-export function compiledRules(css) {
+export function compiledRules(css, layer = 'utilities') {
   const byKey = new Map();
   const visit = (nodes, at, selector) => {
     for (const n of nodes) {
       if (n.prelude.startsWith('@layer')) {
-        if (n.prelude === '@layer utilities') visit(n.children, at, null);
+        if (n.prelude === `@layer ${layer}`) visit(n.children, at, null);
         continue;
       }
       const isAt = n.prelude.startsWith('@');
@@ -72,7 +73,7 @@ export function compiledRules(css) {
       visit(n.children, nextAt, sel);
     }
   };
-  // Only the utilities layer: skip everything outside an @layer.
+  // Only that layer: skip everything outside an @layer.
   visit(parse(css).filter(n => n.prelude.startsWith('@layer')), [], null);
   return [...byKey.values()];
 }
