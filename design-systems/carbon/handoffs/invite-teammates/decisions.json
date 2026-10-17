@@ -1,0 +1,162 @@
+{
+  "condition:state.email": false,
+  "reach:invite-teammates:loading": {
+    "steps": [
+      {
+        "fill": "#email",
+        "value": "sam@example.com"
+      },
+      {
+        "click": "#send"
+      }
+    ]
+  },
+  "reach:invite-teammates:empty": {
+    "steps": [
+      {
+        "click": ".link-danger"
+      },
+      {
+        "click": ".link-danger"
+      }
+    ]
+  },
+  "reach:invite-teammates:success": {
+    "steps": [
+      {
+        "fill": "#email",
+        "value": "sam@example.com"
+      },
+      {
+        "click": "#send"
+      },
+      {
+        "clock": 800
+      }
+    ]
+  },
+  "recognise:input[type=email]": {
+    "draft": "text-input",
+    "tuple": {
+      "size": "md"
+    },
+    "via": "element",
+    "reason": "Carbon ships TextInput, but this Design System has no Contract for it yet"
+  },
+  "contract:text-input": {
+    "path": "design-systems/carbon/contracts/text-input.component.json"
+  },
+  "recognise:select": {
+    "noContract": "select",
+    "reason": "Carbon ships Select, but this Design System has no Contract for it yet"
+  },
+  "recognise:div.avatars>span": {
+    "proposal": "avatar-stack",
+    "tuple": {},
+    "via": "element"
+  },
+  "recognise:button.link-danger": {
+    "contract": "button",
+    "tuple": {
+      "kind": "danger--ghost",
+      "size": "sm"
+    },
+    "via": "element"
+  },
+  "recognise:button.btn.btn-success": {
+    "contract": "button",
+    "tuple": {
+      "kind": "secondary",
+      "size": "md"
+    },
+    "via": "library",
+    "candidates": [
+      {
+        "kind": "secondary",
+        "size": "md"
+      },
+      {
+        "kind": "primary",
+        "size": "md"
+      }
+    ]
+  },
+  "recognise:button.btn.btn-outline-secondary": {
+    "contract": "button",
+    "tuple": {
+      "kind": "tertiary",
+      "size": "md"
+    },
+    "via": "library"
+  },
+  "recognise:button.btn.btn-primary": {
+    "contract": "button",
+    "tuple": {
+      "kind": "primary",
+      "size": "md"
+    },
+    "via": "library"
+  },
+  "recognise:div.toast[role=status]": {
+    "noContract": "toast-notification",
+    "reason": "Carbon ships ToastNotification, but this Design System has no Contract for it yet"
+  },
+  "token:background-color:#fafafa": "background",
+  "token:color:#161616": "text-primary",
+  "token:font-size:20px": "heading-03-font-size",
+  "token:color:#525252": "text-secondary",
+  "textStyle:14/18/400/0.16": "body-compact-01",
+  "token:font-size:14px": "body-compact-01-font-size",
+  "token:background-color:#f4f4f4": "layer-01",
+  "textStyle:12/16/400/0.32": "label-01",
+  "feature": {
+    "owner": "to confirm: the Prototype names no owning team",
+    "goal": "Let a workspace member invite teammates by email and pick their role.",
+    "scope": [
+      "invite one teammate at a time",
+      "see and remove pending invites",
+      "seat count"
+    ],
+    "nonGoals": [
+      "bulk invite",
+      "billing for extra seats"
+    ]
+  },
+  "acceptance": [
+    {
+      "id": "send-disabled-until-email",
+      "screen": "invite-teammates",
+      "state": "default",
+      "given": "the email field is empty",
+      "when": "the screen shows",
+      "then": "Send invites is disabled"
+    },
+    {
+      "id": "sending",
+      "screen": "invite-teammates",
+      "state": "loading",
+      "given": "a valid email",
+      "when": "the member presses Send invites",
+      "then": "the button reads Sending… and stays disabled until the send finishes"
+    },
+    {
+      "id": "no-invites",
+      "screen": "invite-teammates",
+      "state": "empty",
+      "given": "no pending invites",
+      "when": "the screen shows",
+      "then": "the list reads No pending invites yet."
+    },
+    {
+      "id": "sent",
+      "screen": "invite-teammates",
+      "state": "success",
+      "given": "a send that succeeds",
+      "when": "it finishes",
+      "then": "a status toast reads Invites sent and the invite joins the list"
+    }
+  ],
+  "token:border-color:#8d8d8d": "border-strong-01",
+  "token:background-color:#ffffff": "field-02",
+  "token:color:#ffffff": "text-on-color"
+}
