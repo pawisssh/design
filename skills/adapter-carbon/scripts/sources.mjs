@@ -73,6 +73,15 @@ export async function fetchSources(dir = DEFAULT_DIR) {
     mkdirSync(dirname(out), { recursive: true });
     writeFileSync(out, bytes);
   }
+  // The files the committed Contracts pin, checked against those pins: their Drafted-value fingerprints (#144).
+  for (const [path, want] of contractPins()) {
+    const out = join(dir, 'carbon', path);
+    if (existsSync(out) && `sha256:${sha256(readFileSync(out))}` === want) continue;
+    const bytes = await download(`https://raw.githubusercontent.com/carbon-design-system/carbon/${CARBON.commit}/${path}`);
+    if (`sha256:${sha256(bytes)}` !== want) throw new Error(`${path}: sha256 does not match the Contract's pin ${want}`);
+    mkdirSync(dirname(out), { recursive: true });
+    writeFileSync(out, bytes);
+  }
   for (const [name, pin] of Object.entries(CARBON.packages)) {
     const out = pkgDir(dir, name);
     if (pin.extract.every(m => existsSync(join(out, m)))) continue;
@@ -90,6 +99,18 @@ export async function fetchSources(dir = DEFAULT_DIR) {
     execFileSync('mv', [tmp, out]);
   }
   return dir;
+}
+
+/** [path, "sha256:<hex>"] of every source file the committed Carbon Contracts pin at the pinned commit. */
+function contractPins() {
+  const dir = join(REPO_ROOT, 'design-systems/carbon/contracts');
+  const pins = new Map();
+  for (const f of readdirSync(dir).filter(n => n.endsWith('.component.json'))) {
+    const { source } = JSON.parse(readFileSync(join(dir, f), 'utf8'));
+    if (source.commit !== CARBON.commit) throw new Error(`${f}: pinned to ${source.commit}, not the Adapter's ${CARBON.commit}`);
+    for (const [path, pin] of Object.entries(source.files)) pins.set(path, pin);
+  }
+  return [...pins];
 }
 
 /**

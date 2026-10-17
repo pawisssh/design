@@ -61,14 +61,27 @@ Write `design-systems/carbon/contracts/<family>.component.json` by hand, followi
 12. **Selection.** Set `selection` to `{status: "draft", omit: [], expectedCount: <the expansion count>, approval: null}`. `check.mjs` reports the real count.
 13. **Drafted values.** Record in [`drafted`](../contract/references/contract-schema.md#drafted-values) every value you chose by judgement: a label, a layer name, an icon slot's default, a value the source leaves open. A value read from source is never one, nor is a raw with its reason or a value one of the rules above fixes. Each entry is `{by: "agent", evidence: ["<file>:L<n> what it shows"], fingerprint}`, keyed per [ADR 0010](../../docs/adr/0010-drafted-values-carry-over-by-evidence-fingerprint.md). The entry key names an anatomy or layout node by its layer name, as `draftedValue` resolves it (`anatomy.Field group`, `layout.Field group.width`).
 
-    **Node key.** Each anatomy node also has a node key, the `node` fact its fingerprints hash. A class of the family's own block, `cds--<family>__<element>`, is keyed `<element>` (`cds--text-input__field-wrapper` is `field-wrapper`). Any other class only drops `cds--` (`label`, `text-input`, `form__helper-text`, `form-requirement`). A version node adds `:<version>` (`invalid-icon:warn`, `form-requirement:invalid`). A layer with no element of its own (TextInput's Value, Underline) is keyed by its anatomy name.
+    **Node map.** Write the family's node map to `skills/adapter-carbon/nodes/<family>.nodes.json`: each anatomy layer name maps to the classes of the element that renders it, without `cds--`, the node's own class first, plus `:<version>` for a version node (`"Text input": "text-input-wrapper form-item"`, `"Warn text": "form-requirement:warn"`). A layer with no element of its own (TextInput's Value, Underline) maps to `{"of": "<layer whose element draws it>"}`.
 
-    **Fingerprint.** It is `sha256:` of the canonical JSON of the exact-tier facts its key kind is drafted from. `parts` is the sorted `<element>` names of every `cds--<family>__<element>` class in the React source, modifiers kept (`field-wrapper--warning`). A node's facts are `{node, element, rules}`. `rules` is the sorted SCSS blocks whose selector names the node's class, with comments stripped and whitespace collapsed. A layer with no element takes its parent's `element` and `rules` and adds `of: <parent's node key>`.
+    **Node key.** Each anatomy node also has a node key, the `node` fact its fingerprints hash, taken from its own class. A class of the family's own block, `cds--<family>__<element>`, is keyed `<element>` (`cds--text-input__field-wrapper` is `field-wrapper`). Any other class only drops `cds--` (`label`, `text-input-wrapper`, `form__helper-text`, `form-requirement`). A version node adds `:<version>` (`invalid-icon:warn`, `form-requirement:invalid`). A layer with no element of its own is keyed by its anatomy name.
+
+    **Fingerprint.** It is `sha256:` of the canonical JSON of the exact-tier facts its key kind is drafted from. Compute them with `scripts/fingerprints.mjs`, the one definition the tests also use; don't hash by hand. `parts` is the sorted, unique `<element>` names of every `${prefix}--<family>__<element>` class in the React source (`.js`, `.jsx`, `.ts`, `.tsx`), modifiers kept (`field-wrapper--warning`). A node's facts are `{node, element, rules}`:
+    - `element` is the node's classes with `cds--`, space-separated in node-map order (`cds--text-input-wrapper cds--form-item`).
+    - `rules` is every SCSS block, at any depth, in the Contract's pinned `.scss` sources whose selector names one of the node's classes or a `--<modifier>` of it: `.#{$prefix}--text-input` and `.#{$prefix}--text-input--invalid` name `text-input`, while `.#{$prefix}--text-input__field-wrapper` and `.#{$prefix}--text-input-wrapper` don't. Each block is written `<selector> { <body> }`, with comments stripped, every run of whitespace collapsed to one space, interpolations kept as written, and nested blocks left inside their parent's body. The list is sorted.
+    - A layer with no element takes the `element` and `rules` of the layer that draws it and adds `of: <that layer's node key>`.
+
+    A property field hashes the node of its first bind. A layout key's match is not a fact, so `layout{"size":"sm"}.Box.height` and `layout.Box.height` share a fingerprint.
     - an axis or axis value label: `{kind: "axis", axis, values: [value keys]}`;
     - an anatomy node: `{kind: "node", ...the node's facts, parts}`;
     - a property field: `{kind: "property", prop: <its React prop>, ...the node's facts, parts}`;
     - a layout field: `{kind: "layout", ...the node's facts}`;
     - a family-wide value (`family.*`, `icons.*`, `figma.*`, `code.*`): `{kind: "family", axes: {<axis>: [value keys]}, defaults: {<axis>: <default>}, parts}`.
+
+    Write the entries with `fingerprint` left out, then fill them in from the script's output. The script reads the pinned sources that `scripts/sources.mjs` fetches, and `--check` exits 1 naming each entry whose fingerprint differs from the facts:
+
+    ```
+    node skills/adapter-carbon/scripts/fingerprints.mjs design-systems/carbon/contracts/<family>.component.json --nodes skills/adapter-carbon/nodes/<family>.nodes.json [--check]
+    ```
 
     The Button Contract predates this step and gains its table at its next re-approval.
 14. **Notes.** Record every disagreement you resolved and every behaviour you could not check (wrapping, a sub-pixel offset), with `at` and `level`.
