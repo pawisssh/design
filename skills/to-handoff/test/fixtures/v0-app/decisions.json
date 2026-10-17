@@ -1,15 +1,4 @@
 {
-  "recognise:Alert[variant=destructive]": {
-    "draft": "alert",
-    "tuple": {
-      "variant": "destructive"
-    },
-    "via": "library",
-    "reason": "shadcn ships Alert, but this Design System has no alert Contract, and the Generic Adapter could not write one mid-run"
-  },
-  "contract:alert": {
-    "unwritable": "node skills/adapter-generic/scripts/components.mjs --family alert: Alert (Variant=Default, Slot Alert Action=False, State=Enabled) is not a flex container (display: grid); only Auto Layout is read"
-  },
   "recognise:Label": {
     "draft": "label",
     "tuple": {},
@@ -26,7 +15,7 @@
     "reason": "shadcn ships Input, but this Design System has no input Contract, and the Generic Adapter could not write one mid-run"
   },
   "contract:input": {
-    "unwritable": "node skills/adapter-generic/scripts/components.mjs --family input: components/ui/input.tsx:4 Input calls no cva; only cva families are read yet"
+    "unwritable": "node skills/adapter-generic/scripts/components.mjs --family input: Input (Invalid=Valid, State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read"
   },
   "recognise:Select": {
     "draft": "select",
@@ -35,7 +24,7 @@
     "reason": "shadcn ships Select, but this Design System has no select Contract, and the Generic Adapter could not write one mid-run"
   },
   "contract:select": {
-    "unwritable": "node skills/adapter-generic/scripts/components.mjs --family select: components/ui/select.tsx:8 Select calls no cva; only cva families are read yet"
+    "unwritable": "node skills/adapter-generic/scripts/components.mjs --family select: Select (State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read"
   },
   "recognise:Textarea[rows=3]": {
     "draft": "textarea",
@@ -73,7 +62,7 @@
       "state": "loading",
       "given": "a filled form",
       "when": "Request access is pressed",
-      "then": "the button shows Sending… and is disabled"
+      "then": "the button shows Sending\u2026 and is disabled"
     },
     {
       "id": "send-fails",

@@ -1,6 +1,6 @@
 // To-handoff on a v0 shadcn Prototype against the shadcn Design System (#125): the swap test for the Adapter
 // interface. The fixture is the v0 sample as source plus lockfile; the Design System is a temp copy of the
-// shadcn Foundations document and Button Contract only, so Contracts added later do not move these tests.
+// shadcn Foundations document and the Alert, Button and Card Contracts, so Contracts added later do not move these tests.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { copyFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { hasRuntime, hasTypescript } from '../scripts/deps.mjs';
 import { contentHash, validate } from '../../contract/scripts/contract.mjs';
 import { generate } from '../scripts/generate.mjs';
+import { render } from '../scripts/render-html.mjs';
 import { readReact } from '../scripts/react.mjs';
 import { walk } from '../scripts/reader.mjs';
 import { loadDesignSystem } from '../scripts/system.mjs';
@@ -23,13 +24,16 @@ const noRuntime = !hasRuntime() && 'the runtime packages or a browser are missin
 const BUTTON_PACKAGE = '@/components/ui/button';
 const elements = (root, pick) => { const out = []; walk(root, el => { if (pick(el)) out.push(el); }); return out; };
 const DECISIONS = JSON.parse(readFileSync(join(V0, 'decisions.json'), 'utf8'));
+const noRender = async () => noTs || (!(await loadDesignSystem(shadcnDesignSystem())).adapter.available()
+  && 'Generic preview packages missing; run: node skills/adapter-generic/scripts/sources.mjs');
 
-// The committed shadcn Foundations document and Button Contract, named one by one, in a temp Design System.
+// The committed shadcn Foundations document and Contracts, named one by one, in a temp Design System.
 function shadcnDesignSystem() {
   const dir = mkdtempSync(join(tmpdir(), 'to-handoff-shadcn-'));
   mkdirSync(join(dir, 'contracts'));
   copyFileSync(repo('design-systems/shadcn/shadcn.foundations.json'), join(dir, 'shadcn.foundations.json'));
-  copyFileSync(repo('design-systems/shadcn/contracts/button.component.json'), join(dir, 'contracts/button.component.json'));
+  for (const family of ['alert', 'button', 'card'])
+    copyFileSync(repo(`design-systems/shadcn/contracts/${family}.component.json`), join(dir, `contracts/${family}.component.json`));
   return dir;
 }
 const copy = () => { const dir = mkdtempSync(join(tmpdir(), 'to-handoff-v0-')); cpSync(V0, dir, { recursive: true }); return dir; };
@@ -69,7 +73,7 @@ test('generate: a Code Library component holding another library\'s usages is wa
     'Region `flex`: `Card` (@/components/ui/card, app/page.tsx:18:7) holds other Code Library usages, so it is read as a wrapper: its parts\' styles and text stay in the region, and the usages inside it are their own.' }]);
 });
 
-test('generate: the v0 Prototype is a valid Handoff; each shadcn Button is its Contract by import, its tuple from its props', { skip: noTs }, async () => {
+test('generate: the v0 Prototype is a valid Handoff; each shadcn Button and the Alert is its Contract by import, its tuple from its props', { skip: noTs }, async () => {
   const ds = shadcnDesignSystem();
   const result = await generate({ prototype: V0, designSystem: ds, decisions: DECISIONS });
   assert.deepEqual(result.requests, []);
@@ -80,19 +84,38 @@ test('generate: the v0 Prototype is a valid Handoff; each shadcn Button is its C
     ['components/submit-button.tsx:11:5', 'import', {}],
     ['app/page.tsx:33:11', 'import', { variant: 'link', size: 'sm' }],
   ]);
-  assert.deepEqual(Object.keys(result.handoff.source.contracts), ['button']);
+  const alerts = result.handoff.screens[0].regions.flatMap(r => r.usages).filter(u => u.contract === 'alert');
+  assert.deepEqual(alerts.map(u => [u.at, u.match.by, u.tuple]), [['app/request-access-form.tsx:58:9', 'import', { variant: 'destructive' }]]);
+  // Card holds other Code Library usages, so it is descended and its Contract goes unused (#151).
+  assert.deepEqual(Object.keys(result.handoff.source.contracts), ['alert', 'button']);
 });
 
 test('generate: a family the Generic Adapter cannot write mid-run is raw, with a question that says why', { skip: noTs }, async () => {
   const { handoff } = await generate({ prototype: V0, designSystem: shadcnDesignSystem(), decisions: DECISIONS });
   const usages = handoff.screens[0].regions.flatMap(r => r.usages);
-  for (const [element, why] of [['Input[required]', 'Input calls no cva'], ['Select', 'Select calls no cva'], ['Toaster', 'exports no Sonner']]) {
+  for (const [element, why] of [['Input[required]', 'Input .* is not a flex or grid container'], ['Select', 'Select .* is not a flex or grid container'], ['Toaster', 'exports no Sonner']]) {
     const u = usages.find(x => x.raw && x.raw.element === element);
     assert.ok(u, element);
     const q = handoff.openQuestions.find(x => x.id === u.question);
     assert.equal(q.kind, 'no-contract');
     assert.match(q.text, new RegExp(`could not write one mid-run: .*${why}`), element);
   }
+});
+
+test('render: the Rendering shows each Contract usage as the project\'s own component, raw ones flagged, pending sign-off', { skip: await noRender() }, async () => {
+  const ds = shadcnDesignSystem();
+  const result = await generate({ prototype: V0, designSystem: ds, decisions: DECISIONS });
+  const out = await render({ handoffPath: result.path, designSystem: ds });
+  const html = readFileSync(out, 'utf8');
+  const card = id => html.slice(html.indexOf(`<article class="card" id="usage-${id}">`)).split('</article>')[0];
+  assert.match(card('button'), /<button data-slot="button" data-variant="outline" data-size="default"/);
+  assert.match(card('button-3'), /<button data-slot="button" data-variant="link" data-size="sm"/);
+  assert.match(card('alert'), /<div data-slot="alert" role="alert" class="[^"]*text-destructive/);
+  for (const id of ['name', 'select', 'toaster']) assert.match(card(id), /data-g="∅"/, id);
+  assert.match(html, /<option value="dark" data-class="dark">Dark<\/option>/, 'Dark applies as its selector\'s class');
+  assert.ok(html.includes(result.contentHash.slice(7, 19)));
+  assert.match(html, /pending sign-off/);
+  assert.equal(readFileSync(await render({ handoffPath: result.path, designSystem: ds }), 'utf8'), html);
 });
 
 test('the committed approved Carbon Button Contract is unchanged since its approval and still validates', () => {
