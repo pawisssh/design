@@ -83,10 +83,10 @@
   ],
   "excluded": [],
   "selection": {
-    "status": "draft",
+    "status": "approved",
     "omit": [],
     "expectedCount": 6,
-    "approval": null
+    "approval": { "by": "owner", "at": "2026-10-17T20:35:52.814Z", "snapshotId": "sha256:64f0eeaa577420d90e356377fa81c2f9bdeabdf8b755e2cfb73aeb3544230f6d", "contentHash": "sha256:71cfa478400165bd2d40077d078dda3743577c28b8051617f8b4bc4610792df4" }
   },
   "anatomy": {
     "name": "Textarea",

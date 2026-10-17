@@ -47,10 +47,10 @@
   ],
   "excluded": [],
   "selection": {
-    "status": "draft",
+    "status": "approved",
     "omit": [],
     "expectedCount": 1,
-    "approval": null
+    "approval": { "by": "owner", "at": "2026-10-17T20:35:52.814Z", "snapshotId": "sha256:2fbc63c58aa952937092b9110e4a6accddae11732a7699f62ac878d29aece9c5", "contentHash": "sha256:501cef7842a2cd7da6cd789150363eae97e82db8eb203719afc457fa3df8a8d5" }
   },
   "anatomy": {
     "name": "Label",
