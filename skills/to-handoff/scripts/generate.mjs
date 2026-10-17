@@ -352,8 +352,17 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const usageStates = Object.fromEntries(present.map(s => [s, {}]));
 
     const recognised = [];
-    const visit = el => {
+    // A Code Library component holding another module's components (a Card around a form) is walked like a wrapper,
+    // with its own parts, so the usages inside it are their own (#125). Its look stays in the region; a note names it.
+    const containers = new Map();
+    const holdsOtherLibrary = el => { let found = false; walk(el, x => { if (x !== el && x.component && x.component.module !== el.component.module) found = true; }); return found; };
+    const visit = (el, through = new Set()) => {
       if (el.type !== 'element' || consumed.has(el)) return;
+      if (el.component && (through.has(el.component.module) || holdsOtherLibrary(el))) {
+        if (!through.has(el.component.module)) containers.set(el, el.component);
+        for (const c of el.children) visit(c, new Set([...through, el.component.module]));
+        return;
+      }
       const contract = el.component && el.component.kind === 'ds' && contractOfImport(el.component);
       // A Design System import is its Contract by import (#62): the tuple is its props through each axis value's code.
       if (contract) {
@@ -362,7 +371,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       } else {
         // Another library component is decided by its signature, once per signature; a plain element by its own.
         const cand = el.component ? { kind: 'element', sig: librarySignature(el), library: true } : candidateOf(el, rules);
-        if (!cand) { for (const c of el.children) visit(c); return; }
+        if (!cand) { for (const c of el.children) visit(c, through); return; }
         const key = `recognise:${cand.sig}`;
         const answer = resolveDraftAnswer(d.ask(key, {
           kind: 'recognise', question: `What is \`${cand.sig}\` ("${elementText(el, atomsIn('default')).slice(0, 40)}")?`, candidates: families,
@@ -420,7 +429,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
         if (answer.noContract) {
           u.question = question({
             id: `q-no-contract-${id}`, kind: 'no-contract', to: 'owner',
-            text: `\`${cand.sig}\` is a ${answer.noContract} with no Contract in ${system.key} yet${answer.failed ? `, and the Adapter could not write one mid-run: ${answer.failed}` : ''}. ${adapter.contractProcedure}, then re-run To-handoff.`,
+            text: `\`${cand.sig}\` is ${/^[aeiou]/i.test(answer.noContract) ? 'an' : 'a'} ${answer.noContract} with no Contract in ${system.key} yet${answer.failed ? `, and the Adapter could not write one mid-run: ${answer.failed}` : ''}. ${adapter.contractProcedure}, then re-run To-handoff.`,
           });
         }
       }
@@ -545,6 +554,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       if (shell) elements.push(...g.els);
       else for (const root of g.els) walk(root, el => { if (!consumed.has(el)) elements.push(el); });
       for (const el of elements) {
+        if (containers.has(el)) notes.push({ level: 'info', text: `Region \`${r.id}\`: \`${el.tag}\` (${containers.get(el).module}, ${at(el.offset)}) holds other Code Library usages, so it is read as a wrapper: its parts' styles and text stay in the region, and the usages inside it are their own.` });
         const u = usages.get(el);
         if (u) {
           r.usages.push(u);
