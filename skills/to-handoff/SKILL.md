@@ -71,7 +71,7 @@ The store writes only when the content changes. Each write bumps `revision` and 
 
 The Adapter names the breakpoints (Carbon: `sm` 320, `md` 672, `lg` 1056, `xlg` 1312, `max` 1584, from @carbon/layout). Each state's `screenshots` maps a breakpoint to `screens/<screen>.<state>.<breakpoint>.png`, which sits next to `handoff.json`, or to `{missing, reason}`. The PNGs are rewritten with the Handoff, so an unchanged Handoff keeps them byte for byte. Their bytes are not part of the content hash.
 
-A failure in the copy, tag, build or browser step gives a **static-only Handoff**. Every screenshot is `{missing, reason}` with the failing command and its last output line, and a `q-runtime` question tells the owner. A state whose steps fail is missing only at that breakpoint.
+A failure in the copy, tag, build or browser step gives a **static-only Handoff**. Every screenshot is `{missing, reason}` with the failing command and its last output line, and a `q-runtime` question tells the owner. A state whose steps fail is missing only at that breakpoint. A `@media` rule raises a `q-breakpoint-…` question: on a runtime run it names the breakpoints the query applies at and, for one px width, the two it falls between; a static run says the static reader has no viewport.
 
 ## 4. Validate and render
 

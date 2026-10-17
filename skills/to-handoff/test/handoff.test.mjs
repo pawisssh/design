@@ -15,6 +15,7 @@ import { generate, loadDesignSystem, render, renderHtml, validateHandoff } from 
 import { parseInline } from '../scripts/css.mjs';
 import { matchDeclaration, matchText } from '../scripts/match.mjs';
 import { innerHtmlTemplates } from '../scripts/reader.mjs';
+import { mediaAtBreakpoints } from '../scripts/generate.mjs';
 import { BUTTON, DECISIONS, PROTOTYPE, designSystem, fixture, repo } from './helpers.mjs';
 
 const BUTTON_BYTES = readFileSync(BUTTON, 'utf8');
@@ -367,4 +368,13 @@ test('the CLI refuses with decision requests and exit code 2 when decisions are 
   assert.equal(code, 2);
   assert.ok(JSON.parse(out).requests.length > 0);
   assert.ok(!existsSync(join(ds, 'handoffs')));
+});
+
+test('a media query at the breakpoints: where it applies, the two a px width falls between, else the widths seen (#146)', () => {
+  const carbon = [['sm', 320], ['md', 672], ['lg', 1056], ['xlg', 1312], ['max', 1584]].map(([key, width]) => ({ key, width }));
+  assert.equal(mediaAtBreakpoints('(min-width: 672px)', carbon), 'In the screenshots it applies at md (672px), lg (1056px), xlg (1312px) and max (1584px), not at sm (320px); 672px is md\'s width');
+  assert.equal(mediaAtBreakpoints('screen and (min-width: 400px) and (max-width: 1100px)', carbon), 'In the screenshots it applies at md (672px) and lg (1056px), not at sm (320px), xlg (1312px) or max (1584px)');
+  assert.equal(mediaAtBreakpoints('(max-width: 2000px)', carbon), 'In the screenshots it applies at every breakpoint; 2000px is above max');
+  assert.equal(mediaAtBreakpoints('(max-width: 200px)', carbon), 'In the screenshots it applies at none of sm (320px), md (672px), lg (1056px), xlg (1312px) or max (1584px); 200px is below sm');
+  assert.equal(mediaAtBreakpoints('(prefers-color-scheme: dark)', [{ key: 'desktop', width: 1280 }]), 'The screenshots were taken at desktop (1280px)');
 });
