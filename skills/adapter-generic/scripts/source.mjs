@@ -1,7 +1,7 @@
 // The component source reader (#119): what a shadcn/ui component file says, read from the TypeScript AST with the
 // pinned `typescript` (sources.mjs). Nothing in the file is executed. It reads:
 // - every `cva(base, {variants, defaultVariants, compoundVariants})` call bound to a name;
-// - every top-level function component: whether it is exported, its element, `data-slot`, the attributes a prop
+// - every top-level function component, declared or bound to a `const` (`const Toaster = (…) => …`): whether it is exported, its element, `data-slot`, the attributes a prop
 //   sets (`data-size={size}`), its destructured defaults, the literal unions in its props type, the cva it calls
 //   and its className string literals.
 // Each class list keeps its 1-based line, so a later step can point at it.
@@ -46,6 +46,11 @@ export function readSource(text, file, { tools = DEFAULT_DIR } = {}) {
     if (ts.isVariableStatement(st))
       for (const d of st.declarationList.declarations) {
         const call = d.initializer;
+        // `const Toaster = (props) => …`: a function component bound to a name (sonner.tsx, #154).
+        if (call && ts.isIdentifier(d.name) && (ts.isArrowFunction(call) || ts.isFunctionExpression(call))) {
+          components.push(readFunction(call, d.name.text, d));
+          continue;
+        }
         if (!call || !ts.isCallExpression(call) || call.expression.getText() !== 'cva' || !ts.isIdentifier(d.name)) continue;
         const [base, config] = call.arguments;
         const c = members(config);
@@ -65,13 +70,14 @@ export function readSource(text, file, { tools = DEFAULT_DIR } = {}) {
           : [];
         cvas[d.name.text] = { base: classList(base), variants, keys, defaults, compound };
       }
-    if (ts.isFunctionDeclaration(st) && st.name) components.push(readFunction(st));
+    if (ts.isFunctionDeclaration(st) && st.name) components.push(readFunction(st, st.name.text, st));
   }
   for (const c of components) c.exported = exported.has(c.name) || !!(ts.getCombinedModifierFlags(c.node) & ts.ModifierFlags.Export);
   return { cvas, components: components.map(({ node, ...c }) => c) };
 
-  function readFunction(fn) {
-    const out = { name: fn.name.text, line: line(fn), node: fn, exported: false, element: null, slot: null, cva: null, attrs: {}, defaults: {}, unions: {}, classes: [] };
+  // `fn` is the function, `node` what declares it: the function itself, or the `const` it is bound to.
+  function readFunction(fn, name, node) {
+    const out = { name, line: line(node), node, exported: false, element: null, slot: null, cva: null, attrs: {}, defaults: {}, unions: {}, classes: [] };
     const param = fn.parameters[0];
     if (param && ts.isObjectBindingPattern(param.name))
       for (const el of param.name.elements)

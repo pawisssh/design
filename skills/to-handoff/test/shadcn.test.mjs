@@ -112,7 +112,7 @@ test('generate: a family with no Contract is drafted mid-run by the Generic proc
 test('generate: a family the Generic Adapter cannot write mid-run is raw, with a question that says why', { skip: noTs }, async () => {
   const { handoff } = await generate({ prototype: V0, designSystem: shadcnDesignSystem(), decisions: DECISIONS });
   const usages = handoff.screens[0].regions.flatMap(r => r.usages);
-  for (const [element, family, why] of [['Input[required]', 'input', 'Input .* is not a flex or grid container'], ['Select', 'select', 'Select .* is not a flex or grid container'], ['Toaster', 'sonner', 'exports no Sonner']]) {
+  for (const [element, family, why] of [['Input[required]', 'input', 'Input .* is not a flex or grid container'], ['Select', 'select', 'Select .* is not a flex or grid container'], ['Toaster', 'sonner', 'Toaster .* is not a flex or grid container']]) {
     const u = usages.find(x => x.raw && x.raw.element === element);
     assert.ok(u, element);
     const q = handoff.openQuestions.find(x => x.id === u.question);
