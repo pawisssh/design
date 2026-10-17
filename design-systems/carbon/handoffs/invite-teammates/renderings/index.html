@@ -37427,7 +37427,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <body class="page">
 <header class="top">
 <h1>Invite teammates</h1>
-<p class="stamp">r3 · 5c47b2aad269 · pending sign-off</p>
+<p class="stamp">r4 · 975ecff001de · pending sign-off</p>
 <label>Mode <select id="mode"><option value="white" data-class="cds--white" selected>White</option><option value="g10" data-class="cds--g10">Gray 10</option><option value="g90" data-class="cds--g90">Gray 90</option><option value="g100" data-class="cds--g100">Gray 100</option></select></label>
 <p class="unverified" id="unverified" hidden>Unverified: the Prototype maps only light → White.</p>
 </header>
@@ -37438,8 +37438,8 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <p>Owner: to confirm: the Prototype names no owning team</p>
 <p>Scope:</p><ul><li>invite one teammate at a time</li><li>see and remove pending invites</li><li>seat count</li></ul>
 <p>Non-goals:</p><ul><li>bulk invite</li><li>billing for extra seats</li></ul>
-<div class="table-wrap"><table><tr><td>Contract <code>button</code></td><td><code>4a9e9f38d7a4</code></td></tr><tr><td>Contract <code>text-input</code></td><td><code>ffc567ffda43</code></td></tr><tr><td>Proposal <code>avatar-stack</code></td><td><code>5faf6770f9d3</code></td></tr><tr><td>Prototype <code>index.html</code></td><td><code>9ad61d663473</code></td></tr><tr><td>Foundations (used)</td><td><code>a02b6da43e4d</code></td></tr></table></div>
-<p class="note">info: Single-mode Prototype: its page surface (#fafafa) and first container (.card #f4f4f4) map best to White (White ΔE 0.0149, Gray 10 ΔE 0.0508, Gray 90 ΔE 1.3391, Gray 100 ΔE 1.4834). The other Theme modes render unverified.</p><p class="note">info: `text-input` is a Contract the Adapter wrote mid-run at status draft (54 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not.</p>
+<div class="table-wrap"><table><tr><td>Contract <code>button</code></td><td><code>4a9e9f38d7a4</code></td></tr><tr><td>Contract <code>select</code></td><td><code>34b5b1f0c09c</code></td></tr><tr><td>Contract <code>text-input</code></td><td><code>ffc567ffda43</code></td></tr><tr><td>Contract <code>toast-notification</code></td><td><code>80115c9a4a94</code></td></tr><tr><td>Proposal <code>avatar-stack</code></td><td><code>28f70d094a1c</code></td></tr><tr><td>Prototype <code>index.html</code></td><td><code>9ad61d663473</code></td></tr><tr><td>Foundations (used)</td><td><code>ce717a37dfd9</code></td></tr></table></div>
+<p class="note">info: Single-mode Prototype: its page surface (#fafafa) and first container (.card #f4f4f4) map best to White (White ΔE 0.0149, Gray 10 ΔE 0.0508, Gray 90 ΔE 1.3391, Gray 100 ΔE 1.4834). The other Theme modes render unverified.</p><p class="note">info: `text-input` is a Contract the Adapter wrote mid-run at status draft (54 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not.</p><p class="note">info: `select` is a Contract the Adapter wrote mid-run at status draft (53 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not.</p><p class="note">info: `toast-notification` is a Contract the Adapter wrote mid-run at status draft (44 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not.</p>
 <section class="optional"><h3>flow</h3><table><tr><th>from</th><th>trigger</th><th>to</th><th>source</th></tr><tr><td>default</td><td><code>sendInvites()</code></td><td>loading</td><td>simulated</td></tr><tr><td>loading</td><td><code>800ms timer</code></td><td>success</td><td>simulated</td></tr><tr><td>loading</td><td><code>sendInvites() fails</code></td><td>error</td><td>missing <span class="flag" data-g="!">! missing state</span></td></tr></table></section>
 <section class="optional"><h3>interactions</h3><p class="not-specified">Not specified · this Handoff has no <code>interactions</code></p></section>
 <section class="optional"><h3>data</h3><ul><li><code>invites</code> <span class="flag" data-g="◌">◌ mock</span> `mockInvites` is mock data standing in for the invites · index.html:45:9</li><li><code>send-invites</code> <span class="flag" data-g="◌">◌ simulated</span> `sendInvites()` simulates its work with a 800ms setTimeout · index.html:50:3</li></ul></section>
@@ -37447,7 +37447,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <section class="optional"><h3>tokensToAdd</h3><p class="not-specified">Not specified · this Handoff has no <code>tokensToAdd</code></p></section>
 </section>
 <section class="group" id="look"><h2>Needs a look</h2>
-<p class="counts"><span class="flag" data-g="≠">≠ Off-system</span> 3 · <span class="flag" data-g="≈">≈ near match</span> 1 · <span class="flag" data-g="◇">◇ agent pick</span> 19 · <span class="flag" data-g="+">+ Proposal</span> 1 · <span class="flag" data-g="∅">∅ no Contract</span> 2 · <span class="flag" data-g="↯">↯ off-axis</span> 2 · <span class="flag" data-g="!">! missing state</span> 1 · <span class="flag" data-g="◌">◌ mock</span> 1 · <span class="flag" data-g="◌">◌ simulated</span> 1 · <span class="flag" data-g="◌">◌ placeholder copy</span> 2 · <span class="flag" data-g="◐">◐ Contract draft, not approved</span> 1</p>
+<p class="counts"><span class="flag" data-g="≠">≠ Off-system</span> 3 · <span class="flag" data-g="≈">≈ near match</span> 1 · <span class="flag" data-g="◇">◇ agent pick</span> 17 · <span class="flag" data-g="+">+ Proposal</span> 1 · <span class="flag" data-g="↯">↯ off-axis</span> 4 · <span class="flag" data-g="!">! missing state</span> 1 · <span class="flag" data-g="◌">◌ mock</span> 1 · <span class="flag" data-g="◌">◌ simulated</span> 1 · <span class="flag" data-g="◌">◌ placeholder copy</span> 2 · <span class="flag" data-g="◐">◐ Contract draft, not approved</span> 3</p>
 <div class="table-wrap"><table><tr><th>flag</th><th>what</th><th>why</th><th>where</th></tr>
 <tr><td><span class="flag" data-g="≠">≠ Off-system</span></td><td><code>#edf5ff</code> as background-color</td><td>No Background, Layer, Field, Support token is within ΔE 0.02 of #edf5ff in White; the chroma guard dropped 5 grey candidates for a tinted colour</td><td>index.html:18:12</td></tr>
 <tr><td><span class="flag" data-g="≠">≠ Off-system</span></td><td><code>#002d9c</code> as color</td><td>No Text, Link, Icon token is within ΔE 0.02 of #002d9c in White</td><td>index.html:18:33</td></tr>
@@ -37456,28 +37456,28 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>color: #161616</code> → <code>text-primary</code></td><td>tied with icon-primary</td><td>index.html:13:85</td></tr>
 <tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>color: #525252</code> → <code>text-secondary</code></td><td>tied with icon-secondary</td><td>index.html:16:11</td></tr>
 <tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>background-color: #f4f4f4</code> → <code>layer-01</code></td><td>tied with field-01, field-03, layer-03, layer-background-02</td><td>index.html:17:11</td></tr>
-<tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>color: #525252</code> → <code>text-secondary</code></td><td>tied with icon-secondary</td><td>index.html:19:87, index.html:29:95, index.html:36:12</td></tr>
-<tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>border-bottom-color: #8d8d8d</code> → <code>border-strong-01</code></td><td>tied with border-strong-02, border-strong-03</td><td>index.html:22:57</td></tr>
-<tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>background-color: #ffffff</code> → <code>field-02</code></td><td>tied with background, layer-02, layer-background-01, layer-background-03</td><td>index.html:22:91</td></tr>
-<tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>color: #fff</code> → <code>text-on-color</code></td><td>tied with icon-inverse, icon-on-color, text-inverse</td><td>index.html:37:77</td></tr>
+<tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>color: #525252</code> → <code>text-secondary</code></td><td>tied with icon-secondary</td><td>index.html:29:95, index.html:36:12</td></tr>
 <tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>“Invite teammates” → font size <code>heading-03-font-size</code></td><td>no whole Text Style matches; tied with fluid-heading-03-font-size, fluid-quotation-01-font-size</td><td>index.html:57:11</td></tr>
 <tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>“Teammates get an email with a link to join this workspace.” → <code>body-compact-01</code></td><td>tied with helper-text-02, label-02, legal-02</td><td>index.html:58:23</td></tr>
 <tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>“Lorem ipsum: invite 3 more people to unlock shared dashboards.” → font size <code>body-compact-01-font-size</code></td><td>no whole Text Style matches; tied with body-01-font-size, caption-02-font-size, code-02-font-size, expressive-heading-01-font-size, heading-01-font-size, heading-compact-01-font-size, helper-text-02-font-size, label-02-font-size, legal-02-font-size</td><td>index.html:59:26</td></tr>
-<tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>“Role” → <code>label-01</code></td><td>tied with caption-01, code-01, helper-text-01, legal-01</td><td>index.html:63:71</td></tr>
 <tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>“{invites.length + 1} of 5 seats used” → font size <code>body-compact-01-font-size</code></td><td>no whole Text Style matches; tied with body-01-font-size, caption-02-font-size, code-02-font-size, expressive-heading-01-font-size, heading-01-font-size, heading-compact-01-font-size, helper-text-02-font-size, label-02-font-size, legal-02-font-size</td><td>index.html:65:100</td></tr>
 <tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>“{email} · {role}” → font size <code>body-compact-01-font-size</code></td><td>no whole Text Style matches; tied with body-01-font-size, caption-02-font-size, code-02-font-size, expressive-heading-01-font-size, heading-01-font-size, heading-compact-01-font-size, helper-text-02-font-size, label-02-font-size, legal-02-font-size</td><td>index.html:66:88</td></tr>
 <tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>“No pending invites yet.” → font size <code>body-compact-01-font-size</code></td><td>no whole Text Style matches; tied with body-01-font-size, caption-02-font-size, code-02-font-size, expressive-heading-01-font-size, heading-01-font-size, heading-compact-01-font-size, helper-text-02-font-size, label-02-font-size, legal-02-font-size</td><td>index.html:67:58</td></tr>
 <tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>email</code> → <code>text-input</code> md</td><td>recognised by the agent (element)</td><td>index.html:62:62</td></tr>
 <tr><td><span class="flag" data-g="↯">↯ off-axis</span></td><td><code>email</code> <code>background-color: #ffffff</code></td><td>`text-input` md none editable enabled paints no #ffffff in White <a class="flag" data-g="?" href="#q-off-axis-email">? q-off-axis-email</a></td><td>index.html:62:62</td></tr>
-<tr><td><span class="flag" data-g="∅">∅ no Contract</span></td><td><code>role</code> (<code>select</code>)</td><td>Carbon ships Select, but this Design System has no Contract for it yet <a class="flag" data-g="?" href="#q-no-contract-role">? q-no-contract-role</a></td><td>index.html:63:83</td></tr>
+<tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>role</code> → <code>select</code> md</td><td>recognised by the agent (element)</td><td>index.html:63:83</td></tr>
+<tr><td><span class="flag" data-g="↯">↯ off-axis</span></td><td><code>role</code> <code>background-color: #ffffff</code></td><td>`select` md none editable enabled paints no #ffffff in White <a class="flag" data-g="?" href="#q-off-axis-role">? q-off-axis-role</a></td><td>index.html:63:83</td></tr>
 <tr><td><span class="flag" data-g="+">+ Proposal</span></td><td><code>avatars</code> is Proposal <code>avatar-stack</code></td><td>not in the Code Library yet; build it in the app</td><td>index.html:65:28</td></tr>
 <tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>link-danger</code> → <code>button</code> danger--ghost sm</td><td>recognised by the agent (element)</td><td>index.html:66:117</td></tr>
 <tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>copy</code> → <code>button</code> secondary md</td><td>recognised by the agent (library)</td><td>index.html:69:11</td></tr>
 <tr><td><span class="flag" data-g="↯">↯ off-axis</span></td><td><code>copy</code> <code>background-color: #198754</code></td><td>`button` secondary md enabled paints no #198754 in White <a class="flag" data-g="?" href="#q-off-axis-copy">? q-off-axis-copy</a></td><td>index.html:69:11</td></tr>
 <tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>cancel</code> → <code>button</code> tertiary md</td><td>recognised by the agent (library)</td><td>index.html:70:11</td></tr>
 <tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>send</code> → <code>button</code> primary md</td><td>recognised by the agent (library)</td><td>index.html:71:11</td></tr>
-<tr><td><span class="flag" data-g="∅">∅ no Contract</span></td><td><code>toast</code> (<code>div.toast[role=status]</code>)</td><td>Carbon ships ToastNotification, but this Design System has no Contract for it yet <a class="flag" data-g="?" href="#q-no-contract-toast">? q-no-contract-toast</a></td><td>index.html:74:23</td></tr>
+<tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>toast</code> → <code>toast-notification</code> success</td><td>recognised by the agent (element)</td><td>index.html:74:23</td></tr>
+<tr><td><span class="flag" data-g="↯">↯ off-axis</span></td><td><code>toast</code> <code>background-color: #24a148</code></td><td>`toast-notification` success paints no #24a148 in White <a class="flag" data-g="?" href="#q-off-axis-toast">? q-off-axis-toast</a></td><td>index.html:74:23</td></tr>
+<tr><td><span class="flag" data-g="◐">◐ Contract draft, not approved</span></td><td><code>select</code> Contract draft, not approved</td><td>53 Drafted values; the owner approves it through To-design's base loop, not this sign-off</td><td>index.html:63:83</td></tr>
 <tr><td><span class="flag" data-g="◐">◐ Contract draft, not approved</span></td><td><code>text-input</code> Contract draft, not approved</td><td>54 Drafted values; the owner approves it through To-design's base loop, not this sign-off</td><td>index.html:62:62</td></tr>
+<tr><td><span class="flag" data-g="◐">◐ Contract draft, not approved</span></td><td><code>toast-notification</code> Contract draft, not approved</td><td>44 Drafted values; the owner approves it through To-design's base loop, not this sign-off</td><td>index.html:74:23</td></tr>
 <tr><td><span class="flag" data-g="!">! missing state</span></td><td>error state</td><td>The Prototype has no error state: no condition reads like error. What should the screen show? <a class="flag" data-g="?" href="#q-state-error">? q-state-error</a></td><td>index.html:42:1</td></tr>
 <tr><td><span class="flag" data-g="◌">◌ mock</span></td><td><code>invites</code></td><td>`mockInvites` is mock data standing in for the invites</td><td>index.html:45:9</td></tr>
 <tr><td><span class="flag" data-g="◌">◌ simulated</span></td><td><code>send-invites</code></td><td>`sendInvites()` simulates its work with a 800ms setTimeout</td><td>index.html:50:3</td></tr>
@@ -37522,12 +37522,17 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 
 </article>
 <article class="card" id="usage-role">
-<header><h3>role</h3><p>raw element · card · index.html:63:83</p><p><span class="flag" data-g="∅">∅ no Contract</span></p></header>
-<div class="specimen mode-root cds--white" data-mode-root><div class="raw-box"><code>select</code> Viewer Editor Admin</div></div>
+<header><h3>role</h3><p><code>select</code> size=md · card · index.html:63:83</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="◐">◐ Contract draft, not approved</span> <span class="flag" data-g="◇">◇ agent pick</span> <span class="flag" data-g="↯">↯ off-axis</span></p></header>
+<div class="specimen mode-root cds--white" data-mode-root><div class="cds--form-item"><div class="cds--select cds--select--md cds--layout--size-md"><label for="role" class="cds--label" dir="auto">Role</label><div class="cds--select-input__wrapper"><select id="role" class="cds--select-input" title="Viewer"><option class="cds--select-option" value="Viewer">Viewer</option></select><svg focusable="false" preserveAspectRatio="xMidYMid meet" fill="currentColor" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" class="cds--select__arrow" xmlns="http://www.w3.org/2000/svg"><path d="M8 11 3 6 3.7 5.3 8 9.6 12.3 5.3 13 6z"></path></svg></div></div></div></div>
 
+<textarea class="snippet" readonly wrap="off" rows="6">import { Select, SelectItem } from '@carbon/react';
+<Select id="role" labelText="Role" size="md">
+  <SelectItem value="Viewer" text="Viewer" />
+  <SelectItem value="Editor" text="Editor" />
+  <SelectItem value="Admin" text="Admin" />
+</Select></textarea>
+<p class="note"><span class="flag" data-g="↯">↯ off-axis</span> `select` md none editable enabled paints no #ffffff in White (`role` (select) sets background-color #ffffff, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?) <a class="flag" data-g="?" href="#q-off-axis-role">? q-off-axis-role</a></p>
 
-
-<p class="note">`select` is a select with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff. <a class="flag" data-g="?" href="#q-no-contract-role">? q-no-contract-role</a></p>
 </article>
 <article class="card" id="usage-avatars">
 <header><h3>avatars</h3><p>Proposal <code>avatar-stack</code>  · card · index.html:65:28</p><p><span class="flag" data-g="+">+ Proposal</span> <span class="flag" data-g="◇">◇ agent pick</span></p></header>
@@ -37574,12 +37579,13 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 
 </article>
 <article class="card" id="usage-toast">
-<header><h3>toast</h3><p>raw element · toast · index.html:74:23 · shows in success</p><p><span class="flag" data-g="∅">∅ no Contract</span></p></header>
-<div class="specimen mode-root cds--white" data-mode-root><div class="raw-box"><code>div.toast[role=status]</code> Invites sent</div></div>
+<header><h3>toast</h3><p><code>toast-notification</code> kind=success · toast · index.html:74:23 · shows in success</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="◐">◐ Contract draft, not approved</span> <span class="flag" data-g="◇">◇ agent pick</span> <span class="flag" data-g="↯">↯ off-axis</span></p></header>
+<div class="specimen mode-root cds--white" data-mode-root><div role="status" class="cds--toast-notification cds--toast-notification--success"><svg focusable="false" preserveAspectRatio="xMidYMid meet" fill="currentColor" aria-label="success icon" width="20" height="20" viewBox="0 0 20 20" role="img" class="cds--toast-notification__icon" xmlns="http://www.w3.org/2000/svg"><path d="M10,1c-4.9,0-9,4.1-9,9s4.1,9,9,9s9-4,9-9S15,1,10,1z M8.7,13.5l-3.2-3.2l1-1l2.2,2.2l4.8-4.8l1,1L8.7,13.5z"></path><path fill="none" d="M8.7,13.5l-3.2-3.2l1-1l2.2,2.2l4.8-4.8l1,1L8.7,13.5z" data-icon-path="inner-path" opacity="0"></path><title>success icon</title></svg><div class="cds--toast-notification__details"></div><button type="button" aria-label="close notification" title="close notification" class="cds--toast-notification__close-button"><svg focusable="false" preserveAspectRatio="xMidYMid meet" fill="currentColor" width="16" height="16" viewBox="0 0 32 32" aria-hidden="true" class="cds--toast-notification__close-icon" xmlns="http://www.w3.org/2000/svg"><path d="M17.4141 16 24 9.4141 22.5859 8 16 14.5859 9.4143 8 8 9.4141 14.5859 16 8 22.5859 9.4143 24 16 17.4141 22.5859 24 24 22.5859 17.4141 16z"></path></svg></button></div></div>
 
+<textarea class="snippet" readonly wrap="off" rows="2">import { ToastNotification } from '@carbon/react';
+<ToastNotification kind="success" /></textarea>
+<p class="note"><span class="flag" data-g="↯">↯ off-axis</span> `toast-notification` success paints no #24a148 in White (`toast` (toast-notification) sets background-color #24a148, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?) <a class="flag" data-g="?" href="#q-off-axis-toast">? q-off-axis-toast</a></p>
 
-
-<p class="note">`div.toast[role=status]` is a toast-notification with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff. <a class="flag" data-g="?" href="#q-no-contract-toast">? q-no-contract-toast</a></p>
 </article>
 </div>
 </section>
@@ -37604,29 +37610,19 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <tr><td>card</td><td><code>border-radius</code></td><td><code>8px</code></td><td><code>border-radius-08</code></td><td><span class="flag" data-g="=">= exact</span></td><td>index.html:17:65</td></tr>
 <tr><td>card</td><td><code>padding</code></td><td><code>16px</code></td><td><code>spacing-05</code></td><td><span class="flag" data-g="=">= exact</span></td><td>index.html:17:85</td></tr>
 <tr><td>card</td><td><code>gap</code></td><td><code>10px</code></td><td><code>value:gap-10px</code></td><td><span class="flag" data-g="≠">≠ Off-system</span></td><td>index.html:20:25, index.html:28:29</td></tr>
-<tr><td>card</td><td><code>color</code></td><td><code>#525252</code></td><td><code>text-secondary</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:19:87, index.html:29:95, index.html:36:12</td></tr>
-<tr><td>card</td><td><code>margin-bottom</code></td><td><code>4px</code></td><td><code>spacing-02</code></td><td><span class="flag" data-g="=">= exact</span></td><td>index.html:19:103</td></tr>
-<tr><td>card</td><td><code>border-bottom-color</code></td><td><code>#8d8d8d</code></td><td><code>border-strong-01</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:22:57</td></tr>
-<tr><td>card</td><td><code>background-color</code></td><td><code>#ffffff</code></td><td><code>field-02</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:22:91</td></tr>
-<tr><td>card</td><td><code>padding</code></td><td><code>12px</code></td><td><code>spacing-04</code></td><td><span class="flag" data-g="=">= exact</span></td><td>index.html:22:112</td></tr>
 <tr><td>card</td><td><code>gap</code></td><td><code>8px</code></td><td><code>spacing-03</code></td><td><span class="flag" data-g="=">= exact</span></td><td>index.html:29:48</td></tr>
 <tr><td>card</td><td><code>margin</code></td><td><code>16px</code></td><td><code>spacing-05</code></td><td><span class="flag" data-g="=">= exact</span></td><td>index.html:29:58</td></tr>
 <tr><td>card</td><td><code>margin</code></td><td><code>8px</code></td><td><code>spacing-03</code></td><td><span class="flag" data-g="=">= exact</span></td><td>index.html:29:58</td></tr>
+<tr><td>card</td><td><code>color</code></td><td><code>#525252</code></td><td><code>text-secondary</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:29:95, index.html:36:12</td></tr>
 <tr><td>card</td><td><code>padding</code></td><td><code>8px</code></td><td><code>spacing-03</code></td><td><span class="flag" data-g="=">= exact</span></td><td>index.html:34:76, index.html:36:45</td></tr>
 <tr><td>card</td><td><code>border-top-color</code></td><td><code>var(--border)</code></td><td><code>border-subtle-01</code> via <code>--border</code></td><td><span class="flag" data-g="=">= exact</span></td><td>index.html:34:92</td></tr>
 <tr><td>card</td><td><code>margin-top</code></td><td><code>16px</code></td><td><code>spacing-05</code></td><td><span class="flag" data-g="=">= exact</span></td><td>index.html:28:67</td></tr>
-<tr><td>toast</td><td><code>background-color</code></td><td><code>#24a148</code></td><td><code>support-success</code></td><td><span class="flag" data-g="=">= exact</span></td><td>index.html:37:56</td></tr>
-<tr><td>toast</td><td><code>color</code></td><td><code>#fff</code></td><td><code>text-on-color</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:37:77</td></tr>
-<tr><td>toast</td><td><code>padding</code></td><td><code>12px</code></td><td><code>spacing-04</code></td><td><span class="flag" data-g="=">= exact</span></td><td>index.html:37:90</td></tr>
-<tr><td>toast</td><td><code>padding</code></td><td><code>16px</code></td><td><code>spacing-05</code></td><td><span class="flag" data-g="=">= exact</span></td><td>index.html:37:90</td></tr>
-<tr><td>toast</td><td><code>border-radius</code></td><td><code>8px</code></td><td><code>border-radius-08</code></td><td><span class="flag" data-g="=">= exact</span></td><td>index.html:37:110</td></tr>
 </table></div>
 <h3>Text</h3>
 <div class="table-wrap"><table><tr><th>region</th><th>text</th><th>Text Style</th><th></th><th>where</th></tr>
 <tr><td>header</td><td>“Invite teammates”</td><td>font size <code>heading-03-font-size</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:57:11</td></tr>
 <tr><td>header</td><td>“Teammates get an email with a link to join this workspace.”</td><td><code>body-compact-01</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:58:23</td></tr>
 <tr><td>promo</td><td>“Lorem ipsum: invite 3 more people to unlock shared dashboards.”</td><td>font size <code>body-compact-01-font-size</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:59:26</td></tr>
-<tr><td>card</td><td>“Role”</td><td><code>label-01</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:63:71</td></tr>
 <tr><td>card</td><td>“{invites.length + 1} of 5 seats used”</td><td>font size <code>body-compact-01-font-size</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:65:100</td></tr>
 <tr><td>card</td><td>“{email} · {role}”</td><td>font size <code>body-compact-01-font-size</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:66:88 · default, loading, success</td></tr>
 <tr><td>card</td><td>“No pending invites yet.”</td><td>font size <code>body-compact-01-font-size</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:67:58 · empty</td></tr>
@@ -37642,7 +37638,10 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <div class="table-wrap"><table><tr><th>id</th><th>text</th><th>where</th></tr>
 <tr><td><code>email-label</code></td><td>Email</td><td>index.html:62:30</td></tr>
 <tr><td><code>email-placeholder</code></td><td>jane@example.com <span class="flag" data-g="◌">◌ placeholder copy</span></td><td>index.html:62:62</td></tr>
-<tr><td><code>role-text</code></td><td>Viewer Editor Admin</td><td>index.html:63:83</td></tr>
+<tr><td><code>role-label</code></td><td>Role</td><td>index.html:63:53</td></tr>
+<tr><td><code>role-value-1</code></td><td>Viewer</td><td>index.html:63:101</td></tr>
+<tr><td><code>role-value-2</code></td><td>Editor</td><td>index.html:63:124</td></tr>
+<tr><td><code>role-value-3</code></td><td>Admin</td><td>index.html:63:147</td></tr>
 <tr><td><code>avatars-initials-1</code></td><td>JD</td><td>index.html:65:49</td></tr>
 <tr><td><code>avatars-initials-2</code></td><td>JA</td><td>index.html:65:64</td></tr>
 <tr><td><code>avatars-initials-3</code></td><td>+1</td><td>index.html:65:79</td></tr>
@@ -37651,25 +37650,23 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <tr><td><code>cancel-label</code></td><td>Cancel</td><td>index.html:70:65</td></tr>
 <tr><td><code>send-label</code></td><td>Send invites</td><td>index.html:71:106</td></tr>
 <tr><td><code>send-label-loading</code></td><td>Sending…</td><td>index.html:71:106</td></tr>
-<tr><td><code>toast-text</code></td><td>Invites sent</td><td>index.html:74:56</td></tr>
 <tr><td><code>h1</code></td><td>Invite teammates</td><td>index.html:57:11</td></tr>
 <tr><td><code>lead</code></td><td>Teammates get an email with a link to join this workspace.</td><td>index.html:58:23</td></tr>
 <tr><td><code>promo</code></td><td>Lorem ipsum: invite 3 more people to unlock shared dashboards. <span class="flag" data-g="◌">◌ placeholder copy</span></td><td>index.html:59:26</td></tr>
-<tr><td><code>label</code></td><td>Role</td><td>index.html:63:71</td></tr>
 <tr><td><code>seats</code></td><td>{invites.length + 1} of 5 seats used</td><td>index.html:65:100</td></tr>
 <tr><td><code>span</code></td><td>{email} · {role}</td><td>index.html:66:88</td></tr>
 <tr><td><code>empty</code></td><td>No pending invites yet.</td><td>index.html:67:58</td></tr>
 </table></div>
 <h3>Open questions</h3>
-<ul><li id="q-off-axis-email"><code>q-off-axis-email</code> · off-axis · to owner: `email` (text-input) sets background-color #ffffff, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?</li>
-<li id="q-no-contract-role"><code>q-no-contract-role</code> · no-contract · to owner: `select` is a select with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.</li>
-<li id="q-off-axis-copy"><code>q-off-axis-copy</code> · off-axis · to owner: `copy` (button) sets background-color #198754, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?</li>
-<li id="q-no-contract-toast"><code>q-no-contract-toast</code> · no-contract · to owner: `div.toast[role=status]` is a toast-notification with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.</li>
-<li id="q-state-error"><code>q-state-error</code> · missing-state · to owner: The Prototype has no error state: no condition reads like error. What should the screen show?</li>
-<li id="q-font"><code>q-font</code> · font · to owner: The Prototype sets font-family Inter, system-ui, sans-serif (index.html:13:21); the Text Styles use IBM Plex Sans (font-family-sans). Use IBM Plex Sans?</li>
-<li id="q-breakpoint-max-width-640px"><code>q-breakpoint-max-width-640px</code> · breakpoint · to owner: @media (max-width: 640px) changes .actions, .actions .btn. In the screenshots it applies at sm (320px), not at md (672px), lg (1056px), xlg (1312px) or max (1584px); 640px falls between sm and md. Which Design System breakpoint is it, and what should change there?</li>
-<li id="q-data-invites"><code>q-data-invites</code> · stand-in · to developer: Where do the invites come from? `mockInvites` stands in for them.</li>
-<li id="q-data-send-invites"><code>q-data-send-invites</code> · stand-in · to developer: What does `sendInvites()` call, and how does it fail? The Prototype simulates it with a timer.</li></ul>
+<ul><li id="q-off-axis-email"><code>q-off-axis-email</code> · off-axis · to owner: `email` (text-input) sets background-color #ffffff, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant? <strong>Keep the Contract's look.</strong></li>
+<li id="q-off-axis-role"><code>q-off-axis-role</code> · off-axis · to owner: `role` (select) sets background-color #ffffff, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?</li>
+<li id="q-off-axis-copy"><code>q-off-axis-copy</code> · off-axis · to owner: `copy` (button) sets background-color #198754, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant? <strong>Keep the Contract's look, with the Kind the Prototype's tuple picked (secondary). No green variant.</strong></li>
+<li id="q-off-axis-toast"><code>q-off-axis-toast</code> · off-axis · to owner: `toast` (toast-notification) sets background-color #24a148, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?</li>
+<li id="q-state-error"><code>q-state-error</code> · missing-state · to owner: The Prototype has no error state: no condition reads like error. What should the screen show? <strong>When sending invites fails, show a Carbon InlineNotification of kind error below the form, and keep the entered emails so the user can resend.</strong></li>
+<li id="q-font"><code>q-font</code> · font · to owner: The Prototype sets font-family Inter, system-ui, sans-serif (index.html:13:21); the Text Styles use IBM Plex Sans (font-family-sans). Use IBM Plex Sans? <strong>Use IBM Plex Sans.</strong></li>
+<li id="q-breakpoint-max-width-640px"><code>q-breakpoint-max-width-640px</code> · breakpoint · to owner: @media (max-width: 640px) changes .actions, .actions .btn. In the screenshots it applies at sm (320px), not at md (672px), lg (1056px), xlg (1312px) or max (1584px); 640px falls between sm and md. Which Design System breakpoint is it, and what should change there? <strong>Treat it as below md (672px): under 672px the .actions buttons stack vertically at full width.</strong></li>
+<li id="q-data-invites"><code>q-data-invites</code> · stand-in · to developer: Where do the invites come from? `mockInvites` stands in for them. <strong>Engineering owns this. It does not block Sign-off.</strong></li>
+<li id="q-data-send-invites"><code>q-data-send-invites</code> · stand-in · to developer: What does `sendInvites()` call, and how does it fail? The Prototype simulates it with a timer. <strong>Engineering owns this. It does not block Sign-off.</strong></li></ul>
 </section>
 </main>
 <script>

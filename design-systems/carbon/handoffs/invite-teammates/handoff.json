@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 3,
+  "revision": 4,
   "status": "pending",
   "approval": null,
   "feature": {
@@ -33,17 +33,25 @@
         "snapshotId": "sha256:4c82c3cc7f2af6fa24fba39bb5e159c415b5691800130268c9d8903901164152",
         "contentHash": "sha256:4a9e9f38d7a42ccfd0ea029241862365784bfe49b7f087e48ceee8ee07711bf5"
       },
+      "select": {
+        "snapshotId": "sha256:6d36c2b22a7ad32899a5080c48e270fa4578beff8edef845236b574d4c60b2ff",
+        "contentHash": "sha256:34b5b1f0c09c68f8789ac006f6e89ec91beb0e3be947f2e8fcfbbc407087e167"
+      },
       "text-input": {
         "snapshotId": "sha256:1a5e61e829858c59e445d7febf9c44c5d920bae55ddd39de50851196f1502c4c",
         "contentHash": "sha256:ffc567ffda43ccc993b609efd9111bb3d652edadddf331cf0bd9f77b67e8e151"
+      },
+      "toast-notification": {
+        "snapshotId": "sha256:43954adf2ff1b4015bfe8fb98a58492ea6ec309e3f4f32a316d9003e9119ab8f",
+        "contentHash": "sha256:80115c9a4a94214a3fe56b4a8cce2ec2d3f50c2611cc413f548897b18d750671"
       }
     },
     "proposals": {
-      "avatar-stack": "sha256:5faf6770f9d3151490c5717a5a174fcfd38221795f9e8b0cf25ac67caed2e33b"
+      "avatar-stack": "sha256:28f70d094a1cc06d5b3cb7eb2d0d2e3335993227eb4816606f2f2a525389462e"
     },
     "foundations": {
       "documentHash": "sha256:9f99c2066cc22e492d01bfc15814cdbd9ea347e47f4a6eb752d17b909315fb45",
-      "usedHash": "sha256:a02b6da43e4d59df23afe864c558ef46d06746892fb0104ed64ffed7b7860781"
+      "usedHash": "sha256:ce717a37dfd96773de2fea32a46d1e3c1f30d8c83a2c68994cc8f867a8b49959"
     },
     "modes": {
       "light": "white"
@@ -56,6 +64,14 @@
       {
         "level": "info",
         "text": "`text-input` is a Contract the Adapter wrote mid-run at status draft (54 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
+      },
+      {
+        "level": "info",
+        "text": "`select` is a Contract the Adapter wrote mid-run at status draft (53 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
+      },
+      {
+        "level": "info",
+        "text": "`toast-notification` is a Contract the Adapter wrote mid-run at status draft (44 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
       }
     ]
   },
@@ -349,67 +365,6 @@
               "value": "value:gap-10px"
             },
             {
-              "property": "color",
-              "raw": "#525252",
-              "at": [
-                "index.html:19:87",
-                "index.html:29:95",
-                "index.html:36:12"
-              ],
-              "token": "text-secondary",
-              "candidates": [
-                "icon-secondary",
-                "text-secondary"
-              ],
-              "by": "agent"
-            },
-            {
-              "property": "margin-bottom",
-              "raw": "4px",
-              "at": [
-                "index.html:19:103"
-              ],
-              "token": "spacing-02"
-            },
-            {
-              "property": "border-bottom-color",
-              "raw": "#8d8d8d",
-              "at": [
-                "index.html:22:57"
-              ],
-              "token": "border-strong-01",
-              "candidates": [
-                "border-strong-01",
-                "border-strong-02",
-                "border-strong-03"
-              ],
-              "by": "agent"
-            },
-            {
-              "property": "background-color",
-              "raw": "#ffffff",
-              "at": [
-                "index.html:22:91"
-              ],
-              "token": "field-02",
-              "candidates": [
-                "background",
-                "field-02",
-                "layer-02",
-                "layer-background-01",
-                "layer-background-03"
-              ],
-              "by": "agent"
-            },
-            {
-              "property": "padding",
-              "raw": "12px",
-              "at": [
-                "index.html:22:112"
-              ],
-              "token": "spacing-04"
-            },
-            {
               "property": "gap",
               "raw": "8px",
               "at": [
@@ -432,6 +387,20 @@
                 "index.html:29:58"
               ],
               "token": "spacing-03"
+            },
+            {
+              "property": "color",
+              "raw": "#525252",
+              "at": [
+                "index.html:29:95",
+                "index.html:36:12"
+              ],
+              "token": "text-secondary",
+              "candidates": [
+                "icon-secondary",
+                "text-secondary"
+              ],
+              "by": "agent"
             },
             {
               "property": "padding",
@@ -463,21 +432,6 @@
             }
           ],
           "text": [
-            {
-              "copy": "label",
-              "at": "index.html:63:71",
-              "style": {
-                "textStyle": "label-01",
-                "candidates": [
-                  "caption-01",
-                  "code-01",
-                  "helper-text-01",
-                  "label-01",
-                  "legal-01"
-                ],
-                "by": "agent"
-              }
-            },
             {
               "copy": "seats",
               "at": "index.html:65:100",
@@ -605,14 +559,46 @@
             },
             {
               "id": "role",
-              "raw": {
-                "element": "select"
+              "contract": "select",
+              "tuple": {
+                "size": "md"
               },
-              "reason": "Carbon ships Select, but this Design System has no Contract for it yet",
+              "items": [
+                {
+                  "properties": {
+                    "value": "copy:role-value-1"
+                  },
+                  "at": "index.html:63:101"
+                },
+                {
+                  "properties": {
+                    "value": "copy:role-value-2"
+                  },
+                  "at": "index.html:63:124"
+                },
+                {
+                  "properties": {
+                    "value": "copy:role-value-3"
+                  },
+                  "at": "index.html:63:147"
+                }
+              ],
               "properties": {
-                "text": "copy:role-text"
+                "label": "copy:role-label",
+                "id": "role"
               },
-              "question": "q-no-contract-role",
+              "match": {
+                "by": "agent",
+                "via": "element"
+              },
+              "offAxis": [
+                {
+                  "property": "background-color",
+                  "raw": "#ffffff",
+                  "reason": "`select` md none editable enabled paints no #ffffff in White",
+                  "question": "q-off-axis-role"
+                }
+              ],
               "at": "index.html:63:83"
             },
             {
@@ -742,67 +728,27 @@
             "success"
           ],
           "at": "index.html:74:23",
-          "styles": [
-            {
-              "property": "background-color",
-              "raw": "#24a148",
-              "at": [
-                "index.html:37:56"
-              ],
-              "token": "support-success"
-            },
-            {
-              "property": "color",
-              "raw": "#fff",
-              "at": [
-                "index.html:37:77"
-              ],
-              "token": "text-on-color",
-              "candidates": [
-                "icon-inverse",
-                "icon-on-color",
-                "text-inverse",
-                "text-on-color"
-              ],
-              "by": "agent"
-            },
-            {
-              "property": "padding",
-              "raw": "12px",
-              "at": [
-                "index.html:37:90"
-              ],
-              "token": "spacing-04"
-            },
-            {
-              "property": "padding",
-              "raw": "16px",
-              "at": [
-                "index.html:37:90"
-              ],
-              "token": "spacing-05"
-            },
-            {
-              "property": "border-radius",
-              "raw": "8px",
-              "at": [
-                "index.html:37:110"
-              ],
-              "token": "border-radius-08"
-            }
-          ],
+          "styles": [],
           "text": [],
           "usages": [
             {
               "id": "toast",
-              "raw": {
-                "element": "div.toast[role=status]"
+              "contract": "toast-notification",
+              "tuple": {
+                "kind": "success"
               },
-              "reason": "Carbon ships ToastNotification, but this Design System has no Contract for it yet",
-              "properties": {
-                "text": "copy:toast-text"
+              "match": {
+                "by": "agent",
+                "via": "element"
               },
-              "question": "q-no-contract-toast",
+              "offAxis": [
+                {
+                  "property": "background-color",
+                  "raw": "#24a148",
+                  "reason": "`toast-notification` success paints no #24a148 in White",
+                  "question": "q-off-axis-toast"
+                }
+              ],
               "states": [
                 "success"
               ],
@@ -895,9 +841,21 @@
       "placeholder": true,
       "at": "index.html:62:62"
     },
-    "role-text": {
-      "text": "Viewer Editor Admin",
-      "at": "index.html:63:83"
+    "role-label": {
+      "text": "Role",
+      "at": "index.html:63:53"
+    },
+    "role-value-1": {
+      "text": "Viewer",
+      "at": "index.html:63:101"
+    },
+    "role-value-2": {
+      "text": "Editor",
+      "at": "index.html:63:124"
+    },
+    "role-value-3": {
+      "text": "Admin",
+      "at": "index.html:63:147"
     },
     "avatars-initials-1": {
       "text": "JD",
@@ -931,10 +889,6 @@
       "text": "Sending…",
       "at": "index.html:71:106"
     },
-    "toast-text": {
-      "text": "Invites sent",
-      "at": "index.html:74:56"
-    },
     "h1": {
       "text": "Invite teammates",
       "at": "index.html:57:11"
@@ -947,10 +901,6 @@
       "text": "Lorem ipsum: invite 3 more people to unlock shared dashboards.",
       "placeholder": true,
       "at": "index.html:59:26"
-    },
-    "label": {
-      "text": "Role",
-      "at": "index.html:63:71"
     },
     "seats": {
       "text": "{invites.length + 1} of 5 seats used",
@@ -1084,13 +1034,14 @@
       "kind": "off-axis",
       "to": "owner",
       "text": "`email` (text-input) sets background-color #ffffff, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?",
-      "answer": null
+      "answer": "Keep the Contract's look.",
+      "by": "owner"
     },
     {
-      "id": "q-no-contract-role",
-      "kind": "no-contract",
+      "id": "q-off-axis-role",
+      "kind": "off-axis",
       "to": "owner",
-      "text": "`select` is a select with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "text": "`role` (select) sets background-color #ffffff, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?",
       "answer": null
     },
     {
@@ -1098,13 +1049,14 @@
       "kind": "off-axis",
       "to": "owner",
       "text": "`copy` (button) sets background-color #198754, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?",
-      "answer": null
+      "answer": "Keep the Contract's look, with the Kind the Prototype's tuple picked (secondary). No green variant.",
+      "by": "owner"
     },
     {
-      "id": "q-no-contract-toast",
-      "kind": "no-contract",
+      "id": "q-off-axis-toast",
+      "kind": "off-axis",
       "to": "owner",
-      "text": "`div.toast[role=status]` is a toast-notification with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "text": "`toast` (toast-notification) sets background-color #24a148, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?",
       "answer": null
     },
     {
@@ -1112,35 +1064,40 @@
       "kind": "missing-state",
       "to": "owner",
       "text": "The Prototype has no error state: no condition reads like error. What should the screen show?",
-      "answer": null
+      "answer": "When sending invites fails, show a Carbon InlineNotification of kind error below the form, and keep the entered emails so the user can resend.",
+      "by": "owner"
     },
     {
       "id": "q-font",
       "kind": "font",
       "to": "owner",
       "text": "The Prototype sets font-family Inter, system-ui, sans-serif (index.html:13:21); the Text Styles use IBM Plex Sans (font-family-sans). Use IBM Plex Sans?",
-      "answer": null
+      "answer": "Use IBM Plex Sans.",
+      "by": "owner"
     },
     {
       "id": "q-breakpoint-max-width-640px",
       "kind": "breakpoint",
       "to": "owner",
       "text": "@media (max-width: 640px) changes .actions, .actions .btn. In the screenshots it applies at sm (320px), not at md (672px), lg (1056px), xlg (1312px) or max (1584px); 640px falls between sm and md. Which Design System breakpoint is it, and what should change there?",
-      "answer": null
+      "answer": "Treat it as below md (672px): under 672px the .actions buttons stack vertically at full width.",
+      "by": "owner"
     },
     {
       "id": "q-data-invites",
       "kind": "stand-in",
       "to": "developer",
       "text": "Where do the invites come from? `mockInvites` stands in for them.",
-      "answer": null
+      "answer": "Engineering owns this. It does not block Sign-off.",
+      "by": "owner"
     },
     {
       "id": "q-data-send-invites",
       "kind": "stand-in",
       "to": "developer",
       "text": "What does `sendInvites()` call, and how does it fail? The Prototype simulates it with a timer.",
-      "answer": null
+      "answer": "Engineering owns this. It does not block Sign-off.",
+      "by": "owner"
     }
   ],
   "flow": [
@@ -1179,5 +1136,29 @@
       "question": "q-data-send-invites"
     }
   ],
-  "ownerDecisions": {}
+  "ownerDecisions": {
+    "question:q-breakpoint-max-width-640px": {
+      "answer": "Treat it as below md (672px): under 672px the .actions buttons stack vertically at full width."
+    },
+    "question:q-data-invites": {
+      "answer": "Engineering owns this. It does not block Sign-off.",
+      "to": "developer"
+    },
+    "question:q-data-send-invites": {
+      "answer": "Engineering owns this. It does not block Sign-off.",
+      "to": "developer"
+    },
+    "question:q-font": {
+      "answer": "Use IBM Plex Sans."
+    },
+    "question:q-off-axis-copy": {
+      "answer": "Keep the Contract's look, with the Kind the Prototype's tuple picked (secondary). No green variant."
+    },
+    "question:q-off-axis-email": {
+      "answer": "Keep the Contract's look."
+    },
+    "question:q-state-error": {
+      "answer": "When sending invites fails, show a Carbon InlineNotification of kind error below the form, and keep the entered emails so the user can resend."
+    }
+  }
 }

@@ -47,8 +47,15 @@
     "path": "design-systems/carbon/contracts/text-input.component.json"
   },
   "recognise:select": {
-    "noContract": "select",
-    "reason": "Carbon ships Select, but this Design System has no Contract for it yet"
+    "draft": "select",
+    "tuple": {
+      "size": "md"
+    },
+    "via": "element",
+    "reason": "Carbon ships Select; the owner chose to draft its Contract before Sign-off"
+  },
+  "contract:select": {
+    "path": "design-systems/carbon/contracts/select.component.json"
   },
   "recognise:div.avatars>span": {
     "proposal": "avatar-stack",
@@ -98,8 +105,15 @@
     "via": "library"
   },
   "recognise:div.toast[role=status]": {
-    "noContract": "toast-notification",
-    "reason": "Carbon ships ToastNotification, but this Design System has no Contract for it yet"
+    "draft": "toast-notification",
+    "tuple": {
+      "kind": "success"
+    },
+    "via": "element",
+    "reason": "Carbon ships ToastNotification; the owner chose to draft its Contract before Sign-off"
+  },
+  "contract:toast-notification": {
+    "path": "design-systems/carbon/contracts/toast-notification.component.json"
   },
   "token:background-color:#fafafa": "background",
   "token:color:#161616": "text-primary",
@@ -158,5 +172,35 @@
   ],
   "token:border-color:#8d8d8d": "border-strong-01",
   "token:background-color:#ffffff": "field-02",
-  "token:color:#ffffff": "text-on-color"
+  "token:color:#ffffff": "text-on-color",
+  "question:q-off-axis-email": {
+    "by": "owner",
+    "answer": "Keep the Contract's look."
+  },
+  "question:q-off-axis-copy": {
+    "by": "owner",
+    "answer": "Keep the Contract's look, with the Kind the Prototype's tuple picked (secondary). No green variant."
+  },
+  "question:q-state-error": {
+    "by": "owner",
+    "answer": "When sending invites fails, show a Carbon InlineNotification of kind error below the form, and keep the entered emails so the user can resend."
+  },
+  "question:q-font": {
+    "by": "owner",
+    "answer": "Use IBM Plex Sans."
+  },
+  "question:q-breakpoint-max-width-640px": {
+    "by": "owner",
+    "answer": "Treat it as below md (672px): under 672px the .actions buttons stack vertically at full width."
+  },
+  "question:q-data-invites": {
+    "by": "owner",
+    "answer": "Engineering owns this. It does not block Sign-off.",
+    "to": "developer"
+  },
+  "question:q-data-send-invites": {
+    "by": "owner",
+    "answer": "Engineering owns this. It does not block Sign-off.",
+    "to": "developer"
+  }
 }
