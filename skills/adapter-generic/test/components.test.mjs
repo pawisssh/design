@@ -18,6 +18,7 @@ const COMMITTED = new URL('design-systems/shadcn/shadcn.foundations.json', root)
 const committed = JSON.parse(readFileSync(COMMITTED, 'utf8'));
 const CLI = new URL('../scripts/components.mjs', import.meta.url).pathname;
 const BUTTON = 'components/ui/button.tsx';
+const DRAFTS = new URL('../fixtures/drafts/button.json', import.meta.url).pathname; // the agent tier's fixed drafts (#122)
 const skip = hasTools() ? false : 'Generic Adapter tools missing: run node skills/adapter-generic/scripts/sources.mjs';
 
 // The Code Library tokens alone, as the foundations step reads them before a family adds its Synthesized tokens:
@@ -162,7 +163,7 @@ test('layout is the same in every State, attribute and variant value: the rules 
 });
 
 test('generate writes the draft Contract against the Foundations document of the same run: it validates', { skip }, async () => {
-  const { contract } = await generate({ project: FIXTURE, family: 'button', foundations: committed });
+  const { contract } = await generate({ project: FIXTURE, family: 'button', foundations: committed, drafts: JSON.parse(readFileSync(DRAFTS, 'utf8')).drafts });
   assert.deepEqual(validate(contract, committed).errors, []);
   assert.deepEqual([contract.selection.status, contract.selection.approval], ['draft', null]);
   assert.equal(expand(contract).length, contract.selection.expectedCount);
@@ -180,11 +181,10 @@ test('generate writes the draft Contract against the Foundations document of the
   assert.equal(at('default', 'disabled').opacity, 0.5);
 });
 
-test('two CLI runs write byte-identical Contracts through writeJson', { skip }, () => {
-  const dir = mkdtempSync(join(tmpdir(), 'generic-contract-'));
-  const out = join(dir, 'button.component.json');
+test('two CLI runs from no prior Contract write byte-identical Contracts through writeJson', { skip }, () => {
   const runs = [1, 2].map(() => {
-    execFileSync('node', [CLI, '--family', 'button', '-o', out]);
+    const out = join(mkdtempSync(join(tmpdir(), 'generic-contract-')), 'button.component.json');
+    execFileSync('node', [CLI, '--family', 'button', '-o', out, '--drafts', DRAFTS]);
     return readFileSync(out, 'utf8');
   });
   assert.equal(runs[0], runs[1]);

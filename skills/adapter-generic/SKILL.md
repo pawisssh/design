@@ -7,7 +7,7 @@ description: Generic Adapter for shadcn/ui-style Code Libraries, from a consumer
 
 The Adapter for Code Libraries a consumer installs as source and themes with CSS custom properties and Tailwind v4, starting with shadcn/ui (spec [#103](https://github.com/pawisssh/design/issues/103)). It is a sibling of the [Carbon Adapter](../adapter-carbon/SKILL.md) with the same outputs. What a Foundations document must contain is defined in the shared [`contract`](../contract/SKILL.md) skill's [foundations schema](../contract/references/foundations-schema.md); this skill only knows how to read the project.
 
-Today it has the exact tier: the Foundations step ([#118](https://github.com/pawisssh/design/issues/118)), the component step ([#119](https://github.com/pawisssh/design/issues/119)), Synthesized tokens ([#120](https://github.com/pawisssh/design/issues/120)) and Slot axes ([#121](https://github.com/pawisssh/design/issues/121)). The agent tier ([#122](https://github.com/pawisssh/design/issues/122)) and the preview renderer are later tickets.
+Today it has the exact tier: the Foundations step ([#118](https://github.com/pawisssh/design/issues/118)), the component step ([#119](https://github.com/pawisssh/design/issues/119)), Synthesized tokens ([#120](https://github.com/pawisssh/design/issues/120)) and Slot axes ([#121](https://github.com/pawisssh/design/issues/121)), and the agent tier's first keys ([#122](https://github.com/pawisssh/design/issues/122)): axis and value labels, the Figma grid and the family description. The rest of the agent tier and the preview renderer are later tickets.
 
 ## Inputs
 
@@ -45,7 +45,7 @@ It reads the reference project and the fetched tools by default, and writes [`de
 
 - Never edit that file by hand. Change the project, the pins or a rule here, and regenerate.
 - A rerun is byte-identical.
-- The seam is `generate({project, families, drafts})`. `drafts` must be empty until the agent tier (#122) exists.
+- The seam is `generate({project, families, drafts})`. `drafts` must be empty: a Foundations document holds no Drafted values (ADR 0010), and no drafted key changes a token.
 - **Families.** `--family` repeats; by default it is every family with a committed Contract in `design-systems/shadcn/contracts/`. One run writes the Code Library tokens and every family's [Synthesized tokens](#synthesized-tokens) (#70 §1): for each family it reads the component the way the component step does, adds its Synthesized tokens and its component file (so editing the file makes the document stale), and builds its Contract against the result. That Contract fills `closure.contracts`, `closure.tokens`, each token's `usedBy` and `checks.scopes` (`contract.mjs validate`, rule 6, with no errors).
 
 ### Modes
@@ -125,9 +125,10 @@ A literal `@theme --color-*` (not `var(…)`) gets a warning note and is not car
 
 ```
 node skills/adapter-generic/scripts/components.mjs --family <key> [--project <dir>] [--foundations <file>] [--tools <dir>] [-o <file>]
+  [--drafts <file>] [--requests <file>] [--rewrite]
 ```
 
-It reads one component family of the project, `<ui alias>/<key>.tsx`, and writes the draft Contract `design-systems/shadcn/contracts/<key>.component.json`. It checks the Contract with [`contract.mjs`](../contract/scripts/contract.mjs) `validate` and writes it with [`io.mjs`](../contract/scripts/io.mjs) `writeJson`. A rerun is byte-identical. The seams are `readFamily({project, family, foundations})` (the exact-tier reading, with the family's Synthesized tokens) and `generate({project, family, foundations, drafts})`.
+It reads one component family of the project, `<ui alias>/<key>.tsx`, and writes the draft Contract `design-systems/shadcn/contracts/<key>.component.json`. It checks the Contract with [`contract.mjs`](../contract/scripts/contract.mjs) `validate` and writes it with [`io.mjs`](../contract/scripts/io.mjs) `writeJson`. A rerun writes nothing when nothing changed. The seams are `readFamily({project, family, foundations})` (the exact-tier reading, with the family's Synthesized tokens) and `generate({project, family, foundations, prior, drafts})`, which merges the [Drafted values](#agent-tier-drafted-values).
 
 - **Snapshot.** The Foundations document must be from this project's snapshot: every file in its `source.files` must hash the same, or the step fails with "another snapshot". The Contract's `source.files` are the document's, minus other families' component files, plus its own.
 - **Synthesized tokens.** The document must hold exactly the family's Synthesized tokens as its source reads now, and a closure entry with the Contract's `snapshotId`. Otherwise the step fails, naming the tokens and the fix: regenerate with `foundations.mjs --family <key>`.
@@ -146,7 +147,7 @@ It reads one component family of the project, `<ui alias>/<key>.tsx`, and writes
 
 In order: each cva variant axis, then the attribute axes, then the Slot axes, then the canonical State.
 
-- **cva axes.** Keys and values are the code's, and labels are Title Case (`icon-xs` → `Icon Xs`). Each value's `code` is `{<axis>: <value>}`. The default comes from `defaultVariants`, or else from the destructured default.
+- **cva axes.** Keys and values are the code's, and their labels are [Drafted values](#agent-tier-drafted-values) (`xs` → `Extra Small`). Each value's `code` is `{<axis>: <value>}`. The default comes from `defaultVariants`, or else from the destructured default.
 - **Attribute axes.** Each is absent by default:
 
   | Attribute | Axis | Values |
@@ -189,7 +190,7 @@ A slot whose presence changes the root ([ADR 0011](../../docs/adr/0011-slot-depe
 - **Axis.** One per attribute selector a carried rule needs, keyed `<attr without data->-<value>` (`icon-inline-start`), labelled in Title Case, with `slot` the node of the same name (`Icon Inline Start`). Its values are `none` (`False`, `filled: false`, `css: :not(:has(…))`) and the key (`True`, `filled: true`, `css: :has(…)`), both with `code: {}`, and `none` is the default. Slots on the logical sides come start first, then end; any other slot follows by key.
 - **Padding.** A slot rule applies where its axis is filled, and wins the cascade by its specificity: Default `px-2.5` with `has-data-[icon=inline-start]:pl-2` is 10 → 8 px of CSS, recorded as 11 → 9 with the border; xs is 8 → 6 (9 → 7), sm 10 → 6 (11 → 7). The icon sizes have no slot utility, so their padding stays the same, but a filled slot still shows its frame there, so it is no twin. An icon size with both slots empty is an empty square; the exact tier cuts only twins, so it stays selected for the owner to omit in To-preview.
 - **Against ADR 0011.** The ADR's example is new-york-v4's single `has-[>svg]:px-3` slot (192 → 288 variants with the empty icon-only squares omitted). radix-nova marks its slots with `data-icon`, so Button has two Slot axes and 2304 variants, and `:has(>svg)`, which names no slot, stays a note.
-- **Frame.** Each slot node is a FRAME (role `icon`) whose `width` and `height` come from the descendant svg size utilities (`[&_svg:not([class*='size-'])]:size-4`, `size-3` in xs and icon-xs, `size-3.5` in sm), merged as `cn()` merges them, and whose `visible` is the axis value's `filled`. A note says that a consumer `size-*` class on the svg overrides the size (off-axis) and that the frame stands in for the icon instance and its INSTANCE_SWAP with `code.visibleWhen: {axis}`, which are the agent tier (#122): the exact tier has no icon to name as `icons.default`. Other descendant utilities (`[&_svg]:shrink-0`) stay notes.
+- **Frame.** Each slot node is a FRAME (role `icon`) whose `width` and `height` come from the descendant svg size utilities (`[&_svg:not([class*='size-'])]:size-4`, `size-3` in xs and icon-xs, `size-3.5` in sm), merged as `cn()` merges them, and whose `visible` is the axis value's `filled`. A note says that a consumer `size-*` class on the svg overrides the size (off-axis) and that the frame stands in for the icon instance and its INSTANCE_SWAP with `code.visibleWhen: {axis}`, which are left for a later agent-tier ticket: the exact tier has no icon to name as `icons.default`. Other descendant utilities (`[&_svg]:shrink-0`) stay notes.
 - **Fails:** a slot selector with an empty value; a slot no svg size utility sizes; a frame size that differs by Mode.
 
 ### Synthesized tokens
@@ -209,16 +210,44 @@ Paint the Foundations tokens cannot bind directly becomes a Synthesized token (#
   - a name two families both derive, naming both;
   - relative colour syntax, which the converter cannot read, naming the utility.
 
+### Agent tier: Drafted values
+
+A value that neither the source nor a rule here states is drafted by an agent. The value sits in its usual place in the Contract, and the `drafted` table records where it came from ([ADR 0010](../../docs/adr/0010-drafted-values-carry-over-by-evidence-fingerprint.md), [contract schema](../contract/references/contract-schema.md#drafted-values)). [`scripts/drafts.mjs`](scripts/drafts.mjs) owns the rules.
+
+- **What is drafted.** Keys, evidence and fingerprints are fixed by rule; the agent supplies only the value.
+
+  | Key | Evidence | Fingerprint pins |
+  |---|---|---|
+  | `axes.<cva axis>.label`, `axes.<cva axis>.values.<value>.label` | the line of the axis or value key | the axis's value keys |
+  | `axes.<attribute axis>.label` | the first utility that styles the attribute | the variant prefixes of its utilities (`aria-invalid`, `dark:aria-invalid`) |
+  | `family.description`, `figma.grid` | the root export and the cva variants | every axis's key, value keys and default; the exported parts |
+
+  Slot and State axis labels and an attribute axis's value labels (its state words) are rules, so they are not drafted.
+- **Placeholders.** The Foundations step builds the Contract only for its closure, without drafts. That Contract keeps placeholders: Title Case labels, `size` across in the grid, and a description that names the source file.
+- **A run** reads the prior Contract at `-o` and, per key:
+  - an owner entry is kept with its value. When the snapshot changed it is also listed under `ownerCheck`, because an owner entry has no fingerprint to show whether its evidence moved. An owner value the key no longer accepts, such as a grid without a new axis, is reopened and listed under `ownerCheck`;
+  - an agent entry whose fingerprint is unchanged is carried verbatim;
+  - a moved fingerprint reopens the entry, and a key with no entry is missing. Each takes its value from `--drafts`, or is requested;
+  - a prior entry whose subject is gone, such as a renamed axis value's label, is dropped and listed as vanished. An owner entry is dropped too, since every key must name a value (rule 9).
+  - a carried entry keeps its evidence verbatim, line numbers included, so a line that moved without moving the fingerprint is not rewritten.
+- **Requests.** While one is open, the CLI writes no Contract. It writes `{family, requests: [{key, evidence, fingerprint, brief, prior}]}` to `--requests` (default `.scratch/adapter-generic/drafts/<key>.requests.json`) and exits 2. A reopened request carries `prior` and asks to keep it unless the new evidence contradicts it. The agent answers with a drafts file, `{"family": "<key>", "drafts": {"<key>": <value>}}`, and the step runs again with `--drafts <file>`.
+  - A label or a description is a non-empty string. A grid is `{columns, rows}`, naming every axis exactly once with at least one column. Anything else fails, naming the key.
+  - A draft that no open key takes is reported as unused.
+- **Unchanged.** On the prior's snapshot with no Drafted value reopened, missing or vanished, or when the merged Contract has the prior's `contentHash`, the CLI prints `unchanged` and writes nothing. The owner's omit patch, a tweak and the approval stand. Otherwise the Contract is written as a draft (`approval: null`).
+  - `--rewrite` writes on an unchanged snapshot anyway, to apply a change of the Adapter's own rules. It still carries the Drafted values.
+- **Button.** The committed Contract was drafted from [`fixtures/drafts/button.json`](fixtures/drafts/button.json). It stays a draft until the owner approves it in To-design's base loop.
+
 ### Left for later tickets
 
 - **Notes.** Each of these gets an `info` note, and none is carried:
   - `:has(…)` conditions other than `:has([<attr>="<value>"])`, such as `has-[>svg]`;
   - ancestor styling such as `in-data-[slot=button-group]` (ADR 0012);
-  - descendant styling other than a slot frame's svg size, such as `[&_svg]:shrink-0`, plus text utilities and parts other than the root and its slot frames (#122);
+  - descendant styling other than a slot frame's svg size, such as `[&_svg]:shrink-0`, plus text utilities and parts other than the root and its slot frames (a later agent-tier ticket);
   - other media queries and conditions;
   - utilities no field carries;
   - classes that compile to no CSS.
-- **Defaults.** The anatomy is the root and its slot frames, `properties` is `[]`, and `figma.grid` is a placeholder: `size` across, every other axis down.
+- **Defaults.** The anatomy is the root and its slot frames, and `properties` is `[]`.
+- **Agent tier.** Layer names and the anatomy below the root, each slot's icon (an INSTANCE with an INSTANCE_SWAP, `icons.default` and `code.visibleWhen: {axis}`), properties, text styles and excluded combinations are not drafted yet.
 
 Tests: `node --test skills/adapter-generic/test/*.test.mjs`. They skip, saying so, until the tools are fetched.
 

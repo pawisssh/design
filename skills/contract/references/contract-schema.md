@@ -213,7 +213,7 @@ A TEXT property whose node a variant hides (`visible: false`) is not emitted for
 ```
 
 - **Agent entry:** `by: "agent"`, `evidence` (one or more `"file:Lnn what it shows"` strings) and `fingerprint` (`sha256:` of the exact-tier facts its key kind is drafted from).
-- **Owner entry:** `by: "owner"` (or `"owner (simulated, …)"` in a prototype) and `was`, the value before the owner's correction. The base loop writes it when an owner tweak lands on a drafted value; an entry already the owner's keeps its first `was`.
+- **Owner entry:** `by: "owner"` (or `"owner (simulated, …)"` in a prototype) and `was`, the value before the owner's correction. The base loop writes it when an owner tweak lands on a drafted value; an entry already the owner's keeps its first `was`. An Adapter re-run keeps it, unless the value it names is gone (a renamed axis value): every key must name a value (rule 9), so the entry is dropped and reported as vanished.
 - **Keys** are fixed by rule ([ADR 0010](../../../docs/adr/0010-drafted-values-carry-over-by-evidence-fingerprint.md)), and `draftedValue(contract, key)` resolves one:
   - `axes.<axis>.label`, `axes.<axis>.values.<value>.label`, `family.<field>`, `icons.<field>`, `figma.<field>`, `code.<field>`: the path, with list items picked by `key` or `name`.
   - `anatomy.<node>`: a layer and its name.

@@ -92,12 +92,12 @@ function scaled(text, at) {
  * @param project  the project folder (components.json at its root).
  * @param families the Component Family keys with a Contract: each adds its Synthesized tokens (#120), and its
  *                 Contract gives the closure, usedBy and the scope check (one run writes both, #70 §1).
- * @param drafts   agent-drafted values; read by the agent tier (#122), so it must be empty here.
+ * @param drafts   agent-drafted values: none belong in a Foundations document (ADR 0010), so it must be empty.
  * @param tools    the pinned tools folder (sources.mjs).
  * @returns {doc, text, documentHash, summary}. Throws on any failed check (see the header).
  */
 export async function generate({ project, families = [], drafts = [], tools = DEFAULT_DIR }) {
-  if (drafts.length) fail('drafts are read by the agent tier (#122), which does not exist yet');
+  if (drafts.length) fail('a Foundations document holds no Drafted values (ADR 0010); the component step reads drafts');
   const readText = rel => readFileSync(join(project, rel), 'utf8');
   const config = JSON.parse(readText('components.json'));
   const cssFile = config.tailwind && config.tailwind.css;

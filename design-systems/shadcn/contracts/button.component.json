@@ -3,7 +3,7 @@
   "family": {
     "key": "button",
     "name": "Button",
-    "description": "shadcn/ui Button (components/ui/button.tsx), read from its source and compiled CSS."
+    "description": "A clickable control that triggers an action or event, styled in one of six variants and sized from extra small to large, with square icon-only sizes."
   },
   "source": {
     "codeLibrary": "shadcn/ui",
@@ -87,21 +87,21 @@
         },
         {
           "key": "xs",
-          "label": "Xs",
+          "label": "Extra Small",
           "code": {
             "size": "xs"
           }
         },
         {
           "key": "sm",
-          "label": "Sm",
+          "label": "Small",
           "code": {
             "size": "sm"
           }
         },
         {
           "key": "lg",
-          "label": "Lg",
+          "label": "Large",
           "code": {
             "size": "lg"
           }
@@ -115,21 +115,21 @@
         },
         {
           "key": "icon-xs",
-          "label": "Icon Xs",
+          "label": "Icon Extra Small",
           "code": {
             "size": "icon-xs"
           }
         },
         {
           "key": "icon-sm",
-          "label": "Icon Sm",
+          "label": "Icon Small",
           "code": {
             "size": "icon-sm"
           }
         },
         {
           "key": "icon-lg",
-          "label": "Icon Lg",
+          "label": "Icon Large",
           "code": {
             "size": "icon-lg"
           }
@@ -999,15 +999,15 @@
     },
     "grid": {
       "columns": [
-        "size"
+        "state"
       ],
       "rows": [
         "variant",
+        "size",
         "invalid",
         "expanded",
         "icon-inline-start",
-        "icon-inline-end",
-        "state"
+        "icon-inline-end"
       ]
     }
   },
@@ -1027,7 +1027,7 @@
     {
       "level": "info",
       "at": "anatomy",
-      "message": "Icon Inline Start, Icon Inline End: a frame per Slot axis (#121, ADR 0011), shown where its slot is filled and sized by [&_svg:not([class*='size-'])]:size-3, [&_svg:not([class*='size-'])]:size-3.5, [&_svg:not([class*='size-'])]:size-4. A consumer size-* class on the svg overrides that size, off-axis (#62). Each frame stands in for the slot's icon, an INSTANCE with an INSTANCE_SWAP whose code.visibleWhen names its axis: the agent tier (#122)."
+      "message": "Icon Inline Start, Icon Inline End: a frame per Slot axis (#121, ADR 0011), shown where its slot is filled and sized by [&_svg:not([class*='size-'])]:size-3, [&_svg:not([class*='size-'])]:size-3.5, [&_svg:not([class*='size-'])]:size-4. A consumer size-* class on the svg overrides that size, off-axis (#62). Each frame stands in for the slot's icon, an INSTANCE with an INSTANCE_SWAP whose code.visibleWhen names its axis, which the agent tier does not draft yet."
     },
     {
       "level": "info",
@@ -1037,7 +1037,7 @@
     {
       "level": "info",
       "at": "components/ui/button.tsx",
-      "message": "[&_svg]:pointer-events-none, [&_svg]:shrink-0: Styles a descendant; anatomy beyond the root is the agent tier (#122). Not carried."
+      "message": "[&_svg]:pointer-events-none, [&_svg]:shrink-0: Styles a descendant; the anatomy beyond the root is not drafted yet (agent tier). Not carried."
     },
     {
       "level": "info",
@@ -1047,7 +1047,7 @@
     {
       "level": "info",
       "at": "components/ui/button.tsx",
-      "message": "aria-expanded:text-foreground, aria-expanded:text-secondary-foreground, font-medium, hover:text-foreground, hover:underline, text-[0.8rem], text-destructive, text-primary, text-primary-foreground, text-secondary-foreground, text-sm, text-xs, underline-offset-4, whitespace-nowrap: Text utilities; text styles, the label and the anatomy beyond the root are the agent tier (#122). Not carried."
+      "message": "aria-expanded:text-foreground, aria-expanded:text-secondary-foreground, font-medium, hover:text-foreground, hover:underline, text-[0.8rem], text-destructive, text-primary, text-primary-foreground, text-secondary-foreground, text-sm, text-xs, underline-offset-4, whitespace-nowrap: Text utilities; text styles, the label and the anatomy beyond the root are not drafted yet (agent tier). Not carried."
     },
     {
       "level": "info",
@@ -1060,14 +1060,152 @@
       "message": "group/button: Compiles to no CSS (a group or peer marker)."
     },
     {
-      "level": "info",
-      "at": "figma.grid",
-      "message": "A placeholder layout (size across, every other axis down); the agent tier (#122) lays the grid out."
-    },
-    {
       "level": "verify",
       "at": "selection",
       "message": "2304 variants: past ADR 0004's ~600. Only attribute twins are omitted and nothing else is cut; probe the build cost before building it, or narrow it with selection.omit."
     }
-  ]
+  ],
+  "drafted": {
+    "axes.expanded.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L13 aria-expanded:bg-muted styles [aria-expanded=\"true\"]; prefixes aria-expanded"
+      ],
+      "fingerprint": "sha256:201decbe1d204298e374e708de68f630dca7e99a9b55ad4a9f27c244a2d5c54c"
+    },
+    "axes.invalid.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L7 aria-invalid:border-destructive styles [aria-invalid=\"true\"]; prefixes aria-invalid, dark:aria-invalid"
+      ],
+      "fingerprint": "sha256:b514d8e286761c45e3cd9af0cfbca247bdf3f5800ce484252a12dca14b984ba0"
+    },
+    "axes.size.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L22 buttonVariants variants.size: \"default\", \"xs\", \"sm\", \"lg\", \"icon\", \"icon-xs\", \"icon-sm\", \"icon-lg\""
+      ],
+      "fingerprint": "sha256:f4ba0a5a7168c7a535475b5f011c828aea59267bea2aeb26fc35483c8b83a588"
+    },
+    "axes.size.values.default.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L23 size \"default\" in buttonVariants variants"
+      ],
+      "fingerprint": "sha256:f4ba0a5a7168c7a535475b5f011c828aea59267bea2aeb26fc35483c8b83a588"
+    },
+    "axes.size.values.icon-lg.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L33 size \"icon-lg\" in buttonVariants variants"
+      ],
+      "fingerprint": "sha256:f4ba0a5a7168c7a535475b5f011c828aea59267bea2aeb26fc35483c8b83a588"
+    },
+    "axes.size.values.icon-sm.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L31 size \"icon-sm\" in buttonVariants variants"
+      ],
+      "fingerprint": "sha256:f4ba0a5a7168c7a535475b5f011c828aea59267bea2aeb26fc35483c8b83a588"
+    },
+    "axes.size.values.icon-xs.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L29 size \"icon-xs\" in buttonVariants variants"
+      ],
+      "fingerprint": "sha256:f4ba0a5a7168c7a535475b5f011c828aea59267bea2aeb26fc35483c8b83a588"
+    },
+    "axes.size.values.icon.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L28 size \"icon\" in buttonVariants variants"
+      ],
+      "fingerprint": "sha256:f4ba0a5a7168c7a535475b5f011c828aea59267bea2aeb26fc35483c8b83a588"
+    },
+    "axes.size.values.lg.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L27 size \"lg\" in buttonVariants variants"
+      ],
+      "fingerprint": "sha256:f4ba0a5a7168c7a535475b5f011c828aea59267bea2aeb26fc35483c8b83a588"
+    },
+    "axes.size.values.sm.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L26 size \"sm\" in buttonVariants variants"
+      ],
+      "fingerprint": "sha256:f4ba0a5a7168c7a535475b5f011c828aea59267bea2aeb26fc35483c8b83a588"
+    },
+    "axes.size.values.xs.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L25 size \"xs\" in buttonVariants variants"
+      ],
+      "fingerprint": "sha256:f4ba0a5a7168c7a535475b5f011c828aea59267bea2aeb26fc35483c8b83a588"
+    },
+    "axes.variant.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L10 buttonVariants variants.variant: \"default\", \"outline\", \"secondary\", \"ghost\", \"destructive\", \"link\""
+      ],
+      "fingerprint": "sha256:2caa446def0f6d856508d57f6d4b923aabd172d50c1d9b5026cb8c3fd531c97a"
+    },
+    "axes.variant.values.default.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L11 variant \"default\" in buttonVariants variants"
+      ],
+      "fingerprint": "sha256:2caa446def0f6d856508d57f6d4b923aabd172d50c1d9b5026cb8c3fd531c97a"
+    },
+    "axes.variant.values.destructive.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L18 variant \"destructive\" in buttonVariants variants"
+      ],
+      "fingerprint": "sha256:2caa446def0f6d856508d57f6d4b923aabd172d50c1d9b5026cb8c3fd531c97a"
+    },
+    "axes.variant.values.ghost.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L16 variant \"ghost\" in buttonVariants variants"
+      ],
+      "fingerprint": "sha256:2caa446def0f6d856508d57f6d4b923aabd172d50c1d9b5026cb8c3fd531c97a"
+    },
+    "axes.variant.values.link.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L20 variant \"link\" in buttonVariants variants"
+      ],
+      "fingerprint": "sha256:2caa446def0f6d856508d57f6d4b923aabd172d50c1d9b5026cb8c3fd531c97a"
+    },
+    "axes.variant.values.outline.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L12 variant \"outline\" in buttonVariants variants"
+      ],
+      "fingerprint": "sha256:2caa446def0f6d856508d57f6d4b923aabd172d50c1d9b5026cb8c3fd531c97a"
+    },
+    "axes.variant.values.secondary.label": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L14 variant \"secondary\" in buttonVariants variants"
+      ],
+      "fingerprint": "sha256:2caa446def0f6d856508d57f6d4b923aabd172d50c1d9b5026cb8c3fd531c97a"
+    },
+    "family.description": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L43 exports Button, rendered as <button>",
+        "components/ui/button.tsx:L10 buttonVariants variants; the Contract's axes: variant (6), size (8), invalid (2), expanded (2), icon-inline-start (2), icon-inline-end (2), state (4)"
+      ],
+      "fingerprint": "sha256:804498718cf447b62c186ae04298168694f0cd399e18c4ff9855d7c5f8e2ba2c"
+    },
+    "figma.grid": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/button.tsx:L10 buttonVariants variants; the Contract's axes: variant (6), size (8), invalid (2), expanded (2), icon-inline-start (2), icon-inline-end (2), state (4)"
+      ],
+      "fingerprint": "sha256:804498718cf447b62c186ae04298168694f0cd399e18c4ff9855d7c5f8e2ba2c"
+    }
+  }
 }
