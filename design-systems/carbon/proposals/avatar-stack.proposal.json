@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "family": { "key": "avatar-stack", "name": "Avatar stack", "description": "Overlapping initials avatars that show who is in a workspace." },
+  "proposal": {
+    "by": "agent",
+    "reason": "Carbon React v11.118.0 ships no avatar or avatar group; the Prototype's overlapping initials circles are their own family.",
+    "considered": [
+      { "contract": "button", "whyNot": "The avatars are not actions." }
+    ],
+    "origin": { "input": "prototype", "at": "index.html:65" },
+    "home": { "where": "app", "path": "components/avatar-stack" }
+  },
+  "axes": [],
+  "anatomy": {
+    "name": "Stack", "type": "COMPONENT", "role": "container",
+    "children": [
+      { "name": "Avatar", "type": "FRAME", "role": "avatar", "children": [ { "name": "Initials", "type": "TEXT", "role": "label" } ] }
+    ]
+  },
+  "properties": [
+    { "key": "initials", "label": "Initials", "type": "TEXT", "default": "JD", "binds": [ { "node": "Initials", "field": "characters" } ] }
+  ],
+  "layout": [
+    { "match": {}, "set": {
+      "Stack": { "direction": "HORIZONTAL" },
+      "Avatar": { "width": 24, "height": 24 },
+      "Initials": { "textStyle": { "token": "label-01" } }
+    } }
+  ],
+  "paint": [
+    { "match": {}, "set": {
+      "Avatar": { "fill": { "token": "layer-accent-01" }, "stroke": { "token": "layer-01" } },
+      "Initials": { "fill": { "token": "text-primary" } }
+    } }
+  ],
+  "notes": [
+    { "level": "warning", "at": "index.html:31", "text": "The Prototype sets the initials at 10px, which no Carbon Type style has; the Proposal binds label-01 (12px), the smallest. The owner confirms the size." },
+    { "level": "info", "at": "index.html:31", "text": "Each avatar after the first overlaps the one before by 6px (margin-left: -6px) with a 2px ring in the card's colour; the Proposal records the ring as a layer-01 stroke and leaves the overlap to the app component." }
+  ],
+  "status": "pending",
+  "approval": null
+}
