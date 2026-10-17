@@ -78,7 +78,7 @@ export function signature(el) {
 }
 
 // Props that carry content or behaviour, not a variant: left out of a library component's signature.
-const CONTENT_PROPS = /^(class|id|href|src|alt|title|name|value|placeholder|for|type|role|target|rel|tabIndex|aria-.*|data-.*)$/;
+export const CONTENT_PROPS = /^(class|id|href|src|alt|title|name|value|placeholder|for|type|role|target|rel|tabIndex|aria-.*|data-.*)$/;
 
 /** A library component's signature (#62 tier 2): its name, then its sorted literal variant props, `Button[size=sm]`. */
 export function librarySignature(el) {

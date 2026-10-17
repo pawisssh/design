@@ -56,8 +56,9 @@ export async function run({ prototype, screens, breakpoints, depsDir = DEPS_DIR 
     // The HTML file is tagged at the static reader's offsets: the Prototype itself, or a Vite app's index.html.
     rel = folder ? (existsSync(join(copy, 'index.html')) ? 'index.html' : null) : relative(root, prototype).split(sep).join('/');
     if (rel) writeFileSync(join(copy, rel), tagHtml(readHtml(join(copy, rel), rel, { depsDir })));
-    const failed = tagTree(copy, loadTypescript(depsDir));
-    uiDir = codeLibraryDir(copy);
+    const ts = loadTypescript(depsDir);
+    const failed = tagTree(copy, ts);
+    uiDir = codeLibraryDir(copy, ts);
     server = existsSync(join(copy, 'package.json')) ? await buildAndServe(copy) : await serveStatic(copy);
     const { chromium, launchOptions } = loadChromium(depsDir);
     browser = await chromium.launch(launchOptions);

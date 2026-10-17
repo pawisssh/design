@@ -43,7 +43,7 @@ export function reactKind(root) {
  * `aliases.ui` through the tsconfig paths (`@/` is the root on Next, src/ on Vite without paths), else
  * components/ui/ on Next and src/components/ui/ on Vite.
  */
-export function codeLibraryDir(root, kind = reactKind(root), paths = compilerPaths(root)) {
+export function codeLibraryDir(root, ts, kind = reactKind(root), paths = compilerPaths(root, ts)) {
   const file = join(root, 'components.json');
   const ui = existsSync(file) && JSON.parse(readFileSync(file, 'utf8')).aliases?.ui;
   if (!ui) return kind === 'react-vite' ? 'src/components/ui/' : 'components/ui/';
@@ -65,7 +65,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
   if (!kind) throw new Error(`${root} is not a Next.js or Vite React project: its package.json needs react with next or vite`);
   const space = addressSpace();
   const paths = compilerPaths(root, ts);
-  const uiDir = codeLibraryDir(root, kind, paths);
+  const uiDir = codeLibraryDir(root, ts, kind, paths);
   const rules = [];
   const sources = new Map();
   const ignored = [];
@@ -532,6 +532,8 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
         for (const name of ['not-found', 'loading', 'error']) {
           const f = special(d, name);
           if (!f) continue;
+          // The root not-found answers unmatched URLs, never "no record" (#62): it is scaffolding.
+          if (name === 'not-found' && d === app) { ignored.push(`${f} (root not-found)`); continue; }
           const inner = content;
           content = ctx => [...(renderComponent(def(f), {}, null, withCond(ctx, f, true)) || []), ...inner(withCond(ctx, f, false))];
         }

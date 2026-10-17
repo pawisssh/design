@@ -191,7 +191,7 @@ test('generate: a Next Prototype is a valid Handoff; a Code Library Button is de
   assert.match(h.openQuestions.find(q => q.id === 'q-font').text, /GeistSans from geist\/font\/sans \(app\/layout\.tsx:2:10\)/);
 });
 
-test('generate: Next boundary files are states by name: not-found.tsx is empty, error.tsx error, under any folder', { skip: noTs }, async () => {
+test('generate: Next boundary files are states by name: a feature not-found.tsx is empty, error.tsx error; the root not-found is ignored', { skip: noTs }, async () => {
   const page = text => `export default function Page() { return <main><h1>${text}</h1></main>; }`;
   const root = project({
     'package.json': '{"name": "boundaries", "dependencies": {"next": "15.5.28", "react": "19.1.10"}}',
@@ -200,6 +200,7 @@ test('generate: Next boundary files are states by name: not-found.tsx is empty, 
     'app/not-found.tsx': 'export default function NotFound() { return <p>Nothing here</p>; }',
     'app/loading-demo/page.tsx': page('Demo'),
     'app/loading-demo/error.tsx': 'export default function Failed() { return <p>Something broke</p>; }',
+    'app/loading-demo/not-found.tsx': 'export default function NoRecord() { return <p>No such demo</p>; }',
   });
   const decisions = {
     'token:font-size:16px': 'body-02-font-size', feature: { goal: 'Show the boundaries.' },
@@ -208,7 +209,21 @@ test('generate: Next boundary files are states by name: not-found.tsx is empty, 
   const result = await generate({ prototype: root, designSystem: designSystem(), decisions });
   assert.deepEqual(result.requests.map(r => r.key), [], 'no condition request for a boundary file');
   const states = Object.fromEntries(result.handoff.screens.map(s => [s.id, STANDARD.filter(x => !s.states[x].missing)]));
-  assert.deepEqual(states, { index: ['default', 'empty'], 'loading-demo': ['default', 'empty', 'error'] });
+  assert.deepEqual(states, { index: ['default'], 'loading-demo': ['default', 'empty', 'error'] });
+  assert.ok(result.handoff.source.ignored.includes('app/not-found.tsx (root not-found)'));
+});
+
+test('read: next/font loaders in a layout are the fonts it loads, each at its binding', { skip: noTs }, () => {
+  const root = project({
+    'package.json': '{"name": "fonts", "dependencies": {"next": "15.5.28", "react": "19.1.10"}}',
+    'app/layout.tsx': `import { Inter } from 'next/font/google';\nimport localFont from 'next/font/local';\nconst inter = Inter({ subsets: ['latin'] });\nconst brand = localFont({ src: './brand.woff2' });\nexport default function RootLayout({ children }) { return <html><body className={inter.className}>{children}</body></html>; }`,
+    'app/page.tsx': 'export default function Page() { return <main>Home</main>; }',
+  });
+  const doc = readReact(root, {});
+  assert.deepEqual(doc.fonts.map(f => [f.module, f.name, doc.at(f.offset)]), [
+    ['next/font/google', 'Inter', 'app/layout.tsx:1:10'],
+    ['next/font/local', 'localFont', 'app/layout.tsx:2:8'],
+  ]);
 });
 
 test('generate: an import prop that maps to no axis value is a prop question to the owner; the rest of the tuple stands', { skip: noTs }, async () => {
@@ -222,6 +237,19 @@ test('generate: an import prop that maps to no axis value is a prop question to 
   const q = result.handoff.openQuestions.find(x => x.id === cta.question);
   assert.deepEqual({ id: q.id, kind: q.kind, to: q.to }, { id: 'q-prop-button', kind: 'prop', to: 'owner' });
   assert.match(q.text, /kind="huge"/);
+  assert.deepEqual(cta.offAxis.map(o => [o.property, o.raw, o.question]), [['kind', '"huge"', 'q-prop-button']]);
+});
+
+test('generate: a styling prop no axis or property names is off-axis with a prop question; content props are not', { skip: noTs }, async () => {
+  const app = project({});
+  cpSync(VITE, app, { recursive: true });
+  const page = join(app, 'src/pages/Members.tsx');
+  writeFileSync(page, readFileSync(page, 'utf8').replace('kind="primary" size="md"', 'kind="primary" size="md" tone="warm"'));
+  const result = await generate({ prototype: app, designSystem: designSystem(), decisions: VITE_DECISIONS });
+  const cta = usagesOf(result.handoff.screens[0]).find(u => u.contract === 'button');
+  assert.deepEqual(cta.tuple, { kind: 'primary', size: 'md' });
+  assert.deepEqual(cta.offAxis.map(o => [o.property, o.raw, o.reason]), [['tone', '"warm"', 'tone is no button axis or property']]);
+  assert.match(result.handoff.openQuestions.find(x => x.id === cta.question).text, /tone="warm", which is no button axis or property/);
 });
 
 test('check right after generating a React Handoff shows no Drift; editing a read file is Drift', { skip: noTs }, async () => {
@@ -234,7 +262,7 @@ test('check right after generating a React Handoff shows no Drift; editing a rea
   assert.deepEqual((await check({ handoffPath: result.path, designSystem: ds, prototype: app })).drift, [{ kind: 'prototype', key: 'src/pages/Members.tsx', change: 'changed' }]);
 });
 
-test('runtime: one Vite build serves both routes; the Carbon Button host joins to its tier-1 at by its own site', { skip: noRuntime, timeout: 300000 }, async () => {
+test('runtime: one Vite build serves both routes; the Carbon Button host joins to its import site by its own', { skip: noRuntime, timeout: 300000 }, async () => {
   const fill = [{ fill: '#email', value: 'ada@example.com' }, { click: 'button[type=submit]' }];
   const r = await run({
     prototype: VITE, breakpoints: [{ key: 'desktop', width: 1280 }],

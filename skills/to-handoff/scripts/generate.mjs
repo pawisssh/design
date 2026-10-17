@@ -22,7 +22,7 @@ import { readHtml, walk } from './reader.mjs';
 import { readReact } from './react.mjs';
 import { STEP_KINDS, run } from './runtime.mjs';
 import {
-  STANDARD_STATES, atomIn, atomsOf, candidateOf, evaluate, isPlaceholderText, librarySignature, ownDeclarations, parseCondition, standIns, stateOfAtom,
+  CONTENT_PROPS, STANDARD_STATES, atomIn, atomsOf, candidateOf, evaluate, isPlaceholderText, librarySignature, ownDeclarations, parseCondition, standIns, stateOfAtom,
 } from './recognise.mjs';
 import { loadDesignSystem } from './system.mjs';
 
@@ -150,7 +150,7 @@ const hasTernary = el => {
 export async function generate({ prototype, designSystem, decisions = {}, depsDir, runtime = false } = {}) {
   const system = await loadDesignSystem(designSystem);
   const { foundations, adapter } = system;
-  // A Design System package import is recognised by import (#62 tier 1): the packages its Contracts name.
+  // A Design System package import is recognised by import (#62): the packages its Contracts name.
   const packages = [...new Set(Object.values(system.contracts).map(c => c.code && c.code.package).filter(Boolean))].sort();
   const doc = readPrototype(prototype, { depsDir, packages });
   const { at, rules, title } = doc;
@@ -227,7 +227,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     return 'an answer names a contract, a proposal, raw or noContract';
   };
 
-  // The Contract a Design System package import names (#62 tier 1): its module and export are the Contract's code.
+  // The Contract a Design System package import names (#62): its module and export are the Contract's code.
   const contractOfImport = c => Object.keys(system.contracts).sort().find(k => {
     const code = system.contracts[k].code || {};
     return code.package === c.module && code.component === c.export;
@@ -297,12 +297,12 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const visit = el => {
       if (el.type !== 'element' || consumed.has(el)) return;
       const contract = el.component && el.component.kind === 'ds' && contractOfImport(el.component);
-      // A Design System import is its Contract by import (#62 tier 1): the tuple is its props through each axis value's code.
+      // A Design System import is its Contract by import (#62): the tuple is its props through each axis value's code.
       if (contract) {
-        const { tuple, unmapped } = importTuple(system.contracts[contract], el);
-        recognised.push({ el, cand: { kind: 'element', sig: el.tag }, answer: { contract, tuple }, key: null, byImport: true, unmapped });
+        const { tuple, unmapped, stray } = importTuple(system.contracts[contract], el);
+        recognised.push({ el, cand: { kind: 'element', sig: el.tag }, answer: { contract, tuple }, key: null, byImport: true, unmapped, stray });
       } else {
-        // Another library component (tier 2) is decided once per signature; a plain element by its own.
+        // Another library component is decided by its signature, once per signature; a plain element by its own.
         const cand = el.component ? { kind: 'element', sig: librarySignature(el), library: true } : candidateOf(el, rules);
         if (!cand) { for (const c of el.children) visit(c); return; }
         const key = `recognise:${cand.sig}`;
@@ -325,7 +325,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
 
     const labelFor = id => { let found = null; walk(screen.root, x => { if (!found && x.tag === 'label' && x.attrs.for === id) found = x; }); return found; };
     const usages = new Map();
-    for (const { el, cand, answer, key, byImport, unmapped } of recognised) {
+    for (const { el, cand, answer, key, byImport, unmapped = [], stray = [] } of recognised) {
       const base = typeof el.attrs.id === 'string' ? el.attrs.id : el.classes[0] || el.tag;
       const id = uniqueId(usageIds, kebab(base));
       const u = { id };
@@ -344,10 +344,16 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
           if (off.length) u.offAxis = off;
           recordUsageStates(def, el, u);
         }
-        if (unmapped && unmapped.length) u.question = question({
-          id: `q-prop-${id}`, kind: 'prop', to: 'owner',
-          text: `\`${el.tag}\` at ${at(el.offset)} sets ${unmapped.map(p => `${p}=${propText(el.attrs[p])}`).join(', ')}, which maps to no ${answer.contract} axis value. Which value is it?`,
-        });
+        // A prop the tuple cannot carry is kept as an off-axis raw value with a reason and a question (#62).
+        const props = [...unmapped.map(p => [p, `maps to no ${answer.contract} axis value`]), ...stray.map(p => [p, `is no ${answer.contract} axis or property`])];
+        if (props.length) {
+          const qid = `q-prop-${id}`;
+          u.offAxis = [...(u.offAxis || []), ...props.map(([p, why]) => ({ property: p, raw: propText(el.attrs[p]), reason: `${p} ${why}`, question: qid }))];
+          u.question = question({
+            id: qid, kind: 'prop', to: 'owner',
+            text: `\`${el.tag}\` at ${at(el.offset)} sets ${props.map(([p, why]) => `${p}=${propText(el.attrs[p])}, which ${why}`).join('; ')}. Which value is it, or does the Contract need it?`,
+          });
+        }
       } else {
         u.raw = { element: cand.sig };
         u.reason = answer.reason;
@@ -786,8 +792,9 @@ function readPrototype(prototype, { depsDir, packages }) {
 }
 
 /**
- * A Design System import's tuple (#62 tier 1): per axis but State, the value whose `code` its props carry, most
- * keys winning (`size="lg" isExpressive` is lg-expressive). An axis prop that maps to no value is `unmapped`.
+ * A Design System import's tuple (#62): per axis but State, the value whose `code` its props carry, most
+ * keys winning (`size="lg" isExpressive` is lg-expressive). An axis prop that maps to no value is `unmapped`; a
+ * styling prop no axis or property names is `stray`.
  */
 function importTuple(def, el) {
   const tuple = {}, unmapped = [];
@@ -800,7 +807,10 @@ function importTuple(def, el) {
     if (pick) { tuple[axis.key] = pick.key; continue; }
     for (const k of new Set(axis.values.flatMap(v => Object.keys(v.code || {})))) if (el.attrs[k] !== undefined && !unmapped.includes(k)) unmapped.push(k);
   }
-  return { tuple, unmapped };
+  // Any other prop that styles: not an axis value's, not a property's, not content or behaviour.
+  const known = new Set([...def.axes.flatMap(a => a.values.flatMap(v => Object.keys((v && v.code) || {}))), ...(def.properties || []).map(p => p.code && p.code.prop).filter(Boolean)]);
+  const stray = Object.keys(el.attrs).filter(k => !known.has(k) && !CONTENT_PROPS.test(k) && !/^(children|key|ref|style|on[A-Z]\w*)$/.test(k)).sort();
+  return { tuple, unmapped, stray };
 }
 
 const propText = v => (typeof v === 'string' ? JSON.stringify(v) : `{${(v.parts || []).map(p => p.expr || p).join('')}}`);
