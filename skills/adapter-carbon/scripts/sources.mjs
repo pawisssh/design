@@ -5,7 +5,8 @@
 //       fetch a Contract's source files at the pinned commit and print its `source.files` and `snapshotId`
 // The command also fetches the preview renderer's packages (preview.mjs) into .scratch/adapter-carbon/preview.
 //
-// - Value files: raw files from the Carbon repository at the pinned commit, each checked against its sha256.
+// - Value files: raw files from the Carbon repository at the pinned commit, each checked against its sha256. The
+//   files the committed Contracts pin come the same way, for their Drafted-value fingerprints (#144).
 // - Check inputs: the compiled `@carbon/styles` CSS and `@carbon/layout` scss/generated, from the npm tarballs,
 //   each tarball checked against its registry sha512 `integrity`. Only the named members are extracted
 //   with `tar`; nothing from a package is ever run (no npm install, no lifecycle scripts).
@@ -63,22 +64,13 @@ const pkgDir = (dir, name) => join(dir, 'npm', `${name}@${CARBON.packages[name].
 
 /** Download every pinned source into `dir`, verifying each hash. Skips files already present and valid. */
 export async function fetchSources(dir = DEFAULT_DIR) {
-  for (const [path, want] of Object.entries(CARBON.files)) {
+  for (const [path, want] of pinnedFiles()) {
     const out = join(dir, 'carbon', path);
     if (existsSync(out) && sha256(readFileSync(out)) === want) continue;
     const url = `https://raw.githubusercontent.com/carbon-design-system/carbon/${CARBON.commit}/${path}`;
     const bytes = await download(url);
     const got = sha256(bytes);
     if (got !== want) throw new Error(`${path}: sha256 ${got} does not match the pin ${want}`);
-    mkdirSync(dirname(out), { recursive: true });
-    writeFileSync(out, bytes);
-  }
-  // The files the committed Contracts pin, checked against those pins: their Drafted-value fingerprints (#144).
-  for (const [path, want] of contractPins()) {
-    const out = join(dir, 'carbon', path);
-    if (existsSync(out) && `sha256:${sha256(readFileSync(out))}` === want) continue;
-    const bytes = await download(`https://raw.githubusercontent.com/carbon-design-system/carbon/${CARBON.commit}/${path}`);
-    if (`sha256:${sha256(bytes)}` !== want) throw new Error(`${path}: sha256 does not match the Contract's pin ${want}`);
     mkdirSync(dirname(out), { recursive: true });
     writeFileSync(out, bytes);
   }
@@ -101,14 +93,21 @@ export async function fetchSources(dir = DEFAULT_DIR) {
   return dir;
 }
 
-/** [path, "sha256:<hex>"] of every source file the committed Carbon Contracts pin at the pinned commit. */
-function contractPins() {
+/**
+ * [path, hex sha256] of every raw file to fetch: the value files, plus every source file the committed Carbon
+ * Contracts pin, which their Drafted-value fingerprints read (#144). Every Contract must be at the pinned commit.
+ */
+function pinnedFiles() {
+  const pins = new Map(Object.entries(CARBON.files));
   const dir = join(REPO_ROOT, 'design-systems/carbon/contracts');
-  const pins = new Map();
   for (const f of readdirSync(dir).filter(n => n.endsWith('.component.json'))) {
     const { source } = JSON.parse(readFileSync(join(dir, f), 'utf8'));
     if (source.commit !== CARBON.commit) throw new Error(`${f}: pinned to ${source.commit}, not the Adapter's ${CARBON.commit}`);
-    for (const [path, pin] of Object.entries(source.files)) pins.set(path, pin);
+    for (const [path, pin] of Object.entries(source.files)) {
+      const want = pin.replace(/^sha256:/, '');
+      if (pins.has(path) && pins.get(path) !== want) throw new Error(`${f}: ${path} pinned to ${pin}, not ${pins.get(path)}`);
+      pins.set(path, want);
+    }
   }
   return [...pins];
 }

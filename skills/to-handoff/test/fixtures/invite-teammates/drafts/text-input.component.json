@@ -802,7 +802,7 @@
     "anatomy.Invalid text": {
       "by": "agent",
       "evidence": [
-        "_form.scss:L205 div.cds--form-requirement holding invalidText"
+        "useNormalizedInputProps.tsx:L81-L88 div.cds--form-requirement holding invalidText"
       ],
       "fingerprint": "sha256:c5963b6980e38fe9f56e11536e902b0c63b206de076f68d6506abfe2eece5788"
     },
@@ -837,7 +837,7 @@
     "anatomy.Warn text": {
       "by": "agent",
       "evidence": [
-        "_form.scss:L205 div.cds--form-requirement holding warnText"
+        "useNormalizedInputProps.tsx:L91-L98 div.cds--form-requirement holding warnText"
       ],
       "fingerprint": "sha256:af869e9b9745cc18a9b12ebf9b7530d8058fa6567cf42c9f071a999513fa8e1e"
     },
@@ -970,7 +970,7 @@
     "layout.Box.alignCross": {
       "by": "agent",
       "evidence": [
-        "_text-input.scss:L106-L108 the icon is centred by top: 50% and translateY(-50%); center is judged"
+        "_text-input.scss:L106-L108 the icon is centred by inset-block-start: 50% and translateY(-50%); center is judged"
       ],
       "fingerprint": "sha256:62bd41e69d4b7473da4bb208cb661a5033f2d39d9fd8d8cc13c870d9cc5c607f"
     },
@@ -1035,21 +1035,21 @@
       "evidence": [
         "_form.scss:L29 .cds--form-item sets no justify-content; start is judged"
       ],
-      "fingerprint": "sha256:844e5b0c10b8ea5ca2110bfa25873a335eef1f66b7d1a9463132b6ee98bb6879"
+      "fingerprint": "sha256:09ad3bf2999d1864fc1c0d9c2aac7370fcce7899eb582bae855865818b3093af"
     },
     "layout.Text input.height": {
       "by": "agent",
       "evidence": [
         "_form.scss:L29 .cds--form-item sets no height; hug is judged"
       ],
-      "fingerprint": "sha256:844e5b0c10b8ea5ca2110bfa25873a335eef1f66b7d1a9463132b6ee98bb6879"
+      "fingerprint": "sha256:09ad3bf2999d1864fc1c0d9c2aac7370fcce7899eb582bae855865818b3093af"
     },
     "layout.Text input.width": {
       "by": "agent",
       "evidence": [
         "_form.scss:L36 .cds--form-item is flex: 1 1 auto inside its parent; fill is judged for a form field"
       ],
-      "fingerprint": "sha256:844e5b0c10b8ea5ca2110bfa25873a335eef1f66b7d1a9463132b6ee98bb6879"
+      "fingerprint": "sha256:09ad3bf2999d1864fc1c0d9c2aac7370fcce7899eb582bae855865818b3093af"
     },
     "layout.Underline.width": {
       "by": "agent",

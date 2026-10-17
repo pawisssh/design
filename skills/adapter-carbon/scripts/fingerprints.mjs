@@ -19,25 +19,63 @@ import { DEFAULT_DIR } from './sources.mjs';
 
 const PREFIX = 'cds';
 const fingerprint = facts => `sha256:${sha256(canonical(facts))}`;
-const escape = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** A nested selector list resolved against its parent's: `&` takes the parent, any other selector descends from it. */
+const resolve = (parent, selector) => parent.split(',').flatMap(p => selector.split(',')
+  .map(s => s.includes('&') ? s.replaceAll('&', p.trim()).trim() : `${p.trim()} ${s.trim()}`)).join(', ');
 
 /**
- * Every `selector { body }` block of an SCSS text, at any depth, as `<selector> { <body> }`: comments stripped,
- * whitespace collapsed to one space, interpolations as written. A block's body keeps its nested blocks.
+ * Every `selector { body }` block of an SCSS text, at any depth, as {text, resolved, ancestors}. `text` is
+ * `<selector> { <body> }` with the selector as written, comments stripped, whitespace collapsed to one space,
+ * strings, url() and interpolations as written, and nested blocks kept in the body. `resolved` is the selector
+ * the block applies to: an at-rule (`@if`, `@include`, `@media`) takes its parent's.
  */
-function scssBlocks(text) {
-  const interp = [];
-  const src = text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1')
-    .replace(/#\{[^}]*\}/g, m => `\u0000${interp.push(m) - 1}\u0000`);
-  const back = s => s.replace(/\u0000(\d+)\u0000/g, (_, n) => interp[n]).replace(/\s+/g, ' ').trim();
+function scssBlocks(text, path) {
+  const kept = [];
+  const keep = s => `\u0000${kept.push(s) - 1}\u0000`;
+  let src = '';
+  for (let i = 0; i < text.length;) {
+    const two = text.slice(i, i + 2);
+    if (two === '/*') { const end = text.indexOf('*/', i + 2); i = end < 0 ? text.length : end + 2; }
+    else if (two === '//') { const end = text.indexOf('\n', i); i = end < 0 ? text.length : end; }
+    else if (text[i] === '"' || text[i] === "'") {
+      let j = i + 1;
+      while (j < text.length && text[j] !== text[i]) j += text[j] === '\\' ? 2 : 1;
+      src += keep(text.slice(i, j + 1));
+      i = j + 1;
+    } else if (two === '#{' || /^url\(/i.test(text.slice(i, i + 4))) {
+      const [opens, closes] = two === '#{' ? ['{', '}'] : ['(', ')'];
+      let depth = 0, j = text.indexOf(opens, i);
+      do { if (text[j] === opens) depth++; else if (text[j] === closes) depth--; j++; } while (depth && j < text.length);
+      src += keep(text.slice(i, j));
+      i = j;
+    } else src += text[i++];
+  }
+  const squash = s => s.replace(/\s+/g, ' ').trim();
+  const back = s => squash(s).replace(/\u0000(\d+)\u0000/g, (_, n) => kept[n]);
   const out = [];
   const open = [];
   let start = 0;
   for (let i = 0; i < src.length; i++) {
-    if (src[i] === '{') { open.push({ selector: src.slice(start, i), at: i }); start = i + 1; }
-    else if (src[i] === '}') { const b = open.pop(); out.push({ selector: back(b.selector), text: `${back(b.selector)} { ${back(src.slice(b.at + 1, i))} }` }); start = i + 1; }
-    else if (src[i] === ';') start = i + 1;
+    if (src[i] === '{') {
+      const raw = squash(src.slice(start, i));
+      const parent = open.at(-1)?.block;
+      const within = parent ? parent.raw : '';
+      const block = { raw: raw.startsWith('@') ? within : within ? resolve(within, raw) : raw, ancestors: parent ? [...parent.ancestors, parent] : [] };
+      block.selector = back(raw);
+      block.resolved = back(block.raw);
+      out.push(block);
+      open.push({ block, at: i });
+      start = i + 1;
+    } else if (src[i] === '}') {
+      const o = open.pop();
+      if (!o) throw new Error(`${path}: unbalanced \`}\` in the SCSS`);
+      o.block.text = `${o.block.selector} { ${back(src.slice(o.at + 1, i))} }`;
+      start = i + 1;
+    } else if (src[i] === ';') start = i + 1;
   }
+  if (open.length) throw new Error(`${path}: unclosed \`{\` in the SCSS after "${open[0].block.selector}"`);
   return out;
 }
 
@@ -49,22 +87,26 @@ function scssBlocks(text) {
 export function fingerprints({ contract, nodes, files, keys }) {
   const family = contract.family.key;
   const react = Object.entries(files).filter(([p]) => /\.[jt]sx?$/.test(p)).map(([, t]) => t).join('\n');
-  const parts = [...new Set([...react.matchAll(new RegExp(`\\$\\{prefix\\}--${escape(family)}__([\\w-]+)`, 'g'))].map(m => m[1]))].sort();
-  const blocks = Object.entries(files).filter(([p]) => p.endsWith('.scss')).flatMap(([, t]) => scssBlocks(t));
+  const parts = [...new Set([...react.matchAll(new RegExp(`\\$\\{prefix\\}--${escapeRe(family)}__([\\w-]+)`, 'g'))].map(m => m[1]))].sort();
+  const blocks = Object.entries(files).filter(([p]) => p.endsWith('.scss')).flatMap(([p, t]) => scssBlocks(t, p));
 
-  const own = layer => {
+  // A block counts when its resolved selector names one of the node's classes, or a --modifier of one, and no
+  // block around it counts already (its text is inside that block's).
+  const nodeFacts = (layer, seen = []) => {
     const spec = nodes[layer];
     if (spec === undefined) throw new Error(`no node for layer "${layer}" in the node map`);
+    if (seen.includes(layer)) throw new Error(`\`of\` cycle: ${[...seen, layer].join(' → ')}`);
     if (typeof spec === 'object') {
-      const drawer = own(spec.of);
+      const drawer = nodeFacts(spec.of, [...seen, layer]);
       return { node: layer, element: drawer.element, rules: drawer.rules, of: drawer.node };
     }
     const [classes, version] = spec.split(':');
     const [cls, ...more] = classes.split(' ');
     const key = cls.startsWith(`${family}__`) ? cls.slice(family.length + 2) : cls;
-    const names = new RegExp(`#\\{\\$prefix\\}--(${[cls, ...more].map(escape).join('|')})(--[\\w-]+)?(?![\\w-])`);
+    const names = new RegExp(`#\\{\\$prefix\\}--(${[cls, ...more].map(escapeRe).join('|')})(--[\\w-]+)?(?![\\w-])`);
+    const counts = new Set(blocks.filter(b => names.test(b.resolved)));
     return { node: version ? `${key}:${version}` : key, element: [cls, ...more].map(c => `${PREFIX}--${c}`).join(' '),
-      rules: blocks.filter(b => names.test(b.selector)).map(b => b.text).sort() };
+      rules: [...counts].filter(b => !b.ancestors.some(a => counts.has(a))).map(b => b.text).sort() };
   };
   const axes = contract.axes || [];
   const values = a => a.values.map(v => v.key);
@@ -76,13 +118,13 @@ export function fingerprints({ contract, nodes, files, keys }) {
     }
     if (['family', 'icons', 'figma', 'code'].includes(root))
       return { kind: 'family', axes: Object.fromEntries(axes.map(a => [a.key, values(a)])), defaults: Object.fromEntries(axes.map(a => [a.key, a.default])), parts };
-    if (root === 'anatomy') return { kind: 'node', ...own(rest.join('.')), parts };
+    if (root === 'anatomy') return { kind: 'node', ...nodeFacts(rest.join('.')), parts };
     const layout = /^layout(\{.*\})?\.([^.]+)\.[^.]+$/.exec(key);
-    if (layout) return { kind: 'layout', ...own(layout[2]) };
+    if (layout) return { kind: 'layout', ...nodeFacts(layout[2]) };
     if (root === 'properties') {
       const props = contract.properties || [];
-      const p = props.find(q => q.key === rest[0]) || props.find(q => (q.binds || []).some(b => b.node === rest[0] && b.field === rest[1]));
-      if (p && p.code && p.code.prop && p.binds && p.binds.length) return { kind: 'property', prop: p.code.prop, ...own(p.binds[0].node), parts };
+      const p = props.find(q => q.key === rest[0]);
+      if (p && p.code && p.code.prop && p.binds && p.binds.length) return { kind: 'property', prop: p.code.prop, ...nodeFacts(p.binds[0].node), parts };
     }
     throw new Error(`no fingerprint kind for "${key}"`);
   };

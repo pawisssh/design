@@ -70,6 +70,47 @@ test('a node with several classes is keyed by the first; its rules are the block
   assert.deepEqual(root.rules, ['.#{$prefix}--form-item { flex-direction: column; }', '.#{$prefix}--text-input-wrapper { inline-size: 100%; }']);
 });
 
+test('a nested block counts for the class its resolved selector names, unless a block around it already counts', () => {
+  const nested = { [SCSS]: [
+    '@mixin text-input {',
+    '  .#{$prefix}--text-input {',
+    '    &:focus { outline: none; }',
+    '    &-wrapper svg[hidden] { display: none; }',
+    '    @if enabled(\'flag\') { .#{$prefix}--form-item & { margin: 0; } }',
+    '  }',
+    '}',
+  ].join('\n') };
+  const r = fingerprints({ contract, files: nested, nodes: { Root: 'text-input-wrapper form-item', Box: 'text-input' },
+    keys: ['anatomy.Root', 'anatomy.Box'] }).facts;
+  // `&-wrapper` resolves to .#{$prefix}--text-input-wrapper; `.#{$prefix}--form-item &` names form-item. Both keep
+  // their own selector as written. Box takes the outer block only: `&:focus` is inside it already.
+  assert.deepEqual(r['anatomy.Root'].rules, [
+    '&-wrapper svg[hidden] { display: none; }',
+    '.#{$prefix}--form-item & { margin: 0; }',
+  ]);
+  assert.deepEqual(r['anatomy.Box'].rules, [
+    '.#{$prefix}--text-input { &:focus { outline: none; } &-wrapper svg[hidden] { display: none; } @if enabled(\'flag\') { .#{$prefix}--form-item & { margin: 0; } } }',
+  ]);
+});
+
+test('strings and url() keep their braces, quotes and slashes; a line comment may hold /* */', () => {
+  const tricky = { [SCSS]: [
+    '// see /* the note',
+    '.#{$prefix}--text-input { content: "}//{"; background: url(//cdn.example/a.png); } // done',
+    '.#{$prefix}--text-input--invalid { content: \'/* not a comment */\'; }',
+  ].join('\n') };
+  assert.deepEqual(fingerprints({ contract, files: tricky, nodes, keys: ['anatomy.Box'] }).facts['anatomy.Box'].rules, [
+    '.#{$prefix}--text-input { content: "}//{"; background: url(//cdn.example/a.png); }',
+    '.#{$prefix}--text-input--invalid { content: \'/* not a comment */\'; }',
+  ]);
+});
+
+test('unbalanced SCSS braces and an `of` cycle in the node map are refused', () => {
+  assert.throws(() => fingerprints({ contract, files: { [SCSS]: '.a { color: red; } }' }, nodes, keys: ['anatomy.Box'] }), /unbalanced `}`/);
+  assert.throws(() => fingerprints({ contract, files: { [SCSS]: '.a { color: red;' }, nodes, keys: ['anatomy.Box'] }), /unclosed `{`/);
+  assert.throws(() => fingerprints({ contract, files, nodes: { A: { of: 'B' }, B: { of: 'A' } }, keys: ['anatomy.A'] }), /`of` cycle: A → B → A/);
+});
+
 test('a class of the family\'s own block is keyed by its element; a version adds :<version>', () => {
   const r = fingerprints({ contract, files, nodes: { Field: 'text-input__field-wrapper', Warn: 'text-input__field-wrapper:warn' },
     keys: ['anatomy.Field', 'anatomy.Warn'] }).facts;
