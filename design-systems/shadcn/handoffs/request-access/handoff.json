@@ -497,7 +497,7 @@
       "id": "q-no-contract-toaster",
       "kind": "no-contract",
       "to": "owner",
-      "text": "`Toaster` is a sonner with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family sonner: components/ui/sonner.tsx exports no Sonner. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for sonner; run node skills/adapter-generic/scripts/components.mjs --family sonner and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "text": "`Toaster` is a sonner with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family sonner: Toaster (State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for sonner; run node skills/adapter-generic/scripts/components.mjs --family sonner and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
       "answer": null
     },
     {

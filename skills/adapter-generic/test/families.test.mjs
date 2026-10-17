@@ -166,3 +166,31 @@ test('a family with no cva drafts its description and grid only, evidenced by th
   for (const r of requests) assert.ok(r.evidence.every(e => e.startsWith('components/ui/card.tsx:L4 ')), r.key);
   assert.match(requests.find(r => r.key === 'figma.grid').evidence[0], /no cva; the Contract's axes: card-footer \(2\), state \(1\)/);
 });
+
+// ---------- a family file with no export named after the family (#154) ----------
+
+test('a family file with no export named after the family is read through its one exported component, which the Contract\'s code names', { skip }, async () => {
+  const project = variant('components/ui/label.tsx', t => t.replaceAll('Label(', 'FieldLabel(').replace('export { Label }', 'export { FieldLabel }'));
+  const doc = (await library({ project, families: ['label'] })).doc;
+  const drafts = JSON.parse(readFileSync(new URL('../fixtures/drafts/label.json', import.meta.url), 'utf8')).drafts;
+  const { contract } = await generate({ project, family: 'label', foundations: doc, drafts });
+  assert.equal(contract.family.key, 'label');
+  assert.equal(contract.code.component, 'FieldLabel');
+  assert.equal(contract.code.import, 'import { FieldLabel } from "@/components/ui/label"');
+  assert.equal(contract.anatomy.name, 'FieldLabel');
+  assert.deepEqual([contract.selection.status, contract.selection.approval], ['draft', null]);
+});
+
+test('a family file with several exported components and none named after the family fails, naming them', { skip }, async () => {
+  const project = variant('components/ui/card.tsx', t => t.replace('function Card(', 'function CardRoot(').replace(/export \{\s*Card,/, 'export {\n  CardRoot,'));
+  await assert.rejects(readFamily({ project, family: 'card', foundations }),
+    /components\/ui\/card\.tsx exports no Card but 7 components \(CardRoot, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter\)/);
+});
+
+test('sonner.tsx exports Toaster alone: --family sonner reads it as the root, past the export check (#154)', { skip }, async () => {
+  await assert.rejects(readFamily({ project: FIXTURE, family: 'sonner', foundations }), e => {
+    assert.doesNotMatch(e.message, /exports no/);
+    assert.match(e.message, /^Toaster \(State=Enabled\) is not a flex or grid container/);
+    return true;
+  });
+});

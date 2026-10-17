@@ -56,3 +56,15 @@ const v = cva("p-1", { variants: { tone: { a: "bg-primary", b: "bg-secondary" } 
   compoundVariants: [{ tone: "a", className: "p-2" }], defaultVariants: { tone: "a" } })`;
   assert.deepEqual(read('x.tsx', text).cvas.v.compound, [{ match: { tone: 'a' }, classes: 'p-2', line: 3 }]);
 });
+
+test('Sonner: a component bound to a const (`const Toaster = (…) => …`) is read, exported through `export { Toaster }` (#154)', { skip }, () => {
+  const { components } = read('components/ui/sonner.tsx');
+  assert.deepEqual(components.map(c => [c.name, c.line, c.exported, c.element]), [['Toaster', 7, true, 'Sonner']]);
+  assert.deepEqual(components[0].classes, [{ classes: 'toaster group', line: 13 }]);
+});
+
+test('a const function component exported in its own statement is exported; an unexported one is not', { skip }, () => {
+  const text = `export const A = function () { return <div className="p-1" /> }
+const B = () => <span />`;
+  assert.deepEqual(read('x.tsx', text).components.map(c => [c.name, c.exported, c.element]), [['A', true, 'div'], ['B', false, 'span']]);
+});
