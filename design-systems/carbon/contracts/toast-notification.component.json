@@ -1,0 +1,996 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "toast-notification",
+    "name": "Toast Notification",
+    "description": "A short-lived message in a dark box with a coloured start border and a status icon per kind, a title, a subtitle and a close button. The low-contrast variant, the caption and the hidden close button are out of this draft."
+  },
+  "source": {
+    "codeLibrary": "Carbon React",
+    "adapter": "carbon",
+    "repository": "https://github.com/carbon-design-system/carbon",
+    "tag": "v11.118.0",
+    "commit": "44f90d8d6b24889af06cee1422ceb37f58e40bed",
+    "packages": {
+      "@carbon/react": "1.118.0",
+      "@carbon/styles": "1.117.0",
+      "@carbon/themes": "11.83.0",
+      "@carbon/layout": "11.61.0",
+      "@carbon/type": "11.69.0",
+      "@carbon/colors": "11.60.0",
+      "@carbon/icons": "11.90.0",
+      "@carbon/icons-react": "11.90.0"
+    },
+    "files": {
+      "packages/layout/src/dtcg/layout.json": "sha256:b337e0e6c8ee8be4845f0a8b2fa0320930bd2999ffbd53c83748afb12723e821",
+      "packages/react/src/components/Notification/Notification.tsx": "sha256:699f181f96ea67aa1fccf7193372ad4453381ab875d1241f7cacbc4771bd7659",
+      "packages/styles/scss/components/notification/_mixins.scss": "sha256:4e5f25eb68d17ff151d69c9d441e71c6962aaf793a4ddd5ae5bedc0bb777603f",
+      "packages/styles/scss/components/notification/_toast-notification.scss": "sha256:5b1a75b50717f38b922b1a5276835c978e1338e37b36065ecc8f734199d75c6c",
+      "packages/themes/src/dtcg/themes.json": "sha256:7f1febe786830b88b26db78e3e573b1cfe2ca9af546ecac54708719df1330ac8",
+      "packages/type/src/styles.ts": "sha256:c6a491d1233ad3af8cfc08681a86780f2a1a2b1865cdac5eb9375dcb556fbbdf"
+    },
+    "snapshotId": "sha256:43954adf2ff1b4015bfe8fb98a58492ea6ec309e3f4f32a316d9003e9119ab8f"
+  },
+  "axes": [
+    {
+      "key": "kind",
+      "label": "Kind",
+      "default": "error",
+      "defaultSource": "Notification.tsx L407: kind = 'error'",
+      "values": [
+        {
+          "key": "error",
+          "label": "Error",
+          "code": {
+            "kind": "error"
+          }
+        },
+        {
+          "key": "info",
+          "label": "Info",
+          "code": {
+            "kind": "info"
+          }
+        },
+        {
+          "key": "info-square",
+          "label": "Info Square",
+          "code": {
+            "kind": "info-square"
+          }
+        },
+        {
+          "key": "success",
+          "label": "Success",
+          "code": {
+            "kind": "success"
+          }
+        },
+        {
+          "key": "warning",
+          "label": "Warning",
+          "code": {
+            "kind": "warning"
+          }
+        },
+        {
+          "key": "warning-alt",
+          "label": "Warning Alt",
+          "code": {
+            "kind": "warning-alt"
+          }
+        }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 6,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Toast notification",
+    "type": "COMPONENT",
+    "children": [
+      {
+        "name": "Accent",
+        "type": "FRAME"
+      },
+      {
+        "name": "Content",
+        "type": "FRAME",
+        "children": [
+          {
+            "name": "Icon",
+            "type": "FRAME",
+            "children": [
+              {
+                "name": "Error icon",
+                "type": "INSTANCE",
+                "role": "icon",
+                "instanceOf": "icon:error--filled"
+              },
+              {
+                "name": "Info icon",
+                "type": "INSTANCE",
+                "role": "icon",
+                "instanceOf": "icon:information--filled"
+              },
+              {
+                "name": "Info Square icon",
+                "type": "INSTANCE",
+                "role": "icon",
+                "instanceOf": "icon:information--square--filled"
+              },
+              {
+                "name": "Success icon",
+                "type": "INSTANCE",
+                "role": "icon",
+                "instanceOf": "icon:checkmark--filled"
+              },
+              {
+                "name": "Warning icon",
+                "type": "INSTANCE",
+                "role": "icon",
+                "instanceOf": "icon:warning--filled"
+              },
+              {
+                "name": "Warning Alt icon",
+                "type": "INSTANCE",
+                "role": "icon",
+                "instanceOf": "icon:warning--alt--filled"
+              }
+            ]
+          },
+          {
+            "name": "Details",
+            "type": "FRAME",
+            "children": [
+              {
+                "name": "Title",
+                "type": "TEXT",
+                "role": "title"
+              },
+              {
+                "name": "Subtitle",
+                "type": "TEXT",
+                "role": "description"
+              }
+            ]
+          },
+          {
+            "name": "Close button",
+            "type": "FRAME",
+            "role": "button",
+            "children": [
+              {
+                "name": "Close icon",
+                "type": "INSTANCE",
+                "role": "icon",
+                "instanceOf": "icon:close"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "properties": [
+    {
+      "key": "title",
+      "label": "Title",
+      "type": "TEXT",
+      "default": "Notification title",
+      "binds": [
+        {
+          "node": "Title",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "title"
+      }
+    },
+    {
+      "key": "subtitle",
+      "label": "Subtitle",
+      "type": "TEXT",
+      "default": "Subtitle text goes here",
+      "binds": [
+        {
+          "node": "Subtitle",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "subtitle"
+      }
+    }
+  ],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Toast notification": {
+          "direction": "row",
+          "width": {
+            "raw": 288,
+            "level": "warning",
+            "reason": "inline-size: convert.to-rem(288px) is a constant with no design token"
+          },
+          "height": "hug",
+          "alignMain": "start",
+          "alignCross": "start",
+          "paddingTop": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the toast has no padding besides its start padding, which Content holds"
+          },
+          "paddingRight": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the toast has no end padding"
+          },
+          "paddingBottom": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the toast has no block padding"
+          },
+          "paddingLeft": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the start padding sits inside the start border, so Content holds it"
+          },
+          "gap": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the start border is flush with the content"
+          }
+        },
+        "Accent": {
+          "width": {
+            "raw": 3,
+            "level": "warning",
+            "reason": "border-inline-start: 3px (notification--experimental mixin) is a constant with no design token"
+          },
+          "height": "fill"
+        },
+        "Content": {
+          "direction": "row",
+          "width": "fill",
+          "height": "hug",
+          "alignCross": "start",
+          "paddingLeft": {
+            "raw": 13,
+            "level": "warning",
+            "reason": "padding-inline-start: convert.to-rem(13px) is a constant with no design token; with the 3px border it makes 16px"
+          },
+          "gap": {
+            "token": "spacing-05"
+          }
+        },
+        "Icon": {
+          "direction": "column",
+          "width": "hug",
+          "height": "hug",
+          "paddingTop": {
+            "token": "spacing-05"
+          }
+        },
+        "Error icon": {
+          "width": {
+            "token": "icon-size-02"
+          },
+          "height": {
+            "token": "icon-size-02"
+          },
+          "visible": false
+        },
+        "Info icon": {
+          "width": {
+            "token": "icon-size-02"
+          },
+          "height": {
+            "token": "icon-size-02"
+          },
+          "visible": false
+        },
+        "Info Square icon": {
+          "width": {
+            "token": "icon-size-02"
+          },
+          "height": {
+            "token": "icon-size-02"
+          },
+          "visible": false
+        },
+        "Success icon": {
+          "width": {
+            "token": "icon-size-02"
+          },
+          "height": {
+            "token": "icon-size-02"
+          },
+          "visible": false
+        },
+        "Warning icon": {
+          "width": {
+            "token": "icon-size-02"
+          },
+          "height": {
+            "token": "icon-size-02"
+          },
+          "visible": false
+        },
+        "Warning Alt icon": {
+          "width": {
+            "token": "icon-size-02"
+          },
+          "height": {
+            "token": "icon-size-02"
+          },
+          "visible": false
+        },
+        "Details": {
+          "direction": "column",
+          "width": "fill",
+          "height": "hug",
+          "paddingTop": {
+            "token": "spacing-05"
+          },
+          "paddingBottom": {
+            "raw": 32,
+            "level": "info",
+            "reason": "derived: the subtitle's margin-block-end $spacing-05 + the details' margin-block-end $spacing-05"
+          },
+          "gap": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the title and subtitle have no margin between them"
+          }
+        },
+        "Title": {
+          "textStyle": {
+            "token": "heading-compact-01"
+          },
+          "width": "fill",
+          "textResize": "height"
+        },
+        "Subtitle": {
+          "textStyle": {
+            "token": "body-compact-01"
+          },
+          "width": "fill",
+          "textResize": "height"
+        },
+        "Close button": {
+          "direction": "column",
+          "alignMain": "center",
+          "alignCross": "center",
+          "width": {
+            "raw": 48,
+            "level": "warning",
+            "reason": "inline-size: convert.to-rem(48px) is a constant with no design token"
+          },
+          "height": {
+            "raw": 48,
+            "level": "warning",
+            "reason": "block-size: convert.to-rem(48px) is a constant with no design token"
+          }
+        },
+        "Close icon": {
+          "width": {
+            "token": "icon-size-01"
+          },
+          "height": {
+            "token": "icon-size-01"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "error"
+      },
+      "set": {
+        "Error icon": {
+          "visible": true
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "info"
+      },
+      "set": {
+        "Info icon": {
+          "visible": true
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "info-square"
+      },
+      "set": {
+        "Info Square icon": {
+          "visible": true
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "success"
+      },
+      "set": {
+        "Success icon": {
+          "visible": true
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "warning"
+      },
+      "set": {
+        "Warning icon": {
+          "visible": true
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "warning-alt"
+      },
+      "set": {
+        "Warning Alt icon": {
+          "visible": true
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Toast notification": {
+          "fill": {
+            "token": "background-inverse"
+          },
+          "stroke": "none"
+        },
+        "Content": {
+          "fill": "none"
+        },
+        "Icon": {
+          "fill": "none"
+        },
+        "Details": {
+          "fill": "none"
+        },
+        "Title": {
+          "fill": {
+            "token": "text-inverse"
+          }
+        },
+        "Subtitle": {
+          "fill": {
+            "token": "text-inverse"
+          }
+        },
+        "Close button": {
+          "fill": "none",
+          "stroke": "none"
+        },
+        "Close icon/Vector": {
+          "fill": {
+            "token": "icon-inverse"
+          }
+        },
+        "Error icon/Vector": {
+          "fill": {
+            "token": "support-error-inverse"
+          }
+        },
+        "Info icon/Vector": {
+          "fill": {
+            "token": "support-info-inverse"
+          }
+        },
+        "Info Square icon/Vector": {
+          "fill": {
+            "token": "support-info-inverse"
+          }
+        },
+        "Success icon/Vector": {
+          "fill": {
+            "token": "support-success-inverse"
+          }
+        },
+        "Warning icon/Vector": {
+          "fill": {
+            "token": "support-warning-inverse"
+          }
+        },
+        "Warning Alt icon/Vector": {
+          "fill": {
+            "token": "support-warning-inverse"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "error"
+      },
+      "set": {
+        "Accent": {
+          "fill": {
+            "token": "support-error-inverse"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "info"
+      },
+      "set": {
+        "Accent": {
+          "fill": {
+            "token": "support-info-inverse"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "info-square"
+      },
+      "set": {
+        "Accent": {
+          "fill": {
+            "token": "support-info-inverse"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "success"
+      },
+      "set": {
+        "Accent": {
+          "fill": {
+            "token": "support-success-inverse"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "warning"
+      },
+      "set": {
+        "Accent": {
+          "fill": {
+            "token": "support-warning-inverse"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "warning-alt"
+      },
+      "set": {
+        "Accent": {
+          "fill": {
+            "token": "support-warning-inverse"
+          }
+        }
+      }
+    }
+  ],
+  "icons": {
+    "source": {
+      "package": "@carbon/icons",
+      "version": "11.90.0",
+      "path": "svg/16/{key}.svg",
+      "fallback": "svg/32/{key}.svg"
+    },
+    "default": "close",
+    "preferred": [
+      "close"
+    ]
+  },
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": [
+      {
+        "family": "IBM Plex Sans",
+        "styles": [
+          "Regular",
+          "SemiBold"
+        ]
+      }
+    ]
+  },
+  "figma": {
+    "page": "Notifications",
+    "componentSetName": "Toast Notification",
+    "description": "Carbon React ToastNotification (@carbon/react 1.118.0). Draft: not yet built or reviewed in Figma.",
+    "header": {
+      "type": "Component",
+      "title": "Toast Notification",
+      "namespace": "@carbon/react"
+    },
+    "grid": {
+      "columns": [
+        "kind"
+      ],
+      "rows": []
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@carbon/react",
+    "component": "ToastNotification",
+    "import": "import { ToastNotification } from '@carbon/react';"
+  },
+  "notes": [
+    {
+      "level": "verify",
+      "at": "paint[kind=warning]",
+      "message": "WarningFilled and WarningAltFilled are two-tone: _toast-notification.scss L221-L229 paints the inner mark (path[opacity='0'], path:first-of-type) $black-100 while the outer shape takes $support-warning-inverse. Icons are one flattened Vector (#13), so the Design Library shows the mark cut out instead of black."
+    },
+    {
+      "level": "verify",
+      "at": "layout.Toast notification",
+      "message": "Carbon's box-shadow 0 2px 6px 0 rgb(0 0 0 / 0.2) (_toast-notification.scss L38) is not drawn: the builder writes a raw effect colour without alpha, and Carbon's shadow token (alpha 0.3) is not scoped EFFECT_COLOR. Add it by hand in Figma, or as a token once Foundations has one."
+    },
+    {
+      "level": "verify",
+      "at": "anatomy.Icon",
+      "message": "The status icons render at size={20} (Notification.tsx L295). @carbon/icons 11.90.0 has no svg/20, so the Design Library scales the svg/16 glyph (error--filled, checkmark--filled, warning--filled) or the svg/32 fallback (information--filled, information--square--filled, warning--alt--filled) to icon-size-02."
+    },
+    {
+      "level": "info",
+      "at": "anatomy.Accent",
+      "message": "The 3px start border (_mixins.scss L35, notification--experimental) is its own FRAME, as a border on one side is (ADR 0013). It and the status icon take the kind colour: support-<kind>-inverse, with info and info-square sharing support-info-inverse and warning and warning-alt sharing support-warning-inverse (_toast-notification.scss L185-L214)."
+    },
+    {
+      "level": "info",
+      "at": "layout.Details.paddingBottom",
+      "message": "Carbon renders title, subtitle and caption only when given (Notification.tsx L475-L489). The Contract always shows Title and Subtitle; the spacing is the title-and-subtitle case: the title's margin-block-start $spacing-05 (L287) on top, the subtitle's margin-block-end $spacing-05 (L295) and the details' $spacing-05 (L238) below."
+    },
+    {
+      "level": "info",
+      "at": "layout.Toast notification.width",
+      "message": "At the max breakpoint (1584px) the toast is 352px wide (_toast-notification.scss L43-L45). The Contract draws the 288px default."
+    },
+    {
+      "level": "info",
+      "at": "anatomy.Close button",
+      "message": "The close button is transparent with a 2px $focus-inverse outline on :focus (_toast-notification.scss L273-L276). The toast has no State axis: its states are the close button's, which is not a family of its own."
+    },
+    {
+      "level": "info",
+      "at": "family",
+      "message": "Left out of this draft: lowContrast (its notification-background-* tokens are not in the Foundations), caption (its padding-block-start $spacing-03 needs a gap the title and subtitle do not have), hideCloseButton (a BOOLEAN shows a node when true, and this prop hides it), role, timeout, actions and children, and the v12 border radius behind enable-v12-release."
+    }
+  ],
+  "drafted": {
+    "anatomy.Accent": {
+      "by": "agent",
+      "evidence": [
+        "_mixins.scss:L35 the root's border-inline-start; no element of its own"
+      ],
+      "fingerprint": "sha256:bad5a32cac8be8f1a6f39cca7595db8e1b51136ae6a6c7f2e36df1ef2038f82e"
+    },
+    "anatomy.Close button": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L492-L498 NotificationButton, a button.cds--toast-notification__close-button (L202-L210)"
+      ],
+      "fingerprint": "sha256:7badd5c979f727fbf1523307d91d5e18970380f2b9810c60a73ad4d0403c64bb"
+    },
+    "anatomy.Close icon": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L187 and L209 Close with .cds--toast-notification__close-icon"
+      ],
+      "fingerprint": "sha256:e959a0f2575b91a636483968e3cc72bfed1ff323307661f37dd034b20be0fce9"
+    },
+    "anatomy.Content": {
+      "by": "agent",
+      "evidence": [
+        "_toast-notification.scss:L41 the root's padding-inline-start inside the start border; no element of its own"
+      ],
+      "fingerprint": "sha256:6e9b75041da6c5f955343b6eeb76b0f1f761d7934b7a668c39a246e0978bff9a"
+    },
+    "anatomy.Details": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L472-L491 div.cds--toast-notification__details"
+      ],
+      "fingerprint": "sha256:c72c1886ad2071fd4f342e274529963fdb5b5a21d7b4fd3699a1de98b2045c17"
+    },
+    "anatomy.Error icon": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L261-L268 iconTypes['error'] at size 20 (L295)"
+      ],
+      "fingerprint": "sha256:dabcf7b0cbfc0c81998c50416e7d275ece466ea554bc4b36776e4435635df7fd"
+    },
+    "anatomy.Icon": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L467-L471 NotificationIcon with .cds--toast-notification__icon"
+      ],
+      "fingerprint": "sha256:bc11ce0615bec047f8e333de3f59307c073541dff588be95b72b833057978796"
+    },
+    "anatomy.Info Square icon": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L261-L268 iconTypes['info-square'] at size 20 (L295)"
+      ],
+      "fingerprint": "sha256:66119315cde82736f971bb55cf9c6901640088da6ff73e7dc80f96b9398e78de"
+    },
+    "anatomy.Info icon": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L261-L268 iconTypes['info'] at size 20 (L295)"
+      ],
+      "fingerprint": "sha256:8a3e7b15978b3a114bb90928cdc6b9c6e95a280072e05e307a61b5e03d92ba86"
+    },
+    "anatomy.Subtitle": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L480-L484 div.cds--toast-notification__subtitle"
+      ],
+      "fingerprint": "sha256:0bb90193f73b15be3a2019ff4a9d050f7ef7bf2300529b97e1f00469cd7e015f"
+    },
+    "anatomy.Success icon": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L261-L268 iconTypes['success'] at size 20 (L295)"
+      ],
+      "fingerprint": "sha256:a6c46cfc0848e1f0702adb37fa2deb2d0968b048656eefb4f35a887024d40f30"
+    },
+    "anatomy.Title": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L475-L479 div.cds--toast-notification__title"
+      ],
+      "fingerprint": "sha256:a01a61b6925cedf6b8ec1b7a1a13b89e57c9ddf96568e7160d1fdbd15b500ffb"
+    },
+    "anatomy.Toast notification": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L466 div.cds--toast-notification"
+      ],
+      "fingerprint": "sha256:62b688ad405992c4476f9af4d8b433794eaa3602f4248d68ceedf6d8dd72b346"
+    },
+    "anatomy.Warning Alt icon": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L261-L268 iconTypes['warning-alt'] at size 20 (L295)"
+      ],
+      "fingerprint": "sha256:1c59ae7abb99c7255c747bc2c63c004151c5f3476fc4db065c948b8d950468ff"
+    },
+    "anatomy.Warning icon": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L261-L268 iconTypes['warning'] at size 20 (L295)"
+      ],
+      "fingerprint": "sha256:2cf706eeccc5281e4c8ba4e6b283e565b52ed83e67c52453a3746f9363062ebc"
+    },
+    "axes.kind.label": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L348-L354 kind prop and L261-L268 one icon per kind; the labels are Carbon's docs names"
+      ],
+      "fingerprint": "sha256:817f66cc4c175a8d188365bb0e9ab16d5dfc0357e8f678656b6fb2d998285e28"
+    },
+    "axes.kind.values.error.label": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L348-L354 kind prop and L261-L268 one icon per kind; the labels are Carbon's docs names"
+      ],
+      "fingerprint": "sha256:817f66cc4c175a8d188365bb0e9ab16d5dfc0357e8f678656b6fb2d998285e28"
+    },
+    "axes.kind.values.info-square.label": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L348-L354 kind prop and L261-L268 one icon per kind; the labels are Carbon's docs names"
+      ],
+      "fingerprint": "sha256:817f66cc4c175a8d188365bb0e9ab16d5dfc0357e8f678656b6fb2d998285e28"
+    },
+    "axes.kind.values.info.label": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L348-L354 kind prop and L261-L268 one icon per kind; the labels are Carbon's docs names"
+      ],
+      "fingerprint": "sha256:817f66cc4c175a8d188365bb0e9ab16d5dfc0357e8f678656b6fb2d998285e28"
+    },
+    "axes.kind.values.success.label": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L348-L354 kind prop and L261-L268 one icon per kind; the labels are Carbon's docs names"
+      ],
+      "fingerprint": "sha256:817f66cc4c175a8d188365bb0e9ab16d5dfc0357e8f678656b6fb2d998285e28"
+    },
+    "axes.kind.values.warning-alt.label": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L348-L354 kind prop and L261-L268 one icon per kind; the labels are Carbon's docs names"
+      ],
+      "fingerprint": "sha256:817f66cc4c175a8d188365bb0e9ab16d5dfc0357e8f678656b6fb2d998285e28"
+    },
+    "axes.kind.values.warning.label": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L348-L354 kind prop and L261-L268 one icon per kind; the labels are Carbon's docs names"
+      ],
+      "fingerprint": "sha256:817f66cc4c175a8d188365bb0e9ab16d5dfc0357e8f678656b6fb2d998285e28"
+    },
+    "family.description": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L319-L396 ToastNotificationProps: kind, title, subtitle, caption, hideCloseButton, lowContrast"
+      ],
+      "fingerprint": "sha256:53f1413f8cfa1e8b42e90f87914f4cfe757a960b0935f5bebb69dd1c84c6be31"
+    },
+    "figma.description": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L397 ToastNotification at @carbon/react 1.118.0"
+      ],
+      "fingerprint": "sha256:53f1413f8cfa1e8b42e90f87914f4cfe757a960b0935f5bebb69dd1c84c6be31"
+    },
+    "figma.grid": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L348-L354 kind is the only axis, so it is the columns"
+      ],
+      "fingerprint": "sha256:53f1413f8cfa1e8b42e90f87914f4cfe757a960b0935f5bebb69dd1c84c6be31"
+    },
+    "figma.page": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L397 ToastNotification; the page name follows the Button Contract's plural"
+      ],
+      "fingerprint": "sha256:53f1413f8cfa1e8b42e90f87914f4cfe757a960b0935f5bebb69dd1c84c6be31"
+    },
+    "icons.default": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L187 NotificationButton renders Close"
+      ],
+      "fingerprint": "sha256:53f1413f8cfa1e8b42e90f87914f4cfe757a960b0935f5bebb69dd1c84c6be31"
+    },
+    "layout.Close button.direction": {
+      "by": "agent",
+      "evidence": [
+        "_toast-notification.scss:L245-L248 display: flex; flex-direction: column, centred"
+      ],
+      "fingerprint": "sha256:5850b49000c9bce3e16815d9de1756ca1c87f2687d9251e46e7abd8b6c81f64c"
+    },
+    "layout.Content.direction": {
+      "by": "agent",
+      "evidence": [
+        "_toast-notification.scss:L31 the root is display: flex in a row; Content keeps the row"
+      ],
+      "fingerprint": "sha256:acc98889f98b5d2beb7a91fea0a23b94f842b7a11148beef9a924750fe12c72e"
+    },
+    "layout.Content.height": {
+      "by": "agent",
+      "evidence": [
+        "_toast-notification.scss:L32 block-size: auto; hug is judged"
+      ],
+      "fingerprint": "sha256:acc98889f98b5d2beb7a91fea0a23b94f842b7a11148beef9a924750fe12c72e"
+    },
+    "layout.Content.width": {
+      "by": "agent",
+      "evidence": [
+        "_toast-notification.scss:L40 the content fills the 288px toast; fill is judged"
+      ],
+      "fingerprint": "sha256:acc98889f98b5d2beb7a91fea0a23b94f842b7a11148beef9a924750fe12c72e"
+    },
+    "layout.Details.direction": {
+      "by": "agent",
+      "evidence": [
+        "_toast-notification.scss:L237 the details are block children stacked; column is judged"
+      ],
+      "fingerprint": "sha256:3513dae5b877bc9681bbb9290b7b44c1b28f453af5ff32b6b7d584fb19496d73"
+    },
+    "layout.Details.height": {
+      "by": "agent",
+      "evidence": [
+        "_toast-notification.scss:L237 the details set no height; hug is judged"
+      ],
+      "fingerprint": "sha256:3513dae5b877bc9681bbb9290b7b44c1b28f453af5ff32b6b7d584fb19496d73"
+    },
+    "layout.Details.width": {
+      "by": "agent",
+      "evidence": [
+        "_toast-notification.scss:L255 the close button's margin-inline-start: auto leaves the rest to the details; fill is judged"
+      ],
+      "fingerprint": "sha256:3513dae5b877bc9681bbb9290b7b44c1b28f453af5ff32b6b7d584fb19496d73"
+    },
+    "layout.Icon.direction": {
+      "by": "agent",
+      "evidence": [
+        "_toast-notification.scss:L231-L235 the icon is a flex-shrink: 0 svg; a column slot is judged to hold its top margin"
+      ],
+      "fingerprint": "sha256:8d41b6c2ce4820ea64f37d4f7c7a1cf37d2b31b8773962bbe7ae6812e152e0a5"
+    },
+    "layout.Subtitle.textResize": {
+      "by": "agent",
+      "evidence": [
+        "_toast-notification.scss:L296 word-break: break-word; height is judged"
+      ],
+      "fingerprint": "sha256:2d2d96d2af80f896b7594b90665b0463c0e2a9b7954b9254119be3f25e1f4fac"
+    },
+    "layout.Subtitle.width": {
+      "by": "agent",
+      "evidence": [
+        "_toast-notification.scss:L291 the subtitle fills the details; fill is judged"
+      ],
+      "fingerprint": "sha256:2d2d96d2af80f896b7594b90665b0463c0e2a9b7954b9254119be3f25e1f4fac"
+    },
+    "layout.Title.textResize": {
+      "by": "agent",
+      "evidence": [
+        "_toast-notification.scss:L288 word-break: break-word; height is judged"
+      ],
+      "fingerprint": "sha256:1f6fca790c761835257134618136dd2cfe78212744ab07ea7db459514ffc55bc"
+    },
+    "layout.Title.width": {
+      "by": "agent",
+      "evidence": [
+        "_toast-notification.scss:L283 the title fills the details; fill is judged"
+      ],
+      "fingerprint": "sha256:1f6fca790c761835257134618136dd2cfe78212744ab07ea7db459514ffc55bc"
+    },
+    "layout.Toast notification.height": {
+      "by": "agent",
+      "evidence": [
+        "_toast-notification.scss:L32 block-size: auto; hug is judged"
+      ],
+      "fingerprint": "sha256:778caec4c01c9db8ba94d2f1635621ac33d2d42cf385b1aba3cff0bb0d2d7a6d"
+    },
+    "properties.subtitle.default": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L385 subtitle prop; the text is the Carbon docs example"
+      ],
+      "fingerprint": "sha256:4869bef329273403331ab2e30cf64121a5593b194a74cdcba69f7ca5edb59f7f"
+    },
+    "properties.subtitle.label": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L385 subtitle prop"
+      ],
+      "fingerprint": "sha256:4869bef329273403331ab2e30cf64121a5593b194a74cdcba69f7ca5edb59f7f"
+    },
+    "properties.title.default": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L395 title prop; the text is the Carbon docs example"
+      ],
+      "fingerprint": "sha256:02dfbd62a9b7e2b01a9eda95ec8bf71ef502f05643ee7f398fb9f78aa27c6b58"
+    },
+    "properties.title.label": {
+      "by": "agent",
+      "evidence": [
+        "Notification.tsx:L395 title prop"
+      ],
+      "fingerprint": "sha256:02dfbd62a9b7e2b01a9eda95ec8bf71ef502f05643ee7f398fb9f78aa27c6b58"
+    }
+  }
+}

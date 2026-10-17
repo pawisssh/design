@@ -34,9 +34,9 @@
     } }
   ],
   "notes": [
-    { "level": "warning", "at": "index.html:31", "text": "The Prototype sets the initials at 10px, which no Carbon Type style has; the Proposal binds label-01 (12px), the smallest. The owner confirms the size." },
+    { "level": "info", "at": "index.html:31", "text": "The Prototype sets the initials at 10px, which no Carbon Type style has. The owner chose label-01 (12px), the smallest Carbon Type style." },
     { "level": "info", "at": "index.html:31", "text": "Each avatar after the first overlaps the one before by 6px (margin-left: -6px) with a 2px ring in the card's colour; the Proposal records the ring as a layer-01 stroke and leaves the overlap to the app component." }
   ],
-  "status": "pending",
-  "approval": null
+  "status": "approved",
+  "approval": { "by": "owner", "at": "2026-10-17T00:00:00Z", "contentHash": "sha256:28f70d094a1cc06d5b3cb7eb2d0d2e3335993227eb4816606f2f2a525389462e" }
 }

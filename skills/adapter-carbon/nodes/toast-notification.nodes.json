@@ -1,0 +1,17 @@
+{
+  "Toast notification": "toast-notification",
+  "Accent": { "of": "Toast notification" },
+  "Content": { "of": "Toast notification" },
+  "Icon": "toast-notification__icon",
+  "Error icon": "toast-notification__icon:error",
+  "Info icon": "toast-notification__icon:info",
+  "Info Square icon": "toast-notification__icon:info-square",
+  "Success icon": "toast-notification__icon:success",
+  "Warning icon": "toast-notification__icon:warning",
+  "Warning Alt icon": "toast-notification__icon:warning-alt",
+  "Details": "toast-notification__details",
+  "Title": "toast-notification__title",
+  "Subtitle": "toast-notification__subtitle",
+  "Close button": "toast-notification__close-button",
+  "Close icon": "toast-notification__close-icon"
+}
