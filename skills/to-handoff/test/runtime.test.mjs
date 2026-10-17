@@ -87,6 +87,9 @@ test('runtime: a screenshot per reached state x Carbon breakpoint, the error sta
   assert.equal(screen.states.error.missing, true);
   assert.deepEqual(validateHandoff(handoff, await loadDesignSystem(ds)).errors, []);
   assert.ok(!handoff.openQuestions.some(q => q.kind === 'runtime'));
+  // The screenshots show where the media query applies: the question names that, never a missing viewport (#146).
+  assert.equal(handoff.openQuestions.find(q => q.id === 'q-breakpoint-max-width-640px').text,
+    '@media (max-width: 640px) changes .actions, .actions .btn. In the screenshots it applies at sm (320px), not at md (672px), lg (1056px), xlg (1312px) or max (1584px); 640px falls between sm and md. Which Design System breakpoint is it, and what should change there?');
 });
 
 test('runtime: a re-run on the same inputs writes nothing and leaves the screenshots byte for byte', { skip: noRuntime }, async () => {
@@ -158,6 +161,7 @@ test('runtime: a build that fails gives a valid static-only Handoff with the rea
     for (const bp of Object.keys(CARBON_BREAKPOINTS)) assert.deepEqual(s.screenshots[bp], { missing: true, reason }, `${state} at ${bp}`);
   const q = handoff.openQuestions.find(x => x.id === 'q-runtime');
   assert.equal(q.kind, 'runtime');
+  assert.match(handoff.openQuestions.find(x => x.id === 'q-breakpoint-max-width-640px').text, /the static reader has no viewport/, 'a failed runtime run is static-only');
   assert.match(q.text, /npm run build failed \(exit 1\): the build is broken/);
   assert.ok(!existsSync(join(dirname(path), 'screens')), 'no screenshots are written');
   // Other test files run concurrently and keep their own runs: look only for this Prototype's copy.

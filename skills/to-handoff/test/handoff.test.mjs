@@ -203,6 +203,9 @@ test('#edf5ff is Off-system with nearest and its Primitive; a near match and a t
   const ref = styles(handoff).find(s => s.property === 'border-color');
   assert.equal(ref.token, 'border-subtle-01');
   assert.ok(handoff.openQuestions.filter(q => q.kind === 'font').length === 1);
+  // A static run never saw a viewport, and says so (#146).
+  assert.equal(handoff.openQuestions.find(q => q.id === 'q-breakpoint-max-width-640px').text,
+    '@media (max-width: 640px) changes .actions, .actions .btn; the static reader has no viewport. Which Design System breakpoint is it, and what should change there?');
 });
 
 test('states, Stand-ins and the missing error state come from the Prototype', { skip: noDeps }, async () => {
