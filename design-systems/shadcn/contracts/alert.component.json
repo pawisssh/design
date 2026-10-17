@@ -12,6 +12,7 @@
       "@/components/ui/alert": "sha256:f253568242c1c69b343f12474002fdbe229f603158171c59e21c491ab79f2e6e",
       "class-variance-authority": "0.7.1",
       "cn": "0.5.0",
+      "lucide-react": "1.58.0",
       "radix-ui": "1.8.1",
       "react": "19.1.0",
       "react-dom": "19.1.0",

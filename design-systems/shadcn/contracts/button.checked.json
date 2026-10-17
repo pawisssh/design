@@ -1,0 +1,5622 @@
+{
+  "family": "button",
+  "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6",
+  "checked": [
+    {
+      "variant": "default",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "default",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "default",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "default",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "default",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "default",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "default",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "default",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "default",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "default",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "default",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "default",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "default",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "default",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "default",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "default",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "default",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "default",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "default",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "default",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "xs",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "sm",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "lg",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-xs",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-xs",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-xs",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-xs",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-sm",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-sm",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-sm",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-sm",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-lg",
+      "invalid": "invalid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-lg",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-lg",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "outline",
+      "size": "icon-lg",
+      "invalid": "invalid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "secondary",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "ghost",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "expanded",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon-xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon-sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "destructive",
+      "size": "icon-lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "link",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "link",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "link",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "link",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "link",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "link",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "link",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "link",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "link",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "link",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "link",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "link",
+      "size": "default",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "link",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "link",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "link",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "link",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "link",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "link",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "link",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "link",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "link",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "link",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "link",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "link",
+      "size": "xs",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "link",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "link",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "link",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "link",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "link",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "link",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "link",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "link",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "link",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "link",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "link",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "link",
+      "size": "sm",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "link",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "link",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "link",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "link",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    },
+    {
+      "variant": "link",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "enabled"
+    },
+    {
+      "variant": "link",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "hover"
+    },
+    {
+      "variant": "link",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "focus"
+    },
+    {
+      "variant": "link",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "none",
+      "icon-inline-end": "icon-inline-end",
+      "state": "disabled"
+    },
+    {
+      "variant": "link",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "enabled"
+    },
+    {
+      "variant": "link",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "hover"
+    },
+    {
+      "variant": "link",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "focus"
+    },
+    {
+      "variant": "link",
+      "size": "lg",
+      "invalid": "valid",
+      "expanded": "collapsed",
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "none",
+      "state": "disabled"
+    }
+  ]
+}

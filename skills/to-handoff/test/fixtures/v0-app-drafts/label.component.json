@@ -12,6 +12,7 @@
       "@/components/ui/label": "sha256:344bde38b8531615dbf8e14af3895517c24d8ef6ce56ddeda7e2e6fe4b5d0c00",
       "class-variance-authority": "0.7.1",
       "cn": "0.5.0",
+      "lucide-react": "1.58.0",
       "radix-ui": "1.8.1",
       "react": "19.1.0",
       "react-dom": "19.1.0",

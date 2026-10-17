@@ -243,7 +243,7 @@ A value that neither the source nor a rule here states is drafted by an agent. T
 - **Button.** The committed Contract was drafted from [`fixtures/drafts/button.json`](fixtures/drafts/button.json). It stays a draft until the owner approves it in To-design's base loop.
 - **Label and Textarea.** Drafted mid-run by To-handoff's v0 run (#125) from [`fixtures/drafts/label.json`](fixtures/drafts/label.json) and [`fixtures/drafts/textarea.json`](fixtures/drafts/textarea.json), after the Foundations document was regenerated with both families. They are drafts too.
 - **Input.** A plain box (#153), drafted mid-run by the same v0 run from [`fixtures/drafts/input.json`](fixtures/drafts/input.json), after the Foundations document was regenerated with it. A draft.
-- **Select.** Read through SelectTrigger (#153), and [`fixtures/drafts/select.json`](fixtures/drafts/select.json) drafts it, but no Contract is committed: `components/ui/select.tsx` imports `lucide-react`, which [`preview/package.json`](preview/package.json) does not pin, so the preview renderer cannot render it.
+- **Select.** A provider root (#153), read through SelectTrigger and drafted mid-run by the v0 run from [`fixtures/drafts/select.json`](fixtures/drafts/select.json), after `lucide-react` (which `components/ui/select.tsx` imports) was pinned in [`preview/package.json`](preview/package.json). A draft.
 
 ### Left for later tickets
 
@@ -261,7 +261,7 @@ A value that neither the source nor a rule here states is drafted by an agent. T
 
 [`scripts/preview.mjs`](scripts/preview.mjs) is the renderer To-preview finds by convention, and [`scripts/handoff-adapter.mjs`](scripts/handoff-adapter.mjs) hands the same renderer to To-handoff, with the rest of #102's Adapter interface. `previewRenderer(contract)` resolves to:
 
-- `render(tuple, properties)`: the project's own component, rendered with `react-dom/server` `renderToStaticMarkup`. A missing axis takes its default, and each axis value's `code` props are set. Each anatomy node the variant shows is a child, in anatomy order: an icon slot an `<svg>` carrying the attribute its Slot axis tests, a part its exported component holding its layer name. A node the resolved layout hides (`visible: false`) is not rendered. The Contract has no properties yet.
+- `render(tuple, properties)`: the project's own component, rendered with `react-dom/server` `renderToStaticMarkup`. A missing axis takes its default, and each axis value's `code` props are set. Each anatomy node the variant shows is a child, in anatomy order: an icon slot an `<svg>` carrying the attribute its Slot axis tests, a part its exported component holding its layer name. A node the resolved layout hides (`visible: false`) is not rendered. A provider family (Select) renders its Root around the Trigger it was read from: the Trigger takes the props and the children, and holds the family's `<Name>Value` export with the family name as its placeholder. The Contract has no properties yet.
 - `stylesheet`: the project's global CSS compiled by the pinned Tailwind over every class of the component files the render loads, Preflight and the base layer included. Tailwind's `@supports (color: color-mix(…))` guards are unwrapped, because To-preview's state forcing does not read inside `@supports`.
 - `modeClass(mode)`: `mode-<key>`, used only for Light, which records no selector. Dark switches by its `selector`, `.dark`.
 

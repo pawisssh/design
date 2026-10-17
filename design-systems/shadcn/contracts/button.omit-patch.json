@@ -1,0 +1,51 @@
+{
+  "family": "button",
+  "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6",
+  "omit": [
+    {
+      "variant": [
+        "default",
+        "destructive",
+        "link"
+      ],
+      "expanded": "expanded"
+    },
+    {
+      "size": [
+        "icon",
+        "icon-xs",
+        "icon-sm",
+        "icon-lg"
+      ],
+      "icon-inline-start": "none"
+    },
+    {
+      "variant": "link",
+      "size": [
+        "icon",
+        "icon-xs",
+        "icon-sm",
+        "icon-lg"
+      ]
+    },
+    {
+      "variant": [
+        "default",
+        "secondary",
+        "ghost",
+        "destructive",
+        "link"
+      ],
+      "invalid": "invalid"
+    },
+    {
+      "expanded": "expanded",
+      "state": "disabled"
+    },
+    {
+      "icon-inline-start": "icon-inline-start",
+      "icon-inline-end": "icon-inline-end"
+    }
+  ],
+  "expectedCount": 624
+}

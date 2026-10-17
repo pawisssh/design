@@ -20,10 +20,11 @@
       "components/ui/card.tsx": "sha256:8ad3a18d36bda0598dc0e9aa96ea22854944d5443ee4946f1d173815e115375f",
       "components/ui/input.tsx": "sha256:75418e030b2a54dd017ac0f4588db4bbdbabca7525e88bbc9d84cb3e18bcb905",
       "components/ui/label.tsx": "sha256:344bde38b8531615dbf8e14af3895517c24d8ef6ce56ddeda7e2e6fe4b5d0c00",
+      "components/ui/select.tsx": "sha256:81ec673cb09a8f7586f6194eceeeb3701228be1c1582e65b094220ab9340f756",
       "components/ui/textarea.tsx": "sha256:82601c91ffc6c727d924162c78d7cb853114bcced4e2eb922a68ca12d4239c0f",
       "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
     },
-    "snapshotId": "sha256:270059e42f5c06040de67211fb560e87bbafd5f6227a9506feca30d183d5eb0e"
+    "snapshotId": "sha256:fe6d7f5fd98cdc54a725714b3bd92515415add8c64c6319853e235462ac2d55c"
   },
   "closure": {
     "contracts": [
@@ -51,6 +52,11 @@
         "family": "label",
         "path": "design-systems/shadcn/contracts/label.component.json",
         "snapshotId": "sha256:160c2f58b3f8e1e4e8b236c549344a7c10eb73d1dd3253d92e3481309a972fdc"
+      },
+      {
+        "family": "select",
+        "path": "design-systems/shadcn/contracts/select.component.json",
+        "snapshotId": "sha256:65b44cdfa0fbdfbeade787cba9f252cdff0b73c09e1de9d1a8c80e53a214de61"
       },
       {
         "family": "textarea",
@@ -93,6 +99,13 @@
       "radius-xl",
       "ring",
       "secondary",
+      "select-fill",
+      "select-focus-effect",
+      "select-hover-fill",
+      "select-invalid-effect",
+      "select-invalid-focus-effect",
+      "select-invalid-focus-stroke",
+      "select-invalid-stroke",
       "spacing-0",
       "spacing-0_5",
       "spacing-1",
@@ -592,6 +605,7 @@
       },
       "usedBy": [
         "input",
+        "select",
         "textarea"
       ]
     },
@@ -817,6 +831,7 @@
       "usedBy": [
         "button",
         "input",
+        "select",
         "textarea"
       ]
     },
@@ -2050,6 +2065,266 @@
       ],
       "family": "input"
     },
+    "select-fill": {
+      "collection": "theme",
+      "name": "Select/select-fill",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/select.tsx:46 bg-transparent dark:bg-input/30",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "bg-transparent dark:bg-input/30"
+      },
+      "values": {
+        "light": {
+          "raw": "#000000",
+          "alpha": 0,
+          "resolved": "rgba(0, 0, 0, 0)",
+          "from": {
+            "css": "transparent"
+          }
+        },
+        "dark": {
+          "raw": "#ffffff",
+          "alpha": 0.045,
+          "resolved": "rgba(255, 255, 255, 0.045)",
+          "from": {
+            "alias": "input",
+            "alpha": 0.3
+          },
+          "level": "info",
+          "reason": "dark:bg-input/30: input at 30%, flattened to RGBA since a Figma alias cannot carry alpha"
+        }
+      },
+      "usedBy": [
+        "select"
+      ],
+      "family": "select"
+    },
+    "select-focus-effect": {
+      "collection": "theme",
+      "name": "Select/select-focus-effect",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/select.tsx:46 focus-visible:ring-ring/50",
+      "scopes": [
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "focus-visible:ring-ring/50"
+      },
+      "values": {
+        "light": {
+          "raw": "#a1a1a1",
+          "alpha": 0.5,
+          "resolved": "rgba(161, 161, 161, 0.5)",
+          "from": {
+            "alias": "ring",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "focus-visible:ring-ring/50: ring at 50%, flattened to RGBA since a Figma alias cannot carry alpha"
+        },
+        "dark": {
+          "raw": "#737373",
+          "alpha": 0.5,
+          "resolved": "rgba(115, 115, 115, 0.5)",
+          "from": {
+            "alias": "ring",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "focus-visible:ring-ring/50: ring at 50%, flattened to RGBA since a Figma alias cannot carry alpha"
+        }
+      },
+      "usedBy": [
+        "select"
+      ],
+      "family": "select"
+    },
+    "select-hover-fill": {
+      "collection": "theme",
+      "name": "Select/select-hover-fill",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/select.tsx:46 bg-transparent dark:hover:bg-input/50",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {
+        "WEB": "bg-transparent dark:hover:bg-input/50"
+      },
+      "values": {
+        "light": {
+          "raw": "#000000",
+          "alpha": 0,
+          "resolved": "rgba(0, 0, 0, 0)",
+          "from": {
+            "css": "transparent"
+          }
+        },
+        "dark": {
+          "raw": "#ffffff",
+          "alpha": 0.075,
+          "resolved": "rgba(255, 255, 255, 0.075)",
+          "from": {
+            "alias": "input",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "dark:hover:bg-input/50: input at 50%, flattened to RGBA since a Figma alias cannot carry alpha"
+        }
+      },
+      "usedBy": [
+        "select"
+      ],
+      "family": "select"
+    },
+    "select-invalid-effect": {
+      "collection": "theme",
+      "name": "Select/select-invalid-effect",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/select.tsx:46 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
+      "scopes": [
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40"
+      },
+      "values": {
+        "light": {
+          "raw": "#e7000b",
+          "alpha": 0.2,
+          "resolved": "rgba(231, 0, 11, 0.2)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.2
+          },
+          "level": "info",
+          "reason": "aria-invalid:ring-destructive/20: destructive at 20%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.4,
+          "resolved": "rgba(255, 100, 103, 0.4)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.4
+          },
+          "level": "info",
+          "reason": "dark:aria-invalid:ring-destructive/40: destructive at 40%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "select"
+      ],
+      "family": "select"
+    },
+    "select-invalid-focus-effect": {
+      "collection": "theme",
+      "name": "Select/select-invalid-focus-effect",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/select.tsx:46 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
+      "scopes": [
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40"
+      },
+      "values": {
+        "light": {
+          "raw": "#e7000b",
+          "alpha": 0.2,
+          "resolved": "rgba(231, 0, 11, 0.2)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.2
+          },
+          "level": "info",
+          "reason": "aria-invalid:ring-destructive/20: destructive at 20%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.4,
+          "resolved": "rgba(255, 100, 103, 0.4)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.4
+          },
+          "level": "info",
+          "reason": "dark:aria-invalid:ring-destructive/40: destructive at 40%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "select"
+      ],
+      "family": "select"
+    },
+    "select-invalid-focus-stroke": {
+      "collection": "theme",
+      "name": "Select/select-invalid-focus-stroke",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/select.tsx:46 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "aria-invalid:border-destructive dark:aria-invalid:border-destructive/50"
+      },
+      "values": {
+        "light": {
+          "alias": "destructive",
+          "resolved": "#e7000b"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.5,
+          "resolved": "rgba(255, 100, 103, 0.5)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "dark:aria-invalid:border-destructive/50: destructive at 50%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "select"
+      ],
+      "family": "select"
+    },
+    "select-invalid-stroke": {
+      "collection": "theme",
+      "name": "Select/select-invalid-stroke",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/select.tsx:46 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50",
+      "scopes": [
+        "STROKE_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "aria-invalid:border-destructive dark:aria-invalid:border-destructive/50"
+      },
+      "values": {
+        "light": {
+          "alias": "destructive",
+          "resolved": "#e7000b"
+        },
+        "dark": {
+          "raw": "#ff6467",
+          "alpha": 0.5,
+          "resolved": "rgba(255, 100, 103, 0.5)",
+          "from": {
+            "alias": "destructive",
+            "alpha": 0.5
+          },
+          "level": "info",
+          "reason": "dark:aria-invalid:border-destructive/50: destructive at 50%, flattened to RGBA since a Figma alias cannot carry alpha; outside sRGB, clipped per channel"
+        }
+      },
+      "usedBy": [
+        "select"
+      ],
+      "family": "select"
+    },
     "textarea-disabled-fill": {
       "collection": "theme",
       "name": "Textarea/textarea-disabled-fill",
@@ -2403,6 +2678,7 @@
         "alert",
         "button",
         "input",
+        "select",
         "textarea"
       ]
     },
@@ -2690,7 +2966,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "select"
       ]
     },
     "spacing-2": {
@@ -3212,7 +3489,8 @@
       },
       "usedBy": [
         "button",
-        "input"
+        "input",
+        "select"
       ]
     },
     "spacing-80": {
@@ -3322,7 +3600,7 @@
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
-      "contracts": 6,
+      "contracts": 7,
       "errors": 0
     }
   },
