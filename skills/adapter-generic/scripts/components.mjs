@@ -19,21 +19,30 @@
 //
 // What it reads, for the family's root component (the export named after the family):
 // - axes: each cva variant axis, then an axis per attribute state the CSS styles (ATTR_AXES), then the canonical
-//   State from the CSS pseudo-classes. Every axis is fully selected.
+//   State from the CSS pseudo-classes. Every axis is fully selected. A root with no cva (Card) is one variant, its
+//   own className; a prop it sets an attribute from that no axis reads (`data-size={size}`) keeps its default, and
+//   the utilities under its other values are a note (#123).
 // - Slot axes (#121, ADR 0011): a slot whose presence (`has-data-[icon=inline-start]:pl-2`, compiled to
 //   `:has([data-icon="inline-start"])`) changes the root is an axis over a FRAME the root holds, shown where the slot
-//   is filled and sized by the svg size utilities (`[&_svg:not([class*='size-'])]:size-4`).
+//   is filled and sized by the svg size utilities (`[&_svg:not([class*='size-'])]:size-4`). A `data-slot` naming a
+//   part (`has-data-[slot=card-footer]:pb-0`) is an axis over that part's frame.
+// - parts (#123): the other exported components (CardHeader), each a FRAME under the root in source order, named by
+//   its data-slot and sized by its own width and height utilities or by how the root lays it out. A part positioned
+//   out of the flow (`absolute`) is left out, with a note.
 // - layout and paint of the root node, per variant: the cva classes each variant renders, merged as `cn()` merges
-//   them, then the CSS cascade over their compiled rules (specificity, then output order).
+//   them, then the CSS cascade over their compiled rules (specificity, then output order). A flex root, or a grid
+//   with no columns read as a column (#123); a custom property a utility sets is resolved where a length reads it;
+//   a border with no colour utility takes its colour from the base layer's `*` rule.
 // - paint that differs by Mode, carries an opacity or mixes tokens (#120): a Synthesized token, a per-mode Theme
 //   component token the Contract binds as a plain {token}. The foundations step re-derives the same tokens through
 //   readFamily() and writes them into the Foundations document, which this step then requires to hold them.
-// What it leaves to later tickets, each in a note: text, the icon each slot frame stands for and the rest of the
-// anatomy (later agent-tier keys), any other `:has(…)` condition, and styling set by an ancestor (ADR 0012).
+// What it leaves to later tickets, each in a note: text, the icon each slot frame stands for, each part's own
+// layout, paint and text (later agent-tier keys), any other `:has(…)` condition, and styling set by an ancestor
+// (ADR 0012).
 // Generation throws (the CLI exits 1 and writes nothing) on anything it cannot read exactly: compound variants, an
-// attribute state with no known state words, layout, an opacity or an effect's shape that differs by Mode, relative
-// colour syntax, a Synthesized name a Code Library token already has, a border whose colour comes from the base
-// layer, or a Foundations document from another snapshot or without the family's Synthesized tokens.
+// attribute state with no known state words, layout other than flex or a one-column grid, an opacity or an effect's
+// shape that differs by Mode, relative colour syntax, a Synthesized name a Code Library token already has, or a
+// Foundations document from another snapshot or without the family's Synthesized tokens.
 import { existsSync, readFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -64,7 +73,13 @@ const FRAME_FIELDS = [...SIZE_FIELDS, 'visible'];
 const SIDES = ['inline-start', 'inline-end'];
 // CSS properties a Contract field carries; any other utility is reported, not carried.
 const LAYOUT_PROPS = ['display', 'flex-direction', 'justify-content', 'align-items', 'gap', 'width', 'height', 'border-radius',
-  'border-width', 'padding', 'padding-inline', 'padding-block', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left'];
+  'border-width', 'padding', 'padding-inline', 'padding-block', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+  'grid-template-columns', 'grid-auto-flow', 'row-gap', 'column-gap', 'justify-items', 'align-content'];
+// A custom property a utility sets (`[--card-spacing:--spacing(4)]`), not one of Tailwind's own: carried, so a length
+// that reads it (`gap-(--card-spacing)`) resolves to what the variant sets it to.
+const isVar = prop => /^--(?!tw-)/.test(prop);
+// A part's own utilities that size it in its parent's Auto Layout; the rest of a part is not read yet.
+const PART_PROPS = ['width', 'height', 'align-self', 'justify-self', 'flex-grow', 'position'];
 const PAINT_PROPS = ['background-color', 'border-color', 'opacity', '--tw-ring-shadow', '--tw-ring-color'];
 const TEXT_PROPS = ['color', 'font-size', 'line-height', 'font-weight', '--tw-font-weight', '--tw-leading', 'letter-spacing',
   '--tw-tracking', 'text-align', 'text-decoration-line', 'text-underline-offset', 'white-space'];
@@ -87,11 +102,12 @@ const byKey = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const words = s => s.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1));
 const title = s => words(s).join(' ');
 const pascal = s => words(s).join('');
+const kebab = s => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 const has = (rule, props) => props.some(p => p in rule.decls);
 const declOf = (rule, props) => rule.decls[props.find(p => p in rule.decls)];
 
 // "a b(c d)" -> ["a", "b(c d)"]: the space-separated parts of a value, outside parentheses.
-function parts(text) {
+function spaced(text) {
   const out = [];
   let depth = 0, start = 0;
   for (let i = 0; i <= text.length; i++) {
@@ -143,56 +159,84 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   files[file] = `sha256:${sha256(readFileSync(join(project, file)))}`;
   const sortedFiles = Object.fromEntries(Object.keys(files).sort(byKey).map(f => [f, files[f]]));
 
-  // 1. Source: the root component and its cva call.
+  // 1. Source: the root component and its cva call. A root with no cva (Card) is one variant: its own className.
   const { cvas, components } = readSource(readText(file), file, { tools });
   const root = components.find(c => c.name === Name && c.exported) || fail(`${file} exports no ${Name}`);
-  if (!root.cva) fail(`${file}:${root.line} ${Name} calls no cva; only cva families are read yet`);
-  const cv = cvas[root.cva];
+  const cv = root.cva ? cvas[root.cva] : { base: { classes: '', line: root.line }, variants: {}, keys: {}, defaults: {}, compound: [] };
   if (cv.compound.length) fail(`${file}:${cv.compound[0].line} ${root.cva}: compoundVariants are not read yet`);
+  // A prop the root sets an attribute from that no axis reads (Card's `data-size={size}`) keeps its default.
+  const fixed = Object.fromEntries(Object.values(root.attrs).filter(a => a.prop && !cv.variants[a.prop]).map(a => [a.prop, root.defaults[a.prop]]));
+  // The other exported components are the parts (CardHeader), each a FRAME under the root, named by its data-slot.
+  const parts = components.filter(c => c.exported && c !== root).map(c => ({ name: c.name, line: c.line, slot: c.slot || kebab(c.name),
+    node: title(c.slot || kebab(c.name)), entries: c.classes.flatMap(l => l.classes.split(/\s+/).filter(Boolean).map(candidate => ({ candidate, line: l.line }))) }));
   const entries = []; // every class occurrence: {candidate, line, axis?, value?}, in the order cva emits them
   const add = (list, origin) => list.classes.split(/\s+/).filter(Boolean).forEach(c => entries.push({ candidate: c, line: list.line, ...origin }));
   add(cv.base, {});
   for (const [axis, values] of Object.entries(cv.variants))
     for (const [value, list] of Object.entries(values)) add(list, { axis, value });
   root.classes.forEach(list => add(list, {}));
-  const at = e => `${file}:${e.line}`;
 
   // 2. Compile every utility and sort its rules by condition.
   const candidates = [...new Set(entries.map(e => e.candidate))].sort(byKey);
-  const compiled = await build(readText(cssFile), candidates, { base: join(project, cssFile, '..'), tools });
+  const partCandidates = parts.flatMap(p => p.entries.map(e => e.candidate));
+  const compiled = await build(readText(cssFile), [...new Set([...candidates, ...partCandidates])].sort(byKey), { base: join(project, cssFile, '..'), tools });
   const rules = compiledRules(compiled);
+  // The project's base layer gives a border with no colour utility its colour (`* { @apply border-border }`).
+  const baseBorder = compiledRules(compiled, 'base').filter(r => r.selector === '*' && 'border-color' in r.decls).pop();
   const modes = foundations.collections.find(c => c.key === 'theme').modes;
-  const propAttrs = Object.fromEntries(Object.entries(root.attrs).filter(([, a]) => a.prop && cv.variants[a.prop]).map(([k, a]) => [k, a.prop]));
+  const propAttrs = Object.fromEntries(Object.entries(root.attrs).filter(([, a]) => a.prop).map(([k, a]) => [k, a.prop]));
   const ruleOf = {};
-  for (const c of candidates) ruleOf[c] = candidateRules(rules, c, { modes, attrs: propAttrs });
+  for (const c of new Set([...candidates, ...partCandidates])) ruleOf[c] = candidateRules(rules, c, { modes, attrs: propAttrs });
   const propsOf = c => new Set(ruleOf[c].flatMap(r => Object.keys(r.decls)));
+  const at = e => (e.base ? `${cssFile} @layer base` : `${file}:${e.line}`);
 
-  // 3. Sort the utilities: carried, or reported in a note.
-  const report = { none: [], text: [], other: [], slot: [], ancestor: [], descendant: [], media: [], condition: [] };
+  // A part positioned out of the flow (AlertAction: `absolute`) is no Auto Layout child: it is left out, with a note.
+  // A part is read only by the utilities that apply whatever the variant: no condition, state, Mode or slot.
+  const plain = r => !r.skip && !r.when.slot && !r.when.state && !r.when.mode && !r.when.props && !Object.keys(r.when.attrs).length;
+  for (const p of parts) {
+    p.rules = p.entries.flatMap(e => ruleOf[e.candidate].filter(r => plain(r) && PART_PROPS.some(q => q in r.decls)).map(r => ({ ...r, entry: e })));
+    p.position = winner(p.rules, ['position']);
+  }
+  const outOfFlow = p => p.position && /^(absolute|fixed)$/.test(p.position.decls.position);
+  const placed = parts.filter(p => !outOfFlow(p));
+
+  // 3. Sort the utilities: carried, or reported in a note. A utility only under a value of a fixed prop never applies;
+  //    one styled by the presence of a part the anatomy leaves out has nothing to show it.
+  const report = { none: [], fixed: [], text: [], other: [], slot: [], absent: [], ancestor: [], descendant: [], media: [], condition: [] };
+  const offFixed = r => r.when.props && Object.entries(r.when.props).some(([p, v]) => p in fixed && fixed[p] !== v);
+  const absentPart = r => {
+    const m = r.when.slot && /^\[data-slot="([^"]*)"\]$/.exec(r.when.slot);
+    return Boolean(m) && !placed.some(p => p.slot === m[1]);
+  };
   const carried = new Set();
   for (const c of candidates) {
     const props = [...propsOf(c)];
     const skip = ruleOf[c].map(r => r.skip).find(Boolean);
     if (!props.length) report.none.push(c);
+    else if (ruleOf[c].every(offFixed)) report.fixed.push(c);
     else if (skip) report[skip].push(c);
-    else if (props.some(p => LAYOUT_PROPS.includes(p) || PAINT_PROPS.includes(p))) carried.add(c);
+    else if (ruleOf[c].some(absentPart)) report.absent.push(c);
+    else if (props.some(p => LAYOUT_PROPS.includes(p) || PAINT_PROPS.includes(p) || isVar(p))) carried.add(c);
     else report[props.some(p => TEXT_PROPS.includes(p)) ? 'text' : 'other'].push(c);
   }
   const list = cs => cs.join(', ');
   const ruled = carry => entries.filter(e => carry.has(e.candidate)).flatMap(e => ruleOf[e.candidate].map(r => ({ ...r, entry: e })));
   const live = ruled(carried);
   // A slot whose presence changes the root is a Slot axis over a frame the root holds (#121, ADR 0011); the svg size
-  // utilities size each frame, and any other descendant utility stays a note.
+  // utilities size each icon slot's frame, and any other descendant utility stays a note. A `data-slot` naming a part
+  // (`has-data-[slot=card-footer]:pb-0`) is a Slot axis over that part's frame, keyed by the slot.
   const side = s => (SIDES.includes(s.value) ? SIDES.indexOf(s.value) : SIDES.length);
   const slots = [...new Set(live.map(r => r.when.slot).filter(Boolean))].map(sel => {
     const [, attr, value] = /^\[([\w-]+)="([^"]*)"\]$/.exec(sel);
     const utilities = [...new Set(live.filter(r => r.when.slot === sel).map(r => r.candidate))];
     if (!value) fail(`${list(utilities)}: :has(${sel}) names no slot value`);
-    const key = `${attr.replace(/^data-/, '')}-${value}`;
-    return { sel, key, value, node: title(key), utilities };
+    const part = attr === 'data-slot' ? placed.find(p => p.slot === value) : null;
+    const key = part ? value : `${attr.replace(/^data-/, '')}-${value}`;
+    return { sel, key, value, node: part ? part.node : title(key), utilities, part };
   }).sort((a, b) => side(a) - side(b) || byKey(a.key, b.key));
+  const icons = slots.filter(s => !s.part);
   const slotOf = Object.fromEntries(slots.map(s => [s.sel, s.key]));
-  const sizing = new Set(slots.length ? report.descendant.filter(c => ruleOf[c].every(r => SLOT_CONTENT.test(r.target))
+  const sizing = new Set(icons.length ? report.descendant.filter(c => ruleOf[c].every(r => SLOT_CONTENT.test(r.target))
     && [...propsOf(c)].every(p => SIZE_FIELDS.includes(p))) : []);
   report.descendant = report.descendant.filter(c => !sizing.has(c));
   const content = ruled(sizing);
@@ -280,7 +324,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     if (!keep.has(r.entry) || (w.mode && w.mode !== mode) || (w.state && w.state !== t.state)) return false;
     if (Object.keys(w.attrs).some(a => t[ATTR_AXES[a].key] !== ATTR_AXES[a].on)) return false;
     if (w.slot && t[slotOf[w.slot]] === 'none') return false;
-    return !w.props || Object.entries(w.props).every(([p, v]) => t[p] === v);
+    return !w.props || Object.entries(w.props).every(([p, v]) => (p in fixed ? fixed[p] : t[p]) === v);
   };
 
   const env = {};
@@ -293,9 +337,10 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     const v = foundations.variables[k];
     return v.codeSyntax && v.codeSyntax.WEB === text && (v.scopes || []).includes(scope);
   });
-  const length = (field, r, props) => {
-    const text = declOf(r, props);
-    if (parts(text).length > 1) fail(`${r.candidate} (${at(r.entry)}): ${text} sets more than one side; not read yet`);
+  // `sub` replaces each carried custom property with what the variant sets it to.
+  const length = (field, r, props, sub = x => x) => {
+    const text = sub(declOf(r, props));
+    if (spaced(text).length > 1) fail(`${r.candidate} (${at(r.entry)}): ${text} sets more than one side; not read yet`);
     const px = evaluate(text, env, r.candidate);
     const token = tokenFor(text, SCOPE[field]);
     return { px, text, prop: props.find(p => p in r.decls), value: token ? { token }
@@ -317,44 +362,70 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
 
   const usesBorder = live.some(r => 'border-width' in r.decls);
   const usesRadius = live.some(r => 'border-radius' in r.decls);
-  // Layout and paint of one variant in one Mode: {layout, paint, by: {field: winning rule}}.
+  const baseStroke = baseBorder && { candidate: '* (border-color)', decls: baseBorder.decls, entry: { base: true } };
+  let strokeFromBase = false;
+  // Layout and paint of one variant in one Mode: {layout, paint, by: {field: winning rule}, frames: {node: {field}}}.
   function render(t, mode) {
     const keep = survivors(t);
     const here = live.filter(r => applies(r, t, mode, keep));
     const win = props => winner(here, props);
+    const sub = text => text.replace(/var\((--[\w-]+)\)/g, (m, name) => {
+      const r = isVar(name) && win([name]);
+      return r ? sub(r.decls[name]) : m;
+    });
+    // `width: 100%` fills the parent; any other width is a length.
+    const size = (field, r) => (r.decls[field] === '100%' ? 'fill' : length(field, r, [field], sub).value);
     const layout = {}, paint = {}, by = {};
     const display = win(['display']);
-    if (!display || !/^(inline-)?flex$/.test(display.decls.display))
-      fail(`${Name} (${variantName({ axes }, t)}) is not a flex container (display: ${display ? display.decls.display : 'not set'}); only Auto Layout is read`);
-    const dir = win(['flex-direction']);
-    layout.direction = dir && /^column/.test(dir.decls['flex-direction']) ? 'column' : 'row';
-    for (const [field, prop] of [['width', 'width'], ['height', 'height']]) {
-      const r = win([prop]);
-      layout[field] = r ? length(field, r, [prop]).value : 'hug';
+    const shown = display ? display.decls.display : 'not set';
+    if (!/^(inline-)?(flex|grid)$/.test(shown))
+      fail(`${Name} (${variantName({ axes }, t)}) is not a flex or grid container (display: ${shown}); only Auto Layout is read`);
+    // A grid with no columns stacks its children: a column, its row gap the gap, its justify-items the cross alignment.
+    const grid = /grid$/.test(shown);
+    if (grid) {
+      const cols = win(['grid-template-columns']);
+      if (cols && cols.decls['grid-template-columns'] !== 'none')
+        fail(`${cols.candidate} (${at(cols.entry)}): grid-template-columns ${cols.decls['grid-template-columns']}: a grid with columns has no Auto Layout; only a grid of one column is read, as a column`);
+      const flow = win(['grid-auto-flow']);
+      if (flow && /column/.test(flow.decls['grid-auto-flow']))
+        fail(`${flow.candidate} (${at(flow.entry)}): grid-auto-flow ${flow.decls['grid-auto-flow']} adds columns; only a grid of one column is read, as a column`);
+      layout.direction = 'column';
+    } else {
+      const dir = win(['flex-direction']);
+      layout.direction = dir && /^column/.test(dir.decls['flex-direction']) ? 'column' : 'row';
+    }
+    // With no width, a block-level container (flex, grid) fills its parent and an inline one hugs its content.
+    for (const field of SIZE_FIELDS) {
+      const r = win([field]);
+      layout[field] = r ? size(field, r) : field === 'width' && !/^inline-/.test(shown) ? 'fill' : 'hug';
       if (r) by[field] = r;
     }
-    for (const [field, prop] of [['alignMain', 'justify-content'], ['alignCross', 'align-items']]) {
+    const [mainProp, crossProp] = grid ? ['align-content', 'justify-items'] : ['justify-content', 'align-items'];
+    for (const [field, prop] of [['alignMain', mainProp], ['alignCross', crossProp]]) {
       const r = win([prop]);
       const v = r ? r.decls[prop] : 'normal';
       layout[field] = ALIGN[v] || fail(`${r.candidate} (${at(r.entry)}): ${prop}: ${v} has no Auto Layout alignment`);
     }
+    const cross = win([crossProp]);
+    const stretches = !cross || ['normal', 'stretch'].includes(cross.decls[crossProp]);
     const border = win(['border-width']);
     const bw = border ? evaluate(border.decls['border-width'], env, border.candidate) : 0;
     for (const [field, props] of Object.entries(PADDING)) {
       const r = win(props);
       if (r) by[field] = r;
-      if (!bw) { layout[field] = r ? length(field, r, props).value : { token: 'spacing-0' }; continue; }
-      const p = r ? length(field, r, props) : null;
+      if (!bw) { layout[field] = r ? length(field, r, props, sub).value : { token: 'spacing-0' }; continue; }
+      const p = r ? length(field, r, props, sub) : null;
       layout[field] = { raw: round((p ? p.px : 0) + bw), level: 'info', reason: p
         ? `derived: ${r.candidate} ${p.prop} ${p.text} = ${p.px}px + ${bw}px border (an inside stroke takes no layout space)`
         : `derived: no padding + ${bw}px border (an inside stroke takes no layout space)` };
     }
-    const gap = win(['gap']);
-    layout.gap = gap ? length('gap', gap, ['gap']).value : { token: 'spacing-0' };
+    const gapProps = layout.direction === 'column' ? ['row-gap', 'gap'] : ['column-gap', 'gap'];
+    const gap = win(gapProps);
+    layout.gap = gap ? length('gap', gap, gapProps, sub).value : { token: 'spacing-0' };
     if (gap) by.gap = gap;
     if (usesRadius) {
       const r = win(['border-radius']);
-      layout.radius = r ? length('radius', r, ['border-radius']).value : { raw: 0, level: 'info', reason: 'no border-radius utility' };
+      layout.radius = r ? length('radius', r, ['border-radius'], sub).value : { raw: 0, level: 'info', reason: 'no border-radius utility' };
       if (r) by.radius = r;
     }
     if (usesBorder) {
@@ -367,8 +438,9 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     paint.fill = fill ? colour(fill.decls['background-color'], fill) : 'none';
     if (fill) by.fill = fill;
     if (bw) {
-      const r = win(['border-color']);
-      if (!r) fail(`${Name} (${variantName({ axes }, t)}): a ${bw}px border with no border-color utility takes its colour from the base layer, which is not read`);
+      const r = win(['border-color']) || baseStroke;
+      if (!r) fail(`${Name} (${variantName({ axes }, t)}): a ${bw}px border with no border-color utility, and no border-color on * in ${cssFile}'s base layer`);
+      if (r === baseStroke) strokeFromBase = true;
       paint.stroke = colour(r.decls['border-color'], r);
       by.stroke = r;
     } else paint.stroke = 'none';
@@ -390,13 +462,30 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     if (op) by.opacity = op;
     const frames = {};
     const sizes = content.filter(r => applies(r, t, mode, keep));
-    for (const s of slots) {
+    for (const s of icons) {
       const f = frames[s.node] = {};
       for (const field of SIZE_FIELDS) {
         const r = winner(sizes, [field]);
         f[field] = r ? length(field, r, [field]).value : fail(`${Name} (${variantName({ axes }, t)}): no svg size utility sizes the ${s.node} slot`);
       }
       f.visible = t[s.key] !== 'none';
+    }
+    // A part's size: its own width or height utility; else, across the root, fill where the root stretches it and
+    // its self-alignment leaves it so, and along the root, fill where it grows in a flex root; else hug.
+    for (const p of placed) {
+      const f = frames[p.node] = {};
+      const self = winner(p.rules, [grid ? 'justify-self' : 'align-self']);
+      const selfValue = self ? self.decls[grid ? 'justify-self' : 'align-self'] : 'auto';
+      const across = selfValue === 'stretch' || (['auto', 'normal'].includes(selfValue) && stretches) ? 'fill' : 'hug';
+      const grow = !grid && winner(p.rules, ['flex-grow']);
+      const along = grow && parseFloat(grow.decls['flex-grow']) > 0 ? 'fill' : 'hug';
+      const [w, h] = layout.direction === 'column' ? [across, along] : [along, across];
+      for (const [field, fallback] of [['width', w], ['height', h]]) {
+        const r = winner(p.rules, [field]);
+        f[field] = r ? size(field, r) : fallback;
+      }
+      const slot = slots.find(s => s.part === p);
+      if (slot) f.visible = t[slot.key] !== 'none';
     }
     return { layout, paint, by, frames };
   }
@@ -439,7 +528,10 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const values = { layout: {}, paint: {} };
   LAYOUT_FIELDS.forEach(f => { values.layout[f] = []; });
   PAINT_FIELDS.forEach(f => { values.paint[f] = []; });
-  const frameValues = Object.fromEntries(slots.map(s => [s.node, Object.fromEntries(FRAME_FIELDS.map(f => [f, []]))]));
+  // A frame per icon slot, then per part; a part that is no slot always shows, so it has no visibility.
+  const frameFields = Object.fromEntries([...icons.map(s => [s.node, FRAME_FIELDS]),
+    ...placed.map(p => [p.node, slots.some(s => s.part === p) ? FRAME_FIELDS : SIZE_FIELDS])]);
+  const frameValues = Object.fromEntries(Object.entries(frameFields).map(([n, fs]) => [n, Object.fromEntries(fs.map(f => [f, []]))]));
   const uses = new Map(); // placeholder JSON -> the rules that set it, per Mode
   const json = v => JSON.stringify(v);
   const modeDiffers = (field, r, i) =>
@@ -464,12 +556,12 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
         }
       if (o.paint.opacity !== light.paint.opacity) modeDiffers('opacity', o.by.opacity || light.by.opacity, i);
       if (json(o.frames) !== json(light.frames))
-        fail(`${Name}: a slot frame's svg size (${list([...sizing])}) differs by mode (${modes[i].key}); layout is the same in every Mode`);
+        fail(`${Name}: a frame's size differs by mode (${modes[i].key}); layout is the same in every Mode`);
       const shape = x => json(x.paint.effects.map(({ color, ...e }) => e));
       if (shape(o) !== shape(light)) modeDiffers('effects', o.by.ring || light.by.ring, i);
     });
     for (const f of LAYOUT_FIELDS) values.layout[f].push(light.layout[f]);
-    for (const s of slots) for (const f of FRAME_FIELDS) frameValues[s.node][f].push(light.frames[s.node][f]);
+    for (const [n, fs] of Object.entries(frameFields)) for (const f of fs) frameValues[n][f].push(light.frames[n][f]);
     values.paint.fill.push(colourValue('fill', rendered, x => x.paint.fill));
     values.paint.stroke.push(colourValue('stroke', rendered, x => x.paint.stroke));
     values.paint.opacity.push(light.paint.opacity);
@@ -490,7 +582,8 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
           if (json(r[section][node][f]) !== json(vs[i]))
             fail(`internal: the ${section} rules do not reproduce ${node}.${f} at ${variantName(check, t)}`);
   });
-  const anatomy = { name: Name, type: 'COMPONENT', ...(slots.length && { children: slots.map(s => ({ name: s.node, type: 'FRAME', role: 'icon' })) }) };
+  const children = [...icons.map(s => ({ name: s.node, type: 'FRAME', role: 'icon' })), ...placed.map(p => ({ name: p.node, type: 'FRAME' }))];
+  const anatomy = { name: Name, type: 'COMPONENT', ...(children.length && { children }) };
 
   // Each placeholder becomes a Synthesized token named by its rule (#70 §1): the family, the match's value keys in
   // axis order (an array's joined by "+"), the node unless it is the root, and the field.
@@ -527,9 +620,10 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const expectedCount = expand({ axes, excluded: [], selection: { omit } }).length;
   const notes = [];
   if (drops.size)
-    notes.push({ level: 'info', at: `${file} ${root.cva}`, message: `Each variant's classes are merged as cn() merges them, modelled (no package code runs): a later class drops an earlier one with the same variants whose CSS properties it covers, or that also sets font-size. Here: ${list([...drops].sort(byKey))}.` });
+    notes.push({ level: 'info', at: `${file} ${root.cva || Name}`, message: `Each variant's classes are merged as cn() merges them, modelled (no package code runs): a later class drops an earlier one with the same variants whose CSS properties it covers, or that also sets font-size. Here: ${list([...drops].sort(byKey))}.` });
   const why = {
     slot: 'Styled by what the component holds, in a :has() form other than :has([attr="value"]), the only one read as a Slot axis (#121). Not carried.',
+    absent: 'Styled by whether the component holds a part the anatomy leaves out (see the anatomy notes). Not carried.',
     ancestor: 'Styled by an ancestor; that is a Mode or the parent\'s Contract (ADR 0012). Not carried.',
     descendant: 'Styles a descendant; the anatomy beyond the root is not drafted yet (agent tier). Not carried.',
     media: 'Under a media query no tuple decides. Not carried.',
@@ -538,12 +632,24 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     other: 'No Contract field carries these properties. Not carried.',
     none: 'Compiles to no CSS (a group or peer marker).',
   };
-  if (slots.length)
-    notes.push({ level: 'info', at: 'anatomy', message: `${list(slots.map(s => s.node))}: a frame per Slot axis (#121, ADR 0011), shown where its slot is filled and sized by ${list([...sizing].sort(byKey))}. A consumer size-* class on the svg overrides that size, off-axis (#62). Each frame stands in for the slot's icon, an INSTANCE with an INSTANCE_SWAP whose code.visibleWhen names its axis, which the agent tier does not draft yet.` });
-  for (const kind of ['slot', 'ancestor', 'descendant', 'media', 'condition', 'text', 'other', 'none'])
+  if (icons.length)
+    notes.push({ level: 'info', at: 'anatomy', message: `${list(icons.map(s => s.node))}: a frame per Slot axis (#121, ADR 0011), shown where its slot is filled and sized by ${list([...sizing].sort(byKey))}. A consumer size-* class on the svg overrides that size, off-axis (#62). Each frame stands in for the slot's icon, an INSTANCE with an INSTANCE_SWAP whose code.visibleWhen names its axis, which the agent tier does not draft yet.` });
+  if (placed.length)
+    notes.push({ level: 'info', at: 'anatomy', message: `${list(placed.map(p => p.node))}: the exported parts (${list(placed.map(p => p.name))}), each a FRAME under ${Name} in source order, whatever nesting a consumer gives them. Of each part only its width and height are read (its own width or height utility; else fill where ${Name} stretches it, hug otherwise), and its visibility where ${Name} styles its presence (a Slot axis). Its own layout, paint and text are not drafted yet.` });
+  for (const p of parts.filter(outOfFlow))
+    notes.push({ level: 'info', at: 'anatomy', message: `${p.name} (${file}:${p.line}): position ${p.position.decls.position} (${p.position.candidate}) takes it out of the flow Auto Layout lays out, so the anatomy leaves it out.` });
+  if (strokeFromBase)
+    notes.push({ level: 'info', at: `${Name}.stroke`, message: `No border-color utility colours ${Name}'s border, so it takes its colour from ${cssFile}'s base layer: * { border-color: ${baseBorder.decls['border-color']} }.` });
+  const offs = {};
+  for (const c of report.fixed)
+    for (const r of ruleOf[c]) for (const [prop, v] of Object.entries(r.when.props)) if (prop in fixed && fixed[prop] !== v) (offs[`${prop}\0${v}`] = offs[`${prop}\0${v}`] || new Set()).add(c);
+  for (const [k, cs] of Object.entries(offs)) {
+    const [prop, v] = k.split('\0');
+    notes.push({ level: 'info', at: file, message: `${list([...cs])}: under ${prop} "${v}". ${prop} is a prop of ${Name} that no axis reads (only a cva variant is an axis), so every variant renders its default${fixed[prop] === undefined ? ' (none)' : ` "${fixed[prop]}"`}. Not carried.` });
+  }
+  for (const kind of ['slot', 'absent', 'ancestor', 'descendant', 'media', 'condition', 'text', 'other', 'none'])
     if (report[kind].length) notes.push({ level: 'info', at: file, message: `${list(report[kind])}: ${why[kind]}` });
-  const exportedParts = components.filter(c => c.exported && c !== root).map(c => c.name);
-  if (exportedParts.length) notes.push({ level: 'info', at: file, message: `${list(exportedParts)}: parts beyond the root are not drafted yet (agent tier).` });
+  const exportedParts = parts.map(p => p.name);
   if (expectedCount > VARIANT_LIMIT)
     notes.push({ level: 'verify', at: 'selection', message: `${expectedCount} variants: past ADR 0004's ~${VARIANT_LIMIT}. Only attribute twins are omitted and nothing else is cut; probe the build cost before building it, or narrow it with selection.omit.` });
 
