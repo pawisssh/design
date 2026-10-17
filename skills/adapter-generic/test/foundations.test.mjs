@@ -52,8 +52,8 @@ test('two CLI runs write byte-identical documents', { skip }, () => {
   assert.equal(out[0], out[1]);
 });
 
-test('the committed shadcn foundations document is exactly what this step generates, with the Button\'s Synthesized tokens', { skip }, async () => {
-  assert.equal((await generate({ project: FIXTURE, families: ['button'] })).text, read(COMMITTED));
+test('the committed shadcn foundations document is exactly what this step generates, with the Button, Card and Alert Synthesized tokens', { skip }, async () => {
+  assert.equal((await generate({ project: FIXTURE, families: ['alert', 'button', 'card'] })).text, read(COMMITTED));
 });
 
 test('light and dark values match the project CSS through the shared converter', { skip }, async () => {
@@ -74,10 +74,10 @@ test('light and dark values match the project CSS through the shared converter',
   }
 });
 
-test('Theme has a Light and a Dark mode, each with its selector; Layout has one mode', { skip }, async () => {
+test('Theme has a Light and a Dark mode, Dark with its selector (Light is :root, the page itself); Layout has one mode', { skip }, async () => {
   const { collections } = (await run()).doc;
   assert.deepEqual(collections, [
-    { key: 'theme', name: 'Theme', modes: [{ key: 'light', label: 'Light', selector: ':root' }, { key: 'dark', label: 'Dark', selector: '.dark' }] },
+    { key: 'theme', name: 'Theme', modes: [{ key: 'light', label: 'Light' }, { key: 'dark', label: 'Dark', selector: '.dark' }] },
     { key: 'layout', name: 'Layout', modes: [{ key: 'default', label: 'Default' }] },
   ]);
 });

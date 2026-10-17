@@ -788,7 +788,9 @@ export function contractFor(f, family, foundations) {
   const contract = {
     schemaVersion: 1,
     family: { key: family, name: f.name, description: `shadcn/ui ${f.name} (${f.file}), read from its source and compiled CSS.` },
-    source: { codeLibrary: foundations.source.codeLibrary, adapter: 'generic', packages: foundations.source.packages,
+    // The component is a project module, not a package: its import path is pinned to its file's hash (#123).
+    source: { codeLibrary: foundations.source.codeLibrary, adapter: 'generic',
+      packages: Object.fromEntries(Object.entries({ ...foundations.source.packages, [f.alias]: f.files[f.file] }).sort(([a], [b]) => byKey(a, b))),
       files: f.files, snapshotId: snapshotId(f.files) },
     axes: f.axes,
     excluded: [],

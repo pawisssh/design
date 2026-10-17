@@ -1,0 +1,17 @@
+{
+  "family": "alert",
+  "drafts": {
+    "axes.variant.label": "Variant",
+    "axes.variant.values.default.label": "Default",
+    "axes.variant.values.destructive.label": "Destructive",
+    "family.description": "A bordered callout that draws attention to a message with a title and description, in a default or destructive variant.",
+    "figma.grid": {
+      "columns": [
+        "state"
+      ],
+      "rows": [
+        "variant"
+      ]
+    }
+  }
+}
