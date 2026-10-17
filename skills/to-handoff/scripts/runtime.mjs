@@ -16,6 +16,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { createServer } from 'node:http';
 import { basename, dirname, extname, join, relative, sep } from 'node:path';
 import { DEPS_DIR, loadChromium, loadTypescript } from './deps.mjs';
+import { codeLibraryDir } from './react.mjs';
 import { readHtml } from './reader.mjs';
 import { ATTR, tagHtml, tagJsx } from './tag.mjs';
 
@@ -28,37 +29,53 @@ const PROPS = ['font-size', 'line-height', 'font-weight', 'letter-spacing'];
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon', '.woff2': 'font/woff2' };
 
 /**
- * run({prototype, screen, states, breakpoints, depsDir}) -> {elements, shots, failed, cleanup}.
- * `prototype` is the HTML file (its folder is the Prototype root); `states` is [{state, steps, expect}], where
- * `steps` is null for a state with no way to reach it (its `reason` says why) and `expect` lists the `at`s that
- * must be on the page once it is reached. `elements` maps an `at` to {style, rect} for the first host element
- * that joins to it; `shots` maps state -> breakpoint -> a PNG path inside `dir` or {missing, reason}. The caller
- * copies the PNGs it keeps and calls cleanup().
+ * run({prototype, screens, breakpoints, depsDir}) -> {screens: {<screen>: {elements, shots}}, failed, cleanup}.
+ * `prototype` is the HTML file (its folder is the Prototype root) or a React app folder, built once for every
+ * screen. `screens` is [{screen, route, states}]: a React screen loads at its route. `states` is [{state, steps,
+ * expect}], where `steps` is null for a state with no way to reach it (its `reason` says why) and `expect` lists
+ * the `at`s that must be on the page once it is reached. `elements` maps an `at` to {style, rect, via} for the
+ * first host element that joins to it, `via` naming the join (own, fibre, ancestor or shell); `shots` maps
+ * state -> breakpoint -> a PNG path inside `dir` or {missing, reason}. The caller copies the PNGs it keeps and
+ * calls cleanup().
  */
-export async function run({ prototype, screen, states, breakpoints, depsDir = DEPS_DIR }) {
-  const root = dirname(prototype);
+export async function run({ prototype, screens, breakpoints, depsDir = DEPS_DIR }) {
+  const folder = !/\.html?$/i.test(prototype);
+  const root = folder ? prototype : dirname(prototype);
   const runs = join(depsDir, 'runs');
   mkdirSync(runs, { recursive: true });
   const dir = mkdtempSync(join(runs, 'run-'));
   const copy = join(dir, 'copy');
   const out = join(dir, 'screens');
   const cleanup = () => rmSync(dir, { recursive: true, force: true });
-  let server, browser;
+  let server, browser, rel, uiDir;
   // A reason goes into the Handoff: name the copy and the server the same way on every run.
   const scrub = message => { let m = firstLine(message).split(copy).join('<copy>').split(dir).join('<run>'); if (server) m = m.split(server.url).join('<server>'); return m; };
   try {
     cpSync(root, copy, { recursive: true, filter: src => !SKIP_DIRS.has(basename(src)) || src === root });
     mkdirSync(out);
-    const entry = join(copy, relative(root, prototype));
-    const rel = relative(root, prototype).split(sep).join('/');
-    writeFileSync(entry, tagHtml(readHtml(entry, rel, { depsDir })));
-    const failed = tagTree(copy, loadTypescript(depsDir));
-    const uiDir = codeLibraryDir(copy);
+    // The HTML file is tagged at the static reader's offsets: the Prototype itself, or a Vite app's index.html.
+    rel = folder ? (existsSync(join(copy, 'index.html')) ? 'index.html' : null) : relative(root, prototype).split(sep).join('/');
+    if (rel) writeFileSync(join(copy, rel), tagHtml(readHtml(join(copy, rel), rel, { depsDir })));
+    const ts = loadTypescript(depsDir);
+    const failed = tagTree(copy, ts);
+    uiDir = codeLibraryDir(copy, ts);
     server = existsSync(join(copy, 'package.json')) ? await buildAndServe(copy) : await serveStatic(copy);
-    // A Next or Vite server serves the app at its root; files are served as they are, so the HTML file by path.
-    const url = server.url + (server.app ? '' : '/' + rel);
     const { chromium, launchOptions } = loadChromium(depsDir);
     browser = await chromium.launch(launchOptions);
+    const result = {};
+    for (const { screen, route, states } of screens) result[screen] = await readScreen(screen, route, states);
+    return { screens: result, failed, cleanup };
+  } catch (e) {
+    cleanup();
+    throw new Error(scrub(e.message));
+  } finally {
+    if (browser) await browser.close();
+    if (server) await server.close();
+  }
+
+  async function readScreen(screen, route, states) {
+    // A Next or Vite server serves the app at each route; files are served as they are, so the HTML file by path.
+    const url = server.url + (server.app ? route || '/' : '/' + rel);
     const elements = {};
     const shots = {};
     const widest = breakpoints[breakpoints.length - 1];
@@ -81,7 +98,7 @@ export async function run({ prototype, screen, states, breakpoints, depsDir = DE
           const file = join(out, `${screen}.${s.state}.${b.key}.png`);
           await page.screenshot({ path: file, fullPage: true, animations: 'disabled' });
           shots[s.state][b.key] = file;
-          if (b === widest) for (const r of await page.evaluate(snapshot, { ATTR, PROPS, uiDir, shell: rel })) if (!elements[r.at]) elements[r.at] = { style: r.style, rect: r.rect };
+          if (b === widest) for (const r of await page.evaluate(snapshot, { ATTR, PROPS, uiDir, shell: rel || '' })) if (!elements[r.at]) elements[r.at] = { style: r.style, rect: r.rect, via: r.via };
         } catch (e) {
           shots[s.state][b.key] = { missing: true, reason: `the steps for ${s.state} failed: ${scrub(e.message)}` };
         } finally {
@@ -89,13 +106,7 @@ export async function run({ prototype, screen, states, breakpoints, depsDir = DE
         }
       }
     }
-    return { elements, shots, failed, cleanup };
-  } catch (e) {
-    cleanup();
-    throw new Error(scrub(e.message));
-  } finally {
-    if (browser) await browser.close();
-    if (server) await server.close();
+    return { elements, shots };
   }
 }
 
@@ -127,23 +138,14 @@ function snapshot({ ATTR, PROPS, uiDir, shell }) {
   const out = [];
   for (const el of [document.documentElement, ...document.documentElement.querySelectorAll('*')]) {
     if (['SCRIPT', 'STYLE', 'LINK', 'META', 'NOSCRIPT', 'TEMPLATE', 'TITLE', 'HEAD'].includes(el.tagName)) continue;
-    const at = app(el.getAttribute(ATTR)) || fibre(el) || ancestor(el) || shell;
+    const own = app(el.getAttribute(ATTR)), viaFibre = !own && fibre(el), viaAncestor = !own && !viaFibre && ancestor(el);
+    const at = own || viaFibre || viaAncestor || shell;
+    const via = own ? 'own' : viaFibre ? 'fibre' : viaAncestor ? 'ancestor' : 'shell';
     const cs = getComputedStyle(el);
     const r = el.getBoundingClientRect();
-    out.push({ at, style: Object.fromEntries(PROPS.map(p => [p, cs.getPropertyValue(p)])), rect: { width: Math.round(r.width * 100) / 100, height: Math.round(r.height * 100) / 100 } });
+    out.push({ at, via, style: Object.fromEntries(PROPS.map(p => [p, cs.getPropertyValue(p)])), rect: { width: Math.round(r.width * 100) / 100, height: Math.round(r.height * 100) / 100 } });
   }
   return out;
-}
-
-// The Code Library folder an element's own site must be outside of (#84, #102): components.json `aliases.ui`
-// with its `@/` alias resolved (the root, or src/ on Vite), else components/ui/.
-function codeLibraryDir(copy) {
-  const file = join(copy, 'components.json');
-  const ui = existsSync(file) && JSON.parse(readFileSync(file, 'utf8')).aliases?.ui;
-  if (!ui) return 'components/ui/';
-  const pkg = existsSync(join(copy, 'package.json')) ? JSON.parse(readFileSync(join(copy, 'package.json'), 'utf8')) : {};
-  const vite = Boolean({ ...pkg.dependencies, ...pkg.devDependencies }.vite);
-  return ui.replace(/^@\//, vite ? 'src/' : '').replace(/\/?$/, '/');
 }
 
 // Every .tsx/.jsx under the copy, tagged. A file TypeScript cannot parse stays untagged: its elements join

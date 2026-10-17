@@ -35,9 +35,14 @@ export function hasDeps(dir = DEPS_DIR) {
   return lockOf(dir) === lockOf(PINNED_DIR) && installed(dir, 'parse5');
 }
 
+/** True when TypeScript 6 is installed beside parse5: the React static reader's packages (#114). */
+export function hasTypescript(dir = DEPS_DIR) {
+  return hasDeps(dir) && installed(dir, 'typescript');
+}
+
 /** True when the runtime reader's packages are installed and a browser is there to run them. */
 export function hasRuntime(dir = DEPS_DIR) {
-  return hasDeps(dir) && installed(dir, 'typescript') && installed(dir, 'playwright-core') && Boolean(findBrowser(dir));
+  return hasTypescript(dir) && installed(dir, 'playwright-core') && Boolean(findBrowser(dir));
 }
 
 /** Install the pinned packages into `dir`, and Chromium when there is no system Chrome. Skips what is there. */

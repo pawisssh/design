@@ -69,7 +69,7 @@
       "given": { "type": "string" }, "when": { "type": "string" }, "then": { "type": "string" }, "by": { "enum": ["agent", "owner"] } } } },
     "openQuestions": { "type": "array", "items": { "type": "object", "required": ["id", "kind", "to", "text"], "properties": {
       "id": { "type": "string", "pattern": "^q-[a-z0-9-]+$" },
-      "kind": { "enum": ["font", "mode-map", "breakpoint", "no-contract", "off-axis", "missing-state", "stand-in", "prop", "runtime"] },
+      "kind": { "enum": ["font", "mode-map", "breakpoint", "no-contract", "off-axis", "missing-state", "stand-in", "prop", "runtime", "split"] },
       "to": { "enum": ["owner", "developer"] },
       "text": { "type": "string", "minLength": 1 },
       "answer": { "anyOf": [ { "type": "null" }, { "type": "string" } ] },

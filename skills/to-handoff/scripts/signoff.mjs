@@ -47,7 +47,7 @@ export function driftOf(handoff, system, prototype) {
   const src = handoff.source || {};
   if (prototype) {
     const pinned = (src.prototype && src.prototype.files) || {};
-    const now = prototypeFiles(prototype);
+    const now = prototypeFiles(prototype, Object.keys(pinned));
     for (const file of [...new Set([...Object.keys(pinned), ...Object.keys(now)])].sort()) {
       if (!(file in now)) drift.push({ kind: 'prototype', key: file, change: 'removed' });
       else if (!(file in pinned)) drift.push({ kind: 'prototype', key: file, change: 'added' });
