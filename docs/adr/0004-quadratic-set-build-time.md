@@ -21,13 +21,14 @@ Probe #165 built the shadcn Button set in the smoke draft four ways, each on its
 - **In-call** is the sum of `Date.now()` deltas inside each successful call. **Wall** runs from the hook's package swap to the response and includes failed calls.
 - **Ratios.** At 624, B is 9.7× faster than A in-call and 6.4× by wall. At 2304, B′ is 12.7× faster than A in-call and 11.4× by wall.
 - **Identity.** A-624 and B-624 match variant by variant (cell, layers, fields, bindings), and so do A-2304 (set 91:10) and B′-2304 (set 90:5), with no differences.
-- **The limit.** No per-call limit is documented. Every failure is consistent with a ceiling of about 2 min per `use_figma` call.
-  - B-2304's final call dropped with "MCP server connection lost" at 126.9 s and again at 126.1 s.
-  - Each time it rolled back, leaving 2304 loose components and no set.
+- **The limit.** No per-call limit is documented. Three failures are consistent with a ceiling of about 2 min per `use_figma` call:
+  - B-2304's final call dropped with "MCP server connection lost" at 126.9 s and again at 126.1 s. Each time it rolled back, leaving 2304 loose components and no set.
+  - A's 49-variant call at 1274 errored about 120 s after the swap.
+  - A's errors at 1554, 1792 and 2210 are not the limit. They came back in 86–93 s, and the same call passed on retry, so they were transient.
 - **Why B failed.** `combineAsVariants` alone fits in a call: 3.2 s at 624 and 46.9 s at 2304, roughly quadratic. What does not fit at 2304 is combine plus grid placement in one call. `setGridChildPosition` costs about 31 ms per move at 624 and 89–120 ms per move at 2304, about 255 s in total.
-- **A also exceeds the limit at 49 per call.** It failed at set size 1274, after its longest successful call took 107.3 s (1176–1225).
+- **A also exceeds the limit at 49 per call.** It failed at set size 1274 (about 120 s after the swap), after its longest successful call took 107.3 s (1176–1225).
   - From 1274 it finished at 41–36 variants per call up to 1466, then 30–16 per call.
-  - A's total cost is about 1.7–1.9 ms × variants created × set size, which sums to about N²/2 whatever the per-call size, so the A totals remain comparable.
+  - A's total cost is about 1.7–1.9 ms × variants created × set size, which sums to about 1.8 ms × N²/2 whatever the per-call size. At 2304 that is ≈ 4,780 s against 4,788.6 s measured, so the A totals remain comparable.
 - **A's five failures.**
   - Four came back as "An unexpected error occurred" and committed nothing. The 1274 call was re-run at a smaller size, and the other three passed on retry.
   - The fifth (833–882) created its variants but lost its response. Its in-call time is estimated at 73.1 s.
