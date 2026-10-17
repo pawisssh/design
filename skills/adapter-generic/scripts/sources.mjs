@@ -4,9 +4,11 @@
 // The command also fetches the preview renderer's packages (preview.mjs) into .scratch/adapter-generic/preview.
 //
 // Each npm tarball is checked against its registry sha512 `integrity`, and only the named members are extracted
-// with `tar`. Nothing is installed and no lifecycle script runs. The reading tier executes only Tailwind's
-// compiler (tailwind.mjs), over the consumer project's CSS; the preview renderer runs the project's components. shadcn and tw-animate-css are read as stylesheets only:
-// the fixture's CSS imports them. Downloads are untrusted data and live in gitignored scratch.
+// with `tar`. No tool is installed and no lifecycle script runs. The reading tier executes only Tailwind's
+// compiler (tailwind.mjs), over the consumer project's CSS. The preview renderer's packages are installed with
+// `npm ci --ignore-scripts`, and the renderer runs the project's components (preview.mjs). shadcn and
+// tw-animate-css are read as stylesheets only: the fixture's CSS imports them. Downloads are untrusted data and live
+// in gitignored scratch.
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';

@@ -33,7 +33,7 @@ test('Card has no cva: its root className is its one variant, with a Slot axis f
   const card = await read('card');
   assert.deepEqual(card.axes.map(a => a.key), ['card-footer', 'state']);
   const { 'card-footer': footer, state } = byKey(card.axes);
-  assert.equal(footer.slot, 'Card Footer');
+  assert.equal(footer.slot, 'Footer');
   assert.deepEqual(footer.values.map(v => [v.key, v.label, v.filled, v.css]), [
     ['none', 'False', false, ':not(:has([data-slot="card-footer"]))'],
     ['card-footer', 'True', true, ':has([data-slot="card-footer"])']]);
@@ -41,10 +41,10 @@ test('Card has no cva: its root className is its one variant, with a Slot axis f
   assert.equal(card.expectedCount, 2);
 });
 
-test('Card\'s exported parts are FRAME nodes under the root, named by their data-slot, in source order', { skip }, async () => {
+test('Card\'s exported parts are FRAME nodes under the root, named by their data-slot without the family prefix, in source order', { skip }, async () => {
   const { anatomy } = await read('card');
   assert.equal(anatomy.name, 'Card');
-  assert.deepEqual(anatomy.children, ['Card Header', 'Card Title', 'Card Description', 'Card Action', 'Card Content', 'Card Footer']
+  assert.deepEqual(anatomy.children, ['Header', 'Title', 'Description', 'Action', 'Content', 'Footer']
     .map(name => ({ name, type: 'FRAME' })));
 });
 
@@ -60,16 +60,16 @@ test('Card layout: a block flex column fills across; gap and padding resolve --c
   assert.deepEqual(at({ 'card-footer': 'card-footer' }).Card.paddingBottom, tok('spacing-0'));
 });
 
-test('each Card part fills the column across and hugs down; Card Action is self-start, so it hugs; the footer shows where filled', { skip }, async () => {
+test('each Card part fills the column across and hugs down; Action is self-start, so it hugs; the footer shows where filled', { skip }, async () => {
   const card = await read('card');
   const none = resolve(card, { 'card-footer': 'none', state: 'enabled' }).layout;
   const filled = resolve(card, { 'card-footer': 'card-footer', state: 'enabled' }).layout;
-  for (const part of ['Card Header', 'Card Title', 'Card Description', 'Card Content', 'Card Footer'])
+  for (const part of ['Header', 'Title', 'Description', 'Content', 'Footer'])
     assert.deepEqual([none[part].width, none[part].height], ['fill', 'hug'], part);
-  assert.deepEqual([none['Card Action'].width, none['Card Action'].height], ['hug', 'hug']);
-  assert.equal(none['Card Footer'].visible, false);
-  assert.equal(filled['Card Footer'].visible, true);
-  assert.equal(none['Card Header'].visible, undefined, 'a part that is no slot always shows');
+  assert.deepEqual([none['Action'].width, none['Action'].height], ['hug', 'hug']);
+  assert.equal(none['Footer'].visible, false);
+  assert.equal(filled['Footer'].visible, true);
+  assert.equal(none['Header'].visible, undefined, 'a part that is no slot always shows');
 });
 
 test('Card\'s size prop is read by no axis: its data-[size=sm] utilities are a note, not carried', { skip }, async () => {
@@ -91,7 +91,7 @@ test('Card paint: the card fill and a 1px foreground/10 ring, a Synthesized toke
 
 test('the parts note says what of each part is read: its size, and its visibility where it is a slot', { skip }, async () => {
   const { notes } = await read('card');
-  assert.ok(notes.some(n => n.at === 'anatomy' && /Card Header, Card Title, Card Description, Card Action, Card Content, Card Footer/.test(n.message)
+  assert.ok(notes.some(n => n.at === 'anatomy' && /Header, Title, Description, Action, Content, Footer/.test(n.message)
     && /width and height/.test(n.message)));
 });
 
@@ -123,9 +123,9 @@ test('Alert\'s border colour comes from the project\'s base layer (* { border-bo
 
 test('Alert\'s parts: Title and Description fill the grid\'s one column; the absolute Alert Action is left out, with its slot utilities', { skip }, async () => {
   const alert = await read('alert');
-  assert.deepEqual(alert.anatomy.children, [{ name: 'Alert Title', type: 'FRAME' }, { name: 'Alert Description', type: 'FRAME' }]);
+  assert.deepEqual(alert.anatomy.children, [{ name: 'Title', type: 'FRAME' }, { name: 'Description', type: 'FRAME' }]);
   const { layout } = resolve(alert, { variant: 'default', state: 'enabled' });
-  assert.deepEqual([layout['Alert Title'].width, layout['Alert Title'].height], ['fill', 'hug']);
+  assert.deepEqual([layout['Title'].width, layout['Title'].height], ['fill', 'hug']);
   const note = alert.notes.find(n => /AlertAction/.test(n.message) && /absolute/.test(n.message));
   assert.ok(note, 'the absolute part is named');
   assert.ok(alert.notes.some(n => /has-data-\[slot=alert-action\]:pr-18/.test(n.message)), 'its slot utilities are listed, not an axis');

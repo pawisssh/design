@@ -51,7 +51,7 @@ test('a Card renders its exported parts as its anatomy nodes; the footer only wh
   for (const slot of ['card-header', 'card-title', 'card-description', 'card-action', 'card-content'])
     assert.match(none, new RegExp(`data-slot="${slot}"`), slot);
   assert.doesNotMatch(none, /data-slot="card-footer"/);
-  assert.match(render({ 'card-footer': 'card-footer' }), /<div data-slot="card-footer"[^>]*>Card Footer<\/div>/);
+  assert.match(render({ 'card-footer': 'card-footer' }), /<div data-slot="card-footer"[^>]*>Footer<\/div>/);
 });
 
 test('the stylesheet is the compiled project CSS with no @supports guard, the dark Mode its .dark class, light inert', { skip }, async () => {
@@ -68,6 +68,12 @@ test('refuses a project whose files are not the Contract\'s snapshot', { skip },
   cpSync(FIXTURE, project, { recursive: true });
   writeFileSync(join(project, 'components/ui/button.tsx'), readFileSync(join(project, 'components/ui/button.tsx'), 'utf8') + '\n');
   await assert.rejects(previewRenderer(contract('button'), { project }), /components\/ui\/button\.tsx differs from the Contract's snapshot/);
+});
+
+test('refuses to render when an installed package differs from the Contract pin', { skip }, async () => {
+  const moved = contract('button');
+  moved.source.packages.react = '19.2.0';
+  await assert.rejects(previewRenderer(moved), /react 19\.1\.0 is installed but the Contract pins 19\.2\.0/);
 });
 
 // ---------- catalogs, measured ----------

@@ -9,8 +9,8 @@
 //                      axis's default, and each axis value's `code` props are set (a State whose `code` is null
 //                      renders like Enabled: the page forces it through its CSS pseudo-class). Each anatomy node
 //                      the variant shows is a child, in anatomy order: an icon slot an <svg> carrying the attribute
-//                      its Slot axis tests (`data-icon="inline-start"`), a part its exported component (CardHeader)
-//                      holding its layer name. A node the variant hides (`visible: false`) is not rendered. The
+//                      its Slot axis tests (`data-icon="inline-start"`), a part its exported component (CardHeader for
+//                      the Header node) holding its layer name. A node the variant hides (`visible: false`) is not rendered. The
 //                      Contract has no properties yet, so `properties` changes nothing;
 //   stylesheet         the project's global CSS compiled by the pinned Tailwind over every class of the component
 //                      files the render loads, Preflight and the base layer included;
@@ -20,7 +20,8 @@
 // Unlike the reading tier, which executes nothing, this renderer runs code: the project's component files,
 // transpiled with the pinned TypeScript, and the packages they import, from preview/package.json and its lockfile,
 // installed with `npm ci --ignore-scripts` into gitignored scratch. It refuses when the project's files are not
-// the Contract's snapshot, or when an installed package's version differs from the one the project's lockfile resolves.
+// the Contract's snapshot, when a pinned package is not the Contract's `source.packages` version, or when any installed
+// package's version differs from the one the project's lockfile resolves.
 import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -79,13 +80,18 @@ export async function previewRenderer(contract, { project = FIXTURE, dir = PREVI
   if (!hasTools(tools)) fail(`Generic Adapter tools missing in ${tools}; run: node skills/adapter-generic/scripts/sources.mjs`);
   for (const [f, hash] of Object.entries(contract.source.files))
     if (`sha256:${sha256(readFileSync(join(project, f)))}` !== hash) fail(`${f} differs from the Contract's snapshot; regenerate the Contract first`);
+  const pinned = Object.keys(JSON.parse(readFileSync(join(PINNED_DIR, 'package.json'), 'utf8')).dependencies);
+  const installed = JSON.parse(lockOf(dir)).packages;
+  for (const name of pinned) {
+    const { version } = installed[`node_modules/${name}`];
+    if (contract.source.packages[name] !== version) fail(`${name} ${version} is installed but the Contract pins ${contract.source.packages[name] || 'none'}`);
+  }
   const projectLock = JSON.parse(readFileSync(join(project, 'package-lock.json'), 'utf8')).packages;
-  for (const [key, pkg] of Object.entries(JSON.parse(lockOf(dir)).packages)) {
+  for (const [key, pkg] of Object.entries(installed)) {
     if (!key) continue;
     const want = (projectLock[key] || {}).version;
     if (want !== pkg.version) fail(`${key.replace(/^node_modules\//, '')} ${pkg.version} is installed, but the project resolves ${want || 'none'}`);
   }
-  const pinned = Object.keys(JSON.parse(readFileSync(join(PINNED_DIR, 'package.json'), 'utf8')).dependencies);
   const req = createRequire(join(dir, 'package.json'));
   const ts = createRequire(import.meta.url)(join(toolDir('typescript', tools), 'lib/typescript.js'));
 
@@ -143,7 +149,9 @@ export async function previewRenderer(contract, { project = FIXTURE, dir = PREVI
       return React.createElement('svg', { key, [m[1]]: m[2], xmlns: 'http://www.w3.org/2000/svg', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, 'aria-hidden': true },
         React.createElement('circle', { cx: 12, cy: 12, r: 9 }));
     }
-    const Part = library[node.name.replace(/\s+/g, '')] || fail(`${alias} exports no part ${node.name.replace(/\s+/g, '')} for the ${node.name} node`);
+    // A part's layer name is its data-slot without the family prefix (Footer), so its export is the root's name plus it.
+    const name = contract.code.component + node.name.replace(/\s+/g, '');
+    const Part = library[name] || fail(`${alias} exports no part ${name} for the ${node.name} node`);
     return React.createElement(Part, { key }, node.name);
   };
 

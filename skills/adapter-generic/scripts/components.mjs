@@ -99,6 +99,7 @@ const COLOUR_PROP = { fill: 'background-color', stroke: 'border-color', effects:
 
 const fail = msg => { throw new Error(msg); };
 const byKey = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+const PREVIEW_PACKAGES = fileURLToPath(new URL('../preview/package.json', import.meta.url));
 const words = s => s.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1));
 const title = s => words(s).join(' ');
 const pascal = s => words(s).join('');
@@ -158,6 +159,10 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   }
   files[file] = `sha256:${sha256(readFileSync(join(project, file)))}`;
   const sortedFiles = Object.fromEntries(Object.keys(files).sort(byKey).map(f => [f, files[f]]));
+  // The packages the preview renderer runs the component with, at the versions the project's lockfile resolves.
+  const lock = JSON.parse(readText('package-lock.json')).packages;
+  const renderer = Object.fromEntries(Object.keys(JSON.parse(readFileSync(PREVIEW_PACKAGES, 'utf8')).dependencies)
+    .map(name => [name, (lock[`node_modules/${name}`] || fail(`package-lock.json resolves no ${name}, which the preview renderer pins`)).version]));
 
   // 1. Source: the root component and its cva call. A root with no cva (Card) is one variant: its own className.
   const { cvas, components } = readSource(readText(file), file, { tools });
@@ -166,9 +171,10 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   if (cv.compound.length) fail(`${file}:${cv.compound[0].line} ${root.cva}: compoundVariants are not read yet`);
   // A prop the root sets an attribute from that no axis reads (Card's `data-size={size}`) keeps its default.
   const fixed = Object.fromEntries(Object.values(root.attrs).filter(a => a.prop && !cv.variants[a.prop]).map(a => [a.prop, root.defaults[a.prop]]));
-  // The other exported components are the parts (CardHeader), each a FRAME under the root, named by its data-slot.
+  // The other exported components are the parts (CardHeader), each a FRAME under the root, named by rule (#103): the
+  // Title Case of its data-slot without the family prefix (card-header -> Header).
   const parts = components.filter(c => c.exported && c !== root).map(c => ({ name: c.name, line: c.line, slot: c.slot || kebab(c.name),
-    node: title(c.slot || kebab(c.name)), entries: c.classes.flatMap(l => l.classes.split(/\s+/).filter(Boolean).map(candidate => ({ candidate, line: l.line }))) }));
+    node: title((c.slot || kebab(c.name)).replace(new RegExp(`^${family}-`), '')), entries: c.classes.flatMap(l => l.classes.split(/\s+/).filter(Boolean).map(candidate => ({ candidate, line: l.line }))) }));
   const entries = []; // every class occurrence: {candidate, line, axis?, value?}, in the order cva emits them
   const add = (list, origin) => list.classes.split(/\s+/).filter(Boolean).forEach(c => entries.push({ candidate: c, line: list.line, ...origin }));
   add(cv.base, {});
@@ -625,7 +631,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     slot: 'Styled by what the component holds, in a :has() form other than :has([attr="value"]), the only one read as a Slot axis (#121). Not carried.',
     absent: 'Styled by whether the component holds a part the anatomy leaves out (see the anatomy notes). Not carried.',
     ancestor: 'Styled by an ancestor; that is a Mode or the parent\'s Contract (ADR 0012). Not carried.',
-    descendant: 'Styles a descendant; the anatomy beyond the root is not drafted yet (agent tier). Not carried.',
+    descendant: 'Styles a descendant other than a slot frame or a part; the anatomy below them is not drafted yet (agent tier). Not carried.',
     media: 'Under a media query no tuple decides. Not carried.',
     condition: 'Under a condition no tuple decides (a negation, or two states at once). Not carried.',
     text: 'Text utilities; text styles, the label and the anatomy beyond the root are not drafted yet (agent tier). Not carried.',
@@ -667,7 +673,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
 
   return { name: Name, file, files: sortedFiles, element: root.element, axes, anatomy, layout, paint,
     synthesized: Object.fromEntries(Object.keys(synthesized).sort(byKey).map(k => [k, synthesized[k]])),
-    notes, omit, expectedCount, alias: `${ui}/${family}`, facts };
+    notes, omit, expectedCount, alias: `${ui}/${family}`, renderer, facts };
 }
 
 /**
@@ -788,9 +794,10 @@ export function contractFor(f, family, foundations) {
   const contract = {
     schemaVersion: 1,
     family: { key: family, name: f.name, description: `shadcn/ui ${f.name} (${f.file}), read from its source and compiled CSS.` },
-    // The component is a project module, not a package: its import path is pinned to its file's hash (#123).
+    // The pins plus the preview renderer's packages. The component is a project module, not a package: its import
+    // path is pinned to its file's hash (#123).
     source: { codeLibrary: foundations.source.codeLibrary, adapter: 'generic',
-      packages: Object.fromEntries(Object.entries({ ...foundations.source.packages, [f.alias]: f.files[f.file] }).sort(([a], [b]) => byKey(a, b))),
+      packages: Object.fromEntries(Object.entries({ ...foundations.source.packages, ...f.renderer, [f.alias]: f.files[f.file] }).sort(([a], [b]) => byKey(a, b))),
       files: f.files, snapshotId: snapshotId(f.files) },
     axes: f.axes,
     excluded: [],
