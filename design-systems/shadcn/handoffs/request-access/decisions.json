@@ -12,10 +12,10 @@
     "draft": "input",
     "tuple": {},
     "via": "library",
-    "reason": "shadcn ships Input, but this Design System has no input Contract, and the Generic Adapter could not write one mid-run"
+    "reason": "shadcn ships Input, but this Design System has no input Contract, and the Generic Adapter's mid-run draft did not pass"
   },
   "contract:input": {
-    "unwritable": "node skills/adapter-generic/scripts/components.mjs --family input: Input (Invalid=Valid, State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read"
+    "path": "skills/to-handoff/test/fixtures/v0-app-drafts/input.component.json"
   },
   "recognise:Select": {
     "draft": "select",
@@ -24,7 +24,7 @@
     "reason": "shadcn ships Select, but this Design System has no select Contract, and the Generic Adapter could not write one mid-run"
   },
   "contract:select": {
-    "unwritable": "node skills/adapter-generic/scripts/components.mjs --family select: Select (State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read"
+    "unwritable": "node skills/adapter-generic/scripts/components.mjs --family select drafts it, but the Generic preview renderer cannot render it: components/ui/select.tsx imports lucide-react, which skills/adapter-generic/preview/package.json does not pin"
   },
   "recognise:Textarea[rows=3]": {
     "draft": "textarea",

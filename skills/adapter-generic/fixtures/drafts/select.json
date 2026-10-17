@@ -1,0 +1,15 @@
+{
+  "family": "select",
+  "drafts": {
+    "axes.invalid.label": "Invalid",
+    "family.description": "The closed trigger of a dropdown that picks one option, whose invalid axis gives it a destructive border and ring, and whose state axis tints it on hover, adds a focus ring or dims it when disabled.",
+    "figma.grid": {
+      "columns": [
+        "state"
+      ],
+      "rows": [
+        "invalid"
+      ]
+    }
+  }
+}

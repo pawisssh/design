@@ -17,7 +17,8 @@
 // The Contract is checked with contract.mjs validate and written with io.mjs writeJson; two runs from the same
 // drafts are byte-identical.
 //
-// What it reads, for the family's root component (the export named after the family):
+// What it reads, for the family's root component (the export named after the family, or its exported Trigger when it
+// renders a primitive's Root with no classes, as Select does, #153):
 // - axes: each cva variant axis, then an axis per attribute state the CSS styles (ATTR_AXES), then the canonical
 //   State from the CSS pseudo-classes. Every axis is fully selected. A root with no cva (Card) is one variant, its
 //   own className; a prop it sets an attribute from that no axis reads (`data-size={size}`) keeps its default, and
@@ -30,8 +31,9 @@
 //   its data-slot and sized by its own width and height utilities or by how the root lays it out. A part positioned
 //   out of the flow (`absolute`) is left out, with a note.
 // - layout and paint of the root node, per variant: the cva classes each variant renders, merged as `cn()` merges
-//   them, then the CSS cascade over their compiled rules (specificity, then output order). A flex root, or a grid
-//   with no columns read as a column (#123); a custom property a utility sets is resolved where a length reads it;
+//   them, then the CSS cascade over their compiled rules (specificity, then output order). A flex root, a grid
+//   with no columns read as a column (#123), or a plain box (block or inline-block, #153) read as a column with no gap
+//   or alignment; a custom property a utility sets is resolved where a length reads it;
 //   a border with no colour utility takes its colour from the base layer's `*` rule.
 // - paint that differs by Mode, carries an opacity or mixes tokens (#120): a Synthesized token, a per-mode Theme
 //   component token the Contract binds as a plain {token}. The foundations step re-derives the same tokens through
@@ -40,7 +42,7 @@
 // layout, paint and text (later agent-tier keys), any other `:has(…)` condition, and styling set by an ancestor
 // (ADR 0012).
 // Generation throws (the CLI exits 1 and writes nothing) on anything it cannot read exactly: compound variants, an
-// attribute state with no known state words, layout other than flex or a one-column grid, an opacity or an effect's
+// attribute state with no known state words, layout other than flex, a one-column grid or a plain box, an opacity or an effect's
 // shape that differs by Mode, relative colour syntax, a Synthesized name a Code Library token already has, or a
 // Foundations document from another snapshot or without the family's Synthesized tokens.
 import { existsSync, readFileSync } from 'node:fs';
@@ -51,7 +53,7 @@ import { contentHash, expand, resolve, scopeFor, validate, variantName } from '.
 import { writeJson } from '../../contract/scripts/io.mjs';
 import { candidateRules, compiledRules, winner } from './cascade.mjs';
 import { mergeDrafts, subjects } from './drafts.mjs';
-import { readSource } from './source.mjs';
+import { familyRoot, readSource } from './source.mjs';
 import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, hasTools, sha256, snapshotId } from './sources.mjs';
 import { build } from './tailwind.mjs';
 import { CLIPPED, evaluate, isSynthesized, literalForm, resolvedText, round } from './values.mjs';
@@ -64,6 +66,11 @@ const ATTR_AXES = {
 const STATES = ['hover', 'active', 'focus', 'disabled'];
 const STATE_CSS = [':hover', ':active', ':focus-visible', ':focus', ':disabled', '[aria-disabled="true"]', '[data-disabled]'];
 const NATIVE_DISABLED = new Set(['button', 'input', 'select', 'textarea', 'fieldset']);
+// The display of a root element no display utility sets, when it is a plain box (#153): the form controls are
+// inline-block, the block elements block. Any other element (a component, an inline element) is not read.
+const BOX_DISPLAY = { ...Object.fromEntries(['button', 'input', 'select', 'textarea'].map(e => [e, 'inline-block'])),
+  ...Object.fromEntries(['div', 'section', 'article', 'aside', 'header', 'footer', 'main', 'nav', 'form', 'fieldset', 'ul', 'ol', 'li', 'p']
+    .map(e => [e, 'block'])) };
 const VARIANT_LIMIT = 600; // ADR 0004
 // The content of a slot a Contract carries: an svg, sized unless the consumer sizes it (#121).
 const SLOT_CONTENT = /^svg(:not\(\[class\*='size-'\]\))?$/;
@@ -169,14 +176,16 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
 
   // 1. Source: the root component and its cva call. A root with no cva (Card) is one variant: its own className.
   const { cvas, components } = readSource(readText(file), file, { tools });
-  const root = components.find(c => c.name === Name && c.exported) || fail(`${file} exports no ${Name}`);
+  // A provider with no box of its own (Select renders SelectPrimitive.Root) is read through its Trigger (#153); the
+  // other exports render inside the Trigger or in the popup it opens, so none is a part.
+  const { provider, root } = familyRoot(components, Name, file);
   const cv = root.cva ? cvas[root.cva] : { base: { classes: '', line: root.line }, variants: {}, keys: {}, defaults: {}, compound: [] };
   if (cv.compound.length) fail(`${file}:${cv.compound[0].line} ${root.cva}: compoundVariants are not read yet`);
   // A prop the root sets an attribute from that no axis reads (Card's `data-size={size}`) keeps its default.
   const fixed = Object.fromEntries(Object.values(root.attrs).filter(a => a.prop && !cv.variants[a.prop]).map(a => [a.prop, root.defaults[a.prop]]));
   // The other exported components are the parts (CardHeader), each a FRAME under the root, named by rule (#103): the
   // Title Case of its data-slot without the family prefix (card-header -> Header).
-  const parts = components.filter(c => c.exported && c !== root).map(c => ({ name: c.name, line: c.line, slot: c.slot || kebab(c.name),
+  const parts = components.filter(c => c.exported && !provider && c !== root).map(c => ({ name: c.name, line: c.line, slot: c.slot || kebab(c.name),
     node: title((c.slot || kebab(c.name)).replace(new RegExp(`^${family}-`), '')), entries: c.classes.flatMap(l => l.classes.split(/\s+/).filter(Boolean).map(candidate => ({ candidate, line: l.line }))) }));
   const entries = []; // every class occurrence: {candidate, line, axis?, value?}, in the order cva emits them
   const add = (list, origin) => list.classes.split(/\s+/).filter(Boolean).forEach(c => entries.push({ candidate: c, line: list.line, ...origin }));
@@ -283,7 +292,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     const css = [...stateCss[key]].sort((a, b) => STATE_CSS.indexOf(a) - STATE_CSS.indexOf(b));
     let code = null;
     if (key === 'disabled')
-      code = NATIVE_DISABLED.has(root.element) && css.includes(':disabled') ? { disabled: true }
+      code = (NATIVE_DISABLED.has(root.element) || provider) && css.includes(':disabled') ? { disabled: true }
         : css.includes('[aria-disabled="true"]') ? { 'aria-disabled': true } : { 'data-disabled': true };
     return { key, label: title(key), code, css: css.join(', ') };
   };
@@ -373,6 +382,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const usesRadius = live.some(r => 'border-radius' in r.decls);
   const baseStroke = baseBorder && { candidate: '* (border-color)', decls: baseBorder.decls, entry: { base: true } };
   let strokeFromBase = false;
+  const boxes = new Set(); // what gives each variant read as a plain box its display
   // Layout and paint of one variant in one Mode: {layout, paint, by: {field: winning rule}, frames: {node: {field}}}.
   function render(t, mode) {
     const keep = survivors(t);
@@ -382,16 +392,20 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       const r = isVar(name) && win([name]);
       return r ? sub(r.decls[name]) : m;
     });
-    // `width: 100%` fills the parent; any other width is a length.
-    const size = (field, r) => (r.decls[field] === '100%' ? 'fill' : length(field, r, [field], sub).value);
+    // `width: 100%` fills the parent, `fit-content` (SelectTrigger's `w-fit`) hugs; any other width is a length.
+    const size = (field, r) => (r.decls[field] === '100%' ? 'fill' : r.decls[field] === 'fit-content' ? 'hug' : length(field, r, [field], sub).value);
     const layout = {}, paint = {}, by = {};
     const display = win(['display']);
     const shown = display ? display.decls.display : 'not set';
-    if (!/^(inline-)?(flex|grid)$/.test(shown))
-      fail(`${Name} (${variantName({ axes }, t)}) is not a flex or grid container (display: ${shown}); only Auto Layout is read`);
+    // A plain box (#153): no display utility, or block or inline-block, stacks its children as a column with no gap
+    // and no alignment; its element gives the display when no utility does (Input's <input> is inline-block).
+    const box = display ? /^(inline-)?block$/.test(shown) && shown : root.element in BOX_DISPLAY && BOX_DISPLAY[root.element];
+    if (!box && !/^(inline-)?(flex|grid)$/.test(shown))
+      fail(`${Name} (${variantName({ axes }, t)}) is not a flex or grid container or a plain box (display: ${shown}${display ? '' : `, element ${root.element}`}); only Auto Layout is read`);
     // A grid with no columns stacks its children: a column, its row gap the gap, its justify-items the cross alignment.
     const grid = /grid$/.test(shown);
-    if (grid) {
+    if (box) { layout.direction = 'column'; boxes.add(display ? `${display.candidate}: ${box}` : `<${root.element}>: ${box}`); }
+    else if (grid) {
       const cols = win(['grid-template-columns']);
       if (cols && cols.decls['grid-template-columns'] !== 'none')
         fail(`${cols.candidate} (${at(cols.entry)}): grid-template-columns ${cols.decls['grid-template-columns']}: a grid with columns has no Auto Layout; only a grid of one column is read, as a column`);
@@ -406,16 +420,18 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     // With no width, a block-level container (flex, grid) fills its parent and an inline one hugs its content.
     for (const field of SIZE_FIELDS) {
       const r = win([field]);
-      layout[field] = r ? size(field, r) : field === 'width' && !/^inline-/.test(shown) ? 'fill' : 'hug';
+      layout[field] = r ? size(field, r) : field === 'width' && !/^inline-/.test(box || shown) ? 'fill' : 'hug';
       if (r) by[field] = r;
     }
     const [mainProp, crossProp] = grid ? ['align-content', 'justify-items'] : ['justify-content', 'align-items'];
+    // A plain box has no alignment or gap: justify-, align- and gap utilities do nothing there, and its children
+    // stretch across it.
     for (const [field, prop] of [['alignMain', mainProp], ['alignCross', crossProp]]) {
-      const r = win([prop]);
+      const r = !box && win([prop]);
       const v = r ? r.decls[prop] : 'normal';
       layout[field] = ALIGN[v] || fail(`${r.candidate} (${at(r.entry)}): ${prop}: ${v} has no Auto Layout alignment`);
     }
-    const cross = win([crossProp]);
+    const cross = !box && win([crossProp]);
     const stretches = !cross || ['normal', 'stretch'].includes(cross.decls[crossProp]);
     const border = win(['border-width']);
     const bw = border ? evaluate(border.decls['border-width'], env, border.candidate) : 0;
@@ -429,7 +445,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
         : `derived: no padding + ${bw}px border (an inside stroke takes no layout space)` };
     }
     const gapProps = layout.direction === 'column' ? ['row-gap', 'gap'] : ['column-gap', 'gap'];
-    const gap = win(gapProps);
+    const gap = !box && win(gapProps);
     layout.gap = gap ? length('gap', gap, gapProps, sub).value : { token: 'spacing-0' };
     if (gap) by.gap = gap;
     if (usesRadius) {
@@ -490,10 +506,10 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       const flex = display && /flex$/.test(display.decls.display);
       const dir = flex && winner(p.rules, ['flex-direction']);
       const f = frames[p.node] = { direction: flex && !(dir && /^column/.test(dir.decls['flex-direction'])) ? 'row' : 'column' };
-      const self = winner(p.rules, [grid ? 'justify-self' : 'align-self']);
+      const self = !box && winner(p.rules, [grid ? 'justify-self' : 'align-self']);
       const selfValue = self ? self.decls[grid ? 'justify-self' : 'align-self'] : 'auto';
       const across = selfValue === 'stretch' || (['auto', 'normal'].includes(selfValue) && stretches) ? 'fill' : 'hug';
-      const grow = !grid && winner(p.rules, ['flex-grow']);
+      const grow = !grid && !box && winner(p.rules, ['flex-grow']);
       const along = grow && parseFloat(grow.decls['flex-grow']) > 0 ? 'fill' : 'hug';
       const [w, h] = layout.direction === 'column' ? [across, along] : [along, across];
       for (const [field, fallback] of [['width', w], ['height', h]]) {
@@ -649,6 +665,10 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     notes.push({ level: 'info', at: 'anatomy', message: `${list(placed.map(p => p.node))}: the exported parts (${list(placed.map(p => p.name))}), each a FRAME under ${Name} in source order, whatever nesting a consumer gives them. Of each part only its direction (a flex part's own, else a column), its width and height (its own width or height utility; else fill where ${Name} stretches it, hug otherwise) are read, and its visibility where ${Name} styles its presence (a Slot axis). Its own padding, gap, alignment, paint and text are not drafted yet.` });
   for (const p of parts.filter(outOfFlow))
     notes.push({ level: 'info', at: 'anatomy', message: `${p.name} (${file}:${p.line}): position ${p.position.decls.position} (${p.position.candidate}) takes it out of the flow Auto Layout lays out, so the anatomy leaves it out.` });
+  if (boxes.size)
+    notes.push({ level: 'info', at: `${Name}.layout`, message: `${root.name} is a plain box (${[...boxes].sort(byKey).join('; ')}), not a flex or grid container: read as a column Auto Layout with no gap, start-aligned, as a block stacks its children (#153). Its justify-, align-, gap and self-alignment utilities do nothing there.` });
+  if (provider)
+    notes.push({ level: 'verify', at: 'anatomy', message: `${Name} (${file}:${provider.line}) renders ${provider.element}, a provider with no box of its own, so this Contract is read from ${root.name} (${file}:${root.line}), the box a designer sees; code.component stays ${Name}. In code, ${list(axes.filter(a => !a.canonical).map(a => a.key))} ${axes.filter(a => !a.canonical).length === 1 ? 'is' : 'are'} styled on ${root.name}, not on ${Name}. The other exports (${list(components.filter(c => c.exported && c !== provider && c !== root).map(c => c.name))}) render inside ${root.name} or in the popup it opens, so none is a part, and the options a Usage lists (code.items, ADR 0013) are not drafted.` });
   if (strokeFromBase)
     notes.push({ level: 'info', at: `${Name}.stroke`, message: `No border-color utility colours ${Name}'s border, so it takes its colour from ${cssFile}'s base layer: * { border-color: ${baseBorder.decls['border-color']} }.` });
   const offs = {};
@@ -656,7 +676,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     for (const r of ruleOf[c]) for (const [prop, v] of Object.entries(r.when.props)) if (prop in fixed && fixed[prop] !== v) (offs[`${prop}\0${v}`] = offs[`${prop}\0${v}`] || new Set()).add(c);
   for (const [k, cs] of Object.entries(offs)) {
     const [prop, v] = k.split('\0');
-    notes.push({ level: 'info', at: file, message: `${list([...cs])}: under ${prop} "${v}". ${prop} is a prop of ${Name} that no axis reads (only a cva variant is an axis), so every variant renders its default${fixed[prop] === undefined ? ' (none)' : ` "${fixed[prop]}"`}. Not carried.` });
+    notes.push({ level: 'info', at: file, message: `${list([...cs])}: under ${prop} "${v}". ${prop} is a prop of ${root.name} that no axis reads (only a cva variant is an axis), so every variant renders its default${fixed[prop] === undefined ? ' (none)' : ` "${fixed[prop]}"`}. Not carried.` });
   }
   for (const kind of ['slot', 'absent', 'ancestor', 'descendant', 'media', 'condition', 'text', 'other', 'none'])
     if (report[kind].length) notes.push({ level: 'info', at: file, message: `${list(report[kind])}: ${why[kind]}` });
@@ -674,7 +694,8 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     attributes[ax.key] = { attr, line: using[0].line, candidate: using[0].candidate,
       prefixes: [...new Set(using.map(e => e.candidate.split(':').slice(0, -1).join(':')))].sort(byKey) };
   }
-  const facts = { line: root.line, cva: root.cva, parts: exportedParts, variants: cv.keys, attributes };
+  const facts = { line: root.line, cva: root.cva, parts: exportedParts, variants: cv.keys, attributes,
+    ...(provider && { provider: { line: provider.line, element: provider.element, root: root.name } }) };
 
   return { name: Name, file, files: sortedFiles, element: root.element, axes, anatomy, layout, paint,
     synthesized: Object.fromEntries(Object.keys(synthesized).sort(byKey).map(k => [k, synthesized[k]])),

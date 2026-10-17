@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 1,
+  "revision": 2,
   "status": "pending",
   "approval": null,
   "feature": {
@@ -39,6 +39,10 @@
         "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6",
         "contentHash": "sha256:63cf726a7d861cb46e8422f0d923a78f29e33abbed58d3e7b4478bb38d63a138"
       },
+      "input": {
+        "snapshotId": "sha256:f9b01bacfe3e4ad85205c04e1c3ecff91f1a284700ca11902c2515be13f9c1f5",
+        "contentHash": "sha256:82af840f7b9f7be0bc886be55eed1215dfd0afd29fdc7b8ab72025bb1831e3c7"
+      },
       "label": {
         "snapshotId": "sha256:160c2f58b3f8e1e4e8b236c549344a7c10eb73d1dd3253d92e3481309a972fdc",
         "contentHash": "sha256:f7ec0e8ffe6f72b307d33bca57cc13137845ebc52afc9de07b74df05dfcda28b"
@@ -50,7 +54,7 @@
     },
     "proposals": {},
     "foundations": {
-      "documentHash": "sha256:40426fa5d53d3c8dc7eeed5bd3265a53f00dfa714ee7acfa9a1376797dab49c5",
+      "documentHash": "sha256:5956c88e859c74caa74fb11efc8273f4e483a453a656d8b9926c3c41b09fdad5",
       "usedHash": "sha256:ac8b6acde88f612a973024395f4fd7c858474021dee1e48177b0d65c5d6399d7"
     },
     "modes": {
@@ -64,6 +68,10 @@
       {
         "level": "info",
         "text": "`label` is a Contract the Adapter wrote mid-run at status draft (2 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
+      },
+      {
+        "level": "info",
+        "text": "`input` is a Contract the Adapter wrote mid-run at status draft (3 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
       },
       {
         "level": "info",
@@ -204,11 +212,12 @@
             },
             {
               "id": "name",
-              "raw": {
-                "element": "Input[required]"
+              "contract": "input",
+              "tuple": {},
+              "match": {
+                "by": "agent",
+                "via": "library"
               },
-              "reason": "shadcn ships Input, but this Design System has no input Contract, and the Generic Adapter could not write one mid-run",
-              "question": "q-no-contract-name",
               "states": [
                 "default",
                 "loading",
@@ -233,11 +242,12 @@
             },
             {
               "id": "email",
-              "raw": {
-                "element": "Input[required]"
+              "contract": "input",
+              "tuple": {},
+              "match": {
+                "by": "agent",
+                "via": "library"
               },
-              "reason": "shadcn ships Input, but this Design System has no input Contract, and the Generic Adapter could not write one mid-run",
-              "question": "q-no-contract-email",
               "states": [
                 "default",
                 "loading",
@@ -473,24 +483,10 @@
   ],
   "openQuestions": [
     {
-      "id": "q-no-contract-name",
-      "kind": "no-contract",
-      "to": "owner",
-      "text": "`Input[required]` is an input with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family input: Input (Invalid=Valid, State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for input; run node skills/adapter-generic/scripts/components.mjs --family input and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
-      "answer": null
-    },
-    {
-      "id": "q-no-contract-email",
-      "kind": "no-contract",
-      "to": "owner",
-      "text": "`Input[required]` is an input with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family input: Input (Invalid=Valid, State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for input; run node skills/adapter-generic/scripts/components.mjs --family input and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
-      "answer": null
-    },
-    {
       "id": "q-no-contract-select",
       "kind": "no-contract",
       "to": "owner",
-      "text": "`Select` is a select with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family select: Select (State=Enabled) is not a flex or grid container (display: not set); only Auto Layout is read. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for select; run node skills/adapter-generic/scripts/components.mjs --family select and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "text": "`Select` is a select with no Contract in shadcn yet, and the Adapter could not write one mid-run: node skills/adapter-generic/scripts/components.mjs --family select drafts it, but the Generic preview renderer cannot render it: components/ui/select.tsx imports lucide-react, which skills/adapter-generic/preview/package.json does not pin. Regenerate the Foundations document with node skills/adapter-generic/scripts/foundations.mjs, passing --family for every family with a committed Contract and for select; run node skills/adapter-generic/scripts/components.mjs --family select and draft the values it requests (skills/adapter-generic/SKILL.md); then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
       "answer": null
     },
     {

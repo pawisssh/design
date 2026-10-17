@@ -57,9 +57,11 @@ export function subjects(f, contract) {
       evidence: [at(a.line, `${a.candidate} styles [${a.attr}="true"]; prefixes ${a.prefixes.join(', ')}`)] });
   const family = fingerprint({ kind: 'family', axes: contract.axes.map(a => ({ key: a.key, values: a.values.map(v => v.key), default: a.default })), parts: facts.parts });
   const axisList = contract.axes.map(a => `${a.key} (${a.values.length})`).join(', ');
-  const rootEvidence = at(facts.line, `exports ${f.name}, rendered as <${f.element}>${facts.parts.length ? `; also exports ${facts.parts.join(', ')}` : ''}`);
+  const p = facts.provider;
+  const rootEvidence = p ? at(p.line, `exports ${f.name}, rendered as <${p.element}>, a provider with no box; read from ${p.root} (L${facts.line}), rendered as <${f.element}>`)
+    : at(facts.line, `exports ${f.name}, rendered as <${f.element}>${facts.parts.length ? `; also exports ${facts.parts.join(', ')}` : ''}`);
   const axesEvidence = facts.cva ? at(Object.values(facts.variants)[0].line, `${facts.cva} variants; the Contract's axes: ${axisList}`)
-    : at(facts.line, `${f.name} calls no cva; the Contract's axes: ${axisList}`);
+    : at(facts.line, `${p ? p.root : f.name} calls no cva; the Contract's axes: ${axisList}`);
   out.push({ key: 'family.description', fingerprint: family, check: text('family.description'), evidence: [rootEvidence, axesEvidence],
     brief: 'One sentence on what the component is and how its axes vary it, from its source.' });
   out.push({ key: 'figma.grid', fingerprint: family, check: grid(contract.axes), evidence: [axesEvidence],
