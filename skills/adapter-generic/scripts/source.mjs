@@ -1,7 +1,7 @@
 // The component source reader (#119): what a shadcn/ui component file says, read from the TypeScript AST with the
 // pinned `typescript` (sources.mjs). Nothing in the file is executed. It reads:
 // - every `cva(base, {variants, defaultVariants, compoundVariants})` call bound to a name;
-// - every top-level function component: whether it is exported, its element, `data-slot`, the attributes a prop
+// - every top-level function component, declared or bound to a `const` (`const Toaster = (…) => …`): whether it is exported, its element, `data-slot`, the attributes a prop
 //   sets (`data-size={size}`), its destructured defaults, the literal unions in its props type, the cva it calls
 //   and its className string literals.
 // Each class list keeps its 1-based line, so a later step can point at it.
@@ -46,6 +46,11 @@ export function readSource(text, file, { tools = DEFAULT_DIR } = {}) {
     if (ts.isVariableStatement(st))
       for (const d of st.declarationList.declarations) {
         const call = d.initializer;
+        // `const Toaster = (props) => …`: a function component bound to a name (sonner.tsx, #154).
+        if (call && ts.isIdentifier(d.name) && (ts.isArrowFunction(call) || ts.isFunctionExpression(call))) {
+          components.push(readFunction(call, d.name.text, d));
+          continue;
+        }
         if (!call || !ts.isCallExpression(call) || call.expression.getText() !== 'cva' || !ts.isIdentifier(d.name)) continue;
         const [base, config] = call.arguments;
         const c = members(config);
@@ -65,13 +70,14 @@ export function readSource(text, file, { tools = DEFAULT_DIR } = {}) {
           : [];
         cvas[d.name.text] = { base: classList(base), variants, keys, defaults, compound };
       }
-    if (ts.isFunctionDeclaration(st) && st.name) components.push(readFunction(st));
+    if (ts.isFunctionDeclaration(st) && st.name) components.push(readFunction(st, st.name.text, st));
   }
   for (const c of components) c.exported = exported.has(c.name) || !!(ts.getCombinedModifierFlags(c.node) & ts.ModifierFlags.Export);
   return { cvas, components: components.map(({ node, ...c }) => c) };
 
-  function readFunction(fn) {
-    const out = { name: fn.name.text, line: line(fn), node: fn, exported: false, element: null, slot: null, cva: null, attrs: {}, defaults: {}, unions: {}, classes: [] };
+  // `fn` is the function, `node` what declares it: the function itself, or the `const` it is bound to.
+  function readFunction(fn, name, node) {
+    const out = { name, line: line(node), node, exported: false, element: null, slot: null, cva: null, attrs: {}, defaults: {}, unions: {}, classes: [] };
     const param = fn.parameters[0];
     if (param && ts.isObjectBindingPattern(param.name))
       for (const el of param.name.elements)
@@ -118,15 +124,18 @@ export function readSource(text, file, { tools = DEFAULT_DIR } = {}) {
 
 /**
  * The component a family is read from, among `components` (readSource): {named, provider, root}. `named` is the export
- * named after the family (Input). When it renders a primitive's Root with no classes (Select: SelectPrimitive.Root),
- * it is a provider with no box of its own: `provider` is it and `root` its exported Trigger (SelectTrigger), the box a
- * designer sees (#153). Otherwise `provider` is null and `root` is `named`. Throws when either export is missing.
+ * named after the family (Input), else the file's one exported component (sonner.tsx's Toaster, #154). When it renders
+ * a primitive's Root with no classes (Select: SelectPrimitive.Root), it is a provider with no box of its own:
+ * `provider` is it and `root` its exported Trigger (SelectTrigger), the box a designer sees (#153). Otherwise
+ * `provider` is null and `root` is `named`. Throws when no export is the family's, or the Trigger is missing.
  */
 export function familyRoot(components, Name, file) {
-  const named = components.find(c => c.name === Name && c.exported);
-  if (!named) throw new Error(`${file} exports no ${Name}`);
+  const exports = components.filter(c => c.exported);
+  const named = exports.find(c => c.name === Name) || (exports.length === 1 ? exports[0] : null);
+  if (!named) throw new Error(exports.length ? `${file} exports no ${Name} but ${exports.length} components (${exports.map(c => c.name).join(', ')}): none is named after the family, so none is read as its root`
+    : `${file} exports no component`);
   if (named.cva || named.classes.length || !/\.Root$/.test(named.element || '')) return { named, provider: null, root: named };
-  const root = components.find(c => c.name === `${Name}Trigger` && c.exported);
-  if (!root) throw new Error(`${file}: ${Name} renders ${named.element} with no classes, a provider with no box, and exports no ${Name}Trigger to read instead`);
+  const root = components.find(c => c.name === `${named.name}Trigger` && c.exported);
+  if (!root) throw new Error(`${file}: ${named.name} renders ${named.element} with no classes, a provider with no box, and exports no ${named.name}Trigger to read instead`);
   return { named, provider: named, root };
 }

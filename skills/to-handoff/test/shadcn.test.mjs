@@ -114,7 +114,7 @@ test('generate: a family with no Contract is drafted mid-run by the Generic proc
 test('generate: a family the Generic Adapter cannot write mid-run is raw, with a question that says why', { skip: noTs }, async () => {
   const { handoff } = await generate({ prototype: V0, designSystem: shadcnDesignSystem(), decisions: DECISIONS });
   const usages = handoff.screens[0].regions.flatMap(r => r.usages);
-  for (const [element, family, why] of [['Select', 'select', 'preview renderer cannot render it: .*imports lucide-react'], ['Toaster', 'sonner', 'exports no Sonner']]) {
+  for (const [element, family, why] of [['Select', 'select', 'preview renderer cannot render it: .*imports lucide-react'], ['Toaster', 'sonner', 'Toaster .* is not a flex or grid container']]) {
     const u = usages.find(x => x.raw && x.raw.element === element);
     assert.ok(u, element);
     const q = handoff.openQuestions.find(x => x.id === u.question);

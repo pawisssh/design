@@ -17,8 +17,8 @@
 // The Contract is checked with contract.mjs validate and written with io.mjs writeJson; two runs from the same
 // drafts are byte-identical.
 //
-// What it reads, for the family's root component (the export named after the family, or its exported Trigger when it
-// renders a primitive's Root with no classes, as Select does, #153):
+// What it reads, for the family's root component (the export named after the family, else the file's one exported
+// component, #154; or that export's Trigger when it renders a primitive's Root with no classes, as Select does, #153):
 // - axes: each cva variant axis, then an axis per attribute state the CSS styles (ATTR_AXES), then the canonical
 //   State from the CSS pseudo-classes. Every axis is fully selected. A root with no cva (Card) is one variant, its
 //   own className; a prop it sets an attribute from that no axis reads (`data-size={size}`) keeps its default, and
@@ -156,7 +156,6 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const ui = (config.aliases && config.aliases.ui) || '@/components/ui';
   if (!ui.startsWith('@/')) fail(`components.json aliases.ui "${ui}" is not under "@/"`);
   const file = `${ui.slice(2)}/${family}.tsx`;
-  const Name = pascal(family);
 
   // 0. The Foundations document must come from this snapshot of the project. The Contract pins the project files
   //    the document read, other than component files (a family it synthesized tokens for), and its own file.
@@ -175,10 +174,13 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     .map(name => [name, (lock[`node_modules/${name}`] || fail(`package-lock.json resolves no ${name}, which the preview renderer pins`)).version]));
 
   // 1. Source: the root component and its cva call. A root with no cva (Card) is one variant: its own className.
+  //    The root is the export named after the family; a file with none and one exported component (sonner.tsx's
+  //    Toaster) is read through that one (#154).
   const { cvas, components } = readSource(readText(file), file, { tools });
   // A provider with no box of its own (Select renders SelectPrimitive.Root) is read through its Trigger (#153); the
   // other exports render inside the Trigger or in the popup it opens, so none is a part.
-  const { provider, root } = familyRoot(components, Name, file);
+  const { named, provider, root } = familyRoot(components, pascal(family), file);
+  const Name = named.name;
   const cv = root.cva ? cvas[root.cva] : { base: { classes: '', line: root.line }, variants: {}, keys: {}, defaults: {}, compound: [] };
   if (cv.compound.length) fail(`${file}:${cv.compound[0].line} ${root.cva}: compoundVariants are not read yet`);
   // A prop the root sets an attribute from that no axis reads (Card's `data-size={size}`) keeps its default.

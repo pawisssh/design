@@ -42,7 +42,7 @@
     "reason": "shadcn ships Toaster, but this Design System has no sonner Contract, and the Generic Adapter could not write one mid-run"
   },
   "contract:sonner": {
-    "unwritable": "node skills/adapter-generic/scripts/components.mjs --family sonner: components/ui/sonner.tsx exports no Sonner"
+    "unwritable": "node skills/adapter-generic/scripts/components.mjs --family sonner: Toaster (State=Enabled) is not a flex or grid container or a plain box (display: not set, element Sonner); only Auto Layout is read"
   },
   "feature": {
     "goal": "Ask for access to a workspace, so an admin can approve it."
