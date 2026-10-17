@@ -1,0 +1,290 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "card",
+    "name": "Card",
+    "description": "A bordered container that groups related content under a header, with title, description and action, a content area, and an optional footer."
+  },
+  "source": {
+    "codeLibrary": "shadcn/ui",
+    "adapter": "generic",
+    "packages": {
+      "@/components/ui/card": "sha256:8ad3a18d36bda0598dc0e9aa96ea22854944d5443ee4946f1d173815e115375f",
+      "class-variance-authority": "0.7.1",
+      "cn": "0.5.0",
+      "radix-ui": "1.8.1",
+      "react": "19.1.0",
+      "react-dom": "19.1.0",
+      "shadcn": "4.22.0",
+      "tailwindcss": "4.3.3",
+      "tw-animate-css": "1.4.0"
+    },
+    "files": {
+      "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
+      "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
+      "components/ui/card.tsx": "sha256:8ad3a18d36bda0598dc0e9aa96ea22854944d5443ee4946f1d173815e115375f",
+      "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
+    },
+    "snapshotId": "sha256:cdadc6b87cc40b244dfebf8d8c0ede671b1f1759c65db52c8c8eae0bd476a031"
+  },
+  "axes": [
+    {
+      "key": "card-footer",
+      "label": "Footer",
+      "slot": "Footer",
+      "default": "none",
+      "defaultSource": "Card renders the children it is given; with no [data-slot=\"card-footer\"] child, none of has-data-[slot=card-footer]:pb-0 applies",
+      "values": [
+        {
+          "key": "none",
+          "label": "False",
+          "filled": false,
+          "code": {},
+          "css": ":not(:has([data-slot=\"card-footer\"]))"
+        },
+        {
+          "key": "card-footer",
+          "label": "True",
+          "filled": true,
+          "code": {},
+          "css": ":has([data-slot=\"card-footer\"])"
+        }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        {
+          "key": "enabled",
+          "label": "Enabled",
+          "code": {}
+        }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 2,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Card",
+    "type": "COMPONENT",
+    "children": [
+      {
+        "name": "Header",
+        "type": "FRAME"
+      },
+      {
+        "name": "Title",
+        "type": "FRAME"
+      },
+      {
+        "name": "Description",
+        "type": "FRAME"
+      },
+      {
+        "name": "Action",
+        "type": "FRAME"
+      },
+      {
+        "name": "Content",
+        "type": "FRAME"
+      },
+      {
+        "name": "Footer",
+        "type": "FRAME"
+      }
+    ]
+  },
+  "properties": [],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Card": {
+          "direction": "column",
+          "width": "fill",
+          "height": "hug",
+          "alignMain": "start",
+          "alignCross": "start",
+          "paddingTop": {
+            "token": "spacing-4"
+          },
+          "paddingRight": {
+            "token": "spacing-0"
+          },
+          "paddingBottom": {
+            "token": "spacing-4"
+          },
+          "paddingLeft": {
+            "token": "spacing-0"
+          },
+          "gap": {
+            "token": "spacing-4"
+          },
+          "radius": {
+            "token": "radius-xl"
+          }
+        },
+        "Header": {
+          "width": "fill",
+          "height": "hug"
+        },
+        "Title": {
+          "width": "fill",
+          "height": "hug"
+        },
+        "Description": {
+          "width": "fill",
+          "height": "hug"
+        },
+        "Action": {
+          "width": "hug",
+          "height": "hug"
+        },
+        "Content": {
+          "width": "fill",
+          "height": "hug"
+        },
+        "Footer": {
+          "width": "fill",
+          "height": "hug",
+          "visible": false
+        }
+      }
+    },
+    {
+      "match": {
+        "card-footer": "card-footer"
+      },
+      "set": {
+        "Card": {
+          "paddingBottom": {
+            "token": "spacing-0"
+          }
+        },
+        "Footer": {
+          "visible": true
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Card": {
+          "fill": {
+            "token": "card"
+          },
+          "stroke": "none",
+          "opacity": 1,
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "spread": {
+                "raw": 1,
+                "level": "info",
+                "reason": "ring-1: a 1px ring (box-shadow 0 0 0 1px); no effect-spread variable"
+              },
+              "color": {
+                "token": "card-effect"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": []
+  },
+  "figma": {
+    "page": "Card",
+    "componentSetName": "Card",
+    "description": "shadcn/ui Card (components/ui/card.tsx).",
+    "header": {
+      "type": "Component",
+      "title": "Card",
+      "namespace": "@/components/ui/card"
+    },
+    "grid": {
+      "columns": [
+        "state"
+      ],
+      "rows": [
+        "card-footer"
+      ]
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@/components/ui/card",
+    "component": "Card",
+    "import": "import { Card } from \"@/components/ui/card\"",
+    "alwaysEmit": []
+  },
+  "notes": [
+    {
+      "level": "info",
+      "at": "components/ui/card.tsx Card",
+      "message": "Each variant's classes are merged as cn() merges them, modelled (no package code runs): a later class drops an earlier one with the same variants whose CSS properties it covers, or that also sets font-size. Here: text-sm drops group/card."
+    },
+    {
+      "level": "info",
+      "at": "anatomy",
+      "message": "Header, Title, Description, Action, Content, Footer: the exported parts (CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter), each a FRAME under Card in source order, whatever nesting a consumer gives them. Of each part only its width and height are read (its own width or height utility; else fill where Card stretches it, hug otherwise), and its visibility where Card styles its presence (a Slot axis). Its own layout, paint and text are not drafted yet."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/card.tsx",
+      "message": "data-[size=sm]:[--card-spacing:--spacing(3)], data-[size=sm]:has-data-[slot=card-footer]:pb-0, group/card: under size \"sm\". size is a prop of Card that no axis reads (only a cva variant is an axis), so every variant renders its default \"default\". Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/card.tsx",
+      "message": "has-[>img:first-child]:pt-0: Styled by what the component holds, in a :has() form other than :has([attr=\"value\"]), the only one read as a Slot axis (#121). Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/card.tsx",
+      "message": "*:[img:first-child]:rounded-t-xl, *:[img:last-child]:rounded-b-xl: Styled by an ancestor; that is a Mode or the parent's Contract (ADR 0012). Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/card.tsx",
+      "message": "text-card-foreground, text-sm: Text utilities; text styles, the label and the anatomy beyond the root are not drafted yet (agent tier). Not carried."
+    },
+    {
+      "level": "info",
+      "at": "components/ui/card.tsx",
+      "message": "overflow-hidden: No Contract field carries these properties. Not carried."
+    }
+  ],
+  "drafted": {
+    "family.description": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/card.tsx:L4 exports Card, rendered as <div>; also exports CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter",
+        "components/ui/card.tsx:L4 Card calls no cva; the Contract's axes: card-footer (2), state (1)"
+      ],
+      "fingerprint": "sha256:518c0609e96b8656aff98570be0c41cedc59240e46332f7d835933e06def3570"
+    },
+    "figma.grid": {
+      "by": "agent",
+      "evidence": [
+        "components/ui/card.tsx:L4 Card calls no cva; the Contract's axes: card-footer (2), state (1)"
+      ],
+      "fingerprint": "sha256:518c0609e96b8656aff98570be0c41cedc59240e46332f7d835933e06def3570"
+    }
+  }
+}

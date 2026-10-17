@@ -1,0 +1,14 @@
+{
+  "family": "card",
+  "drafts": {
+    "family.description": "A bordered container that groups related content under a header, with title, description and action, a content area, and an optional footer.",
+    "figma.grid": {
+      "columns": [
+        "state"
+      ],
+      "rows": [
+        "card-footer"
+      ]
+    }
+  }
+}

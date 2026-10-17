@@ -15,20 +15,33 @@
     "files": {
       "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
       "components.json": "sha256:a39384a64384ceca47944248c992f4ab4d2ff565cfea3ff8daa89b2fc7b125e2",
+      "components/ui/alert.tsx": "sha256:f253568242c1c69b343f12474002fdbe229f603158171c59e21c491ab79f2e6e",
       "components/ui/button.tsx": "sha256:08e5f87833c5db8436e89337ebde0f776bcdbf649d3de69fb89be6441ca2e366",
+      "components/ui/card.tsx": "sha256:8ad3a18d36bda0598dc0e9aa96ea22854944d5443ee4946f1d173815e115375f",
       "package-lock.json": "sha256:c083ebb3d38ac44b3c46ae3eb62de2086d548670e82bfbc4e523901c494c7ea9"
     },
-    "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6"
+    "snapshotId": "sha256:c6acdf9913ad650ceac8b2b05291cdd62541a95a00528ac6bcf4cbe5d43374c3"
   },
   "closure": {
     "contracts": [
       {
+        "family": "alert",
+        "path": "design-systems/shadcn/contracts/alert.component.json",
+        "snapshotId": "sha256:26121ba66822ed1c1ac5705e0059e3fcccbd9e76ca761f36f4710d3fc58074e1"
+      },
+      {
         "family": "button",
         "path": "design-systems/shadcn/contracts/button.component.json",
         "snapshotId": "sha256:ac47254af53013ff9018153b24e522d85c5cb22dbf0df7e8b805a15739008eb6"
+      },
+      {
+        "family": "card",
+        "path": "design-systems/shadcn/contracts/card.component.json",
+        "snapshotId": "sha256:cdadc6b87cc40b244dfebf8d8c0ede671b1f1759c65db52c8c8eae0bd476a031"
       }
     ],
     "tokens": [
+      "border",
       "button-default-hover-fill",
       "button-destructive-fill",
       "button-destructive-focus-effect",
@@ -46,12 +59,16 @@
       "button-outline-hover-fill",
       "button-outline-stroke",
       "button-secondary-hover-fill",
+      "card",
+      "card-effect",
       "muted",
       "primary",
       "radius-lg",
+      "radius-xl",
       "ring",
       "secondary",
       "spacing-0",
+      "spacing-0_5",
       "spacing-1",
       "spacing-1_5",
       "spacing-3",
@@ -70,8 +87,7 @@
       "modes": [
         {
           "key": "light",
-          "label": "Light",
-          "selector": ":root"
+          "label": "Light"
         },
         {
           "key": "dark",
@@ -215,7 +231,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "alert"
+      ]
     },
     "card": {
       "collection": "theme",
@@ -246,7 +264,10 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "alert",
+        "card"
+      ]
     },
     "card-foreground": {
       "collection": "theme",
@@ -1687,6 +1708,46 @@
       ],
       "family": "button"
     },
+    "card-effect": {
+      "collection": "theme",
+      "name": "Card/card-effect",
+      "type": "COLOR",
+      "source": "synthesized: components/ui/card.tsx:14 ring-foreground/10",
+      "scopes": [
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {
+        "WEB": "ring-foreground/10"
+      },
+      "values": {
+        "light": {
+          "raw": "#0a0a0a",
+          "alpha": 0.1,
+          "resolved": "rgba(10, 10, 10, 0.1)",
+          "from": {
+            "alias": "foreground",
+            "alpha": 0.1
+          },
+          "level": "info",
+          "reason": "ring-foreground/10: foreground at 10%, flattened to RGBA since a Figma alias cannot carry alpha"
+        },
+        "dark": {
+          "raw": "#fafafa",
+          "alpha": 0.1,
+          "resolved": "rgba(250, 250, 250, 0.1)",
+          "from": {
+            "alias": "foreground",
+            "alpha": 0.1
+          },
+          "level": "info",
+          "reason": "ring-foreground/10: foreground at 10%, flattened to RGBA since a Figma alias cannot carry alpha"
+        }
+      },
+      "usedBy": [
+        "card"
+      ],
+      "family": "card"
+    },
     "radius-2xl": {
       "collection": "layout",
       "name": "Radius/radius-2xl",
@@ -1774,6 +1835,7 @@
         }
       },
       "usedBy": [
+        "alert",
         "button"
       ]
     },
@@ -1841,7 +1903,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "card"
+      ]
     },
     "spacing-0": {
       "collection": "layout",
@@ -1865,7 +1929,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "card"
       ]
     },
     "spacing-0_5": {
@@ -1889,7 +1954,9 @@
           }
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "alert"
+      ]
     },
     "spacing-1": {
       "collection": "layout",
@@ -2289,7 +2356,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "card"
       ]
     },
     "spacing-40": {
@@ -2681,7 +2749,7 @@
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
-      "contracts": 1,
+      "contracts": 3,
       "errors": 0
     }
   },

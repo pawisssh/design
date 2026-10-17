@@ -1,0 +1,12 @@
+{
+  "name": "adapter-generic-preview",
+  "private": true,
+  "description": "Pinned packages for the Generic Adapter's preview renderer: the versions the fixture project's lockfile resolves for what its components import. Installed into .scratch/adapter-generic/preview by scripts/preview.mjs with npm ci --ignore-scripts; never installed here.",
+  "dependencies": {
+    "class-variance-authority": "0.7.1",
+    "cn": "0.5.0",
+    "radix-ui": "1.8.1",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  }
+}
