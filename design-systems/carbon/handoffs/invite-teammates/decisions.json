@@ -36,26 +36,18 @@
     ]
   },
   "recognise:input[type=email]": {
-    "draft": "text-input",
+    "contract": "text-input",
     "tuple": {
       "size": "md"
     },
-    "via": "element",
-    "reason": "Carbon ships TextInput, but this Design System has no Contract for it yet"
-  },
-  "contract:text-input": {
-    "path": "design-systems/carbon/contracts/text-input.component.json"
+    "via": "element"
   },
   "recognise:select": {
-    "draft": "select",
+    "contract": "select",
     "tuple": {
       "size": "md"
     },
-    "via": "element",
-    "reason": "Carbon ships Select; the owner chose to draft its Contract before Sign-off"
-  },
-  "contract:select": {
-    "path": "design-systems/carbon/contracts/select.component.json"
+    "via": "element"
   },
   "recognise:div.avatars>span": {
     "proposal": "avatar-stack",
@@ -105,15 +97,11 @@
     "via": "library"
   },
   "recognise:div.toast[role=status]": {
-    "draft": "toast-notification",
+    "contract": "toast-notification",
     "tuple": {
       "kind": "success"
     },
-    "via": "element",
-    "reason": "Carbon ships ToastNotification; the owner chose to draft its Contract before Sign-off"
-  },
-  "contract:toast-notification": {
-    "path": "design-systems/carbon/contracts/toast-notification.component.json"
+    "via": "element"
   },
   "token:background-color:#fafafa": "background",
   "token:color:#161616": "text-primary",
@@ -202,5 +190,13 @@
     "by": "owner",
     "answer": "Engineering owns this. It does not block Sign-off.",
     "to": "developer"
+  },
+  "question:q-off-axis-role": {
+    "by": "owner",
+    "answer": "Keep the Contract's look (field-01)."
+  },
+  "question:q-off-axis-toast": {
+    "by": "owner",
+    "answer": "Keep the Contract's look: kind success, the dark toast. No green-fill variant."
   }
 }

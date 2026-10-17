@@ -111,7 +111,7 @@ node skills/to-handoff/scripts/handoff.mjs review design-systems/<ds>/handoffs/<
 - the diff against `signed.json`, or "First sign-off". When only `source` changed it says "only pins moved";
 - agent marks by kind, with their candidates;
 - open questions by addressee, missing states and missing screenshots;
-- the Contracts used, with their status (a draft Contract doesn't block);
+- the Contracts used, with their status;
 - each pending Proposal in full, with its hash;
 - signed Handoffs these Proposals put into Drift;
 - what blocks sign-off;
@@ -127,6 +127,7 @@ It refuses, writes nothing and exits 1 with every reason when:
 
 - validation fails;
 - a question to the owner is unanswered;
+- a Contract the Handoff uses is still a draft: the Handoff takes its look from the Contract, so the owner approves the Contract first;
 - a pending Proposal the Handoff uses wasn't passed;
 - a hash moved since the review;
 - a Design System pin moved (re-run To-handoff);

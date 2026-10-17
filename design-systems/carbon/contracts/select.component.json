@@ -193,10 +193,10 @@
     }
   ],
   "selection": {
-    "status": "draft",
+    "status": "approved",
     "omit": [],
     "expectedCount": 52,
-    "approval": null
+    "approval": { "by": "owner", "at": "2026-10-17T00:00:00Z", "snapshotId": "sha256:6d36c2b22a7ad32899a5080c48e270fa4578beff8edef845236b574d4c60b2ff", "contentHash": "sha256:34b5b1f0c09c68f8789ac006f6e89ec91beb0e3be947f2e8fcfbbc407087e167" }
   },
   "anatomy": {
     "name": "Select",
