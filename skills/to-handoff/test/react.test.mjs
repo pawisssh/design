@@ -211,6 +211,19 @@ test('generate: Next boundary files are states by name: not-found.tsx is empty, 
   assert.deepEqual(states, { index: ['default', 'empty'], 'loading-demo': ['default', 'empty', 'error'] });
 });
 
+test('generate: an import prop that maps to no axis value is a prop question to the owner; the rest of the tuple stands', { skip: noTs }, async () => {
+  const app = project({});
+  cpSync(VITE, app, { recursive: true });
+  const page = join(app, 'src/pages/Members.tsx');
+  writeFileSync(page, readFileSync(page, 'utf8').replace('kind="primary" size="md"', 'kind="huge" size="md"'));
+  const result = await generate({ prototype: app, designSystem: designSystem(), decisions: VITE_DECISIONS });
+  const cta = usagesOf(result.handoff.screens[0]).find(u => u.contract === 'button');
+  assert.deepEqual(cta.tuple, { size: 'md' });
+  const q = result.handoff.openQuestions.find(x => x.id === cta.question);
+  assert.deepEqual({ id: q.id, kind: q.kind, to: q.to }, { id: 'q-prop-button', kind: 'prop', to: 'owner' });
+  assert.match(q.text, /kind="huge"/);
+});
+
 test('check right after generating a React Handoff shows no Drift; editing a read file is Drift', { skip: noTs }, async () => {
   const ds = designSystem();
   const app = project({});

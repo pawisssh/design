@@ -160,7 +160,12 @@ test('runtime: a build that fails gives a valid static-only Handoff with the rea
   assert.equal(q.kind, 'runtime');
   assert.match(q.text, /npm run build failed \(exit 1\): the build is broken/);
   assert.ok(!existsSync(join(dirname(path), 'screens')), 'no screenshots are written');
-  assert.deepEqual(readdirSync(join(DEPS_DIR, 'runs')), [], 'the scratch run is removed');
+  // Other test files run concurrently and keep their own runs: look only for this Prototype's copy.
+  const ours = readdirSync(join(DEPS_DIR, 'runs')).filter(run => {
+    const pkg = join(DEPS_DIR, 'runs', run, 'copy', 'package.json');
+    return existsSync(pkg) && readFileSync(pkg, 'utf8').includes('the build is broken');
+  });
+  assert.deepEqual(ours, [], 'the scratch run is removed');
 });
 
 const noRender = async () => noRuntime || (!(await loadDesignSystem(designSystem())).adapter.available() && 'Code Library preview packages missing; run: node skills/adapter-carbon/scripts/sources.mjs');
