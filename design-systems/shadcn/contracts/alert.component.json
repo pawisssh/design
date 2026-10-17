@@ -69,10 +69,10 @@
   ],
   "excluded": [],
   "selection": {
-    "status": "draft",
+    "status": "approved",
     "omit": [],
     "expectedCount": 2,
-    "approval": null
+    "approval": { "by": "owner", "at": "2026-10-17T20:35:52.814Z", "snapshotId": "sha256:cc58aa7a7e075c5897afc8c49324286cd81d8de528f4e39b242d080681b5ae2b", "contentHash": "sha256:47a7a2df67cd5551599669f8d2efcf1c81e59d423ee5f2d010f55578175e4107" }
   },
   "anatomy": {
     "name": "Alert",

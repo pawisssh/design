@@ -70,10 +70,10 @@
   ],
   "excluded": [],
   "selection": {
-    "status": "draft",
+    "status": "approved",
     "omit": [],
     "expectedCount": 2,
-    "approval": null
+    "approval": { "by": "owner", "at": "2026-10-17T20:35:52.814Z", "snapshotId": "sha256:caab2c63c6b24a6a664d471916bb30854545180451155ea24fc81af19d3cd296", "contentHash": "sha256:19e0531923e146c3dc2b0b8d418f80156201ef758089f33ccc17e1edd55813bb" }
   },
   "anatomy": {
     "name": "Card",

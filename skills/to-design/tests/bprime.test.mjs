@@ -23,6 +23,8 @@ const COMPONENTS_CORE = join(ROOT, 'skills/to-design/assets/builder-core-compone
 const PACKAGER = join(ROOT, 'skills/to-design/scripts/package_native_builder.py');
 const SHADCN_DOC = readFileSync(join(ROOT, 'design-systems/shadcn/shadcn.foundations.json'), 'utf8');
 const SHADCN_BUTTON = JSON.parse(readFileSync(join(ROOT, 'design-systems/shadcn/contracts/button.component.json'), 'utf8'));
+// The Button set as the Adapter drafted it, before the owner's omit patch: 2304 variants, the large set B′ was measured on.
+const SHADCN_2304 = asDraft({ ...SHADCN_BUTTON, selection: { ...SHADCN_BUTTON.selection, omit: SHADCN_BUTTON.selection.omit.slice(0, 1), expectedCount: 2304 } });
 const FILE_KEY = 'MOCKFILEKEY';
 const AT = '2026-10-18T00:00:00.000Z';
 const TOTAL = expand(BUTTON).length;
@@ -231,7 +233,7 @@ test('combineAsVariants ids: a combine that changed them clears the ledger ids, 
   assert.deepEqual(moved.sets.f.variants, [null, null]);
 });
 
-// shadcn's Button (2304 variants) with a stand-in ledger: plans only.
+// shadcn's Button with a stand-in ledger: plans only.
 function shadcnLedger(contract, rec) {
   const anyId = new Proxy({}, { get: (t, k) => (typeof k === 'string' ? 'VariableID:123:4567' : undefined), has: () => true });
   return { schemaVersion: 1, fileKey: FILE_KEY, foundations: { documentHash: documentHash(SHADCN_DOC), variables: anyId, textStyles: anyId }, icons: { components: {} }, sets: rec ? { [contract.family.key]: rec } : {} };
@@ -242,7 +244,8 @@ test('per call scales with set size for appends; a larger --per-call needs its w
   assert.equal(appendPerCall(539), 46);
   assert.equal(appendPerCall(2304), 10, '1.8 ms × 10 × 2304 ≈ 41 s');
   assert.ok(1.8 * appendPerCall(2304) * 2304 < 45000);
-  const c = approve(SHADCN_BUTTON, AT, { prototype: true });
+  const c = approve(SHADCN_2304, AT, { prototype: true });
+  assert.equal(expand(c).length, 2304);
   const opts = { fileKey: FILE_KEY, at: AT, prototype: true };
   const fresh = setsPlan(c, SHADCN_DOC, shadcnLedger(c, null), { ...opts, batch: 0 }).plan.options;
   assert.equal(fresh.phase, 'loose');
@@ -270,7 +273,7 @@ test('per call scales with set size for appends; a larger --per-call needs its w
 });
 
 test('a first build above MAX_COMBINE variants is refused: its one combine call would near the call ceiling', () => {
-  const c = asDraft(SHADCN_BUTTON);
+  const c = asDraft(SHADCN_2304);
   const state = c.axes.find(a => a.key === 'state');
   for (let i = 1; i <= 2; i++) state.values.push({ ...state.values[0], key: `extra-${i}`, label: `Extra ${i}` });
   c.selection.expectedCount = expand(c).length;

@@ -61,7 +61,7 @@ async function buildAll() {
 const built = buildAll();
 built.catch(() => {}); // each test awaits it and reports a failed build itself
 
-for (const [c, count] of FAMILIES.map(c => [c, { button: 2304, card: 2, alert: 2 }[c.family.key]]))
+for (const [c, count] of FAMILIES.map(c => [c, { button: 624, card: 2, alert: 2 }[c.family.key]]))
   test(`${c.family.name}: ${count} variants build with both cores and pass the coverage check`, async () => {
     const { ledger, coverage } = await built;
     assert.equal(expand(c).length, count);

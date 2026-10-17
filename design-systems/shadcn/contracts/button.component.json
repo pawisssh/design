@@ -271,7 +271,7 @@
   ],
   "excluded": [],
   "selection": {
-    "status": "draft",
+    "status": "approved",
     "omit": [
       {
         "match": {
@@ -283,10 +283,56 @@
           "expanded": "expanded"
         },
         "reason": "expanded is the twin of collapsed: no aria-expanded utility in variant default, destructive, link"
+      },
+      {
+        "match": {
+          "size": [
+            "icon",
+            "icon-xs",
+            "icon-sm",
+            "icon-lg"
+          ],
+          "icon-inline-start": "none"
+        }
+      },
+      {
+        "match": {
+          "variant": "link",
+          "size": [
+            "icon",
+            "icon-xs",
+            "icon-sm",
+            "icon-lg"
+          ]
+        }
+      },
+      {
+        "match": {
+          "variant": [
+            "default",
+            "secondary",
+            "ghost",
+            "destructive",
+            "link"
+          ],
+          "invalid": "invalid"
+        }
+      },
+      {
+        "match": {
+          "expanded": "expanded",
+          "state": "disabled"
+        }
+      },
+      {
+        "match": {
+          "icon-inline-start": "icon-inline-start",
+          "icon-inline-end": "icon-inline-end"
+        }
       }
     ],
-    "expectedCount": 2304,
-    "approval": null
+    "expectedCount": 624,
+    "approval": { "by": "owner", "at": "2026-10-17T20:35:52.814Z", "snapshotId": "sha256:dd2a12ada2f95ba0193b0d483a36282e01a713a95ac0cc4329e6a9ea5f9439ae", "contentHash": "sha256:a53a7bf44fa83e9dd46733ca1c927e55d62eb54a3267e962bd44e9ce51e5ad96" }
   },
   "anatomy": {
     "name": "Button",

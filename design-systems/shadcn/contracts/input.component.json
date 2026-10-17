@@ -83,10 +83,10 @@
   ],
   "excluded": [],
   "selection": {
-    "status": "draft",
+    "status": "approved",
     "omit": [],
     "expectedCount": 6,
-    "approval": null
+    "approval": { "by": "owner", "at": "2026-10-17T20:35:52.814Z", "snapshotId": "sha256:2ccace5bd63cb30a132c3481b0a1285a287905946f7608f0497720c3fca29c41", "contentHash": "sha256:e4ffaa65f6eb08c193143ddf7785d53fd4d3ee0b44c69e32ea3aff1df1bf80d5" }
   },
   "anatomy": {
     "name": "Input",

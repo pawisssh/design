@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 6,
+  "revision": 7,
   "status": "pending",
   "approval": null,
   "feature": {
@@ -37,7 +37,7 @@
       },
       "button": {
         "snapshotId": "sha256:dd2a12ada2f95ba0193b0d483a36282e01a713a95ac0cc4329e6a9ea5f9439ae",
-        "contentHash": "sha256:5ab44d800fda935e7bcbe528800105a97d78ebf3a9acba9ecee9f4ad730956bd"
+        "contentHash": "sha256:a53a7bf44fa83e9dd46733ca1c927e55d62eb54a3267e962bd44e9ce51e5ad96"
       },
       "input": {
         "snapshotId": "sha256:2ccace5bd63cb30a132c3481b0a1285a287905946f7608f0497720c3fca29c41",
@@ -68,22 +68,6 @@
       {
         "level": "info",
         "text": "Single-mode Prototype: its page surface (#ffffff) map best to Light (Light ΔE 0, Dark ΔE 0.8552). The other Theme modes render unverified."
-      },
-      {
-        "level": "info",
-        "text": "`label` is a Contract the Adapter wrote mid-run at status draft (3 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
-      },
-      {
-        "level": "info",
-        "text": "`input` is a Contract the Adapter wrote mid-run at status draft (3 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
-      },
-      {
-        "level": "info",
-        "text": "`select` is a Contract the Adapter wrote mid-run at status draft (4 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
-      },
-      {
-        "level": "info",
-        "text": "`textarea` is a Contract the Adapter wrote mid-run at status draft (3 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
       },
       {
         "level": "info",
@@ -203,8 +187,7 @@
                 "text": "copy:label-text"
               },
               "match": {
-                "by": "agent",
-                "via": "library"
+                "by": "import"
               },
               "states": [
                 "default",
@@ -218,9 +201,17 @@
               "contract": "input",
               "tuple": {},
               "match": {
-                "by": "agent",
-                "via": "library"
+                "by": "import"
               },
+              "offAxis": [
+                {
+                  "property": "required",
+                  "raw": "\"\"",
+                  "reason": "required is no input axis or property",
+                  "question": "q-prop-name"
+                }
+              ],
+              "question": "q-prop-name",
               "states": [
                 "default",
                 "loading",
@@ -236,8 +227,7 @@
                 "text": "copy:label-2-text"
               },
               "match": {
-                "by": "agent",
-                "via": "library"
+                "by": "import"
               },
               "states": [
                 "default",
@@ -251,9 +241,17 @@
               "contract": "input",
               "tuple": {},
               "match": {
-                "by": "agent",
-                "via": "library"
+                "by": "import"
               },
+              "offAxis": [
+                {
+                  "property": "required",
+                  "raw": "\"\"",
+                  "reason": "required is no input axis or property",
+                  "question": "q-prop-email"
+                }
+              ],
+              "question": "q-prop-email",
               "states": [
                 "default",
                 "loading",
@@ -269,8 +267,7 @@
                 "text": "copy:label-3-text"
               },
               "match": {
-                "by": "agent",
-                "via": "library"
+                "by": "import"
               },
               "states": [
                 "default",
@@ -287,8 +284,7 @@
                 "placeholder": "copy:select-placeholder"
               },
               "match": {
-                "by": "agent",
-                "via": "library"
+                "by": "import"
               },
               "states": [
                 "default",
@@ -305,8 +301,7 @@
                 "text": "copy:label-4-text"
               },
               "match": {
-                "by": "agent",
-                "via": "library"
+                "by": "import"
               },
               "states": [
                 "default",
@@ -320,9 +315,17 @@
               "contract": "textarea",
               "tuple": {},
               "match": {
-                "by": "agent",
-                "via": "library"
+                "by": "import"
               },
+              "offAxis": [
+                {
+                  "property": "rows",
+                  "raw": "\"3\"",
+                  "reason": "rows is no textarea axis or property",
+                  "question": "q-prop-reason"
+                }
+              ],
+              "question": "q-prop-reason",
               "states": [
                 "default",
                 "loading",
@@ -544,6 +547,27 @@
     }
   ],
   "openQuestions": [
+    {
+      "id": "q-prop-name",
+      "kind": "prop",
+      "to": "owner",
+      "text": "`Input` at app/request-access-form.tsx:66:9 sets required=\"\", which is no input axis or property. Which value is it, or does the Contract need it?",
+      "answer": null
+    },
+    {
+      "id": "q-prop-email",
+      "kind": "prop",
+      "to": "owner",
+      "text": "`Input` at app/request-access-form.tsx:70:9 sets required=\"\", which is no input axis or property. Which value is it, or does the Contract need it?",
+      "answer": null
+    },
+    {
+      "id": "q-prop-reason",
+      "kind": "prop",
+      "to": "owner",
+      "text": "`Textarea` at app/request-access-form.tsx:87:9 sets rows=\"3\", which is no textarea axis or property. Which value is it, or does the Contract need it?",
+      "answer": null
+    },
     {
       "id": "q-no-contract-toaster",
       "kind": "no-contract",
