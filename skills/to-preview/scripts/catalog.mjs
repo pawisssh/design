@@ -60,7 +60,7 @@ export function buildCatalog({ contract, foundations, renderer }) {
 
   const data = JSON.stringify({ contract, toggles, forces, sourceLabel, specimens }).replace(/</g, '\\u003c');
   // Inline the shared module as a classic script: strip `export` and expose what the page uses.
-  const contractScript = `window.Contract = (function () {\n"use strict";\n${readFileSync(new URL('../../contract/scripts/contract.mjs', import.meta.url), 'utf8').replace(/^export /gm, '')}\nreturn { matches, expand, baseTuple, tupleKey, variantName, applyOmit };\n})();`;
+  const contractScript = `window.Contract = (function () {\n"use strict";\n${readFileSync(new URL('../../contract/scripts/contract.mjs', import.meta.url), 'utf8').replace(/^export /gm, '')}\nreturn { matches, expand, baseTuple, tupleKey, variantName, applyOmit, resolve };\n})();`;
   const script = text => `<script>\n${text.replace(/<\/script/gi, '<\\/script')}\n</script>`;
   const page = asset('catalog-template.html')
     .replace('<title>Component preview</title>', () => `<title>${contract.family.name} preview</title>`)

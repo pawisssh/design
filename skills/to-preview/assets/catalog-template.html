@@ -16,15 +16,18 @@
   body > header > h1{font-size:20px;margin:0} .tp-main{padding:24px;min-width:0}
   .tp-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 20px}.tp-toolbar label{display:flex;gap:5px;align-items:center}
   .tp-toolbar select{padding:7px;border:1px solid var(--cds-border-strong-01);background:var(--cds-field-02);color:var(--cds-text-primary)}
-  /* Cards butt together with shared 1px borders: each card overlaps the one before it by its border. */
-  #grid{display:grid;grid-template-columns:repeat(auto-fill,200px);max-width:1200px;box-sizing:content-box;padding:1px 0 0 1px}
-  .tp-cell{width:200px;height:200px;margin:-1px 0 0 -1px;padding:16px;display:grid;grid-template-rows:auto 1fr auto;row-gap:8px;border:1px solid var(--cds-border-subtle-01);background:var(--cds-layer-background,var(--cds-background))}
+  /* Cards butt together with shared 1px borders: each card overlaps the one before it by its border.
+     A catalog's cards share one size, 200×200 unless a specimen needs more; sizeCells() sets it. Each card is one
+     column (minmax(0,1fr)), so its text wraps or cuts inside it and never widens it. */
+  #grid{--tp-cell-width:200px;--tp-cell-height:200px;display:grid;grid-template-columns:repeat(auto-fill,var(--tp-cell-width));max-width:calc(6 * var(--tp-cell-width));box-sizing:content-box;padding:1px 0 0 1px}
+  .tp-cell{width:var(--tp-cell-width);height:var(--tp-cell-height);margin:-1px 0 0 -1px;padding:16px;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr auto;row-gap:8px;border:1px solid var(--cds-border-subtle-01);background:var(--cds-layer-background,var(--cds-background))}
   .tp-card-head{display:flex;gap:8px;align-items:start;justify-content:space-between}.tp-card-head > input{margin:0;flex:none;accent-color:var(--cds-icon-primary)}
   .tp-card-name{font-size:12px;line-height:16px;overflow-wrap:anywhere}
   .tp-drafted{font-style:italic;text-decoration:underline dotted var(--cds-support-warning);text-underline-offset:2px}.tp-drafted::after{content:"*"}
   .tp-specimen{display:flex;align-items:center;justify-content:center;min-height:0;min-width:0}
-  .tp-omitted .tp-specimen{opacity:.4}
-  .tp-card-foot{display:flex;flex-wrap:wrap;column-gap:16px;font-size:12px;line-height:16px;color:var(--cds-text-secondary)}.tp-card-foot > span{white-space:nowrap}
+  .tp-specimen > .tp-fill{flex:1 1 auto}
+  .tp-omitted .tp-specimen{opacity:.4} #grid.tp-measuring .tp-specimen{width:min-content} #grid.tp-measuring-height .tp-cell{height:auto}
+  .tp-card-foot{display:flex;flex-wrap:wrap;column-gap:16px;font-size:12px;line-height:16px;color:var(--cds-text-secondary)}.tp-card-foot > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
   .tp-cell[hidden]{display:none} #status{color:var(--cds-text-secondary);flex:1} #error{color:var(--cds-text-error);white-space:pre-wrap}
   @media(max-width:760px){.tp-main{padding:16px}}
 </style>
@@ -139,6 +142,32 @@
     for (const sheet of document.styleSheets) { try { walk(sheet); } catch (error) { /* a cross-origin sheet cannot be read */ } }
   }
 
+  // One card size for the catalog. The width is 200px, or wider when a specimen does not fit a 200px card's host. A
+  // specimen's width is its min-content width, so one with a set width (Carbon's Toast is 18rem) counts at that width
+  // and a fluid one (width:100%) counts at its narrowest, and still fills the card. The height is 200px, or the
+  // tallest card's at that width: its label, specimen and footer.
+  function sizeCells() {
+    const grid = $("grid"), cell = grid.querySelector(".tp-cell");
+    if (!cell) return;
+    grid.style.removeProperty("--tp-cell-width"); grid.style.removeProperty("--tp-cell-height");
+    const chrome = cell.offsetWidth - cell.querySelector(".tp-specimen").clientWidth;
+    grid.classList.add("tp-measuring");
+    let widest = 0;
+    for (const host of grid.querySelectorAll(".tp-specimen")) if (host.firstElementChild) widest = Math.max(widest, host.firstElementChild.getBoundingClientRect().width);
+    grid.classList.remove("tp-measuring");
+    if (Math.ceil(widest) + chrome > 200) grid.style.setProperty("--tp-cell-width", Math.ceil(widest) + chrome + "px");
+    grid.classList.add("tp-measuring-height");
+    let tallest = 0;
+    for (const c of grid.querySelectorAll(".tp-cell")) tallest = Math.max(tallest, c.offsetHeight);
+    grid.classList.remove("tp-measuring-height");
+    if (tallest > 200) grid.style.setProperty("--tp-cell-height", tallest + "px");
+  }
+  // A specimen whose Contract root is fill width fills its card, as it fills its parent (the shadcn Card).
+  const fills = specimen => { const root = window.Contract.resolve(catalog.contract, specimen.tuple).layout[catalog.contract.anatomy.name]; return !!root && root.width === "fill"; };
+  // A specimen's width can follow the viewport (Carbon's Toast is 22rem from 99rem), so a resize sizes the cards again.
+  let resizing = 0;
+  window.addEventListener("resize", () => { if (rendered && !resizing) resizing = requestAnimationFrame(() => { resizing = 0; sizeCells(); }); });
+
   async function render() {
     $("grid").replaceChildren();
     const forceFor = specimen => catalog.forces.filter(f => specimen.tuple[f.axis] === f.value).map(f => "tp-force-" + f.pseudo.slice(1));
@@ -150,12 +179,14 @@
         const inDefaults = atDefaults();
         await renderer(specimen, host);
         if (!host.firstElementChild) throw new Error("The renderer returned an empty specimen: " + specimen.name);
+        if (fills(specimen)) host.firstElementChild.classList.add("tp-fill");
         // A form control styles :hover and :focus on its nested <input> or <select>, not its root (#93), so the
         // forced class goes on every element of the specimen, as a pointer over the innermost one would.
         for (const el of [host.firstElementChild, ...host.firstElementChild.querySelectorAll("*")]) el.classList.add(...forceFor(specimen));
         if (inDefaults) model.verify(specimen.id);
       }
       if (document.fonts) await document.fonts.ready;
+      sizeCells();
       rendered = true;
     } catch (error) { $("error").textContent = error.message; }
     summary();

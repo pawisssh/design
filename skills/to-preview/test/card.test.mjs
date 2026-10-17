@@ -54,15 +54,17 @@ test('the checkbox is named by the full variant name; the Base Component checkbo
 test('the footer reads Source and the Code Library package, or Base Component on the base card', () => {
   const footer = id => card(id).card.children[2].children.map(text);
   assert.deepEqual(footer('ghost|md|focus'), ['Source', '@carbon/react 1.118.0']);
+  assert.equal(card('ghost|md|focus').card.children[2].children[1].props.title, '@carbon/react 1.118.0', 'a cut source shows in full as its tooltip');
   assert.deepEqual(footer(model.baseId), ['Base Component']);
 });
 
-test('the card chrome uses Carbon tokens, never raw hex; the grid is 200px cards, at most 6 columns', () => {
+test('the card chrome uses Carbon tokens, never raw hex; the grid is cards of one size, 200×200 by default, at most 6 columns', () => {
   const template = readFileSync(new URL('../assets/catalog-template.html', import.meta.url), 'utf8');
   const css = template.match(/<style>([\s\S]*?)<\/style>/)[1];
   assert.doesNotMatch(css, /#[0-9a-f]{3}(?:[0-9a-f]{3})?\b/i);
-  assert.match(css, /#grid\{[^}]*grid-template-columns:repeat\(auto-fill,200px\)[^}]*max-width:1200px/);
-  assert.match(css, /\.tp-cell\{[^}]*width:200px;height:200px/);
+  assert.match(css, /#grid\{--tp-cell-width:200px;--tp-cell-height:200px;[^}]*grid-template-columns:repeat\(auto-fill,var\(--tp-cell-width\)\)[^}]*max-width:calc\(6 \* var\(--tp-cell-width\)\)/);
+  assert.match(css, /\.tp-cell\{[^}]*width:var\(--tp-cell-width\);height:var\(--tp-cell-height\)[^}]*grid-template-columns:minmax\(0,1fr\)/);
+  assert.match(css, /\.tp-card-foot > span\{white-space:nowrap;overflow:hidden;text-overflow:ellipsis/);
   assert.match(css, /\.tp-specimen\{[^}]*align-items:center;justify-content:center/);
   assert.match(css, /\.tp-omitted \.tp-specimen\{opacity:\.4\}/);
 });

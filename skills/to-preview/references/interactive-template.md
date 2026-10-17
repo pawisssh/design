@@ -25,7 +25,14 @@ It should refuse to render when the installed packages differ from `contract.sou
 
 `Catalog.configure({catalog, renderSpecimen})` builds the selection model, forces the States and renders every specimen into its card. Captions and checkboxes stay outside the component DOM.
 
-**Cards.** The grid follows the IBM UI Icon Library (Community) grid: 200×200 cards with shared 1px borders and no gap, at most 6 columns, in Contract axis order with no group headings. `catalogCard(specimen, {contract, baseId, sourceLabel, h})` builds one card through the node factory `h(tag, props, ...children)`:
+**Cards.** The grid follows the IBM UI Icon Library (Community) grid: 200×200 cards with shared 1px borders and no gap, at most 6 columns, in Contract axis order with no group headings. The cards of one catalog share one size, which grows past 200×200 only to fit a specimen:
+
+- **Width.** A specimen too wide for a 200px card, such as Carbon's 288px Toast, widens every card of that catalog to fit it. After the specimens render, the page measures each one at its min-content width. One with a set width counts at that width. A fluid one (`width:100%`) counts at its narrowest and still fills its card. The widest one sets `--tp-cell-width`.
+- **Height.** At that width, the tallest card (label, specimen and footer) sets `--tp-cell-height`, as the shadcn Card does.
+- **Fill.** A specimen whose Contract root is `fill` width (resolve()'s layout) fills its card, as it fills its parent. Its root gets `.tp-fill`.
+- **Resize.** The page measures again on resize, because a specimen's width can follow the viewport (the Toast is 22rem from 99rem).
+
+A card is one column (`minmax(0,1fr)`), so its text never widens it. The label wraps, with the full variant name as its tooltip. Each footer item stays on one line and is cut with an ellipsis. The source carries its full text as its tooltip (a shadcn source is the package path and its hash). `catalogCard(specimen, {contract, baseId, sourceLabel, h})` builds one card through the node factory `h(tag, props, ...children)`:
 
 - top-left, the axis values only (`Primary / Extra Small / Enabled`), with the full variant name as the tooltip. A value label the agent drafted (an `axes.<axis>.values.<value>.label` entry `by: "agent"` in the Contract's [`drafted`](../../contract/references/contract-schema.md#drafted-values) table) is marked `.tp-drafted`, in italics with a dotted underline and an asterisk, and the tooltip ends `(drafted: Size)`. An owner-corrected label is not marked. To-preview only flags it; the owner approves it with the Contract;
 - top-right, the selection checkbox, labelled with the full variant name and locked on the Base Component; the name and checkbox share one `<label>`, so clicking the name toggles it;
