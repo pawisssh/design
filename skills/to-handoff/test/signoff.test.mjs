@@ -17,7 +17,10 @@ import { approve, check, generate, handoffContentHash, loadDesignSystem, review,
 const repo = p => fileURLToPath(new URL(`../../../${p}`, import.meta.url));
 const fixture = p => fileURLToPath(new URL(`fixtures/invite-teammates/${p}`, import.meta.url));
 const CLI = fileURLToPath(new URL('../scripts/handoff.mjs', import.meta.url));
-const DECISIONS = JSON.parse(readFileSync(fixture('decisions.json'), 'utf8'));
+// This Design System already has the form-controls text-input Contract, so the email field is a plain Contract
+// usage here rather than the fixture's mid-run draft (#115).
+const { 'contract:text-input': _draft, ...SHARED } = JSON.parse(readFileSync(fixture('decisions.json'), 'utf8'));
+const DECISIONS = { ...SHARED, 'recognise:input[type=email]': { contract: 'text-input', tuple: { size: 'md' }, via: 'element' } };
 const noDeps = !hasDeps() && 'parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
 const AT = '2026-10-17T12:00:00.000Z';
 

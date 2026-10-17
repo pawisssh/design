@@ -5,7 +5,7 @@ description: Turns a single-HTML-file Prototype into a validated Handoff (handof
 
 # To-handoff
 
-Reads one Prototype file, statically and then by rendering a scratch copy, and writes `design-systems/<ds>/handoffs/<feature-key>/handoff.json` and `renderings/index.html`. Every pick that could be a guess is a **decision** the agent answers in a `decisions.json`; with any decision open, generate writes nothing and returns the requests. To-handoff knows no Code Library: the Adapter named by the Foundations document's `source.adapter` supplies the role groups, the mode-map surfaces, the Contract-writing procedure and the renderer, in `skills/adapter-<adapter>/scripts/handoff-adapter.mjs`.
+Reads one Prototype file, statically and then by rendering a scratch copy, and writes `design-systems/<ds>/handoffs/<feature-key>/handoff.json` and `renderings/index.html`. Every pick that could be a guess is a **decision** the agent answers in a `decisions.json`; with any decision open, generate writes nothing and returns the requests. To-handoff knows no Code Library: the Adapter named by the Foundations document's `source.adapter` supplies the role groups, the mode-map surfaces, the breakpoints, the Contract-writing procedure, the check a Contract written mid-run must pass (`checkContract`) and the renderer, in `skills/adapter-<adapter>/scripts/handoff-adapter.mjs`.
 
 Out of scope so far: multi-file or React Prototypes as generate input (the runtime reader can already tag and build them; #114). The owner signs a Handoff off; the agent runs `approve` only on the owner's explicit "approve" in chat (section 5).
 
@@ -29,7 +29,8 @@ With an empty `{}` it exits 2 and prints `{requests: [{key, kind, question, cand
 
 | key | answer |
 | --- | --- |
-| `recognise:<signature>` | `{contract, tuple, via: "library"\|"element"}`, `{proposal, tuple, via}`, `{noContract: "<family>", reason}` (a raw usage plus the Adapter's Contract-writing step as a question), or `{raw: true, reason}`. A tuple names non-State axes only: States come from the Prototype's conditions. |
+| `recognise:<signature>` | `{contract, tuple, via: "library"\|"element"}`, `{proposal, tuple, via}`, `{draft: "<family>", tuple, via, reason}` (the Code Library ships the family but the Design System has no Contract: the Adapter writes one mid-run), `{noContract: "<family>", reason}` (a raw usage plus the Adapter's Contract-writing step as a question), or `{raw: true, reason}`. A tuple names non-State axes only: States come from the Prototype's conditions. |
+| `contract:<family>` | asked after a `draft` answer: `{path}` of the whole-family Contract the agent wrote by the Adapter's procedure, at `status: "draft"` and `approval: null`, or `{unwritable: reason}`. A draft that passes the Adapter's `checkContract` joins `contracts/` byte for byte (never over an existing Contract), and the usage points at it. One that fails, can't be read or isn't a draft leaves the usage raw with the reason in its no-Contract question. The Handoff's sign-off never approves it. |
 | `token:<role>:<value>` | one of the tied or near tokens, or `"value"` to keep it Off-system. |
 | `textStyle:<size>/<line-height>/<weight>/<letter-spacing>` | a Text Style among the candidates, or `"value"`. |
 | `token:font-size:<n>px` | a font-size token, when no whole Text Style matches. |
@@ -89,7 +90,7 @@ node skills/to-handoff/scripts/handoff.mjs render design-systems/<ds>/handoffs/<
 `render` writes `renderings/index.html`, one static page with these sections:
 
 - Overview, which says *Not specified* for each optional section the Handoff lacks;
-- Needs a look, counted per flag: ≠ Off-system, ≈ near, ◇ agent pick, + Proposal, ∅ no Contract, ↯ off-axis, ! missing, ◌ Stand-in, and `? q-…` linking to the question that settles it. Elsewhere, = exact, ✓ import (a Contract usage) and – n/a;
+- Needs a look, counted per flag: ≠ Off-system, ≈ near, ◇ agent pick, + Proposal, ∅ no Contract, ↯ off-axis, ! missing, ◌ Stand-in, ◐ Contract draft, not approved (also on each card that uses one), and `? q-…` linking to the question that settles it. Elsewhere, = exact, ✓ import (a Contract usage) and – n/a;
 - States, with a states × breakpoints matrix of screenshots (a missing state is a hatched row; a missing screenshot shows its reason) and one tab per state with its screenshots;
 - Components, with real renders inside the mapped mode's class, per-state renders and code snippets from each Contract's `code`;
 - Tokens & values;
