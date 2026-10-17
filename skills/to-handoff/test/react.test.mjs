@@ -3,13 +3,14 @@
 // no fixture install, no Next or Vite, no browser. The Carbon import is matched by its specifier string.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { hasTypescript } from '../scripts/deps.mjs';
+import { hasRuntime, hasTypescript } from '../scripts/deps.mjs';
 import { generate } from '../scripts/generate.mjs';
 import { readReact } from '../scripts/react.mjs';
+import { run } from '../scripts/runtime.mjs';
 import { walk } from '../scripts/reader.mjs';
 import { loadDesignSystem } from '../scripts/system.mjs';
 import { validateHandoff } from '../scripts/validate.mjs';
@@ -20,6 +21,8 @@ const VITE = fileURLToPath(new URL('fixtures/vite-app', import.meta.url));
 const NEXT = fileURLToPath(new URL('fixtures/next-app', import.meta.url));
 const noTs = !hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
 const PACKAGES = ['@carbon/react'];
+// The runtime tests install each fixture from its lockfile into the scratch run, so they need the npm registry too.
+const noRuntime = !hasRuntime() && 'the runtime packages or a browser are missing; run: node skills/to-handoff/scripts/deps.mjs';
 const project = files => {
   const dir = mkdtempSync(join(tmpdir(), 'to-handoff-react-'));
   for (const [rel, text] of Object.entries(files)) { mkdirSync(dirname(join(dir, rel)), { recursive: true }); writeFileSync(join(dir, rel), text); }
@@ -216,4 +219,43 @@ test('check right after generating a React Handoff shows no Drift; editing a rea
   assert.deepEqual((await check({ handoffPath: result.path, designSystem: ds, prototype: app })).drift, []);
   writeFileSync(join(app, 'src/pages/Members.tsx'), readFileSync(join(app, 'src/pages/Members.tsx'), 'utf8').replace('Invite a member', 'Add a member'));
   assert.deepEqual((await check({ handoffPath: result.path, designSystem: ds, prototype: app })).drift, [{ kind: 'prototype', key: 'src/pages/Members.tsx', change: 'changed' }]);
+});
+
+test('runtime: one Vite build serves both routes; the Carbon Button host joins to its tier-1 at by its own site', { skip: noRuntime, timeout: 300000 }, async () => {
+  const fill = [{ fill: '#email', value: 'ada@example.com' }, { click: 'button[type=submit]' }];
+  const r = await run({
+    prototype: VITE, breakpoints: [{ key: 'desktop', width: 1280 }],
+    screens: [
+      { screen: 'index', route: '/', states: [{ state: 'default', steps: [] }] },
+      { screen: 'invite', route: '/invite', states: [{ state: 'default', steps: [] }, { state: 'loading', steps: fill }, { state: 'success', steps: [...fill, { clock: 800 }, { expect: '.notice' }], expect: ['src/pages/Invite.tsx:26:18'] }] },
+    ],
+  });
+  try {
+    const shots = Object.fromEntries(Object.entries(r.screens).map(([id, x]) => [id, Object.fromEntries(Object.entries(x.shots).map(([st, b]) => [st, typeof b.desktop === 'string' ? basename(b.desktop) : b.desktop]))]));
+    assert.deepEqual(shots, {
+      index: { default: 'index.default.desktop.png' },
+      invite: { default: 'invite.default.desktop.png', loading: 'invite.loading.desktop.png', success: 'invite.success.desktop.png' },
+    });
+    // Carbon's ButtonBase spreads the rest props onto its <a>, so the tag the copy wrote reaches the host itself.
+    const cta = r.screens.index.elements['src/pages/Members.tsx:21:7'];
+    assert.equal(cta.via, 'own');
+    assert.ok(cta.rect.width > 0 && cta.rect.height > 0, 'the Button rendered');
+    assert.equal(r.screens.invite.elements['src/pages/Invite.tsx:22:9'].via, 'own');
+    assert.deepEqual(r.failed, []);
+  } finally {
+    r.cleanup();
+  }
+});
+
+test('runtime: generate on the Next fixture takes screenshots for both routes from one build', { skip: noRuntime, timeout: 300000 }, async () => {
+  const ds = designSystem();
+  const decisions = { ...NEXT_DECISIONS, 'reach:index:loading': { unreachable: 'loading.tsx shows only while the server renders' },
+    'reach:subscribe:loading': { unreachable: 'the submit is too quick to catch' }, 'reach:subscribe:error': { unreachable: 'the API route always succeeds' } };
+  const result = await generate({ prototype: NEXT, designSystem: ds, decisions, runtime: true });
+  assert.deepEqual(result.requests, []);
+  const h = result.handoff;
+  assert.equal(h.openQuestions.find(q => q.id === 'q-runtime'), undefined, 'the runtime reader ran');
+  for (const screen of h.screens) for (const [bp, shot] of Object.entries(screen.states.default.screenshots))
+    assert.equal(shot, `screens/${screen.id}.default.${bp}.png`);
+  assert.ok(existsSync(join(dirname(result.path), 'screens/subscribe.default.' + h.screens[1].breakpoints[0] + '.png')));
 });

@@ -210,8 +210,6 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   const fonts = [];
   const sim = doc.standIns;
   const flow = [];
-  const runtimeFailed = [];
-  let runtimeError = null;
 
   const checkRecognise = answer => {
     if (!answer || typeof answer !== 'object') return 'an answer is {contract, tuple, via} | {proposal, tuple, via} | {raw: true, reason} | {noContract, reason}';
@@ -235,16 +233,18 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     return code.package === c.module && code.component === c.export;
   });
 
-  const screens = [];
+  // Each screen's states first, so one runtime run (one build) serves every screen; then each screen's pass.
   const allPresent = new Set();
-  const writeShotsLater = [];
-  for (const screen of doc.screens) screens.push(await screenPass(screen));
+  const plans = doc.screens.map(statesOf);
+  const rt = runtime
+    ? await runtimeRead({ prototype, breakpoints, depsDir, screens: plans.map(p => ({ screen: p.screen.id, route: p.screen.route, states: p.runtimeStates })) })
+    : { screens: {}, reason: 'static-only: generated without the runtime reader' };
+  const screens = plans.map(p => screenPass(p, rt.screens[p.screen.id] || { elements: {}, shots: {}, reason: rt.reason }));
 
-  async function screenPass(screen) {
+  // ---- conditions and the standard states (#62), and how the runtime reader reaches each ----
+  function statesOf(screen) {
     const screenId = screen.id;
     const mount = screen.mount || findTag(screen.root, 'body');
-
-    // ---- conditions and the standard states (#62) ----
     const conds = [];
     walk(screen.root, el => {
       for (const c of el.cond) conds.push(c.expr);
@@ -270,7 +270,6 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       return ins.length === present.length ? null : ins;
     };
 
-    // ---- the runtime reader (#113): how each state is reached, then screenshots and computed values ----
     const reach = s => {
       if (s === 'default') return { steps: [] };
       const answer = d.ask(`reach:${screenId}:${s}`, {
@@ -280,11 +279,13 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       return answer.unreachable ? { steps: null, reason: answer.unreachable } : answer;
     };
     const expectIn = s => { const out = []; walk(mount, el => { const ins = shownIn(el); if (ins && ins.includes(s) && !ins.includes('default')) out.push(at(el.offset)); }); return out; };
-    const rt = runtime
-      ? await runtimeRead({ prototype, screen: screenId, breakpoints, depsDir, states: present.map(s => ({ state: s, ...reach(s), expect: expectIn(s) })) })
-      : { elements: {}, shots: {}, reason: 'static-only: generated without the runtime reader' };
-    if (rt.error) runtimeError = rt.error;
-    runtimeFailed.push(...(rt.failed || []));
+    const runtimeStates = runtime ? present.map(s => ({ state: s, ...reach(s), expect: expectIn(s) })) : null;
+    return { screen, mount, atoms, present, stateAtoms, atomsIn, shownIn, runtimeStates };
+  }
+
+  // ---- one screen: recognition, regions, text and states, with the runtime reader's values (#113) ----
+  function screenPass({ screen, mount, atoms, present, stateAtoms, atomsIn, shownIn }, rt) {
+    const screenId = screen.id;
     const live = el => rt.elements[at(el.offset)];
 
     // ---- recognition: usage candidates, then each one's decision ----
@@ -582,7 +583,6 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       if (from && !present.includes('error')) flow.push({ from: stateRef(from), trigger: `${f.name}() fails`, to: stateRef('error'), source: 'missing' });
     }
 
-    writeShotsLater.push(rt.shots);
     return { id: screenId, name: screen.name, at: at(screen.offset), breakpoints: breakpoints.map(b => b.key), regions, states: screenStates };
   }
 
@@ -682,11 +682,11 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     text: `The Prototype has ${doc.screens.length} routes (${doc.screens.map(s => s.route).join(', ')}). Split it into smaller Handoffs, or keep one?`,
   });
 
-  if (runtimeError) question({
+  if (rt.error) question({
     id: 'q-runtime', kind: 'runtime', to: 'owner',
-    text: `The runtime reader could not run the Prototype (${runtimeError}), so this Handoff is static-only: no screenshots, and text metrics read from the source alone. Fix it and re-run To-handoff?`,
+    text: `The runtime reader could not run the Prototype (${rt.error}), so this Handoff is static-only: no screenshots, and text metrics read from the source alone. Fix it and re-run To-handoff?`,
   });
-  for (const f of runtimeFailed) question({
+  for (const f of rt.failed || []) question({
     id: `q-untagged-${kebab(f.file)}`, kind: 'runtime', to: 'developer',
     text: `${f.file} does not parse (${f.error}), so the runtime copy left it untagged and its elements join to their caller. Is it meant to build?`,
   });
@@ -765,7 +765,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   };
   handoff.source.foundations.usedHash = usedHash(handoff, foundations);
   const result = { ...store(handoff, dir), dropped: d.dropped };
-  for (const shots of writeShotsLater) writeShots(shots, join(dirname(result.path), 'screens'), result.wrote);
+  for (const { shots } of Object.values(rt.screens)) writeShots(shots, join(dirname(result.path), 'screens'), result.wrote);
   return result;
 }
 
@@ -808,21 +808,25 @@ const propText = v => (typeof v === 'string' ? JSON.stringify(v) : `{${(v.parts 
 // ---------- the runtime reader's results ----------
 
 /**
- * Run the runtime reader and keep what generate needs: {elements, shots, failed}, with each screenshot read into
- * memory ({name, png}) and the scratch run removed. When it cannot run: {elements: {}, shots: {}, error, reason}.
+ * Run the runtime reader and keep what generate needs: {screens: {<screen>: {elements, shots}}, failed}, with each
+ * screenshot read into memory ({name, png}) and the scratch run removed. When it cannot run: {screens: {}, error, reason}.
  */
 async function runtimeRead(options) {
-  const fail = error => ({ elements: {}, shots: {}, error, reason: `static-only: the runtime reader failed: ${error}` });
+  const fail = error => ({ screens: {}, error, reason: `static-only: the runtime reader failed: ${error}` });
   if (!hasRuntime(options.depsDir)) return fail('the runtime packages or a browser are missing; run node skills/to-handoff/scripts/deps.mjs');
   let r;
   try { r = await run(options); } catch (e) { return fail(e.message); }
   try {
-    const shots = {};
-    for (const [state, byBp] of Object.entries(r.shots)) {
-      shots[state] = {};
-      for (const [bp, shot] of Object.entries(byBp)) shots[state][bp] = typeof shot === 'string' ? { name: basename(shot), png: readFileSync(shot) } : shot;
+    const screens = {};
+    for (const [id, read] of Object.entries(r.screens)) {
+      const shots = {};
+      for (const [state, byBp] of Object.entries(read.shots)) {
+        shots[state] = {};
+        for (const [bp, shot] of Object.entries(byBp)) shots[state][bp] = typeof shot === 'string' ? { name: basename(shot), png: readFileSync(shot) } : shot;
+      }
+      screens[id] = { elements: read.elements, shots };
     }
-    return { elements: r.elements, shots, failed: r.failed };
+    return { screens, failed: r.failed };
   } finally {
     r.cleanup();
   }
