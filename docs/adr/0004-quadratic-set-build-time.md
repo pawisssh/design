@@ -6,6 +6,20 @@ Building a Component Set costs about 1.6 ms × variants created × set size per 
 
 When a family exceeds about 600 variants, probe the build cost before building it.
 
+**Revisited in #168: a first build is B′.** Probe #165 below measured it. A family's first build now runs loose batches of up to 49, then one combine-only call, then place calls under a 45 s budget, each resuming where the last stopped (`build-plan.mjs sets --next`). Re-runs and updates still append into the set, with the batch sized by `appendPerCall` so that 1.8 ms × per-call × set size stays under about 45 s (10 at 2,304, or 49 for an update-free re-run). A first build above `MAX_COMBINE` (3,000 variants) is refused, because the combine alone grows with the square of the set. Measured live on the full shadcn Button Contract (2,304 variants) on a new page of the smoke draft:
+
+| Phase | Calls | In-call total | Per call |
+|---|---|---|---|
+| Loose | 48 | 52.3 s | 0.2–1.3 s |
+| Combine | 1 | 32.2 s | 32.2 s |
+| Place | 4 | 179.9 s | 43.9–45.4 s (499–684 cells) |
+| Update-free re-run | 48 | 22.3 s | 0.3–0.9 s, 0 created, 0 updated |
+
+- **Ids.** The combine kept every loose variant's id (`idsKept: true`). The ledger still clears them when a combine reports otherwise.
+- **Identity.** The set matches #165's A-2304 set (91:10) variant by variant: names, grid cells, layers, fields, bindings and icon instances, plus the set's property definitions and default variant. The one difference is the set's height, 32,662 against 32,762. A-2304's empty spacer rows each keep about 0.5 px, and B′'s hug the computed 32,660 plus stroke.
+- **Inputs.** The live build used the Button Contract and shadcn Foundations from before #166, which match what the probe built. #166 since added a Label TEXT property. The probe's B′ never wired property references, so TEXT wiring in the place calls is covered by the unit tests, not by this run.
+- **Default variant.** It is the top-left cell, so it reads as the base only after the last place call.
+
 ## Measured: combine once vs append
 
 Probe #165 built the shadcn Button set in the smoke draft four ways, each on its own page. Method A is the current core: it seeds with `combineAsVariants([seed])` and then calls `appendChild` per call. Method B builds loose components 49 per call, then makes one final call that runs `figma.combineAsVariants(all, page)` and styles and places the grid. The per-variant content code was identical in both. 624 is the Button Contract with `button.omit-patch.json` applied in memory only, and 2304 is the full Contract. B′ is what was tried after B's final call failed. It uses B's loose phase, then one call that only runs `combineAsVariants`, then grid placement in calls capped at 60 s.

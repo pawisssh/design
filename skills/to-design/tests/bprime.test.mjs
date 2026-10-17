@@ -252,13 +252,21 @@ test('per call scales with set size for appends; a larger --per-call needs its w
   const rec = variants => ({ page: '1:1', section: '1:2', set: { id: '1:3', key: 'k', name: 'Button' }, props: {}, variants, total: 2304, contentHash: plan.contentHash, placed: true });
   const append = setsPlan(c, SHADCN_DOC, shadcnLedger(c, rec(ids)), { ...opts, batch: 0 }).plan.options;
   assert.deepEqual([append.phase, append.perCall, append.of], ['append', 10, 231]);
-  // an update-free re-run may take 49 per call: every variant in the window has a recorded id, so it appends none
-  const wide = setsPlan(c, SHADCN_DOC, shadcnLedger(c, rec(ids)), { ...opts, batch: 3, perCall: 49 }).plan;
-  assert.deepEqual(wide.selection.entries.map(e => e[0]), Array.from({ length: 49 }, (_, i) => 147 + i));
+  // an update-free re-run may take up to the char cap per call: every variant in the window has a recorded id, so it
+  // appends none
+  const top = fresh.perCall;
+  const wide = setsPlan(c, SHADCN_DOC, shadcnLedger(c, rec(ids)), { ...opts, batch: 3, perCall: top }).plan;
+  assert.deepEqual(wide.selection.entries.map(e => e[0]), Array.from({ length: top }, (_, i) => 3 * top + i));
   const hole = ids.slice();
-  hole[150] = null;
-  assert.throws(() => setsPlan(c, SHADCN_DOC, shadcnLedger(c, rec(hole)), { ...opts, batch: 3, perCall: 49 }), /per-call 49 .* 1 of its 49 variants/);
+  hole[3 * top + 2] = null;
+  assert.throws(() => setsPlan(c, SHADCN_DOC, shadcnLedger(c, rec(hole)), { ...opts, batch: 3, perCall: top }), new RegExp(`per-call ${top} .* 1 of its ${top} variants`));
   assert.throws(() => setsPlan(c, SHADCN_DOC, shadcnLedger(c, rec(ids)), { ...opts, batch: 0, perCall: 50 }), /at most 49/);
+  if (top < PER_CALL) assert.throws(() => setsPlan(c, SHADCN_DOC, shadcnLedger(c, rec(ids)), { ...opts, batch: 0, perCall: PER_CALL }), /does not fit/);
+  // a reconcile of the whole set goes by windows that fit, each carrying its ids
+  const r0 = setsPlan(c, SHADCN_DOC, shadcnLedger(c, rec(ids)), { ...opts, mode: 'reconcile', batch: 0 }).plan.options;
+  assert.ok(r0.of > 1 && r0.perCall * r0.of >= 2304, JSON.stringify(r0));
+  for (let batch = 0; batch !== r0.of; batch++) setsPlan(c, SHADCN_DOC, shadcnLedger(c, rec(ids)), { ...opts, mode: 'reconcile', batch });
+  assert.throws(() => setsPlan(c, SHADCN_DOC, shadcnLedger(c, rec(ids)), { ...opts, mode: 'reconcile' }), /give --batch/);
 });
 
 test('a first build above MAX_COMBINE variants is refused: its one combine call would near the call ceiling', () => {

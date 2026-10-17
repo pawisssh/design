@@ -117,16 +117,26 @@ Every Contract write (`apply`, `discard`, `approve`) keeps the file's layout, so
 ## 4. Batch build
 
 ```
-node skills/to-design/scripts/build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out .scratch/to-design/<run> --batch <N> [--per-call 49]
+node skills/to-design/scripts/build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out .scratch/to-design/<run> --next
+# or a step by hand: --batch <N> [--per-call n] | --mode combine | --mode place [--budget ms]
 ```
 
 Core: `builder-core-components.js`. `sets` takes an approved Contract only: it refuses a draft, a failing validation, and a foundations document the ledger did not build. It expands the selection with the shared Contract module, resolves every tuple in node (identical fragments deduped), and packs each entry as an axis-ordered tuple of value indexes that decodes back to the approved selection. The selection is sparse: omitted variants are never built.
 
-- **Batches.** Batch `N` (from 0) holds `PER_CALL` (49) entries in expansion order; the derive prints `options.batch` and `options.of`. Run batch 0, record, then batch 1, and so on to `of − 1`: one call per batch, never one per variant, and never two calls at once.
-- **Base first.** When the ledger has `bases[family]`, the Base Component is moved into the set and rebuilt in place (same id and key) at the property defaults, and batch 0 holds it. No tweaked scratch copy stays behind.
+- **The first build: loose, combine, place** (#168, [ADR 0004](../../docs/adr/0004-quadratic-set-build-time.md)). `--next` derives the family's next step from the ledger; run it, record, and repeat until it prints that the family is built. A family with no set yet takes three phases:
+  1. **Loose batches.** Batch `N` (from 0) holds up to `PER_CALL` (49) entries in expansion order, each made as a loose COMPONENT on the family page. The derive prints `options.phase`, `options.batch` and `options.of`. A loose call's time is flat in the set's size. Property wiring and a root that fills its parent wait for the set.
+  2. **One combine call.** It runs `combineAsVariants` over every loose variant (the Base Component first) and moves the set into `Content`, and nothing else. It refuses if a variant is missing from the page or named twice. Its result says whether the combine kept the loose ids (`idsKept`). When it did not, `ledger.mjs record` clears the family's ids, and the place calls record them again. A family above `MAX_COMBINE` (3,000) variants is refused: the combine grows with the square of the set and would near the ~2 min call ceiling.
+  3. **Place calls.** These set the set's description, grid, padding and stroke, put every variant in its cell, and wire its properties. Each call stops after the first change past `--budget` (default `PLACE_BUDGET`, 45,000 ms). The next call resumes from what the file holds, until the result reports `placed: true`. The default variant is the one in the top-left cell, so it is the base only once placement finishes.
+- **Re-runs and updates append.** Once placed, a build batch appends into the set. An append costs about 1.8 ms × per-call × set size, so its batch is `appendPerCall(total)`: at most 49, and 10 at 2,304. A window whose every variant has a recorded id adds nothing (an update-free re-run), so it may take `--per-call` up to 49.
+- **Batch size.** Every batch also shrinks until its plan and state fit `SETS_BUDGET` (13,600 chars next to the packaged core), so the package stays under 50,000. An explicit `--per-call` that does not fit is refused, not shrunk. One call per batch, never one per variant, and never two build calls on one family at once.
+- **Base first.** When the ledger has `bases[family]`, the Base Component is rebuilt in place (same id and key) at the property defaults, and batch 0 holds it: on a first build it joins the loose variants on the family page and the combine takes it first; on an append it moves into the set. No tweaked scratch copy stays behind.
 - **Diffs only.** Writes happen only where the readback differs, so a rerun creates and updates nothing.
 - **Batch ids only.** A call carries and returns only its batch's variant ids. `ledger.mjs record` merges them into `sets[family].variants` (one id per expansion index) and keeps the other families.
-- **Lost connection.** A call whose result was lost may still have committed. Before retrying, run `--mode reconcile` (read only: it finds the set's variants by name, and reports the ones the selection dropped), record its result, and only then re-derive and retry the batch.
+- **Lost connection.** A call whose result was lost may still have committed. Every phase is resumable:
+  - **Loose.** A re-run loose batch finds its variants on the page by name, so it makes no duplicates.
+  - **Combine.** A re-run combine adopts the set it finds.
+  - **Place.** A place call always resumes from the file.
+  - **Append.** Before retrying an append, run `--mode reconcile` (read only: it finds the set's variants by name, and reports the ones the selection dropped). A family too large for one reconcile call needs `--batch`; the derive says how many. Record its result, and only then re-derive and retry the batch.
 - **After a Contract edit** (a new omit, a re-approval), rebuild every batch, then see [Dropped variants](#dropped-variants-orphans-and-prune) below.
 
 **The Figma structure** (checked by `coverage.mjs`):
@@ -136,12 +146,13 @@ Core: `builder-core-components.js`. `sets` takes an approved Contract only: it r
 - `Content` holds the COMPONENT_SET, a Grid Auto Layout: `figma.grid.columns` (Size) make the columns, `figma.grid.rows` (Kind then State) the rows, each axis default-first so the default variant sits top-left. Gap 20×20, padding 20, dashed stroke `#9747ff` (dash 10, gap 5), radius 5.
 - Variants are named `Prop=Value` with the axis and value labels. TEXT, BOOLEAN and INSTANCE_SWAP properties are wired with `componentPropertyReferences`; the INSTANCE_SWAP `preferredValues` are the ledger's icon keys and its default is the icon id.
 
-**Measured live (#32, 245 and 539 variants, 49 per call):**
+**Measured live (#32, 245 and 539 variants, 49 per call, appending; #168, 2,304 variants, first build):**
 
 - **Package size.** Packages run 40-47K chars, so 64 per call left too little room under 50,000.
 - **Output.** Build output is at most 2.3KB. A coverage read is about 1.5KB plus 23 bytes per variant (6.6KB at 245, 13.1KB at 539); `use_figma` output must stay under 20KB, so one coverage read holds about 800 variants. A sample read is about 1.6KB per variant (keep it to 12 or fewer); a theme read is about 0.35KB per variant.
 - **Time.** A creating call costs about 1.6 ms × variants created × set size: 5.1s at 49, 18.6s at 245, 41.8s at 539, so building a family is quadratic (539 variants took 263s over 11 calls). An update-free rerun call takes 0.4-1.1s, and a coverage read 0.3s at 539.
-- **Ceiling: 49 per call.** At 49 the largest Button package measured 48,006 chars live (with the orphan flow of #67), and 64 per call at 539 variants would take about 55s, beyond the longest call measured. For a family above about 600 variants, lower `--per-call` so that 1.6 ms × per-call × set size stays under about 45s.
+- **The first build at 2,304** (#168, the full shadcn Button Contract): 48 loose calls of 49 at 0.2–1.3 s each (52.3 s in all); one combine of 32.2 s that kept the loose ids; 4 place calls of 43.9–45.4 s (179.9 s in all, 499–684 cells each). That is 264 s in-call over 53 calls, against about 4,790 s appending. The update-free re-run took 48 calls of 49 at 0.3–0.9 s each (22.3 s). Packages ran up to 48,537 chars for loose batches, 49,364 for re-run batches, 42,772 for place calls and 39,558 for the combine. Its coverage read came to 74.5KB, past the 20KB output, so the set was compared variant by variant against #165's A-2304 set instead.
+- **Ceiling: 49 per call.** At 49 the largest Button package measured 48,006 chars live (with the orphan flow of #67), and 64 per call at 539 variants would take about 55s, beyond the longest call measured. Appends size themselves by `appendPerCall` (1.8 ms × per-call × set size under about 45 s), and a first build combines at most `MAX_COMBINE` (3,000) variants. The combine measured 46.9 s (#165) and 32.2 s (#168) at 2,304. It grows with the square of the set, so 3,000 is about 80 s at the slower rate.
 
 ### Dropped variants: orphans and prune
 

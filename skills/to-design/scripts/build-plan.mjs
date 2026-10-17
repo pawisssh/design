@@ -206,7 +206,7 @@ export const PLACE_BUDGET = 45000;
  * its wrapper (tests/bprime.test.mjs measures them).
  */
 export const SETS_BUDGET = 13600;
-// a reconcile window: its entries carry no fragments
+// a reconcile window, at most: its entries carry no fragments
 const RECONCILE_PER_CALL = 500;
 // The Component Header template every family page's Header is an instance of (one per file):
 // TEXT properties with their font style and size.
@@ -431,16 +431,20 @@ export function setsPlan(contract, docText, ledger, {
     props: Object.fromEntries(props.map(p => [p.key, `${p.name}#${ID}`])), variants: {}, total, snapshotId: contract.source.snapshotId, contentHash: hash,
     documentHash: f.documentHash, builtAt: at, placed: false } }).length + JSON.stringify({ header: { page: ID, id: ID, key: 'k'.repeat(40) } }).length;
   const windows = n => Array.from({ length: Math.ceil(total / n) }, (_, b) => tuples.map((_, i) => i).slice(b * n, (b + 1) * n));
-  const fits = n => windows(n).every(w => {
-    const { plan, state } = assemble(w, 'build', { phase: 'loose', batch: 0, of: 0, perCall: n });
+  const fits = (n, m = 'build') => windows(n).every(w => {
+    const { plan, state } = assemble(w, m, { phase: 'loose', batch: 0, of: 0, perCall: n });
     return JSON.stringify(plan).length + JSON.stringify(state).length - JSON.stringify(state.templates).length + recordBound + 20 * w.length <= SETS_BUDGET;
   });
   const sized = {};
   const perCallFor = phase => {
     if (sized[phase]) return sized[phase];
-    let n = phase === 'append' ? appendPerCall(total) : PER_CALL;
-    while (n > 1 && !fits(n)) n--;
+    let n = phase === 'append' ? appendPerCall(total) : phase === 'reconcile' ? RECONCILE_PER_CALL : PER_CALL;
+    while (n > 1 && !fits(n, phase === 'reconcile' ? 'reconcile' : 'build')) n = phase === 'reconcile' ? Math.floor(n * 0.9) : n - 1;
     return (sized[phase] = n);
+  };
+  // an explicit per call is never shrunk: it is refused when a window would not fit
+  const checkFits = (n, m) => {
+    if (!fits(n, m)) throw new Error(`--per-call ${n} does not fit every ${m} window in SETS_BUDGET (${SETS_BUDGET} chars next to the core): at most ${perCallFor(m === 'reconcile' ? 'reconcile' : 'loose')}`);
   };
   const firstGap = n => windows(n).findIndex(w => w.some(i => !ids[i]));
 
@@ -468,6 +472,7 @@ export function setsPlan(contract, docText, ledger, {
   if (mode === 'build') {
     if (unplaced) throw new Error(`the ${family} set is combined but not placed: run --mode place (or --next) until it reports placed, then build batches`);
     const phase = combined ? 'append' : 'loose';
+    if (perCall) checkFits(perCall, 'build');
     const n = perCall || perCallFor(phase);
     const of = Math.ceil(total / n);
     if (batch == null) batch = 0;
@@ -481,10 +486,13 @@ export function setsPlan(contract, docText, ledger, {
     }
     options = { phase, batch, of, perCall: n };
   } else if (mode === 'reconcile') {
+    // the whole family in one call when it fits, else by --batch
     picked = tuples.map((_, i) => i);
+    const n = perCall || perCallFor('reconcile');
+    if (perCall) checkFits(perCall, 'reconcile');
+    const of = Math.ceil(total / n);
+    if (batch == null && of > 1) throw new Error(`a reconcile of ${total} variants takes ${of} calls: give --batch 0..${of - 1}`);
     if (batch != null) {
-      const n = perCall || RECONCILE_PER_CALL;
-      const of = Math.ceil(total / n);
       if (!Number.isInteger(batch) || batch < 0 || batch >= of) throw new Error(`batch must be 0..${of - 1} (${total} variants, ${n} per reconcile call)`);
       picked = windows(n)[batch];
       options = { batch, of, perCall: n };
