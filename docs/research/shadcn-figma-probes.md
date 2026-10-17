@@ -35,6 +35,21 @@ Probed on 2026-10-16 through the official remote Figma MCP `use_figma`, on the s
 - **Generic Adapter** (`skills/adapter-generic/scripts/components.mjs`): `var(--x)` in a Synthesized value is `{alias: "x", resolved}`. Two shadcn Synthesized tokens (`button-ghost-expanded-hover-fill`, `button-outline-expanded-hover-fill`) now agree in every mode with the hover tokens, so they merge into them and the Button Contract loses those two rules.
 - **Docs:** the value-form table and rule 7 in `skills/contract/references/foundations-schema.md`, and the Synthesized tokens section of `skills/adapter-generic/SKILL.md`.
 
+## Mock build: Button, Card and Alert
+
+`skills/to-design/tests/shadcn.test.mjs` builds the committed Foundations document and the three draft Contracts, approved as a prototype, on the mock figma. It runs the foundations core and then every sets batch of the components core, which is unchanged. Results:
+
+- Button builds 2304 variants, and Card and Alert 2 each.
+- The coverage check reports 0 problems for each family.
+- The sample check reads back the first, middle and last variant of each family against `resolve()`, and the theme check reads each paint per Mode. Both report 0 problems.
+
+The build turned up two Adapter gaps, both fixed in the Adapter and not the core:
+
+- **A part that hugs had no direction.** Card's and Alert's parts were `{width, height: "hug"}`, but Figma sets HUG only on an Auto Layout frame or on text, and the mock refuses it the same way. A part now carries a `direction`: a flex part's own (CardFooter is a row), else a column.
+- **`opacity` was a bare number.** The components core writes a literal from `raw`, so `opacity: 0.5` wrote nothing. It is now `{raw, level: "info", reason}`.
+
+No live component build was run. The smoke draft's `Theme` collection belongs to its Carbon foundations, so a shadcn foundations build there stops at an `unowned` conflict, by design.
+
 ## Left on the smoke draft
 
 Page `Probe #124` (`77:8`) with the frames `Mode Light` and `Mode Dark`, the four probe component sets, and the collection `Probe 124 Theme`. They are kept as evidence; delete the page and the collection to clear them.

@@ -72,6 +72,16 @@ test('each Card part fills the column across and hugs down; Action is self-start
   assert.equal(none['Header'].visible, undefined, 'a part that is no slot always shows');
 });
 
+test('a part hugs inside its own Auto Layout: a flex part (CardFooter) is a row, a grid or block part a column (#124)', { skip }, async () => {
+  const card = await read('card');
+  const { layout } = resolve(card, { 'card-footer': 'card-footer', state: 'enabled' });
+  assert.deepEqual(['Header', 'Title', 'Description', 'Action', 'Content', 'Footer'].map(p => layout[p].direction),
+    ['column', 'column', 'column', 'column', 'column', 'row']);
+  const alert = await read('alert');
+  const a = resolve(alert, { variant: 'default', state: 'enabled' }).layout;
+  assert.deepEqual([a['Title'].direction, a['Description'].direction], ['column', 'column']);
+});
+
 test('Card\'s size prop is read by no axis: its data-[size=sm] utilities are a note, not carried', { skip }, async () => {
   const { notes } = await read('card');
   const note = notes.find(n => /data-\[size=sm\]:\[--card-spacing:--spacing\(3\)\]/.test(n.message));
@@ -89,10 +99,10 @@ test('Card paint: the card fill and a 1px foreground/10 ring, a Synthesized toke
   assert.ok(card.synthesized['card-effect']);
 });
 
-test('the parts note says what of each part is read: its size, and its visibility where it is a slot', { skip }, async () => {
+test('the parts note says what of each part is read: its direction and size, and its visibility where it is a slot', { skip }, async () => {
   const { notes } = await read('card');
   assert.ok(notes.some(n => n.at === 'anatomy' && /Header, Title, Description, Action, Content, Footer/.test(n.message)
-    && /width and height/.test(n.message)));
+    && /direction/.test(n.message) && /width and height/.test(n.message)));
 });
 
 // ---------- Alert: a one-column grid root ----------

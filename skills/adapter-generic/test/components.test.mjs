@@ -178,7 +178,8 @@ test('generate writes the draft Contract against the Foundations document of the
   assert.equal(at('default', 'enabled').stroke, 'none', 'border-transparent');
   assert.deepEqual(at('default', 'focus').stroke, tok('ring'));
   assert.deepEqual(at('default', 'enabled', 'invalid').stroke, tok('button-invalid-stroke'));
-  assert.equal(at('default', 'disabled').opacity, 0.5);
+  assert.equal(at('default', 'disabled').opacity.raw, 0.5);
+  assert.deepEqual(at('default', 'enabled').opacity, { raw: 1, level: 'info', reason: 'no opacity utility' }, 'a literal is the raw form the core writes (#124)');
 });
 
 test('two CLI runs from no prior Contract write byte-identical Contracts through writeJson', { skip }, () => {

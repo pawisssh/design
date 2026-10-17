@@ -69,6 +69,8 @@ const VARIANT_LIMIT = 600; // ADR 0004
 const SLOT_CONTENT = /^svg(:not\(\[class\*='size-'\]\))?$/;
 const SIZE_FIELDS = ['width', 'height'];
 const FRAME_FIELDS = [...SIZE_FIELDS, 'visible'];
+// A part hugs or fills inside its own Auto Layout, so it carries a direction too (#124).
+const PART_FIELDS = ['direction', ...SIZE_FIELDS];
 // Logical sides, start before end, order a family's slot frames; any other slot follows them by key.
 const SIDES = ['inline-start', 'inline-end'];
 // CSS properties a Contract field carries; any other utility is reported, not carried.
@@ -78,8 +80,8 @@ const LAYOUT_PROPS = ['display', 'flex-direction', 'justify-content', 'align-ite
 // A custom property a utility sets (`[--card-spacing:--spacing(4)]`), not one of Tailwind's own: carried, so a length
 // that reads it (`gap-(--card-spacing)`) resolves to what the variant sets it to.
 const isVar = prop => /^--(?!tw-)/.test(prop);
-// A part's own utilities that size it in its parent's Auto Layout; the rest of a part is not read yet.
-const PART_PROPS = ['width', 'height', 'align-self', 'justify-self', 'flex-grow', 'position'];
+// A part's own utilities that size it in its parent's Auto Layout or give its own direction; the rest is not read yet.
+const PART_PROPS = ['width', 'height', 'align-self', 'justify-self', 'flex-grow', 'position', 'display', 'flex-direction'];
 const PAINT_PROPS = ['background-color', 'border-color', 'opacity', '--tw-ring-shadow', '--tw-ring-color'];
 const TEXT_PROPS = ['color', 'font-size', 'line-height', 'font-weight', '--tw-font-weight', '--tw-leading', 'letter-spacing',
   '--tw-tracking', 'text-align', 'text-decoration-line', 'text-underline-offset', 'white-space'];
@@ -451,7 +453,9 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       by.stroke = r;
     } else paint.stroke = 'none';
     const op = win(['opacity']);
-    paint.opacity = op ? round(/%$/.test(op.decls.opacity) ? parseFloat(op.decls.opacity) / 100 : parseFloat(op.decls.opacity)) : 1;
+    // A literal, as the Contract's raw form: the core writes `raw`, so a bare number would write nothing (#124).
+    paint.opacity = op ? { raw: round(/%$/.test(op.decls.opacity) ? parseFloat(op.decls.opacity) / 100 : parseFloat(op.decls.opacity)), level: 'info',
+      reason: `${op.candidate}: opacity ${op.decls.opacity}; the Foundations document has no opacity variable` } : { raw: 1, level: 'info', reason: 'no opacity utility' };
     const ring = win(['--tw-ring-shadow']);
     paint.effects = [];
     if (ring) {
@@ -477,9 +481,14 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       f.visible = t[s.key] !== 'none';
     }
     // A part's size: its own width or height utility; else, across the root, fill where the root stretches it and
-    // its self-alignment leaves it so, and along the root, fill where it grows in a flex root; else hug.
+    // its self-alignment leaves it so, and along the root, fill where it grows in a flex root; else hug. A frame that
+    // hugs is an Auto Layout in Figma, so a part has a direction (#124): a flex part's flex-direction (row unless it
+    // says column), else a column, as a grid with no columns or a block stacks its children.
     for (const p of placed) {
-      const f = frames[p.node] = {};
+      const display = winner(p.rules, ['display']);
+      const flex = display && /flex$/.test(display.decls.display);
+      const dir = flex && winner(p.rules, ['flex-direction']);
+      const f = frames[p.node] = { direction: flex && !(dir && /^column/.test(dir.decls['flex-direction'])) ? 'row' : 'column' };
       const self = winner(p.rules, [grid ? 'justify-self' : 'align-self']);
       const selfValue = self ? self.decls[grid ? 'justify-self' : 'align-self'] : 'auto';
       const across = selfValue === 'stretch' || (['auto', 'normal'].includes(selfValue) && stretches) ? 'fill' : 'hug';
@@ -531,7 +540,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   PAINT_FIELDS.forEach(f => { values.paint[f] = []; });
   // A frame per icon slot, then per part; a part that is no slot always shows, so it has no visibility.
   const frameFields = Object.fromEntries([...icons.map(s => [s.node, FRAME_FIELDS]),
-    ...placed.map(p => [p.node, slots.some(s => s.part === p) ? FRAME_FIELDS : SIZE_FIELDS])]);
+    ...placed.map(p => [p.node, slots.some(s => s.part === p) ? ['direction', ...FRAME_FIELDS] : PART_FIELDS])]);
   const frameValues = Object.fromEntries(Object.entries(frameFields).map(([n, fs]) => [n, Object.fromEntries(fs.map(f => [f, []]))]));
   const uses = new Map(); // placeholder JSON -> the rules that set it, per Mode
   const json = v => JSON.stringify(v);
@@ -555,7 +564,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
           const r = o.by[f] || light.by[f];
           fail(`${Name}.${f}: ${r ? `${r.candidate} (${at(r.entry)})` : 'a value'} differs by mode (${modes[i].key}); layout is the same in every Mode`);
         }
-      if (o.paint.opacity !== light.paint.opacity) modeDiffers('opacity', o.by.opacity || light.by.opacity, i);
+      if (o.paint.opacity.raw !== light.paint.opacity.raw) modeDiffers('opacity', o.by.opacity || light.by.opacity, i);
       if (json(o.frames) !== json(light.frames))
         fail(`${Name}: a frame's size differs by mode (${modes[i].key}); layout is the same in every Mode`);
       const shape = x => json(x.paint.effects.map(({ color, ...e }) => e));
@@ -636,7 +645,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   if (icons.length)
     notes.push({ level: 'info', at: 'anatomy', message: `${list(icons.map(s => s.node))}: a frame per Slot axis (#121, ADR 0011), shown where its slot is filled and sized by ${list([...sizing].sort(byKey))}. A consumer size-* class on the svg overrides that size, off-axis (#62). Each frame stands in for the slot's icon, an INSTANCE with an INSTANCE_SWAP whose code.visibleWhen names its axis, which the agent tier does not draft yet.` });
   if (placed.length)
-    notes.push({ level: 'info', at: 'anatomy', message: `${list(placed.map(p => p.node))}: the exported parts (${list(placed.map(p => p.name))}), each a FRAME under ${Name} in source order, whatever nesting a consumer gives them. Of each part only its width and height are read (its own width or height utility; else fill where ${Name} stretches it, hug otherwise), and its visibility where ${Name} styles its presence (a Slot axis). Its own layout, paint and text are not drafted yet.` });
+    notes.push({ level: 'info', at: 'anatomy', message: `${list(placed.map(p => p.node))}: the exported parts (${list(placed.map(p => p.name))}), each a FRAME under ${Name} in source order, whatever nesting a consumer gives them. Of each part only its direction (a flex part's own, else a column), its width and height (its own width or height utility; else fill where ${Name} stretches it, hug otherwise) are read, and its visibility where ${Name} styles its presence (a Slot axis). Its own layout, paint and text are not drafted yet.` });
   for (const p of parts.filter(outOfFlow))
     notes.push({ level: 'info', at: 'anatomy', message: `${p.name} (${file}:${p.line}): position ${p.position.decls.position} (${p.position.candidate}) takes it out of the flow Auto Layout lays out, so the anatomy leaves it out.` });
   if (strokeFromBase)

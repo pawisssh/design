@@ -134,26 +134,32 @@
           }
         },
         "Header": {
+          "direction": "column",
           "width": "fill",
           "height": "hug"
         },
         "Title": {
+          "direction": "column",
           "width": "fill",
           "height": "hug"
         },
         "Description": {
+          "direction": "column",
           "width": "fill",
           "height": "hug"
         },
         "Action": {
+          "direction": "column",
           "width": "hug",
           "height": "hug"
         },
         "Content": {
+          "direction": "column",
           "width": "fill",
           "height": "hug"
         },
         "Footer": {
+          "direction": "row",
           "width": "fill",
           "height": "hug",
           "visible": false
@@ -185,7 +191,11 @@
             "token": "card"
           },
           "stroke": "none",
-          "opacity": 1,
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "no opacity utility"
+          },
           "effects": [
             {
               "type": "drop-shadow",
@@ -242,7 +252,7 @@
     {
       "level": "info",
       "at": "anatomy",
-      "message": "Header, Title, Description, Action, Content, Footer: the exported parts (CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter), each a FRAME under Card in source order, whatever nesting a consumer gives them. Of each part only its width and height are read (its own width or height utility; else fill where Card stretches it, hug otherwise), and its visibility where Card styles its presence (a Slot axis). Its own layout, paint and text are not drafted yet."
+      "message": "Header, Title, Description, Action, Content, Footer: the exported parts (CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter), each a FRAME under Card in source order, whatever nesting a consumer gives them. Of each part only its direction (a flex part's own, else a column), its width and height (its own width or height utility; else fill where Card stretches it, hug otherwise) are read, and its visibility where Card styles its presence (a Slot axis). Its own layout, paint and text are not drafted yet."
     },
     {
       "level": "info",
