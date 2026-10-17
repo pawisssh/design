@@ -74,6 +74,8 @@ async function main(argv) {
     try {
       const r = await approve({ handoffPath: input, designSystem: values.ds, contentHash: values['content-hash'], proposals });
       console.log(`signed off ${input} (r${r.handoff.revision}, ${r.handoff.approval.contentHash})${r.approved.length ? `; approved ${r.approved.join(', ')}` : ''}; wrote ${r.signedPath}`);
+      // The Rendering's stamp carries the status, so a Sign-off renders it again.
+      console.log(`rendered ${await render({ handoffPath: input, designSystem: values.ds })}`);
       return 0;
     } catch (e) { console.error(e.message); return 1; }
   }
