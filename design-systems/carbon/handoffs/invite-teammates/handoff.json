@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 4,
+  "revision": 5,
   "status": "pending",
   "approval": null,
   "feature": {
@@ -60,18 +60,6 @@
       {
         "level": "info",
         "text": "Single-mode Prototype: its page surface (#fafafa) and first container (.card #f4f4f4) map best to White (White ΔE 0.0149, Gray 10 ΔE 0.0508, Gray 90 ΔE 1.3391, Gray 100 ΔE 1.4834). The other Theme modes render unverified."
-      },
-      {
-        "level": "info",
-        "text": "`text-input` is a Contract the Adapter wrote mid-run at status draft (54 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
-      },
-      {
-        "level": "info",
-        "text": "`select` is a Contract the Adapter wrote mid-run at status draft (53 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
-      },
-      {
-        "level": "info",
-        "text": "`toast-notification` is a Contract the Adapter wrote mid-run at status draft (44 Drafted values); its check passed. The owner approves it through To-design's base loop; this Handoff's sign-off does not."
       }
     ]
   },
@@ -1042,7 +1030,8 @@
       "kind": "off-axis",
       "to": "owner",
       "text": "`role` (select) sets background-color #ffffff, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?",
-      "answer": null
+      "answer": "Keep the Contract's look (field-01).",
+      "by": "owner"
     },
     {
       "id": "q-off-axis-copy",
@@ -1057,7 +1046,8 @@
       "kind": "off-axis",
       "to": "owner",
       "text": "`toast` (toast-notification) sets background-color #24a148, which its tuple does not paint. Keep the Contract's look, pick another tuple, or record a variant?",
-      "answer": null
+      "answer": "Keep the Contract's look: kind success, the dark toast. No green-fill variant.",
+      "by": "owner"
     },
     {
       "id": "q-state-error",
@@ -1156,6 +1146,12 @@
     },
     "question:q-off-axis-email": {
       "answer": "Keep the Contract's look."
+    },
+    "question:q-off-axis-role": {
+      "answer": "Keep the Contract's look (field-01)."
+    },
+    "question:q-off-axis-toast": {
+      "answer": "Keep the Contract's look: kind success, the dark toast. No green-fill variant."
     },
     "question:q-state-error": {
       "answer": "When sending invites fails, show a Carbon InlineNotification of kind error below the form, and keep the entered emails so the user can resend."
