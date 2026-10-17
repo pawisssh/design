@@ -1,0 +1,12 @@
+{
+  "family": "label",
+  "drafts": {
+    "family.description": "A short medium-weight text label that names a form control, in one enabled state.",
+    "figma.grid": {
+      "columns": [
+        "state"
+      ],
+      "rows": []
+    }
+  }
+}

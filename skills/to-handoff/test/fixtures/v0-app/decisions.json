@@ -3,10 +3,10 @@
     "draft": "label",
     "tuple": {},
     "via": "library",
-    "reason": "shadcn ships Label, but this Design System has no label Contract, and the Generic Adapter could not write one mid-run"
+    "reason": "shadcn ships Label, but this Design System has no label Contract, and the Generic Adapter's mid-run draft did not pass"
   },
   "contract:label": {
-    "unwritable": "node skills/adapter-generic/scripts/components.mjs --family label: components/ui/label.tsx:7 Label calls no cva; only cva families are read yet"
+    "path": "skills/to-handoff/test/fixtures/v0-app-drafts/label.component.json"
   },
   "recognise:Input[required]": {
     "draft": "input",
@@ -30,10 +30,10 @@
     "draft": "textarea",
     "tuple": {},
     "via": "library",
-    "reason": "shadcn ships Textarea, but this Design System has no textarea Contract, and the Generic Adapter could not write one mid-run"
+    "reason": "shadcn ships Textarea, but this Design System has no textarea Contract, and the Generic Adapter's mid-run draft did not pass"
   },
   "contract:textarea": {
-    "unwritable": "node skills/adapter-generic/scripts/components.mjs --family textarea: components/ui/textarea.tsx:4 Textarea calls no cva; only cva families are read yet"
+    "path": "skills/to-handoff/test/fixtures/v0-app-drafts/textarea.component.json"
   },
   "recognise:Toaster": {
     "draft": "sonner",

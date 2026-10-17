@@ -235,11 +235,13 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   // that passes the Adapter's check is used in this run and written into contracts/ once nothing is open; one
   // that fails, can't be read or can't be written falls back to a raw usage plus an open question.
   const drafts = new Map();
+  // An Adapter's procedure may name the family as `<family>`.
+  const procedureFor = family => adapter.contractProcedure.replaceAll('<family>', family);
   const draftOf = family => {
     if (drafts.has(family)) return drafts.get(family);
     const answer = d.ask(`contract:${family}`, {
       kind: 'contract-draft', candidates: [],
-      question: `\`${family}\` has no Contract in ${system.key}. ${adapter.contractProcedure}. Write the whole family at status draft with its Drafted values, then answer {path} with the file, or {unwritable: reason}.`,
+      question: `\`${family}\` has no Contract in ${system.key}. ${procedureFor(family)}. Write the whole family at status draft with its Drafted values, then answer {path} with the file, or {unwritable: reason}.`,
     }, a => (a && (typeof a.path === 'string' && a.path || typeof a.unwritable === 'string' && a.unwritable) ? null : 'a draft answer is {path} or {unwritable: reason}'));
     let result = null;
     if (answer && answer.unwritable) result = { failed: answer.unwritable };
@@ -429,7 +431,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
         if (answer.noContract) {
           u.question = question({
             id: `q-no-contract-${id}`, kind: 'no-contract', to: 'owner',
-            text: `\`${cand.sig}\` is ${/^[aeiou]/i.test(answer.noContract) ? 'an' : 'a'} ${answer.noContract} with no Contract in ${system.key} yet${answer.failed ? `, and the Adapter could not write one mid-run: ${answer.failed}` : ''}. ${adapter.contractProcedure}, then re-run To-handoff.`,
+            text: `\`${cand.sig}\` is ${/^[aeiou]/i.test(answer.noContract) ? 'an' : 'a'} ${answer.noContract} with no Contract in ${system.key} yet${answer.failed ? `, and the Adapter could not write one mid-run: ${answer.failed}` : ''}. ${procedureFor(answer.noContract)}, then re-run To-handoff.`,
           });
         }
       }

@@ -239,6 +239,7 @@ A value that neither the source nor a rule here states is drafted by an agent. T
 - **Unchanged.** On the prior's snapshot with no Drafted value reopened, missing or vanished, or when the merged Contract has the prior's `contentHash`, the CLI prints `unchanged` and writes nothing. The owner's omit patch, a tweak and the approval stand. Otherwise the Contract is written as a draft (`approval: null`).
   - `--rewrite` writes on an unchanged snapshot anyway, to apply a change of the Adapter's own rules. It still carries the Drafted values.
 - **Button.** The committed Contract was drafted from [`fixtures/drafts/button.json`](fixtures/drafts/button.json). It stays a draft until the owner approves it in To-design's base loop.
+- **Label and Textarea.** Drafted mid-run by To-handoff's v0 run (#125) from [`fixtures/drafts/label.json`](fixtures/drafts/label.json) and [`fixtures/drafts/textarea.json`](fixtures/drafts/textarea.json), after the Foundations document was regenerated with both families. They are drafts too.
 
 ### Left for later tickets
 
