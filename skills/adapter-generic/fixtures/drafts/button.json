@@ -1,0 +1,23 @@
+{
+  "family": "button",
+  "drafts": {
+    "axes.size.label": "Size",
+    "axes.size.values.default.label": "Default",
+    "axes.size.values.icon-lg.label": "Icon Large",
+    "axes.size.values.icon-sm.label": "Icon Small",
+    "axes.size.values.icon-xs.label": "Icon Extra Small",
+    "axes.size.values.icon.label": "Icon",
+    "axes.size.values.lg.label": "Large",
+    "axes.size.values.sm.label": "Small",
+    "axes.size.values.xs.label": "Extra Small",
+    "axes.variant.label": "Variant",
+    "axes.variant.values.default.label": "Default",
+    "axes.variant.values.destructive.label": "Destructive",
+    "axes.variant.values.ghost.label": "Ghost",
+    "axes.variant.values.link.label": "Link",
+    "axes.variant.values.outline.label": "Outline",
+    "axes.variant.values.secondary.label": "Secondary",
+    "family.description": "A clickable control that triggers an action or event, styled in one of six variants and sized from extra small to large, with square icon-only sizes.",
+    "figma.grid": { "columns": ["state"], "rows": ["variant", "size", "invalid", "expanded", "icon-inline-start", "icon-inline-end"] }
+  }
+}

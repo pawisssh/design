@@ -1,13 +1,20 @@
 #!/usr/bin/env node
-// The Generic Adapter's component step, exact tier (#119): a shadcn/ui component family's draft Contract, read from
-// its source (source.mjs) and Tailwind's compiled CSS (cascade.mjs). Never edit its output by hand.
+// The Generic Adapter's component step (#119): a shadcn/ui component family's draft Contract, read from its source
+// (source.mjs) and Tailwind's compiled CSS (cascade.mjs), with the agent tier's Drafted values (drafts.mjs, #122).
+// Never edit its output by hand.
 //
 //   node skills/adapter-generic/scripts/components.mjs --family <key> [--project <dir>] [--foundations <file>]
-//     [--tools <dir>] [-o <file>]
+//     [--tools <dir>] [-o <file>] [--drafts <file>] [--requests <file>]
+//
+// The Contract at -o, when there is one, is the prior: its Drafted values are carried while their fingerprints hold.
+// A reopened or missing one is taken from --drafts ({"family", "drafts": {key: value}}); while one has no value, the
+// CLI writes the requests (default .scratch/adapter-generic/drafts/<family>.requests.json), no Contract, and exits 2.
+// When nothing changed it writes nothing, so an approval stands.
 //
 // Defaults: the committed fixture project (sources.mjs FIXTURE), its Foundations document
 // design-systems/shadcn/shadcn.foundations.json, output design-systems/shadcn/contracts/<family>.component.json.
-// The Contract is checked with contract.mjs validate and written with io.mjs writeJson; two runs are byte-identical.
+// The Contract is checked with contract.mjs validate and written with io.mjs writeJson; two runs from the same
+// drafts are byte-identical.
 //
 // What it reads, for the family's root component (the export named after the family):
 // - axes: each cva variant axis, then an axis per attribute state the CSS styles (ATTR_AXES), then the canonical
@@ -21,18 +28,19 @@
 //   component token the Contract binds as a plain {token}. The foundations step re-derives the same tokens through
 //   readFamily() and writes them into the Foundations document, which this step then requires to hold them.
 // What it leaves to later tickets, each in a note: text, the icon each slot frame stands for and the rest of the
-// anatomy (#122), any other `:has(…)` condition, and styling set by an ancestor (ADR 0012).
+// anatomy (later agent-tier keys), any other `:has(…)` condition, and styling set by an ancestor (ADR 0012).
 // Generation throws (the CLI exits 1 and writes nothing) on anything it cannot read exactly: compound variants, an
 // attribute state with no known state words, layout, an opacity or an effect's shape that differs by Mode, relative
 // colour syntax, a Synthesized name a Code Library token already has, a border whose colour comes from the base
 // layer, or a Foundations document from another snapshot or without the family's Synthesized tokens.
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { convert } from '../../contract/scripts/color.mjs';
-import { expand, resolve, scopeFor, validate, variantName } from '../../contract/scripts/contract.mjs';
+import { contentHash, expand, resolve, scopeFor, validate, variantName } from '../../contract/scripts/contract.mjs';
 import { writeJson } from '../../contract/scripts/io.mjs';
 import { candidateRules, compiledRules, winner } from './cascade.mjs';
+import { mergeDrafts, subjects } from './drafts.mjs';
 import { readSource } from './source.mjs';
 import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, hasTools, sha256, snapshotId } from './sources.mjs';
 import { build } from './tailwind.mjs';
@@ -522,26 +530,29 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const why = {
     slot: 'Styled by what the component holds, in a :has() form other than :has([attr="value"]), the only one read as a Slot axis (#121). Not carried.',
     ancestor: 'Styled by an ancestor; that is a Mode or the parent\'s Contract (ADR 0012). Not carried.',
-    descendant: 'Styles a descendant; anatomy beyond the root is the agent tier (#122). Not carried.',
+    descendant: 'Styles a descendant; the anatomy beyond the root is not drafted yet (agent tier). Not carried.',
     media: 'Under a media query no tuple decides. Not carried.',
     condition: 'Under a condition no tuple decides (a negation, or two states at once). Not carried.',
-    text: 'Text utilities; text styles, the label and the anatomy beyond the root are the agent tier (#122). Not carried.',
+    text: 'Text utilities; text styles, the label and the anatomy beyond the root are not drafted yet (agent tier). Not carried.',
     other: 'No Contract field carries these properties. Not carried.',
     none: 'Compiles to no CSS (a group or peer marker).',
   };
   if (slots.length)
-    notes.push({ level: 'info', at: 'anatomy', message: `${list(slots.map(s => s.node))}: a frame per Slot axis (#121, ADR 0011), shown where its slot is filled and sized by ${list([...sizing].sort(byKey))}. A consumer size-* class on the svg overrides that size, off-axis (#62). Each frame stands in for the slot's icon, an INSTANCE with an INSTANCE_SWAP whose code.visibleWhen names its axis: the agent tier (#122).` });
+    notes.push({ level: 'info', at: 'anatomy', message: `${list(slots.map(s => s.node))}: a frame per Slot axis (#121, ADR 0011), shown where its slot is filled and sized by ${list([...sizing].sort(byKey))}. A consumer size-* class on the svg overrides that size, off-axis (#62). Each frame stands in for the slot's icon, an INSTANCE with an INSTANCE_SWAP whose code.visibleWhen names its axis, which the agent tier does not draft yet.` });
   for (const kind of ['slot', 'ancestor', 'descendant', 'media', 'condition', 'text', 'other', 'none'])
     if (report[kind].length) notes.push({ level: 'info', at: file, message: `${list(report[kind])}: ${why[kind]}` });
   const exportedParts = components.filter(c => c.exported && c !== root).map(c => c.name);
-  if (exportedParts.length) notes.push({ level: 'info', at: file, message: `${list(exportedParts)}: parts beyond the root are the agent tier (#122).` });
-  notes.push({ level: 'info', at: 'figma.grid', message: 'A placeholder layout (size across, every other axis down); the agent tier (#122) lays the grid out.' });
+  if (exportedParts.length) notes.push({ level: 'info', at: file, message: `${list(exportedParts)}: parts beyond the root are not drafted yet (agent tier).` });
   if (expectedCount > VARIANT_LIMIT)
     notes.push({ level: 'verify', at: 'selection', message: `${expectedCount} variants: past ADR 0004's ~${VARIANT_LIMIT}. Only attribute twins are omitted and nothing else is cut; probe the build cost before building it, or narrow it with selection.omit.` });
 
+  // The source facts the agent tier's evidence and fingerprints are drawn from (drafts.mjs).
+  const facts = { line: root.line, cva: root.cva, cvaLine: cv.base.line, parts: exportedParts,
+    variants: Object.fromEntries(Object.entries(cv.variants).map(([axis, values]) => [axis, Object.fromEntries(Object.entries(values).map(([v, l]) => [v, l.line]))])) };
+
   return { name: Name, file, files: sortedFiles, element: root.element, axes, anatomy, layout, paint,
     synthesized: Object.fromEntries(Object.keys(synthesized).sort(byKey).map(k => [k, synthesized[k]])),
-    notes, omit, expectedCount, alias: `${ui}/${family}` };
+    notes, omit, expectedCount, alias: `${ui}/${family}`, facts };
 }
 
 /**
@@ -687,25 +698,36 @@ export function contractFor(f, family, foundations) {
 /**
  * Generate the draft Contract of one family. `foundations` must be the document foundations.mjs wrote with this
  * family: it holds the family's Synthesized tokens exactly as this run derives them and the Contract's closure entry.
- * Throws when it does not, when `drafts` is not empty (the agent tier, #122), or when the Contract does not validate.
- * @returns {contract, summary}
+ * The agent tier (drafts.mjs, ADR 0010) then merges the Drafted values: carried from `prior` (the Contract on disk, or
+ * null) while their fingerprints hold, otherwise taken from `drafts` ({key: value}) or requested.
+ * Throws when the document does not match, on a drafted value of the wrong shape, or when the Contract does not
+ * validate.
+ * @returns {contract, unchanged, report, requests, summary}: `contract` is null while a request is open, and is
+ * `prior` itself when nothing it holds changed (`unchanged`), so a caller writes nothing and an approval stands.
  */
-export async function generate({ project, family, foundations, drafts = [], tools = DEFAULT_DIR }) {
-  if (drafts.length) fail('drafts are read by the agent tier (#122), which does not exist yet');
+export async function generate({ project, family, foundations, prior = null, drafts = {}, tools = DEFAULT_DIR }) {
+  if (prior && prior.family.key !== family) fail(`the prior Contract is for "${prior.family.key}", not "${family}"`);
   const f = await readFamily({ project, family, foundations, tools });
   const json = v => JSON.stringify(v);
   const stale = Object.keys(f.synthesized).filter(k => json(foundations.variables[k]) !== json(f.synthesized[k]));
   for (const [k, v] of Object.entries(foundations.variables))
     if (v.family === family && isSynthesized(v) && !f.synthesized[k]) stale.push(k);
-  const contract = stale.length ? null : contractFor(f, family, foundations);
-  const listed = contract && (foundations.closure.contracts || []).some(c => c.family === family && c.snapshotId === contract.source.snapshotId);
+  const exact = stale.length ? null : contractFor(f, family, foundations);
+  const listed = exact && (foundations.closure.contracts || []).some(c => c.family === family && c.snapshotId === exact.source.snapshotId);
   if (stale.length || !listed)
     fail(`the Foundations document does not hold ${f.name} as its source reads now (${stale.length ? `Synthesized tokens ${stale.sort(byKey).join(', ')}` : 'its closure has no entry for this snapshot'}); regenerate it with foundations.mjs --family ${family}`);
+  const { contract, report, requests } = mergeDrafts({ contract: exact, subjects: subjects(f, exact), prior, drafts });
+  const counts = ['carried', 'reopened', 'missing', 'vanished', 'owner', 'ownerCheck', 'unused'].map(k => `${k} ${report[k].length}`).join(', ');
   const summary = [
     `${f.name}: axes ${f.axes.map(a => `${a.key} ${a.values.length}`).join(', ')}; ${f.expectedCount} variants`,
     `rules layout ${f.layout.length}, paint ${f.paint.length}; Synthesized tokens ${Object.keys(f.synthesized).length}; notes ${f.notes.length}`,
+    `Drafted values: ${counts}`,
   ];
-  return { contract, summary };
+  if (!contract) return { contract, unchanged: false, report, requests, summary };
+  const { errors } = validate(contract, foundations);
+  if (errors.length) fail(`the Contract does not validate:\n${errors.map(e => `  rule ${e.rule} ${e.at}: ${e.message}`).join('\n')}`);
+  const unchanged = prior !== null && contentHash(contract) === contentHash(prior);
+  return { contract: unchanged ? prior : contract, unchanged, report, requests, summary };
 }
 
 // ---------- CLI ----------
@@ -721,10 +743,27 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const foundationsPath = path('--foundations', join(REPO_ROOT, 'design-systems/shadcn/shadcn.foundations.json'));
     const out = path('-o', join(REPO_ROOT, `design-systems/shadcn/contracts/${family}.component.json`));
     if (!hasTools(tools)) await fetchTools(tools);
+    const requestsPath = path('--requests', join(REPO_ROOT, `.scratch/adapter-generic/drafts/${family}.requests.json`));
     const foundations = JSON.parse(readFileSync(foundationsPath, 'utf8'));
-    const { contract, summary } = await generate({ project, family, foundations, tools });
-    writeJson(out, contract);
-    console.log([...summary, `wrote ${relative(process.cwd(), out)}`, 'OK'].join('\n'));
+    const prior = existsSync(out) ? JSON.parse(readFileSync(out, 'utf8')) : null;
+    let drafts = {};
+    if (args.includes('--drafts')) {
+      const file = JSON.parse(readFileSync(path('--drafts'), 'utf8'));
+      if (file.family !== family) fail(`--drafts holds drafts for "${file.family}", not "${family}"`);
+      drafts = file.drafts;
+    }
+    const { contract, unchanged, report, requests, summary } = await generate({ project, family, foundations, prior, drafts, tools });
+    if (!contract) {
+      writeJson(requestsPath, { family, requests });
+      console.log([...summary, `${requests.length} Drafted values needed (reopened ${report.reopened.length}, missing ${report.missing.length}): wrote ${relative(process.cwd(), requestsPath)}`,
+        `Draft each one, then run again with --drafts <file> holding {"family": "${family}", "drafts": {"<key>": <value>}}.`].join('\n'));
+      process.exit(2);
+    }
+    if (unchanged) console.log([...summary, `unchanged: ${relative(process.cwd(), out)} not written`, 'OK'].join('\n'));
+    else {
+      writeJson(out, contract);
+      console.log([...summary, `wrote ${relative(process.cwd(), out)}`, 'OK'].join('\n'));
+    }
   } catch (e) {
     console.error(`FAIL: ${e.message}`);
     process.exit(1);
