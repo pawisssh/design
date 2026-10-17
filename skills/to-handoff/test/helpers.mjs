@@ -18,8 +18,8 @@ export function designSystem() {
   mkdirSync(join(dir, 'proposals'));
   copyFileSync(repo('design-systems/carbon/carbon.foundations.json'), join(dir, 'carbon.foundations.json'));
   copyFileSync(BUTTON, join(dir, 'contracts/button.component.json'));
-  for (const f of ['text-input', 'select'])
-    copyFileSync(repo(`skills/contract/test/fixtures/form-controls/${f}.component.json`), join(dir, `contracts/${f}.component.json`));
+  // No text-input: the fixture's email field is a family with no Contract, which the Adapter drafts mid-run (#115).
+  copyFileSync(repo('skills/contract/test/fixtures/form-controls/select.component.json'), join(dir, 'contracts/select.component.json'));
   copyFileSync(fixture('proposals/avatar-stack.proposal.json'), join(dir, 'proposals/avatar-stack.proposal.json'));
   return dir;
 }

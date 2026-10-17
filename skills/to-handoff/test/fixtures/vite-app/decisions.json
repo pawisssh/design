@@ -6,11 +6,15 @@
   "textStyle:32/40/400/0": "heading-05",
   "token:font-size:16px": "body-02-font-size",
   "recognise:input.field[type=email]": {
-    "contract": "text-input",
+    "draft": "text-input",
     "tuple": {
       "size": "md"
     },
-    "via": "element"
+    "via": "element",
+    "reason": "Carbon ships TextInput, but this Design System has no Contract for it yet"
+  },
+  "contract:text-input": {
+    "path": "skills/to-handoff/test/fixtures/invite-teammates/drafts/text-input.component.json"
   },
   "feature": {
     "goal": "See the project members and invite a new one by email."

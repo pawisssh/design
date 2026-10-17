@@ -13,7 +13,7 @@ const FLAGS = {
   exact: ['=', 'exact'], import: ['✓', 'import'], na: ['–', 'n/a'],
   off: ['≠', 'Off-system'], near: ['≈', 'near match'], pick: ['◇', 'agent pick'], proposal: ['+', 'Proposal'],
   raw: ['∅', 'no Contract'], axis: ['↯', 'off-axis'], missing: ['!', 'missing state'], mock: ['◌', 'mock'],
-  simulated: ['◌', 'simulated'], placeholder: ['◌', 'placeholder copy'],
+  simulated: ['◌', 'simulated'], placeholder: ['◌', 'placeholder copy'], draft: ['◐', 'Contract draft, not approved'],
 };
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const flag = k => `<span class="flag" data-g="${FLAGS[k][0]}">${FLAGS[k][0]} ${FLAGS[k][1]}</span>`;
@@ -78,6 +78,14 @@ export async function renderHtml(handoff, system) {
     if (u.contract && u.match && u.match.by === 'agent') look.push(['pick', `${code(u.id)} → ${code(u.contract)} ${esc(Object.values(u.tuple).join(' '))}`, `recognised by the agent (${esc(u.match.via)})`, u.at]);
     for (const o of u.offAxis || []) look.push(['axis', `${code(u.id)} ${code(`${o.property}: ${o.raw}`)}`, esc(o.reason) + qflag(o.question), u.at]);
   }
+  // A draft Contract (one written mid-run among them, #115) renders real components, but its owner has not
+  // approved it: this Handoff's sign-off does not approve it either.
+  const isDraft = key => ((contracts[key] || {}).selection || {}).status === 'draft';
+  for (const key of Object.keys(h.source.contracts).sort()) {
+    if (!isDraft(key)) continue;
+    const drafted = Object.keys(contracts[key].drafted || {}).length;
+    look.push(['draft', `${code(key)} Contract draft, not approved`, `${drafted} Drafted values; the owner approves it through To-design's base loop, not this sign-off`, usages.filter(u => u.contract === key).map(u => u.at).join(', ')]);
+  }
   for (const [name, s] of Object.entries(screen.states)) if (s.missing) look.push(['missing', `${esc(name)} state`, esc(question(s.question)) + qflag(s.question), screen.at || '']);
   for (const x of h.data || []) look.push([x.source === 'mock' ? 'mock' : 'simulated', code(x.id), esc(x.note || ''), x.at || '']);
   for (const [id, c] of Object.entries(h.copy)) if (c.placeholder) look.push(['placeholder', `${code(id)} “${esc(c.text)}”`, 'Stand-in copy: replace before release', c.at || '']);
@@ -87,7 +95,7 @@ export async function renderHtml(handoff, system) {
   // ---- usage cards ----
   const cards = [];
   for (const u of usages) {
-    const flags = [u.contract && flag('import'), u.proposal && flag('proposal'), u.raw && flag('raw'), u.match && u.match.by === 'agent' && flag('pick'), (u.offAxis || []).length && flag('axis')].filter(Boolean).join(' ');
+    const flags = [u.contract && flag('import'), u.contract && isDraft(u.contract) && flag('draft'), u.proposal && flag('proposal'), u.raw && flag('raw'), u.match && u.match.by === 'agent' && flag('pick'), (u.offAxis || []).length && flag('axis')].filter(Boolean).join(' ');
     let specimen = '', snippet = '';
     const perState = [];
     if (u.contract) {
