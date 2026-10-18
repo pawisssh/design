@@ -10,14 +10,14 @@ import { cpSync, existsSync, readFileSync, readdirSync, writeFileSync } from 'no
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { contentHash, expand } from '../../contract/scripts/contract.mjs';
+import { contentHash, expand, tupleKey } from '../../contract/scripts/contract.mjs';
 import { setsPlan } from '../../to-design/scripts/build-plan.mjs';
 import { approveFolder } from '../scripts/approve.mjs';
 import { baselined, gate, nextStep, pendingUpdate, variantFingerprints } from '../scripts/build.mjs';
-import { buildFolder } from '../scripts/folder.mjs';
+import { buildFolder, carryOmits } from '../scripts/folder.mjs';
 import { buildReview, reviewModel } from '../scripts/review.mjs';
 import { AT, FILE_KEY, NARROW, drive, smokeDraft } from './drive.mjs';
-import { READABLE, V0, contractPath, read, scratch, selections, skip, snapshot } from './helpers.mjs';
+import { READABLE, V0, contractPath, read, scratch, selections, skip, snapshot, v0Folder } from './helpers.mjs';
 
 const { reviewExport } = createRequire(import.meta.url)('../assets/review-export.js');
 const REVIEW = fileURLToPath(new URL('../scripts/review.mjs', import.meta.url));
@@ -123,6 +123,68 @@ test('after one component\'s code changes, only it is reviewed and only its chan
   const again = await drive({ dir, mock, ledger: next, record: kept, namespace: 'v0-app' });
   assert.deepEqual([again.n.status, again.steps], ['built', []]);
   assert.equal(mock.log.length, writes);
+});
+
+test('a narrowed family drafted again keeps its narrowing: the review page shows it, and approve and the build keep it', { skip }, async () => {
+  const { project, root, dir, mock, ledger, record } = await builtProject();
+  const approved = read(contractPath(dir, 'button'));
+  assert.equal(expand(approved).length, 48);
+  const key = t => approved.axes.map(a => t[a.key]).join('|');
+  // Button's disabled State at opacity 40 in place of 50: every axis and value stays.
+  fadeDisabled(join(project, 'components/ui/button.tsx'));
+  const r = await buildFolder({ project, root, drafts });
+  assert.deepEqual([r.written, r.foundations.written], [['button'], true]);
+  const redrafted = read(contractPath(dir, 'button'));
+  assert.equal(redrafted.selection.status, 'draft');
+  assert.notEqual(redrafted.source.snapshotId, approved.source.snapshotId);
+  assert.deepEqual(expand(redrafted).map(key), expand(approved).map(key));
+  assert.equal(redrafted.selection.expectedCount, 48);
+
+  // The review page holds button alone, ticked as approved: the page's export, untouched, is the carried omit.
+  assert.deepEqual(reviewModel(dir).families.map(f => f.family), ['button']);
+  const page = selections(dir).button;
+  assert.equal(page.patch.expectedCount, 48);
+  assert.deepEqual(page.patch.omit, redrafted.selection.omit.map(o => o.match));
+
+  // A plain approve keeps 48, and the Foundations document is the one the narrowed Contracts generate.
+  const a = await approveFolder({ dir, project, exported: exported(dir), said: 'approve', at: AT, test: true });
+  assert.deepEqual(a.approved, ['button']);
+  assert.equal(expand(read(contractPath(dir, 'button'))).length, 48);
+  const again = await buildFolder({ project, root, drafts });
+  assert.deepEqual([again.written, again.foundations.written], [[], false]);
+
+  // The build sends only Button's changed variants, its disabled ones, into the set: none of the omitted come back.
+  const { n, ledger: next, record: kept, steps } = await drive({ dir, mock, ledger, record, namespace: 'v0-app' });
+  assert.equal(n.status, 'built', JSON.stringify(n));
+  const sets = steps.filter(s => s.step === 'sets');
+  assert.ok(sets.length && sets.every(s => s.family === 'button'));
+  const tuples = expand(read(contractPath(dir, 'button')));
+  const sent = sets.flatMap(s => s.plan.selection.entries.map(e => tuples[e[0]]));
+  assert.deepEqual(sent.map(t => t.state), Array(12).fill('disabled'));
+  assert.deepEqual(next.sets.button.variants, ledger.sets.button.variants);
+  assert.equal(kept.coverage.button.ok, true, JSON.stringify(kept.coverage.button.problems));
+});
+
+test('carryOmits matches by axis value: variants new to the redraft keep the Adapter\'s default ticks', { skip }, async () => {
+  const { dir } = await v0Folder();
+  const redraft = read(contractPath(dir, 'button'));
+  const defaults = new Set(expand(redraft).map(t => tupleKey(redraft, t)));
+  // The prior had no link Variant and no Expanded axis, and the owner omitted sizes xs and lg.
+  const prior = structuredClone(redraft);
+  prior.axes = prior.axes.filter(a => a.key !== 'expanded');
+  prior.axes.find(a => a.key === 'variant').values = prior.axes.find(a => a.key === 'variant').values.filter(v => v.key !== 'link');
+  prior.selection.omit = [{ match: { size: ['xs', 'lg'] } }];
+  const carried = carryOmits(prior, redraft);
+  assert.equal(carried.selection.status, 'draft');
+  const kept = new Set(expand(carried).map(t => tupleKey(redraft, t)));
+  for (const t of expand({ ...redraft, selection: { ...redraft.selection, omit: [] } })) {
+    const id = tupleKey(redraft, t);
+    const known = t.variant !== 'link' && t.expanded === 'collapsed';
+    assert.equal(kept.has(id), defaults.has(id) && !(known && ['xs', 'lg'].includes(t.size)), id);
+  }
+  // The Adapter's own omits keep their reasons; a prior with only the Adapter's omits carries nothing.
+  assert.ok(carried.selection.omit.some(o => o.reason));
+  assert.equal(carryOmits(redraft, redraft), redraft);
 });
 
 test('a change undone before its update is checked is sent again: the update\'s writes leave the baseline', { skip }, async () => {
@@ -266,7 +328,7 @@ test('a component removed from the project: its approved Contract is set aside, 
   assert.deepEqual(next.sets.textarea, ledger.sets.textarea);
   assert.deepEqual([kept.built.textarea, kept.coverage.textarea], [record.built.textarea, record.coverage.textarea]);
 
-  // The component comes back: it is drafted afresh into contracts/, its set-aside copy goes, and only it is reviewed.
+  // The component comes back: its set-aside copy is the prior, it returns to contracts/ as a draft, and only it is reviewed.
   restore();
   const back = await buildFolder({ project, root, drafts });
   assert.deepEqual([back.written, back.setAside], [['textarea'], []]);
@@ -298,4 +360,45 @@ test('a draft Contract whose component is removed, or that the Adapter now skips
   assert.deepEqual(reviewModel(dir).families.map(f => f.family), rest);
   const a = await approveFolder({ dir, project, exported: exported(dir), said: 'approve', at: AT, test: true });
   assert.deepEqual(a.approved, rest);
+});
+
+test('a removed component that comes back has its set-aside Contract as its prior: the owner\'s omit and Drafted value come back with it', { skip }, async () => {
+  const root = scratch();
+  const project = join(root, 'project');
+  cpSync(V0, project, { recursive: true });
+  const ds = join(root, 'ds');
+  const { dir } = await buildFolder({ project, root: ds, drafts });
+  // The owner renames Textarea's invalid axis in chat (an owner entry, ADR 0010) and unticks its focus State.
+  const file = contractPath(dir, 'textarea');
+  const edited = read(file);
+  edited.axes.find(a => a.key === 'invalid').label = 'Errored';
+  edited.drafted['axes.invalid.label'] = { by: 'owner', was: 'Invalid' };
+  writeFileSync(file, JSON.stringify(edited, null, 2) + '\n');
+  const unfocused = { textarea: m => m.selectMatching({ state: 'focus' }, false) };
+  await approveFolder({ dir, project, exported: exported(dir, unfocused), said: 'approve', at: AT, test: true });
+  const approved = read(file);
+  assert.deepEqual([approved.selection.status, expand(approved).length], ['approved', 4]);
+
+  // Removed from the screens, then changed while it is away (a new snapshot), then back.
+  const restore = dropTextarea(project);
+  assert.deepEqual((await buildFolder({ project, root: ds, drafts })).setAside.map(s => s.family), ['textarea']);
+  fadeDisabled(join(project, 'components/ui/textarea.tsx'));
+  restore();
+  const back = await buildFolder({ project, root: ds, drafts });
+  assert.deepEqual([back.written, back.setAside, back.requests], [['textarea'], [], {}]);
+  assert.ok(!existsSync(join(dir, 'removed/textarea.component.json')));
+  const returned = read(file);
+  assert.equal(returned.selection.status, 'draft');
+  assert.notEqual(returned.source.snapshotId, approved.source.snapshotId);
+  assert.equal(returned.axes.find(a => a.key === 'invalid').label, 'Errored');
+  assert.deepEqual(returned.drafted['axes.invalid.label'], { by: 'owner', was: 'Invalid' });
+  assert.deepEqual(expand(returned).map(t => t.state).sort(), ['disabled', 'disabled', 'enabled', 'enabled']);
+  assert.ok(returned.selection.omit.some(o => !o.reason));
+
+  // The review page holds it alone, unticked as the owner left it, and a plain approve keeps both.
+  assert.deepEqual(reviewModel(dir).families.map(f => f.family), ['textarea']);
+  const a = await approveFolder({ dir, project, exported: exported(dir), said: 'approve', at: AT, test: true });
+  assert.deepEqual(a.approved, ['textarea']);
+  const again = read(file);
+  assert.deepEqual([again.selection.status, expand(again).length, again.axes.find(a => a.key === 'invalid').label], ['approved', 4, 'Errored']);
 });

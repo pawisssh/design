@@ -14,11 +14,15 @@
 //
 // A Contract in the folder whose family this run has no Contract for (the screens no longer use it, or the Adapter
 // now skips it) is set aside in design-systems/<name>/removed/, so contracts/ holds exactly the Foundations closure's
-// Contracts and the review, the approve and the build go on without it. When the family comes back, its new Contract
-// goes into contracts/ and the set-aside copy is deleted.
+// Contracts and the review, the approve and the build go on without it. When the family comes back, the set-aside copy
+// is its prior, as a draft: it carries its Drafted values and the owner's omits back, and is deleted once the family's
+// Contract is in contracts/ again.
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import * as contractModule from '../../contract/scripts/contract.mjs';
+import { applyOmit, asDraft, matches, validate } from '../../contract/scripts/contract.mjs';
 import { writeJson } from '../../contract/scripts/io.mjs';
 import { generate as contractOf, readFamily } from '../../adapter-generic/scripts/components.mjs';
 import { generate as foundationsOf } from '../../adapter-generic/scripts/foundations.mjs';
@@ -27,6 +31,7 @@ import { usedFamilies } from './used.mjs';
 
 export const DESIGN_SYSTEMS = join(REPO_ROOT, 'design-systems');
 const NAME = /^[a-z0-9][a-z0-9._-]*$/;
+const CatalogSelection = createRequire(import.meta.url)('../../to-preview/assets/selection-model.js');
 
 /** The folder name: the override, else package.json `name` without its npm scope. */
 export function folderName(project, name) {
@@ -65,16 +70,19 @@ export async function buildFolder({ project, name, root = DESIGN_SYSTEMS, all = 
   }
 
   // A Contract already in the folder is the prior: it keeps its Drafted values and, at the same snapshot, its
-  // selection, which gives the Foundations closure (an approved omit stays narrowed on a rerun, #177).
-  const priors = {};
+  // selection, which gives the Foundations closure (an approved omit stays narrowed on a rerun, #177). At a new
+  // snapshot, its redraft carries the prior's owner omits (carryOmits). A family set aside in removed/ that is back
+  // has that copy as its prior, as a draft (`returning`): the owner reviews it again, and it is written even unchanged.
+  const priors = {}, returning = new Set();
   for (const family of readable) {
-    const out = join(dir, 'contracts', `${family}.component.json`);
+    const out = join(dir, 'contracts', `${family}.component.json`), aside = join(dir, 'removed', `${family}.component.json`);
     if (existsSync(out)) priors[family] = JSON.parse(readFileSync(out, 'utf8'));
+    else if (existsSync(aside)) { priors[family] = asDraft(JSON.parse(readFileSync(aside, 'utf8'))); returning.add(family); }
   }
   // The component step can still refuse a family (its Contract does not validate): drop it and regenerate, so the
   // Foundations closure lists only families with a Contract.
   for (;;) {
-    const { doc, text } = await foundationsOf({ project, families: readable, tools, designSystem, contracts: priors });
+    let { doc, text } = await foundationsOf({ project, families: readable, tools, designSystem, contracts: priors });
     const results = {};
     let refused = null;
     for (const family of readable) {
@@ -84,6 +92,23 @@ export async function buildFolder({ project, name, root = DESIGN_SYSTEMS, all = 
       catch (e) { refused = family; skip(family, e); break; }
     }
     if (refused) { readable.splice(readable.indexOf(refused), 1); delete contracts[refused]; continue; }
+
+    // A redraft comes with the Adapter's default ticks: carry the owner's omits over from its prior. The narrowed
+    // Contract then gives the Foundations closure, as approve generates it from the Contracts on disk.
+    const carried = {};
+    for (const family of readable) {
+      const r = results[family];
+      if (!r.contract || r.unchanged || !priors[family]) continue;
+      const narrowed = carryOmits(priors[family], r.contract);
+      if (narrowed !== r.contract) carried[family] = r.contract = narrowed;
+    }
+    if (Object.keys(carried).length) {
+      ({ doc, text } = await foundationsOf({ project, families: readable, tools, designSystem, contracts: { ...priors, ...carried } }));
+      for (const [family, c] of Object.entries(carried)) {
+        const { errors } = validate(c, doc);
+        if (errors.length) throw new Error(`${family} with its carried omits does not validate:\n${errors.map(e => `  rule ${e.rule} ${e.at}: ${e.message}`).join('\n')}`);
+      }
+    }
 
     const setAside = [];
     const held = join(dir, 'contracts'), removed = join(dir, 'removed');
@@ -103,12 +128,41 @@ export async function buildFolder({ project, name, root = DESIGN_SYSTEMS, all = 
     for (const family of readable) {
       const r = results[family];
       if (!r.contract) requests[family] = r.requests;
-      else if (r.unchanged) unchanged.push(family);
+      else if (r.unchanged && !returning.has(family)) unchanged.push(family);
       else { writeJson(r.out, r.contract); written.push(family); rmSync(join(removed, `${family}.component.json`), { force: true }); }
     }
     skipped.sort((a, b) => (a.family < b.family ? -1 : 1));
     return { name: key, dir, foundations, contracts, used, families: readable, skipped, setAside, written, unchanged, requests };
   }
+}
+
+/**
+ * carryOmits(prior, contract) -> `contract`, a family drafted again, with the owner's omits of `prior` carried over.
+ * The owner's omits are the prior's with no `reason`: the Adapter's own (attribute twins) come from the redraft.
+ * Each variant is matched to the prior's by axis value: an axis new to the redraft only at its default, an axis it
+ * dropped at the prior's default. A variant the prior omitted by an owner's omit is omitted again. One with a value
+ * the prior did not have, or that the prior excluded, is new and keeps the Adapter's default tick, as does the Base
+ * Component, which is always on. The omit is To-preview's own patch (CatalogSelection), as the review page's export
+ * writes it, so the page shows those variants unticked. Returns `contract` itself when nothing carries.
+ */
+export function carryOmits(prior, contract) {
+  const owners = prior.selection.omit.filter(o => !o.reason).map(o => o.match);
+  if (!owners.length) return contract;
+  const values = Object.fromEntries(prior.axes.map(a => [a.key, a.values.map(v => v.key)]));
+  const priorTuple = tuple => {
+    if (contract.axes.some(a => !values[a.key] && tuple[a.key] !== a.default)) return null;
+    const p = Object.fromEntries(prior.axes.map(a => [a.key, a.key in tuple ? tuple[a.key] : a.default]));
+    if (prior.axes.some(a => !values[a.key].includes(p[a.key])) || (prior.excluded || []).some(e => matches(e.match, p))) return null;
+    return p;
+  };
+  const model = new CatalogSelection(contract, contractModule);
+  let carried = 0;
+  for (const s of model.specimens.values()) {
+    model.verify(s.id);
+    const p = priorTuple(s.tuple);
+    if (p && s.id !== model.baseId && model.selected.has(s.id) && owners.some(m => matches(m, p))) { model.select(s.id, false); carried++; }
+  }
+  return carried ? applyOmit(contract, model.omitPatch()) : contract;
 }
 
 /** One drafts file: {"drafts": {family: {key: value}}}, or the Adapter's {"family", "drafts": {key: value}}. */
