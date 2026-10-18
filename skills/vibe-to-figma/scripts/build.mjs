@@ -21,6 +21,8 @@
 // each variant's fingerprint and id. When its Contract changes after that, only the variants whose fingerprint moved
 // (or that are new) are appended into the set, the rest keep their ids and are not written; a change of the set alone
 // takes one call with no variant in it. A coverage verdict holds across a Foundations build, which writes no set.
+// A set the ledger holds for a family with no Contract in the folder (folder.mjs set it aside: the project no longer
+// has the component) is orphaned: no call touches it, nothing in Figma is deleted, and the build's end names it.
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -52,7 +54,8 @@ export const buildRecordPath = ledger => ledger.replace(/\.ledger\.json$/, '.bui
 /**
  * The approval gate, before anything reaches Figma. Loads design-systems/<name>/ and returns {key, doc, docText,
  * documentHash, contracts: {family: Contract as To-design takes it}, families (approved, to build), drafts,
- * skipped, ask: [{family, total}]}. Throws, naming each reason, when nothing is approved, an approved Contract does
+ * skipped, orphaned: [{family, set, variants}], ask: [{family, total}]}. `orphaned` are the ledger's sets whose family
+ * has no Contract in the folder at all. Throws, naming each reason, when nothing is approved, an approved Contract does
  * not validate or is not in the Foundations closure at its snapshot, a Contract names icons, or the ledger is
  * another file's or another Design System's. A Contract approved by the test approver passes only under .scratch/,
  * where it is built as a prototype approval. `ask` lists the families whose first build is above `maxCombine`.
@@ -91,7 +94,10 @@ export function gate({ dir, fileKey, ledger = null, skip = [], maxCombine = MAX_
     .filter(f => !(ledger && ledger.sets && ledger.sets[f] && ledger.sets[f].set))
     .map(f => ({ family: f, total: expand(contracts[f]).length }))
     .filter(a => a.total > maxCombine);
-  return { key, doc, docText, documentHash: documentHash(docText), contracts, families, drafts, skipped: [...skip].sort(), ask };
+  const orphaned = Object.entries((ledger && ledger.sets) || {}).filter(([f, rec]) => !(f in all) && rec.set)
+    .map(([family, rec]) => ({ family, set: rec.set.id, variants: (rec.variants || []).filter(Boolean).length }))
+    .sort((a, b) => (a.family < b.family ? -1 : 1));
+  return { key, doc, docText, documentHash: documentHash(docText), contracts, families, drafts, skipped: [...skip].sort(), orphaned, ask };
 }
 
 /** A plan in the file's namespace: its Variable collections and its Templates page carry the prefix. */
@@ -170,7 +176,7 @@ function assertNamespace(record, namespace) {
  *   {status: 'ask', ask}                                       a set above maxCombine: nothing derived, ask the owner
  *   {status: 'step', step: 'foundations'|'sets'|'coverage', family?, core, plan, state, options}
  *   {status: 'problems', family, problems}                     a coverage check failed: stop and report
- *   {status: 'built', families: [{family, variants, set}], drafts, skipped}
+ *   {status: 'built', families: [{family, variants, set}], drafts, skipped, orphaned: [{family, set, variants}]}
  * Each also carries `record`, the build record with any new baseline (`baselined`), for the CLI to keep.
  * Options: dir, fileKey, ledger, record (the build record), namespace, skip, maxCombine, coveragePerCall, at, and
  * rebuild: families whose failed coverage check starts a rebuild of their set (one already under way goes on anyway).
@@ -230,6 +236,7 @@ function nextOf({ g, fileKey, ledger, record, namespace, coveragePerCall, rebuil
     families: g.families.map(f => ({ family: f, variants: expand(g.contracts[f]).length, set: ledger.sets[f].set.id, page: g.contracts[f].figma.page })),
     drafts: g.drafts,
     skipped: g.skipped,
+    orphaned: g.orphaned,
   };
 }
 
@@ -372,6 +379,7 @@ function main() {
       ...n.families.map(f => `built ${f.family}: ${f.variants} variants on page ${f.page} (set ${f.set}), coverage passed`),
       ...n.drafts.map(f => `not built ${f}: a draft`),
       ...n.skipped.map(f => `not built ${f}: skipped on the owner's word`),
+      ...n.orphaned.map(o => `orphaned ${o.family}: set ${o.set} (${o.variants} variants) stays in Figma, but the project no longer has its component; nothing was deleted`),
       `https://www.figma.com/design/${fileKey}`,
       'OK',
     ].join('\n'));
