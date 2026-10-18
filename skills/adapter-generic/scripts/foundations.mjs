@@ -92,6 +92,9 @@ function scaled(text, at) {
   return { css: text };
 }
 
+// The Design System the reference project's document names.
+const SHADCN = { key: 'shadcn', name: 'shadcn/ui' };
+
 // ---------- generate ----------
 
 /**
@@ -101,9 +104,11 @@ function scaled(text, at) {
  *                 Contract gives the closure, usedBy and the scope check (one run writes both, #70 §1).
  * @param drafts   agent-drafted values: none belong in a Foundations document (ADR 0010), so it must be empty.
  * @param tools    the pinned tools folder (sources.mjs).
+ * @param designSystem {key, name}: the key names the file, its folder design-systems/<key>/ and the ledger section.
+ *                 shadcn's own reference project by default; Vibe-to-Figma passes a project's folder name (#176).
  * @returns {doc, text, documentHash, summary}. Throws on any failed check (see the header).
  */
-export async function generate({ project, families = [], drafts = [], tools = DEFAULT_DIR }) {
+export async function generate({ project, families = [], drafts = [], tools = DEFAULT_DIR, designSystem = SHADCN }) {
   if (drafts.length) fail('a Foundations document holds no Drafted values (ADR 0010); the component step reads drafts');
   const readText = rel => readFileSync(join(project, rel), 'utf8');
   const config = JSON.parse(readText('components.json'));
@@ -283,7 +288,7 @@ export async function generate({ project, families = [], drafts = [], tools = DE
 
   const doc = {
     schemaVersion: 1,
-    designSystem: { key: 'shadcn', name: 'shadcn/ui' },
+    designSystem: { key: designSystem.key, name: designSystem.name },
     source: {
       codeLibrary: 'shadcn/ui', adapter: 'generic',
       packages: Object.fromEntries(STYLESHEETS.map(n => [n, TOOLS[n].version])),

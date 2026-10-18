@@ -46,6 +46,7 @@ It reads the reference project and the fetched tools by default, and writes [`de
 - Never edit that file by hand. Change the project, the pins or a rule here, and regenerate.
 - A rerun is byte-identical.
 - The seam is `generate({project, families, drafts})`. `drafts` must be empty: a Foundations document holds no Drafted values (ADR 0010), and no drafted key changes a token.
+- `designSystem` (`{key, name}`, default `{key: "shadcn", name: "shadcn/ui"}`) is the document's `designSystem`; its key names the file and its folder. [Vibe-to-Figma](../vibe-to-figma/SKILL.md) passes a project's own folder name (#176).
 - **Families.** `--family` repeats; by default it is every family with a committed Contract in `design-systems/shadcn/contracts/`. One run writes the Code Library tokens and every family's [Synthesized tokens](#synthesized-tokens) (#70 §1): for each family it reads the component the way the component step does, adds its Synthesized tokens and its component file (so editing the file makes the document stale), and builds its Contract against the result. That Contract fills `closure.contracts`, `closure.tokens`, each token's `usedBy` and `checks.scopes` (`contract.mjs validate`, rule 6, with no errors).
 
 ### Modes
