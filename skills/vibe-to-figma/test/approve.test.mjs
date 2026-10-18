@@ -1,36 +1,26 @@
 // The one approve (#177): "approve" or "approve except <family>" reads the review's combined export, applies each
-// family's omit and approves the Contracts against the Foundations document the page showed, in one act. Tests
-// approve only under .scratch/ with the test approver; they never approve a committed file.
+// family's omit and approves the Contracts against the Foundations document the page showed, in one act, then
+// generates that document again from them. Tests approve only under .scratch/ with the test approver; they never
+// approve a committed file.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { cpSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import * as contractModule from '../../contract/scripts/contract.mjs';
 import { generate } from '../../to-handoff/scripts/generate.mjs';
 import { TEST_APPROVER } from '../../to-handoff/scripts/system.mjs';
 import { approveFolder, parseApproval } from '../scripts/approve.mjs';
+import { buildFolder } from '../scripts/folder.mjs';
 import { reviewModel } from '../scripts/review.mjs';
-import { READABLE, V0, read, skip, v0Folder } from './helpers.mjs';
+import { READABLE, V0, read, selections, skip, v0Folder } from './helpers.mjs';
 
-const require = createRequire(import.meta.url);
-const Selection = require('../../to-preview/assets/selection-model.js');
-const { reviewExport } = require('../assets/review-export.js');
+const { reviewExport } = createRequire(import.meta.url)('../assets/review-export.js');
 const AT = '2026-10-18T00:00:00Z';
 const contractPath = (dir, family) => join(dir, 'contracts', `${family}.component.json`);
-
 // The page's export, in node: every catalog rendered, then the owner's unticks.
-function exported(dir, edits = {}) {
-  const model = reviewModel(dir);
-  return reviewExport(model, Object.fromEntries(READABLE.map(family => {
-    const m = new Selection(read(contractPath(dir, family)), contractModule);
-    for (const id of m.specimens.keys()) m.verify(id);
-    if (edits[family]) edits[family](m);
-    const patch = m.omitPatch();
-    return [family, { patch, checked: { family, snapshotId: patch.snapshotId, checked: m.checkedTuples() } }];
-  })));
-}
+const exported = (dir, edits) => reviewExport(reviewModel(dir), selections(dir, edits));
 // Every file of the folder, as text: what a refusal must leave unchanged.
 const snapshot = dir => Object.fromEntries(['', 'contracts'].flatMap(sub => readdirSync(join(dir, sub)).filter(f => f.endsWith('.json')).map(f => [join(sub, f), readFileSync(join(dir, sub, f), 'utf8')])));
 
@@ -44,16 +34,26 @@ test('the owner\'s message: "approve", or "approve except" one or more families'
   assert.throws(() => parseApproval('approve except sonner', READABLE), /sonner has no Contract here/);
 });
 
-test('"approve" applies every family\'s omit and approves every Contract; the Foundations document is unchanged', { skip }, async () => {
+test('"approve" applies every family\'s omit, approves every Contract and narrows the Foundations closure to them', { skip }, async () => {
   const { dir } = await v0Folder();
   const before = snapshot(dir);
   const review = exported(dir, { button: m => m.selectMatching({ size: 'xs' }, false) });
-  const r = approveFolder({ dir, exported: review, said: 'approve', at: AT, test: true });
+  const r = await approveFolder({ dir, project: V0, exported: review, said: 'approve', at: AT, test: true });
   assert.deepEqual(r.approved, READABLE);
   assert.deepEqual(r.drafts, []);
-  assert.equal(r.foundations.documentHash, review.documentHash);
-  assert.equal(readFileSync(join(dir, 'v0-app.foundations.json'), 'utf8'), before['v0-app.foundations.json']);
-  const foundations = read(join(dir, 'v0-app.foundations.json'));
+  assert.equal(r.foundations.reviewed, review.documentHash);
+  assert.equal(r.foundations.written, true);
+  const text = readFileSync(join(dir, 'v0-app.foundations.json'), 'utf8');
+  assert.equal(r.foundations.documentHash, `sha256:${contractModule.sha256(text)}`);
+  // Only button used text-xs-medium, and only at size xs: the closure is the approved Contracts' own, so it goes.
+  const foundations = JSON.parse(text), was = JSON.parse(before['v0-app.foundations.json']);
+  const union = new Set(READABLE.flatMap(f => contractModule.closure(read(contractPath(dir, f)))));
+  assert.deepEqual(foundations.closure.tokens, [...union].sort());
+  assert.ok(was.closure.tokens.includes('text-xs-medium') && !foundations.closure.tokens.includes('text-xs-medium'));
+  assert.deepEqual(foundations.textStyles['text-xs-medium'].usedBy, []);
+  // Nothing else in the document moves: no approval of its own, the same variables and closure.contracts.
+  for (const k of Object.keys(was).filter(k => k !== 'closure' && k !== 'textStyles' && k !== 'variables')) assert.deepEqual(foundations[k], was[k], k);
+  assert.deepEqual(foundations.closure.contracts, was.closure.contracts);
   for (const family of READABLE) {
     const c = read(contractPath(dir, family));
     assert.equal(c.selection.status, 'approved', family);
@@ -68,12 +68,18 @@ test('"approve" applies every family\'s omit and approves every Contract; the Fo
   // Only the selection lines change: the rest of each Contract is byte for byte the draft's.
   const label = readFileSync(contractPath(dir, 'label'), 'utf8');
   assert.equal(label.replace(/"selection": \{[\s\S]*?\n  \}/, ''), before['contracts/label.component.json'].replace(/"selection": \{[\s\S]*?\n  \}/, ''));
+  // folder.mjs again over the approved folder: its Contracts give the closure, so nothing moves.
+  const approvedFolder = snapshot(dir);
+  const again = await buildFolder({ project: V0, root: dirname(dir) });
+  assert.equal(again.foundations.written, false);
+  assert.deepEqual(again.unchanged, READABLE);
+  assert.deepEqual(snapshot(dir), approvedFolder);
 });
 
 test('"approve except select" leaves select a draft, byte-unchanged, and approves the rest', { skip }, async () => {
   const { dir } = await v0Folder();
   const before = snapshot(dir);
-  const r = approveFolder({ dir, exported: exported(dir, { select: m => m.selectMatching({ state: 'disabled' }, false) }), said: 'approve except select', at: AT, test: true });
+  const r = await approveFolder({ dir, project: V0, exported: exported(dir, { select: m => m.selectMatching({ state: 'disabled' }, false) }), said: 'approve except select', at: AT, test: true });
   assert.deepEqual(r.approved, READABLE.filter(f => f !== 'select'));
   assert.deepEqual(r.drafts, ['select']);
   assert.equal(readFileSync(contractPath(dir, 'select'), 'utf8'), before['contracts/select.component.json']);
@@ -83,11 +89,12 @@ test('"approve except select" leaves select a draft, byte-unchanged, and approve
 test('approving again with the same ticks leaves every approval as it was', { skip }, async () => {
   const { dir } = await v0Folder();
   const review = exported(dir);
-  approveFolder({ dir, exported: review, said: 'approve', at: AT, test: true });
+  await approveFolder({ dir, project: V0, exported: review, said: 'approve', at: AT, test: true });
   const once = snapshot(dir);
-  const r = approveFolder({ dir, exported: exported(dir), said: 'approve', at: '2026-10-19T00:00:00Z', test: true });
+  const r = await approveFolder({ dir, project: V0, exported: exported(dir), said: 'approve', at: '2026-10-19T00:00:00Z', test: true });
   assert.deepEqual(r.approved, []);
   assert.deepEqual(r.unchanged, READABLE);
+  assert.equal(r.foundations.written, false);
   assert.deepEqual(snapshot(dir), once);
 });
 
@@ -95,25 +102,25 @@ test('a refusal writes nothing: no owner message, a test outside .scratch/, anot
   const { dir } = await v0Folder();
   const review = exported(dir);
   const before = snapshot(dir);
-  const refuses = (args, pattern) => {
-    assert.throws(() => approveFolder({ dir, exported: review, said: 'approve', at: AT, test: true, ...args }), pattern);
+  const refuses = async (args, pattern) => {
+    await assert.rejects(approveFolder({ dir, project: V0, exported: review, said: 'approve', at: AT, test: true, ...args }), pattern);
     assert.deepEqual(snapshot(args.dir || dir), args.dir ? args.before : before);
   };
-  refuses({ said: 'ship it' }, /is not "approve" or "approve except <family>"/);
+  await refuses({ said: 'ship it' }, /is not "approve" or "approve except <family>"/);
   const outside = join(mkdtempSync(join(tmpdir(), 'vibe-to-figma-')), 'v0-app');
   cpSync(dir, outside, { recursive: true });
-  refuses({ dir: outside, before: snapshot(outside) }, /a test approval is written only under .*\.scratch/);
-  refuses({ exported: { ...review, designSystem: 'shadcn' } }, /the review is of shadcn, not v0-app/);
-  refuses({ exported: { ...review, documentHash: 'sha256:0' } }, /the Foundations document moved since the review/);
+  await refuses({ dir: outside, before: snapshot(outside) }, /a test approval is written only under .*\.scratch/);
+  await refuses({ exported: { ...review, designSystem: 'shadcn' } }, /the review is of shadcn, not v0-app/);
+  await refuses({ exported: { ...review, documentHash: 'sha256:0' } }, /the Foundations document moved since the review/);
   const { select, ...rest } = review.families;
-  refuses({ exported: { ...review, families: rest } }, /no ticks for select/);
+  await refuses({ exported: { ...review, families: rest } }, /no ticks for select/);
   const stale = structuredClone(review);
   stale.families.card.patch.snapshotId = stale.families.card.checked.snapshotId = 'sha256:old';
-  refuses({ exported: stale }, /card: .*snapshotId/);
+  await refuses({ exported: stale }, /card: .*snapshotId/);
   // All or nothing: one family's ticks that do not reproduce its checked tuples stop every family.
   const wrong = structuredClone(review);
   wrong.families.button.checked.checked.pop();
-  refuses({ exported: wrong }, /button: the expansion differs from the checked tuples/);
+  await refuses({ exported: wrong }, /button: the expansion differs from the checked tuples/);
 });
 
 test('a Contract the Foundations document does not list, or lists at another snapshot, is refused', { skip }, async () => {
@@ -124,7 +131,20 @@ test('a Contract the Foundations document does not list, or lists at another sna
   doc.closure.contracts = doc.closure.contracts.filter(c => c.family !== 'card');
   writeFileSync(file, JSON.stringify(doc, null, 2) + '\n');
   const moved = { ...review, documentHash: `sha256:${contractModule.sha256(readFileSync(file, 'utf8'))}` };
-  assert.throws(() => approveFolder({ dir, exported: moved, said: 'approve', at: AT, test: true }), /card is not in the Foundations document's closure/);
+  await assert.rejects(approveFolder({ dir, project: V0, exported: moved, said: 'approve', at: AT, test: true }), /card is not in the Foundations document's closure/);
+});
+
+test('a Foundations document the project no longer generates is refused, so approve writes only what an omit changes', { skip }, async () => {
+  const { dir } = await v0Folder();
+  const review = exported(dir);
+  const file = join(dir, 'v0-app.foundations.json');
+  const doc = read(file);
+  doc.notes.push({ level: 'info', at: 'variables', message: 'edited by hand' });
+  writeFileSync(file, JSON.stringify(doc, null, 2) + '\n');
+  const before = snapshot(dir);
+  const moved = { ...review, documentHash: `sha256:${contractModule.sha256(readFileSync(file, 'utf8'))}` };
+  await assert.rejects(approveFolder({ dir, project: V0, exported: moved, said: 'approve', at: AT, test: true }), /no longer generates the Foundations document the page showed/);
+  assert.deepEqual(snapshot(dir), before);
 });
 
 test('To-handoff generates against the approved folder with no Contract requests and no draft Contract', { skip }, async () => {
@@ -136,7 +156,7 @@ test('To-handoff generates against the approved folder with no Contract requests
   const draft = await generate({ prototype: V0, designSystem: dir, decisions });
   assert.deepEqual(drafts(draft), ['alert', 'button', 'input', 'label', 'select', 'textarea']);
 
-  approveFolder({ dir, exported: exported(dir), said: 'approve', at: AT, test: true });
+  await approveFolder({ dir, project: V0, exported: exported(dir), said: 'approve', at: AT, test: true });
   const r = await generate({ prototype: V0, designSystem: dir, decisions });
   assert.deepEqual(r.requests, []);
   assert.deepEqual(r.dropped, []);

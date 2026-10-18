@@ -3,8 +3,10 @@
 // answers. Each test takes its own copy; after() removes them all.
 import { after } from 'node:test';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import * as contractModule from '../../contract/scripts/contract.mjs';
 import { REPO_ROOT, hasTools } from '../../adapter-generic/scripts/sources.mjs';
 import { hasTypescript } from '../../to-handoff/scripts/deps.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
@@ -34,3 +36,18 @@ export async function v0Folder() {
 }
 
 export const read = path => JSON.parse(readFileSync(path, 'utf8'));
+
+const Selection = createRequire(import.meta.url)('../../to-preview/assets/selection-model.js');
+/**
+ * What the page's export does with each catalog's Catalog.getSelection(), in node: every specimen rendered, then
+ * the owner's edits ({family: model => ...}). -> {family: {patch, checked}}.
+ */
+export function selections(dir, edits = {}) {
+  return Object.fromEntries(READABLE.map(family => {
+    const model = new Selection(read(join(dir, 'contracts', `${family}.component.json`)), contractModule);
+    for (const id of model.specimens.keys()) model.verify(id);
+    if (edits[family]) edits[family](model);
+    const patch = model.omitPatch();
+    return [family, { patch, checked: { family, snapshotId: patch.snapshotId, checked: model.checkedTuples() } }];
+  }));
+}

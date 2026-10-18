@@ -106,9 +106,11 @@ const SHADCN = { key: 'shadcn', name: 'shadcn/ui' };
  * @param tools    the pinned tools folder (sources.mjs).
  * @param designSystem {key, name}: the key names the file, its folder design-systems/<key>/ and the ledger section.
  *                 shadcn's own reference project by default; Vibe-to-Figma passes a project's folder name (#176).
+ * @param contracts {family: Contract}, the Contracts on disk: one at the snapshot this run reads gives the closure
+ *                 and usedBy in place of the Adapter's draft, so an owner's omit narrows them (#177).
  * @returns {doc, text, documentHash, summary}. Throws on any failed check (see the header).
  */
-export async function generate({ project, families = [], drafts = [], tools = DEFAULT_DIR, designSystem = SHADCN }) {
+export async function generate({ project, families = [], drafts = [], tools = DEFAULT_DIR, designSystem = SHADCN, contracts = {} }) {
   if (drafts.length) fail('a Foundations document holds no Drafted values (ADR 0010); the component step reads drafts');
   const readText = rel => readFileSync(join(project, rel), 'utf8');
   const config = JSON.parse(readText('components.json'));
@@ -315,7 +317,8 @@ export async function generate({ project, families = [], drafts = [], tools = DE
   };
 
   // 6. Each family with a Contract: its Synthesized tokens join the Theme after every Code Library token, its file
-  //    joins `source.files`, and its Contract, built against the whole document, gives the closure and usedBy.
+  //    joins `source.files`, and its Contract, built against the whole document, gives the closure and usedBy. A
+  //    given Contract at the same snapshot gives them instead: its selection is the owner's, the draft's is not.
   const read = [];
   for (const family of [...new Set(families)].sort(byKey)) {
     const f = await readFamily({ project, family, foundations: doc, tools });
@@ -332,7 +335,9 @@ export async function generate({ project, families = [], drafts = [], tools = DE
     doc.variables = ordered(variables);
     const tokens = new Set();
     for (const [family, f] of read) {
-      const contract = contractFor(f, family, doc);
+      const draft = contractFor(f, family, doc);
+      const given = contracts[family];
+      const contract = given && given.source.snapshotId === draft.source.snapshotId ? given : draft;
       doc.closure.contracts.push({ family, path: `design-systems/${designSystem.key}/contracts/${family}.component.json`, snapshotId: contract.source.snapshotId });
       for (const t of closure(contract)) {
         tokens.add(t);
@@ -428,7 +433,13 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   try {
     if (families.some(f => !f || f.startsWith('-'))) throw new Error('--family needs a family key');
     if (!hasTools(tools)) await fetchTools(tools);
-    const { text, documentHash, summary } = await generate({ project, families, tools });
+    // The committed Contracts give the closure, so an owner's omit narrows it (#177).
+    const contracts = {};
+    for (const f of families) {
+      const file = join(REPO_ROOT, CONTRACTS, `${f}.component.json`);
+      if (existsSync(file)) contracts[f] = JSON.parse(readFileSync(file, 'utf8'));
+    }
+    const { text, documentHash, summary } = await generate({ project, families, tools, contracts });
     writeFileSync(out, text);
     console.log([...summary, `wrote ${relative(process.cwd(), out)} (${text.length} chars, documentHash ${documentHash})`, 'OK'].join('\n'));
   } catch (e) {

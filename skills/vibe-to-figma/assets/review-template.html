@@ -125,7 +125,6 @@
       $("status").textContent = "Exported " + name + ": " + Object.entries(data.families).map(([k, s]) => k + " " + s.patch.expectedCount).join(", ") + ". Say \"approve\" in chat.";
     } catch (error) { $("error").textContent = error.message; }
   };
-  window.Review = { selections, exportReview: () => window.ReviewExport.reviewExport(model, selections()) };
 })();
 </script>
 </html>
