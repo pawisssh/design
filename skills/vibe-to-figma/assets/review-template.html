@@ -34,12 +34,14 @@
 <main id="panels"></main>
 <!-- review -->
 <script src="./review-export.js"></script>
+<script src="./review-store.js"></script>
 <script>
 (() => {
   "use strict";
-  // Vibe-to-Figma's review shell (#177). review = {model, tabs, catalogs}: model is reviewModel() (scripts/review.mjs),
+  // Vibe-to-Figma's review shell (#177, #178). review = {model, tabs, catalogs}: model is reviewModel() (scripts/review.mjs),
   // catalogs maps a family to To-preview's own catalog page, run unchanged in an iframe. Export collects each catalog's
-  // Catalog.getSelection() into one file. Drafted values are read-only here: the owner changes them in chat.
+  // Catalog.getSelection() into one file; as an Artifact, the db keeps them instead. Drafted values are read-only here:
+  // the owner changes them in chat.
   const review = JSON.parse(document.getElementById("review").textContent);
   const { model } = review;
   const $ = id => document.getElementById(id);
@@ -104,16 +106,88 @@
   });
 
   // Each catalog keeps its own page; only its per-family export button goes, since this page exports them all.
-  let loaded = 0;
-  for (const frame of frames) frame.addEventListener("load", () => {
+  const loaded = Promise.all(frames.map(frame => new Promise(resolve => frame.addEventListener("load", () => {
     const own = frame.contentDocument && frame.contentDocument.getElementById("export");
     if (own) own.hidden = true;
-    if (++loaded === frames.length) { $("export").disabled = false; $("status").textContent = frames.length + " catalogs loaded. Export when every tab is ticked."; }
-  });
+    resolve();
+  }, { once: true }))));
 
   function selections() {
     return Object.fromEntries(frames.map(frame => [frame.dataset.family, frame.contentWindow.Catalog.getSelection()]));
   }
+
+  // Published as an Artifact (#178), the ticks persist in its db (ReviewStore.DOC) and come back on a reload; approve
+  // reads them from there. Only the owner's ticks are saved. A local page has no db: it keeps the export below.
+  const store = (async () => {
+    if (!window.claude || typeof window.claude.use !== "function") return null;
+    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    return db ? { doc: db.doc(window.ReviewStore.DOC), owner: user ? await user.isOwner() : false } : null;
+  })().catch(() => null);
+  // A catalog has rendered every specimen once its own (hidden) export button is enabled.
+  const rendered = frame => new Promise(resolve => {
+    const own = frame.contentDocument.getElementById("export");
+    if (!own.disabled) return resolve();
+    new MutationObserver((_, observer) => { if (!own.disabled) { observer.disconnect(); resolve(); } }).observe(own, { attributes: true, attributeFilter: ["disabled"] });
+  });
+  const reason = error => (error && error.message) || String(error);
+  // `last` is the document as the db holds it, `sent` the last one written to it (both ReviewStore.canonical).
+  const saving = { last: null, sent: null, queue: Promise.resolve(), timer: 0 };
+  const SAVING = "Saving the ticks.";
+  function save(s) {
+    let next;
+    try { next = window.ReviewStore.storedTicks(window.ReviewExport.reviewExport(model, selections())); }
+    catch (error) { $("error").textContent = error.message; return; }
+    const text = window.ReviewStore.canonical(next);
+    if (text !== saving.sent) {
+      saving.sent = text;
+      // One write at a time; each saves the page's whole state as it is then. The patches are objects of the catalogs'
+      // own windows, which the db refuses as not plain JSON, so it gets a copy made in this window.
+      saving.queue = saving.queue.then(() => s.doc.set(JSON.parse(text))).then(() => {
+        saving.last = text; $("error").textContent = "";
+      }, error => {
+        saving.sent = saving.last;
+        $("status").textContent = "The ticks are not saved.";
+        $("error").textContent = "The ticks were not saved: " + reason(error) + ". Tick again to retry.";
+      });
+    }
+    // Saved says so only once no tick waits and the db holds what the page shows.
+    saving.queue.then(() => {
+      if (!saving.timer && saving.last === saving.sent && $("status").textContent === SAVING)
+        $("status").textContent = "Ticks saved. Say \"approve\" in chat, or \"approve except <family>\".";
+    });
+  }
+
+  Promise.all([loaded, store]).then(async ([, s]) => {
+    if (!s) { $("export").disabled = false; $("status").textContent = frames.length + " catalogs loaded. Export when every tab is ticked."; return; }
+    // An Artifact cannot download a file, so the export goes; its db holds the ticks instead.
+    $("export").hidden = true;
+    $("status").textContent = "Loading the saved ticks.";
+    await Promise.all(frames.map(rendered));
+    let saved;
+    try { const snap = await s.doc.get(); saved = snap.exists ? snap.data() : null; }
+    catch (error) { $("error").textContent = "The saved ticks could not be read: " + reason(error) + ". Reload the page; nothing is saved until they are."; return; }
+    const { patches, stale } = window.ReviewStore.restorable(model, saved);
+    for (const frame of frames) if (patches[frame.dataset.family]) frame.contentWindow.Catalog.setSelection(patches[frame.dataset.family]);
+    const restored = Object.keys(patches).length;
+    $("status").textContent = (restored ? "Restored the saved ticks of " + restored + " of " + frames.length + " families. " : "") + (stale.length ? stale.join("; ") + ", so those show as their Contracts have them. " : "")
+      + (s.owner ? "Ticks save as you go. Say \"approve\" in chat." : "Your ticks are not saved: only the owner's are.");
+    if (!s.owner) return;
+    saving.last = saving.sent = saved && !stale.length ? window.ReviewStore.canonical(saved) : null;
+    // A page whose state is not saved yet (first open, or a new version) saves it once, so approve reads what it shows.
+    save(s);
+    // A tick saves 400 ms after the last one, or at once when the owner leaves the page for the chat, so approve does
+    // not read the ticks from before it.
+    const now = () => { clearTimeout(saving.timer); saving.timer = 0; save(s); };
+    const later = () => {
+      clearTimeout(saving.timer); saving.timer = setTimeout(now, 400);
+      $("status").textContent = SAVING;
+    };
+    document.addEventListener("visibilitychange", () => { if (document.hidden && saving.timer) now(); });
+    for (const frame of frames) {
+      frame.contentDocument.addEventListener("change", later);
+      frame.contentDocument.addEventListener("click", event => { if (event.target.closest("button")) later(); });
+    }
+  });
   $("export").onclick = () => {
     $("error").textContent = "";
     try {
