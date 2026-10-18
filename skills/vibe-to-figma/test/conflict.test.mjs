@@ -5,7 +5,7 @@
 // copy of the v0 project under .scratch/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { contentHash } from '../../contract/scripts/contract.mjs';
 import { approveFolder } from '../scripts/approve.mjs';
@@ -48,6 +48,7 @@ test('a variant edited in Figma whose code changed is left as it is and reported
   // The edited variant is as the owner left it, at its old opacity; the unedited one updated; the other edits kept.
   assert.deepEqual((await node(ids[2])).fills, RED);
   assert.equal((await node(ids[2])).opacity, was);
+  assert.deepEqual(r.steps.flatMap(s => s.writes).filter(([, id]) => id === ids[2]), []);
   near((await node(ids[5])).opacity, 0.4);
   assert.deepEqual((await node(ids[0])).fills, RED);
   assert.deepEqual((await node(ledger.sets.label.variants[0])).fills, RED);
@@ -203,7 +204,7 @@ test('a baseline from before #181 gets its Contract on a run with no change; mid
   assert.equal((await node(ids[5])).opacity, was);
 });
 
-test('the build record keeps its Contracts as files beside it, and drops one no baseline needs', async () => {
+test('the build record keeps its Contracts as files beside it, drops one no baseline needs, and reads on without a lost one', async () => {
   const dir = scratch();
   const file = join(dir, 'X.v0-app.build.json');
   assert.deepEqual(readRecord(file), {});
@@ -213,6 +214,9 @@ test('the build record keeps its Contracts as files beside it, and drops one no 
   assert.deepEqual(read(file).contracts, ['sha256:aa']);
   assert.deepEqual(readdirSync(join(dir, 'X.v0-app.build.contracts')), ['aa.json']);
   assert.deepEqual(readRecord(file), record);
+  // a Contract file gone is a Contract not kept: its variants are not read back, and are conflicts while they change
+  rmSync(join(dir, 'X.v0-app.build.contracts', 'aa.json'));
+  assert.deepEqual(readRecord(file), { ...record, contracts: {} });
   writeRecord(file, { ...record, contracts: { 'sha256:bb': c } });
   assert.deepEqual(readdirSync(join(dir, 'X.v0-app.build.contracts')), ['bb.json']);
   writeRecord(file, { namespace: 'v0-app' });

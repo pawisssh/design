@@ -126,7 +126,7 @@ Repeat until `next` prints `OK`. It lists each Component Set it built, with its 
     Give a flag to `next` only on the owner's own word in chat.
   - **A variant edited in Figma whose code did not change** is never read and never reported.
   - **A conflict read back as built** at a later code change (the owner undid the edit) is one no more and is sent.
-  - **A conflict whose code goes back** to the version its variant was built from is one no more: an edit of a variant whose code did not change. A conflict on a variant the Contract no longer expands (unticked on the review page) goes too.
+  - **A conflict whose code goes back** to the version its variant was built from is one no more: an edit of a variant whose code did not change. A variant gone from the set stays a conflict. A conflict on a variant the Contract no longer expands (unticked on the review page) goes too.
   - **A variant that cannot be read back** is a conflict too, `not read back`: one from a baseline from before #181 while its update is under way, one whose Contract file is gone, or a read To-design refuses to plan against today's Foundations. A baseline from before #181 gets its Contract on the next `next` with no change.
   - **What it does not guard:** a variant's place in the grid, and `--rebuild` and a family's first build, which write every variant. A failed coverage check's `--rebuild` writes over the conflicts too, so ask the owner first.
 

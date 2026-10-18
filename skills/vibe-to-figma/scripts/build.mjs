@@ -206,7 +206,7 @@ const conflictAt = (built, name, fingerprint) => !!(built && built.conflicts && 
 /**
  * The build record without the conflicts that no longer hold: a variant the Contract no longer expands (unticked or
  * gone from the code), or one whose code is back to the version it was built from (an edit of a variant whose code did
- * not change is not reported). A take of a variant the Contract no longer expands goes too.
+ * not change is not reported), but for one gone from the set. A take of a variant the Contract no longer expands goes too.
  */
 export function settled(record, g) {
   let out = record;
@@ -214,7 +214,8 @@ export function settled(record, g) {
     const built = (out.built || {})[f];
     if (!built || !(built.conflicts || built.take)) continue;
     const fps = new Map(variantFingerprints(g.contracts[f]).map(v => [v.name, v.fingerprint]));
-    const conflicts = Object.fromEntries(Object.entries(built.conflicts || {}).filter(([name]) => fps.has(name) && !holds(built.variants[name], fps.get(name))));
+    // a variant gone from the set still needs the owner's word (untick it, or --take-code), whatever its code
+    const conflicts = Object.fromEntries(Object.entries(built.conflicts || {}).filter(([name, c]) => fps.has(name) && (c.reason === 'missing' || !holds(built.variants[name], fps.get(name)))));
     const take = (built.take || []).filter(name => fps.has(name));
     if (Object.keys(conflicts).length === Object.keys(built.conflicts || {}).length && take.length === (built.take || []).length) continue;
     const next = { ...built, conflicts, take };
