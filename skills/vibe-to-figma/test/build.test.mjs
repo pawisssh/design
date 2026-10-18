@@ -56,9 +56,8 @@ async function drive({ dir, mock, ledger = null, record = {}, max = 200, ...opts
     if (n.status !== 'step') return { n, ledger, record, steps };
     const result = await runPackage(pack(n.plan, n.state, n.core), mock.figma);
     steps.push({ step: n.step, family: n.family, options: n.options, result });
+    ({ ledger, record } = recordStep({ dir, fileKey: FILE_KEY, ledger, record, result, namespace: opts.namespace, skip: opts.skip, at: AT }));
     if (result.conflicts && result.conflicts.length) return { n: { status: 'conflicts', conflicts: result.conflicts }, ledger, record, steps };
-    ({ ledger, record } = recordStep({ dir, fileKey: FILE_KEY, ledger, record, result, at: AT }));
-    record = { ...record, namespace: opts.namespace ?? null };
   }
   throw new Error(`no end after ${max} calls`);
 }
@@ -96,9 +95,10 @@ test('after "approve", Foundations then every Component Set by B′, each passin
   const plain = await drive({ dir, mock });
   assert.equal(plain.n.status, 'conflicts');
   assert.deepEqual(plain.n.conflicts.map(c => [c.kind, c.reason]), [['collection', 'unowned'], ['collection', 'unowned']]);
-  assert.equal(plain.ledger, null);
-  // In its own namespace it builds.
-  const { n, ledger, record, steps } = await drive({ dir, mock, namespace: 'v0-app', coveragePerCall: 4 });
+  assert.ok(!plain.ledger.foundations);
+  assert.ok(!('namespace' in plain.record));
+  // In its own namespace it builds, on from the conflict.
+  const { n, ledger, record, steps } = await drive({ dir, mock, ledger: plain.ledger, record: plain.record, namespace: 'v0-app', coveragePerCall: 4 });
   assert.equal(n.status, 'built', JSON.stringify(n));
   assert.deepEqual(n.families.map(f => f.family), READABLE);
   assert.deepEqual(n.drafts, []);
@@ -124,6 +124,7 @@ test('after "approve", Foundations then every Component Set by B′, each passin
   // A rerun derives nothing: the build is done, and Figma is not called again.
   assert.equal(nextStep({ dir, fileKey: FILE_KEY, ledger, record, namespace: 'v0-app', at: AT }).status, 'built');
   assert.throws(() => nextStep({ dir, fileKey: FILE_KEY, ledger, record, namespace: null, at: AT }), /built with --namespace "v0-app"/);
+  assert.throws(() => recordStep({ dir, fileKey: FILE_KEY, ledger, record, result: steps.at(-1).result, at: AT }), /built with --namespace "v0-app"/);
 });
 
 test('a set that fails its coverage check stops the run until --rebuild builds it again in place', { skip }, async () => {
@@ -145,6 +146,11 @@ test('a set that fails its coverage check stops the run until --rebuild builds i
   // Still stopped on a rerun; an unknown family is refused.
   assert.equal(nextStep({ dir, fileKey: FILE_KEY, ledger: failed.ledger, record: failed.record, namespace: 'v0-app', at: AT }).status, 'problems');
   assert.throws(() => nextStep({ dir, fileKey: FILE_KEY, ledger: failed.ledger, record: failed.record, namespace: 'v0-app', rebuild: ['sonner'], at: AT }), /--rebuild sonner: not an approved family/);
+  // Only a build batch into the set its current verdict failed starts a rebuild; after a Contract change it is an update.
+  const append = { slice: 'sets', mode: 'build', phase: 'append', fileKey: FILE_KEY, family: 'label', batch: [0, 2], conflicts: [], ledger: { sets: { label: failed.ledger.sets.label } } };
+  const into = record => recordStep({ dir, fileKey: FILE_KEY, ledger: failed.ledger, record, result: append, namespace: 'v0-app', at: AT }).record.rebuild;
+  assert.deepEqual(into(failed.record), { label: [0] });
+  assert.equal(into({ ...failed.record, coverage: { ...failed.record.coverage, label: { ...failed.record.coverage.label, contentHash: 'sha256:before' } } }), undefined);
   const fixed = await drive({ ...opts, ledger: failed.ledger, record: failed.record, rebuild: ['label', 'button'] });
   assert.equal(fixed.n.status, 'built', JSON.stringify(fixed.n));
   // Only the failed set is built again, inside its set (same set id), then read again.
@@ -175,11 +181,17 @@ test('a set above MAX_COMBINE stops the run before any write, until the owner na
   const ask = nextStep({ dir, fileKey: FILE_KEY, maxCombine: 40 });
   assert.equal(ask.status, 'ask');
   assert.deepEqual(ask.ask, [{ family: 'button', total: 48 }]);
+  // Skipped on the owner's word, Button is left out of the gate to the end, even where it would not pass it.
+  const button = join(dir, 'contracts/button.component.json');
+  const approved = readFileSync(button, 'utf8');
+  writeFileSync(button, JSON.stringify({ ...JSON.parse(approved), source: { ...JSON.parse(approved).source, snapshotId: 'sha256:elsewhere' } }));
+  assert.throws(() => nextStep({ dir, fileKey: FILE_KEY }), /cannot build [^]*\n- button /);
   const mock = mockFigma({ fileKey: FILE_KEY });
   const { n } = await drive({ dir, mock, maxCombine: 40, skip: ['button'] });
   assert.equal(n.status, 'built', JSON.stringify(n));
   assert.deepEqual(n.skipped, ['button']);
   assert.ok(!n.families.some(f => f.family === 'button'));
+  writeFileSync(button, approved);
   assert.throws(() => nextStep({ dir, fileKey: FILE_KEY, skip: ['sonner'] }), /--skip sonner: sonner is not an approved Contract here/);
   // Under MAX_COMBINE the CLI derives and packages the first call, Foundations.
   const tmp = scratch();

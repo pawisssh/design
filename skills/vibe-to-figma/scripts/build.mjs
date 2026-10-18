@@ -101,6 +101,12 @@ export function namespaced(plan, namespace) {
 
 const prototypeOf = c => c.selection.approval.by === PROTOTYPE_APPROVER;
 
+/** A file built in one namespace is built on in that one; the record takes it from the first call without a conflict. */
+function assertNamespace(record, namespace) {
+  if ('namespace' in record && record.namespace !== namespace)
+    throw new Error(`this file was built with --namespace ${JSON.stringify(record.namespace)}: give the same one (a different one would rename its collections)`);
+}
+
 /**
  * The build's next call, from the gate, the ledger and the build record:
  *   {status: 'ask', ask}                                       a set above maxCombine: nothing derived, ask the owner
@@ -114,8 +120,7 @@ export function nextStep({ dir, fileKey, ledger = null, record = {}, namespace =
   const g = gate({ dir, fileKey, ledger, skip, maxCombine });
   const unknown = rebuild.filter(f => !g.families.includes(f));
   if (unknown.length) throw new Error(`--rebuild ${unknown.join(', ')}: not an approved family of ${dir} built here`);
-  if ('namespace' in record && record.namespace !== namespace)
-    throw new Error(`this file was built with --namespace ${JSON.stringify(record.namespace)}: give the same one (a different one would rename its collections)`);
+  assertNamespace(record, namespace);
   if (g.ask.length) return { status: 'ask', ask: g.ask, drafts: g.drafts };
   const step = (name, family, core, { plan, state }) => ({ status: 'step', step: name, family, core, plan: namespaced(plan, namespace), state, options: plan.options });
 
@@ -158,17 +163,26 @@ export function nextStep({ dir, fileKey, ledger = null, record = {}, namespace =
 /**
  * The ledger and build record after a use_figma result: a build result goes into the ledger (To-design's
  * recordResult), a coverage page into the record; once every page of a family is read, the pages merge and the
- * coverage check's verdict replaces them. Throws on an error result. -> {ledger, record, verdict?}
+ * coverage check's verdict replaces them. Throws on an error result. A call without a conflict fixes the record's
+ * namespace; one that conflicts leaves it open, so the run can go on with --namespace. Options as nextStep's.
+ * -> {ledger, record, verdict?}
  */
-export function recordStep({ dir, fileKey, ledger = null, record = {}, result, at = new Date().toISOString() }) {
+export function recordStep({ dir, fileKey, ledger = null, record = {}, result, namespace = null, skip = [], at = new Date().toISOString() }) {
   if (!result || result.error) throw new Error(`not recording a failed call: ${JSON.stringify(result && result.error)}`);
   if (result.fileKey !== fileKey) throw new Error(`the result is for ${result.fileKey}, not ${fileKey}`);
+  assertNamespace(record, namespace);
+  const out = recorded({ dir, fileKey, ledger, record, result, skip, at });
+  if (!(result.conflicts || []).length) out.record = { ...out.record, namespace };
+  return out;
+}
+
+function recorded({ dir, fileKey, ledger, record, result, skip, at }) {
   if (result.slice === 'sets' && result.mode === 'coverage') {
     const family = result.family;
     const pages = { ...((record.pages || {})[family] || {}), [result.batch[0]]: result };
     const next = { ...record, pages: { ...(record.pages || {}), [family]: pages } };
     if (Object.keys(pages).length < result.batch[1]) return { ledger, record: next };
-    const g = gate({ dir, fileKey, ledger });
+    const g = gate({ dir, fileKey, ledger, skip });
     const contract = g.contracts[family];
     let merged;
     try { merged = mergeCoverage(Object.values(pages)); }
@@ -184,10 +198,15 @@ export function recordStep({ dir, fileKey, ledger = null, record = {}, result, a
   if (result.slice === 'sets') {
     const drop = o => Object.fromEntries(Object.entries(o || {}).filter(([f]) => f !== result.family));
     out.record = { ...record, coverage: drop(record.coverage), pages: drop(record.pages) };
-    // a rebuild's batch (a build batch into the set) is kept until all of them are in
+    // a rebuild's batch (a build batch into the set, after its current verdict failed) is kept until all of them are in
     const under = (record.rebuild || {})[result.family];
     const failed = (record.coverage || {})[result.family];
-    if (result.mode === 'build' && result.phase === 'append' && (under || (failed && !failed.ok))) {
+    const starts = () => {
+      if (!failed || failed.ok || failed.set !== result.ledger.sets[result.family]?.set?.id) return false;
+      const g = gate({ dir, fileKey, ledger, skip });
+      return failed.contentHash === contentHash(g.contracts[result.family]) && failed.documentHash === g.documentHash;
+    };
+    if (result.mode === 'build' && result.phase === 'append' && (under || starts())) {
       const done = [...new Set([...(under || []), result.batch[0]])];
       const rest = drop(record.rebuild);
       out.record.rebuild = done.length < result.batch[1] ? { ...rest, [result.family]: done } : rest;
@@ -223,11 +242,11 @@ function main() {
   const record = existsSync(recordFile) ? JSON.parse(readFileSync(recordFile, 'utf8')) : {};
   const namespace = values.namespace ?? null;
   const rel = p => relative(process.cwd(), p);
-  const writeRecord = r => { mkdirSync(dirname(recordFile), { recursive: true }); writeFileSync(recordFile, JSON.stringify({ ...r, namespace }, null, 2) + '\n'); };
+  const writeRecord = r => { mkdirSync(dirname(recordFile), { recursive: true }); writeFileSync(recordFile, JSON.stringify(r, null, 2) + '\n'); };
 
   if (cmd === 'record') {
     const result = JSON.parse(readFileSync(resolve(resultPath), 'utf8'));
-    const r = recordStep({ dir, fileKey, ledger, record, result });
+    const r = recordStep({ dir, fileKey, ledger, record, result, namespace, skip: values.skip });
     if (r.ledger !== ledger) { mkdirSync(dirname(ledgerFile), { recursive: true }); writeFileSync(ledgerFile, JSON.stringify(r.ledger, null, 2) + '\n'); }
     writeRecord(r.record);
     const conflicts = result.conflicts || [];
@@ -266,7 +285,6 @@ function main() {
   mkdirSync(out, { recursive: true });
   writeFileSync(join(out, 'plan.json'), JSON.stringify(n.plan, null, 2) + '\n');
   writeFileSync(join(out, 'state.json'), JSON.stringify(n.state, null, 2) + '\n');
-  writeRecord(record);
   const packaged = JSON.parse(execFileSync('python3', [join(TO_DESIGN, 'scripts/package_native_builder.py'), n.core, join(out, 'plan.json'), out, '--state', join(out, 'state.json')], { encoding: 'utf8' }).trim().split('\n').pop());
   if (packaged.status !== 'packaged') throw new Error(`the packager refused: ${packaged.error}`);
   console.log(JSON.stringify({
