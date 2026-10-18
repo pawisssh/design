@@ -766,7 +766,9 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
         const rows = [];
         // a ledger orphan's row ends with its id, so the check matches it by id, not by name
         const oid = Object.values((prev && prev.orphans) || {});
-        for (const k of set.children) {
+        // a paged read (options.rows: [from, to or null]) reads only its window of the set's children
+        const R = opts.rows;
+        for (const k of R ? set.children.slice(R[0], R[1] == null ? undefined : R[1]) : set.children) {
           const refs = {};
           for (const x of k.findAll(() => true)) {
             const r = x.componentPropertyReferences;
@@ -786,7 +788,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
         const hp = hdr ? hdr.componentProperties : {};
         const content = section && kidNamed(section, 'FRAME', 'Content');
         return {
-          summary: { variants: rows.length, conflicts: 0 },
+          summary: { variants: rows.length, children: set.children.length, conflicts: 0 },
           set: { id: set.id, name: set.name, description: set.description, layoutMode: set.layoutMode, grid: [set.gridRowCount, set.gridColumnCount],
             gap: [set.gridRowGap, set.gridColumnGap], padding: set.paddingTop, dash: set.dashPattern, radius: set.topLeftRadius, stroke: paintOf(set.strokes),
             defaultVariant: set.defaultVariant ? set.defaultVariant.name : null, page: pageOf(set).name, parents: [set.parent.name, set.parent.parent && set.parent.parent.name] },
