@@ -156,7 +156,9 @@ test('To-handoff generates against the approved folder with no Contract requests
   const draft = await generate({ prototype: V0, designSystem: dir, decisions });
   assert.deepEqual(drafts(draft), ['alert', 'button', 'input', 'label', 'select', 'textarea']);
 
-  await approveFolder({ dir, project: V0, exported: exported(dir), said: 'approve', at: AT, test: true });
+  // An omit that narrows the closure, so To-handoff reads the Foundations document approve wrote.
+  const approved = await approveFolder({ dir, project: V0, exported: exported(dir, { button: m => m.selectMatching({ size: 'xs' }, false) }), said: 'approve', at: AT, test: true });
+  assert.equal(approved.foundations.written, true);
   const r = await generate({ prototype: V0, designSystem: dir, decisions });
   assert.deepEqual(r.requests, []);
   assert.deepEqual(r.dropped, []);
