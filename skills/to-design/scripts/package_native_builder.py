@@ -137,7 +137,9 @@ def check_sets(plan):
     entries = selection.get("entries") if isinstance(selection, dict) else None
     if selection.get("schemaVersion") != 1 or not isinstance(axes, list) or not axes or not isinstance(entries, list):
         raise ValueError("Sets plan selection must be versioned axis-ordered tuples")
-    if not entries and mode in ("build", "reconcile", "sample", "theme"):
+    # an append that picks no variant (setsPlan indexes []) updates the set alone: its name, properties and grid
+    set_only = mode == "build" and (plan.get("options") or {}).get("phase") == "append" and (plan.get("options") or {}).get("picked") == 0
+    if not entries and mode in ("build", "reconcile", "sample", "theme") and not set_only:
         raise ValueError(f"A {mode} plan must select variants")
     seen = set()
     for e in entries:

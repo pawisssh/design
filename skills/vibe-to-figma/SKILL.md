@@ -11,7 +11,7 @@ description: One command from a React + shadcn + Tailwind Prototype (a v0 or Lov
 
 Runs the existing skills end to end on a Prototype (spec [#175](https://github.com/pawisssh/design/issues/175)). It adds no Adapter and no builder: the [Generic Adapter](../adapter-generic/SKILL.md) reads the project, [To-preview](../to-preview/SKILL.md) and [Contract](../contract/SKILL.md) approval narrow and approve it, and [To-design](../to-design/SKILL.md) builds it. [To-handoff](../to-handoff/SKILL.md) reads the same folder afterwards.
 
-Today it has the Design System folder ([#176](https://github.com/pawisssh/design/issues/176)), the review page and the one approve ([#177](https://github.com/pawisssh/design/issues/177)), the review page as a private Artifact whose ticks persist ([#178](https://github.com/pawisssh/design/issues/178)), the Figma build into the linked file ([#179](https://github.com/pawisssh/design/issues/179)), and reruns that touch only the components whose code changed ([#180](https://github.com/pawisssh/design/issues/180)). What is still open is under [Left for later tickets](#left-for-later-tickets).
+Today it has the Design System folder ([#176](https://github.com/pawisssh/design/issues/176)), the review page and the one approve ([#177](https://github.com/pawisssh/design/issues/177)), the review page as a private Artifact whose ticks persist ([#178](https://github.com/pawisssh/design/issues/178)), the Figma build into the linked file ([#179](https://github.com/pawisssh/design/issues/179)), reruns that touch only the components whose code changed ([#180](https://github.com/pawisssh/design/issues/180)), and Figma edits that are never overwritten ([#181](https://github.com/pawisssh/design/issues/181)). What is still open is under [Left for later tickets](#left-for-later-tickets).
 
 ## Inputs
 
@@ -118,6 +118,16 @@ Repeat until `next` prints `OK`. It lists each Component Set it built, with its 
 - **A failed coverage check** stops the run (exit 1) and names the problems. Once the cause is fixed, `--rebuild <family>` builds that set's batches again inside the set, with the same set and variant ids, and then reads its coverage again.
 - Drafts (`approve except`) and families the folder skipped are not built.
 - **A rerun builds only what changed** ([#180](https://github.com/pawisssh/design/issues/180)). With no change, `next` prints `OK` at once. Once a set passes its coverage check, the build record keeps its baseline, `built: {<family>: {contentHash, set, variants}}`: each variant's fingerprint (its layer tree, resolved layout and paint, and property wiring) and id. A record from before #180 gets it on the next `next`, for each family whose Contract is as its last passing check had it; a family changed since then has no baseline and is built in full. When a family's approved Contract changes, its update goes into the same set: one call per append's worth of the variants that are new or whose fingerprint changed (To-design's `setsPlan` `indexes`), at least one call for a change of the set alone (its description or properties), then its coverage check. A call into the set takes the variants it wrote out of the baseline until that check passes, so a change undone in between is still sent. A variant whose code did not change is never written again, so an edit to it in Figma stays; every other family is not called. A changed closure also moves the Foundations document, so its call goes out first, and it changes nothing when the tokens did not.
+- **Figma edits are never overwritten** ([#181](https://github.com/pawisssh/design/issues/181)). The baseline also keeps the Contract its set was built from (`contract`, its contentHash; the Contract itself is a file in `<fileKey>.<name>.build.contracts/`). Before an update writes a variant that is in the set, `next` asks for a `check` call: To-design's read-only `sample` read of up to 24 variants, diffed against that Contract with To-design's `checkSample`, but for the grid cell, which every call into a set re-places by name. Send it and record it like any other call.
+  - **A variant that differs, or is gone from the set,** was edited in Figma. It is not sent: it is kept as a conflict in the build record and the rest of the update goes in. Its coverage problems are the conflict's, not the check's, so the check still passes.
+  - **Every `OK` lists each conflict,** `CONFLICT <family>:<variant>`, with the fields that differ, until the owner resolves it. Show the owner each one and ask, per variant:
+    - `--take-code <family>:<variant>` writes the code's version over the owner's edit;
+    - `--keep-figma <family>:<variant>` keeps Figma's version. The code's change is not built into that variant, and a later change of its code is a conflict again. For a variant gone from the set, untick it on the review page instead.
+    Give a flag to `next` only on the owner's own word in chat.
+  - **A variant edited in Figma whose code did not change** is never read and never reported.
+  - **A conflict read back as built** at a later code change (the owner undid the edit) is one no more and is sent.
+  - **A variant that cannot be read back** is a conflict too, `not read back`: one from a baseline from before #181 while its update is under way, or a read To-design refuses to plan against today's Foundations. A baseline from before #181 gets its Contract on the next `next` with no change.
+  - **What it does not guard:** a variant's place in the grid, and `--rebuild` and a family's first build, which write every variant. A failed coverage check's `--rebuild` writes over the conflicts too, so ask the owner first.
 
 Tests: `skills/vibe-to-figma/test/build.test.mjs` drives the whole loop on To-design's mock Figma. A mock smoke draft holds Carbon's collections and Templates page. The tests cover:
 
@@ -130,6 +140,14 @@ Tests: `skills/vibe-to-figma/test/build.test.mjs` drives the whole loop on To-de
 
 `skills/vibe-to-figma/test/rerun.test.mjs` reruns on a copy of the v0 project: with no change nothing is written, reviewed or built; after `input.tsx` changes, only input is drafted, reviewed and approved, the other approvals stay byte-unchanged, and its set gets one call with its two changed variants, while hand edits to an unchanged variant and to another family survive. It also covers a change undone before its update is checked, a build record from before #180, `pendingUpdate` and the `indexes` refusals.
 
+`skills/vibe-to-figma/test/conflict.test.mjs` covers the conflicts on the same copy:
+- a hand-edited variant whose code changed is read back, left as it is and reported, while the other changed variant updates and edits to unchanged variants are not read or reported;
+- the conflict is still reported on a rerun with no change, and still edited at a further change;
+- `--take-code` and `--keep-figma`, and their refusals;
+- a variant removed in Figma;
+- a baseline from before #181;
+- the record's Contract files.
+
 ## Left for later tickets
 
-- **Figma edits never overwritten** ([#181](https://github.com/pawisssh/design/issues/181)): a rerun leaves unchanged variants alone (#180), but a changed variant is written over, edits and all.
+- **Pulling Figma edits back into code**, and merging both sides automatically: phase 2 of [#175](https://github.com/pawisssh/design/issues/175).
