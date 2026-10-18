@@ -2,7 +2,8 @@
 // Vibe-to-Figma's review page (#177): one local page for a Design System folder. Its first tab is Foundations
 // (colors, Text Styles), then one tab per Contract holding To-preview's own catalog page for it, unchanged, in an
 // iframe. Drafted values show read-only; the owner changes them in chat. One export button writes every family's
-// ticks to one file, <name>.review.json, which approve.mjs reads.
+// ticks to one file, <name>.review.json, which approve.mjs reads. Published as a private Artifact (#178), the page saves
+// the ticks in the Artifact's db instead and restores them on a reload (assets/review-store.js).
 //
 //   node skills/vibe-to-figma/scripts/review.mjs design-systems/<name> --project <project> [--out <file>]
 //
@@ -34,7 +35,7 @@ const lineHeight = l => (l.unit === 'PIXELS' ? `${l.value}px` : l.unit === 'PERC
 /**
  * reviewModel(dir) -> {designSystem, foundations: {documentHash, colors: {modes, variables}, textStyles}, families}.
  * `colors` is the COLOR variables of the first multi-mode collection (Theme) with each mode's resolved value;
- * `families` lists each Contract: {family, name, description, status, variants, drafted: [{key, value, by}]}.
+ * `families` lists each Contract: {family, name, description, status, snapshotId, variants, drafted: [{key, value, by}]}.
  */
 export function reviewModel(dir) {
   const files = folderFiles(dir);
@@ -53,7 +54,7 @@ export function reviewModel(dir) {
     const c = readJson(path);
     if (c.family.key !== family) throw new Error(`${relative(dir, path)} holds the ${c.family.key} Contract`);
     return {
-      family, name: c.family.name, description: c.family.description, status: c.selection.status, variants: expand(c).length,
+      family, name: c.family.name, description: c.family.description, status: c.selection.status, snapshotId: c.source.snapshotId, variants: expand(c).length,
       drafted: Object.entries(c.drafted || {}).map(([key, d]) => ({ key, value: draftedValue(c, key).value, by: d.by })),
     };
   });
@@ -78,7 +79,8 @@ export async function buildReview({ dir, renderer }) {
   const html = asset('review-template.html')
     .replace('<title>Design System review</title>', () => `<title>${model.designSystem} review</title>`)
     .replace('<!-- review -->', () => `<script type="application/json" id="review">${data}</script>`)
-    .replace('<script src="./review-export.js"></script>', () => script(asset('review-export.js')));
+    .replace('<script src="./review-export.js"></script>', () => script(asset('review-export.js')))
+    .replace('<script src="./review-store.js"></script>', () => script(asset('review-store.js')));
   return { html, model };
 }
 

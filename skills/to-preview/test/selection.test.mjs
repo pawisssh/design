@@ -106,3 +106,22 @@ test('export needs every checked specimen rendered', () => {
   model.select('secondary|sm|hover', false);
   assert.equal(model.omitPatch().expectedCount, 191);
 });
+
+test('selectPatch() restores the selection an omitPatch() described, and refuses another family or snapshot', () => {
+  const ticked = new Selection(fixture(), contractModule);
+  for (const id of ticked.specimens.keys()) ticked.verify(id);
+  ticked.selectMatching({ size: 'xs' }, false);
+  ticked.select('secondary|lg|hover', false);
+  ticked.select('primary|sm|focus', true);
+  const patch = ticked.omitPatch();
+  const restored = new Selection(fixture(), contractModule);
+  for (const id of restored.specimens.keys()) restored.verify(id);
+  restored.selectPatch(patch);
+  assert.deepEqual(restored.checkedTuples(), ticked.checkedTuples());
+  assert.deepEqual(restored.omitPatch(), patch);
+  // A patch that matches the Base Component leaves it locked on.
+  restored.selectPatch({ ...patch, omit: [{ kind: 'primary' }] });
+  assert.ok(restored.selected.has(restored.baseId));
+  assert.throws(() => restored.selectPatch({ ...patch, snapshotId: 'sha256:old' }), /The ticks are for button at sha256:old/);
+  assert.throws(() => restored.selectPatch({ ...patch, family: 'tag' }), /The ticks are for tag/);
+});
