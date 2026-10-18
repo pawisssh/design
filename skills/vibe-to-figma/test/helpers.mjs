@@ -1,0 +1,53 @@
+// The v0 Prototype's Design System folder, built once per test file under <repo>/.scratch/vibe-to-figma-tests/
+// (a test approval is written only under .scratch/), with the Adapter's committed fixtures/drafts as the agent's
+// answers. Each test takes its own copy; after() removes them all.
+import { after } from 'node:test';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import * as contractModule from '../../contract/scripts/contract.mjs';
+import { REPO_ROOT, hasTools } from '../../adapter-generic/scripts/sources.mjs';
+import { hasTypescript } from '../../to-handoff/scripts/deps.mjs';
+import { buildFolder } from '../scripts/folder.mjs';
+
+export const V0 = fileURLToPath(new URL('../../to-handoff/test/fixtures/v0-app', import.meta.url));
+const DRAFTS = fileURLToPath(new URL('../../adapter-generic/fixtures/drafts/', import.meta.url));
+export const READABLE = ['alert', 'button', 'card', 'input', 'label', 'select', 'textarea'];
+export const skip = (!hasTools() && 'Generic Adapter tools missing; run: node skills/adapter-generic/scripts/sources.mjs')
+  || (!hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs');
+
+const SCRATCH = join(REPO_ROOT, '.scratch/vibe-to-figma-tests');
+const made = [];
+after(() => { for (const dir of made) rmSync(dir, { recursive: true, force: true }); });
+export const scratch = () => { mkdirSync(SCRATCH, { recursive: true }); const dir = mkdtempSync(join(SCRATCH, 'run-')); made.push(dir); return dir; };
+
+let built;
+/** A fresh copy of design-systems/v0-app/ under .scratch/: {dir, report}. */
+export async function v0Folder() {
+  if (!built) {
+    const drafts = Object.fromEntries(READABLE.map(f => [f, JSON.parse(readFileSync(join(DRAFTS, `${f}.json`), 'utf8')).drafts]));
+    const root = scratch();
+    built = { report: await buildFolder({ project: V0, root, drafts }), root };
+  }
+  const root = scratch();
+  cpSync(join(built.root, 'v0-app'), join(root, 'v0-app'), { recursive: true });
+  return { dir: join(root, 'v0-app'), report: built.report };
+}
+
+export const read = path => JSON.parse(readFileSync(path, 'utf8'));
+
+const Selection = createRequire(import.meta.url)('../../to-preview/assets/selection-model.js');
+/**
+ * What the page's export does with each catalog's Catalog.getSelection(), in node: every specimen rendered, then
+ * the owner's edits ({family: model => ...}). -> {family: {patch, checked}}.
+ */
+export function selections(dir, edits = {}) {
+  return Object.fromEntries(READABLE.map(family => {
+    const model = new Selection(read(join(dir, 'contracts', `${family}.component.json`)), contractModule);
+    for (const id of model.specimens.keys()) model.verify(id);
+    if (edits[family]) edits[family](model);
+    const patch = model.omitPatch();
+    return [family, { patch, checked: { family, snapshotId: patch.snapshotId, checked: model.checkedTuples() } }];
+  }));
+}

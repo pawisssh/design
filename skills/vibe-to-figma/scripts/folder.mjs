@@ -56,15 +56,22 @@ export async function buildFolder({ project, name, root = DESIGN_SYSTEMS, all = 
     try { await readFamily({ project, family, foundations: base, tools }); readable.push(family); } catch (e) { skip(family, e); }
   }
 
+  // A Contract already in the folder is the prior: it keeps its Drafted values and, at the same snapshot, its
+  // selection, which gives the Foundations closure (an approved omit stays narrowed on a rerun, #177).
+  const priors = {};
+  for (const family of readable) {
+    const out = join(dir, 'contracts', `${family}.component.json`);
+    if (existsSync(out)) priors[family] = JSON.parse(readFileSync(out, 'utf8'));
+  }
   // The component step can still refuse a family (its Contract does not validate): drop it and regenerate, so the
   // Foundations closure lists only families with a Contract.
   for (;;) {
-    const { doc, text } = await foundationsOf({ project, families: readable, tools, designSystem });
+    const { doc, text } = await foundationsOf({ project, families: readable, tools, designSystem, contracts: priors });
     const results = {};
     let refused = null;
     for (const family of readable) {
       const out = contracts[family] = join(dir, 'contracts', `${family}.component.json`);
-      const prior = existsSync(out) ? JSON.parse(readFileSync(out, 'utf8')) : null;
+      const prior = priors[family] || null;
       try { results[family] = { out, ...(await contractOf({ project, family, foundations: doc, prior, drafts: drafts[family] || {}, tools })) }; }
       catch (e) { refused = family; skip(family, e); break; }
     }
