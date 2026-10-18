@@ -1,13 +1,18 @@
 // The agent's build loop on To-design's mock Figma (#179), shared by the build and rerun tests: next, the packaged
-// call, record, until the build is done or stops.
+// call, record, until the build is done or stops. And a copy of the v0 project built on the mock, for the reruns.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mockFigma, runPackage } from '../../to-design/tests/mock-figma.mjs';
+import { approveFolder } from '../scripts/approve.mjs';
 import { nextStep, recordStep } from '../scripts/build.mjs';
+import { buildFolder } from '../scripts/folder.mjs';
+import { reviewModel } from '../scripts/review.mjs';
+import { READABLE, V0, read, scratch, selections } from './helpers.mjs';
 
 const PACKAGER = fileURLToPath(new URL('../../to-design/scripts/package_native_builder.py', import.meta.url));
 export const FILE_KEY = 'MOCKFILEKEY0000000000000';
@@ -56,4 +61,26 @@ export function smokeDraft() {
   mock.figma.variables.createVariableCollection('Theme');
   mock.figma.variables.createVariableCollection('Layout');
   return mock;
+}
+
+const { reviewExport } = createRequire(import.meta.url)('../assets/review-export.js');
+const DRAFTS = fileURLToPath(new URL('../../adapter-generic/fixtures/drafts/', import.meta.url));
+export const drafts = Object.fromEntries(READABLE.map(f => [f, read(join(DRAFTS, `${f}.json`)).drafts]));
+export const RED = [{ type: 'SOLID', color: { r: 1, g: 0, b: 0 }, opacity: 1, visible: true, blendMode: 'NORMAL' }];
+/** The page's export, in node, for the families on it. */
+export const exported = (dir, edits) => { const model = reviewModel(dir); const all = selections(dir, edits); return reviewExport(model, Object.fromEntries(model.families.map(f => [f.family, all[f.family]]))); };
+/** Input's disabled State at another opacity (50 to 40, then to 30): its two disabled variants change (indexes 2 and 5). */
+export const fadeDisabled = (file, from = 50, to = 40) => writeFileSync(file, readFileSync(file, 'utf8').replace(`disabled:opacity-${from}`, `disabled:opacity-${to}`));
+
+/** A copy of the v0 project with its folder built, approved (Button narrowed) and built on the mock. */
+export async function builtProject() {
+  const root = scratch();
+  const project = join(root, 'project');
+  cpSync(V0, project, { recursive: true });
+  const { dir } = await buildFolder({ project, root: join(root, 'ds'), drafts });
+  await approveFolder({ dir, project, exported: exported(dir, NARROW), said: 'approve', at: AT, test: true });
+  const mock = smokeDraft();
+  const first = await drive({ dir, mock, namespace: 'v0-app' });
+  assert.equal(first.n.status, 'built', JSON.stringify(first.n));
+  return { project, root: join(root, 'ds'), dir, mock, ledger: first.ledger, record: first.record };
 }

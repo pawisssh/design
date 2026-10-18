@@ -6,41 +6,19 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { contentHash, expand, tupleKey } from '../../contract/scripts/contract.mjs';
 import { setsPlan } from '../../to-design/scripts/build-plan.mjs';
 import { approveFolder } from '../scripts/approve.mjs';
-import { baselined, gate, nextStep, pendingUpdate, variantFingerprints } from '../scripts/build.mjs';
+import { CORES, baselined, gate, nextStep, pendingUpdate, variantFingerprints } from '../scripts/build.mjs';
 import { buildFolder, carryOmits } from '../scripts/folder.mjs';
 import { buildReview, reviewModel } from '../scripts/review.mjs';
-import { AT, FILE_KEY, NARROW, drive, smokeDraft } from './drive.mjs';
-import { READABLE, V0, contractPath, read, scratch, selections, skip, snapshot, v0Folder } from './helpers.mjs';
+import { AT, FILE_KEY, RED, builtProject, drafts, drive, exported, fadeDisabled, pack } from './drive.mjs';
+import { READABLE, contractPath, read, selections, skip, snapshot, v0Folder } from './helpers.mjs';
 
-const { reviewExport } = createRequire(import.meta.url)('../assets/review-export.js');
 const REVIEW = fileURLToPath(new URL('../scripts/review.mjs', import.meta.url));
-const DRAFTS = fileURLToPath(new URL('../../adapter-generic/fixtures/drafts/', import.meta.url));
-const drafts = Object.fromEntries(READABLE.map(f => [f, read(join(DRAFTS, `${f}.json`)).drafts]));
-const RED = [{ type: 'SOLID', color: { r: 1, g: 0, b: 0 }, opacity: 1, visible: true, blendMode: 'NORMAL' }];
-// The page's export, in node, for the families on it.
-const exported = (dir, edits) => { const model = reviewModel(dir); const all = selections(dir, edits); return reviewExport(model, Object.fromEntries(model.families.map(f => [f.family, all[f.family]]))); };
-// Input's disabled State at opacity 40 in place of 50: its two disabled variants change (invalid × state, indexes 2 and 5).
-const fadeDisabled = file => writeFileSync(file, readFileSync(file, 'utf8').replace('disabled:opacity-50', 'disabled:opacity-40'));
-
-/** A copy of the v0 project with its folder built, approved (Button narrowed) and built on the mock. */
-async function builtProject() {
-  const root = scratch();
-  const project = join(root, 'project');
-  cpSync(V0, project, { recursive: true });
-  const { dir } = await buildFolder({ project, root: join(root, 'ds'), drafts });
-  await approveFolder({ dir, project, exported: exported(dir, NARROW), said: 'approve', at: AT, test: true });
-  const mock = smokeDraft();
-  const first = await drive({ dir, mock, namespace: 'v0-app' });
-  assert.equal(first.n.status, 'built', JSON.stringify(first.n));
-  return { project, root: join(root, 'ds'), dir, mock, ledger: first.ledger, record: first.record };
-}
 // One built project for the tests that change neither it nor the mock.
 let shared;
 const sharedProject = () => (shared ??= builtProject());
@@ -99,16 +77,19 @@ test('after one component\'s code changes, only it is reviewed and only its chan
   const approved = snapshot(dir);
   for (const f of READABLE.filter(f => f !== 'input')) assert.equal(approved[join('contracts', `${f}.component.json`)], before[join('contracts', `${f}.component.json`)], f);
 
-  // The build: one Foundations call (the closure moved with input's snapshot) that writes nothing, then one call into
-  // input's set with only its two changed variants, then input's coverage check. No other family is called.
+  // The build: one Foundations call (the closure moved with input's snapshot) that writes nothing, a read-only check of
+  // the two changed variants (#181), then one call into input's set with only those two, then input's coverage check.
+  // No other family is called.
   const { n, ledger: next, record: kept, steps } = await drive({ dir, mock, ledger, record, namespace: 'v0-app' });
   assert.equal(n.status, 'built', JSON.stringify(n));
-  assert.deepEqual(steps.map(s => [s.step, s.family]), [['foundations', null], ['sets', 'input'], ...steps.filter(s => s.step === 'coverage').map(() => ['coverage', 'input'])]);
+  assert.deepEqual(n.conflicts, []);
+  assert.deepEqual(steps.map(s => [s.step, s.family]), [['foundations', null], ['check', 'input'], ['sets', 'input'], ...steps.filter(s => s.step === 'coverage').map(() => ['coverage', 'input'])]);
   assert.ok(steps.some(s => s.step === 'coverage'));
   const { created, updated, orphaned, pruned, conflicts } = steps[0].result.summary;
   assert.deepEqual({ created, updated, orphaned, pruned, conflicts }, { created: 0, updated: 0, orphaned: 0, pruned: 0, conflicts: 0 });
   assert.deepEqual(steps[0].writes, []);
-  const update = steps[1];
+  assert.deepEqual(steps[1].writes, []);
+  const update = steps[2];
   assert.equal(update.options.picked, 2);
   assert.deepEqual(update.plan.selection.entries.map(e => e[0]), [2, 5]);
   assert.equal(kept.coverage.input.ok, true, JSON.stringify(kept.coverage.input.problems));
@@ -258,8 +239,10 @@ test('pendingUpdate: no update without a baseline of the same set; a change of t
   assert.deepEqual(pendingUpdate(described, ledger, holed), [1, 3]);
   // An empty pick is a set-only call; indexes are refused anywhere but a build call into a placed set.
   const { docText } = g;
-  const { plan } = setsPlan(contract, docText, ledger, { fileKey: FILE_KEY, mode: 'build', indexes: [], prototype: true, at: AT });
+  const { plan, state } = setsPlan(contract, docText, ledger, { fileKey: FILE_KEY, mode: 'build', indexes: [], prototype: true, at: AT });
   assert.deepEqual([plan.selection.entries, plan.options.picked, plan.options.of], [[], 0, 1]);
+  // and To-design's packager takes it (it refuses any other plan that picks no variant)
+  assert.match(pack(plan, state, CORES.sets), /build-components|figma/);
   const refuses = (opts, pattern, l = ledger) => assert.throws(() => setsPlan(contract, docText, l, { fileKey: FILE_KEY, prototype: true, at: AT, ...opts }), pattern);
   refuses({ mode: 'coverage', indexes: [0] }, /indexes pick a build call's variants themselves/);
   refuses({ mode: 'build', next: true, indexes: [0] }, /indexes pick a build call's variants themselves/);
