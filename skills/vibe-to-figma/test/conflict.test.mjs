@@ -9,7 +9,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { contentHash } from '../../contract/scripts/contract.mjs';
 import { approveFolder } from '../scripts/approve.mjs';
-import { gate, nextStep, parseResolve, readRecord, variantFingerprints, writeRecord } from '../scripts/build.mjs';
+import { conflictsOf, gate, nextStep, parseResolve, readRecord, settled, variantFingerprints, writeRecord } from '../scripts/build.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
 import { AT, FILE_KEY, RED, builtProject, drafts, drive, exported, fadeDisabled } from './drive.mjs';
 import { contractPath, read, scratch, skip } from './helpers.mjs';
@@ -136,6 +136,47 @@ test('--keep-figma keeps the edit and builds the code change elsewhere; a varian
   assert.equal(again.n.status, 'built', JSON.stringify(again.n));
   assert.deepEqual(again.n.conflicts.map(c => [c.variant, c.reason]), [[names[2], 'edited'], [names[5], 'missing']]);
   assert.deepEqual((await node(ids[2])).fills, RED);
+});
+
+test('--take-code builds a variant removed in Figma again; a conflict whose code goes back, or that is unticked, is not reported', { skip }, async () => {
+  const p = await builtProject();
+  const { dir, mock, ledger, record } = p;
+  const node = nodeOf(mock);
+  const ids = ledger.sets.input.variants;
+  const names = variantFingerprints(gate({ dir, fileKey: FILE_KEY, ledger }).contracts.input).map(v => v.name);
+  (await node(ids[2])).fills = RED;
+  (await node(ids[5])).remove();
+  await changed(p, 50, 40);
+  const r = await drive({ dir, mock, ledger, record, namespace: 'v0-app' });
+  assert.deepEqual(r.n.conflicts.map(c => [c.variant, c.reason]), [[names[2], 'edited'], [names[5], 'missing']]);
+
+  // The removed variant is made again under a new id, once: the take ends with its write.
+  const said = nextStep({ dir, fileKey: FILE_KEY, ledger: r.ledger, record: r.record, namespace: 'v0-app', at: AT, resolve: parseResolve([`input:${names[5]}`]) });
+  const taken = await drive({ dir, mock, ledger: r.ledger, record: said.record, namespace: 'v0-app' });
+  assert.equal(taken.n.status, 'built', JSON.stringify(taken.n));
+  assert.deepEqual(sentOf(taken.steps), [[5]]);
+  assert.notEqual(taken.ledger.sets.input.variants[5], ids[5]);
+  near((await node(taken.ledger.sets.input.variants[5])).opacity, 0.4);
+  assert.equal(taken.record.coverage.input.ok, true, JSON.stringify(taken.record.coverage.input.problems));
+  assert.deepEqual(taken.n.conflicts.map(c => c.variant), [names[2]]);
+  assert.ok(!('take' in taken.record.built.input));
+
+  // The code goes back to what the edited variant was built from: its edit is one of a variant whose code did not
+  // change, so it is neither read nor reported; the other changed variants are updated as ever.
+  await changed(p, 40, 50);
+  const back = await drive({ dir, mock, ledger: taken.ledger, record: taken.record, namespace: 'v0-app' });
+  assert.equal(back.n.status, 'built', JSON.stringify(back.n));
+  assert.deepEqual(back.n.conflicts, []);
+  assert.ok(!readOf(back.steps).flat().includes(2) && !sentOf(back.steps).flat().includes(2));
+  assert.ok(sentOf(back.steps).flat().includes(5));
+  assert.deepEqual((await node(ids[2])).fills, RED);
+
+  // A conflict on a variant the Contract no longer expands (unticked on the review page) goes, and so does its take.
+  const g = gate({ dir, fileKey: FILE_KEY, ledger: back.ledger });
+  const input = { ...back.record.built.input, conflicts: { 'Gone=Yes': { reason: 'edited', fingerprint: 'sha256:00', contract: null, at: AT } }, take: ['Gone=Yes'] };
+  const out = settled({ ...back.record, built: { ...back.record.built, input } }, g);
+  assert.deepEqual(conflictsOf(out), []);
+  assert.ok(!('take' in out.built.input) && !('conflicts' in out.built.input));
 });
 
 test('a baseline from before #181 gets its Contract on a run with no change; mid-update, its variants are not written over', { skip }, async () => {

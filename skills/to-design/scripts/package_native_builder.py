@@ -131,14 +131,15 @@ def check_sets(plan):
             raise ValueError(f"Sets plan needs {field}")
     if not plan.get("snapshotId") or not str(plan.get("contentHash", "")).startswith("sha256:"):
         raise ValueError("Sets plan must carry the approved Contract's snapshotId and contentHash")
-    mode = (plan.get("options") or {}).get("mode", "build")
+    options = plan.get("options") or {}
+    mode = options.get("mode", "build")
     selection = plan["selection"]
     axes = selection.get("axes") if isinstance(selection, dict) else None
     entries = selection.get("entries") if isinstance(selection, dict) else None
     if selection.get("schemaVersion") != 1 or not isinstance(axes, list) or not axes or not isinstance(entries, list):
         raise ValueError("Sets plan selection must be versioned axis-ordered tuples")
     # an append that picks no variant (setsPlan indexes []) updates the set alone: its name, properties and grid
-    set_only = mode == "build" and (plan.get("options") or {}).get("phase") == "append" and (plan.get("options") or {}).get("picked") == 0
+    set_only = mode == "build" and options.get("phase") == "append" and options.get("picked") == 0
     if not entries and mode in ("build", "reconcile", "sample", "theme") and not set_only:
         raise ValueError(f"A {mode} plan must select variants")
     seen = set()

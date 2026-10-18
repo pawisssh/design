@@ -121,12 +121,13 @@ Repeat until `next` prints `OK`. It lists each Component Set it built, with its 
 - **Figma edits are never overwritten** ([#181](https://github.com/pawisssh/design/issues/181)). The baseline also keeps the Contract its set was built from (`contract`, its contentHash; the Contract itself is a file in `<fileKey>.<name>.build.contracts/`). Before an update writes a variant that is in the set, `next` asks for a `check` call: To-design's read-only `sample` read of up to 24 variants, diffed against that Contract with To-design's `checkSample`, but for the grid cell, which every call into a set re-places by name. Send it and record it like any other call.
   - **A variant that differs, or is gone from the set,** was edited in Figma. It is not sent: it is kept as a conflict in the build record and the rest of the update goes in. Its coverage problems are the conflict's, not the check's, so the check still passes.
   - **Every `OK` lists each conflict,** `CONFLICT <family>:<variant>`, with the fields that differ, until the owner resolves it. Show the owner each one and ask, per variant:
-    - `--take-code <family>:<variant>` writes the code's version over the owner's edit;
+    - `--take-code <family>:<variant>` writes the code's version over the owner's edit, or builds a variant gone from the set again;
     - `--keep-figma <family>:<variant>` keeps Figma's version. The code's change is not built into that variant, and a later change of its code is a conflict again. For a variant gone from the set, untick it on the review page instead.
     Give a flag to `next` only on the owner's own word in chat.
   - **A variant edited in Figma whose code did not change** is never read and never reported.
   - **A conflict read back as built** at a later code change (the owner undid the edit) is one no more and is sent.
-  - **A variant that cannot be read back** is a conflict too, `not read back`: one from a baseline from before #181 while its update is under way, or a read To-design refuses to plan against today's Foundations. A baseline from before #181 gets its Contract on the next `next` with no change.
+  - **A conflict whose code goes back** to the version its variant was built from is one no more: an edit of a variant whose code did not change. A conflict on a variant the Contract no longer expands (unticked on the review page) goes too.
+  - **A variant that cannot be read back** is a conflict too, `not read back`: one from a baseline from before #181 while its update is under way, one whose Contract file is gone, or a read To-design refuses to plan against today's Foundations. A baseline from before #181 gets its Contract on the next `next` with no change.
   - **What it does not guard:** a variant's place in the grid, and `--rebuild` and a family's first build, which write every variant. A failed coverage check's `--rebuild` writes over the conflicts too, so ask the owner first.
 
 Tests: `skills/vibe-to-figma/test/build.test.mjs` drives the whole loop on To-design's mock Figma. A mock smoke draft holds Carbon's collections and Templates page. The tests cover:
@@ -144,7 +145,8 @@ Tests: `skills/vibe-to-figma/test/build.test.mjs` drives the whole loop on To-de
 - a hand-edited variant whose code changed is read back, left as it is and reported, while the other changed variant updates and edits to unchanged variants are not read or reported;
 - the conflict is still reported on a rerun with no change, and still edited at a further change;
 - `--take-code` and `--keep-figma`, and their refusals;
-- a variant removed in Figma;
+- a variant removed in Figma, and `--take-code` building it again;
+- a conflict whose code goes back, and one on an unticked variant;
 - a baseline from before #181;
 - the record's Contract files.
 
