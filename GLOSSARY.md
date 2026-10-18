@@ -80,6 +80,10 @@ _Avoid_: Draft Contract, proposed Contract, custom component
 The generated description of the Code Library's whole theme (every shared token and mode it defines, used by a Contract or not), which every Contract in that Design System refers to. One per Design System.
 _Avoid_: Tokens file, theme file, variables JSON
 
+**Foundations approval**:
+The record of which Foundations document the owner's last approve of a Design System's review covered, kept beside the document. The document itself carries no approval. A Foundations build sends no call for any other document.
+_Avoid_: Foundations sign-off, approved Foundations (the document is never marked approved)
+
 **Mode**:
 One of the alternative value sets a Foundations document defines for a group of tokens, such as Carbon's Gray 100 theme or its second Layer level. The page or an enclosing element picks it, never the component's own props.
 _Avoid_: Theme (when a Layer level is meant), context, mode variant
