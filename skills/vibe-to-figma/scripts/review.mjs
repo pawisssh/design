@@ -5,14 +5,16 @@
 // ticks to one file, <name>.review.json, which approve.mjs reads. Published as a private Artifact (#178), the page saves
 // the ticks in the Artifact's db instead and restores them on a reload (assets/review-store.js).
 // Only a draft Contract is on the page (#180): an approved one keeps its approval and is not reviewed again, so after a
-// rerun of folder.mjs the page holds the families whose code changed. With no draft there is nothing to review: the
-// CLI says so and writes no page.
+// rerun of folder.mjs the page holds the families whose code changed. A Foundations document the owner's last approve
+// did not cover (its Foundations approval, <name>.foundations-approval.json) is on the page even with no draft: then
+// the page is its Foundations tab alone. With no draft and the Foundations document approved there is nothing to
+// review: the CLI says so and writes no page.
 //
 //   node skills/vibe-to-figma/scripts/review.mjs design-systems/<name> --project <project> [--out <file>]
 //
 // Specimens render with the Adapter's preview renderer over the project (skills/adapter-<source.adapter>/scripts/
 // preview.mjs, as To-preview's catalog finds it). The page defaults to .scratch/vibe-to-figma/<name>/review.html.
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -23,20 +25,35 @@ import { buildCatalog } from '../../to-preview/scripts/catalog.mjs';
 
 const asset = name => readFileSync(new URL(`../assets/${name}`, import.meta.url), 'utf8');
 
-/** The folder's Foundations document path (its single *.foundations.json) and its Contracts' paths, by family. */
+/**
+ * The folder's Foundations document path (its single <name>.foundations.json), its Foundations approval's path
+ * (<name>.foundations-approval.json, which approve.mjs writes) and its Contracts' paths, by family.
+ */
 export function folderFiles(dir) {
   const found = readdirSync(dir).filter(f => f.endsWith('.foundations.json'));
   if (found.length !== 1) throw new Error(`${dir} has ${found.length} *.foundations.json files; a Design System folder has exactly one`);
   const contracts = {};
   for (const f of readdirSync(join(dir, 'contracts')).filter(f => f.endsWith('.component.json')).sort())
     contracts[f.slice(0, -'.component.json'.length)] = join(dir, 'contracts', f);
-  return { foundations: join(dir, found[0]), contracts };
+  const name = found[0].slice(0, -'.foundations.json'.length);
+  return { foundations: join(dir, found[0]), approval: join(dir, `${name}.foundations-approval.json`), contracts };
 }
+
+/**
+ * The folder's Foundations approval, {designSystem, documentHash, by, at}: the Foundations document the owner's last
+ * approve covered, or null when approve has not run since this record was added. The document itself carries no
+ * approval (it is a pure function of its inputs), so this record says which one the owner saw.
+ */
+export const foundationsApproval = dir => {
+  const { approval } = folderFiles(dir);
+  return existsSync(approval) ? readJson(approval) : null;
+};
 
 const lineHeight = l => (l.unit === 'PIXELS' ? `${l.value}px` : l.unit === 'PERCENT' ? `${l.value}%` : 'normal');
 
 /**
- * reviewModel(dir) -> {designSystem, foundations: {documentHash, colors: {modes, variables}, textStyles}, families}.
+ * reviewModel(dir) -> {designSystem, foundations: {documentHash, approved, colors: {modes, variables}, textStyles},
+ * families, kept}. `approved` says the folder's Foundations approval covers this document.
  * `colors` is the COLOR variables of the first multi-mode collection (Theme) with each mode's resolved value;
  * `families` lists each draft Contract, the ones on the page: {family, name, description, status, snapshotId, variants,
  * drafted: [{key, value, by}]}. `kept` lists the approved ones, which keep their approval and are not reviewed again.
@@ -64,17 +81,20 @@ export function reviewModel(dir) {
       drafted: Object.entries(c.drafted || {}).map(([key, d]) => ({ key, value: draftedValue(c, key).value, by: d.by })),
     });
   }
-  return { designSystem: doc.designSystem.key, foundations: { documentHash: `sha256:${sha256(text)}`, colors, textStyles }, families, kept };
+  const documentHash = `sha256:${sha256(text)}`;
+  const approval = foundationsApproval(dir);
+  const approved = !!approval && approval.designSystem === doc.designSystem.key && approval.documentHash === documentHash;
+  return { designSystem: doc.designSystem.key, foundations: { documentHash, approved, colors, textStyles }, families, kept };
 }
 
 /**
- * buildReview({dir, renderer}) -> {html, model}, or {html: null, model} when no Contract is a draft (nothing to
- * review). `renderer(contract)` returns (or resolves to) the Adapter's preview renderer for that Contract, which
+ * buildReview({dir, renderer}) -> {html, model}, or {html: null, model} when no Contract is a draft and the Foundations
+ * document is the approved one (nothing to review). `renderer(contract)` returns (or resolves to) the Adapter's preview renderer for that Contract, which
  * To-preview's buildCatalog takes as it is.
  */
 export async function buildReview({ dir, renderer }) {
   const model = reviewModel(dir);
-  if (!model.families.length) return { html: null, model };
+  if (!model.families.length && model.foundations.approved) return { html: null, model };
   const files = folderFiles(dir);
   const foundations = readJson(files.foundations);
   const catalogs = {};
@@ -116,13 +136,15 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     };
     const { html, model } = await buildReview({ dir, renderer });
     if (!html) {
-      console.log(`nothing to review: every Contract is approved (${model.kept.join(', ')}), so no page is written\nOK`);
+      console.log(`nothing to review: every Contract is approved (${model.kept.join(', ')}) and so is the Foundations document, so no page is written\nOK`);
       process.exit(0);
     }
     const out = resolve(outFlag || join(REPO_ROOT, '.scratch/vibe-to-figma', model.designSystem, 'review.html'));
     mkdirSync(dirname(out), { recursive: true });
     writeFileSync(out, html);
-    console.log(`${relative(process.cwd(), out)}: Foundations, then ${model.families.map(f => `${f.family} ${f.variants}`).join(', ')} (${(Buffer.byteLength(html) / 1e6).toFixed(1)} MB)${model.kept.length ? `; kept approved, not reviewed again: ${model.kept.join(', ')}` : ''}`);
+    const tabs = model.families.length ? `Foundations, then ${model.families.map(f => `${f.family} ${f.variants}`).join(', ')}`
+      : 'Foundations only: no approve covers this Foundations document, and every Contract is approved';
+    console.log(`${relative(process.cwd(), out)}: ${tabs} (${(Buffer.byteLength(html) / 1e6).toFixed(1)} MB)${model.kept.length ? `; kept approved, not reviewed again: ${model.kept.join(', ')}` : ''}`);
   } catch (e) {
     console.error(`FAIL: ${e.message}`);
     process.exit(1);
