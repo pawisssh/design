@@ -1,6 +1,6 @@
-// Which Code Library components a vibe-coded Prototype uses (#176). A component is a family keyed by its file in
-// the Code Library folder (components.json `aliases.ui`): `components/ui/select.tsx` is `select`, whichever of its
-// exports (Select, SelectTrigger, SelectValue) a screen renders.
+// Which Component Families a Prototype uses (#176). A family is keyed by its file in the Code Library folder
+// (components.json `aliases.ui`): `components/ui/select.tsx` is `select`, whichever of its exports (Select,
+// SelectTrigger, SelectValue) a screen renders.
 import { readdirSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { loadTypescript } from '../../to-handoff/scripts/deps.mjs';

@@ -35,7 +35,7 @@ import { evaluate, isSynthesized, lengthPx, literalForm, round } from './values.
 // Mode selector -> mode. The first is the default; a mode that omits a property inherits the default's value.
 const MODES = [[':root', 'light', 'Light'], ['.dark', 'dark', 'Dark']];
 const COLLECTIONS = ['theme', 'layout'];
-const CONTRACTS = 'design-systems/shadcn/contracts'; // where a family's Contract is committed, for the closure
+const CONTRACTS = 'design-systems/shadcn/contracts'; // the reference project's Contracts: the CLI's default families
 // Role table: the `@theme` key prefix gives a token its Figma type, group, scopes and the utility that compiles it.
 // In Tailwind every theme colour feeds bg-, text-, border-, ring- and shadow- utilities, so a colour may fill,
 // stroke or colour an effect.
@@ -333,7 +333,7 @@ export async function generate({ project, families = [], drafts = [], tools = DE
     const tokens = new Set();
     for (const [family, f] of read) {
       const contract = contractFor(f, family, doc);
-      doc.closure.contracts.push({ family, path: `${CONTRACTS}/${family}.component.json`, snapshotId: contract.source.snapshotId });
+      doc.closure.contracts.push({ family, path: `design-systems/${designSystem.key}/contracts/${family}.component.json`, snapshotId: contract.source.snapshotId });
       for (const t of closure(contract)) {
         tokens.add(t);
         const v = doc.variables[t] || doc.textStyles[t];
