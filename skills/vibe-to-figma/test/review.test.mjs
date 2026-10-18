@@ -75,4 +75,9 @@ test('the export refuses a missing or unknown family, or ticks from another fami
   assert.throws(() => reviewExport(model, rest), /no ticks for select/);
   assert.throws(() => reviewExport(model, { ...picked, sonner: picked.label }), /sonner has no Contract in v0-app/);
   assert.throws(() => reviewExport(model, { ...picked, select: picked.label }), /select's ticks are label's/);
+  // An approved family is not on the page (#180): its ticks are refused, and the rest export without it.
+  const { label, ...unapproved } = picked;
+  const keptLabel = { ...model, families: model.families.filter(f => f.family !== 'label'), kept: ['label'] };
+  assert.throws(() => reviewExport(keptLabel, picked), /label is approved and not on the review page/);
+  assert.deepEqual(Object.keys(reviewExport(keptLabel, unapproved).families), READABLE.filter(f => f !== 'label'));
 });

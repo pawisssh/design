@@ -154,6 +154,22 @@ test('a second run with the returned ledger creates nothing, updates nothing and
   assert.deepEqual(second.ledger, first.ledger);
 });
 
+test('a run on a file whose sets are built carries only the foundations record, and the sets stay in the ledger (#180)', async () => {
+  const mock = mockFigma({ fileKey: FILE_KEY });
+  const first = await call(mock);
+  // a ledger with a large set recorded next to the foundations, as after a build of every Component Set
+  const sets = { button: { set: { id: '1:1' }, contentHash: 'sha256:x', total: 2304, variants: Array.from({ length: 2304 }, (_, i) => `2:${i}`) } };
+  const ledger = { ...ledgerAfter(first), sets, templates: { page: '3:3' } };
+  const { state } = pack({ ledger });
+  assert.deepEqual(Object.keys(state).sort(), ['fileKey', 'foundations', 'schemaVersion']);
+  assert.deepEqual(state.foundations, ledger.foundations);
+  mock.log.length = 0;
+  const second = await call(mock, { ledger });
+  assert.equal(second.summary.created + second.summary.updated, 0);
+  const after = recordResult(ledger, second);
+  assert.deepEqual([after.sets, after.templates], [sets, ledger.templates]);
+});
+
 // ---- ownership ----
 
 const docWith = edit => { const doc = JSON.parse(DOC_TEXT); edit(doc); return JSON.stringify(doc, null, 2) + '\n'; };

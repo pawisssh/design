@@ -86,15 +86,29 @@ test('"approve except select" leaves select a draft, byte-unchanged, and approve
   for (const family of r.approved) assert.equal(read(contractPath(dir, family)).selection.status, 'approved', family);
 });
 
-test('approving again with the same ticks leaves every approval as it was', { skip }, async () => {
+test('approving again: the same ticks leave every approval as it was; the next page holds none of them, and keeps them all (#180)', { skip }, async () => {
   const { dir } = await v0Folder();
   const review = exported(dir);
   await approveFolder({ dir, project: V0, exported: review, said: 'approve', at: AT, test: true });
   const once = snapshot(dir);
-  const r = await approveFolder({ dir, project: V0, exported: exported(dir), said: 'approve', at: '2026-10-19T00:00:00Z', test: true });
-  assert.deepEqual(r.approved, []);
-  assert.deepEqual(r.unchanged, READABLE);
-  assert.equal(r.foundations.written, false);
+  const again = await approveFolder({ dir, project: V0, exported: review, said: 'approve', at: '2026-10-19T00:00:00Z', test: true });
+  assert.deepEqual([again.approved, again.unchanged, again.kept], [[], READABLE, []]);
+  assert.equal(again.foundations.written, false);
+  assert.deepEqual(snapshot(dir), once);
+  // The page after approval leaves every approved Contract out, so its export has no ticks: each is kept.
+  assert.deepEqual(reviewModel(dir).families, []);
+  const empty = reviewExport(reviewModel(dir), {});
+  assert.deepEqual(empty.families, {});
+  const kept = await approveFolder({ dir, project: V0, exported: empty, said: 'approve', at: '2026-10-19T00:00:00Z', test: true });
+  assert.deepEqual([kept.approved, kept.unchanged, kept.kept], [[], [], READABLE]);
+  assert.deepEqual(snapshot(dir), once);
+  // Ticks the page never showed, which would change an approval, are refused, and an approved family is no except.
+  // (an export the page cannot give now, as an old one would be: every family's ticks)
+  const unshown = { ...empty, families: selections(dir, { select: m => m.selectMatching({ state: 'disabled' }, false) }) };
+  await assert.rejects(approveFolder({ dir, project: V0, exported: unshown, said: 'approve', at: AT, test: true }),
+    /select: approved already and not on the review page, so these ticks, which would change its approval, were never shown/);
+  await assert.rejects(approveFolder({ dir, project: V0, exported: empty, said: 'approve except select', at: AT, test: true }),
+    /select is approved already and not on the review page, so there is nothing to except/);
   assert.deepEqual(snapshot(dir), once);
 });
 

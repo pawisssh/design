@@ -4,6 +4,9 @@
 // iframe. Drafted values show read-only; the owner changes them in chat. One export button writes every family's
 // ticks to one file, <name>.review.json, which approve.mjs reads. Published as a private Artifact (#178), the page saves
 // the ticks in the Artifact's db instead and restores them on a reload (assets/review-store.js).
+// Only a draft Contract is on the page (#180): an approved one keeps its approval and is not reviewed again, so after a
+// rerun of folder.mjs the page holds the families whose code changed. With no draft there is nothing to review: the
+// CLI says so and writes no page.
 //
 //   node skills/vibe-to-figma/scripts/review.mjs design-systems/<name> --project <project> [--out <file>]
 //
@@ -35,7 +38,8 @@ const lineHeight = l => (l.unit === 'PIXELS' ? `${l.value}px` : l.unit === 'PERC
 /**
  * reviewModel(dir) -> {designSystem, foundations: {documentHash, colors: {modes, variables}, textStyles}, families}.
  * `colors` is the COLOR variables of the first multi-mode collection (Theme) with each mode's resolved value;
- * `families` lists each Contract: {family, name, description, status, snapshotId, variants, drafted: [{key, value, by}]}.
+ * `families` lists each draft Contract, the ones on the page: {family, name, description, status, snapshotId, variants,
+ * drafted: [{key, value, by}]}. `kept` lists the approved ones, which keep their approval and are not reviewed again.
  */
 export function reviewModel(dir) {
   const files = folderFiles(dir);
@@ -50,28 +54,32 @@ export function reviewModel(dir) {
   const textStyles = Object.entries(doc.textStyles).map(([key, s]) => ({
     key, name: s.name, fontFamily: s.fontFamily, fontStyle: s.fontStyle, fontSize: s.fontSize, lineHeight: lineHeight(s.lineHeight), fontWeight: s.fontWeight,
   }));
-  const families = Object.entries(files.contracts).map(([family, path]) => {
+  const families = [], kept = [];
+  for (const [family, path] of Object.entries(files.contracts)) {
     const c = readJson(path);
     if (c.family.key !== family) throw new Error(`${relative(dir, path)} holds the ${c.family.key} Contract`);
-    return {
+    if (c.selection.status === 'approved') { kept.push(family); continue; }
+    families.push({
       family, name: c.family.name, description: c.family.description, status: c.selection.status, snapshotId: c.source.snapshotId, variants: expand(c).length,
       drafted: Object.entries(c.drafted || {}).map(([key, d]) => ({ key, value: draftedValue(c, key).value, by: d.by })),
-    };
-  });
-  return { designSystem: doc.designSystem.key, foundations: { documentHash: `sha256:${sha256(text)}`, colors, textStyles }, families };
+    });
+  }
+  return { designSystem: doc.designSystem.key, foundations: { documentHash: `sha256:${sha256(text)}`, colors, textStyles }, families, kept };
 }
 
 /**
- * buildReview({dir, renderer}) -> {html, model}. `renderer(contract)` returns (or resolves to) the Adapter's preview
- * renderer for that Contract, which To-preview's buildCatalog takes as it is.
+ * buildReview({dir, renderer}) -> {html, model}, or {html: null, model} when no Contract is a draft (nothing to
+ * review). `renderer(contract)` returns (or resolves to) the Adapter's preview renderer for that Contract, which
+ * To-preview's buildCatalog takes as it is.
  */
 export async function buildReview({ dir, renderer }) {
   const model = reviewModel(dir);
+  if (!model.families.length) return { html: null, model };
   const files = folderFiles(dir);
   const foundations = readJson(files.foundations);
   const catalogs = {};
-  for (const [family, path] of Object.entries(files.contracts)) {
-    const contract = readJson(path);
+  for (const { family } of model.families) {
+    const contract = readJson(files.contracts[family]);
     catalogs[family] = buildCatalog({ contract, foundations, renderer: await renderer(contract) });
   }
   const data = JSON.stringify({ model, tabs: ['foundations', ...Object.keys(catalogs)], catalogs }).replace(/</g, '\\u003c');
@@ -107,10 +115,14 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
       return adapters[a].previewRenderer(contract, { project: resolve(project) });
     };
     const { html, model } = await buildReview({ dir, renderer });
+    if (!html) {
+      console.log(`nothing to review: every Contract is approved (${model.kept.join(', ')}), so no page is written\nOK`);
+      process.exit(0);
+    }
     const out = resolve(outFlag || join(REPO_ROOT, '.scratch/vibe-to-figma', model.designSystem, 'review.html'));
     mkdirSync(dirname(out), { recursive: true });
     writeFileSync(out, html);
-    console.log(`${relative(process.cwd(), out)}: Foundations, then ${model.families.map(f => `${f.family} ${f.variants}`).join(', ')} (${(Buffer.byteLength(html) / 1e6).toFixed(1)} MB)`);
+    console.log(`${relative(process.cwd(), out)}: Foundations, then ${model.families.map(f => `${f.family} ${f.variants}`).join(', ')} (${(Buffer.byteLength(html) / 1e6).toFixed(1)} MB)${model.kept.length ? `; kept approved, not reviewed again: ${model.kept.join(', ')}` : ''}`);
   } catch (e) {
     console.error(`FAIL: ${e.message}`);
     process.exit(1);

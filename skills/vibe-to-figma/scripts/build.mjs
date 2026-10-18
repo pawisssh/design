@@ -17,12 +17,16 @@
 // <fileKey>.<name>.build.json keeps the namespace, the coverage pages and verdicts, and any rebuild under way.
 // A set that fails its coverage check stops the run; --rebuild <family> then builds its batches again inside the set
 // (the builder rebuilds a layer tree unlike the Contract's anatomy and wires it again), and its coverage is read again.
+// A rerun touches only what changed (#180). A set that passes its coverage check leaves a baseline in the build record:
+// each variant's fingerprint and id. When its Contract changes after that, only the variants whose fingerprint moved
+// (or that are new) are appended into the set, the rest keep their ids and are not written; a change of the set alone
+// takes one call with no variant in it. A coverage verdict holds across a Foundations build, which writes no set.
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { contentHash, expand, icons as iconKeys, PROTOTYPE_APPROVER, validate } from '../../contract/scripts/contract.mjs';
+import { canonical, contentHash, expand, icons as iconKeys, PROTOTYPE_APPROVER, resolve as resolveTuple, sha256, validate, variantName } from '../../contract/scripts/contract.mjs';
 import { documentHash, foundationsNext, foundationsPlan, MAX_COMBINE, setsPlan } from '../../to-design/scripts/build-plan.mjs';
 import { checkCoverage, mergeCoverage } from '../../to-design/scripts/coverage.mjs';
 import { ledgerPath, mainCheckoutOf, readLedger, recordResult } from '../../to-design/scripts/ledger.mjs';
@@ -101,6 +105,60 @@ export function namespaced(plan, namespace) {
 
 const prototypeOf = c => c.selection.approval.by === PROTOTYPE_APPROVER;
 
+/**
+ * Each variant's fingerprint, by expansion index: [{name, fingerprint}]. It covers what a build writes into the variant
+ * (the anatomy's layer tree, the resolved layout and paint, and the property wiring), so a variant whose name and
+ * fingerprint hold needs no write. Its grid cell is left out: every append call places each child by its name.
+ */
+export function variantFingerprints(contract) {
+  const tree = canonical(contract.anatomy);
+  return expand(contract).map(t => {
+    const { layout, paint, binds } = resolveTuple(contract, t);
+    return { name: variantName(contract, t), fingerprint: `sha256:${sha256(tree + canonical({ layout, paint, binds }))}` };
+  });
+}
+
+/**
+ * The build record with a baseline, `built: {family: {contentHash, set, variants: {name: [fingerprint, id]}}}`, for each
+ * family whose set passed its coverage check from its Contract as it is now. A rerun compares a changed Contract with it.
+ */
+export function baselined(record, g, ledger) {
+  const built = { ...(record.built || {}) };
+  let changed = false;
+  for (const f of g.families) {
+    const verdict = (record.coverage || {})[f];
+    const rec = ledger && ledger.sets && ledger.sets[f];
+    const hash = contentHash(g.contracts[f]);
+    if (!verdict || !verdict.ok || verdict.contentHash !== hash || !rec || !rec.set || rec.set.id !== verdict.set || rec.contentHash !== hash) continue;
+    if (built[f] && built[f].contentHash === hash && built[f].set === rec.set.id) continue;
+    const variants = {};
+    variantFingerprints(g.contracts[f]).forEach(({ name, fingerprint }, i) => { variants[name] = [fingerprint, (rec.variants || [])[i] || null]; });
+    built[f] = { contentHash: hash, set: rec.set.id, variants };
+    changed = true;
+  }
+  return changed ? { ...record, built } : record;
+}
+
+/**
+ * An update's variants still to send, by expansion index: the family's Contract changed since its set's baseline, and
+ * these variants are new, changed, or have no id in it. The first call of an update goes out even with none (a change
+ * of the set alone). null when the family is no update, or its update is done.
+ */
+export function pendingUpdate(contract, ledger, built) {
+  const rec = ledger && ledger.sets && ledger.sets[contract.family.key];
+  if (!built || !rec || !rec.set || rec.placed === false || rec.set.id !== built.set) return null;
+  const hash = contentHash(contract);
+  if (built.contentHash === hash) return null;
+  const changed = [];
+  variantFingerprints(contract).forEach(({ name, fingerprint }, i) => {
+    const b = built.variants[name];
+    if (!b || b[0] !== fingerprint || !b[1]) changed.push(i);
+  });
+  if (rec.contentHash !== hash) return changed;
+  const left = changed.filter(i => !(rec.variants || [])[i]);
+  return left.length ? left : null;
+}
+
 /** A file built in one namespace is built on in that one; the record takes it from the first call without a conflict. */
 function assertNamespace(record, namespace) {
   if ('namespace' in record && record.namespace !== namespace)
@@ -113,6 +171,7 @@ function assertNamespace(record, namespace) {
  *   {status: 'step', step: 'foundations'|'sets'|'coverage', family?, core, plan, state, options}
  *   {status: 'problems', family, problems}                     a coverage check failed: stop and report
  *   {status: 'built', families: [{family, variants, set}], drafts, skipped}
+ * Each also carries `record`, the build record with any new baseline (`baselined`), for the CLI to keep.
  * Options: dir, fileKey, ledger, record (the build record), namespace, skip, maxCombine, coveragePerCall, at, and
  * rebuild: families whose failed coverage check starts a rebuild of their set (one already under way goes on anyway).
  */
@@ -121,20 +180,34 @@ export function nextStep({ dir, fileKey, ledger = null, record = {}, namespace =
   const unknown = rebuild.filter(f => !g.families.includes(f));
   if (unknown.length) throw new Error(`--rebuild ${unknown.join(', ')}: not an approved family of ${dir} built here`);
   assertNamespace(record, namespace);
+  record = baselined(record, g, ledger);
+  const n = nextOf({ g, fileKey, ledger, record, namespace, coveragePerCall, rebuild, at });
+  return { ...n, record };
+}
+
+function nextOf({ g, fileKey, ledger, record, namespace, coveragePerCall, rebuild, at }) {
   if (g.ask.length) return { status: 'ask', ask: g.ask, drafts: g.drafts };
   const step = (name, family, core, { plan, state }) => ({ status: 'step', step: name, family, core, plan: namespaced(plan, namespace), state, options: plan.options });
 
   const chunk = foundationsNext(g.docText, ledger);
   if (chunk) return step('foundations', null, CORES.foundations, foundationsPlan(g.docText, ledger, { fileKey, chunk, at }));
   for (const f of g.families) {
-    const d = setsPlan(g.contracts[f], g.docText, ledger, { fileKey, next: true, prototype: prototypeOf(g.contracts[f]), at });
+    const prototype = prototypeOf(g.contracts[f]);
+    // an update after a code change: only the variants that changed, a call's worth at a time
+    const pending = pendingUpdate(g.contracts[f], ledger, (record.built || {})[f]);
+    if (pending) {
+      const { perCall } = setsPlan(g.contracts[f], g.docText, ledger, { fileKey, mode: 'build', batch: 0, prototype, at }).plan.options;
+      return step('sets', f, CORES.sets, setsPlan(g.contracts[f], g.docText, ledger, { fileKey, mode: 'build', indexes: pending.slice(0, perCall), prototype, at }));
+    }
+    const d = setsPlan(g.contracts[f], g.docText, ledger, { fileKey, next: true, prototype, at });
     if (d) return step('sets', f, CORES.sets, d);
   }
   for (const f of g.families) {
     const verdict = (record.coverage || {})[f];
     const set = ledger.sets[f];
     const rebuilt = (record.rebuild || {})[f];
-    const current = verdict && verdict.contentHash === set.contentHash && verdict.documentHash === g.documentHash && verdict.set === set.set.id;
+    // coverage reads names, cells and wiring, none of which a Foundations build writes: a verdict outlives one
+    const current = verdict && verdict.contentHash === set.contentHash && verdict.set === set.set.id;
     if (rebuilt || (current && !verdict.ok && rebuild.includes(f))) {
       // each build batch again, in the set: the first one recorded drops the failed verdict
       const opts = { fileKey, mode: 'build', prototype: prototypeOf(g.contracts[f]), at };
@@ -191,9 +264,9 @@ function recorded({ dir, fileKey, ledger, record, result, skip, at }) {
     const verdict = { ok: report.ok, expected: report.expected, read: report.read, problems: report.problems.slice(0, 20), orphaned: report.orphaned,
       contentHash: contentHash(contract), documentHash: g.documentHash, set: merged.set.id, at };
     delete next.pages[family];
-    return { ledger, record: { ...next, coverage: { ...(record.coverage || {}), [family]: verdict } }, verdict: { family, ...verdict } };
+    return { ledger, record: baselined({ ...next, coverage: { ...(record.coverage || {}), [family]: verdict } }, g, ledger), verdict: { family, ...verdict } };
   }
-  const out = { ledger: recordResult(ledger, result), record };
+  const out = { ledger: carried(recordResult(ledger, result), result, record, () => gate({ dir, fileKey, ledger, skip })), record };
   // a write to a set stales its coverage verdict and any page read before it
   if (result.slice === 'sets') {
     const drop = o => Object.fromEntries(Object.entries(o || {}).filter(([f]) => f !== result.family));
@@ -204,7 +277,7 @@ function recorded({ dir, fileKey, ledger, record, result, skip, at }) {
     const starts = () => {
       if (!failed || failed.ok || failed.set !== result.ledger.sets[result.family]?.set?.id) return false;
       const g = gate({ dir, fileKey, ledger, skip });
-      return failed.contentHash === contentHash(g.contracts[result.family]) && failed.documentHash === g.documentHash;
+      return failed.contentHash === contentHash(g.contracts[result.family]);
     };
     if (result.mode === 'build' && result.phase === 'append' && (under || starts())) {
       const done = [...new Set([...(under || []), result.batch[0]])];
@@ -213,6 +286,23 @@ function recorded({ dir, fileKey, ledger, record, result, skip, at }) {
     }
   }
   return out;
+}
+
+// During an update, the variants whose fingerprint holds keep their baseline ids in the ledger: they are in the set as
+// this Contract has them, so no call writes them.
+function carried(ledger, result, record, gateOf) {
+  const family = result.slice === 'sets' && result.mode === 'build' && result.phase === 'append' ? result.family : null;
+  const built = family && (record.built || {})[family];
+  const rec = built && ledger.sets[family];
+  if (!rec || !rec.set || rec.set.id !== built.set || rec.contentHash === built.contentHash) return ledger;
+  const contract = gateOf().contracts[family];
+  if (!contract || contentHash(contract) !== rec.contentHash) return ledger;
+  const variants = rec.variants.slice();
+  variantFingerprints(contract).forEach(({ name, fingerprint }, i) => {
+    const b = built.variants[name];
+    if (!variants[i] && b && b[0] === fingerprint && b[1]) variants[i] = b[1];
+  });
+  return { ...ledger, sets: { ...ledger.sets, [family]: { ...rec, variants } } };
 }
 
 const USAGE = [
@@ -263,6 +353,7 @@ function main() {
   }
 
   const n = nextStep({ dir, fileKey, ledger, record, namespace, skip: values.skip, rebuild: values.rebuild });
+  if (JSON.stringify(n.record) !== JSON.stringify(record)) writeRecord(n.record);
   if (n.status === 'ask') {
     console.error(`ASK THE OWNER: nothing was written to Figma.\n${n.ask.map(a => `- ${a.family} has ${a.total} variants, above MAX_COMBINE (${MAX_COMBINE}): its first build combines them all in one call, which grows with the square of the set and nears the ~2 min call ceiling.`).join('\n')}\nThe owner can untick variants on the review page and approve again, or build the rest without it (--skip <family>, only on the owner's word).`);
     process.exit(3);

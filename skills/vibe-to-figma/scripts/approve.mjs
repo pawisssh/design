@@ -2,7 +2,9 @@
 // Vibe-to-Figma's one approve (#177). Run it only after the owner's own chat message says "approve" or
 // "approve except <family>[, <family>]", and pass that message verbatim as --said. It reads the review page's
 // combined export, applies each family's omit (To-preview's omitApplied) and approves every Contract but the
-// excepted ones, in one act: every family is applied and checked before any file is written.
+// excepted ones, in one act: every family is applied and checked before any file is written. Only the families on the
+// review page, the draft Contracts, need ticks (#180): an approved Contract the page leaves out keeps its approval,
+// byte-unchanged.
 //
 //   node skills/vibe-to-figma/scripts/approve.mjs design-systems/<name> --project <project> --export <name>.review.json --said "<message>"
 //   node skills/vibe-to-figma/scripts/approve.mjs design-systems/<name> --project <project> --ticks <saved review/ticks.json> --said "<message>"
@@ -55,28 +57,38 @@ export function storedExport(dir, stored) {
   return { designSystem: stored.designSystem, documentHash: stored.documentHash, families };
 }
 
-/** The owner's message -> {except: [family]}. Throws on anything but "approve" or "approve except <families>". */
-export function parseApproval(said, families) {
+/**
+ * The owner's message -> {except: [family]}. Throws on anything but "approve" or "approve except <families>", where
+ * each family is one on the review page (`families`); `kept` are the approved ones the page leaves out.
+ */
+export function parseApproval(said, families, kept = []) {
   const m = /^approve(?: except (.+))?$/i.exec(String(said ?? '').trim());
   if (!m) throw new Error(`"${said}" is not "approve" or "approve except <family>"; only the owner's own message in chat approves`);
   const except = m[1] ? m[1].split(/\s*(?:,|\band\b)\s*/i).filter(Boolean) : [];
-  for (const f of except) if (!families.includes(f)) throw new Error(`${f} has no Contract here (${families.join(', ')})`);
+  for (const f of except) {
+    if (kept.includes(f)) throw new Error(`${f} is approved already and not on the review page, so there is nothing to except (on the page: ${families.join(', ') || 'none'})`);
+    if (!families.includes(f)) throw new Error(`${f} has no Contract here (${families.join(', ')})`);
+  }
   return { except: [...new Set(except)].sort() };
 }
 
 /**
  * approveFolder({dir, project, exported, said, at, test, tools})
- *   -> {approved, unchanged, drafts, foundations: {path, reviewed, documentHash, written}}.
+ *   -> {approved, unchanged, kept, drafts, foundations: {path, reviewed, documentHash, written}}.
  * `project` is the vibe-coded project the folder was built from; `exported` is the page's combined export
  * {designSystem, documentHash, families: {family: {patch, checked}}}. `approved` lists the Contracts written approved;
- * `unchanged` the ones already approved with these ticks; `drafts` the excepted ones, left byte-unchanged.
+ * `unchanged` the ones already approved with these ticks; `kept` the approved ones with no ticks, which the review page
+ * leaves out (#180); `drafts` the excepted ones. All but `approved` are left byte-unchanged. Ticks for an approved
+ * Contract that would change its approval are refused: the page never showed it.
  * `foundations.reviewed` is the documentHash the page showed, `documentHash` the regenerated one. Throws, writing
  * nothing, on any refusal.
  */
 export async function approveFolder({ dir, project, exported, said, at = new Date().toISOString(), test = false, tools = DEFAULT_DIR }) {
   const files = folderFiles(dir);
   const families = Object.keys(files.contracts);
-  const { except } = parseApproval(said, families);
+  const onDisk = Object.fromEntries(families.map(f => [f, readJson(files.contracts[f])]));
+  const isApproved = f => onDisk[f].selection.status === 'approved';
+  const { except } = parseApproval(said, families.filter(f => !isApproved(f)), families.filter(isApproved));
   const text = readFileSync(files.foundations, 'utf8');
   const foundations = JSON.parse(text);
   const key = foundations.designSystem.key;
@@ -88,22 +100,23 @@ export async function approveFolder({ dir, project, exported, said, at = new Dat
     reasons.push(`the Foundations document moved since the review (${exported.documentHash} reviewed, ${documentHash} now): build the page again and export`);
   const listed = new Map(foundations.closure.contracts.map(c => [c.family, c.snapshotId]));
   for (const f of families) {
-    const snapshotId = readJson(files.contracts[f]).source.snapshotId;
+    const { snapshotId } = onDisk[f].source;
     if (!listed.has(f)) reasons.push(`${f} is not in the Foundations document's closure: run folder.mjs again`);
     else if (listed.get(f) !== snapshotId) reasons.push(`${f} is at ${snapshotId}, but the Foundations document lists ${listed.get(f)}: run folder.mjs again`);
   }
   for (const f of listed.keys()) if (!families.includes(f)) reasons.push(`the Foundations document lists ${f}, which has no Contract here`);
   for (const f of Object.keys(exported.families || {})) if (!families.includes(f)) reasons.push(`the review has ticks for ${f}, which has no Contract here`);
 
-  const onDisk = Object.fromEntries(families.map(f => [f, readJson(files.contracts[f])]));
-  const contracts = { ...onDisk }, approved = [], unchanged = [];
+  const contracts = { ...onDisk }, approved = [], unchanged = [], kept = [];
   if (!reasons.length) for (const family of families.filter(f => !except.includes(f))) {
     const ticks = (exported.families || {})[family];
+    if (!ticks && isApproved(family)) { kept.push(family); continue; }
     if (!ticks) { reasons.push(`no ticks for ${family}: export the review again, or open the review Artifact so it saves them`); continue; }
     try {
       const contract = onDisk[family];
       const next = omitApplied({ contract, patch: ticks.patch, checked: ticks.checked, foundations });
-      if (contract.selection.status === 'approved' && contentHash(next) === contentHash(contract)) { unchanged.push(family); continue; }
+      if (isApproved(family) && contentHash(next) === contentHash(contract)) { unchanged.push(family); continue; }
+      if (isApproved(family)) throw new Error('approved already and not on the review page, so these ticks, which would change its approval, were never shown: open the review page again');
       const approval = approve(next, at);
       const { errors } = validate(approval, foundations);
       if (errors.length) throw new Error(errors.map(e => `[rule ${e.rule}] ${e.message}`).join('; '));
@@ -131,7 +144,7 @@ export async function approveFolder({ dir, project, exported, said, at = new Dat
   }
   const written = next.text !== text;
   if (written) writeFileSync(files.foundations, next.text);
-  return { approved, unchanged, drafts: except, foundations: { path: files.foundations, reviewed: documentHash, documentHash: next.documentHash, written } };
+  return { approved, unchanged, kept, drafts: except, foundations: { path: files.foundations, reviewed: documentHash, documentHash: next.documentHash, written } };
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
@@ -157,6 +170,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     console.log([
       ...r.approved.map(f => `approved ${f}`),
       ...r.unchanged.map(f => `unchanged ${f} (already approved with these ticks)`),
+      ...r.kept.map(f => `kept ${f} (approved, not on the review page)`),
       ...r.drafts.map(f => `left ${f} a draft`),
       r.foundations.written
         ? `Foundations ${rel(r.foundations.path)} generated again from the approved Contracts: ${r.foundations.documentHash} (reviewed ${r.foundations.reviewed})`
