@@ -56,7 +56,7 @@ test('a rerun with no code change reviews nothing and builds nothing', { skip },
   assert.deepEqual(review.model.kept, READABLE);
   const cli = spawnSync(process.execPath, [REVIEW, dir, '--project', project, '--out', join(root, 'review.html')], { encoding: 'utf8' });
   assert.equal(cli.status, 0, cli.stderr);
-  assert.match(cli.stdout, /^nothing to review: every Contract is approved \(alert, button, card, input, label, select, textarea\), so no page is written\nOK/);
+  assert.match(cli.stdout, /^nothing to review: every Contract is approved \(alert, button, card, input, label, select, textarea\) and so is the Foundations document, so no page is written\nOK/);
   assert.ok(!readdirSync(root).includes('review.html'));
   const writes = mock.log.length;
   const again = await drive({ dir, mock, ledger, record, namespace: 'v0-app' });
