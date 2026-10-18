@@ -59,7 +59,7 @@ test('a variant edited in Figma whose code changed is left as it is and reported
   assert.equal(built.contentHash, contentHash(read(contractPath(dir, 'input'))));
   assert.deepEqual(built.variants[names[2]], record.built.input.variants[names[2]]);
   assert.equal(built.conflicts[names[2]].contract, record.built.input.contract);
-  assert.deepEqual(Object.keys(r.record.contracts).sort(), [...new Set(Object.values(r.record.built).map(b => b.contract))].sort());
+  assert.deepEqual(Object.keys(r.record.contracts).sort(), [...new Set(Object.values(r.record.built).flatMap(b => [b.contract, ...Object.values(b.conflicts || {}).map(c => c.contract)]))].sort());
 
   // A rerun with no change sends nothing and still reports the conflict.
   const writes = mock.log.length;

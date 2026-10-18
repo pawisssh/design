@@ -260,8 +260,11 @@ export function toSend(contract, built, pending) {
 
 /** Each family's conflicts, for the report: [{family, variant, reason, changes, at}]. */
 export function conflictsOf(record) {
-  return Object.entries(record.built || {}).flatMap(([family, b]) =>
-    Object.entries(b.conflicts || {}).map(([variant, c]) => ({ family, variant, reason: c.reason, ...(c.changes ? { changes: c.changes } : {}), at: c.at })));
+  return Object.entries(record.built || {}).flatMap(([family, b]) => {
+    const order = Object.keys(b.variants || {});
+    const place = name => (order.indexOf(name) + 1 || order.length + 1);
+    return Object.entries(b.conflicts || {}).sort(([x], [y]) => place(x) - place(y)).map(([variant, c]) => ({ family, variant, reason: c.reason, ...(c.changes ? { changes: c.changes } : {}), at: c.at }));
+  });
 }
 
 /**
