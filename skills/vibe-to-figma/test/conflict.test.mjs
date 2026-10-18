@@ -200,7 +200,7 @@ test('a baseline from before #181 gets its Contract on a run with no change; mid
   assert.deepEqual(readOf(r.steps), []);
   assert.deepEqual(sentOf(r.steps), [[]]);
   assert.deepEqual(r.n.conflicts.map(c => c.reason), ['unchecked', 'unchecked']);
-  assert.match(r.n.conflicts[0].changes[0], /keeps no Contract this variant was built from \(built before #181\)/);
+  assert.match(r.n.conflicts[0].changes[0], /keeps no Contract this variant was built from \(built before #181, or its file is gone\)/);
   assert.equal((await node(ids[5])).opacity, was);
 });
 
