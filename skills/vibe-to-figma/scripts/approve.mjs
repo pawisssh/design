@@ -36,12 +36,14 @@ const CatalogSelection = createRequire(import.meta.url)('../../to-preview/assets
  * that the review page shows for the ticks it saved in the Artifact's db, `stored` = {designSystem, documentHash,
  * families: {family: patch}}. Each family's patch is selected over its Contract and exported as the page's export
  * does it (To-preview's CatalogSelection), so approveFolder gets exactly what the export would give. A patch of
- * another snapshot passes through with no checked tuples, for approveFolder to refuse.
+ * another snapshot passes through with no checked tuples, for approveFolder to refuse. Throws on a family whose saved
+ * ticks are not a patch at all.
  */
 export function storedExport(dir, stored) {
   const { contracts } = folderFiles(dir);
   const families = {};
   for (const [family, patch] of Object.entries(stored.families || {})) {
+    if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new Error(`${family}'s saved ticks are not an omit patch`);
     if (!contracts[family]) { families[family] = { patch, checked: null }; continue; }
     const model = new CatalogSelection(readJson(contracts[family]), contractModule);
     for (const id of model.specimens.keys()) model.verify(id);

@@ -130,19 +130,31 @@
     new MutationObserver((_, observer) => { if (!own.disabled) { observer.disconnect(); resolve(); } }).observe(own, { attributes: true, attributeFilter: ["disabled"] });
   });
   const reason = error => (error && error.message) || String(error);
-  const saving = { last: null, queue: Promise.resolve(), timer: 0 };
+  // `last` is the document as the db holds it, `sent` the last one written to it (both ReviewStore.canonical).
+  const saving = { last: null, sent: null, queue: Promise.resolve(), timer: 0 };
+  const SAVING = "Saving the ticks.";
   function save(s) {
     let next;
     try { next = window.ReviewStore.storedTicks(window.ReviewExport.reviewExport(model, selections())); }
     catch (error) { $("error").textContent = error.message; return; }
     const text = window.ReviewStore.canonical(next);
-    if (text === saving.last) return;
-    // One write at a time; each saves the page's whole state as it is then. The patches are objects of the catalogs'
-    // own windows, which the db refuses as not plain JSON, so it gets a copy made in this window.
-    saving.queue = saving.queue.then(() => s.doc.set(JSON.parse(text))).then(() => {
-      saving.last = text; $("error").textContent = "";
-      $("status").textContent = "Ticks saved. Say \"approve\" in chat, or \"approve except <family>\".";
-    }, error => { $("error").textContent = "The ticks were not saved: " + reason(error) + ". Tick again to retry."; });
+    if (text !== saving.sent) {
+      saving.sent = text;
+      // One write at a time; each saves the page's whole state as it is then. The patches are objects of the catalogs'
+      // own windows, which the db refuses as not plain JSON, so it gets a copy made in this window.
+      saving.queue = saving.queue.then(() => s.doc.set(JSON.parse(text))).then(() => {
+        saving.last = text; $("error").textContent = "";
+      }, error => {
+        saving.sent = saving.last;
+        $("status").textContent = "The ticks are not saved.";
+        $("error").textContent = "The ticks were not saved: " + reason(error) + ". Tick again to retry.";
+      });
+    }
+    // Saved says so only once no tick waits and the db holds what the page shows.
+    saving.queue.then(() => {
+      if (!saving.timer && saving.last === saving.sent && $("status").textContent === SAVING)
+        $("status").textContent = "Ticks saved. Say \"approve\" in chat, or \"approve except <family>\".";
+    });
   }
 
   Promise.all([loaded, store]).then(async ([, s]) => {
@@ -158,12 +170,19 @@
     for (const frame of frames) if (patches[frame.dataset.family]) frame.contentWindow.Catalog.setSelection(patches[frame.dataset.family]);
     const restored = Object.keys(patches).length;
     $("status").textContent = (restored ? "Restored the saved ticks of " + restored + " of " + frames.length + " families. " : "") + (stale.length ? stale.join("; ") + ", so those show as their Contracts have them. " : "")
-      + (s.owner ? "Ticks save as you go. Say \"approve\" in chat." : "Read-only: only the owner's ticks are saved.");
+      + (s.owner ? "Ticks save as you go. Say \"approve\" in chat." : "Your ticks are not saved: only the owner's are.");
     if (!s.owner) return;
-    saving.last = saved && !stale.length ? window.ReviewStore.canonical(saved) : null;
+    saving.last = saving.sent = saved && !stale.length ? window.ReviewStore.canonical(saved) : null;
     // A page whose state is not saved yet (first open, or a new version) saves it once, so approve reads what it shows.
     save(s);
-    const later = () => { clearTimeout(saving.timer); saving.timer = setTimeout(() => save(s), 400); };
+    // A tick saves 400 ms after the last one, or at once when the owner leaves the page for the chat, so approve does
+    // not read the ticks from before it.
+    const now = () => { clearTimeout(saving.timer); saving.timer = 0; save(s); };
+    const later = () => {
+      clearTimeout(saving.timer); saving.timer = setTimeout(now, 400);
+      $("status").textContent = SAVING;
+    };
+    document.addEventListener("visibilitychange", () => { if (document.hidden && saving.timer) now(); });
     for (const frame of frames) {
       frame.contentDocument.addEventListener("change", later);
       frame.contentDocument.addEventListener("click", event => { if (event.target.closest("button")) later(); });

@@ -45,7 +45,8 @@ test('the page restores only ticks saved on this version of it, and each family\
   const stored = storedTicks(reviewExport(model, selections(dir, untickXs)));
   assert.deepEqual(restorable(model, null), { patches: {}, stale: [] });
   assert.deepEqual(restorable(model, stored), { patches: stored.families, stale: [] });
-  assert.deepEqual(restorable(model, { ...stored, documentHash: 'sha256:0' }), { patches: {}, stale: ['the saved ticks are from another version of this page'] });
+  assert.deepEqual(restorable(model, { ...stored, documentHash: 'sha256:0' }), { patches: {}, stale: ['the saved ticks are from another Foundations document'] });
+  assert.deepEqual(restorable(model, { ...stored, designSystem: 'other' }), { patches: {}, stale: ['the saved ticks are for another design system'] });
   const old = structuredClone(stored);
   old.families.card.snapshotId = 'sha256:old';
   const { card, ...rest } = stored.families;
@@ -63,12 +64,12 @@ test('"approve" and "approve except" over the saved ticks write what they write 
   }
 });
 
-test('saved ticks approve refuses as the export does: another page version, another snapshot, an unknown family', { skip }, async () => {
+test('saved ticks approve refuses as the export does: another Foundations document, another snapshot, an unknown family, a document that is not ticks', { skip }, async () => {
   const { dir } = await v0Folder();
   const before = snapshot(dir);
   const stored = storedTicks(reviewExport(reviewModel(dir), selections(dir)));
   const refuses = async (ticks, pattern) => {
-    await assert.rejects(approveFolder({ dir, project: V0, exported: storedExport(dir, ticks), said: 'approve', at: AT, test: true }), pattern);
+    await assert.rejects(async () => approveFolder({ dir, project: V0, exported: storedExport(dir, ticks), said: 'approve', at: AT, test: true }), pattern);
     assert.deepEqual(snapshot(dir), before);
   };
   await refuses({ ...stored, documentHash: 'sha256:0' }, /the Foundations document moved since the review/);
@@ -78,6 +79,7 @@ test('saved ticks approve refuses as the export does: another page version, anot
   await refuses({ ...stored, families: { ...stored.families, sonner: stored.families.label } }, /the review has ticks for sonner, which has no Contract here/);
   const { select, ...rest } = stored.families;
   await refuses({ ...stored, families: rest }, /no ticks for select/);
+  await refuses({ ...stored, families: { ...stored.families, card: null } }, /card's saved ticks are not an omit patch/);
 });
 
 // ---- In a browser -------------------------------------------------------------------------------------------------
@@ -143,6 +145,7 @@ test('as an Artifact: ticks save to the db as the owner ticks, and survive a rel
     await select.evaluate(() => document.querySelector('.tp-cell input:not(:disabled)').click());
     const want = storedTicks(reviewExport(model, selections(dir, { button: untickXs.button, select: m => m.select([...m.specimens.keys()].find(id => id !== m.baseId), false) })));
     await waitFor(() => canonical(db[DOC]) === canonical(want));
+    await first.waitForFunction(() => /^Ticks saved/.test(document.getElementById('status').textContent));
     const ticked = { button: await checked(button), select: await checked(select) };
 
     const again = first, writes = written.get(db);
@@ -159,6 +162,14 @@ test('as an Artifact: ticks save to the db as the owner ticks, and survive a rel
       return Object.fromEntries(frames.map(f => [f.dataset.family, f.contentWindow.Catalog.getSelection()]));
     });
     assert.deepEqual(storedExport(dir, db[DOC]), reviewExport(model, shown));
+
+    // A tick waits 400 ms to save, but leaving the page for the chat saves it at once.
+    const before = written.get(db);
+    await (await catalog(again, 'card')).evaluate(() => document.querySelector('.tp-cell input:not(:disabled)').click());
+    assert.match(await status(again), /^Saving the ticks/);
+    await again.evaluate(() => { Object.defineProperty(document, 'hidden', { value: true, configurable: true }); document.dispatchEvent(new Event('visibilitychange')); });
+    await waitFor(() => written.get(db) > before, 300);
+    assert.equal(db[DOC].families.card.omit.length, 1);
     await again.close();
   } finally { await browser.close(); }
 });
@@ -173,8 +184,8 @@ test('as an Artifact: ticks saved on another version of the page are not restore
     const old = { ...storedTicks(reviewExport(model, selections(dir, untickXs))), documentHash: 'sha256:0' };
     const db = { [DOC]: old };
     const tab = await open(browser, html, { db, owner: false });
-    await tab.waitForFunction(() => /Read-only/.test(document.getElementById('status').textContent));
-    assert.match(await status(tab), /from another version of this page/);
+    await tab.waitForFunction(() => /only the owner's are/.test(document.getElementById('status').textContent));
+    assert.match(await status(tab), /from another Foundations document/);
     assert.equal((await checked(await catalog(tab, 'button'))).length, model.families.find(f => f.family === 'button').variants);
     await (await catalog(tab, 'select')).evaluate(() => document.querySelector('.tp-cell input:not(:disabled)').click());
     await tab.evaluate(() => new Promise(r => setTimeout(r, 600)));
