@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Design System review</title>
+<style>
+  :root{--vr-bg:#f6f6f6;--vr-surface:#fff;--vr-text:#161616;--vr-muted:#525252;--vr-border:#e0e0e0;--vr-accent:#0f62fe;--vr-error:#da1e28;color-scheme:light}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--vr-bg:#161616;--vr-surface:#262626;--vr-text:#f4f4f4;--vr-muted:#c6c6c6;--vr-border:#393939;--vr-accent:#78a9ff;--vr-error:#ff8389;color-scheme:dark}}
+  :root[data-theme="dark"]{--vr-bg:#161616;--vr-surface:#262626;--vr-text:#f4f4f4;--vr-muted:#c6c6c6;--vr-border:#393939;--vr-accent:#78a9ff;--vr-error:#ff8389;color-scheme:dark}
+  *{box-sizing:border-box} body{margin:0;font:14px/1.4 system-ui,sans-serif;color:var(--vr-text);background:var(--vr-bg)}
+  header{padding:16px 24px;background:var(--vr-surface);border-bottom:1px solid var(--vr-border);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  header h1{font-size:20px;margin:0} #status{color:var(--vr-muted);flex:1;min-width:200px} #error{color:var(--vr-error);white-space:pre-wrap;margin:0 24px}
+  button{font:inherit;cursor:pointer;padding:8px 12px;border:1px solid var(--vr-border);background:var(--vr-surface);color:var(--vr-text)}
+  button:focus-visible{outline:2px solid var(--vr-accent);outline-offset:2px} #export:disabled{opacity:.5;cursor:default}
+  [role=tablist]{display:flex;gap:0;overflow-x:auto;background:var(--vr-surface);border-bottom:1px solid var(--vr-border);padding:0 24px}
+  [role=tab]{border:0;border-bottom:2px solid transparent;background:none;padding:12px 16px;white-space:nowrap}
+  [role=tab][aria-selected=true]{border-bottom-color:var(--vr-accent);font-weight:600}
+  [role=tabpanel]{padding:24px} [role=tabpanel][hidden]{display:none}
+  h2{font-size:16px;margin:0 0 12px} .vr-note{color:var(--vr-muted);margin:0 0 16px;max-width:72ch}
+  table{border-collapse:collapse;background:var(--vr-surface);margin:0 0 24px;max-width:100%} th,td{border:1px solid var(--vr-border);padding:6px 10px;text-align:left;vertical-align:middle}
+  th{font-weight:600} .vr-table{overflow-x:auto}
+  .vr-swatch{display:inline-block;width:20px;height:20px;border:1px solid var(--vr-border);vertical-align:middle;margin-right:8px;background-image:linear-gradient(45deg,#ccc 25%,transparent 25%,transparent 75%,#ccc 75%),linear-gradient(45deg,#ccc 25%,transparent 25%,transparent 75%,#ccc 75%);background-size:8px 8px;background-position:0 0,4px 4px}
+  .vr-swatch > span{display:block;width:100%;height:100%}
+  code{font:12px/1.4 ui-monospace,monospace} .vr-specimen{white-space:nowrap}
+  .vr-drafted{margin:0 0 16px;color:var(--vr-muted)} .vr-drafted summary{cursor:pointer} .vr-drafted table{color:var(--vr-text);margin:8px 0 0}
+  .vr-family-head{margin:0 0 16px} .vr-family-head p{margin:4px 0;max-width:72ch}
+  iframe{display:block;width:100%;height:calc(100vh - 140px);min-height:480px;border:1px solid var(--vr-border);background:var(--vr-surface)}
+  @media(max-width:760px){header,[role=tablist]{padding-left:16px;padding-right:16px}[role=tabpanel]{padding:16px}}
+</style>
+<body>
+<header><h1 id="title">Design System review</h1><span id="status" aria-live="polite">Loading the catalogs.</span><button id="export" disabled>Export the review</button></header>
+<p id="error" role="alert"></p>
+<nav role="tablist" id="tabs" aria-label="Review tabs"></nav>
+<main id="panels"></main>
+<!-- review -->
+<script src="./review-export.js"></script>
+<script>
+(() => {
+  "use strict";
+  // Vibe-to-Figma's review shell (#177). review = {model, tabs, catalogs}: model is reviewModel() (scripts/review.mjs),
+  // catalogs maps a family to To-preview's own catalog page, run unchanged in an iframe. Export collects each catalog's
+  // Catalog.getSelection() into one file. Drafted values are read-only here: the owner changes them in chat.
+  const review = JSON.parse(document.getElementById("review").textContent);
+  const { model } = review;
+  const $ = id => document.getElementById(id);
+  const h = (tag, props = {}, ...children) => {
+    const node = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) { if (k.startsWith("aria-") || k === "role") node.setAttribute(k, v); else node[k] = v; }
+    node.append(...children);
+    return node;
+  };
+  const text = v => (typeof v === "string" ? v : JSON.stringify(v));
+  const table = (head, rows) => h("div", { className: "vr-table" }, h("table", {}, h("thead", {}, h("tr", {}, ...head.map(x => h("th", {}, x)))), h("tbody", {}, ...rows.map(r => h("tr", {}, ...r.map(c => h("td", {}, c)))))));
+  const swatch = color => h("span", { className: "vr-swatch" }, Object.assign(h("span"), { style: "background:" + color }));
+
+  $("title").textContent = model.designSystem + " review";
+  document.title = model.designSystem + " review";
+
+  function foundationsPanel() {
+    const f = model.foundations, { modes } = f.colors;
+    return [
+      h("h2", {}, "Colors"),
+      h("p", { className: "vr-note" }, f.colors.variables.length + " color variables, read from the project's CSS. Foundations change only with the code."),
+      table(["Variable", ...modes.map(m => m.label)], f.colors.variables.map(v => [h("code", {}, v.name), ...modes.map(m => h("span", {}, swatch(v.values[m.key]), h("code", {}, v.values[m.key])))])),
+      h("h2", {}, "Text Styles"),
+      h("p", { className: "vr-note" }, f.textStyles.length + " Text Styles."),
+      table(["Style", "Specimen", "Font", "Size / line", "Weight"], f.textStyles.map(s => [
+        h("code", {}, s.name),
+        h("span", { className: "vr-specimen", style: "font-family:'" + s.fontFamily + "',system-ui;font-size:" + s.fontSize + "px;line-height:" + s.lineHeight + ";font-weight:" + s.fontWeight }, "Aa Request access"),
+        s.fontFamily + " " + s.fontStyle, s.fontSize + " / " + s.lineHeight, String(s.fontWeight)])),
+    ];
+  }
+  function familyPanel(f) {
+    const head = h("div", { className: "vr-family-head" },
+      h("h2", {}, f.name),
+      h("p", {}, f.description),
+      h("p", { className: "vr-note" }, f.variants + " variants checked in the Contract · status " + f.status + ". Untick what to leave out, then export."));
+    const parts = [head];
+    if (f.drafted.length) parts.push(h("details", { className: "vr-drafted" },
+      h("summary", {}, f.drafted.length + " Drafted values (read-only; ask in chat to change one)"),
+      table(["Key", "Value", "By"], f.drafted.map(d => [h("code", {}, d.key), text(d.value), d.by]))));
+    const frame = h("iframe", { title: f.name + " catalog" });
+    frame.dataset.family = f.family;
+    frame.srcdoc = review.catalogs[f.family];
+    parts.push(frame);
+    return parts;
+  }
+
+  const frames = [];
+  const tabs = review.tabs.map((key, i) => {
+    const f = model.families.find(x => x.family === key);
+    const tab = h("button", { role: "tab", id: "tab-" + key, "aria-controls": "panel-" + key, "aria-selected": String(i === 0) }, f ? f.name : "Foundations");
+    const panel = h("section", { role: "tabpanel", id: "panel-" + key, "aria-labelledby": "tab-" + key, hidden: i !== 0 }, ...(f ? familyPanel(f) : foundationsPanel()));
+    const frame = panel.querySelector("iframe");
+    if (frame) frames.push(frame);
+    tab.onclick = () => {
+      document.querySelectorAll("[role=tab]").forEach(t => t.setAttribute("aria-selected", String(t === tab)));
+      document.querySelectorAll("[role=tabpanel]").forEach(p => { p.hidden = p !== panel; });
+      // A hidden catalog measured its cards at zero width: a resize sizes them again.
+      if (frame && frame.contentWindow) frame.contentWindow.dispatchEvent(new Event("resize"));
+    };
+    $("tabs").append(tab); $("panels").append(panel);
+    return tab;
+  });
+
+  // Each catalog keeps its own page; only its per-family export button goes, since this page exports them all.
+  let loaded = 0;
+  for (const frame of frames) frame.addEventListener("load", () => {
+    const own = frame.contentDocument && frame.contentDocument.getElementById("export");
+    if (own) own.hidden = true;
+    if (++loaded === frames.length) { $("export").disabled = false; $("status").textContent = frames.length + " catalogs loaded. Export when every tab is ticked."; }
+  });
+
+  function selections() {
+    return Object.fromEntries(frames.map(frame => [frame.dataset.family, frame.contentWindow.Catalog.getSelection()]));
+  }
+  $("export").onclick = () => {
+    $("error").textContent = "";
+    try {
+      const data = window.ReviewExport.reviewExport(model, selections());
+      const name = model.designSystem + ".review.json";
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" })), link = h("a");
+      link.href = url; link.download = name; document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      window.dispatchEvent(new CustomEvent("vibe-to-figma:review", { detail: data }));
+      $("status").textContent = "Exported " + name + ": " + Object.entries(data.families).map(([k, s]) => k + " " + s.patch.expectedCount).join(", ") + ". Say \"approve\" in chat.";
+    } catch (error) { $("error").textContent = error.message; }
+  };
+  window.Review = { selections, exportReview: () => window.ReviewExport.reviewExport(model, selections()) };
+})();
+</script>
+</html>

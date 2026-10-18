@@ -43,7 +43,7 @@ The page refuses to export unless every checked specimen rendered and the patch,
 node skills/to-preview/scripts/apply-omit.mjs <family>.omit-patch.json --checked <family>.checked.json --contract design-systems/<ds>/contracts/<family>.component.json
 ```
 
-It applies the patch with the shared module's `applyOmit`, validates against the foundations document, asserts the expanded set equals the checked tuples (tuple by tuple, not only the count) and that nothing but `selection` changed, then writes the Contract in place. The written Contract is a draft with `approval: null`. On any failure it writes nothing and exits 1. Done when it prints the variant count and `status draft`. The write keeps the Contract's layout, so a diff shows only the `selection` lines.
+It applies the patch with the shared module's `applyOmit`, validates against the foundations document, asserts the expanded set equals the checked tuples (tuple by tuple, not only the count) and that nothing but `selection` changed, then writes the Contract in place. The written Contract is a draft with `approval: null`. On any failure it writes nothing and exits 1. Done when it prints the variant count and `status draft`. The same checks are exported as `omitApplied({contract, patch, checked, foundations})`, which returns the patched Contract and writes nothing; [Vibe-to-Figma](../vibe-to-figma/SKILL.md)'s approve calls it for every family before it writes any. The write keeps the Contract's layout, so a diff shows only the `selection` lines.
 
 ## 4. Next
 
