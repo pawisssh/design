@@ -62,6 +62,7 @@
     const f = model.foundations, { modes } = f.colors;
     return [
       ...(model.kept.length ? [h("p", { className: "vr-note" }, "Kept approved, their code unchanged, so not reviewed again: " + model.kept.join(", ") + ".")] : []),
+      ...(f.approved ? [] : [h("p", { className: "vr-note" }, "This Foundations document is not the one the last approve covered. Nothing goes to Figma until the owner approves it" + (model.families.length ? " with the Contracts." : ": say \"approve\" in chat."))]),
       h("h2", {}, "Colors"),
       h("p", { className: "vr-note" }, f.colors.variables.length + " color variables, read from the project's CSS. Foundations change only with the code."),
       table(["Variable", ...modes.map(m => m.label)], f.colors.variables.map(v => [h("code", {}, v.name), ...modes.map(m => h("span", {}, swatch(v.values[m.key]), h("code", {}, v.values[m.key])))])),
@@ -159,7 +160,7 @@
   }
 
   Promise.all([loaded, store]).then(async ([, s]) => {
-    if (!s) { $("export").disabled = false; $("status").textContent = frames.length + " catalogs loaded. Export when every tab is ticked."; return; }
+    if (!s) { $("export").disabled = false; $("status").textContent = frames.length ? frames.length + " catalogs loaded. Export when every tab is ticked." : "Foundations only. Export, then say \"approve\" in chat."; return; }
     // An Artifact cannot download a file, so the export goes; its db holds the ticks instead.
     $("export").hidden = true;
     $("status").textContent = "Loading the saved ticks.";
@@ -170,7 +171,8 @@
     const { patches, stale } = window.ReviewStore.restorable(model, saved);
     for (const frame of frames) if (patches[frame.dataset.family]) frame.contentWindow.Catalog.setSelection(patches[frame.dataset.family]);
     const restored = Object.keys(patches).length;
-    $("status").textContent = (restored ? "Restored the saved ticks of " + restored + " of " + frames.length + " families. " : "") + (stale.length ? stale.join("; ") + ", so those show as their Contracts have them. " : "")
+    $("status").textContent = !frames.length ? (s.owner ? "Foundations only. Say \"approve\" in chat." : "Foundations only. Only the owner approves.")
+      : (restored ? "Restored the saved ticks of " + restored + " of " + frames.length + " families. " : "") + (stale.length ? stale.join("; ") + ", so those show as their Contracts have them. " : "")
       + (s.owner ? "Ticks save as you go. Say \"approve\" in chat." : "Your ticks are not saved: only the owner's are.");
     if (!s.owner) return;
     saving.last = saving.sent = saved && !stale.length ? window.ReviewStore.canonical(saved) : null;

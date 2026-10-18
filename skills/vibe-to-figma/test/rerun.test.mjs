@@ -56,7 +56,7 @@ test('a rerun with no code change reviews nothing and builds nothing', { skip },
   assert.deepEqual(review.model.kept, READABLE);
   const cli = spawnSync(process.execPath, [REVIEW, dir, '--project', project, '--out', join(root, 'review.html')], { encoding: 'utf8' });
   assert.equal(cli.status, 0, cli.stderr);
-  assert.match(cli.stdout, /^nothing to review: every Contract is approved \(alert, button, card, input, label, select, textarea\), so no page is written\nOK/);
+  assert.match(cli.stdout, /^nothing to review: every Contract is approved \(alert, button, card, input, label, select, textarea\) and so is the Foundations document, so no page is written\nOK/);
   assert.ok(!readdirSync(root).includes('review.html'));
   const writes = mock.log.length;
   const again = await drive({ dir, mock, ledger, record, namespace: 'v0-app' });
@@ -283,7 +283,7 @@ const dropTextarea = project => {
 };
 const FOLDER = fileURLToPath(new URL('../scripts/folder.mjs', import.meta.url));
 
-test('a component removed from the project: its approved Contract is set aside, nothing is reviewed, and the build names its set orphaned', { skip }, async () => {
+test('a component removed from the project: its approved Contract is set aside, only the narrowed Foundations is reviewed, and the build names its set orphaned', { skip }, async () => {
   const { project, root, dir, mock, ledger, record } = await builtProject();
   const before = snapshot(dir);
   const textarea = before[join('contracts', 'textarea.component.json')];
@@ -305,13 +305,19 @@ test('a component removed from the project: its approved Contract is set aside, 
   const again = await buildFolder({ project, root, drafts });
   assert.deepEqual([again.setAside, again.written, again.unchanged, again.foundations.written], [[], [], rest, false]);
 
-  // Nothing to review: textarea is neither on the page nor kept.
-  const review = await buildReview({ dir, renderer: () => { throw new Error('no catalog is built'); } });
-  assert.equal(review.html, null);
-  assert.deepEqual(review.model.kept, rest);
-
-  // The build: the gate passes, one Foundations call for the closure, no call into any set, textarea named orphaned.
+  // No Contract to review: textarea is neither on the page nor kept. The narrowed closure is a Foundations document no
+  // approve covers, so the page is its Foundations tab alone, and the build refuses its call until the owner approves it.
+  const noCatalog = () => { throw new Error('no catalog is built'); };
+  const review = await buildReview({ dir, renderer: noCatalog });
+  assert.deepEqual([review.model.families, review.model.kept, review.model.foundations.approved], [[], rest, false]);
+  assert.match(review.html, /"tabs":\["foundations"\]/);
   const g = gate({ dir, fileKey: FILE_KEY, ledger });
+  assert.match(g.foundationsRefused, /no approve covers the Foundations document/);
+  const a = await approveFolder({ dir, project, exported: reviewExport(review.model, {}), said: 'approve', at: AT, test: true });
+  assert.deepEqual([a.approved, a.kept, a.foundations.approval], [[], rest, 'written']);
+  assert.equal((await buildReview({ dir, renderer: noCatalog })).html, null);
+
+  // The build: one Foundations call for the closure, no call into any set, textarea named orphaned.
   assert.deepEqual(g.families, rest);
   const set = ledger.sets.textarea.set.id;
   assert.deepEqual(g.orphaned, [{ family: 'textarea', set, variants: ledger.sets.textarea.variants.length }]);
