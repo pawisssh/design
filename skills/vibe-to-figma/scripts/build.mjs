@@ -22,8 +22,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { contentHash, expand, icons as iconKeys, PROTOTYPE_APPROVER, sha256, validate } from '../../contract/scripts/contract.mjs';
-import { foundationsNext, foundationsPlan, MAX_COMBINE, setsPlan } from '../../to-design/scripts/build-plan.mjs';
+import { contentHash, expand, icons as iconKeys, PROTOTYPE_APPROVER, validate } from '../../contract/scripts/contract.mjs';
+import { documentHash, foundationsNext, foundationsPlan, MAX_COMBINE, setsPlan } from '../../to-design/scripts/build-plan.mjs';
 import { checkCoverage, mergeCoverage } from '../../to-design/scripts/coverage.mjs';
 import { ledgerPath, mainCheckoutOf, readLedger, recordResult } from '../../to-design/scripts/ledger.mjs';
 import { REPO_ROOT, TEST_APPROVER, inScratch } from '../../to-handoff/scripts/system.mjs';
@@ -87,7 +87,7 @@ export function gate({ dir, fileKey, ledger = null, skip = [], maxCombine = MAX_
     .filter(f => !(ledger && ledger.sets && ledger.sets[f] && ledger.sets[f].set))
     .map(f => ({ family: f, total: expand(contracts[f]).length }))
     .filter(a => a.total > maxCombine);
-  return { key, doc, docText, documentHash: `sha256:${sha256(docText)}`, contracts, families, drafts, skipped: [...skip].sort(), ask };
+  return { key, doc, docText, documentHash: documentHash(docText), contracts, families, drafts, skipped: [...skip].sort(), ask };
 }
 
 /** A plan in the file's namespace: its Variable collections and its Templates page carry the prefix. */
