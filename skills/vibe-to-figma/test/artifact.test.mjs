@@ -5,18 +5,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { hasRuntime, loadChromium } from '../../to-handoff/scripts/deps.mjs';
 import { approveFolder, storedExport } from '../scripts/approve.mjs';
 import { buildReview, reviewModel } from '../scripts/review.mjs';
-import { READABLE, V0, selections, skip, v0Folder } from './helpers.mjs';
+import { READABLE, V0, selections, skip, snapshot, v0Folder } from './helpers.mjs';
 
 const require = createRequire(import.meta.url);
 const { reviewExport } = require('../assets/review-export.js');
 const { DOC, storedTicks, restorable, canonical } = require('../assets/review-store.js');
 const AT = '2026-10-18T00:00:00Z';
-const snapshot = dir => Object.fromEntries(['', 'contracts'].flatMap(sub => readdirSync(join(dir, sub)).filter(f => f.endsWith('.json')).map(f => [join(sub, f), readFileSync(join(dir, sub, f), 'utf8')])));
 const untickXs = { button: m => m.selectMatching({ size: 'xs' }, false), select: m => m.selectMatching({ state: 'disabled' }, false) };
 
 test('the saved ticks are each family\'s omit patch, small enough for one db document', { skip }, async () => {

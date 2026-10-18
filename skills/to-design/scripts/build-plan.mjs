@@ -89,7 +89,10 @@ export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune
     foundations: strip ? stripReviewFields(sub) : sub,
     ...(parts.length > 1 ? { chunk: { index: chunk, of: parts.length, groups: parts[chunk - 1].groups } } : {}),
   };
-  const state = !ledger ? emptyLedger(fileKey) : parts.length > 1 ? chunkState(ledger, parts[chunk - 1], chunk === 1 ? names : null) : ledger;
+  // The slice reads only the ledger's foundations, so the file's other records (a built set's every variant id) stay
+  // out of the call, where they would count against its budget (#180: a Foundations call after the sets are built).
+  const foundationsOnly = l => ({ schemaVersion: l.schemaVersion, fileKey: l.fileKey, ...(l.foundations ? { foundations: l.foundations } : {}) });
+  const state = !ledger ? emptyLedger(fileKey) : foundationsOnly(parts.length > 1 ? chunkState(ledger, parts[chunk - 1], chunk === 1 ? names : null) : ledger);
   const chars = JSON.stringify(plan).length + JSON.stringify(state).length;
   if (strip && chars > budget) throw new Error(`the foundations plan and state are ${chars} chars, over the ${budget} a call takes`);
   return { plan, state };
@@ -308,15 +311,21 @@ export function entrySpec(plan, entry) {
  * decode back to the expansion and resolve to what the Contract resolves; the core never matches rules.
  * A `coverage` read with `batch` reads one window of `coveragePerCall` of the set's children (the last window is
  * open-ended); `coverage.mjs` merges the pages (`mergeCoverage`). Without `batch` it reads the whole set.
- * Options: fileKey (required), mode, next, batch, perCall, coveragePerCall, budget, sample, prune, adopt, prototype, page, at.
+ * `indexes` (expansion indexes, at most one append call's worth) makes a `build` call into a placed set append exactly
+ * those variants, in place of a batch window: an update that leaves every other variant as it is (#180). It may be
+ * empty: the call then updates only the set itself (its name, description, properties and grid) and re-places its
+ * children.
+ * Options: fileKey (required), mode, next, batch, indexes, perCall, coveragePerCall, budget, sample, prune, adopt,
+ * prototype, page, at.
  */
 export function setsPlan(contract, docText, ledger, {
-  fileKey, mode = 'build', next = false, batch, perCall, coveragePerCall = COVERAGE_PER_CALL, budget = PLACE_BUDGET, sample = [], prune = null, adopt = false,
+  fileKey, mode = 'build', next = false, batch, indexes = null, perCall, coveragePerCall = COVERAGE_PER_CALL, budget = PLACE_BUDGET, sample = [], prune = null, adopt = false,
   prototype = false, page = null, at = new Date().toISOString(),
 } = {}) {
   if (!fileKey) throw new Error('fileKey is required');
   if (!SET_MODES.includes(mode)) throw new Error(`mode must be one of ${SET_MODES.join(', ')}`);
   if ((mode === 'prune') !== !!prune) throw new Error('prune takes a prune list (--prune-list), and only the prune mode does');
+  if (indexes != null && (mode !== 'build' || next || batch != null)) throw new Error('indexes pick a build call\'s variants themselves: give them with mode build and no next or batch');
   if (!ledger || ledger.fileKey !== fileKey) throw new Error(`no ledger for ${fileKey}: build foundations and icons first`);
   if (perCall != null && (!Number.isInteger(perCall) || perCall < 1 || perCall > PER_CALL)) throw new Error(`--per-call takes 1..${PER_CALL}: at most ${PER_CALL} per call`);
   const doc = JSON.parse(docText);
@@ -489,6 +498,7 @@ export function setsPlan(contract, docText, ledger, {
     if (gap) throw new Error(`combine: ${gap} of ${total} loose variants are not recorded in the ledger: build their batches first (--next)`);
   }
   if (mode === 'place' && !combined) throw new Error(`the ${family} set is not combined yet: build its loose batches and the combine first (--next)`);
+  if (indexes != null && (!combined || unplaced)) throw new Error(`indexes append into a placed set, and the ${family} set is not ${combined ? 'placed' : 'combined'} yet: build it first (--next)`);
 
   let picked;
   let options = {};
@@ -497,17 +507,22 @@ export function setsPlan(contract, docText, ledger, {
     const phase = combined ? 'append' : 'loose';
     if (perCall) checkFits(perCall, 'build');
     const n = perCall || perCallFor(phase);
-    const of = Math.ceil(total / n);
+    if (indexes != null) {
+      picked = [...new Set(indexes)].sort((a, b) => a - b);
+      if (picked.some(i => !Number.isInteger(i) || i < 0 || i >= total)) throw new Error(`indexes must be expansion indexes 0..${total - 1}`);
+      if (picked.length > n) throw new Error(`${picked.length} indexes are above the ${n} an append call of ${family} takes: give them in calls of ${n}`);
+    }
+    const of = indexes != null ? 1 : Math.ceil(total / n);
     if (batch == null) batch = 0;
     if (!Number.isInteger(batch) || batch < 0 || batch >= of) throw new Error(`batch must be 0..${of - 1} (${total} variants, ${n} per call)`);
-    picked = windows(n)[batch];
+    if (indexes == null) picked = windows(n)[batch];
     // above appendPerCall, only an update-free re-run: every variant in the window is in the set already
     const cap = appendPerCall(total);
     if (phase === 'append' && n > cap) {
       const miss = picked.filter(i => !ids[i]).length;
       if (miss) throw new Error(`--per-call ${n} is above ${cap} for a set of ${total}, which only an update-free re-run may take: ${miss} of its ${picked.length} variants ${miss === 1 ? 'has' : 'have'} no recorded id`);
     }
-    options = { phase, batch, of, perCall: n };
+    options = { phase, batch, of, perCall: n, ...(indexes != null ? { picked: picked.length } : {}) };
   } else if (mode === 'reconcile') {
     // the whole family in one call when it fits, else by --batch
     picked = tuples.map((_, i) => i);

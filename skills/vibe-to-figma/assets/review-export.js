@@ -5,8 +5,10 @@
   // {patch, checked}. The page calls it on export and the tests call it in node, so both write the same file.
   function reviewExport(model, selections) {
     const families = model.families.map(f => f.family);
-    for (const family of Object.keys(selections))
+    for (const family of Object.keys(selections)) {
+      if ((model.kept || []).includes(family)) throw new Error(family + " is approved and not on the review page");
       if (!families.includes(family)) throw new Error(family + " has no Contract in " + model.designSystem);
+    }
     const out = {};
     for (const family of families) {
       const s = selections[family];

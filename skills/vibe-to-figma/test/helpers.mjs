@@ -2,7 +2,7 @@
 // (a test approval is written only under .scratch/), with the Adapter's committed fixtures/drafts as the agent's
 // answers. Each test takes its own copy; after() removes them all.
 import { after } from 'node:test';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -36,6 +36,9 @@ export async function v0Folder() {
 }
 
 export const read = path => JSON.parse(readFileSync(path, 'utf8'));
+export const contractPath = (dir, family) => join(dir, 'contracts', `${family}.component.json`);
+// Every file of the folder, as text: what a refusal, or a rerun of what did not change, must leave unchanged.
+export const snapshot = dir => Object.fromEntries(['', 'contracts'].flatMap(sub => readdirSync(join(dir, sub)).filter(f => f.endsWith('.json')).map(f => [join(sub, f), readFileSync(join(dir, sub, f), 'utf8')])));
 
 const Selection = createRequire(import.meta.url)('../../to-preview/assets/selection-model.js');
 /**
