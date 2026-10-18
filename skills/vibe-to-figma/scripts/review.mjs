@@ -13,11 +13,11 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { draftedValue, expand, sha256 } from '../../contract/scripts/contract.mjs';
+import { readJson } from '../../contract/scripts/io.mjs';
+import { REPO_ROOT } from '../../to-handoff/scripts/system.mjs';
 import { buildCatalog } from '../../to-preview/scripts/catalog.mjs';
 
-const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const asset = name => readFileSync(new URL(`../assets/${name}`, import.meta.url), 'utf8');
-const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
 
 /** The folder's Foundations document path (its single *.foundations.json) and its Contracts' paths, by family. */
 export function folderFiles(dir) {
