@@ -17,14 +17,12 @@ import { baselined, gate, nextStep, pendingUpdate, variantFingerprints } from '.
 import { buildFolder } from '../scripts/folder.mjs';
 import { buildReview, reviewModel } from '../scripts/review.mjs';
 import { AT, FILE_KEY, NARROW, drive, smokeDraft } from './drive.mjs';
-import { READABLE, V0, read, scratch, selections, skip } from './helpers.mjs';
+import { READABLE, V0, contractPath, read, scratch, selections, skip, snapshot } from './helpers.mjs';
 
 const { reviewExport } = createRequire(import.meta.url)('../assets/review-export.js');
 const REVIEW = fileURLToPath(new URL('../scripts/review.mjs', import.meta.url));
 const DRAFTS = fileURLToPath(new URL('../../adapter-generic/fixtures/drafts/', import.meta.url));
 const drafts = Object.fromEntries(READABLE.map(f => [f, read(join(DRAFTS, `${f}.json`)).drafts]));
-const contractPath = (dir, family) => join(dir, 'contracts', `${family}.component.json`);
-const snapshot = dir => Object.fromEntries(['', 'contracts'].flatMap(sub => readdirSync(join(dir, sub)).filter(f => f.endsWith('.json')).map(f => [join(sub, f), readFileSync(join(dir, sub, f), 'utf8')])));
 const RED = [{ type: 'SOLID', color: { r: 1, g: 0, b: 0 }, opacity: 1, visible: true, blendMode: 'NORMAL' }];
 // The page's export, in node, for the families on it.
 const exported = (dir, edits) => { const model = reviewModel(dir); const all = selections(dir, edits); return reviewExport(model, Object.fromEntries(model.families.map(f => [f.family, all[f.family]]))); };
@@ -111,7 +109,7 @@ test('after one component\'s code changes, only it is reviewed and only its chan
   assert.deepEqual({ created, updated, orphaned, pruned, conflicts }, { created: 0, updated: 0, orphaned: 0, pruned: 0, conflicts: 0 });
   assert.deepEqual(steps[0].writes, []);
   const update = steps[1];
-  assert.equal(update.options.indexes, 2);
+  assert.equal(update.options.picked, 2);
   assert.deepEqual(update.plan.selection.entries.map(e => e[0]), [2, 5]);
   assert.equal(kept.coverage.input.ok, true, JSON.stringify(kept.coverage.input.problems));
   // The same set and variants, the owner's edits kept, every other family's ledger record as it was.
@@ -125,6 +123,35 @@ test('after one component\'s code changes, only it is reviewed and only its chan
   const again = await drive({ dir, mock, ledger: next, record: kept, namespace: 'v0-app' });
   assert.deepEqual([again.n.status, again.steps], ['built', []]);
   assert.equal(mock.log.length, writes);
+});
+
+test('a change undone before its update is checked is sent again: the update\'s writes leave the baseline', { skip }, async () => {
+  const { project, root, dir, mock, ledger, record } = await builtProject();
+  const file = join(project, 'components/ui/input.tsx');
+  const source = readFileSync(file, 'utf8');
+  const ids = ledger.sets.input.variants;
+  const opacity = async () => (await mock.figma.getNodeByIdAsync(ids[2])).opacity;
+  const was = await opacity();
+  const rerun = async () => {
+    await buildFolder({ project, root, drafts });
+    await approveFolder({ dir, project, exported: exported(dir), said: 'approve', at: AT, test: true });
+  };
+  fadeDisabled(file);
+  await rerun();
+  // The update call is in, its coverage check not yet: the owner puts the code back.
+  const half = await drive({ dir, mock, ledger, record, namespace: 'v0-app', until: s => s.step === 'sets' });
+  assert.deepEqual(half.steps.at(-1).plan.selection.entries.map(e => e[0]), [2, 5]);
+  assert.notEqual(await opacity(), was);
+  writeFileSync(file, source);
+  await rerun();
+  const { n, ledger: next, record: kept, steps } = await drive({ dir, mock, ledger: half.ledger, record: half.record, namespace: 'v0-app' });
+  assert.equal(n.status, 'built', JSON.stringify(n));
+  const sent = steps.filter(s => s.step === 'sets');
+  assert.deepEqual(sent.map(s => s.plan.selection.entries.map(e => e[0])), [[2, 5]]);
+  assert.equal(await opacity(), was);
+  assert.deepEqual(next.sets.input.variants, ids);
+  assert.equal(kept.coverage.input.ok, true);
+  assert.equal(kept.built.input.contentHash, contentHash(read(contractPath(dir, 'input'))));
 });
 
 test('a build record from before #180 gets its baseline from the coverage checks that passed, and no call', { skip }, async () => {
@@ -170,7 +197,7 @@ test('pendingUpdate: no update without a baseline of the same set; a change of t
   // An empty pick is a set-only call; indexes are refused anywhere but a build call into a placed set.
   const { docText } = g;
   const { plan } = setsPlan(contract, docText, ledger, { fileKey: FILE_KEY, mode: 'build', indexes: [], prototype: true, at: AT });
-  assert.deepEqual([plan.selection.entries, plan.options.indexes, plan.options.of], [[], 0, 1]);
+  assert.deepEqual([plan.selection.entries, plan.options.picked, plan.options.of], [[], 0, 1]);
   const refuses = (opts, pattern, l = ledger) => assert.throws(() => setsPlan(contract, docText, l, { fileKey: FILE_KEY, prototype: true, at: AT, ...opts }), pattern);
   refuses({ mode: 'coverage', indexes: [0] }, /indexes pick a build call's variants themselves/);
   refuses({ mode: 'build', next: true, indexes: [0] }, /indexes pick a build call's variants themselves/);

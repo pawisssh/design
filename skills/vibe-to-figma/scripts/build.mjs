@@ -139,6 +139,9 @@ export function baselined(record, g, ledger) {
   return changed ? { ...record, built } : record;
 }
 
+// A baseline variant, [fingerprint, id], is in the set as a Contract with this variant fingerprint has it.
+const holds = (baseline, fingerprint) => !!baseline && baseline[0] === fingerprint && !!baseline[1];
+
 /**
  * An update's variants still to send, by expansion index: the family's Contract changed since its set's baseline, and
  * these variants are new, changed, or have no id in it. The first call of an update goes out even with none (a change
@@ -150,10 +153,7 @@ export function pendingUpdate(contract, ledger, built) {
   const hash = contentHash(contract);
   if (built.contentHash === hash) return null;
   const changed = [];
-  variantFingerprints(contract).forEach(({ name, fingerprint }, i) => {
-    const b = built.variants[name];
-    if (!b || b[0] !== fingerprint || !b[1]) changed.push(i);
-  });
+  variantFingerprints(contract).forEach(({ name, fingerprint }, i) => { if (!holds(built.variants[name], fingerprint)) changed.push(i); });
   if (rec.contentHash !== hash) return changed;
   const left = changed.filter(i => !(rec.variants || [])[i]);
   return left.length ? left : null;
@@ -271,6 +271,14 @@ function recorded({ dir, fileKey, ledger, record, result, skip, at }) {
   if (result.slice === 'sets') {
     const drop = o => Object.fromEntries(Object.entries(o || {}).filter(([f]) => f !== result.family));
     out.record = { ...record, coverage: drop(record.coverage), pages: drop(record.pages) };
+    // and its baseline no longer holds the variants it wrote: until the next passing check the family is an update, so
+    // a later Contract that has them as the baseline does still sends them again
+    const base = (record.built || {})[result.family];
+    const wrote = new Set(Object.values(result.ledger.sets[result.family]?.variants || {}).filter(Boolean));
+    if (base && wrote.size) {
+      const variants = Object.fromEntries(Object.entries(base.variants).filter(([, [, id]]) => !wrote.has(id)));
+      out.record.built = { ...record.built, [result.family]: { ...base, contentHash: null, variants } };
+    }
     // a rebuild's batch (a build batch into the set, after its current verdict failed) is kept until all of them are in
     const under = (record.rebuild || {})[result.family];
     const failed = (record.coverage || {})[result.family];
@@ -298,10 +306,7 @@ function carried(ledger, result, record, gateOf) {
   const contract = gateOf().contracts[family];
   if (!contract || contentHash(contract) !== rec.contentHash) return ledger;
   const variants = rec.variants.slice();
-  variantFingerprints(contract).forEach(({ name, fingerprint }, i) => {
-    const b = built.variants[name];
-    if (!variants[i] && b && b[0] === fingerprint && b[1]) variants[i] = b[1];
-  });
+  variantFingerprints(contract).forEach(({ name, fingerprint }, i) => { if (!variants[i] && holds(built.variants[name], fingerprint)) variants[i] = built.variants[name][1]; });
   return { ...ledger, sets: { ...ledger.sets, [family]: { ...rec, variants } } };
 }
 

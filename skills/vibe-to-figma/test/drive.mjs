@@ -31,8 +31,8 @@ export function pack(plan, state, core) {
   return readFileSync(join(root, 'out/build-components.mcp.js'), 'utf8');
 }
 
-/** The agent's loop on the mock: next, use_figma, record, until the build is done or stops. */
-export async function drive({ dir, mock, ledger = null, record = {}, max = 200, ...opts }) {
+/** The agent's loop on the mock: next, use_figma, record, until the build is done or stops, or `until` a step. */
+export async function drive({ dir, mock, ledger = null, record = {}, max = 200, until = () => false, ...opts }) {
   const steps = [];
   for (let i = 0; i < max; i++) {
     const n = nextStep({ dir, fileKey: FILE_KEY, ledger, record, at: AT, ...opts });
@@ -45,6 +45,7 @@ export async function drive({ dir, mock, ledger = null, record = {}, max = 200, 
     steps.push({ step: n.step, family: n.family, options: n.options, plan: n.plan, result, writes });
     ({ ledger, record } = recordStep({ dir, fileKey: FILE_KEY, ledger, record, result, namespace: opts.namespace, skip: opts.skip, at: AT }));
     if (result.conflicts && result.conflicts.length) return { n: { status: 'conflicts', conflicts: result.conflicts }, ledger, record, steps };
+    if (until(steps.at(-1))) return { n: { status: 'stopped' }, ledger, record, steps };
   }
   throw new Error(`no end after ${max} calls`);
 }

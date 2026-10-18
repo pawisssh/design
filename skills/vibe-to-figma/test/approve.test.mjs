@@ -14,15 +14,12 @@ import { TEST_APPROVER } from '../../to-handoff/scripts/system.mjs';
 import { approveFolder, parseApproval } from '../scripts/approve.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
 import { reviewModel } from '../scripts/review.mjs';
-import { READABLE, V0, read, selections, skip, v0Folder } from './helpers.mjs';
+import { READABLE, V0, contractPath, read, selections, skip, snapshot, v0Folder } from './helpers.mjs';
 
 const { reviewExport } = createRequire(import.meta.url)('../assets/review-export.js');
 const AT = '2026-10-18T00:00:00Z';
-const contractPath = (dir, family) => join(dir, 'contracts', `${family}.component.json`);
 // The page's export, in node: every catalog rendered, then the owner's unticks.
 const exported = (dir, edits) => reviewExport(reviewModel(dir), selections(dir, edits));
-// Every file of the folder, as text: what a refusal must leave unchanged.
-const snapshot = dir => Object.fromEntries(['', 'contracts'].flatMap(sub => readdirSync(join(dir, sub)).filter(f => f.endsWith('.json')).map(f => [join(sub, f), readFileSync(join(dir, sub, f), 'utf8')])));
 
 test('the owner\'s message: "approve", or "approve except" one or more families', () => {
   assert.deepEqual(parseApproval('approve', READABLE), { except: [] });

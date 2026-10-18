@@ -91,8 +91,8 @@ export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune
   };
   // The slice reads only the ledger's foundations, so the file's other records (a built set's every variant id) stay
   // out of the call, where they would count against its budget (#180: a Foundations call after the sets are built).
-  const own = l => ({ schemaVersion: l.schemaVersion, fileKey: l.fileKey, ...(l.foundations ? { foundations: l.foundations } : {}) });
-  const state = !ledger ? emptyLedger(fileKey) : own(parts.length > 1 ? chunkState(ledger, parts[chunk - 1], chunk === 1 ? names : null) : ledger);
+  const foundationsOnly = l => ({ schemaVersion: l.schemaVersion, fileKey: l.fileKey, ...(l.foundations ? { foundations: l.foundations } : {}) });
+  const state = !ledger ? emptyLedger(fileKey) : foundationsOnly(parts.length > 1 ? chunkState(ledger, parts[chunk - 1], chunk === 1 ? names : null) : ledger);
   const chars = JSON.stringify(plan).length + JSON.stringify(state).length;
   if (strip && chars > budget) throw new Error(`the foundations plan and state are ${chars} chars, over the ${budget} a call takes`);
   return { plan, state };
@@ -522,7 +522,7 @@ export function setsPlan(contract, docText, ledger, {
       const miss = picked.filter(i => !ids[i]).length;
       if (miss) throw new Error(`--per-call ${n} is above ${cap} for a set of ${total}, which only an update-free re-run may take: ${miss} of its ${picked.length} variants ${miss === 1 ? 'has' : 'have'} no recorded id`);
     }
-    options = { phase, batch, of, perCall: n, ...(indexes != null ? { indexes: picked.length } : {}) };
+    options = { phase, batch, of, perCall: n, ...(indexes != null ? { picked: picked.length } : {}) };
   } else if (mode === 'reconcile') {
     // the whole family in one call when it fits, else by --batch
     picked = tuples.map((_, i) => i);
