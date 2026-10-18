@@ -222,7 +222,9 @@
       controls(); summary(); render();
       return model;
     },
-    getSelection: selection
+    getSelection: selection,
+    // Ticks the specimens an earlier export's patch kept and unticks the rest (Vibe-to-Figma restores saved ticks).
+    setSelection(patch) { model.selectPatch(patch); summary(); }
   };
 })();
 </script>

@@ -43,6 +43,17 @@
       for (const specimen of this.specimens.values())
         if (this.matches(specimen, filters) && (value || specimen.id !== this.baseId)) this.select(specimen.id, value);
     }
+    // The selection an omit patch describes, as omitPatch() wrote it: every specimen it does not omit, and the
+    // Base Component, locked on. Throws for a patch of another family or snapshot.
+    selectPatch(patch) {
+      const c = this.contract;
+      if (!patch || patch.family !== c.family.key || patch.snapshotId !== c.source.snapshotId || !Array.isArray(patch.omit))
+        throw new Error("The ticks are for " + (patch && patch.family) + " at " + (patch && patch.snapshotId) + ", not " + c.family.key + " at " + c.source.snapshotId);
+      for (const s of this.specimens.values()) {
+        const off = patch.omit.some(p => this.module.matches(p, s.tuple));
+        if (!off || s.id !== this.baseId) this.select(s.id, !off);
+      }
+    }
     // Display filters {axisKey: valueKey}; an empty value shows every value of that axis.
     matches(specimen, filters) {
       return Object.entries(filters || {}).every(([axis, value]) => !value || specimen.tuple[axis] === value);
