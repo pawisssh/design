@@ -213,6 +213,8 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const make = (parent, s) => {
       const n = s.type === 'TEXT' ? figma.createText() : s.type === 'INSTANCE' ? I[spec.swap[s.name]].createInstance() : figma.createFrame();
       if (s.type === 'FRAME') n.fills = [];
+      // a new text layer is named "Text" with autoRename on, so a layer named "Text" would take its characters' name
+      if (s.type === 'TEXT') n.autoRename = false;
       n.name = s.name;
       parent.appendChild(n);
       if (s.type !== 'INSTANCE') for (const c of s.children || []) make(n, c);

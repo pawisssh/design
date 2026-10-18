@@ -5,7 +5,7 @@
 // To-design plan, packaged with To-design's packager, sent to use_figma by the agent and recorded here.
 //
 //   node skills/vibe-to-figma/scripts/build.mjs next design-systems/<name> <figma-file-url> --out <run dir>
-//        [--ledger <path>] [--namespace <prefix>] [--skip <family>]...
+//        [--ledger <path>] [--namespace <prefix>] [--skip <family>]... [--rebuild <family>]...
 //   node skills/vibe-to-figma/scripts/build.mjs record design-systems/<name> <figma-file-url> <run dir>/result.json
 //        [--ledger <path>] [--namespace <prefix>] [--skip <family>]...
 //
@@ -14,7 +14,9 @@
 // first build would combine more than MAX_COMBINE variants stops the run before any write, for the owner to decide.
 // The ledger is the Design System's own, <fileKey>.<name>.ledger.json in the main checkout's .scratch/to-design/, so
 // a file that holds another Design System (the smoke draft's Carbon) keeps its ledger untouched. Beside it,
-// <fileKey>.<name>.build.json keeps the namespace and the coverage pages and verdicts.
+// <fileKey>.<name>.build.json keeps the namespace, the coverage pages and verdicts, and any rebuild under way.
+// A set that fails its coverage check stops the run; --rebuild <family> then builds its batches again inside the set
+// (the builder rebuilds a layer tree unlike the Contract's anatomy and wires it again), and its coverage is read again.
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -105,10 +107,13 @@ const prototypeOf = c => c.selection.approval.by === PROTOTYPE_APPROVER;
  *   {status: 'step', step: 'foundations'|'sets'|'coverage', family?, core, plan, state, options}
  *   {status: 'problems', family, problems}                     a coverage check failed: stop and report
  *   {status: 'built', families: [{family, variants, set}], drafts, skipped}
- * Options: dir, fileKey, ledger, record (the build record), namespace, skip, maxCombine, coveragePerCall, at.
+ * Options: dir, fileKey, ledger, record (the build record), namespace, skip, maxCombine, coveragePerCall, at, and
+ * rebuild: families whose failed coverage check starts a rebuild of their set (one already under way goes on anyway).
  */
-export function nextStep({ dir, fileKey, ledger = null, record = {}, namespace = null, skip = [], maxCombine = MAX_COMBINE, coveragePerCall, at = new Date().toISOString() }) {
+export function nextStep({ dir, fileKey, ledger = null, record = {}, namespace = null, skip = [], maxCombine = MAX_COMBINE, coveragePerCall, rebuild = [], at = new Date().toISOString() }) {
   const g = gate({ dir, fileKey, ledger, skip, maxCombine });
+  const unknown = rebuild.filter(f => !g.families.includes(f));
+  if (unknown.length) throw new Error(`--rebuild ${unknown.join(', ')}: not an approved family of ${dir} built here`);
   if ('namespace' in record && record.namespace !== namespace)
     throw new Error(`this file was built with --namespace ${JSON.stringify(record.namespace)}: give the same one (a different one would rename its collections)`);
   if (g.ask.length) return { status: 'ask', ask: g.ask, drafts: g.drafts };
@@ -123,7 +128,16 @@ export function nextStep({ dir, fileKey, ledger = null, record = {}, namespace =
   for (const f of g.families) {
     const verdict = (record.coverage || {})[f];
     const set = ledger.sets[f];
-    if (verdict && verdict.contentHash === set.contentHash && verdict.documentHash === g.documentHash && verdict.set === set.set.id) {
+    const rebuilt = (record.rebuild || {})[f];
+    const current = verdict && verdict.contentHash === set.contentHash && verdict.documentHash === g.documentHash && verdict.set === set.set.id;
+    if (rebuilt || (current && !verdict.ok && rebuild.includes(f))) {
+      // each build batch again, in the set: the first one recorded drops the failed verdict
+      const opts = { fileKey, mode: 'build', prototype: prototypeOf(g.contracts[f]), at };
+      const of = setsPlan(g.contracts[f], g.docText, ledger, { ...opts, batch: 0 }).plan.options.of;
+      const batch = Array.from({ length: of }, (_, i) => i).find(i => !(rebuilt || []).includes(i));
+      return step('sets', f, CORES.sets, setsPlan(g.contracts[f], g.docText, ledger, { ...opts, batch }));
+    }
+    if (current) {
       if (!verdict.ok) return { status: 'problems', family: f, problems: verdict.problems };
       continue;
     }
@@ -170,19 +184,27 @@ export function recordStep({ dir, fileKey, ledger = null, record = {}, result, a
   if (result.slice === 'sets') {
     const drop = o => Object.fromEntries(Object.entries(o || {}).filter(([f]) => f !== result.family));
     out.record = { ...record, coverage: drop(record.coverage), pages: drop(record.pages) };
+    // a rebuild's batch (a build batch into the set) is kept until all of them are in
+    const under = (record.rebuild || {})[result.family];
+    const failed = (record.coverage || {})[result.family];
+    if (result.mode === 'build' && result.phase === 'append' && (under || (failed && !failed.ok))) {
+      const done = [...new Set([...(under || []), result.batch[0]])];
+      const rest = drop(record.rebuild);
+      out.record.rebuild = done.length < result.batch[1] ? { ...rest, [result.family]: done } : rest;
+    }
   }
   return out;
 }
 
 const USAGE = [
-  'usage: build.mjs next design-systems/<name> <figma-file-url> --out <run dir> [--ledger <path>] [--namespace <prefix>] [--skip <family>]...',
+  'usage: build.mjs next design-systems/<name> <figma-file-url> --out <run dir> [--ledger <path>] [--namespace <prefix>] [--skip <family>]... [--rebuild <family>]...',
   '       build.mjs record design-systems/<name> <figma-file-url> <run dir>/result.json [--ledger <path>] [--namespace <prefix>] [--skip <family>]...',
 ].join('\n');
 
 function main() {
   let args;
   try {
-    args = parseArgs({ allowPositionals: true, options: { out: { type: 'string' }, ledger: { type: 'string' }, namespace: { type: 'string' }, skip: { type: 'string', multiple: true, default: [] } } });
+    args = parseArgs({ allowPositionals: true, options: { out: { type: 'string' }, ledger: { type: 'string' }, namespace: { type: 'string' }, skip: { type: 'string', multiple: true, default: [] }, rebuild: { type: 'string', multiple: true, default: [] } } });
   } catch (e) {
     console.error(`${e.message}\n${USAGE}`);
     process.exit(2);
@@ -221,13 +243,13 @@ function main() {
     return;
   }
 
-  const n = nextStep({ dir, fileKey, ledger, record, namespace, skip: values.skip });
+  const n = nextStep({ dir, fileKey, ledger, record, namespace, skip: values.skip, rebuild: values.rebuild });
   if (n.status === 'ask') {
     console.error(`ASK THE OWNER: nothing was written to Figma.\n${n.ask.map(a => `- ${a.family} has ${a.total} variants, above MAX_COMBINE (${MAX_COMBINE}): its first build combines them all in one call, which grows with the square of the set and nears the ~2 min call ceiling.`).join('\n')}\nThe owner can untick variants on the review page and approve again, or build the rest without it (--skip <family>, only on the owner's word).`);
     process.exit(3);
   }
   if (n.status === 'problems') {
-    console.error(`FAIL: the ${n.family} set does not pass the coverage check:\n${JSON.stringify(n.problems, null, 2)}`);
+    console.error(`FAIL: the ${n.family} set does not pass the coverage check:\n${JSON.stringify(n.problems, null, 2)}\nOnce the cause is fixed, --rebuild ${n.family} builds the set's batches again and reads its coverage again.`);
     process.exit(1);
   }
   if (n.status === 'built') {

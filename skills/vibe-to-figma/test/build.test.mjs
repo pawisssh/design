@@ -126,6 +126,37 @@ test('after "approve", Foundations then every Component Set by B′, each passin
   assert.throws(() => nextStep({ dir, fileKey: FILE_KEY, ledger, record, namespace: null, at: AT }), /built with --namespace "v0-app"/);
 });
 
+test('a set that fails its coverage check stops the run until --rebuild builds it again in place', { skip }, async () => {
+  const dir = await approvedFolder();
+  const mock = smokeDraft();
+  const opts = { dir, mock, namespace: 'v0-app', coveragePerCall: 4 };
+  let { ledger, record } = await drive(opts);
+  // As the smoke draft's Label was (#179): its text layer renamed after its characters, so the Text property wires nothing.
+  const page = mock.figma.root.children.find(p => p.name === 'Label');
+  const set = page.findOne(n => n.type === 'COMPONENT_SET');
+  const text = set.findOne(n => n.type === 'TEXT');
+  text.componentPropertyReferences = {};
+  text.name = 'Label';
+  const { label: _, ...coverage } = record.coverage;
+  const failed = await drive({ ...opts, ledger, record: { ...record, coverage } });
+  assert.equal(failed.n.status, 'problems');
+  assert.equal(failed.n.family, 'label');
+  assert.deepEqual(failed.n.problems.map(p => p.what), ['wiring']);
+  // Still stopped on a rerun; an unknown family is refused.
+  assert.equal(nextStep({ dir, fileKey: FILE_KEY, ledger: failed.ledger, record: failed.record, namespace: 'v0-app', at: AT }).status, 'problems');
+  assert.throws(() => nextStep({ dir, fileKey: FILE_KEY, ledger: failed.ledger, record: failed.record, namespace: 'v0-app', rebuild: ['sonner'], at: AT }), /--rebuild sonner: not an approved family/);
+  const fixed = await drive({ ...opts, ledger: failed.ledger, record: failed.record, rebuild: ['label', 'button'] });
+  assert.equal(fixed.n.status, 'built', JSON.stringify(fixed.n));
+  // Only the failed set is built again, inside its set (same set id), then read again.
+  assert.deepEqual(fixed.steps.map(s => [s.step, s.family, s.options.phase || s.options.mode]), [['sets', 'label', 'append'], ['coverage', 'label', 'coverage']]);
+  assert.equal(fixed.ledger.sets.label.set.id, set.id);
+  assert.equal(fixed.record.coverage.label.ok, true);
+  assert.deepEqual(fixed.record.rebuild, {});
+  assert.equal(set.findOne(n => n.type === 'TEXT').name, 'Text');
+  // Done: --rebuild of a set that passes derives nothing.
+  assert.equal(nextStep({ dir, fileKey: FILE_KEY, ledger: fixed.ledger, record: fixed.record, namespace: 'v0-app', rebuild: ['label'], at: AT }).status, 'built');
+});
+
 test('"approve except select" builds every family but select, and names it a draft', { skip }, async () => {
   const dir = await approvedFolder('approve except select');
   const g = gate({ dir, fileKey: FILE_KEY });

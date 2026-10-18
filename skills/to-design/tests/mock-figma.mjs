@@ -388,16 +388,22 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
   }
   // A TEXT node starts in Inter Regular; changing its characters or typography needs the font loaded,
   // and typography set on the node detaches its Text Style (probed live in #29).
+  // It starts named "Text" with autoRename on, so its characters rename it; a name it does not have already turns
+  // autoRename off, but setting "Text" again does not (seen live in #179: a Label's "Text" layer became "Label").
   class Text extends SceneNode {
     constructor() {
       super('TEXT', 'Text', { width: 0, height: 0 });
       this._fills = [{ type: 'SOLID', color: { r: 0, g: 0, b: 0 } }];
       this._font = { family: 'Inter', style: 'Regular' }; this._size = 12; this._lh = { unit: 'AUTO' }; this._ls = { unit: 'PERCENT', value: 0 };
-      this._chars = ''; this._style = ''; this._p.textAutoResize = 'NONE';
+      this._chars = ''; this._style = ''; this._p.textAutoResize = 'NONE'; this._autoRename = true;
     }
+    get name() { return this._name; }
+    set name(v) { w('node.name', this.id, v); if (v !== this._name) this._autoRename = false; this._name = v; }
+    get autoRename() { return this._autoRename; }
+    set autoRename(v) { w('text.autoRename', this.id, v); this._autoRename = !!v; }
     _need() { if (!fonts.has(`${this._font.family}/${this._font.style}`)) throw new Error(`font not loaded: ${this._font.family} ${this._font.style}`); }
     get characters() { return this._chars; }
-    set characters(v) { this._need(); w('text.characters', this.id, v); this._chars = v; }
+    set characters(v) { this._need(); w('text.characters', this.id, v); this._chars = v; if (this._autoRename) this._name = v; }
     get fontName() { return { ...this._font }; }
     set fontName(v) { this._font = { ...v }; this._need(); w('text.fontName', this.id, v); this._style = ''; }
     get fontSize() { return this._size; }
