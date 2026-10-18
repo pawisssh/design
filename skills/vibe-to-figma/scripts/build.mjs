@@ -27,6 +27,9 @@
 // against that Contract. A variant that differs, or is gone, was edited in Figma: it is skipped, kept as a conflict in
 // the build record and reported on every run until the owner resolves it per variant, --take-code (write the code's
 // version over it) or --keep-figma (keep Figma's; the code's change is not built into it).
+// A Foundations call goes out only for the document the owner's approve covered, the folder's Foundations approval
+// (approve.mjs): a document that changed with no Contract, so with no draft to review, waits for the review page and
+// the owner's "approve" like any other change. A document the ledger holds already needs no call, so none is refused.
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -37,7 +40,7 @@ import { documentHash, foundationsNext, foundationsPlan, MAX_COMBINE, setsPlan }
 import { checkCoverage, checkSample, mergeCoverage } from '../../to-design/scripts/coverage.mjs';
 import { ledgerPath, mainCheckoutOf, readLedger, recordResult } from '../../to-design/scripts/ledger.mjs';
 import { REPO_ROOT, TEST_APPROVER, inScratch } from '../../to-handoff/scripts/system.mjs';
-import { folderFiles } from './review.mjs';
+import { folderFiles, foundationsApproval } from './review.mjs';
 
 const TO_DESIGN = join(REPO_ROOT, 'skills/to-design');
 // Variants a check call reads back: a sample read returns each variant's full values, ~1.7 KB for a Button variant.
@@ -92,8 +95,9 @@ export function parseResolve(takeCode = [], keepFigma = []) {
 
 /**
  * The approval gate, before anything reaches Figma. Loads design-systems/<name>/ and returns {key, doc, docText,
- * documentHash, contracts: {family: Contract as To-design takes it}, families (approved, to build), drafts,
- * skipped, ask: [{family, total}]}. Throws, naming each reason, when nothing is approved, an approved Contract does
+ * documentHash, foundationsRefused: null or why, contracts: {family: Contract as To-design takes it}, families
+ * (approved, to build), drafts, skipped, ask: [{family, total}]}. `foundationsRefused` is null when the folder's
+ * Foundations approval covers the document, else the reason a Foundations call is refused. Throws, naming each reason, when nothing is approved, an approved Contract does
  * not validate or is not in the Foundations closure at its snapshot, a Contract names icons, or the ledger is
  * another file's or another Design System's. A Contract approved by the test approver passes only under .scratch/,
  * where it is built as a prototype approval. `ask` lists the families whose first build is above `maxCombine`.
@@ -132,7 +136,12 @@ export function gate({ dir, fileKey, ledger = null, skip = [], maxCombine = MAX_
     .filter(f => !(ledger && ledger.sets && ledger.sets[f] && ledger.sets[f].set))
     .map(f => ({ family: f, total: expand(contracts[f]).length }))
     .filter(a => a.total > maxCombine);
-  return { key, doc, docText, documentHash: documentHash(docText), contracts, families, drafts, skipped: [...skip].sort(), ask };
+  const hash = documentHash(docText);
+  const approval = foundationsApproval(dir);
+  const notApproved = !approval || approval.designSystem !== key || approval.documentHash !== hash
+    ? `no approve covers the Foundations document ${hash}${approval ? ` (the last approve covered ${approval.documentHash})` : ''}, so nothing is written to Figma: build the review page (review.mjs), show it to the owner and run approve.mjs after their own "approve" in chat`
+    : approval.by === TEST_APPROVER && !inScratch(dir) ? `the Foundations document is approved by "${TEST_APPROVER}", which builds only under ${join(REPO_ROOT, '.scratch')}/` : null;
+  return { key, doc, docText, documentHash: hash, foundationsRefused: notApproved, contracts, families, drafts, skipped: [...skip].sort(), ask };
 }
 
 /** A plan in the file's namespace: its Variable collections and its Templates page carry the prefix. */
@@ -389,6 +398,7 @@ function nextOf({ g, fileKey, ledger, record, namespace, coveragePerCall, rebuil
   const step = (name, family, core, { plan, state }) => ({ status: 'step', step: name, family, core, plan: namespaced(plan, namespace), state, options: plan.options });
 
   const chunk = foundationsNext(g.docText, ledger);
+  if (chunk && g.foundationsRefused) throw new Error(`cannot build the Foundations of ${g.key} into ${fileKey}: ${g.foundationsRefused}`);
   if (chunk) return step('foundations', null, CORES.foundations, foundationsPlan(g.docText, ledger, { fileKey, chunk, at }));
   for (const f of g.families) {
     const prototype = prototypeOf(g.contracts[f]);

@@ -15,8 +15,10 @@
 // The Foundations document has no approval of its own (it is a pure function of its inputs): approve checks that it
 // is the one the page showed (its documentHash), that its closure lists each Contract at its snapshot and that the
 // project still generates it, then generates it again from the approved Contracts, so an omit that drops a token's
-// last variant drops the token from the closure. Tests pass `test: true`, which writes the test approver and only
-// under <repo>/.scratch/.
+// last variant drops the token from the closure. It records the document it leaves as the folder's Foundations
+// approval, <name>.foundations-approval.json, which the build requires before a Foundations call: with no draft, the
+// page is the Foundations tab alone and "approve" approves just that. Tests pass `test: true`, which writes the test
+// approver and only under <repo>/.scratch/.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join, relative, resolve } from 'node:path';
@@ -29,7 +31,7 @@ import { generate as foundationsOf } from '../../adapter-generic/scripts/foundat
 import { DEFAULT_DIR, fetchTools, hasTools } from '../../adapter-generic/scripts/sources.mjs';
 import { omitApplied } from '../../to-preview/scripts/apply-omit.mjs';
 import { REPO_ROOT, TEST_APPROVER, inScratch } from '../../to-handoff/scripts/system.mjs';
-import { folderFiles } from './review.mjs';
+import { folderFiles, foundationsApproval } from './review.mjs';
 
 const CatalogSelection = createRequire(import.meta.url)('../../to-preview/assets/selection-model.js');
 
@@ -74,7 +76,7 @@ export function parseApproval(said, families, kept = []) {
 
 /**
  * approveFolder({dir, project, exported, said, at, test, tools})
- *   -> {approved, unchanged, kept, drafts, foundations: {path, reviewed, documentHash, written}}.
+ *   -> {approved, unchanged, kept, drafts, foundations: {path, reviewed, documentHash, written, approval}}.
  * `project` is the vibe-coded project the folder was built from; `exported` is the page's combined export
  * {designSystem, documentHash, families: {family: {patch, checked}}}. `approved` lists the Contracts written approved;
  * `unchanged` the ones already approved with these ticks; `kept` the approved ones with no ticks, which the review page
@@ -144,7 +146,12 @@ export async function approveFolder({ dir, project, exported, said, at = new Dat
   }
   const written = next.text !== text;
   if (written) writeFileSync(files.foundations, next.text);
-  return { approved, unchanged, kept, drafts: except, foundations: { path: files.foundations, reviewed: documentHash, documentHash: next.documentHash, written } };
+  // The Foundations approval names the document left on disk: the reviewed one, or the one the approved omits narrowed.
+  // One that names it already is left byte-unchanged.
+  const prior = foundationsApproval(dir);
+  const approval = prior && prior.designSystem === key && prior.documentHash === next.documentHash && prior.by === (test ? TEST_APPROVER : 'owner') ? 'unchanged' : 'written';
+  if (approval === 'written') writeFileSync(files.approval, JSON.stringify({ designSystem: key, documentHash: next.documentHash, by: test ? TEST_APPROVER : 'owner', at }, null, 2) + '\n');
+  return { approved, unchanged, kept, drafts: except, foundations: { path: files.foundations, reviewed: documentHash, documentHash: next.documentHash, written, approval } };
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
@@ -175,6 +182,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
       r.foundations.written
         ? `Foundations ${rel(r.foundations.path)} generated again from the approved Contracts: ${r.foundations.documentHash} (reviewed ${r.foundations.reviewed})`
         : `Foundations ${rel(r.foundations.path)} ${r.foundations.documentHash}: as reviewed, unchanged`,
+      r.foundations.approval === 'written' ? `Foundations approval ${rel(folderFiles(dir).approval)}: ${r.foundations.documentHash}` : 'Foundations approval unchanged',
       'OK',
     ].join('\n'));
   } catch (e) {

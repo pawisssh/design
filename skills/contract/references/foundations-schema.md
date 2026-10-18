@@ -180,7 +180,7 @@ The Adapter generates the document. Nobody edits it by hand. Its inputs are:
 
 The document carries the whole theme (ADR 0006, #107, #108); a variable no Contract uses has an empty `usedBy`. The Carbon Adapter's theme source is `themes.json`, `colors.json`, `layout.json` and `@carbon/type`'s `styles.ts`, plus the component token file of each Component Family that has a Contract. A closure token found in none of them fails generation. What a Design Library file holds is To-design's choice, not the document's (see [To-design builds a subset](#to-design-builds-a-subset)).
 
-To change a value, change the source pin or an Adapter rule and regenerate. To add a Component Family, add its Contract to `closure.contracts` and regenerate. There is no separate approval step: the document is a pure function of approved inputs, and the foundations slice report (created, updated, orphaned) is what the owner reviews.
+To change a value, change the source pin or an Adapter rule and regenerate. To add a Component Family, add its Contract to `closure.contracts` and regenerate. There is no separate approval step: the document is a pure function of approved inputs, and the foundations slice report (created, updated, orphaned) is what the owner reviews. The document never carries an approval. Vibe-to-Figma's approve records which document the owner's review covered in a file beside it, `<name>.foundations-approval.json`, and its build sends no Foundations call for any other ([SKILL.md](../../vibe-to-figma/SKILL.md#3-approve)).
 
 ## Versioning and staleness
 
