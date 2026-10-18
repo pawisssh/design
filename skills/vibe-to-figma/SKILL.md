@@ -11,7 +11,7 @@ description: One command from a React + shadcn + Tailwind Prototype (a v0 or Lov
 
 Runs the existing skills end to end on a Prototype (spec [#175](https://github.com/pawisssh/design/issues/175)). It adds no Adapter and no builder: the [Generic Adapter](../adapter-generic/SKILL.md) reads the project, [To-preview](../to-preview/SKILL.md) and [Contract](../contract/SKILL.md) approval narrow and approve it, and [To-design](../to-design/SKILL.md) builds it. [To-handoff](../to-handoff/SKILL.md) reads the same folder afterwards.
 
-Today it has the Design System folder ([#176](https://github.com/pawisssh/design/issues/176)), the review page and the one approve ([#177](https://github.com/pawisssh/design/issues/177)), and the review page as a private Artifact whose ticks persist ([#178](https://github.com/pawisssh/design/issues/178)). The Figma build is a later ticket (see [Left for later tickets](#left-for-later-tickets)); until then the run stops after step 3.
+Today it has the Design System folder ([#176](https://github.com/pawisssh/design/issues/176)), the review page and the one approve ([#177](https://github.com/pawisssh/design/issues/177)), the review page as a private Artifact whose ticks persist ([#178](https://github.com/pawisssh/design/issues/178)), and the Figma build into the linked file ([#179](https://github.com/pawisssh/design/issues/179)). What is still open is under [Left for later tickets](#left-for-later-tickets).
 
 ## Inputs
 
@@ -94,7 +94,36 @@ Done when it prints `OK`. Afterwards To-handoff generates against `design-system
 
 Tests: `node --test skills/vibe-to-figma/test/*.test.mjs`. They run on [`skills/to-handoff/test/fixtures/v0-app`](../to-handoff/test/fixtures/v0-app), with the Adapter's committed [`fixtures/drafts`](../adapter-generic/fixtures/drafts) as the agent's answers, and skip, saying so, until both tool sets are fetched. The review tests use a stub renderer. The approve tests build the folder under `.scratch/vibe-to-figma-tests/` and remove it afterwards. They cover approve, approve except, the refusals, the narrowed closure, a rerun of `folder.mjs` after approve, and To-handoff's run against the approved folder. The Artifact tests check that the saved ticks give back the export and approve as it does, and, in a browser with a stand-in `window.claude` db (To-handoff's runtime; they skip without it), that ticks save (at once when the owner leaves the page), survive a reload, restore only at their snapshot, save nothing for a viewer who is not the owner, and that the page without the runtime keeps its export.
 
+## 4. Figma build
+
+After the approve prints `OK`, build the approved Contracts into the one file the owner linked, `<figma-file-url>`. Write to no other file. Each call is a To-design plan, packaged by To-design's packager and sent with `use_figma`, so the [To-design](../to-design/SKILL.md) call cycle and its hook apply. Loop:
+
+```
+node skills/vibe-to-figma/scripts/build.mjs next design-systems/<name> <figma-file-url> --out .scratch/vibe-to-figma/<name>/runs/<n> [--namespace <prefix>]
+# use_figma: fileKey from the link, code = the printed "stub" exactly, description = the printed "description"
+# save the returned JSON as the printed "result" path
+node skills/vibe-to-figma/scripts/build.mjs record design-systems/<name> <figma-file-url> .scratch/vibe-to-figma/<name>/runs/<n>/result.json [--namespace <prefix>]
+```
+
+Repeat until `next` prints `OK`. It lists each Component Set it built, with its page and set id, and each family left as a draft. `next` writes nothing to Figma. Only the `use_figma` call does.
+
+- **Nothing before the approve.** A folder with no approved Contract is refused, and the refusal says why. Nothing is written to Figma.
+- **The order.** First Foundations, by chunk. Then each approved family's Component Set by B′: loose batches, one combine, then place calls. Last, each set's coverage check: it reads the set and checks every variant's name, grid cell and property wiring against the Contract. Reads of 400 variants each stay under `use_figma`'s 20KB output.
+- **Above MAX_COMBINE (3,000 variants)**, a set's first build would combine every variant in one call, and that call nears the ~2 min ceiling. `next` stops before any write and exits 3 with `ASK THE OWNER`. The owner can untick variants on the review page and approve again. On the owner's own word, `--skip <family>` builds the rest without that family; give it to both `next` and `record`.
+- **The linked file only.** The ledger is the Design System's own: `<fileKey>.<name>.ledger.json` in the main checkout's `.scratch/to-design/`. Next to it, `<fileKey>.<name>.build.json` keeps the namespace, the coverage reads and any rebuild under way. A ledger for another file, or one holding another Design System's Foundations, is refused. A file that already holds another Design System keeps that Design System's ledger untouched.
+- **`--namespace <prefix>`.** Use it when the file already has collections or a Templates page with the same names under another ledger (the smoke draft's Carbon `Theme`, `Layout` and `Templates`). The build then stops with an `unowned` conflict and changes nothing. A prefix renames this build's collections and Templates page, for example `v0-app Theme`, and the run goes on from the conflict. The first call without a conflict fixes the namespace in the build record: give the same prefix on every later run against that file.
+- **A failed coverage check** stops the run (exit 1) and names the problems. Once the cause is fixed, `--rebuild <family>` builds that set's batches again inside the set, with the same set and variant ids, and then reads its coverage again.
+- Drafts (`approve except`) and families the folder skipped are not built.
+
+Tests: `skills/vibe-to-figma/test/build.test.mjs` drives the whole loop on To-design's mock Figma. A mock smoke draft holds Carbon's collections and Templates page. The tests cover:
+
+- the refusal before approve;
+- Foundations and every set by B′, each passing its paged coverage check;
+- `approve except`;
+- the MAX_COMBINE stop and `--skip`;
+- the ledger refusals;
+- a failed check, then `--rebuild`.
+
 ## Left for later tickets
 
-- **Figma build after approval** ([#179](https://github.com/pawisssh/design/issues/179)) into the linked file only: Foundations, then each Component Set by B′.
 - **Reruns on changed code** ([#180](https://github.com/pawisssh/design/issues/180)) and **Figma edits never overwritten** ([#181](https://github.com/pawisssh/design/issues/181)).

@@ -6,6 +6,7 @@
 //   theme     each bound colour resolved per Theme mode, against the foundations document
 //
 //   node skills/to-design/scripts/coverage.mjs <coverage|sample|theme> <contract.json> <result.json> [--ledger <path>] [--foundations <path>]
+//   node skills/to-design/scripts/coverage.mjs coverage <contract.json> <page-0 result.json> <page-1 result.json> ... (a paged read, --batch)
 // Prints {ok, problems, ...}; exits 1 when a problem is found.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -42,6 +43,38 @@ const PAGE_TEMPLATE = {
   section: { name: 'Components', layoutMode: 'VERTICAL', children: ['Header', 'Content'], minWidth: 2560, minHeight: 1440 },
   content: { padding: [80, 80, 80, 80], gap: 80 },
 };
+
+/**
+ * One coverage readback from the pages of a paged read (`build-plan.mjs sets --mode coverage --batch N`), each a
+ * window of the set's children: every page of one read, once, of the same set with the same number of children.
+ * The rows join in page order under one dictionary; the set's own fields come from the first page.
+ */
+export function mergeCoverage(pages) {
+  if (!pages.length) throw new Error('no coverage pages');
+  const of = pages[0].batch ? pages[0].batch[1] : null;
+  if (pages.length === 1 && !pages[0].batch) return pages[0];
+  const byBatch = new Map();
+  for (const p of pages) {
+    if (p.mode !== 'coverage' || !p.batch) throw new Error('a paged read merges only coverage pages (--mode coverage --batch N)');
+    if (p.batch[1] !== of || p.family !== pages[0].family || p.fileKey !== pages[0].fileKey) throw new Error('the pages are not of one read');
+    if (p.set.id !== pages[0].set.id || p.summary.children !== pages[0].summary.children)
+      throw new Error(`the set changed between pages (${pages[0].set.id}, ${pages[0].summary.children} children): read every page again`);
+    if (byBatch.has(p.batch[0])) throw new Error(`page ${p.batch[0]} is given twice`);
+    byBatch.set(p.batch[0], p);
+  }
+  const missing = Array.from({ length: of }, (_, i) => i).filter(i => !byBatch.has(i));
+  if (missing.length) throw new Error(`pages ${missing.join(', ')} of ${of} are not read yet`);
+  const dict = [];
+  const di = new Map();
+  const D = s => (di.has(s) ? di.get(s) : (di.set(s, dict.push(s) - 1), dict.length - 1));
+  const rows = [];
+  for (let i = 0; i < of; i++) {
+    const p = byBatch.get(i);
+    for (const [parts, refs, ...rest] of p.rows) rows.push([parts.map(x => D(p.dict[x])), D(p.dict[refs]), ...rest]);
+  }
+  const { batch, ...first } = pages[0];
+  return { ...first, summary: { ...first.summary, variants: rows.length }, dict, rows };
+}
 
 /**
  * Every expanded variant against a `coverage` readback: names (every `Prop=Value` label is a Contract axis and
@@ -184,13 +217,13 @@ function main() {
   const opt = name => { const i = args.indexOf(name); return i === -1 ? null : args.splice(i, 2)[1]; };
   const ledgerArg = opt('--ledger');
   const foundationsArg = opt('--foundations');
-  const [what, contractPath, resultPath] = args;
-  if (!['coverage', 'sample', 'theme'].includes(what) || !contractPath || !resultPath) {
-    console.error('usage: coverage.mjs <coverage|sample|theme> <contract.json> <result.json> [--ledger <path>] [--foundations <path>]');
+  const [what, contractPath, resultPath, ...pages] = args;
+  if (!['coverage', 'sample', 'theme'].includes(what) || !contractPath || !resultPath || (pages.length && what !== 'coverage')) {
+    console.error('usage: coverage.mjs <coverage|sample|theme> <contract.json> <result.json> [<result.json> ... (coverage pages)] [--ledger <path>] [--foundations <path>]');
     process.exit(2);
   }
   const contract = JSON.parse(readFileSync(contractPath, 'utf8'));
-  const result = JSON.parse(readFileSync(resultPath, 'utf8'));
+  const result = mergeCoverage([resultPath, ...pages].map(p => JSON.parse(readFileSync(p, 'utf8'))));
   const root = fileURLToPath(new URL('../../../', import.meta.url));
   const foundations = JSON.parse(readFileSync(foundationsArg || join(root, 'design-systems', contract.source.adapter, `${contract.source.adapter}.foundations.json`), 'utf8'));
   let report;

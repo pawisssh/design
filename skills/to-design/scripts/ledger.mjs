@@ -14,11 +14,13 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { selectedGroups, selection } from './foundations-subset.mjs';
 
-export const ledgerPath = (fileKey, root = process.env.CLAUDE_PROJECT_DIR || process.cwd()) =>
-  join(root, '.scratch', 'to-design', `${fileKey}.ledger.json`);
+// A ledger holds one Design System's foundations, so a file that holds a second one (Vibe-to-Figma's, #179) keeps
+// it in a ledger of its own, named by its key.
+export const ledgerPath = (fileKey, root = process.env.CLAUDE_PROJECT_DIR || process.cwd(), designSystem = null) =>
+  join(root, '.scratch', 'to-design', `${fileKey}${designSystem ? `.${designSystem}` : ''}.ledger.json`);
 
 // The main checkout's folder when `dir` is in a linked git worktree; null in the main checkout, outside a repo, or without git.
-function mainCheckoutOf(dir) {
+export function mainCheckoutOf(dir) {
   const r = spawnSync('git', ['rev-parse', '--path-format=absolute', '--git-dir', '--git-common-dir'], { cwd: dir, encoding: 'utf8' });
   const lines = r.status === 0 ? r.stdout.trim().split('\n') : [];
   // a git without --path-format echoes the flag back: anything but two absolute paths is not a verdict
@@ -31,10 +33,10 @@ function mainCheckoutOf(dir) {
  * The ledger path for a CLI given no `--ledger`. Refused from a linked worktree: its own `.scratch` would
  * fork the ledger away from the main checkout's, which every other session reads.
  */
-export function defaultLedgerPath(fileKey, root = process.env.CLAUDE_PROJECT_DIR || process.cwd()) {
+export function defaultLedgerPath(fileKey, root = process.env.CLAUDE_PROJECT_DIR || process.cwd(), designSystem = null) {
   const main = mainCheckoutOf(root);
-  if (main) throw new Error(`${root} is a git worktree, so its .scratch is not the shared ledger: pass --ledger ${ledgerPath(fileKey, main)}`);
-  return ledgerPath(fileKey, root);
+  if (main) throw new Error(`${root} is a git worktree, so its .scratch is not the shared ledger: pass --ledger ${ledgerPath(fileKey, main, designSystem)}`);
+  return ledgerPath(fileKey, root, designSystem);
 }
 
 export const emptyLedger = fileKey => ({ schemaVersion: 1, fileKey, foundations: null, sets: {} });

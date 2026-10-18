@@ -40,6 +40,28 @@ export function stripReviewFields(doc) {
 /** sha256 of the document bytes, as the ledger records it. */
 export const documentHash = docText => `sha256:${createHash('sha256').update(docText, 'utf8').digest('hex')}`;
 
+// the selected subset of the whole theme (#107), split by group when it needs several calls;
+// documentHash stays the whole document's, as later slices check it
+function foundationsParts(docText, ledger, budget) {
+  const doc = JSON.parse(docText);
+  if (doc.schemaVersion !== 1) throw new Error('foundations document schemaVersion must be 1');
+  const names = selection(doc, selectedGroups(ledger, doc));
+  const stripped = stripReviewFields(doc);
+  return { doc, names, parts: chunks(doc, names, (kind, n) => JSON.stringify(stripped[kind][n]).length + 2 * n.length + 36, budget) };
+}
+
+/**
+ * The foundations chunk to build next for this document (1-based), or null once the ledger records every chunk's
+ * names from it. A chunk counts as recorded as `assertRecorded` counts it.
+ */
+export function foundationsNext(docText, ledger, { budget = CALL_BUDGET } = {}) {
+  const { parts } = foundationsParts(docText, ledger, budget);
+  const f = ledger && ledger.foundations;
+  const hash = documentHash(docText);
+  const k = parts.findIndex(p => ['variables', 'textStyles'].some(kind => [...p.owned[kind]].some(n => !f || f.documentHash !== hash || !(f[kind] || {})[n])));
+  return k === -1 ? (f && f.documentHash === hash ? null : 1) : k + 1;
+}
+
 /**
  * The foundations slice's plan and state.
  * `docText` is the document file's text (its bytes are the documentHash); `ledger` is the file's ledger or null.
@@ -49,13 +71,7 @@ export const documentHash = docText => `sha256:${createHash('sha256').update(doc
 export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune = [], page = null, at = new Date().toISOString(), strip = true, chunk = 1, budget = CALL_BUDGET } = {}) {
   if (!fileKey) throw new Error('fileKey is required');
   if (ledger && ledger.fileKey !== fileKey) throw new Error(`ledger is for ${ledger.fileKey}, not ${fileKey}`);
-  const doc = JSON.parse(docText);
-  if (doc.schemaVersion !== 1) throw new Error('foundations document schemaVersion must be 1');
-  // the selected subset of the whole theme (#107), split by group when it needs several calls;
-  // documentHash stays the whole document's, as later slices check it
-  const names = selection(doc, selectedGroups(ledger, doc));
-  const stripped = stripReviewFields(doc);
-  const parts = chunks(doc, names, (kind, n) => JSON.stringify(stripped[kind][n]).length + 2 * n.length + 36, budget);
+  const { doc, names, parts } = foundationsParts(docText, ledger, budget);
   if (!(chunk >= 1 && chunk <= parts.length)) throw new Error(`there is no chunk ${chunk} of ${parts.length}`);
   if (chunk > 1 && prune.length) throw new Error('prune runs with chunk 1, which carries the whole selection\'s orphans');
   assertRecorded(ledger, parts, chunk, documentHash(docText));
@@ -208,6 +224,11 @@ export const PLACE_BUDGET = 45000;
 export const SETS_BUDGET = 13600;
 // a reconcile window, at most: its entries carry no fragments
 const RECONCILE_PER_CALL = 500;
+/**
+ * A paged coverage read's window of the set's children, at most: a row is about 32 bytes at 2,304 variants (#168's
+ * read came to 74.5KB), so 400 rows and the set's own fields stay well under use_figma's 20KB output.
+ */
+export const COVERAGE_PER_CALL = 400;
 // The Component Header template every family page's Header is an instance of (one per file):
 // TEXT properties with their font style and size.
 export const TEMPLATES = {
@@ -285,11 +306,13 @@ export function entrySpec(plan, entry) {
  * window's plan and state fit SETS_BUDGET.
  * Entries are axis-ordered tuples [index, value positions..., wiring, fragments...]. The plan asserts they
  * decode back to the expansion and resolve to what the Contract resolves; the core never matches rules.
- * Options: fileKey (required), mode, next, batch, perCall, budget, sample, prune, adopt, prototype, page, at.
+ * A `coverage` read with `batch` reads one window of `coveragePerCall` of the set's children (the last window is
+ * open-ended); `coverage.mjs` merges the pages (`mergeCoverage`). Without `batch` it reads the whole set.
+ * Options: fileKey (required), mode, next, batch, perCall, coveragePerCall, budget, sample, prune, adopt, prototype, page, at.
  */
 export function setsPlan(contract, docText, ledger, {
-  fileKey, mode = 'build', next = false, batch, perCall, budget = PLACE_BUDGET, sample = [], prune = null, adopt = false, prototype = false, page = null,
-  at = new Date().toISOString(),
+  fileKey, mode = 'build', next = false, batch, perCall, coveragePerCall = COVERAGE_PER_CALL, budget = PLACE_BUDGET, sample = [], prune = null, adopt = false,
+  prototype = false, page = null, at = new Date().toISOString(),
 } = {}) {
   if (!fileKey) throw new Error('fileKey is required');
   if (!SET_MODES.includes(mode)) throw new Error(`mode must be one of ${SET_MODES.join(', ')}`);
@@ -500,6 +523,11 @@ export function setsPlan(contract, docText, ledger, {
   } else if (['combine', 'place', 'coverage'].includes(mode) || mode.startsWith('prune')) {
     picked = [];
     if (mode === 'place') options = { budget };
+    if (mode === 'coverage' && batch != null) {
+      const of = Math.ceil(total / coveragePerCall);
+      if (!Number.isInteger(batch) || batch < 0 || batch >= of) throw new Error(`batch must be 0..${of - 1} (${total} variants, ${coveragePerCall} per coverage read)`);
+      options = { batch, of, rows: [batch * coveragePerCall, batch === of - 1 ? null : (batch + 1) * coveragePerCall] };
+    }
   } else {
     if (!sample.length || sample.some(i => !Number.isInteger(i) || i < 0 || i >= total)) throw new Error(`sample must list expansion indexes 0..${total - 1}`);
     picked = [...new Set(sample)];
