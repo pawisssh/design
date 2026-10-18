@@ -2,7 +2,7 @@
 // (a test approval is written only under .scratch/), with the Adapter's committed fixtures/drafts as the agent's
 // answers. Each test takes its own copy; after() removes them all.
 import { after } from 'node:test';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,11 +42,12 @@ export const snapshot = dir => Object.fromEntries(['', 'contracts'].flatMap(sub 
 
 const Selection = createRequire(import.meta.url)('../../to-preview/assets/selection-model.js');
 /**
- * What the page's export does with each catalog's Catalog.getSelection(), in node: every specimen rendered, then
+ * What the page's export does with each catalog's Catalog.getSelection(), in node, for each family with a Contract in
+ * the folder: every specimen rendered, then
  * the owner's edits ({family: model => ...}). -> {family: {patch, checked}}.
  */
 export function selections(dir, edits = {}) {
-  return Object.fromEntries(READABLE.map(family => {
+  return Object.fromEntries(READABLE.filter(family => existsSync(contractPath(dir, family))).map(family => {
     const model = new Selection(read(join(dir, 'contracts', `${family}.component.json`)), contractModule);
     for (const id of model.specimens.keys()) model.verify(id);
     if (edits[family]) edits[family](model);
