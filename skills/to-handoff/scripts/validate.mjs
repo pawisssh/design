@@ -1,7 +1,7 @@
 // validateHandoff (#56, #64): handoff.schema.json (the JSON Schema keyword subset it uses), then the
 // cross-field rules a schema cannot say: tuples against the Contract or Proposal axes, every token a theme
 // token (never a Primitive or a component token), copy, value and question references, the five standard
-// states, no usage of a retired Proposal, and an approval that matches the content (a test approval only
+// states, no usage of a retired Proposal, every usage's `in` a Contract usage on its screen with no cycle, and an approval that matches the content (a test approval only
 // under .scratch/).
 import { readFileSync } from 'node:fs';
 import { handoffContentHash } from './hash.mjs';
@@ -117,6 +117,18 @@ export function validateHandoff(handoff, system) {
       });
     });
     const usageById = new Map((screen.regions || []).flatMap(r => r.usages || []).map(u => [u.id, u]));
+    // in (#193): the nearest enclosing usage is a Contract usage on this screen, and the links form no cycle.
+    (screen.regions || []).forEach((region, ri) => (region.usages || []).forEach(u => {
+      if (u.in === undefined) return;
+      const at = `${sp}.regions[${ri}] (${region.id}) usage \`${u.id}\``;
+      const target = usageById.get(u.in);
+      if (!target) return err('in', at, `${at}: in "${u.in}" names no usage on this screen`);
+      if (!target.contract) err('in', at, `${at}: in "${u.in}" names a usage with no Contract`);
+      const chain = [u.id];
+      for (let next = usageById.get(u.in); next && !chain.includes(next.id); next = next.in === undefined ? null : usageById.get(next.in)) chain.push(next.id);
+      const last = usageById.get(chain.at(-1)).in;
+      if (last === u.id) err('in', at, `${at}: in forms a cycle: ${[...chain, u.id].join(' -> ')}`);
+    }));
     for (const [name, s] of Object.entries(screen.states || {})) {
       const at = `${sp}.states.${name}`;
       state(name, at);
