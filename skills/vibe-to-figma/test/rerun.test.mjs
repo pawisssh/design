@@ -84,7 +84,7 @@ test('after one component\'s code changes, only it is reviewed and only its chan
   // No other family is called.
   const { n, ledger: next, record: kept, steps } = await drive({ dir, mock, ledger, record, namespace: 'v0-app' });
   assert.equal(n.status, 'built', JSON.stringify(n));
-  assert.deepEqual(n.conflicts, []);
+  assert.deepEqual(n.held, []);
   assert.deepEqual(steps.map(s => [s.step, s.family]), [['foundations', null], ['check', 'input'], ['sets', 'input'], ...steps.filter(s => s.step === 'coverage').map(() => ['coverage', 'input'])]);
   assert.ok(steps.some(s => s.step === 'coverage'));
   const { created, updated, orphaned, pruned, conflicts } = steps[0].result.summary;
