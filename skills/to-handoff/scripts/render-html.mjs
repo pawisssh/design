@@ -93,11 +93,18 @@ export async function renderHtml(handoff, system) {
   function question(id) { const q = h.openQuestions.find(x => x.id === id); return q ? q.text : id; }
 
   // ---- usage cards ----
+  // A container Usage's card lists the Usages whose `in` names it (#195), each with its own nested list under it.
+  const named = u => (u.contract ? `${code(u.contract)}${tupleText(u.tuple)}` : u.proposal ? `Proposal ${code(u.proposal)}${tupleText(u.tuple)}` : 'raw element');
+  const nestedIn = (id, seen = [id]) => {
+    const inner = usages.filter(x => x.in === id && !seen.includes(x.id));
+    return inner.length ? `<ul>${inner.map(x => `<li><a href="#usage-${esc(x.id)}">${esc(x.id)}</a> · ${named(x)}${nestedIn(x.id, [...seen, x.id])}</li>`).join('')}</ul>` : '';
+  };
   const cards = [];
   for (const u of usages) {
     const flags = [u.contract && flag('import'), u.contract && isDraft(u.contract) && flag('draft'), u.proposal && flag('proposal'), u.raw && flag('raw'), u.match && u.match.by === 'agent' && flag('pick'), (u.offAxis || []).length && flag('axis')].filter(Boolean).join(' ');
     let specimen = '', snippet = '';
     const perState = [];
+    const nested = nestedIn(u.id);
     if (u.contract) {
       const c = contracts[u.contract];
       const props = propsFor(c, u, text);
@@ -122,7 +129,7 @@ export async function renderHtml(handoff, system) {
 ${perState.length ? `<div class="states-row mode-root ${esc(modeClass(mapped))}" data-mode-root>${perState.join('')}</div>` : ''}
 ${snippet ? `<textarea class="snippet" readonly wrap="off" rows="${snippet.split('\n').length}">${snippet.replace(/&/g, '&amp;').replace(/<\/textarea/gi, '&lt;/textarea')}</textarea>` : ''}
 ${(u.offAxis || []).map(o => `<p class="note">${flag('axis')} ${esc(o.reason)} (${esc(question(o.question))})${qflag(o.question)}</p>`).join('')}
-${u.question ? `<p class="note">${esc(question(u.question))}${qflag(u.question)}</p>` : ''}
+${u.question ? `<p class="note">${esc(question(u.question))}${qflag(u.question)}</p>` : ''}${nested ? `<p>Nested in ${esc(u.id)}:</p>${nested}` : ''}
 </article>`);
   }
 
@@ -302,6 +309,8 @@ ${Object.entries(h.copy).map(([id, c]) => `<tr><td>${code(id)}</td><td>${esc(c.t
 </html>
 `;
 }
+
+const tupleText = tuple => Object.entries(tuple || {}).map(([k, v]) => ` ${esc(k)}=${esc(v)}`).join('');
 
 // A usage's Contract property values for the renderer: copy refs resolved; a TEXT property the Prototype does
 // not show is empty (not the Contract default), and a Repeated child takes the first item.
