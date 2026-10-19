@@ -2,7 +2,7 @@
 // call, record, until the build is done or stops. And a copy of the v0 project built on the mock, for the reruns.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -77,15 +77,45 @@ export const exported = (dir, edits) => { const model = reviewModel(dir); const 
 /** Input's disabled State at another opacity (50 to 40, then to 30): its two disabled variants change (indexes 2 and 5). */
 export const fadeDisabled = (file, from = 50, to = 40) => writeFileSync(file, readFileSync(file, 'utf8').replace(`disabled:opacity-${from}`, `disabled:opacity-${to}`));
 
+// The v0 project and its folder depend only on the opacities input's disabled State went through since the first
+// build (`fades`, from 50), and a build on the mock writes nothing into them. So each state is built and approved once
+// per test file, under .scratch/, as {project, ds} under a root never written after; the tests copy it.
+const states = new Map();
+function stateAfter(fades) {
+  const key = fades.join(' ');
+  if (!states.has(key)) states.set(key, (async () => {
+    const root = scratch();
+    const project = join(root, 'project');
+    if (fades.length) {
+      cpSync(await stateAfter(fades.slice(0, -1)), root, { recursive: true });
+      fadeDisabled(join(project, 'components/ui/input.tsx'), fades.at(-2) ?? 50, fades.at(-1));
+    } else cpSync(V0, project, { recursive: true });
+    const { dir } = await buildFolder({ project, root: join(root, 'ds'), drafts });
+    // The first review narrows Button; a change's review exports the page as the folder now stands.
+    await approveFolder({ dir, project, exported: exported(dir, fades.length ? {} : NARROW), said: 'approve', at: AT, test: true });
+    return root;
+  })());
+  return states.get(key);
+}
+
 /** A copy of the v0 project with its folder built, approved (Button narrowed) and built on the mock. */
 export async function builtProject() {
   const root = scratch();
-  const project = join(root, 'project');
-  cpSync(V0, project, { recursive: true });
-  const { dir } = await buildFolder({ project, root: join(root, 'ds'), drafts });
-  await approveFolder({ dir, project, exported: exported(dir, NARROW), said: 'approve', at: AT, test: true });
+  cpSync(await stateAfter([]), root, { recursive: true });
+  const dir = join(root, 'ds/v0-app');
   const mock = smokeDraft();
   const first = await drive({ dir, mock, namespace: 'v0-app' });
   assert.equal(first.n.status, 'built', JSON.stringify(first.n));
-  return { project, root: join(root, 'ds'), dir, mock, ledger: first.ledger, record: first.record };
+  return { project: join(root, 'project'), root: join(root, 'ds'), dir, fades: [], mock, ledger: first.ledger, record: first.record };
+}
+
+/** builtProject's `p` with input's disabled opacity changed from `from` to `to`, and the change approved. */
+export async function changed(p, from, to) {
+  assert.equal(from, p.fades.at(-1) ?? 50);
+  p.fades = [...p.fades, to];
+  const state = await stateAfter(p.fades);
+  for (const [sub, at] of [['project', p.project], ['ds', p.root]]) {
+    rmSync(at, { recursive: true });
+    cpSync(join(state, sub), at, { recursive: true });
+  }
 }
