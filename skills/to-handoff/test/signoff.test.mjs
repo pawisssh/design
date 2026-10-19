@@ -11,7 +11,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { approve as approveContract, proposalContentHash } from '../../contract/scripts/contract.mjs';
-import { hasDeps } from '../scripts/deps.mjs';
+import { hasDeps, hasTypescript } from '../scripts/deps.mjs';
+import { shadcnDesignSystem, V0 } from './helpers.mjs';
 import { approve, check, generate, handoffContentHash, loadDesignSystem, review, TEST_APPROVER, validateHandoff } from '../scripts/handoff.mjs';
 
 const repo = p => fileURLToPath(new URL(`../../../${p}`, import.meta.url));
@@ -22,6 +23,7 @@ const CLI = fileURLToPath(new URL('../scripts/handoff.mjs', import.meta.url));
 const { 'contract:text-input': _draft, ...SHARED } = JSON.parse(readFileSync(fixture('decisions.json'), 'utf8'));
 const DECISIONS = { ...SHARED, 'recognise:input[type=email]': { contract: 'text-input', tuple: { size: 'md' }, via: 'element' } };
 const noDeps = !hasDeps() && 'parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
+const noTs = !hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
 const AT = '2026-10-17T12:00:00.000Z';
 
 // The owner's answers to every owner question of the fixture: test inputs only.
@@ -229,6 +231,46 @@ test('review prints the revision, hash, pins, agent marks, questions by addresse
   assert.deepEqual(r.blocks, ['draft Contract text-input: the owner approves it before Sign-off']);
   const open = await generated(DECISIONS);
   assert.ok((await review({ handoffPath: open.handoffPath, designSystem: open.ds })).blocks.some(b => /q-font/.test(b)));
+});
+
+test('review shows each container Usage with the Usages nested in it indented under it, deeper nesting chained (#195)', { skip: noTs }, async () => {
+  const ds = shadcnDesignSystem();
+  const decisions = read(join(V0, 'decisions.json'));
+  const { path: handoffPath } = await generate({ prototype: V0, designSystem: ds, decisions });
+  const nesting = text => text.slice(text.indexOf('\nNesting\n') + 1, text.indexOf('\nPending Proposals'));
+  assert.equal(nesting((await review({ handoffPath, designSystem: ds })).text), [
+    'Nesting',
+    '  w-full: card card-footer=card-footer',
+    '    button: button variant=outline',
+    '    alert: alert variant=destructive',
+    '    label: label',
+    '    name: input',
+    '    label-2: label',
+    '    email: input',
+    '    label-3: label',
+    '    select: select',
+    '    label-4: label',
+    '    reason: textarea',
+    '    button-2: button',
+    '    button-3: button variant=link size=sm',
+    '',
+  ].join('\n'));
+  const h = read(handoffPath);
+  for (const u of h.screens[0].regions.flatMap(r => r.usages)) if (u.id === 'button-2' || u.id === 'button-3') u.in = 'alert';
+  writeFileSync(handoffPath, JSON.stringify(h, null, 2) + '\n');
+  assert.ok(nesting((await review({ handoffPath, designSystem: ds })).text).includes([
+    '    alert: alert variant=destructive',
+    '      button-2: button',
+    '      button-3: button variant=link size=sm',
+    '    label: label',
+  ].join('\n')));
+});
+
+test('review of a Handoff with no `in` has no Nesting section', { skip: noDeps }, async () => {
+  const { ds, handoffPath } = await generated();
+  const { text } = await review({ handoffPath, designSystem: ds });
+  assert.ok(!text.includes('Nesting'));
+  assert.match(text, /\nContracts used\n(  .*\n)+\nPending Proposals/);
 });
 
 test('check: no Drift when unchanged or after an unrelated family\'s Contract is added; Drift after a Prototype file changes', { skip: noDeps }, async () => {

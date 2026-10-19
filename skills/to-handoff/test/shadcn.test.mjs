@@ -4,7 +4,7 @@
 // Input, Label and Textarea are drafted mid-run from v0-app-drafts/, the Generic Adapter's output for the decisions' paths.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { copyFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,9 +16,8 @@ import { readReact } from '../scripts/react.mjs';
 import { walk } from '../scripts/reader.mjs';
 import { loadDesignSystem } from '../scripts/system.mjs';
 import { validateHandoff } from '../scripts/validate.mjs';
-import { repo } from './helpers.mjs';
+import { repo, shadcnDesignSystem, V0 } from './helpers.mjs';
 
-const V0 = fileURLToPath(new URL('fixtures/v0-app', import.meta.url));
 const noTs = !hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
 // The runtime test installs the fixture from its lockfile into the scratch run, so it needs the npm registry too.
 const noRuntime = !hasRuntime() && 'the runtime packages or a browser are missing; run: node skills/to-handoff/scripts/deps.mjs';
@@ -28,15 +27,6 @@ const DECISIONS = JSON.parse(readFileSync(join(V0, 'decisions.json'), 'utf8'));
 const noRender = async () => noTs || (!(await loadDesignSystem(shadcnDesignSystem())).adapter.available()
   && 'Generic preview packages missing; run: node skills/adapter-generic/scripts/sources.mjs');
 
-// The committed shadcn Foundations document and Contracts, named one by one, in a temp Design System.
-function shadcnDesignSystem() {
-  const dir = mkdtempSync(join(tmpdir(), 'to-handoff-shadcn-'));
-  mkdirSync(join(dir, 'contracts'));
-  copyFileSync(repo('design-systems/shadcn/shadcn.foundations.json'), join(dir, 'shadcn.foundations.json'));
-  for (const family of ['alert', 'button', 'card'])
-    copyFileSync(repo(`design-systems/shadcn/contracts/${family}.component.json`), join(dir, `contracts/${family}.component.json`));
-  return dir;
-}
 const copy = () => { const dir = mkdtempSync(join(tmpdir(), 'to-handoff-v0-')); cpSync(V0, dir, { recursive: true }); return dir; };
 
 test('read: a Code Library import that resolves to a Contract package file is a Design System leaf; other ui imports stay ui', { skip: noTs }, () => {
@@ -210,6 +200,44 @@ test('render: the Rendering shows each Contract usage as the project\'s own comp
   assert.ok(html.includes(result.contentHash.slice(7, 19)));
   assert.match(html, /pending sign-off/);
   assert.equal(readFileSync(await render({ handoffPath: result.path, designSystem: ds }), 'utf8'), html);
+});
+
+test('render: a container Usage\'s card lists the Usages nested in it, indented, and deeper nesting chains the same way (#195)', { skip: await noRender() }, async () => {
+  const ds = shadcnDesignSystem();
+  const result = await generate({ prototype: V0, designSystem: ds, decisions: DECISIONS });
+  const card = (html, id) => html.slice(html.indexOf(`<article class="card" id="usage-${id}">`)).split('</article>')[0];
+  const html = readFileSync(await render({ handoffPath: result.path, designSystem: ds }), 'utf8');
+  assert.ok(card(html, 'w-full').endsWith('<p>Nested in w-full:</p><ul>'
+    + '<li><a href="#usage-button">button</a> · <code>button</code> variant=outline</li>'
+    + '<li><a href="#usage-alert">alert</a> · <code>alert</code> variant=destructive</li>'
+    + '<li><a href="#usage-label">label</a> · <code>label</code></li>'
+    + '<li><a href="#usage-name">name</a> · <code>input</code></li>'
+    + '<li><a href="#usage-label-2">label-2</a> · <code>label</code></li>'
+    + '<li><a href="#usage-email">email</a> · <code>input</code></li>'
+    + '<li><a href="#usage-label-3">label-3</a> · <code>label</code></li>'
+    + '<li><a href="#usage-select">select</a> · <code>select</code></li>'
+    + '<li><a href="#usage-label-4">label-4</a> · <code>label</code></li>'
+    + '<li><a href="#usage-reason">reason</a> · <code>textarea</code></li>'
+    + '<li><a href="#usage-button-2">button-2</a> · <code>button</code></li>'
+    + '<li><a href="#usage-button-3">button-3</a> · <code>button</code> variant=link size=sm</li>'
+    + '</ul>\n'), card(html, 'w-full'));
+  // A card nothing names in `in` lists nothing.
+  for (const id of ['button', 'alert', 'toaster']) assert.ok(!card(html, id).includes('Nested in'), id);
+
+  // A container inside the container: its Usages list under it in the outer card, and in its own card.
+  const h = JSON.parse(readFileSync(result.path, 'utf8'));
+  for (const u of h.screens[0].regions.flatMap(r => r.usages)) if (u.id === 'button-2' || u.id === 'button-3') u.in = 'alert';
+  writeFileSync(result.path, JSON.stringify(h, null, 2) + '\n');
+  const chained = readFileSync(await render({ handoffPath: result.path, designSystem: ds }), 'utf8');
+  assert.ok(card(chained, 'w-full').includes('<li><a href="#usage-alert">alert</a> · <code>alert</code> variant=destructive<ul>'
+    + '<li><a href="#usage-button-2">button-2</a> · <code>button</code></li>'
+    + '<li><a href="#usage-button-3">button-3</a> · <code>button</code> variant=link size=sm</li>'
+    + '</ul></li>'), card(chained, 'w-full'));
+  assert.ok(card(chained, 'w-full').endsWith('<li><a href="#usage-reason">reason</a> · <code>textarea</code></li></ul>\n'));
+  assert.ok(card(chained, 'alert').endsWith('<p>Nested in alert:</p><ul>'
+    + '<li><a href="#usage-button-2">button-2</a> · <code>button</code></li>'
+    + '<li><a href="#usage-button-3">button-3</a> · <code>button</code> variant=link size=sm</li>'
+    + '</ul>\n'), card(chained, 'alert'));
 });
 
 test('the committed approved Carbon Button Contract is unchanged since its approval and still validates', () => {

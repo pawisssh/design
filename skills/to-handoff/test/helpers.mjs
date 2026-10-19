@@ -23,3 +23,15 @@ export function designSystem() {
   copyFileSync(fixture('proposals/avatar-stack.proposal.json'), join(dir, 'proposals/avatar-stack.proposal.json'));
   return dir;
 }
+
+// The v0 request-access Prototype, and the committed shadcn Foundations document and Contracts, named one by one,
+// in a temp Design System.
+export const V0 = fileURLToPath(new URL('fixtures/v0-app', import.meta.url));
+export function shadcnDesignSystem() {
+  const dir = mkdtempSync(join(tmpdir(), 'to-handoff-shadcn-'));
+  mkdirSync(join(dir, 'contracts'));
+  copyFileSync(repo('design-systems/shadcn/shadcn.foundations.json'), join(dir, 'shadcn.foundations.json'));
+  for (const family of ['alert', 'button', 'card'])
+    copyFileSync(repo(`design-systems/shadcn/contracts/${family}.component.json`), join(dir, `contracts/${family}.component.json`));
+  return dir;
+}

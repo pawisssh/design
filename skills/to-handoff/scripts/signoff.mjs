@@ -108,6 +108,24 @@ function agentMarks(handoff) {
 }
 
 /**
+ * Each container Usage of each screen, with the Usages whose `in` names it indented under it, deeper nesting
+ * chained (#195): one line per Usage, none when nothing records `in`.
+ */
+function nestingOf(handoff) {
+  const lines = [];
+  const named = u => `${u.contract || (u.proposal ? `Proposal ${u.proposal}` : `raw ${u.raw.element}`)}${Object.entries(u.tuple || {}).map(([k, v]) => ` ${k}=${v}`).join('')}`;
+  for (const s of handoff.screens || []) {
+    const usages = (s.regions || []).flatMap(r => r.usages || []);
+    const put = (u, depth, seen) => {
+      lines.push(`${'  '.repeat(depth)}${u.id}: ${named(u)}`);
+      for (const x of usages) if (x.in === u.id && !seen.includes(x.id)) put(x, depth + 1, [...seen, x.id]);
+    };
+    for (const u of usages) if (!usages.some(x => x.id === u.in) && usages.some(x => x.in === u.id)) put(u, 1, [u.id]);
+  }
+  return lines;
+}
+
+/**
  * review({handoffPath, designSystem}) -> {text, diff, signed, blocks, drifts, approveCommand}: the package the
  * owner signs off (#64 §4). `diff` is against signed.json beside handoff.json, empty on a first sign-off.
  */
@@ -165,6 +183,8 @@ export async function review({ handoffPath, designSystem }) {
   if (missing.length) { L.push('', 'Missing'); for (const m of missing) L.push(`  ${m}`); }
   L.push('', 'Contracts used');
   for (const k of Object.keys(h.source.contracts)) L.push(`  ${k}: ${system.contracts[k] ? system.contracts[k].selection.status : 'gone'}`);
+  const nesting = nestingOf(h);
+  if (nesting.length) L.push('', 'Nesting', ...nesting);
   L.push('', 'Pending Proposals (one approve approves each)');
   if (!pending.length) L.push('  none');
   for (const k of pending) { L.push(`  ${k} ${proposalContentHash(system.proposals[k])}`); L.push(...JSON.stringify(system.proposals[k], null, 2).split('\n').map(x => `    ${x}`)); }

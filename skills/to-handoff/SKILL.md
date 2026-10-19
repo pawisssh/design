@@ -93,7 +93,7 @@ node skills/to-handoff/scripts/handoff.mjs render design-systems/<ds>/handoffs/<
 - Overview, which says *Not specified* for each optional section the Handoff lacks;
 - Needs a look, counted per flag: ≠ Off-system, ≈ near, ◇ agent pick, + Proposal, ∅ no Contract, ↯ off-axis, ! missing, ◌ Stand-in, ◐ Contract draft, not approved (also on each card that uses one), and `? q-…` linking to the question that settles it. Elsewhere, = exact, ✓ import (a Contract usage) and – n/a;
 - States, with a states × breakpoints matrix of screenshots (a missing state is a hatched row; a missing screenshot shows its reason) and one tab per state with its screenshots;
-- Components, with real renders inside the mapped mode's class, per-state renders and code snippets from each Contract's `code`;
+- Components, with real renders inside the mapped mode's class, per-state renders and code snippets from each Contract's `code`. A container usage's card lists the usages nested in it (whose `in` names it), indented, deeper nesting under its own container;
 - Tokens & values;
 - Copy & questions.
 
@@ -111,7 +111,7 @@ node skills/to-handoff/scripts/handoff.mjs review design-systems/<ds>/handoffs/<
 - the diff against `signed.json`, or "First sign-off". When only `source` changed it says "only pins moved";
 - agent marks by kind, with their candidates;
 - open questions by addressee, missing states and missing screenshots;
-- the Contracts used, with their status;
+- the Contracts used, with their status, then, when a usage records `in`, each container usage with the usages nested in it indented under it;
 - each pending Proposal in full, with its hash;
 - signed Handoffs these Proposals put into Drift;
 - what blocks sign-off;
