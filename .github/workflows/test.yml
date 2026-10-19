@@ -9,8 +9,14 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  # npm test split four ways by file, each shard on its own runner: one runner ran it in about 20 minutes,
+  # CPU-bound. The four sum to every file npm test runs.
+  shard:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,3 +30,13 @@ jobs:
       # measurements, use the runner's Chrome.
       - run: node skills/to-handoff/scripts/deps.mjs
       - run: npm test
+        env:
+          NODE_OPTIONS: --test-shard=${{ matrix.shard }}/4
+
+  # The one check to require: green only when every shard is.
+  test:
+    needs: shard
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.shard.result }}" = success
