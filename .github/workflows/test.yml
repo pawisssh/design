@@ -30,20 +30,22 @@ jobs:
           node-version: 22
       # Without the pinned Carbon sources and preview packages, the adapter-carbon tests that need them skip.
       - run: node skills/adapter-carbon/scripts/sources.mjs
-      # Without the pinned Tailwind, TypeScript, shadcn stylesheets and preview packages, the adapter-generic tests that need them skip.
+      # Without the pinned Tailwind, TypeScript, shadcn stylesheets and preview packages, the adapter-generic
+      # tests that need them skip.
       - run: node skills/adapter-generic/scripts/sources.mjs
       # Without its packages, the to-handoff tests skip; the runtime tests, and adapter-generic's catalog
       # measurements, use the runner's Chrome.
       - run: node skills/to-handoff/scripts/deps.mjs
-      # Through NODE_OPTIONS: node --test ignores a --test-shard placed after the file globs, as `npm test -- …` would put it.
+      # Through NODE_OPTIONS: `npm test -- --test-shard=n/4` appends the flag after the file globs, where
+      # node --test ignores it.
       - run: npm test
         env:
           NODE_OPTIONS: --test-shard=${{ matrix.shard }}/4
 
-  # The one check to require: green only when every shard is.
+  # The one check to require: green only when every shard is. A cancelled run leaves it cancelled, not red.
   test:
     needs: shard
-    if: always()
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - run: test "${{ needs.shard.result }}" = success
