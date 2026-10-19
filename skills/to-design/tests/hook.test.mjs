@@ -2,41 +2,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { PKG, project, runHook as runHookAt, stubFor, toolInput } from './hook-fixture.mjs';
 
 const HOOK = new URL('../hooks/use-figma-package.mjs', import.meta.url).pathname;
-const PKG = '.scratch/to-design/pkg/build-components.mcp.js';
-const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
-const stubFor = (path, sha) => `/*@package ${path} sha256=${sha}*/ throw new Error("package not injected");`;
-
-// A project dir holding one package and its manifest, as the packager writes them.
-function project(code = '// package\nreturn await buildComponentSets(figma, BUILD_PLAN, BUILD_STATE);\n') {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'to-design-hook-')));
-  const bytes = Buffer.from(code, 'utf8');
-  mkdirSync(join(root, '.scratch/to-design/pkg'), { recursive: true });
-  writeFileSync(join(root, PKG), bytes);
-  writeFileSync(join(root, '.scratch/to-design/pkg/script-package.json'), JSON.stringify({ schemaVersion: 1, fileSha256: sha256(bytes) }));
-  return { root, bytes, sha: sha256(bytes) };
-}
-
-function runHook(root, code, env = {}) {
-  const input = {
-    session_id: 's',
-    cwd: root,
-    hook_event_name: 'PreToolUse',
-    tool_name: 'mcp__plugin_figma_figma__use_figma',
-    tool_use_id: 'toolu_1',
-    tool_input: { fileKey: 'abc123', description: 'Build Button', code },
-  };
-  return spawnSync(process.execPath, [HOOK], {
-    input: JSON.stringify(input),
-    env: { ...process.env, CLAUDE_PROJECT_DIR: root, ...env },
-    encoding: 'utf8',
-  });
-}
+const runHook = (root, code, env) => runHookAt(HOOK, root, { hook_event_name: 'PreToolUse', tool_input: toolInput(code) }, env);
 
 test('a good stub is allowed with code byte-identical to the package file', () => {
   const { root, bytes, sha } = project();
