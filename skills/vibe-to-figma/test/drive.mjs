@@ -27,13 +27,18 @@ export const NARROW = {
   },
 };
 
+// The packager's output depends only on its inputs, and the tests drive the same calls over and over: package each once.
+const packed = new Map();
 export function pack(plan, state, core) {
+  const key = JSON.stringify([plan, state, core]);
+  if (packed.has(key)) return packed.get(key);
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'vibe-to-figma-build-')));
   writeFileSync(join(root, 'plan.json'), JSON.stringify(plan));
   writeFileSync(join(root, 'state.json'), JSON.stringify(state));
   const run = spawnSync('python3', [PACKAGER, core, 'plan.json', 'out', '--state', 'state.json'], { cwd: root, env: { ...process.env, CLAUDE_PROJECT_DIR: root }, encoding: 'utf8' });
   assert.equal(run.status, 0, run.stdout + run.stderr);
-  return readFileSync(join(root, 'out/build-components.mcp.js'), 'utf8');
+  packed.set(key, readFileSync(join(root, 'out/build-components.mcp.js'), 'utf8'));
+  return packed.get(key);
 }
 
 /** The agent's loop on the mock: next, use_figma, record, until the build is done or stops, or `until` a step. */

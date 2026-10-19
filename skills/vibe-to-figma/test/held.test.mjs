@@ -5,20 +5,58 @@
 // a copy of the v0 project under .scratch/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { contentHash } from '../../contract/scripts/contract.mjs';
 import { approveFolder } from '../scripts/approve.mjs';
 import { gate, heldOf, nextStep, parseResolve, readRecord, settled, variantFingerprints, writeRecord } from '../scripts/build.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
-import { AT, FILE_KEY, RED, builtProject, drafts, drive, exported, fadeDisabled } from './drive.mjs';
-import { contractPath, read, scratch, skip } from './helpers.mjs';
+import { AT, FILE_KEY, NARROW, RED, drafts, drive, exported, fadeDisabled, smokeDraft } from './drive.mjs';
+import { V0, contractPath, read, scratch, skip } from './helpers.mjs';
 
-/** The built project, with input's source changed and the change approved, and a reader of the mock's nodes. */
+// The project and its folder depend only on the opacities input's disabled State went through since the first build,
+// and a build on the mock writes nothing into them. So each state is built and approved once per file, under
+// .scratch/, and each test copies it: {project, ds} under a root, never written after.
+const states = new Map();
+function stateAfter(fades) {
+  const key = fades.join(' ');
+  if (!states.has(key)) states.set(key, (async () => {
+    const root = scratch();
+    const project = join(root, 'project');
+    const ds = join(root, 'ds');
+    if (!fades.length) {
+      cpSync(V0, project, { recursive: true });
+      const { dir } = await buildFolder({ project, root: ds, drafts });
+      await approveFolder({ dir, project, exported: exported(dir, NARROW), said: 'approve', at: AT, test: true });
+      return root;
+    }
+    cpSync(await stateAfter(fades.slice(0, -1)), root, { recursive: true });
+    fadeDisabled(join(project, 'components/ui/input.tsx'), fades.at(-2) ?? 50, fades.at(-1));
+    await buildFolder({ project, root: ds, drafts });
+    await approveFolder({ dir: join(ds, 'v0-app'), project, exported: exported(join(ds, 'v0-app')), said: 'approve', at: AT, test: true });
+    return root;
+  })());
+  return states.get(key);
+}
+/** As drive.mjs's builtProject, from the shared first state: a copy of it built on a fresh mock. */
+async function builtProject() {
+  const root = scratch();
+  cpSync(await stateAfter([]), root, { recursive: true });
+  const dir = join(root, 'ds/v0-app');
+  const mock = smokeDraft();
+  const first = await drive({ dir, mock, namespace: 'v0-app' });
+  assert.equal(first.n.status, 'built', JSON.stringify(first.n));
+  return { root, dir, fades: [], mock, ledger: first.ledger, record: first.record };
+}
+/** The built project with input's disabled opacity changed from `from` to `to` and the change approved. */
 async function changed(p, from, to) {
-  fadeDisabled(join(p.project, 'components/ui/input.tsx'), from, to);
-  await buildFolder({ project: p.project, root: p.root, drafts });
-  await approveFolder({ dir: p.dir, project: p.project, exported: exported(p.dir), said: 'approve', at: AT, test: true });
+  assert.equal(from, p.fades.at(-1) ?? 50);
+  p.fades = [...p.fades, to];
+  const state = await stateAfter(p.fades);
+  for (const sub of ['project', 'ds']) {
+    rmSync(join(p.root, sub), { recursive: true });
+    cpSync(join(state, sub), join(p.root, sub), { recursive: true });
+  }
 }
 const nodeOf = mock => id => mock.figma.getNodeByIdAsync(id);
 const sentOf = steps => steps.filter(s => s.step === 'sets').map(s => s.plan.selection.entries.map(e => e[0]));
