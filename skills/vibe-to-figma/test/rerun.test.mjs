@@ -6,7 +6,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { contentHash, expand, tupleKey } from '../../contract/scripts/contract.mjs';
@@ -16,8 +17,9 @@ import { CORES, baselined, gate, nextStep, pendingUpdate, variantFingerprints } 
 import { buildFolder, carryOmits } from '../scripts/folder.mjs';
 import { buildReview, reviewModel } from '../scripts/review.mjs';
 import { AT, FILE_KEY, RED, builtProject, drafts, drive, exported, fadeDisabled, pack } from './drive.mjs';
-import { READABLE, contractPath, read, selections, skip, snapshot, v0Folder } from './helpers.mjs';
+import { READABLE, V0, contractPath, read, scratch, selections, skip, snapshot, v0Folder } from './helpers.mjs';
 
+const { reviewExport } = createRequire(import.meta.url)('../assets/review-export.js');
 const REVIEW = fileURLToPath(new URL('../scripts/review.mjs', import.meta.url));
 // One built project for the tests that change neither it nor the mock.
 let shared;
@@ -251,4 +253,143 @@ test('pendingUpdate: no update without a baseline of the same set; a change of t
   refuses({ mode: 'build', indexes: [-1] }, /indexes must be expansion indexes 0\.\.5/);
   refuses({ mode: 'build', indexes: [0] }, /indexes append into a placed set, and the input set is not combined yet/, { ...ledger, sets: { ...ledger.sets, input: undefined } });
   refuses({ mode: 'build', perCall: 4, indexes: [0, 1, 2, 3, 4] }, /5 indexes are above the 4 an append call of input takes: give them in calls of 4/);
+});
+
+// The request-access form without its Textarea: the screens no longer use the textarea family.
+const TEXTAREA = ['import { Textarea } from "@/components/ui/textarea"\n',
+  '      <div className="grid gap-2">\n        <Label htmlFor="reason">Why do you need access?</Label>\n        <Textarea id="reason" name="reason" rows={3} />\n      </div>\n'];
+const FORM = 'app/request-access-form.tsx';
+const dropTextarea = project => {
+  const file = join(project, FORM);
+  const source = readFileSync(file, 'utf8');
+  for (const part of TEXTAREA) assert.ok(source.includes(part), part);
+  writeFileSync(file, TEXTAREA.reduce((s, part) => s.replace(part, ''), source));
+  return () => writeFileSync(file, source);
+};
+const FOLDER = fileURLToPath(new URL('../scripts/folder.mjs', import.meta.url));
+
+test('a component removed from the project: its approved Contract is set aside, only the narrowed Foundations is reviewed, and the build names its set orphaned', { skip }, async () => {
+  const { project, root, dir, mock, ledger, record } = await builtProject();
+  const before = snapshot(dir);
+  const textarea = before[join('contracts', 'textarea.component.json')];
+  const restore = dropTextarea(project);
+  const cli = spawnSync(process.execPath, [FOLDER, project, '--root', root], { encoding: 'utf8' });
+  assert.equal(cli.status, 0, cli.stdout + cli.stderr);
+  assert.match(cli.stdout, /\nset aside textarea \(not used by the screens\): its Contract is now .*v0-app\/removed\/textarea\.component\.json; a set built from it stays in Figma, and the build names it orphaned\n/);
+  assert.match(cli.stdout, /\nOK\n$/);
+
+  // contracts/ holds the closure's Contracts, the others byte-unchanged; the set-aside one is in removed/ as it was.
+  const after = snapshot(dir);
+  const rest = READABLE.filter(f => f !== 'textarea');
+  assert.deepEqual(Object.keys(after).filter(f => f.startsWith('contracts')).sort(), rest.map(f => join('contracts', `${f}.component.json`)));
+  for (const f of rest) assert.equal(after[join('contracts', `${f}.component.json`)], before[join('contracts', `${f}.component.json`)], f);
+  assert.equal(readFileSync(join(dir, 'removed/textarea.component.json'), 'utf8'), textarea);
+  const doc = read(join(dir, 'v0-app.foundations.json'));
+  assert.deepEqual(doc.closure.contracts.map(c => c.family).sort(), rest);
+  // A second rerun has nothing left to set aside.
+  const again = await buildFolder({ project, root, drafts });
+  assert.deepEqual([again.setAside, again.written, again.unchanged, again.foundations.written], [[], [], rest, false]);
+
+  // No Contract to review: textarea is neither on the page nor kept. The narrowed closure is a Foundations document no
+  // approve covers, so the page is its Foundations tab alone, and the build refuses its call until the owner approves it.
+  const noCatalog = () => { throw new Error('no catalog is built'); };
+  const review = await buildReview({ dir, renderer: noCatalog });
+  assert.deepEqual([review.model.families, review.model.kept, review.model.foundations.approved], [[], rest, false]);
+  assert.match(review.html, /"tabs":\["foundations"\]/);
+  const g = gate({ dir, fileKey: FILE_KEY, ledger });
+  assert.match(g.foundationsRefused, /no approve covers the Foundations document/);
+  const a = await approveFolder({ dir, project, exported: reviewExport(review.model, {}), said: 'approve', at: AT, test: true });
+  assert.deepEqual([a.approved, a.kept, a.foundations.approval], [[], rest, 'written']);
+  assert.equal((await buildReview({ dir, renderer: noCatalog })).html, null);
+
+  // The build: one Foundations call for the closure, no call into any set, textarea named orphaned.
+  assert.deepEqual(g.families, rest);
+  const set = ledger.sets.textarea.set.id;
+  assert.deepEqual(g.orphaned, [{ family: 'textarea', set, variants: ledger.sets.textarea.variants.length }]);
+  const { n, ledger: next, record: kept, steps } = await drive({ dir, mock, ledger, record, namespace: 'v0-app' });
+  assert.equal(n.status, 'built', JSON.stringify(n));
+  assert.deepEqual(n.families.map(f => f.family), rest);
+  assert.deepEqual(n.orphaned, g.orphaned);
+  assert.deepEqual(steps.map(s => [s.step, s.family]), [['foundations', null]]);
+  assert.equal(steps[0].result.summary.pruned, 0);
+  // Nothing in Figma is deleted: the set and its variants stay, and so do the ledger's and the record's entries for it.
+  const node = await mock.figma.getNodeByIdAsync(set);
+  assert.ok(node && node.parent, 'the textarea set is still in the file');
+  for (const id of ledger.sets.textarea.variants) assert.ok(await mock.figma.getNodeByIdAsync(id), id);
+  assert.deepEqual(next.sets.textarea, ledger.sets.textarea);
+  assert.deepEqual([kept.built.textarea, kept.coverage.textarea], [record.built.textarea, record.coverage.textarea]);
+
+  // The component comes back: its set-aside copy is the prior, it returns to contracts/ as a draft, and only it is reviewed.
+  restore();
+  const back = await buildFolder({ project, root, drafts });
+  assert.deepEqual([back.written, back.setAside], [['textarea'], []]);
+  assert.ok(!existsSync(join(dir, 'removed/textarea.component.json')));
+  assert.equal(read(contractPath(dir, 'textarea')).selection.status, 'draft');
+  assert.deepEqual(reviewModel(dir).families.map(f => f.family), ['textarea']);
+  await approveFolder({ dir, project, exported: exported(dir), said: 'approve', at: AT, test: true });
+  const rebuilt = await drive({ dir, mock, ledger: next, record: kept, namespace: 'v0-app' });
+  assert.equal(rebuilt.n.status, 'built', JSON.stringify(rebuilt.n));
+  assert.deepEqual(rebuilt.n.orphaned, []);
+  assert.equal(rebuilt.ledger.sets.textarea.set.id, set);
+});
+
+test('a draft Contract whose component is removed, or that the Adapter now skips, is set aside, so approve goes on without it', { skip }, async () => {
+  const root = scratch();
+  const project = join(root, 'project');
+  cpSync(V0, project, { recursive: true });
+  const { dir } = await buildFolder({ project, root: join(root, 'ds'), drafts });
+  // A Contract under a family the Adapter cannot read (sonner's Toaster), as an earlier Adapter might have left it.
+  const label = read(contractPath(dir, 'label'));
+  writeFileSync(contractPath(dir, 'sonner'), JSON.stringify({ ...label, family: { ...label.family, key: 'sonner' } }, null, 2) + '\n');
+  dropTextarea(project);
+  const r = await buildFolder({ project, root: join(root, 'ds'), drafts });
+  assert.deepEqual(r.setAside.map(s => s.family), ['sonner', 'textarea']);
+  assert.match(r.setAside[0].reason, /^skipped: .*Toaster .*not a flex or grid container/);
+  assert.equal(r.setAside[1].reason, 'not used by the screens');
+  assert.deepEqual(readdirSync(join(dir, 'removed')).sort(), ['sonner.component.json', 'textarea.component.json']);
+  const rest = READABLE.filter(f => f !== 'textarea');
+  assert.deepEqual(reviewModel(dir).families.map(f => f.family), rest);
+  const a = await approveFolder({ dir, project, exported: exported(dir), said: 'approve', at: AT, test: true });
+  assert.deepEqual(a.approved, rest);
+});
+
+test('a removed component that comes back has its set-aside Contract as its prior: the owner\'s omit and Drafted value come back with it', { skip }, async () => {
+  const root = scratch();
+  const project = join(root, 'project');
+  cpSync(V0, project, { recursive: true });
+  const ds = join(root, 'ds');
+  const { dir } = await buildFolder({ project, root: ds, drafts });
+  // The owner renames Textarea's invalid axis in chat (an owner entry, ADR 0010) and unticks its focus State.
+  const file = contractPath(dir, 'textarea');
+  const edited = read(file);
+  edited.axes.find(a => a.key === 'invalid').label = 'Errored';
+  edited.drafted['axes.invalid.label'] = { by: 'owner', was: 'Invalid' };
+  writeFileSync(file, JSON.stringify(edited, null, 2) + '\n');
+  const unfocused = { textarea: m => m.selectMatching({ state: 'focus' }, false) };
+  await approveFolder({ dir, project, exported: exported(dir, unfocused), said: 'approve', at: AT, test: true });
+  const approved = read(file);
+  assert.deepEqual([approved.selection.status, expand(approved).length], ['approved', 4]);
+
+  // Removed from the screens, then changed while it is away (a new snapshot), then back.
+  const restore = dropTextarea(project);
+  assert.deepEqual((await buildFolder({ project, root: ds, drafts })).setAside.map(s => s.family), ['textarea']);
+  fadeDisabled(join(project, 'components/ui/textarea.tsx'));
+  restore();
+  const back = await buildFolder({ project, root: ds, drafts });
+  assert.deepEqual([back.written, back.setAside, back.requests], [['textarea'], [], {}]);
+  assert.ok(!existsSync(join(dir, 'removed/textarea.component.json')));
+  const returned = read(file);
+  assert.equal(returned.selection.status, 'draft');
+  assert.notEqual(returned.source.snapshotId, approved.source.snapshotId);
+  assert.equal(returned.axes.find(a => a.key === 'invalid').label, 'Errored');
+  assert.deepEqual(returned.drafted['axes.invalid.label'], { by: 'owner', was: 'Invalid' });
+  assert.deepEqual(expand(returned).map(t => t.state).sort(), ['disabled', 'disabled', 'enabled', 'enabled']);
+  assert.ok(returned.selection.omit.some(o => !o.reason));
+
+  // The review page holds it alone, unticked as the owner left it, and a plain approve keeps both.
+  assert.deepEqual(reviewModel(dir).families.map(f => f.family), ['textarea']);
+  const a = await approveFolder({ dir, project, exported: exported(dir), said: 'approve', at: AT, test: true });
+  assert.deepEqual(a.approved, ['textarea']);
+  const again = read(file);
+  assert.deepEqual([again.selection.status, expand(again).length, again.axes.find(a => a.key === 'invalid').label], ['approved', 4, 'Errored']);
 });
