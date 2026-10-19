@@ -9,7 +9,7 @@ import { existsSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { contentHash } from '../../contract/scripts/contract.mjs';
 import { approveFolder } from '../scripts/approve.mjs';
-import { heldOf, gate, nextStep, parseResolve, readRecord, settled, variantFingerprints, writeRecord } from '../scripts/build.mjs';
+import { gate, heldOf, nextStep, parseResolve, readRecord, settled, variantFingerprints, writeRecord } from '../scripts/build.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
 import { AT, FILE_KEY, RED, builtProject, drafts, drive, exported, fadeDisabled } from './drive.mjs';
 import { contractPath, read, scratch, skip } from './helpers.mjs';
@@ -69,8 +69,8 @@ test('a variant edited in Figma whose code changed is left as it is and reported
   assert.deepEqual(again.n.held, r.n.held);
   assert.equal(mock.log.length, writes);
 
-  // Another change: the held variant is read back against the Contract it was built from, the other against the baseline's.
-  // It is still edited, so it stays held; index 5 updates again.
+  // Another change: the held variant is read back against the Contract it was built from, the other against the
+  // baseline's. It is still edited, so it stays held; index 5 updates again.
   await changed(p, 40, 30);
   const third = await drive({ dir, mock, ledger: r.ledger, record: r.record, namespace: 'v0-app' });
   assert.equal(third.n.status, 'built', JSON.stringify(third.n));
@@ -225,7 +225,7 @@ test('the build record keeps its Contracts as files beside it, drops one no base
   assert.deepEqual(readdirSync(join(dir, 'X.v0-app.build.contracts')), []);
 });
 
-test('a build record written before held variants were named so reads its `conflicts` as held', () => {
+test('a build record written before the rename reads its `conflicts` as held', () => {
   const dir = scratch();
   const file = join(dir, 'X.v0-app.build.json');
   const one = { reason: 'edited', fingerprint: 'sha256:01', contract: null, at: AT };

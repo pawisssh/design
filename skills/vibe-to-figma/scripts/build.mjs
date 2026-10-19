@@ -65,12 +65,11 @@ export const buildRecordPath = ledger => ledger.replace(/\.ledger\.json$/, '.bui
 const contractsDir = recordFile => recordFile.replace(/\.json$/, '.contracts');
 const contractFile = (recordFile, hash) => join(contractsDir(recordFile), `${hash.replace(/^sha256:/, '')}.json`);
 
-// A record written before the held variants were named so keeps them as `conflicts`: they are read as `held`, so none
-// is lost and written over.
+// held (#181): a record written before the rename keeps its held variants as `conflicts`; they are read as `held`, so
+// none is lost and written over.
 function withHeld(record) {
   if (!record.built) return record;
-  const built = Object.fromEntries(Object.entries(record.built).map(([f, { conflicts, ...b }]) =>
-    [f, conflicts ? { ...b, held: { ...conflicts, ...(b.held || {}) } } : b]));
+  const built = Object.fromEntries(Object.entries(record.built).map(([f, { conflicts, ...b }]) => [f, conflicts ? { ...b, held: conflicts } : b]));
   return { ...record, built };
 }
 
@@ -229,9 +228,9 @@ const holds = (baseline, fingerprint) => !!baseline && baseline[0] === fingerpri
 const heldAt = (built, name, fingerprint) => !!(built && built.held && built.held[name] && built.held[name].fingerprint === fingerprint);
 
 /**
- * The build record without the held variants that are held no more: a variant the Contract no longer expands (unticked or
- * gone from the code), or one whose code is back to the version it was built from (an edit of a variant whose code did
- * not change is not reported), but for one gone from the set. A take of a variant the Contract no longer expands goes too.
+ * The build record without the variants no longer held: one the Contract no longer expands (unticked or gone from the
+ * code), or one whose code is back to the version it was built from (an edit of a variant whose code did not change is
+ * not reported), but for one gone from the set. A take of a variant the Contract no longer expands goes too.
  */
 export function settled(record, g) {
   let out = record;
@@ -327,9 +326,9 @@ export function heldOf(record) {
 }
 
 /**
- * The build record after the owner's word on held variants, each {family, variant, keep: 'code'|'figma'}: `code` writes the
- * code's version over the variant on the next call; `figma` keeps the variant as Figma has it and takes the code's
- * fingerprint into the baseline, so the change is not built into it (and a later change of its code is held
+ * The build record after the owner's word on held variants, each {family, variant, keep: 'code'|'figma'}: `code`
+ * writes the code's version over the variant on the next call; `figma` keeps the variant as Figma has it and takes the
+ * code's fingerprint into the baseline, so the change is not built into it (and a later change of its code holds it
  * again). Throws for a variant that is not held, and for `figma` on a variant gone from the set.
  */
 export function resolved(record, g, resolve = []) {

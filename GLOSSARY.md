@@ -137,7 +137,7 @@ A token or variant To-design built that the Foundations document, the Contract's
 _Avoid_: Extra (that is a node the ledger never recorded), deprecated variant, stale node
 
 **Conflict**:
-A reason To-design stops a call before it changes anything in Figma, such as a same-name object its ledger does not own (`unowned`) or a variable whose type changed (`type-change`). Nothing is written for it; the owner decides.
+A reason To-design stops a call before it changes anything in Figma, such as a same-name object its ledger does not own (`unowned`), a variable whose type changed (`type-change`), or a token the call needs that is not built yet. The call writes nothing until its cause is resolved.
 _Avoid_: Held variant (that is a variant a rerun leaves as Figma has it), clash, collision
 
 **Coverage check**:
@@ -145,11 +145,11 @@ The read of a whole built Component Set that confirms each variant's name, grid 
 _Avoid_: Check (when the Edit check is meant), verification
 
 **Baseline**:
-What a Component Set held when it last passed its Coverage check: each variant as built, and the Contract it was built from. A rerun writes only the variants whose code differs from it.
+The version of each variant's code that a Component Set holds, as of its last passing Coverage check, with the Contract the set was built from; a variant the owner kept as Figma has it takes the code's version it was kept at. A rerun writes only the variants whose code differs from it.
 _Avoid_: Snapshot, last build
 
 **Edit check**:
-The read-only read, before a rerun writes over variants already in a Component Set, of those variants against the Contract their Baseline was built from, to find the ones changed in Figma since.
+The read-only read, before a rerun writes over variants already in a Component Set, of those variants, each against the Contract it was built from, to find the ones changed in Figma since.
 _Avoid_: Check (when the Coverage check is meant), sample, diff
 
 **Held variant**:

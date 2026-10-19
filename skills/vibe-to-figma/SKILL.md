@@ -132,7 +132,7 @@ Repeat until `next` prints `OK`. It lists each Component Set it built, with its 
     Give a flag to `next` only on the owner's own word in chat.
   - **A variant edited in Figma whose code did not change** is never read and never reported.
   - **A Held variant read back as built** at a later code change (the owner undid the edit) is held no more and is sent.
-  - **A Held variant whose code goes back** to the version its variant was built from is held no more: an edit of a variant whose code did not change. A variant gone from the set stays held. A Held variant the Contract no longer expands (unticked on the review page) goes too.
+  - **A Held variant whose code goes back** to the version it was built from is held no more: an edit of a variant whose code did not change. A variant gone from the set stays held. A Held variant the Contract no longer expands (unticked on the review page) goes too.
   - **A variant that cannot be read back** is held too, `not read back`: one from a Baseline from before #181 while its update is under way, one whose Contract file is gone, or a read To-design refuses to plan against today's Foundations. A Baseline from before #181 gets its Contract on the next `next` with no change.
   - **What it does not guard:** a variant's place in the grid, and `--rebuild` and a family's first build, which write every variant. A failed Coverage check's `--rebuild` writes over the Held variants too, so ask the owner first.
 
