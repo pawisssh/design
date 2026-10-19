@@ -1,5 +1,6 @@
-// The agent's build loop on To-design's mock Figma (#179), shared by the build and rerun tests: next, the packaged
-// call, record, until the build is done or stops. And a copy of the v0 project built on the mock, for the reruns.
+// The agent's build loop on To-design's mock Figma (#179), shared by the build, Foundations, rerun and held tests: next,
+// the packaged call, record, until the build is done or stops. And a copy of the v0 project built on the mock, for the
+// reruns and the held variants.
 import assert from 'node:assert/strict';
 import { cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -102,7 +103,7 @@ export async function builtProject() {
 }
 
 /** builtProject's `p` with input's disabled opacity changed from `from` to `to`, and the change approved. */
-export async function changed(p, from, to) {
+export async function inputFaded(p, from, to) {
   assert.equal(from, p.fades.at(-1) ?? 50);
   p.fades = [...p.fades, to];
   const state = await stateAfter(p.fades);
