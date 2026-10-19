@@ -165,7 +165,7 @@ test('To-handoff generates against the approved folder with no Contract requests
   const drafts = r => Object.keys(r.handoff.source.contracts).filter(k => read(contractPath(dir, k)).selection.status !== 'approved');
 
   const draft = await generate({ prototype: V0, designSystem: dir, decisions });
-  assert.deepEqual(drafts(draft), ['alert', 'button', 'input', 'label', 'select', 'textarea']);
+  assert.deepEqual(drafts(draft), ['alert', 'button', 'card', 'input', 'label', 'select', 'textarea']);
 
   // An omit that narrows the closure, so To-handoff reads the Foundations document approve wrote.
   const approved = await approveFolder({ dir, project: V0, exported: exported(dir, { button: m => m.selectMatching({ size: 'xs' }, false) }), said: 'approve', at: AT, test: true });
@@ -176,7 +176,7 @@ test('To-handoff generates against the approved folder with no Contract requests
   assert.deepEqual(drafts(r), []);
   const usages = r.handoff.screens.flatMap(s => s.regions.flatMap(x => x.usages));
   assert.deepEqual([...new Set(usages.filter(u => u.contract).map(u => `${u.contract} ${u.match.by}`))].sort(),
-    ['alert import', 'button import', 'input import', 'label import', 'select import', 'textarea import']);
+    ['alert import', 'button import', 'card import', 'input import', 'label import', 'select import', 'textarea import']);
   assert.deepEqual(usages.filter(u => u.raw).map(u => u.raw.element), ['Toaster']);
   assert.ok(!r.handoff.source.notes.some(n => /Contract the Adapter wrote mid-run/.test(n.text)));
 });

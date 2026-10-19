@@ -354,32 +354,50 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const usageStates = Object.fromEntries(present.map(s => [s, {}]));
 
     const recognised = [];
-    // A Code Library component holding another module's components (a Card around a form) is walked like a wrapper,
-    // with its own parts, so the usages inside it are their own (#125). Its look stays in the region; a note names it.
+    // A container: a Code Library component holding another module's components (a Card around a form). It is
+    // walked with its own parts, so the usages inside it are their own. With a Contract it is that Contract by
+    // import, and each usage inside names it in `in` (#194); without one it is a wrapper whose look stays in the
+    // region, and a note names it (#125).
     const containers = new Map();
+    const parts = new Set();
     const holdsOtherModule = el => { let found = false; walk(el, x => { if (x !== el && x.component && x.component.module !== el.component.module) found = true; }); return found; };
-    const visit = (el, through = new Set()) => {
+    const visit = (el, through = new Set(), within = null) => {
       if (el.type !== 'element' || consumed.has(el)) return;
       if (el.component && (through.has(el.component.module) || holdsOtherModule(el))) {
-        if (!through.has(el.component.module)) containers.set(el, el.component);
-        for (const c of el.children) visit(c, new Set([...through, el.component.module]));
+        let inner = within;
+        if (!through.has(el.component.module)) {
+          const contract = el.component.kind === 'ds' && contractOfImport(el.component);
+          if (contract) {
+            const def = system.contracts[contract];
+            const own = partsOf(el);
+            const known = new Set((def.properties || []).map(p => p.type === 'TEXT' && p.code && p.code.child).filter(Boolean));
+            const record = { el, cand: { kind: 'element', sig: el.tag, container: own }, answer: { contract, tuple: slotTuple(def, own) }, key: null, byImport: true, within };
+            recognised.push(record);
+            usageOf.set(el, record);
+            for (const x of own) parts.add(x);
+            // The Card's own copy leaves the region; the rest of its subtree stays the region's or the usages' inside it.
+            for (const x of own) if (known.has(x.component.export)) walk(x, y => consumed.add(y));
+            inner = el;
+          } else containers.set(el, el.component);
+        }
+        for (const c of el.children) visit(c, new Set([...through, el.component.module]), inner);
         return;
       }
       const contract = el.component && el.component.kind === 'ds' && contractOfImport(el.component);
       // A Design System import is its Contract by import (#62): the tuple is its props through each axis value's code.
       if (contract) {
         const { tuple, unmapped, stray } = importTuple(system.contracts[contract], el);
-        recognised.push({ el, cand: { kind: 'element', sig: el.tag }, answer: { contract, tuple }, key: null, byImport: true, unmapped, stray });
+        recognised.push({ el, cand: { kind: 'element', sig: el.tag }, answer: { contract, tuple }, key: null, byImport: true, unmapped, stray, within });
       } else {
         // Another library component is decided by its signature, once per signature; a plain element by its own.
         const cand = el.component ? { kind: 'element', sig: librarySignature(el), library: true } : candidateOf(el, rules);
-        if (!cand) { for (const c of el.children) visit(c, through); return; }
+        if (!cand) { for (const c of el.children) visit(c, through, within); return; }
         const key = `recognise:${cand.sig}`;
         const answer = resolveDraftAnswer(d.ask(key, {
           kind: 'recognise', question: `What is \`${cand.sig}\` ("${elementText(el, atomsIn('default')).slice(0, 40)}")?`, candidates: families,
           evidence: { at: [at(el.offset)], ...(live(el) ? { rendered: `${live(el).rect.width}x${live(el).rect.height}px` } : {}) },
         }, checkRecognise), key);
-        recognised.push({ el, cand, answer, key });
+        recognised.push({ el, cand, answer, key, within });
       }
       const { answer } = recognised[recognised.length - 1];
       usageOf.set(el, recognised[recognised.length - 1]);
@@ -394,7 +412,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
 
     const labelFor = id => { let found = null; walk(screen.root, x => { if (!found && x.tag === 'label' && x.attrs.for === id) found = x; }); return found; };
     const usages = new Map();
-    for (const { el, cand, answer, key, byImport, unmapped = [], stray = [] } of recognised) {
+    for (const { el, cand, answer, key, byImport, unmapped = [], stray = [], within } of recognised) {
       const base = typeof el.attrs.id === 'string' ? el.attrs.id : el.classes[0] || el.tag;
       const id = uniqueId(usageIds, kebab(base));
       const u = { id };
@@ -423,6 +441,16 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
             text: `\`${el.tag}\` at ${at(el.offset)} sets ${props.map(([p, why]) => `${p}=${propText(el.attrs[p])}, which ${why}`).join('; ')}. Which value is it, or does the Contract need it?`,
           });
         }
+        // A className on a container's part is styling its Contract does not carry: off-axis, with a question (#194).
+        const styled = (cand.container || []).filter(x => typeof x.attrs.class === 'string');
+        if (styled.length) {
+          const qid = `q-prop-${id}`, why = `is no ${answer.contract} axis or property`;
+          u.offAxis = [...(u.offAxis || []), ...styled.map(x => ({ property: `${x.component.export}.className`, raw: propText(x.attrs.class), reason: `${x.component.export} className ${why}`, question: qid }))];
+          u.question = question({
+            id: qid, kind: 'prop', to: 'owner',
+            text: `${styled.map(x => `\`${x.tag}\` at ${at(x.offset)} sets className=${propText(x.attrs.class)}, which ${why}`).join('; ')}. Which value is it, or does the Contract need it?`,
+          });
+        }
       } else {
         u.raw = { element: cand.sig };
         u.reason = answer.reason;
@@ -435,6 +463,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
           });
         }
       }
+      if (within) u.in = usages.get(within).id;
       if (states) u.states = states;
       u.at = at(el.offset);
       usages.set(el, u);
@@ -466,8 +495,10 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
           if (options.length) out.items = options.map((o, n) => ({ properties: { [p.key]: addCopy(`${id}-${kebab(p.key)}-${n + 1}`, elementText(o, atomsIn('default')), o.offset) }, at: at(o.offset) }));
         } else if (c.child) {
           // The text of a child component the usage writes (<AlertTitle>), or one of its props (SelectValue's placeholder), at any depth (#166).
+          // A container reads only its own parts: a nested usage's text never moves up to it (#194).
           let kid = null;
-          walk(el, x => { if (!kid && x !== el && x.type === 'element' && (x.tag === c.child || (x.component && x.component.export === c.child))) kid = x; });
+          if (cand.container) kid = cand.container.find(x => x.component.export === c.child) || null;
+          else walk(el, x => { if (!kid && x !== el && x.type === 'element' && (x.tag === c.child || (x.component && x.component.export === c.child))) kid = x; });
           if (kid && c.childProp && typeof kid.attrs[c.childProp] === 'string') props[p.key] = addCopy(`${id}-${kebab(p.key)}`, kid.attrs[c.childProp], kid.offset);
           else if (kid && !c.childProp && textNodes(kid).length) props[p.key] = addCopy(`${id}-${kebab(p.key)}`, elementText(kid, atomsIn('default')), textNodes(kid)[0].offset);
         } else if (node && roleOfNode(node) === 'label' && elId) {
@@ -571,13 +602,15 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
           continue;
         }
         if (insideUsage(el)) continue;
-        for (const decl of ownDeclarations(rules, el)) addStyle(r, decl);
+        // A container usage's parts are its Contract's look; their className is off-axis.
+        if (!parts.has(el)) for (const decl of ownDeclarations(rules, el)) addStyle(r, decl);
         if (!shell) for (const t of textNodes(el)) addText(r, el, t);
       }
       return r;
     }
 
-    function insideUsage(el) { for (let p = el.parent; p; p = p.parent) if (usages.has(p)) return true; return false; }
+    // Inside a usage that consumes its subtree: a container usage leaves its subtree to the region and the usages inside it.
+    function insideUsage(el) { for (let p = el.parent; p; p = p.parent) if (usages.has(p) && !usageOf.get(p).cand.container) return true; return false; }
 
     function addText(r, el, t) {
       const text = textOf(t.parts, atomsIn('default'));
@@ -901,6 +934,33 @@ function importTuple(def, el) {
   const known = new Set([...def.axes.flatMap(a => a.values.flatMap(v => Object.keys((v && v.code) || {}))), ...(def.properties || []).map(p => p.code && p.code.prop).filter(Boolean)]);
   const stray = Object.keys(el.attrs).filter(k => !known.has(k) && !CONTENT_PROPS.test(k) && !/^(children|key|ref|style|on[A-Z]\w*)$/.test(k)).sort();
   return { tuple, unmapped, stray };
+}
+
+/** A container's own parts: its module's components, reached without entering another module's component. */
+function partsOf(el) {
+  const out = [];
+  const visit = x => {
+    if (x.type !== 'element') return;
+    if (x !== el && x.component) { if (x.component.module !== el.component.module) return; out.push(x); }
+    x.children.forEach(visit);
+  };
+  visit(el);
+  return out;
+}
+
+/**
+ * A container's tuple (#194): each Slot axis from whether its part is rendered, filled or empty. A Slot axis's
+ * part is the export named by the Contract's component and the slot's anatomy node (Card + Footer: CardFooter).
+ */
+function slotTuple(def, own) {
+  const tuple = {};
+  for (const axis of def.axes) {
+    if (!axis.slot) continue;
+    const filled = own.some(x => x.component.export === `${def.code.component}${axis.slot}`);
+    const value = axis.values.find(v => v.filled === filled);
+    if (value) tuple[axis.key] = value.key;
+  }
+  return tuple;
 }
 
 const propText = v => (typeof v === 'string' ? JSON.stringify(v) : `{${(v.parts || []).map(p => p.expr || p).join('')}}`);
