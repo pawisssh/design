@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { applyOmit, approve, asDraft, expand, variantName } from '../../contract/scripts/contract.mjs';
-import { basePlan, decodeEntries, foundationsPlan, iconsPlan, setsPlan } from '../scripts/build-plan.mjs';
+import { basePlan, decodeEntries, foundationsPlan, iconsPlan, SET_MODES, setsPlan } from '../scripts/build-plan.mjs';
 import { checkCoverage, checkSample, checkTheme } from '../scripts/coverage.mjs';
 import { diff, normalizeBaseResult } from '../scripts/base-loop.mjs';
 import { pruneList, recordResult } from '../scripts/ledger.mjs';
@@ -533,4 +533,60 @@ test('the coverage check catches a renamed, a moved and a deleted variant, and a
   await buildAll(env);
   assert.deepEqual(checkCoverage(BUTTON, (await sets(env, { mode: 'coverage' })).result).problems, []);
   assert.equal(set.children.length, TOTAL);
+});
+
+// Every plan shape the build emits, through the real packager (#180: a set-only append was refused, and only the
+// live check caught it). The shapes are To-design's own steps and the ones Vibe-to-Figma's nextOf derives from
+// setsPlan: an update's `indexes` append, the set-only call (`indexes` [], #180), a coverage or rebuild batch and a
+// check's sample. Vibe-to-Figma packages namespaced(plan), which renames only the collections and the templates page,
+// none of which the packager checks. A mode or build phase added later without a shape here fails this test.
+const shapeOf = plan => plan.slice === 'foundations' ? (plan.chunk ? 'foundations chunk' : 'foundations')
+  : plan.slice === 'base' ? (plan.options.readOnly ? 'base read-only' : 'base')
+  : plan.slice !== 'sets' ? plan.slice
+  : plan.options.mode !== undefined && plan.options.mode !== 'build' ? plan.options.mode
+  : `build ${plan.options.phase}${plan.options.picked === 0 ? ' set-only' : plan.options.picked != null ? ' indexes' : ''}`;
+
+test('every plan shape the build emits is accepted by the packager, set-only append included', async () => {
+  const shapes = new Map();
+  const accept = ({ plan, out }) => {
+    assert.equal(out.status, 'packaged', `${shapeOf(plan)}: ${JSON.stringify(out)}`);
+    const entries = plan.slice === 'sets' ? plan.selection.entries.length : plan.slice === 'base' ? 1
+      : plan.slice === 'icons' ? plan.icons.length : Object.keys(plan.foundations.variables).length + Object.keys(plan.foundations.textStyles).length;
+    assert.equal(out.check.entries, entries, shapeOf(plan));
+    shapes.set(shapeOf(plan), (shapes.get(shapeOf(plan)) || 0) + 1);
+  };
+  const packed = ({ plan, state }, core) => accept({ plan, out: pack(plan, state, core).out });
+
+  // foundations from scratch, in one call and chunked (a small budget, as foundations-subset.test does), and the icons
+  packed(foundationsPlan(DOC_TEXT, null, { fileKey: FILE_KEY, at: AT }), CORE);
+  packed(foundationsPlan(DOC_TEXT, null, { fileKey: FILE_KEY, at: AT, budget: 14000 }), CORE);
+  packed(iconsPlan([BUTTON], ICONS_DIR, null, { fileKey: FILE_KEY, at: AT }), CORE);
+  const env = await setup();
+  packed(basePlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT }), COMPONENTS_CORE);
+  // a first set build: loose batches, one combine, then the place calls (#168)
+  for (const run of await buildAll(env)) accept(run);
+  // once the set is built: foundations alone (#180 sends the ledger's foundations only), the base read and rerun
+  packed(foundationsPlan(DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT }), CORE);
+  packed(basePlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, readOnly: true }), COMPONENTS_CORE);
+  // a rerun or rebuild batch, an update's changed variants (#180), and the set-only call: a rerun whose Foundations
+  // need no call and whose update picks no variant, so it sends the set's name, properties and grid alone
+  accept(await sets(env, { batch: 1 }));
+  accept(await sets(env, { mode: 'build', indexes: [3, 40] }));
+  const setOnly = await sets(env, { mode: 'build', indexes: [] });
+  assert.deepEqual([setOnly.plan.selection.entries, setOnly.result.summary.conflicts], [[], 0]);
+  accept(setOnly);
+  // the read-only modes, whole and by batch as Vibe-to-Figma's coverage and To-design's reconcile take them
+  for (const options of [{ mode: 'reconcile' }, { mode: 'reconcile', batch: 0 }, { mode: 'coverage' }, { mode: 'coverage', batch: 0, coveragePerCall: 100 },
+    { mode: 'sample', sample: [0, 37] }, { mode: 'theme', sample: [0, 120] }]) accept(await sets(env, options));
+  // a rebuild after an omit edit leaves orphans: the prune preview, then a prune of one the owner listed
+  const omitted = withoutFocus();
+  for (const run of await buildAll(env, omitted)) accept(run);
+  const shown = await sets(env, { mode: 'prune-preview' }, { contract: omitted });
+  accept(shown);
+  const quiet = 'Kind=Ghost, Size=Small, State=Focus';
+  accept(await sets(env, { mode: 'prune', prune: pruneList(shown.result, [quiet]).prune }, { contract: omitted }));
+
+  const builds = ['build loose', 'build append', 'build append indexes', 'build append set-only'];
+  assert.deepEqual([...shapes.keys()].sort(), ['foundations', 'foundations chunk', 'icons', 'base', 'base read-only',
+    ...builds, ...SET_MODES.filter(m => m !== 'build')].sort());
 });
