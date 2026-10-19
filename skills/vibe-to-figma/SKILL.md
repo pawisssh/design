@@ -109,7 +109,7 @@ After the approve prints `OK`, build the approved Contracts into the one file th
 ```
 node skills/vibe-to-figma/scripts/build.mjs next design-systems/<name> <figma-file-url> --out .scratch/vibe-to-figma/<name>/runs/<n> [--namespace <prefix>]
 # use_figma: fileKey from the link, code = the printed "stub" exactly, description = the printed "description"
-# save the returned JSON as the printed "result" path
+# To-design's result hook saves the returned JSON as the printed "result" path; else save it there yourself
 node skills/vibe-to-figma/scripts/build.mjs record design-systems/<name> <figma-file-url> .scratch/vibe-to-figma/<name>/runs/<n>/result.json [--namespace <prefix>]
 ```
 
