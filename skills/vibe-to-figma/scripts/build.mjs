@@ -23,10 +23,10 @@
 // (or that are new) are appended into the set, the rest keep their ids and are not written; a change of the set alone
 // takes one call with no variant in it. A coverage verdict holds across a Foundations build, which writes no set.
 // Figma edits are never overwritten (#181). The baseline keeps the Contract its set was built from; before an update
-// writes a variant that is in the set, a read-only `check` call (To-design's sample read) reads it back and diffs it
-// against that Contract. A variant that differs, or is gone, was edited in Figma: it is skipped, kept as a conflict in
-// the build record and reported on every run until the owner resolves it per variant, --take-code (write the code's
-// version over it) or --keep-figma (keep Figma's; the code's change is not built into it).
+// writes a variant that is in the set, a read-only edit check (a `check` call, To-design's sample read) reads it back
+// and diffs it against that Contract. A variant that differs, or is gone, was edited in Figma: it is skipped, kept as a
+// held variant in the build record and reported on every run until the owner resolves it per variant, --take-code
+// (write the code's version over it) or --keep-figma (keep Figma's; the code's change is not built into it).
 // A Foundations call goes out only for the document the owner's approve covered, the folder's Foundations approval
 // (approve.mjs): a document that changed with no Contract, so with no draft to review, waits for the review page and
 // the owner's "approve" like any other change. A document the ledger holds already needs no call, so none is refused.
@@ -45,7 +45,7 @@ import { REPO_ROOT, TEST_APPROVER, inScratch } from '../../to-handoff/scripts/sy
 import { folderFiles, foundationsApproval } from './review.mjs';
 
 const TO_DESIGN = join(REPO_ROOT, 'skills/to-design');
-// Variants a check call reads back: a sample read returns each variant's full values, ~1.7 KB for a Button variant.
+// Variants an edit check reads back: a sample read returns each variant's full values, ~1.7 KB for a Button variant.
 export const SAMPLE_PER_CALL = 24;
 export const CORES = { foundations: join(TO_DESIGN, 'assets/builder-core.js'), sets: join(TO_DESIGN, 'assets/builder-core-components.js') };
 
@@ -65,12 +65,21 @@ export const buildRecordPath = ledger => ledger.replace(/\.ledger\.json$/, '.bui
 const contractsDir = recordFile => recordFile.replace(/\.json$/, '.contracts');
 const contractFile = (recordFile, hash) => join(contractsDir(recordFile), `${hash.replace(/^sha256:/, '')}.json`);
 
+// A record written before the held variants were named so keeps them as `conflicts`: they are read as `held`, so none
+// is lost and written over.
+function withHeld(record) {
+  if (!record.built) return record;
+  const built = Object.fromEntries(Object.entries(record.built).map(([f, { conflicts, ...b }]) =>
+    [f, conflicts ? { ...b, held: { ...conflicts, ...(b.held || {}) } } : b]));
+  return { ...record, built };
+}
+
 /** The build record at its path with its Contracts, or {} when there is none. */
 export function readRecord(recordFile) {
   if (!existsSync(recordFile)) return {};
-  const { contracts: hashes, ...record } = JSON.parse(readFileSync(recordFile, 'utf8'));
+  const { contracts: hashes, ...record } = withHeld(JSON.parse(readFileSync(recordFile, 'utf8')));
   if (!hashes) return record;
-  // a Contract file gone is a Contract not kept: its variants are not read back, and are conflicts while they change
+  // a Contract file gone is a Contract not kept: its variants are not read back, and are held while they change
   const stored = hashes.filter(h => existsSync(contractFile(recordFile, h)));
   return { ...record, contracts: Object.fromEntries(stored.map(h => [h, JSON.parse(readFileSync(contractFile(recordFile, h), 'utf8'))])) };
 }
@@ -89,7 +98,7 @@ export function writeRecord(recordFile, record) {
 export function parseResolve(takeCode = [], keepFigma = []) {
   const parse = keep => v => {
     const i = v.indexOf(':');
-    if (i < 1 || i === v.length - 1) throw new Error(`--${keep === 'code' ? 'take-code' : 'keep-figma'} ${v}: give <family>:<variant name>, as the conflict is reported`);
+    if (i < 1 || i === v.length - 1) throw new Error(`--${keep === 'code' ? 'take-code' : 'keep-figma'} ${v}: give <family>:<variant name>, as the held variant is reported`);
     return { family: v.slice(0, i), variant: v.slice(i + 1), keep };
   };
   return [...takeCode.map(parse('code')), ...keepFigma.map(parse('figma'))];
@@ -177,9 +186,9 @@ export function variantFingerprints(contract) {
 
 /**
  * The build record with a baseline, `built: {family: {contentHash, set, contract, variants: {name: [fingerprint, id]},
- * conflicts?}}`, for each family whose set passed its coverage check from its Contract as it is now. A rerun compares a
+ * held?}}`, for each family whose set passed its coverage check from its Contract as it is now. A rerun compares a
  * changed Contract with it. `contract` is that Contract's contentHash, the Contract itself kept in `record.contracts`:
- * an update's check reads each variant back against it. A conflict keeps its variant's entry from before, so it stays
+ * an update's edit check reads each variant back against it. A held variant keeps its entry from before, so it stays
  * a change of the code until the owner resolves it. A baseline from before #181 gets its Contract here too.
  */
 export function baselined(record, g, ledger) {
@@ -194,12 +203,12 @@ export function baselined(record, g, ledger) {
     if (!verdict || !verdict.ok || verdict.contentHash !== hash || !rec || !rec.set || rec.set.id !== verdict.set || rec.contentHash !== hash) continue;
     const was = built[f];
     if (was && was.contentHash === hash && was.set === rec.set.id && was.contract === hash && contracts[hash]) continue;
-    const conflicts = (was && was.set === rec.set.id && was.conflicts) || {};
+    const held = (was && was.set === rec.set.id && was.held) || {};
     const variants = {};
     variantFingerprints(g.contracts[f]).forEach(({ name, fingerprint }, i) => {
-      variants[name] = conflicts[name] ? was.variants[name] || [null, null] : [fingerprint, (rec.variants || [])[i] || null];
+      variants[name] = held[name] ? was.variants[name] || [null, null] : [fingerprint, (rec.variants || [])[i] || null];
     });
-    built[f] = { contentHash: hash, set: rec.set.id, contract: hash, variants, ...(Object.keys(conflicts).length ? { conflicts } : {}) };
+    built[f] = { contentHash: hash, set: rec.set.id, contract: hash, variants, ...(Object.keys(held).length ? { held } : {}) };
     contracts[hash] = g.contracts[f];
     delete checked[f];
     changed = true;
@@ -207,20 +216,20 @@ export function baselined(record, g, ledger) {
   return changed ? { ...record, built, contracts: kept(built, contracts), checked } : record;
 }
 
-// The Contracts a baseline or a conflict still reads back against; the others are dropped.
+// The Contracts a baseline or a held variant still reads back against; the others are dropped.
 function kept(built, contracts) {
-  const used = new Set(Object.values(built).flatMap(b => [b.contract, ...Object.values(b.conflicts || {}).map(c => c.contract)]).filter(Boolean));
+  const used = new Set(Object.values(built).flatMap(b => [b.contract, ...Object.values(b.held || {}).map(c => c.contract)]).filter(Boolean));
   return Object.fromEntries(Object.entries(contracts).filter(([h]) => used.has(h)));
 }
 
 // A baseline variant, [fingerprint, id], is in the set as a Contract with this variant fingerprint has it.
 const holds = (baseline, fingerprint) => !!baseline && baseline[0] === fingerprint && !!baseline[1];
 
-// A variant is a conflict at this fingerprint of its code: left as Figma has it until the code changes again.
-const conflictAt = (built, name, fingerprint) => !!(built && built.conflicts && built.conflicts[name] && built.conflicts[name].fingerprint === fingerprint);
+// A variant is held at this fingerprint of its code: left as Figma has it until the code changes again.
+const heldAt = (built, name, fingerprint) => !!(built && built.held && built.held[name] && built.held[name].fingerprint === fingerprint);
 
 /**
- * The build record without the conflicts that no longer hold: a variant the Contract no longer expands (unticked or
+ * The build record without the held variants that are held no more: a variant the Contract no longer expands (unticked or
  * gone from the code), or one whose code is back to the version it was built from (an edit of a variant whose code did
  * not change is not reported), but for one gone from the set. A take of a variant the Contract no longer expands goes too.
  */
@@ -228,14 +237,14 @@ export function settled(record, g) {
   let out = record;
   for (const f of g.families) {
     const built = (out.built || {})[f];
-    if (!built || !(built.conflicts || built.take)) continue;
+    if (!built || !(built.held || built.take)) continue;
     const fps = new Map(variantFingerprints(g.contracts[f]).map(v => [v.name, v.fingerprint]));
     // a variant gone from the set still needs the owner's word (untick it, or --take-code), whatever its code
-    const conflicts = Object.fromEntries(Object.entries(built.conflicts || {}).filter(([name, c]) => fps.has(name) && (c.reason === 'missing' || !holds(built.variants[name], fps.get(name)))));
+    const held = Object.fromEntries(Object.entries(built.held || {}).filter(([name, c]) => fps.has(name) && (c.reason === 'missing' || !holds(built.variants[name], fps.get(name)))));
     const take = (built.take || []).filter(name => fps.has(name));
-    if (Object.keys(conflicts).length === Object.keys(built.conflicts || {}).length && take.length === (built.take || []).length) continue;
-    const next = { ...built, conflicts, take };
-    if (!Object.keys(conflicts).length) delete next.conflicts;
+    if (Object.keys(held).length === Object.keys(built.held || {}).length && take.length === (built.take || []).length) continue;
+    const next = { ...built, held, take };
+    if (!Object.keys(held).length) delete next.held;
     if (!take.length) delete next.take;
     out = { ...out, built: { ...out.built, [f]: next } };
   }
@@ -250,7 +259,7 @@ const samplePlan = (contract, sample, g, ledger, fileKey, at) =>
  * An update's variants still to send, by expansion index: the family's Contract changed since its set's baseline, and
  * these variants are new, changed, or have no id in it. The first call of an update goes out even with none (a change
  * of the set alone). A variant the owner said to take the code's version of (`take`) is sent too. null when the family
- * is no update, or its update is done. A conflict is among them: the build leaves it out (`toSend`).
+ * is no update, or its update is done. A held variant is among them: the build leaves it out (`toSend`).
  */
 export function pendingUpdate(contract, ledger, built) {
   const rec = ledger && ledger.sets && ledger.sets[contract.family.key];
@@ -269,8 +278,8 @@ export function pendingUpdate(contract, ledger, built) {
 
 /**
  * The read-back an update needs before its next write, or null: the pending variants that are in the set (a baseline
- * id) and not yet read back for this Contract, nor a conflict at this fingerprint, nor taken on the owner's word. Each is
- * read against the Contract it was built from (a conflict's own, else the baseline's), one Contract and up to
+ * id) and not yet read back for this Contract, nor held at this fingerprint, nor taken on the owner's word. Each is
+ * read against the Contract it was built from (a held variant's own, else the baseline's), one Contract and up to
  * SAMPLE_PER_CALL variants a call -> {hash, contract, names, sample: expansion indexes in that Contract}. A variant with
  * no Contract to read against (a baseline from before #181) is in `unread`.
  */
@@ -283,11 +292,11 @@ export function nextCheck(contract, record, pending) {
   const done = (record.checked || {})[f];
   const clean = new Set(done && done.for === hash ? done.clean : []);
   const take = new Set(built.take || []);
-  const conflicts = built.conflicts || {};
+  const held = built.held || {};
   const due = pending.map(i => fps[i]).filter(({ name, fingerprint }) =>
-    built.variants[name] && built.variants[name][1] && !clean.has(name) && !take.has(name) && !conflictAt(built, name, fingerprint));
+    built.variants[name] && built.variants[name][1] && !clean.has(name) && !take.has(name) && !heldAt(built, name, fingerprint));
   if (!due.length) return null;
-  const against = name => (conflicts[name] ? conflicts[name].contract : built.contract);
+  const against = name => (held[name] ? held[name].contract : built.contract);
   const unread = due.filter(v => !(record.contracts || {})[against(v.name)]);
   if (unread.length) return { unread };
   const h = against(due[0].name);
@@ -299,44 +308,44 @@ export function nextCheck(contract, record, pending) {
   return { hash: h, contract: old, names, sample: names.map(n => index.get(n)) };
 }
 
-/** An update's indexes to write: the pending ones but the conflicts at their current fingerprint. */
+/** An update's indexes to write: the pending ones but the ones held at their current fingerprint. */
 export function toSend(contract, built, pending) {
   const fps = variantFingerprints(contract);
-  return pending.filter(i => !conflictAt(built, fps[i].name, fps[i].fingerprint));
+  return pending.filter(i => !heldAt(built, fps[i].name, fps[i].fingerprint));
 }
 
-/** What each kind of conflict says in the report. */
-export const CONFLICT_REASONS = { edited: 'edited in Figma', missing: 'gone from the set in Figma', unchecked: 'not read back' };
+/** What each kind of held variant says in the report. */
+export const HELD_REASONS = { edited: 'edited in Figma', missing: 'gone from the set in Figma', unchecked: 'not read back' };
 
-/** Each family's conflicts, for the report: [{family, variant, reason, changes, at}]. */
-export function conflictsOf(record) {
+/** Each family's held variants, for the report: [{family, variant, reason, changes, at}]. */
+export function heldOf(record) {
   return Object.entries(record.built || {}).flatMap(([family, b]) => {
     const order = Object.keys(b.variants || {});
     const place = name => (order.indexOf(name) + 1 || order.length + 1);
-    return Object.entries(b.conflicts || {}).sort(([x], [y]) => place(x) - place(y)).map(([variant, c]) => ({ family, variant, reason: c.reason, ...(c.changes ? { changes: c.changes } : {}), at: c.at }));
+    return Object.entries(b.held || {}).sort(([x], [y]) => place(x) - place(y)).map(([variant, c]) => ({ family, variant, reason: c.reason, ...(c.changes ? { changes: c.changes } : {}), at: c.at }));
   });
 }
 
 /**
- * The build record after the owner's word on conflicts, each {family, variant, keep: 'code'|'figma'}: `code` writes the
+ * The build record after the owner's word on held variants, each {family, variant, keep: 'code'|'figma'}: `code` writes the
  * code's version over the variant on the next call; `figma` keeps the variant as Figma has it and takes the code's
- * fingerprint into the baseline, so the change is not built into it (and a later change of its code is a conflict
- * again). Throws for a variant that is no conflict, and for `figma` on a variant gone from the set.
+ * fingerprint into the baseline, so the change is not built into it (and a later change of its code is held
+ * again). Throws for a variant that is not held, and for `figma` on a variant gone from the set.
  */
 export function resolved(record, g, resolve = []) {
   if (!resolve.length) return record;
   const built = { ...(record.built || {}) };
   for (const { family, variant, keep } of resolve) {
     const b = built[family];
-    const c = b && (b.conflicts || {})[variant];
+    const c = b && (b.held || {})[variant];
     if (!c) {
-      const listed = conflictsOf(record).map(x => `${x.family}:${x.variant}`);
-      throw new Error(`${family}:${variant} is no conflict here (${listed.length ? `conflicts: ${listed.join('; ')}` : 'there are none'})`);
+      const listed = heldOf(record).map(x => `${x.family}:${x.variant}`);
+      throw new Error(`${family}:${variant} is not held here (${listed.length ? `held: ${listed.join('; ')}` : 'there are none'})`);
     }
     if (keep === 'figma' && c.reason === 'missing') throw new Error(`${family}:${variant} is gone from the set in Figma: to keep it out, untick it on the review page and approve again, or --take-code to build it again`);
-    const { [variant]: _, ...conflicts } = b.conflicts;
-    const next = { ...b, conflicts };
-    if (!Object.keys(conflicts).length) delete next.conflicts;
+    const { [variant]: _, ...held } = b.held;
+    const next = { ...b, held };
+    if (!Object.keys(held).length) delete next.held;
     if (keep === 'code') next.take = [...new Set([...(b.take || []), variant])];
     else {
       const fp = (variantFingerprints(g.contracts[family]).find(v => v.name === variant) || {}).fingerprint;
@@ -347,7 +356,7 @@ export function resolved(record, g, resolve = []) {
   return { ...record, built };
 }
 
-// A variant that cannot be read back against the Contract it was built from is kept as a conflict: what Figma holds
+// A variant that cannot be read back against the Contract it was built from is kept as a held variant: what Figma holds
 // cannot be told from what was built, so nothing is written over it. Either the record keeps no such Contract (a
 // baseline from before #181, mid-update), or To-design refuses to plan a read of it against today's Foundations.
 function unverifiable(record, g, ledger, fileKey, at) {
@@ -365,9 +374,9 @@ function unverifiable(record, g, ledger, fileKey, at) {
         try { samplePlan(check.contract, check.sample, g, ledger, fileKey, at); break; }
         catch (e) { unread = check.names.map(name => ({ name, fingerprint: variantFingerprints(g.contracts[f]).find(v => v.name === name).fingerprint })); why = `no read back against the Contract it was built from: ${e.message}`; }
       }
-      const conflicts = { ...(built.conflicts || {}) };
-      for (const { name, fingerprint } of unread) conflicts[name] = { reason: 'unchecked', fingerprint, contract: null, changes: [why], at };
-      out = { ...out, built: { ...out.built, [f]: { ...built, conflicts } } };
+      const held = { ...(built.held || {}) };
+      for (const { name, fingerprint } of unread) held[name] = { reason: 'unchecked', fingerprint, contract: null, changes: [why], at };
+      out = { ...out, built: { ...out.built, [f]: { ...built, held } } };
     }
   }
   return out;
@@ -384,11 +393,11 @@ function assertNamespace(record, namespace) {
  *   {status: 'ask', ask}                                       a set above maxCombine: nothing derived, ask the owner
  *   {status: 'step', step: 'foundations'|'check'|'sets'|'coverage', family?, core, plan, state, options}
  *   {status: 'problems', family, problems}                     a coverage check failed: stop and report
- *   {status: 'built', families: [{family, variants, set}], drafts, skipped, conflicts, orphaned: [{family, set, variants}]}
+ *   {status: 'built', families: [{family, variants, set}], drafts, skipped, held, orphaned: [{family, set, variants}]}
  * Each also carries `record`, the build record with any new baseline (`baselined`), for the CLI to keep.
  * Options: dir, fileKey, ledger, record (the build record), namespace, skip, maxCombine, coveragePerCall, at,
  * rebuild: families whose failed coverage check starts a rebuild of their set (one already under way goes on anyway),
- * and resolve: the owner's word on conflicts, [{family, variant, keep: 'code'|'figma'}] (`resolved`).
+ * and resolve: the owner's word on held variants, [{family, variant, keep: 'code'|'figma'}] (`resolved`).
  */
 export function nextStep({ dir, fileKey, ledger = null, record = {}, namespace = null, skip = [], maxCombine = MAX_COMBINE, coveragePerCall, rebuild = [], resolve = [], at = new Date().toISOString() }) {
   const g = gate({ dir, fileKey, ledger, skip, maxCombine });
@@ -410,7 +419,7 @@ function nextOf({ g, fileKey, ledger, record, namespace, coveragePerCall, rebuil
   for (const f of g.families) {
     const prototype = prototypeOf(g.contracts[f]);
     // an update after a code change: only the variants that changed, a call's worth at a time, each in the set read
-    // back first; one edited in Figma is a conflict and is not sent
+    // back first; one edited in Figma is held and is not sent
     const built = (record.built || {})[f];
     const pending = pendingUpdate(g.contracts[f], ledger, built);
     if (pending) {
@@ -453,7 +462,7 @@ function nextOf({ g, fileKey, ledger, record, namespace, coveragePerCall, rebuil
     families: g.families.map(f => ({ family: f, variants: expand(g.contracts[f]).length, set: ledger.sets[f].set.id, page: g.contracts[f].figma.page })),
     drafts: g.drafts,
     skipped: g.skipped,
-    conflicts: conflictsOf(record),
+    held: heldOf(record),
     orphaned: g.orphaned,
   };
 }
@@ -487,9 +496,9 @@ function recorded({ dir, fileKey, ledger, record, result, skip, at }) {
     try { merged = mergeCoverage(Object.values(pages)); }
     catch (e) { delete next.pages[family]; throw new Error(`${e.message}: the ${family} pages are dropped, read them again`); }
     const report = checkCoverage(contract, merged, ledger);
-    // a conflict is in the set as Figma has it, not as the Contract does: its variant's problems are the conflict's
-    const conflicts = ((record.built || {})[family] || {}).conflicts || {};
-    report.problems = report.problems.filter(p => !(p.name && conflicts[p.name]));
+    // a held variant is in the set as Figma has it, not as the Contract does: its problems are not the set's
+    const held = ((record.built || {})[family] || {}).held || {};
+    report.problems = report.problems.filter(p => !(p.name && held[p.name]));
     report.ok = !report.problems.length;
     const verdict = { ok: report.ok, expected: report.expected, read: report.read, problems: report.problems.slice(0, 20), orphaned: report.orphaned,
       contentHash: contentHash(contract), documentHash: g.documentHash, set: merged.set.id, at };
@@ -501,8 +510,8 @@ function recorded({ dir, fileKey, ledger, record, result, skip, at }) {
   if (result.slice === 'sets') {
     const drop = o => Object.fromEntries(Object.entries(o || {}).filter(([f]) => f !== result.family));
     out.record = { ...record, coverage: drop(record.coverage), pages: drop(record.pages) };
-    // and its baseline no longer holds the variants it wrote: until the next passing check the family is an update, so
-    // a later Contract that has them as the baseline does still sends them again
+    // and its baseline no longer holds the variants it wrote: until the next passing coverage check the family is an
+    // update, so a later Contract that has them as the baseline does still sends them again
     const base = (record.built || {})[result.family];
     const written = Object.entries(result.ledger.sets[result.family]?.variants || {}).filter(([, id]) => id);
     const wrote = new Set(written.map(([, id]) => id));
@@ -537,10 +546,10 @@ function recorded({ dir, fileKey, ledger, record, result, skip, at }) {
 }
 
 /**
- * A check call's result: each variant it read back, diffed against the Contract it was built from (`checkSample`, but
+ * An edit check's result: each variant it read back, diffed against the Contract it was built from (`checkSample`, but
  * its grid cell, which every append re-places by name). One that differs, or is not in the set, was edited in Figma and
- * becomes a conflict at the code's fingerprint; the others are clean for this Contract. The read must be the one
- * `next` asked for. -> {ledger, record, check: {family, clean, conflicts}}
+ * is held at the code's fingerprint; the others are clean for this Contract. The read must be the one
+ * `next` asked for. -> {ledger, record, check: {family, clean, held}}
  */
 function checkRecorded({ dir, fileKey, ledger, record, result, skip, at }) {
   const family = result.family;
@@ -549,7 +558,7 @@ function checkRecorded({ dir, fileKey, ledger, record, result, skip, at }) {
   const check = contract && nextCheck(contract, record, pendingUpdate(contract, ledger, (record.built || {})[family]));
   const read = Object.keys(result.sample || {});
   if (!check || !check.names || read.length !== check.names.length || check.names.some(n => !read.includes(n)))
-    throw new Error(`this ${family} read is not the check the build asked for (${check && check.names ? check.names.join('; ') : 'none'}): run next again`);
+    throw new Error(`this ${family} read is not the edit check the build asked for (${check && check.names ? check.names.join('; ') : 'none'}): run next again`);
   const report = checkSample(check.contract, result, ledger, g.doc);
   const fps = new Map(variantFingerprints(contract).map(v => [v.name, v.fingerprint]));
   const edited = {};
@@ -563,21 +572,21 @@ function checkRecorded({ dir, fileKey, ledger, record, result, skip, at }) {
   const hash = contentHash(contract);
   const done = (record.checked || {})[family];
   const before = done && done.for === hash ? done.clean : [];
-  const conflicts = { ...(built.conflicts || {}) };
-  // a conflict read back clean (the owner put it back as built) is one no more
-  for (const n of clean) delete conflicts[n];
-  Object.assign(conflicts, edited);
-  const next = { ...built, conflicts };
-  if (!Object.keys(conflicts).length) delete next.conflicts;
+  const held = { ...(built.held || {}) };
+  // a held variant read back clean (the owner put it back as built) is held no more
+  for (const n of clean) delete held[n];
+  Object.assign(held, edited);
+  const next = { ...built, held };
+  if (!Object.keys(held).length) delete next.held;
   return {
     ledger,
     record: { ...record, built: { ...record.built, [family]: next }, checked: { ...(record.checked || {}), [family]: { for: hash, clean: [...new Set([...before, ...clean])] } } },
-    check: { family, clean, conflicts: Object.keys(edited) },
+    check: { family, clean, held: Object.keys(edited) },
   };
 }
 
 // During an update, the variants whose fingerprint holds keep their baseline ids in the ledger: they are in the set as
-// this Contract has them, so no call writes them. A conflict keeps its id too: it is in the set as Figma has it.
+// this Contract has them, so no call writes them. A held variant keeps its id too: it is in the set as Figma has it.
 function carried(ledger, result, record, gateOf) {
   const family = result.slice === 'sets' && result.mode === 'build' && result.phase === 'append' ? result.family : null;
   const built = family && (record.built || {})[family];
@@ -586,9 +595,9 @@ function carried(ledger, result, record, gateOf) {
   const contract = gateOf().contracts[family];
   if (!contract || contentHash(contract) !== rec.contentHash) return ledger;
   const variants = rec.variants.slice();
-  const conflicts = built.conflicts || {};
+  const held = built.held || {};
   variantFingerprints(contract).forEach(({ name, fingerprint }, i) => {
-    if (!variants[i] && (holds(built.variants[name], fingerprint) || (conflicts[name] && built.variants[name]))) variants[i] = built.variants[name][1];
+    if (!variants[i] && (holds(built.variants[name], fingerprint) || (held[name] && built.variants[name]))) variants[i] = built.variants[name][1];
   });
   return { ...ledger, sets: { ...ledger.sets, [family]: { ...rec, variants } } };
 }
@@ -623,7 +632,7 @@ function main() {
   const namespace = values.namespace ?? null;
   const rel = p => relative(process.cwd(), p);
   const keepRecord = r => { mkdirSync(dirname(recordFile), { recursive: true }); writeRecord(recordFile, r); };
-  const conflictLines = cs => cs.map(c => `CONFLICT ${c.family}:${c.variant}: ${CONFLICT_REASONS[c.reason]}, and its code changed; left as Figma has it${c.changes ? ` (${c.changes.join(', ')})` : ''}`);
+  const heldLines = cs => cs.map(c => `HELD ${c.family}:${c.variant}: ${HELD_REASONS[c.reason]}, and its code changed; left as Figma has it${c.changes ? ` (${c.changes.join(', ')})` : ''}`);
 
   if (cmd === 'record') {
     const result = JSON.parse(readFileSync(resolve(resultPath), 'utf8'));
@@ -636,7 +645,7 @@ function main() {
       process.exit(1);
     }
     if (r.check) {
-      console.log(`checked ${r.check.family}: ${r.check.clean.length} as built${r.check.conflicts.length ? `, ${r.check.conflicts.length} edited in Figma, left as they are: ${r.check.conflicts.join('; ')}` : ''}`);
+      console.log(`edit check of ${r.check.family}: ${r.check.clean.length} as built${r.check.held.length ? `, ${r.check.held.length} edited in Figma, left as they are: ${r.check.held.join('; ')}` : ''}`);
       return;
     }
     if (r.verdict) {
@@ -654,7 +663,7 @@ function main() {
     process.exit(3);
   }
   if (n.status === 'problems') {
-    console.error(`FAIL: the ${n.family} set does not pass the coverage check:\n${JSON.stringify(n.problems, null, 2)}\nOnce the cause is fixed, --rebuild ${n.family} builds the set's batches again and reads its coverage again.${conflictsOf(n.record).some(c => c.family === n.family) ? ` It writes over ${n.family}'s conflicts too, the owner's Figma edits: only on the owner's word.` : ''}`);
+    console.error(`FAIL: the ${n.family} set does not pass the coverage check:\n${JSON.stringify(n.problems, null, 2)}\nOnce the cause is fixed, --rebuild ${n.family} builds the set's batches again and reads its coverage again.${heldOf(n.record).some(c => c.family === n.family) ? ` It writes over ${n.family}'s held variants too, the owner's Figma edits: only on the owner's word.` : ''}`);
     process.exit(1);
   }
   if (n.status === 'built') {
@@ -662,8 +671,8 @@ function main() {
       ...n.families.map(f => `built ${f.family}: ${f.variants} variants on page ${f.page} (set ${f.set}), coverage passed`),
       ...n.drafts.map(f => `not built ${f}: a draft`),
       ...n.skipped.map(f => `not built ${f}: skipped on the owner's word`),
-      ...conflictLines(n.conflicts),
-      ...(n.conflicts.length ? [`Each conflict is the owner's to resolve, per variant: --take-code <family>:<variant> writes the code's version over it, --keep-figma <family>:<variant> keeps Figma's.`] : []),
+      ...heldLines(n.held),
+      ...(n.held.length ? [`Each held variant is the owner's to resolve, per variant: --take-code <family>:<variant> writes the code's version over it, --keep-figma <family>:<variant> keeps Figma's.`] : []),
       ...n.orphaned.map(o => `orphaned ${o.family}: set ${o.set} (${o.variants} variants) stays in Figma, but the project no longer has its component; nothing was deleted`),
       `https://www.figma.com/design/${fileKey}`,
       'OK',

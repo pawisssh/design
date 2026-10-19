@@ -136,6 +136,26 @@ _Avoid_: Stale (that is a Foundations document that must be regenerated), outdat
 A token or variant To-design built that the Foundations document, the Contract's selection or the Component Proposal's axes no longer hold, including a Proposal's variant that its retirement maps to nothing. The ledger keeps tracking it by id and Figma keeps the node, so a token or variant that comes back reuses it; it is deleted only through a Prune list.
 _Avoid_: Extra (that is a node the ledger never recorded), deprecated variant, stale node
 
+**Conflict**:
+A reason To-design stops a call before it changes anything in Figma, such as a same-name object its ledger does not own (`unowned`) or a variable whose type changed (`type-change`). Nothing is written for it; the owner decides.
+_Avoid_: Held variant (that is a variant a rerun leaves as Figma has it), clash, collision
+
+**Coverage check**:
+The read of a whole built Component Set that confirms each variant's name, grid cell and property wiring match its Contract.
+_Avoid_: Check (when the Edit check is meant), verification
+
+**Baseline**:
+What a Component Set held when it last passed its Coverage check: each variant as built, and the Contract it was built from. A rerun writes only the variants whose code differs from it.
+_Avoid_: Snapshot, last build
+
+**Edit check**:
+The read-only read, before a rerun writes over variants already in a Component Set, of those variants against the Contract their Baseline was built from, to find the ones changed in Figma since.
+_Avoid_: Check (when the Coverage check is meant), sample, diff
+
+**Held variant**:
+A variant whose code changed since its Baseline while Figma may no longer hold it as built: edited or deleted in Figma, or not read back by an Edit check. A rerun leaves it as Figma has it until the owner takes the code's version or keeps Figma's.
+_Avoid_: Conflict (that is To-design's stop before any change), Figma edit, clash
+
 **Prune list**:
 The Orphans the owner confirmed, by name, for To-design to delete; for variants, each with the instance count the owner was shown. A prune refuses any name whose count has changed since.
 _Avoid_: prune.json (that is the file, not the concept), delete list, cleanup

@@ -1,15 +1,15 @@
-// Figma edits are never overwritten (#181). Before an update writes a variant that is in the set, a read-only check
-// reads it back against the Contract it was built from. One the owner edited in Figma, or removed, is skipped and
-// reported as a conflict, on every run until the owner resolves it per variant (--take-code or --keep-figma). An edit
-// to a variant whose code did not change is never read and never reported. Built on To-design's mock Figma, with a
-// copy of the v0 project under .scratch/.
+// Figma edits are never overwritten (#181). Before an update writes a variant that is in the set, a read-only edit
+// check reads it back against the Contract it was built from. One the owner edited in Figma, or removed, is skipped and
+// reported as a held variant, on every run until the owner resolves it per variant (--take-code or --keep-figma). An
+// edit to a variant whose code did not change is never read and never reported. Built on To-design's mock Figma, with
+// a copy of the v0 project under .scratch/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { contentHash } from '../../contract/scripts/contract.mjs';
 import { approveFolder } from '../scripts/approve.mjs';
-import { conflictsOf, gate, nextStep, parseResolve, readRecord, settled, variantFingerprints, writeRecord } from '../scripts/build.mjs';
+import { heldOf, gate, nextStep, parseResolve, readRecord, settled, variantFingerprints, writeRecord } from '../scripts/build.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
 import { AT, FILE_KEY, RED, builtProject, drafts, drive, exported, fadeDisabled } from './drive.mjs';
 import { contractPath, read, scratch, skip } from './helpers.mjs';
@@ -43,8 +43,8 @@ test('a variant edited in Figma whose code changed is left as it is and reported
   assert.deepEqual(readOf(r.steps), [[2, 5]]);
   assert.deepEqual(r.steps[1].writes, []);
   assert.deepEqual(sentOf(r.steps), [[5]]);
-  assert.deepEqual(r.n.conflicts.map(c => [c.family, c.variant, c.reason]), [['input', names[2], 'edited']]);
-  assert.deepEqual(r.n.conflicts[0].changes, ['paint.Input.fill']);
+  assert.deepEqual(r.n.held.map(c => [c.family, c.variant, c.reason]), [['input', names[2], 'edited']]);
+  assert.deepEqual(r.n.held[0].changes, ['paint.Input.fill']);
   // The edited variant is as the owner left it, at its old opacity; the unedited one updated; the other edits kept.
   assert.deepEqual((await node(ids[2])).fills, RED);
   assert.equal((await node(ids[2])).opacity, was);
@@ -53,34 +53,34 @@ test('a variant edited in Figma whose code changed is left as it is and reported
   assert.deepEqual((await node(ids[0])).fills, RED);
   assert.deepEqual((await node(ledger.sets.label.variants[0])).fills, RED);
   assert.deepEqual(r.ledger.sets.input.variants, ids);
-  // The coverage check passes with the conflict in the set as Figma has it; the baseline takes the new Contract but
-  // keeps the conflict at its old fingerprint, and the Contract it was built from.
+  // The coverage check passes with the held variant in the set as Figma has it; the baseline takes the new Contract but
+  // keeps it held at its old fingerprint, and the Contract it was built from.
   assert.equal(r.record.coverage.input.ok, true, JSON.stringify(r.record.coverage.input.problems));
   const built = r.record.built.input;
   assert.equal(built.contentHash, contentHash(read(contractPath(dir, 'input'))));
   assert.deepEqual(built.variants[names[2]], record.built.input.variants[names[2]]);
-  assert.equal(built.conflicts[names[2]].contract, record.built.input.contract);
-  assert.deepEqual(Object.keys(r.record.contracts).sort(), [...new Set(Object.values(r.record.built).flatMap(b => [b.contract, ...Object.values(b.conflicts || {}).map(c => c.contract)]))].sort());
+  assert.equal(built.held[names[2]].contract, record.built.input.contract);
+  assert.deepEqual(Object.keys(r.record.contracts).sort(), [...new Set(Object.values(r.record.built).flatMap(b => [b.contract, ...Object.values(b.held || {}).map(c => c.contract)]))].sort());
 
-  // A rerun with no change sends nothing and still reports the conflict.
+  // A rerun with no change sends nothing and still reports the held variant.
   const writes = mock.log.length;
   const again = await drive({ dir, mock, ledger: r.ledger, record: r.record, namespace: 'v0-app' });
   assert.deepEqual([again.n.status, again.steps], ['built', []]);
-  assert.deepEqual(again.n.conflicts, r.n.conflicts);
+  assert.deepEqual(again.n.held, r.n.held);
   assert.equal(mock.log.length, writes);
 
-  // Another change: the conflict is read back against the Contract it was built from, the other against the baseline's.
-  // It is still edited, so it stays a conflict; index 5 updates again.
+  // Another change: the held variant is read back against the Contract it was built from, the other against the baseline's.
+  // It is still edited, so it stays held; index 5 updates again.
   await changed(p, 40, 30);
   const third = await drive({ dir, mock, ledger: r.ledger, record: r.record, namespace: 'v0-app' });
   assert.equal(third.n.status, 'built', JSON.stringify(third.n));
   assert.deepEqual(readOf(third.steps), [[2], [5]]);
   assert.deepEqual(sentOf(third.steps), [[5]]);
-  assert.deepEqual(third.n.conflicts.map(c => c.variant), [names[2]]);
+  assert.deepEqual(third.n.held.map(c => c.variant), [names[2]]);
   assert.deepEqual((await node(ids[2])).fills, RED);
   near((await node(ids[5])).opacity, 0.3);
 
-  // The owner takes the code's version of it: it alone is written, and the conflict is gone.
+  // The owner takes the code's version of it: it alone is written, and it is held no more.
   const said = nextStep({ dir, fileKey: FILE_KEY, ledger: third.ledger, record: third.record, namespace: 'v0-app', at: AT, resolve: parseResolve([`input:${names[2]}`]) });
   assert.deepEqual(said.record.built.input.take, [names[2]]);
   assert.deepEqual(said.plan.selection.entries.map(e => e[0]), [2]);
@@ -88,15 +88,15 @@ test('a variant edited in Figma whose code changed is left as it is and reported
   assert.equal(taken.n.status, 'built', JSON.stringify(taken.n));
   assert.deepEqual(sentOf(taken.steps), [[2]]);
   assert.deepEqual(readOf(taken.steps), []);
-  assert.deepEqual(taken.n.conflicts, []);
+  assert.deepEqual(taken.n.held, []);
   assert.notDeepEqual((await node(ids[2])).fills, RED);
   near((await node(ids[2])).opacity, 0.3);
   assert.deepEqual(taken.ledger.sets.input.variants, ids);
-  assert.ok(!('take' in taken.record.built.input) && !('conflicts' in taken.record.built.input));
+  assert.ok(!('take' in taken.record.built.input) && !('held' in taken.record.built.input));
   assert.deepEqual((await node(ids[0])).fills, RED);
 });
 
-test('--keep-figma keeps the edit and builds the code change elsewhere; a variant removed in Figma is a conflict too', { skip }, async () => {
+test('--keep-figma keeps the edit and builds the code change elsewhere; a variant removed in Figma is held too', { skip }, async () => {
   const p = await builtProject();
   const { dir, mock, ledger, record } = p;
   const node = nodeOf(mock);
@@ -110,20 +110,20 @@ test('--keep-figma keeps the edit and builds the code change elsewhere; a varian
   assert.equal(r.n.status, 'built', JSON.stringify(r.n));
   // Neither is written: the update is one call for the set alone, and the removed variant is not built again.
   assert.deepEqual(sentOf(r.steps), [[]]);
-  assert.deepEqual(r.n.conflicts.map(c => [c.variant, c.reason]), [[names[2], 'edited'], [names[5], 'missing']]);
+  assert.deepEqual(r.n.held.map(c => [c.variant, c.reason]), [[names[2], 'edited'], [names[5], 'missing']]);
   assert.equal(await node(ids[5]), null);
   assert.ok(!(await node(ledger.sets.input.set.id)).children.some(k => k.name === names[5]));
   assert.equal(r.record.coverage.input.ok, true, JSON.stringify(r.record.coverage.input.problems));
 
   const opts = { dir, fileKey: FILE_KEY, ledger: r.ledger, record: r.record, namespace: 'v0-app', at: AT };
   assert.throws(() => nextStep({ ...opts, resolve: parseResolve([], [`input:${names[5]}`]) }), /is gone from the set in Figma: to keep it out, untick it on the review page/);
-  assert.throws(() => nextStep({ ...opts, resolve: parseResolve([], [`input:${names[0]}`]) }), /input:Invalid=Valid, State=Enabled is no conflict here \(conflicts: input:Invalid=Valid, State=Disabled; input:Invalid=Invalid, State=Disabled\)/);
+  assert.throws(() => nextStep({ ...opts, resolve: parseResolve([], [`input:${names[0]}`]) }), /input:Invalid=Valid, State=Enabled is not held here \(held: input:Invalid=Valid, State=Disabled; input:Invalid=Invalid, State=Disabled\)/);
   assert.throws(() => parseResolve(['input']), /--take-code input: give <family>:<variant name>/);
 
   // Kept as Figma has it: the baseline takes the code's fingerprint, so nothing is sent for it now.
   const kept = nextStep({ ...opts, resolve: parseResolve([], [`input:${names[2]}`]) });
   assert.equal(kept.status, 'built');
-  assert.deepEqual(kept.conflicts.map(c => c.variant), [names[5]]);
+  assert.deepEqual(kept.held.map(c => c.variant), [names[5]]);
   assert.equal(kept.record.built.input.variants[names[2]][0], variantFingerprints(gate({ dir, fileKey: FILE_KEY, ledger }).contracts.input)[2].fingerprint);
   const writes = mock.log.length;
   const after = await drive({ dir, mock, ledger: r.ledger, record: kept.record, namespace: 'v0-app' });
@@ -131,15 +131,15 @@ test('--keep-figma keeps the edit and builds the code change elsewhere; a varian
   assert.equal(mock.log.length, writes);
   assert.deepEqual((await node(ids[2])).fills, RED);
 
-  // Its code changes again: it is read back against today's Contract, still differs from it, and is a conflict again.
+  // Its code changes again: it is read back against today's Contract, still differs from it, and is held again.
   await changed(p, 40, 30);
   const again = await drive({ dir, mock, ledger: after.ledger, record: after.record, namespace: 'v0-app' });
   assert.equal(again.n.status, 'built', JSON.stringify(again.n));
-  assert.deepEqual(again.n.conflicts.map(c => [c.variant, c.reason]), [[names[2], 'edited'], [names[5], 'missing']]);
+  assert.deepEqual(again.n.held.map(c => [c.variant, c.reason]), [[names[2], 'edited'], [names[5], 'missing']]);
   assert.deepEqual((await node(ids[2])).fills, RED);
 });
 
-test('--take-code builds a variant removed in Figma again; a conflict whose code goes back, or that is unticked, is not reported', { skip }, async () => {
+test('--take-code builds a variant removed in Figma again; a held variant whose code goes back, or that is unticked, is not reported', { skip }, async () => {
   const p = await builtProject();
   const { dir, mock, ledger, record } = p;
   const node = nodeOf(mock);
@@ -149,7 +149,7 @@ test('--take-code builds a variant removed in Figma again; a conflict whose code
   (await node(ids[5])).remove();
   await changed(p, 50, 40);
   const r = await drive({ dir, mock, ledger, record, namespace: 'v0-app' });
-  assert.deepEqual(r.n.conflicts.map(c => [c.variant, c.reason]), [[names[2], 'edited'], [names[5], 'missing']]);
+  assert.deepEqual(r.n.held.map(c => [c.variant, c.reason]), [[names[2], 'edited'], [names[5], 'missing']]);
 
   // The removed variant is made again under a new id, once: the take ends with its write.
   const said = nextStep({ dir, fileKey: FILE_KEY, ledger: r.ledger, record: r.record, namespace: 'v0-app', at: AT, resolve: parseResolve([`input:${names[5]}`]) });
@@ -159,7 +159,7 @@ test('--take-code builds a variant removed in Figma again; a conflict whose code
   assert.notEqual(taken.ledger.sets.input.variants[5], ids[5]);
   near((await node(taken.ledger.sets.input.variants[5])).opacity, 0.4);
   assert.equal(taken.record.coverage.input.ok, true, JSON.stringify(taken.record.coverage.input.problems));
-  assert.deepEqual(taken.n.conflicts.map(c => c.variant), [names[2]]);
+  assert.deepEqual(taken.n.held.map(c => c.variant), [names[2]]);
   assert.ok(!('take' in taken.record.built.input));
 
   // The code goes back to what the edited variant was built from: its edit is one of a variant whose code did not
@@ -167,17 +167,17 @@ test('--take-code builds a variant removed in Figma again; a conflict whose code
   await changed(p, 40, 50);
   const back = await drive({ dir, mock, ledger: taken.ledger, record: taken.record, namespace: 'v0-app' });
   assert.equal(back.n.status, 'built', JSON.stringify(back.n));
-  assert.deepEqual(back.n.conflicts, []);
+  assert.deepEqual(back.n.held, []);
   assert.ok(!readOf(back.steps).flat().includes(2) && !sentOf(back.steps).flat().includes(2));
   assert.ok(sentOf(back.steps).flat().includes(5));
   assert.deepEqual((await node(ids[2])).fills, RED);
 
-  // A conflict on a variant the Contract no longer expands (unticked on the review page) goes, and so does its take.
+  // A held variant the Contract no longer expands (unticked on the review page) goes, and so does its take.
   const g = gate({ dir, fileKey: FILE_KEY, ledger: back.ledger });
-  const input = { ...back.record.built.input, conflicts: { 'Gone=Yes': { reason: 'edited', fingerprint: 'sha256:00', contract: null, at: AT } }, take: ['Gone=Yes'] };
+  const input = { ...back.record.built.input, held: { 'Gone=Yes': { reason: 'edited', fingerprint: 'sha256:00', contract: null, at: AT } }, take: ['Gone=Yes'] };
   const out = settled({ ...back.record, built: { ...back.record.built, input } }, g);
-  assert.deepEqual(conflictsOf(out), []);
-  assert.ok(!('take' in out.built.input) && !('conflicts' in out.built.input));
+  assert.deepEqual(heldOf(out), []);
+  assert.ok(!('take' in out.built.input) && !('held' in out.built.input));
 });
 
 test('a baseline from before #181 gets its Contract on a run with no change; mid-update, its variants are not written over', { skip }, async () => {
@@ -199,8 +199,8 @@ test('a baseline from before #181 gets its Contract on a run with no change; mid
   assert.equal(r.n.status, 'built', JSON.stringify(r.n));
   assert.deepEqual(readOf(r.steps), []);
   assert.deepEqual(sentOf(r.steps), [[]]);
-  assert.deepEqual(r.n.conflicts.map(c => c.reason), ['unchecked', 'unchecked']);
-  assert.match(r.n.conflicts[0].changes[0], /keeps no Contract this variant was built from \(built before #181, or its file is gone\)/);
+  assert.deepEqual(r.n.held.map(c => c.reason), ['unchecked', 'unchecked']);
+  assert.match(r.n.held[0].changes[0], /keeps no Contract this variant was built from \(built before #181, or its file is gone\)/);
   assert.equal((await node(ids[5])).opacity, was);
 });
 
@@ -214,7 +214,7 @@ test('the build record keeps its Contracts as files beside it, drops one no base
   assert.deepEqual(read(file).contracts, ['sha256:aa']);
   assert.deepEqual(readdirSync(join(dir, 'X.v0-app.build.contracts')), ['aa.json']);
   assert.deepEqual(readRecord(file), record);
-  // a Contract file gone is a Contract not kept: its variants are not read back, and are conflicts while they change
+  // a Contract file gone is a Contract not kept: its variants are not read back, and are held while they change
   rmSync(join(dir, 'X.v0-app.build.contracts', 'aa.json'));
   assert.deepEqual(readRecord(file), { ...record, contracts: {} });
   writeRecord(file, { ...record, contracts: { 'sha256:bb': c } });
@@ -223,4 +223,14 @@ test('the build record keeps its Contracts as files beside it, drops one no base
   assert.ok(!('contracts' in read(file)));
   assert.ok(existsSync(join(dir, 'X.v0-app.build.contracts')));
   assert.deepEqual(readdirSync(join(dir, 'X.v0-app.build.contracts')), []);
+});
+
+test('a build record written before held variants were named so reads its `conflicts` as held', () => {
+  const dir = scratch();
+  const file = join(dir, 'X.v0-app.build.json');
+  const one = { reason: 'edited', fingerprint: 'sha256:01', contract: null, at: AT };
+  writeFileSync(file, JSON.stringify({ namespace: 'v0-app', built: { input: { variants: {}, conflicts: { 'State=Disabled': one } }, label: { variants: {} } } }));
+  const record = readRecord(file);
+  assert.deepEqual(record.built, { input: { variants: {}, held: { 'State=Disabled': one } }, label: { variants: {} } });
+  assert.deepEqual(heldOf(record).map(c => [c.family, c.variant, c.reason]), [['input', 'State=Disabled', 'edited']]);
 });
