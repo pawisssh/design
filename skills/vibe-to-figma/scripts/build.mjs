@@ -32,7 +32,7 @@
 // the owner's "approve" like any other change. A document the ledger holds already needs no call, so none is refused.
 // A set the ledger holds for a family with no Contract in the folder (folder.mjs set it aside: the project no longer
 // has the component) is orphaned: no call touches it, nothing in Figma is deleted, and the build's end names it.
-import { execFileSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -674,13 +674,26 @@ function main() {
   mkdirSync(out, { recursive: true });
   writeFileSync(join(out, 'plan.json'), JSON.stringify(n.plan, null, 2) + '\n');
   writeFileSync(join(out, 'state.json'), JSON.stringify(n.state, null, 2) + '\n');
-  const packaged = JSON.parse(execFileSync('python3', [join(TO_DESIGN, 'scripts/package_native_builder.py'), n.core, join(out, 'plan.json'), out, '--state', join(out, 'state.json')], { encoding: 'utf8' }).trim().split('\n').pop());
-  if (packaged.status !== 'packaged') throw new Error(`the packager refused: ${packaged.error}`);
+  const packaged = packageCall(n.core, out);
   console.log(JSON.stringify({
     step: n.step, ...(n.family ? { family: n.family } : {}), options: n.options, fileKey, chars: packaged.chars,
     description: `${key} ${n.step}${n.family ? ` ${n.family}` : ''}${n.options.phase ? ` ${n.options.phase}` : n.options.mode ? ` ${n.options.mode}` : ''}${n.options.batch != null ? ` ${n.options.batch + 1}/${n.options.of}` : ''}${n.plan.chunk ? ` chunk ${n.plan.chunk.index}/${n.plan.chunk.of}` : ''}`,
     stub: packaged.stub, result: rel(join(out, 'result.json')), ledger: ledgerFile,
   }, null, 2));
+}
+
+/**
+ * To-design's packager on the plan and state in `out` -> its result. A refusal exits non-zero with its reason as JSON on
+ * stdout; it is thrown as `the packager refused: <reason>`.
+ */
+function packageCall(core, out) {
+  const run = spawnSync('python3', [join(TO_DESIGN, 'scripts/package_native_builder.py'), core, join(out, 'plan.json'), out, '--state', join(out, 'state.json')], { encoding: 'utf8' });
+  let packaged;
+  try { packaged = JSON.parse((run.stdout || '').trim().split('\n').pop()); } catch {
+    throw new Error(`the packager failed (exit ${run.status ?? run.error?.code}): ${(run.stderr || run.stdout || '').trim()}`);
+  }
+  if (packaged.status !== 'packaged') throw new Error(`the packager refused: ${packaged.error}`);
+  return packaged;
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
