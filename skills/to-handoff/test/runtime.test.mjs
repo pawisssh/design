@@ -103,6 +103,26 @@ test('runtime: a re-run on the same inputs writes nothing and leaves the screens
   assert.ok(readFileSync(shot).equals(bytes));
 });
 
+test('runtime: a Handoff rewritten while the Prototype is unchanged keeps its screenshots; a Prototype change retakes them', { skip: noRuntime }, async () => {
+  const ds = designSystem();
+  const dir = mkdtempSync(join(tmpdir(), 'to-handoff-shots-'));
+  cpSync(dirname(PROTOTYPE), dir, { recursive: true });
+  const prototype = join(dir, 'index.html');
+  const first = await generate({ prototype, designSystem: ds, decisions: DECISIONS, runtime: true });
+  const shot = join(dirname(first.path), first.handoff.screens[0].states.success.screenshots.md);
+  // The same image with bytes after its end: a retake replaces it, keeping leaves it.
+  const kept = Buffer.concat([readFileSync(shot), Buffer.from('kept')]);
+  writeFileSync(shot, kept);
+  const goal = { ...DECISIONS, feature: { ...DECISIONS.feature, goal: 'Invite teammates by email.' } };
+  const reworded = await generate({ prototype, designSystem: ds, decisions: goal, runtime: true });
+  assert.equal(reworded.wrote, true);
+  assert.ok(readFileSync(shot).equals(kept), 'the Prototype is unchanged: the screenshot is kept');
+  writeFileSync(prototype, readFileSync(prototype, 'utf8').replace('</body>', '<!-- edited -->\n</body>'));
+  const edited = await generate({ prototype, designSystem: ds, decisions: goal, runtime: true });
+  assert.equal(edited.wrote, true);
+  assert.ok(!readFileSync(shot).equals(kept), 'the Prototype changed: the screenshot is retaken');
+});
+
 test('runtime: a state with no reach answer is a decision request; answered unreachable, its screenshots are missing with the reason', { skip: noRuntime }, async () => {
   const ds = designSystem();
   const { 'reach:invite-teammates:empty': _, ...rest } = DECISIONS;

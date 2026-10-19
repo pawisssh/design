@@ -893,8 +893,9 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     ownerDecisions: Object.fromEntries([...d.used.keys()].sort().map(k => [k, d.used.get(k)])),
   };
   handoff.source.foundations.usedHash = usedHash(handoff, foundations);
+  const retake = !stored || stored.source.prototype.snapshotId !== handoff.source.prototype.snapshotId;
   const result = { ...store(handoff, dir), dropped: d.dropped };
-  for (const { shots } of Object.values(rt.screens)) writeShots(shots, join(dirname(result.path), 'screens'), result.wrote);
+  for (const { shots } of Object.values(rt.screens)) writeShots(shots, join(dirname(result.path), 'screens'), result.wrote && retake);
   return result;
 }
 
@@ -1034,13 +1035,14 @@ function liveMetrics(cs) {
   };
 }
 
-// The screenshots next to handoff.json, as screens/<screen>.<state>.<breakpoint>.png: rewritten with the Handoff,
-// else only where one is absent, so an unchanged Handoff keeps its screenshots byte for byte.
-function writeShots(shots, dir, wrote) {
+// The screenshots next to handoff.json, as screens/<screen>.<state>.<breakpoint>.png: retaken when a rewritten
+// Handoff pins a changed Prototype, else written only where one is absent. Two renders of the same page differ by
+// a few anti-aliased pixels, so a Handoff rewritten for any other reason keeps its screenshots byte for byte.
+function writeShots(shots, dir, retake) {
   for (const byBp of Object.values(shots)) for (const shot of Object.values(byBp)) {
     if (!shot.png) continue;
     const file = join(dir, shot.name);
-    if (!wrote && existsSync(file)) continue;
+    if (!retake && existsSync(file)) continue;
     mkdirSync(dir, { recursive: true });
     writeFileSync(file, shot.png);
   }
