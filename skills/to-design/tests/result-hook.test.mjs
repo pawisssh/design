@@ -63,6 +63,10 @@ test('a package call the hook cannot place says why nothing was saved', () => {
   assert.equal(loose.status, 0);
   assert.match(loose.said, /carries \/\*@package but is not the stub; nothing saved/);
   assert.ok(!existsSync(join(root, RESULT)));
+
+  const rootless = runHookAt(HOOK, root, { hook_event_name: 'PostToolUse', tool_input: toolInput(stub), tool_response: BODY }, { CLAUDE_PROJECT_DIR: join(root, 'gone') });
+  assert.equal(rootless.status, 0);
+  assert.match(JSON.parse(rootless.stdout).hookSpecificOutput.additionalContext, /cannot resolve the project: ENOENT; nothing saved/);
 });
 
 test('nothing is saved, and the call is never blocked, for a result that is not JSON or a folder that is no package folder', () => {

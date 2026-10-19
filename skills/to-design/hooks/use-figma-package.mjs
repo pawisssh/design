@@ -5,8 +5,8 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync, realpathSync } from 'node:fs';
-import { dirname, join, resolve, sep } from 'node:path';
-import { appendLog, MARKER, PACKAGE_LOG, projectRoot, readInput, STUB, within } from './lib.mjs';
+import { dirname, join, resolve } from 'node:path';
+import { appendLog, MANIFEST, MARKER, PACKAGE_LOG, projectRoot, readInput, relativeInside, STUB } from './lib.mjs';
 
 const MAX_CODE = 50000; // use_figma's code limit
 
@@ -30,20 +30,20 @@ try {
   root = projectRoot(input);
   file = realpathSync(resolve(root, relPath));
 } catch (e) { fail(`cannot resolve ${relPath}: ${e.code || e.message}`); }
-const rel = within(root, file);
+const rel = relativeInside(root, file);
 if (!rel) fail(`package path escapes the project: ${relPath}`);
 
 let bytes, manifest;
 try { bytes = readFileSync(file); } catch (e) { fail(`cannot read ${relPath}: ${e.code || e.message}`); }
 const actual = createHash('sha256').update(bytes).digest('hex');
 if (actual !== expected) fail(`sha256 mismatch for ${relPath}: stub ${expected}, file ${actual}; re-run the packager and send its new stub`);
-try { manifest = JSON.parse(readFileSync(join(dirname(file), 'script-package.json'), 'utf8')); } catch (e) { fail(`cannot read script-package.json next to ${relPath}: ${e.code || e.message}`); }
-if (manifest?.fileSha256 !== actual) fail(`script-package.json fileSha256 ${manifest?.fileSha256} does not match ${relPath} (${actual})`);
+try { manifest = JSON.parse(readFileSync(join(dirname(file), MANIFEST), 'utf8')); } catch (e) { fail(`cannot read ${MANIFEST} next to ${relPath}: ${e.code || e.message}`); }
+if (manifest?.fileSha256 !== actual) fail(`${MANIFEST} fileSha256 ${manifest?.fileSha256} does not match ${relPath} (${actual})`);
 const text = bytes.toString('utf8');
 if (text.length > MAX_CODE) fail(`package is ${text.length} chars, over the ${MAX_CODE} use_figma limit`);
 
 // One line per expansion; the result hook finds a swapped call's package by its toolUseId here.
-const record = { at: new Date().toISOString(), toolUseId: input.tool_use_id, tool: input.tool_name, stubLen: code.length, packageLen: text.length, sha256: actual, path: rel.split(sep).join('/'), ms: Date.now() - startedAt };
+const record = { at: new Date().toISOString(), toolUseId: input.tool_use_id, tool: input.tool_name, stubLen: code.length, packageLen: text.length, sha256: actual, path: rel, ms: Date.now() - startedAt };
 appendLog(root, PACKAGE_LOG, record);
 
 // This hook and its settings load from the main checkout, so a checkout behind its upstream on them runs an old
