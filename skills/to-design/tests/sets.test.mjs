@@ -4,9 +4,7 @@
 // Run with `node --test skills/to-design/tests/*.test.mjs`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { applyOmit, approve, asDraft, expand, variantName } from '../../contract/scripts/contract.mjs';
@@ -15,6 +13,7 @@ import { checkCoverage, checkSample, checkTheme } from '../scripts/coverage.mjs'
 import { diff, normalizeBaseResult } from '../scripts/base-loop.mjs';
 import { pruneList, recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
+import { pack } from './pack.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const BUTTON = JSON.parse(readFileSync(join(ROOT, 'design-systems/carbon/contracts/button.component.json'), 'utf8'));
@@ -23,21 +22,9 @@ const DOC = JSON.parse(DOC_TEXT);
 const ICONS_DIR = join(ROOT, 'skills/to-design/tests/fixtures/carbon-icons@11.90.0');
 const CORE = join(ROOT, 'skills/to-design/assets/builder-core.js');
 const COMPONENTS_CORE = join(ROOT, 'skills/to-design/assets/builder-core-components.js');
-const PACKAGER = join(ROOT, 'skills/to-design/scripts/package_native_builder.py');
 const FILE_KEY = 'MOCKFILEKEY';
 const AT = '2026-10-16T00:00:00.000Z';
 const TOTAL = expand(BUTTON).length;
-
-function pack(plan, state, core = COMPONENTS_CORE) {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'to-design-sets-')));
-  writeFileSync(join(root, 'plan.json'), JSON.stringify(plan));
-  writeFileSync(join(root, 'state.json'), JSON.stringify(state));
-  const run = spawnSync('python3', [PACKAGER, core, 'plan.json', 'out', '--state', 'state.json'], {
-    cwd: root, env: { ...process.env, CLAUDE_PROJECT_DIR: root }, encoding: 'utf8',
-  });
-  assert.equal(run.status, 0, run.stdout + run.stderr);
-  return { code: readFileSync(join(root, 'out/build-components.mcp.js'), 'utf8'), out: JSON.parse(run.stdout) };
-}
 
 // A file with the foundations, the Button icons and the Base Component built, and its ledger.
 async function setup({ withBase = true } = {}) {
@@ -59,7 +46,7 @@ async function setup({ withBase = true } = {}) {
 // One sets call: derive, package, run; records a conflict-free result unless `drop` (a lost connection).
 async function sets(env, options = {}, { contract = BUTTON, drop = false } = {}) {
   const { plan, state } = setsPlan(contract, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, ...options });
-  const { code, out } = pack(plan, state);
+  const { code, out } = pack(plan, state, COMPONENTS_CORE);
   const from = env.mock.log.length;
   const result = await runPackage(code, env.mock.figma);
   assert.ok(!result.error, JSON.stringify(result));
@@ -405,7 +392,7 @@ test('inside its set the Base Component is built and read at the property defaul
   for (const readOnly of [false, true]) {
     const { plan, state } = basePlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, readOnly });
     assert.equal(plan.base.visible.Glyph, false, 'in the set: Icon at its default (off)');
-    const result = await runPackage(pack(plan, state).code, env.mock.figma);
+    const result = await runPackage(pack(plan, state, COMPONENTS_CORE).code, env.mock.figma);
     assert.deepEqual([result.summary.conflicts, result.summary.created, result.summary.updated], [0, 0, 0], JSON.stringify(result.updated));
     const readback = normalizeBaseResult(result, env.ledger);
     assert.equal(readback.specimen, 'set');

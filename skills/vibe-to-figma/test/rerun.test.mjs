@@ -12,11 +12,12 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { contentHash, expand, tupleKey } from '../../contract/scripts/contract.mjs';
 import { setsPlan } from '../../to-design/scripts/build-plan.mjs';
+import { pack } from '../../to-design/tests/pack.mjs';
 import { approveFolder } from '../scripts/approve.mjs';
 import { CORES, baselined, gate, nextStep, pendingUpdate, variantFingerprints } from '../scripts/build.mjs';
 import { buildFolder, carryOmits } from '../scripts/folder.mjs';
 import { buildReview, reviewModel } from '../scripts/review.mjs';
-import { AT, FILE_KEY, RED, builtProject, drafts, drive, exported, fadeDisabled, pack } from './drive.mjs';
+import { AT, FILE_KEY, RED, builtProject, drafts, drive, exported, fadeDisabled } from './drive.mjs';
 import { READABLE, V0, contractPath, read, scratch, selections, skip, snapshot, v0Folder } from './helpers.mjs';
 
 const { reviewExport } = createRequire(import.meta.url)('../assets/review-export.js');
@@ -244,7 +245,7 @@ test('pendingUpdate: no update without a baseline of the same set; a change of t
   const { plan, state } = setsPlan(contract, docText, ledger, { fileKey: FILE_KEY, mode: 'build', indexes: [], prototype: true, at: AT });
   assert.deepEqual([plan.selection.entries, plan.options.picked, plan.options.of], [[], 0, 1]);
   // and To-design's packager takes it (it refuses any other plan that picks no variant)
-  assert.match(pack(plan, state, CORES.sets), /build-components|figma/);
+  assert.match(pack(plan, state, CORES.sets).code, /build-components|figma/);
   const refuses = (opts, pattern, l = ledger) => assert.throws(() => setsPlan(contract, docText, l, { fileKey: FILE_KEY, prototype: true, at: AT, ...opts }), pattern);
   refuses({ mode: 'coverage', indexes: [0] }, /indexes pick a build call's variants themselves/);
   refuses({ mode: 'build', next: true, indexes: [0] }, /indexes pick a build call's variants themselves/);

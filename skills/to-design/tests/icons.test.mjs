@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { iconsPlan } from '../scripts/build-plan.mjs';
 import { recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
+import { pack } from './pack.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const BUTTON = JSON.parse(readFileSync(join(ROOT, 'design-systems/carbon/contracts/button.component.json'), 'utf8'));
@@ -19,22 +20,9 @@ const BUTTON = JSON.parse(readFileSync(join(ROOT, 'design-systems/carbon/contrac
 const ICONS_DIR = join(ROOT, 'skills/to-design/tests/fixtures/carbon-icons@11.90.0');
 const PINNED_DIR = join(ROOT, '.scratch/adapter-carbon/sources/npm/@carbon/icons@11.90.0/package');
 const CORE = join(ROOT, 'skills/to-design/assets/builder-core.js');
-const PACKAGER = join(ROOT, 'skills/to-design/scripts/package_native_builder.py');
 const FILE_KEY = 'MOCKFILEKEY';
 const AT = '2026-10-16T00:00:00.000Z';
 const BUTTON_ICONS = ['Add', 'Arrow--right', 'Launch', 'Download', 'Save', 'Edit', 'Filter', 'Trash-can', 'Close'];
-
-// Packages a plan and state with the real packager; returns the package code and the packager's stdout.
-function pack(plan, state) {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'to-design-icons-')));
-  writeFileSync(join(root, 'plan.json'), JSON.stringify(plan));
-  writeFileSync(join(root, 'state.json'), JSON.stringify(state));
-  const run = spawnSync('python3', [PACKAGER, CORE, 'plan.json', 'out', '--state', 'state.json'], {
-    cwd: root, env: { ...process.env, CLAUDE_PROJECT_DIR: root }, encoding: 'utf8',
-  });
-  assert.equal(run.status, 0, run.stdout + run.stderr);
-  return { code: readFileSync(join(root, 'out/build-components.mcp.js'), 'utf8'), out: JSON.parse(run.stdout) };
-}
 
 const derive = ({ ledger = null, contracts = [BUTTON], dir = ICONS_DIR, options = {} } = {}) =>
   iconsPlan(contracts, dir, ledger, { fileKey: FILE_KEY, at: AT, ...options });
@@ -43,7 +31,7 @@ const derive = ({ ledger = null, contracts = [BUTTON], dir = ICONS_DIR, options 
 async function call(mock, opts = {}) {
   const { plan, state } = derive(opts);
   if (opts.edit) opts.edit(plan);
-  return runPackage(pack(plan, state).code, mock.figma);
+  return runPackage(pack(plan, state, CORE).code, mock.figma);
 }
 
 const writes = mock => mock.log.filter(([op]) => op !== 'setCurrentPage');
@@ -132,7 +120,7 @@ test('a 16px status icon\'s inner path marked opacity="0" is dropped too, so war
 
 test('the package is well under the 50,000-char cap; save.svg\'s literal TAB reaches the core intact', async () => {
   const { plan, state } = derive();
-  const { code, out } = pack(plan, state);
+  const { code, out } = pack(plan, state, CORE);
   assert.ok(out.chars < 50000, `package is ${out.chars} chars`);
   assert.equal(out.check.entries, 9);
   const save = plan.icons.find(i => i.key === 'save');
@@ -150,7 +138,7 @@ test('the package is well under the 50,000-char cap; save.svg\'s literal TAB rea
 // which reformats buildComponentSets.toString() and fails the core hash. The SVGs reach the core intact anyway.
 test('the package never spells "<" before a tag name, yet the core receives every SVG byte for byte', async () => {
   const { plan, state } = derive();
-  const { code } = pack(plan, state);
+  const { code } = pack(plan, state, CORE);
   assert.doesNotMatch(code, /<[A-Za-z/!?]/);
   assert.doesNotMatch(code, /\\u003c|\\x3c/i);
   assert.match(code, /\.join\(String\.fromCharCode\(60\)\)/);

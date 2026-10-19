@@ -4,9 +4,7 @@
 // Run with `node --test skills/to-design/tests/*.test.mjs`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { approve, expand, resolve, variantName } from '../../contract/scripts/contract.mjs';
@@ -15,6 +13,7 @@ import { checkCoverage, checkTheme } from '../scripts/coverage.mjs';
 import { recordResult } from '../scripts/ledger.mjs';
 import { defaultProps, expectedVariant } from '../scripts/readback.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
+import { pack } from './pack.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const FIXTURES = join(ROOT, 'skills/contract/test/fixtures/form-controls');
@@ -22,7 +21,6 @@ const DOC_TEXT = readFileSync(join(FIXTURES, 'carbon.foundations.json'), 'utf8')
 const ICONS_DIR = join(ROOT, 'skills/to-design/tests/fixtures/carbon-icons@11.90.0');
 const CORE = join(ROOT, 'skills/to-design/assets/builder-core.js');
 const COMPONENTS_CORE = join(ROOT, 'skills/to-design/assets/builder-core-components.js');
-const PACKAGER = join(ROOT, 'skills/to-design/scripts/package_native_builder.py');
 const FILE_KEY = 'MOCKFILEKEY';
 const AT = '2026-10-17T00:00:00.000Z';
 const load = name => JSON.parse(readFileSync(join(FIXTURES, `${name}.component.json`), 'utf8'));
@@ -31,23 +29,12 @@ const TEXT_INPUT = asApproved(load('text-input'));
 const SELECT = asApproved(load('select'));
 const STATUS_ICONS = { 'Invalid icon': 'Warning--filled', 'Warn icon': 'Warning--alt--filled' };
 
-function pack(plan, state, core) {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'to-design-forms-')));
-  writeFileSync(join(root, 'plan.json'), JSON.stringify(plan));
-  writeFileSync(join(root, 'state.json'), JSON.stringify(state));
-  const run = spawnSync('python3', [PACKAGER, core, 'plan.json', 'out', '--state', 'state.json'], {
-    cwd: root, env: { ...process.env, CLAUDE_PROJECT_DIR: root }, encoding: 'utf8',
-  });
-  assert.equal(run.status, 0, run.stdout + run.stderr);
-  return readFileSync(join(root, 'out/build-components.mcp.js'), 'utf8');
-}
-
 // One file with the foundations and both families' icons built, then every sets batch of each family.
 async function buildBoth() {
   const mock = mockFigma({ fileKey: FILE_KEY, pages: ['Page 1'] });
   let ledger = null;
   const call = async ({ plan, state }, core) => {
-    const result = await runPackage(pack(plan, state, core), mock.figma);
+    const result = await runPackage(pack(plan, state, core).code, mock.figma);
     assert.ok(!result.error, JSON.stringify(result.error));
     assert.equal(result.summary.conflicts, 0, JSON.stringify(result.conflicts));
     if (result.ledger) ledger = recordResult(ledger, result);

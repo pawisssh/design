@@ -11,25 +11,19 @@ import { fileURLToPath } from 'node:url';
 import { foundationsPlan } from '../scripts/build-plan.mjs';
 import { recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
+// This file's own pack derives the foundations plan first, then packages it with the shared one.
+import { pack as packOnto } from './pack.mjs';
 
 const DOC_PATH = new URL('../../../design-systems/carbon/carbon.foundations.json', import.meta.url);
 const DOC_TEXT = readFileSync(DOC_PATH, 'utf8');
 const CORE = new URL('../assets/builder-core.js', import.meta.url).pathname;
-const PACKAGER = new URL('../scripts/package_native_builder.py', import.meta.url).pathname;
 const FILE_KEY = 'MOCKFILEKEY';
 const AT = '2026-10-16T00:00:00.000Z';
 
-// Derives the plan, packages it with the real packager, and returns the package code.
+// Derives the plan and packages it onto CORE; returns the package code, the packager's stdout, and the plan and state.
 function pack({ docText = DOC_TEXT, ledger = null, options = {}, strip } = {}) {
   const { plan, state } = foundationsPlan(docText, ledger, { fileKey: FILE_KEY, at: AT, strip, ...options });
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'to-design-foundations-')));
-  writeFileSync(join(root, 'plan.json'), JSON.stringify(plan));
-  writeFileSync(join(root, 'state.json'), JSON.stringify(state));
-  const run = spawnSync('python3', [PACKAGER, CORE, 'plan.json', 'out', '--state', 'state.json'], {
-    cwd: root, env: { ...process.env, CLAUDE_PROJECT_DIR: root }, encoding: 'utf8',
-  });
-  assert.equal(run.status, 0, run.stdout + run.stderr);
-  return { code: readFileSync(join(root, 'out/build-components.mcp.js'), 'utf8'), out: JSON.parse(run.stdout), plan, state };
+  return { ...packOnto(plan, state, CORE), plan, state };
 }
 
 // One use_figma call: package and run on the mock.

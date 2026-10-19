@@ -13,24 +13,18 @@ import { formatDiff, review } from '../scripts/base-loop.mjs';
 import { recordResult, setGroups } from '../scripts/ledger.mjs';
 import { DEFAULT_GROUPS, reach, selection, subsetDocument } from '../scripts/foundations-subset.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
+// This file's own pack derives the foundations plan first, then packages it with the shared one.
+import { pack as packOnto } from './pack.mjs';
 
 const DOC_TEXT = readFileSync(new URL('../../../design-systems/carbon/carbon.foundations.json', import.meta.url), 'utf8');
 const SHADCN_TEXT = readFileSync(new URL('../../../design-systems/shadcn/shadcn.foundations.json', import.meta.url), 'utf8');
 const CORE = new URL('../assets/builder-core.js', import.meta.url).pathname;
-const PACKAGER = new URL('../scripts/package_native_builder.py', import.meta.url).pathname;
 const FILE_KEY = 'MOCKFILEKEY';
 const AT = '2026-10-17T00:00:00.000Z';
 
 function pack({ docText = DOC_TEXT, ledger = null, options = {} } = {}) {
   const { plan, state } = foundationsPlan(docText, ledger, { fileKey: FILE_KEY, at: AT, ...options });
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'to-design-subset-')));
-  writeFileSync(join(root, 'plan.json'), JSON.stringify(plan));
-  writeFileSync(join(root, 'state.json'), JSON.stringify(state));
-  const run = spawnSync('python3', [PACKAGER, CORE, 'plan.json', 'out', '--state', 'state.json'], {
-    cwd: root, env: { ...process.env, CLAUDE_PROJECT_DIR: root }, encoding: 'utf8',
-  });
-  assert.equal(run.status, 0, run.stdout + run.stderr);
-  return { code: readFileSync(join(root, 'out/build-components.mcp.js'), 'utf8'), out: JSON.parse(run.stdout), plan, state };
+  return { ...packOnto(plan, state, CORE), plan, state };
 }
 
 const call = async (mock, opts) => runPackage(pack(opts).code, mock.figma);
