@@ -8,6 +8,12 @@ on:
 permissions:
   contents: read
 
+# A new push to a pull request cancels its run still in progress, so a superseded commit holds no runner;
+# a push to main is grouped by its commit, so every commit on main keeps its run.
+concurrency:
+  group: test-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: true
+
 jobs:
   # npm test split four ways by file, each shard on its own runner: one runner ran it in about 20 minutes,
   # CPU-bound. The four sum to every file npm test runs.
@@ -22,13 +28,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # Without the pinned Carbon sources and preview packages, 42 adapter-carbon tests skip.
+      # Without the pinned Carbon sources and preview packages, the adapter-carbon tests that need them skip.
       - run: node skills/adapter-carbon/scripts/sources.mjs
-      # Without the pinned Tailwind, TypeScript, shadcn stylesheets and preview packages, 108 adapter-generic tests skip.
+      # Without the pinned Tailwind, TypeScript, shadcn stylesheets and preview packages, the adapter-generic tests that need them skip.
       - run: node skills/adapter-generic/scripts/sources.mjs
       # Without its packages, the to-handoff tests skip; the runtime tests, and adapter-generic's catalog
       # measurements, use the runner's Chrome.
       - run: node skills/to-handoff/scripts/deps.mjs
+      # Through NODE_OPTIONS: node --test ignores a --test-shard placed after the file globs, as `npm test -- …` would put it.
       - run: npm test
         env:
           NODE_OPTIONS: --test-shard=${{ matrix.shard }}/4
