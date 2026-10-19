@@ -105,9 +105,7 @@ test('runtime: a re-run on the same inputs writes nothing and leaves the screens
 
 test('runtime: a Handoff rewritten while the Prototype is unchanged keeps its screenshots; a Prototype change retakes them', { skip: noRuntime }, async () => {
   const ds = designSystem();
-  const dir = mkdtempSync(join(tmpdir(), 'to-handoff-shots-'));
-  cpSync(dirname(PROTOTYPE), dir, { recursive: true });
-  const prototype = join(dir, 'index.html');
+  const prototype = prototypeCopy();
   const first = await generate({ prototype, designSystem: ds, decisions: DECISIONS, runtime: true });
   const shot = join(dirname(first.path), first.handoff.screens[0].states.success.screenshots.md);
   // The same image with bytes after its end: a retake replaces it, keeping leaves it.
