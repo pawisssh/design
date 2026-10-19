@@ -893,7 +893,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     ownerDecisions: Object.fromEntries([...d.used.keys()].sort().map(k => [k, d.used.get(k)])),
   };
   handoff.source.foundations.usedHash = usedHash(handoff, foundations);
-  const retake = !stored || stored.source.prototype.snapshotId !== handoff.source.prototype.snapshotId;
+  const retake = !stored || stored.source?.prototype?.snapshotId !== handoff.source.prototype.snapshotId;
   const result = { ...store(handoff, dir), dropped: d.dropped };
   for (const { shots } of Object.values(rt.screens)) writeShots(shots, join(dirname(result.path), 'screens'), result.wrote && retake);
   return result;
