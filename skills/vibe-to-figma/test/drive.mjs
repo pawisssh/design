@@ -1,20 +1,18 @@
 // The agent's build loop on To-design's mock Figma (#179), shared by the build and rerun tests: next, the packaged
 // call, record, until the build is done or stops. And a copy of the v0 project built on the mock, for the reruns.
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { cpSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { cpSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mockFigma, runPackage } from '../../to-design/tests/mock-figma.mjs';
+import { pack } from '../../to-design/tests/pack.mjs';
 import { approveFolder } from '../scripts/approve.mjs';
 import { nextStep, recordStep } from '../scripts/build.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
 import { reviewModel } from '../scripts/review.mjs';
 import { READABLE, V0, read, scratch, selections } from './helpers.mjs';
 
-const PACKAGER = fileURLToPath(new URL('../../to-design/scripts/package_native_builder.py', import.meta.url));
 export const FILE_KEY = 'MOCKFILEKEY0000000000000';
 export const URL_ = `https://www.figma.com/design/${FILE_KEY}/Smoke?node-id=0-1`;
 export const AT = '2026-10-18T00:00:00.000Z';
@@ -27,15 +25,6 @@ export const NARROW = {
   },
 };
 
-export function pack(plan, state, core) {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'vibe-to-figma-build-')));
-  writeFileSync(join(root, 'plan.json'), JSON.stringify(plan));
-  writeFileSync(join(root, 'state.json'), JSON.stringify(state));
-  const run = spawnSync('python3', [PACKAGER, core, 'plan.json', 'out', '--state', 'state.json'], { cwd: root, env: { ...process.env, CLAUDE_PROJECT_DIR: root }, encoding: 'utf8' });
-  assert.equal(run.status, 0, run.stdout + run.stderr);
-  return readFileSync(join(root, 'out/build-components.mcp.js'), 'utf8');
-}
-
 /** The agent's loop on the mock: next, use_figma, record, until the build is done or stops, or `until` a step. */
 export async function drive({ dir, mock, ledger = null, record = {}, max = 200, until = () => false, ...opts }) {
   const steps = [];
@@ -44,7 +33,7 @@ export async function drive({ dir, mock, ledger = null, record = {}, max = 200, 
     record = n.record;
     if (n.status !== 'step') return { n, ledger, record, steps };
     const from = mock.log.length;
-    const result = await runPackage(pack(n.plan, n.state, n.core), mock.figma);
+    const result = await runPackage(pack(n.plan, n.state, n.core).code, mock.figma);
     // the call's writes: what it logged, but its page switches and font loads
     const writes = mock.log.slice(from).filter(([op]) => !['setCurrentPage', 'loadFont'].includes(op));
     steps.push({ step: n.step, family: n.family, options: n.options, plan: n.plan, result, writes });

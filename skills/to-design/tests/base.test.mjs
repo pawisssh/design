@@ -3,9 +3,7 @@
 // Run with `node --test skills/to-design/tests/*.test.mjs`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { contentHash } from '../../contract/scripts/contract.mjs';
@@ -14,6 +12,7 @@ import { normalizeReadback } from '../scripts/readback.mjs';
 import { basePlan, foundationsPlan, iconsPlan } from '../scripts/build-plan.mjs';
 import { recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
+import { pack } from './pack.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const BUTTON = JSON.parse(readFileSync(join(ROOT, 'design-systems/carbon/contracts/button.component.json'), 'utf8'));
@@ -23,21 +22,9 @@ const ICONS_DIR = join(ROOT, 'skills/to-design/tests/fixtures/carbon-icons@11.90
 // Foundations and icons run on the foundations core; the base slice on the components core.
 const CORE = join(ROOT, 'skills/to-design/assets/builder-core.js');
 const COMPONENTS_CORE = join(ROOT, 'skills/to-design/assets/builder-core-components.js');
-const PACKAGER = join(ROOT, 'skills/to-design/scripts/package_native_builder.py');
 const FILE_KEY = 'MOCKFILEKEY';
 const AT = '2026-10-16T00:00:00.000Z';
 const SIMULATED = 'owner (simulated in a test)';
-
-function pack(plan, state, core = COMPONENTS_CORE) {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'to-design-base-')));
-  writeFileSync(join(root, 'plan.json'), JSON.stringify(plan));
-  writeFileSync(join(root, 'state.json'), JSON.stringify(state));
-  const run = spawnSync('python3', [PACKAGER, core, 'plan.json', 'out', '--state', 'state.json'], {
-    cwd: root, env: { ...process.env, CLAUDE_PROJECT_DIR: root }, encoding: 'utf8',
-  });
-  assert.equal(run.status, 0, run.stdout + run.stderr);
-  return { code: readFileSync(join(root, 'out/build-components.mcp.js'), 'utf8'), out: JSON.parse(run.stdout) };
-}
 
 // A file with the foundations and the Button icons built, and its ledger.
 async function setup() {
@@ -58,7 +45,7 @@ async function setup() {
 // One base call: derive, package, run; returns the result, the readback in Contract names and the new ledger.
 async function base(env, contract = BUTTON, options = {}) {
   const { plan, state } = basePlan(contract, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, ...options });
-  const { code, out } = pack(plan, state);
+  const { code, out } = pack(plan, state, COMPONENTS_CORE);
   const result = await runPackage(code, env.mock.figma);
   assert.ok(!result.error, JSON.stringify(result));
   if (result.summary.conflicts === 0) env.ledger = recordResult(env.ledger, result);
@@ -175,14 +162,14 @@ test('both packages fit use_figma: foundations on its core, the base on the comp
   const f = foundationsPlan(DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT });
   const b = basePlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT });
   const fChars = pack(f.plan, f.state, CORE).out.chars;
-  const bChars = pack(b.plan, b.state).out.chars;
+  const bChars = pack(b.plan, b.state, COMPONENTS_CORE).out.chars;
   assert.ok(fChars < 50000 && bChars < 50000, `foundations ${fChars}, base ${bChars}`);
 });
 
 test('a drifted package is refused before its first change', async () => {
   const env = await setup();
   const { plan, state } = basePlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT });
-  const { code } = pack(plan, state);
+  const { code } = pack(plan, state, COMPONENTS_CORE);
   env.mock.log.length = 0;
   const result = await runPackage(code.replace('"paddingTop":{"raw":15}', '"paddingTop":{"raw":16}'), env.mock.figma);
   assert.equal(result.error, 'package-mismatch');
