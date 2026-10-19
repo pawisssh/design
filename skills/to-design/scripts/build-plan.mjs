@@ -238,7 +238,7 @@ export const TEMPLATES = {
   page: 'Templates',
   header: { name: 'Component Header', fields: [['Type', 'Regular', 14], ['Title', 'SemiBold', 42], ['Namespace', 'Regular', 14]] },
 };
-const SET_MODES = ['build', 'combine', 'place', 'reconcile', 'coverage', 'sample', 'theme', 'prune-preview', 'prune'];
+export const SET_MODES = ['build', 'combine', 'place', 'reconcile', 'coverage', 'sample', 'theme', 'prune-preview', 'prune'];
 
 // The approval gate: an approved Contract that validates. `prototype` also lets through the one error a
 // prototype approval raises (rule 8, by: PROTOTYPE_APPROVER), and nothing else.
