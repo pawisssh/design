@@ -4,7 +4,7 @@
 // Input, Label and Textarea are drafted mid-run from v0-app-drafts/, the Generic Adapter's output for the decisions' paths.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { copyFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -77,12 +77,67 @@ test('generate: with no Text Styles in the Design System, the font question name
     'The Prototype loads Geist from next/font/google (app/layout.tsx:2:10), Geist_Mono from next/font/google (app/layout.tsx:2:17); shadcn has no Text Styles to name a font. Which font should the Text Styles use?');
 });
 
-test('generate: a Code Library component holding another module\'s components is walked like a wrapper, noted with its import', { skip: noTs }, async () => {
-  const { handoff } = await generate({ prototype: V0, designSystem: shadcnDesignSystem(), decisions: DECISIONS });
+test('generate: a Code Library container with no Contract is walked like a wrapper, noted with its import', { skip: noTs }, async () => {
+  const ds = shadcnDesignSystem();
+  rmSync(join(ds, 'contracts/card.component.json'));
+  const { handoff } = await generate({ prototype: V0, designSystem: ds, decisions: DECISIONS });
   const usages = handoff.screens[0].regions.flatMap(r => r.usages);
   assert.equal(usages.find(u => u.raw && u.raw.element === 'Card'), undefined, 'Card is no usage');
+  assert.deepEqual(usages.filter(u => u.in), []);
   assert.deepEqual(handoff.source.notes.filter(n => /Card/.test(n.text)), [{ level: 'info', text:
     'Region `flex`: `Card` (@/components/ui/card, app/page.tsx:18:7) holds other Code Library usages, so it is read as a wrapper: its parts\' styles and text stay in the region, and the usages inside it are their own.' }]);
+  assert.deepEqual(handoff.screens[0].regions.find(r => r.id === 'flex').text.map(t => [t.copy, handoff.copy[t.copy].text]).slice(0, 2), [
+    ['card-title', 'Request workspace access'],
+    ['card-description', 'Tell us who you are and an admin will approve you within a day.'],
+  ]);
+});
+
+test('generate: a Code Library container with a Contract is its Usage by import, and the Usages inside it name it in `in` (#194)', { skip: noTs }, async () => {
+  const ds = shadcnDesignSystem();
+  const { handoff } = await generate({ prototype: V0, designSystem: ds, decisions: DECISIONS });
+  assert.deepEqual(validateHandoff(handoff, await loadDesignSystem(ds)).errors, []);
+  const flex = handoff.screens[0].regions.find(r => r.id === 'flex');
+  const card = flex.usages.find(u => u.contract === 'card');
+  assert.deepEqual(card, {
+    id: 'w-full', contract: 'card', tuple: { 'card-footer': 'card-footer' },
+    properties: { title: 'copy:w-full-title', description: 'copy:w-full-description' },
+    match: { by: 'import' },
+    offAxis: [{ property: 'CardFooter.className', raw: '"justify-between text-xs text-muted-foreground"', reason: 'CardFooter className is no card axis or property', question: 'q-prop-w-full' }],
+    question: 'q-prop-w-full',
+    at: 'app/page.tsx:18:7',
+  });
+  assert.deepEqual(handoff.copy['w-full-title'], { text: 'Request workspace access', at: 'app/page.tsx:22:24' });
+  assert.deepEqual(handoff.copy['w-full-description'], { text: 'Tell us who you are and an admin will approve you within a day.', at: 'app/page.tsx:25:13' });
+  assert.equal(handoff.openQuestions.find(q => q.id === 'q-prop-w-full').text,
+    '`CardFooter` at app/page.tsx:31:9 sets className="justify-between text-xs text-muted-foreground", which is no card axis or property. Which value is it, or does the Contract need it?');
+  // `usages` stays flat, in reading order: the Card first, then each Usage inside it.
+  assert.deepEqual(handoff.screens[0].regions.flatMap(r => r.usages).map(u => [u.id, u.in]), [
+    ['w-full', undefined],
+    ['button', 'w-full'], ['alert', 'w-full'],
+    ['label', 'w-full'], ['name', 'w-full'], ['label-2', 'w-full'], ['email', 'w-full'],
+    ['label-3', 'w-full'], ['select', 'w-full'], ['label-4', 'w-full'], ['reason', 'w-full'],
+    ['button-2', 'w-full'], ['button-3', 'w-full'],
+    ['toaster', undefined],
+  ]);
+  // Text in no part the Contract knows stays region text; the Card's own copy leaves it.
+  assert.deepEqual(flex.text.map(t => [handoff.copy[t.copy].text, t.at]), [
+    ['Thanks! Your request is in.', 'app/request-access-form.tsx:47:36'],
+    ['Already a member?', 'app/page.tsx:32:17'],
+  ]);
+  assert.deepEqual(handoff.source.notes.filter(n => /Card/.test(n.text)), []);
+  assert.ok('card' in handoff.source.contracts);
+  // The states still see the conditional content inside the Card.
+  assert.equal(handoff.screens[0].states.error.content, '`status === "error"` is true; conditional content shown: .grid, alert');
+});
+
+test('generate: a Card with no CardFooter has the Slot axis\'s empty value', { skip: noTs }, async () => {
+  const dir = copy();
+  const page = join(dir, 'app/page.tsx');
+  const text = readFileSync(page, 'utf8');
+  writeFileSync(page, text.slice(0, text.indexOf('        <CardFooter')) + text.slice(text.indexOf('</CardFooter>\n') + '</CardFooter>\n'.length));
+  const { handoff } = await generate({ prototype: dir, designSystem: shadcnDesignSystem(), decisions: DECISIONS });
+  const card = handoff.screens[0].regions.flatMap(r => r.usages).find(u => u.contract === 'card');
+  assert.deepEqual([card.tuple, card.offAxis], [{ 'card-footer': 'none' }, undefined]);
 });
 
 test('generate: the v0 Prototype is a valid Handoff; each shadcn Button and the Alert is its Contract by import, its tuple from its props', { skip: noTs }, async () => {
@@ -98,8 +153,8 @@ test('generate: the v0 Prototype is a valid Handoff; each shadcn Button and the 
   ]);
   const alerts = result.handoff.screens[0].regions.flatMap(r => r.usages).filter(u => u.contract === 'alert');
   assert.deepEqual(alerts.map(u => [u.at, u.match.by, u.tuple]), [['app/request-access-form.tsx:58:9', 'import', { variant: 'destructive' }]]);
-  // Card holds other Code Library usages, so it is descended and its Contract goes unused (#151).
-  assert.deepEqual(Object.keys(result.handoff.source.contracts), ['alert', 'button', 'input', 'label', 'select', 'textarea']);
+  // Card holds other Code Library usages: a container, its Contract used by import (#194).
+  assert.deepEqual(Object.keys(result.handoff.source.contracts), ['alert', 'button', 'card', 'input', 'label', 'select', 'textarea']);
 });
 
 test('generate: a family with no Contract is drafted mid-run by the Generic procedure, used, and written into contracts/ as the Adapter wrote it', { skip: noTs }, async () => {

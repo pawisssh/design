@@ -110,6 +110,10 @@ _Avoid_: Mockup, vibe code, POC, prototype Contract (that is a Contract approved
 One element of a feature's input, as the Handoff records it: a Contract with a tuple of its axis values (and its Repeated children, if the family has them), a Component Proposal, or a raw element with a reason. It always records how it was recognised.
 _Avoid_: Instance (that is the Figma node), component reference, match
 
+**Container**:
+A Code Library component whose subtree holds Usages of other Code Library components, such as a Card around a form. With a Contract, it is a Usage that the others nest in through `in`; one whose children are all its own parts is a leaf.
+_Avoid_: Wrapper (that is the reading of a container with no Contract), parent
+
 **Stand-in**:
 Anything in a Prototype that fakes what the real feature will do, such as mock data, a stub API, fake latency or placeholder copy. The Handoff records what it pretends to do, never how.
 _Avoid_: Mock (when more than data is meant), fake, throwaway code
