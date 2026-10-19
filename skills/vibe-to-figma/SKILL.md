@@ -142,6 +142,7 @@ Tests: `skills/vibe-to-figma/test/build.test.mjs` drives the whole loop on To-de
 - Foundations and every set by B′, each passing its paged coverage check;
 - `approve except`;
 - the MAX_COMBINE stop and `--skip`;
+- the CLI packaging the first call, and a package the packager refuses, which stops the CLI with the packager's own reason. The packaging test skips, saying so, in a worktree outside its main working tree, where the packager writes no package;
 - the ledger refusals;
 - a failed check, then `--rebuild`.
 

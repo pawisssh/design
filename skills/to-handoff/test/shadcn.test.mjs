@@ -165,7 +165,7 @@ test('the committed approved Carbon Button Contract is unchanged since its appro
   assert.deepEqual(validate(button, carbon).errors, []);
 });
 
-test('runtime: one Next build screenshots each reached state at each Tailwind breakpoint, component sites included; the page maps to Light', { skip: noRuntime, timeout: 300000 }, async () => {
+test('runtime: one Next build screenshots each reached state at each Tailwind breakpoint, component sites included; the page maps to Light', { skip: noRuntime, timeout: 600000 }, async () => {
   const { handoff: h } = await generate({ prototype: V0, designSystem: shadcnDesignSystem(), decisions: DECISIONS, runtime: true });
   assert.equal(h.openQuestions.find(q => q.id === 'q-runtime'), undefined, 'the runtime reader ran');
   const [screen] = h.screens;

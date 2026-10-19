@@ -2,12 +2,13 @@
 // (a test approval is written only under .scratch/), with the Adapter's committed fixtures/drafts as the agent's
 // answers. Each test takes its own copy; after() removes them all.
 import { after } from 'node:test';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as contractModule from '../../contract/scripts/contract.mjs';
 import { REPO_ROOT, hasTools } from '../../adapter-generic/scripts/sources.mjs';
+import { mainCheckoutOf } from '../../to-design/scripts/ledger.mjs';
 import { hasTypescript } from '../../to-handoff/scripts/deps.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
 
@@ -16,6 +17,11 @@ const DRAFTS = fileURLToPath(new URL('../../adapter-generic/fixtures/drafts/', i
 export const READABLE = ['alert', 'button', 'card', 'input', 'label', 'select', 'textarea'];
 export const skip = (!hasTools() && 'Generic Adapter tools missing; run: node skills/adapter-generic/scripts/sources.mjs')
   || (!hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs');
+// To-design's packager writes a package only inside the main working tree, where the use_figma hook resolves it, so a
+// worktree checked out outside it (under /tmp, say) cannot package a call.
+const MAIN = mainCheckoutOf(REPO_ROOT);
+export const packageSkip = skip || (MAIN && relative(realpathSync(MAIN), realpathSync(REPO_ROOT)).startsWith('..')
+  && `this worktree is outside its main working tree ${MAIN}, where To-design's packager writes packages`);
 
 const SCRATCH = join(REPO_ROOT, '.scratch/vibe-to-figma-tests');
 const made = [];

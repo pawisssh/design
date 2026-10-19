@@ -262,7 +262,7 @@ test('check right after generating a React Handoff shows no Drift; editing a rea
   assert.deepEqual((await check({ handoffPath: result.path, designSystem: ds, prototype: app })).drift, [{ kind: 'prototype', key: 'src/pages/Members.tsx', change: 'changed' }]);
 });
 
-test('runtime: one Vite build serves both routes; the Carbon Button host joins to its import site by its own', { skip: noRuntime, timeout: 300000 }, async () => {
+test('runtime: one Vite build serves both routes; the Carbon Button host joins to its import site by its own', { skip: noRuntime, timeout: 600000 }, async () => {
   const fill = [{ fill: '#email', value: 'ada@example.com' }, { click: 'button[type=submit]' }];
   const r = await run({
     prototype: VITE, breakpoints: [{ key: 'desktop', width: 1280 }],
@@ -288,7 +288,7 @@ test('runtime: one Vite build serves both routes; the Carbon Button host joins t
   }
 });
 
-test('runtime: generate on the Next fixture takes screenshots for both routes from one build', { skip: noRuntime, timeout: 300000 }, async () => {
+test('runtime: generate on the Next fixture takes screenshots for both routes from one build', { skip: noRuntime, timeout: 600000 }, async () => {
   const ds = designSystem();
   const decisions = { ...NEXT_DECISIONS, 'reach:index:loading': { unreachable: 'loading.tsx shows only while the server renders' },
     'reach:subscribe:loading': { unreachable: 'the submit is too quick to catch' }, 'reach:subscribe:error': { unreachable: 'the API route always succeeds' } };

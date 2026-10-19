@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -13,11 +13,12 @@ import { fileURLToPath } from 'node:url';
 import { expand } from '../../contract/scripts/contract.mjs';
 import { mergeCoverage } from '../../to-design/scripts/coverage.mjs';
 import { mockFigma } from '../../to-design/tests/mock-figma.mjs';
+import { REPO_ROOT } from '../../to-handoff/scripts/system.mjs';
 import { approveFolder } from '../scripts/approve.mjs';
 import { fileKeyOf, gate, namespaced, nextStep, recordStep } from '../scripts/build.mjs';
 import { reviewModel } from '../scripts/review.mjs';
 import { AT, FILE_KEY, NARROW, URL_, drive, smokeDraft } from './drive.mjs';
-import { READABLE, V0, read, scratch, selections, skip, v0Folder } from './helpers.mjs';
+import { READABLE, V0, packageSkip, read, scratch, selections, skip, v0Folder } from './helpers.mjs';
 
 const { reviewExport } = createRequire(import.meta.url)('../assets/review-export.js');
 const BUILD = fileURLToPath(new URL('../scripts/build.mjs', import.meta.url));
@@ -150,12 +151,27 @@ test('a set above MAX_COMBINE stops the run before any write, until the owner na
   assert.ok(!n.families.some(f => f.family === 'button'));
   writeFileSync(button, approved);
   assert.throws(() => nextStep({ dir, fileKey: FILE_KEY, skip: ['sonner'] }), /--skip sonner: sonner is not an approved Contract here/);
-  // Under MAX_COMBINE the CLI derives and packages the first call, Foundations.
+});
+
+test('under MAX_COMBINE the CLI derives and packages the first call, Foundations', { skip: packageSkip }, async () => {
+  const dir = await approvedFolder();
   const tmp = scratch();
   const run = spawnSync(process.execPath, [BUILD, 'next', dir, URL_, '--out', join(tmp, 'run'), '--ledger', join(tmp, 'ledger.json')], { encoding: 'utf8' });
   assert.equal(run.status, 0, run.stderr);
   assert.equal(JSON.parse(run.stdout).step, 'foundations');
   assert.ok(existsSync(join(tmp, 'run/build-components.mcp.js')));
+});
+
+test('a package the packager refuses stops the CLI with the packager\'s own reason', { skip }, async () => {
+  const dir = await approvedFolder();
+  const tmp = scratch(), out = realpathSync(mkdtempSync(join(tmpdir(), 'vibe-to-figma-out-')));
+  try {
+    const run = spawnSync(process.execPath, [BUILD, 'next', dir, URL_, '--out', out, '--ledger', join(tmp, 'ledger.json')],
+      { encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: REPO_ROOT } });
+    assert.equal(run.status, 1, run.stdout);
+    assert.match(run.stderr, /^FAIL: the packager refused: Package path must be inside the (main working tree|project dir) /);
+    assert.ok(!existsSync(join(out, 'build-components.mcp.js')));
+  } finally { rmSync(out, { recursive: true, force: true }); }
 });
 
 test('only the linked file and this Design System\'s own ledger are built into', { skip }, async () => {
