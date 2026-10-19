@@ -277,6 +277,27 @@ test('validateHandoff refuses a bad tuple, an unknown or non-theme token, a miss
   assert.match(validateHandoff(handoff, retired).errors.map(e => e.message).join('\n'), /`avatar-stack` retired into `button`: migrate/);
 });
 
+test('validateHandoff checks each usage\'s in (#193): a Contract usage on the same screen, and no cycle', { skip: noDeps }, async () => {
+  const { handoff, system } = await run();
+  const edit = fn => { const h = JSON.parse(JSON.stringify(handoff)); fn(h); return validateHandoff(h, system).errors.map(e => e.message).join('\n'); };
+  const set = (h, id, target) => { usage(h, id).in = target; };
+  assert.equal(edit(h => { set(h, 'send', 'cancel'); set(h, 'cancel', 'copy'); }), '');
+  assert.match(edit(h => set(h, 'send', 'nope')), /`send`: in "nope" names no usage on this screen/);
+  assert.match(edit(h => {
+    const other = JSON.parse(JSON.stringify(h.screens[0]));
+    other.id = 'other';
+    other.regions[0].usages.push({ ...usage(h, 'cancel'), id: 'elsewhere' });
+    h.screens.push(other);
+    set(h, 'send', 'elsewhere');
+  }), /screens\[0\].*`send`: in "elsewhere" names no usage on this screen/);
+  assert.match(edit(h => set(h, 'send', 'toast')), /`send`: in "toast" names a usage with no Contract/);
+  assert.match(edit(h => set(h, 'send', 'avatars')), /`send`: in "avatars" names a usage with no Contract/);
+  assert.match(edit(h => set(h, 'send', 'send')), /`send`: in forms a cycle: send -> send/);
+  const two = edit(h => { set(h, 'send', 'cancel'); set(h, 'cancel', 'send'); });
+  assert.match(two, /`send`: in forms a cycle: send -> cancel -> send/);
+  assert.match(two, /`cancel`: in forms a cycle: cancel -> send -> cancel/);
+});
+
 test('the matcher never lets a Primitive or a component token match a region, even by reference', { skip: noDeps }, async () => {
   const { system } = await run();
   const ctx = { system, mode: 'white' };
