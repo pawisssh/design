@@ -1,8 +1,8 @@
 // validateHandoff (#56, #64): handoff.schema.json (the JSON Schema keyword subset it uses), then the
 // cross-field rules a schema cannot say: tuples against the Contract or Proposal axes, every token a theme
 // token (never a Primitive or a component token), copy, value and question references, the five standard
-// states, no usage of a retired Proposal, every usage's `in` a Contract usage on its screen with no cycle, and an approval that matches the content (a test approval only
-// under .scratch/).
+// states, no usage of a retired Proposal, every usage's `in` a Contract usage on its screen with no cycle,
+// and an approval that matches the content (a test approval only under .scratch/).
 import { readFileSync } from 'node:fs';
 import { handoffContentHash } from './hash.mjs';
 import { STANDARD_STATES } from './recognise.mjs';
