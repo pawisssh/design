@@ -4,20 +4,20 @@
 // for the verified package file via updatedInput, so the agent never re-types the package.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { appendFileSync, mkdirSync, readFileSync, realpathSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { readFileSync, realpathSync } from 'node:fs';
+import { dirname, join, resolve, sep } from 'node:path';
+import { appendLog, MARKER, PACKAGE_LOG, projectRoot, readInput, STUB, within } from './lib.mjs';
 
 const MAX_CODE = 50000; // use_figma's code limit
-const STUB = /^\s*\/\*@package (\S+) sha256=([0-9a-f]{64})\*\/\s*throw new Error\("package not injected"\);?\s*$/;
 
 // Exit 2 blocks the call; Claude Code shows the one-line stderr reason to the agent.
 const fail = reason => { process.stderr.write(`use_figma package hook: ${reason}\n`); process.exit(2); };
 
 const startedAt = Date.now();
-const input = JSON.parse(readFileSync(0, 'utf8'));
+const input = readInput();
 const toolInput = input.tool_input || {};
 const code = typeof toolInput.code === 'string' ? toolInput.code : '';
-if (!code.includes('/*@package')) process.exit(0);
+if (!code.includes(MARKER)) process.exit(0);
 
 // Any code carrying the marker is a package call: it must be exactly the stub, or it is blocked.
 const stub = code.match(STUB);
@@ -27,11 +27,11 @@ const [, relPath, expected] = stub;
 // Resolve symlinks on both sides so a link can't point the hook outside the project.
 let root, file;
 try {
-  root = realpathSync(process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd());
+  root = projectRoot(input);
   file = realpathSync(resolve(root, relPath));
 } catch (e) { fail(`cannot resolve ${relPath}: ${e.code || e.message}`); }
-const rel = relative(root, file);
-if (!rel || rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) fail(`package path escapes the project: ${relPath}`);
+const rel = within(root, file);
+if (!rel) fail(`package path escapes the project: ${relPath}`);
 
 let bytes, manifest;
 try { bytes = readFileSync(file); } catch (e) { fail(`cannot read ${relPath}: ${e.code || e.message}`); }
@@ -42,13 +42,9 @@ if (manifest?.fileSha256 !== actual) fail(`script-package.json fileSha256 ${mani
 const text = bytes.toString('utf8');
 if (text.length > MAX_CODE) fail(`package is ${text.length} chars, over the ${MAX_CODE} use_figma limit`);
 
-// One line per expansion in gitignored scratch; a failed write never blocks the call.
+// One line per expansion; the result hook finds a swapped call's package by its toolUseId here.
 const record = { at: new Date().toISOString(), toolUseId: input.tool_use_id, tool: input.tool_name, stubLen: code.length, packageLen: text.length, sha256: actual, path: rel.split(sep).join('/'), ms: Date.now() - startedAt };
-try {
-  const logDir = join(root, '.scratch', 'to-design');
-  mkdirSync(logDir, { recursive: true });
-  appendFileSync(join(logDir, 'use-figma-package.log'), JSON.stringify(record) + '\n');
-} catch {}
+appendLog(root, PACKAGE_LOG, record);
 
 // This hook and its settings load from the main checkout, so a checkout behind its upstream on them runs an old
 // hook. Local refs only (no fetch, the hook has 10s); any git failure skips the warning and never blocks the call.
