@@ -13,6 +13,19 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__.*__use_figma",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/skills/to-design/hooks/use-figma-result.mjs"],
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }

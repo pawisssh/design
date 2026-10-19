@@ -33,14 +33,14 @@ Every Figma step is the same five commands. `<run>` is a fresh folder per call, 
 ```
 node skills/to-design/scripts/build-plan.mjs <slice> ... --file-key <key> --out .scratch/to-design/<run>
 python3 skills/to-design/scripts/package_native_builder.py skills/to-design/assets/<core> .scratch/to-design/<run>/plan.json .scratch/to-design/<run> --state .scratch/to-design/<run>/state.json
-# use_figma with fileKey, description and code = the printed stub (Package delivery); save the returned JSON as:
-#   .scratch/to-design/<run>/result.json
+# use_figma with fileKey, description and code = the printed stub (Package delivery); its result hook saves the
+# returned JSON as .scratch/to-design/<run>/result.json
 node skills/to-design/scripts/ledger.mjs record .scratch/to-design/<run>/result.json
 ```
 
 - `<core>` is [`assets/builder-core.js`](assets/builder-core.js) for `foundations` and `icons`, and [`assets/builder-core-components.js`](assets/builder-core-components.js) for `base` and `sets`. A plan given to the other core returns `unknown-slice` or `package-mismatch` before any change. (One core holding every slice would not fit `use_figma`'s 50,000-char limit next to the foundations plan.)
 - `use_figma` takes `fileKey`, `code` (at most 50,000 chars) and `description` (one line, such as "Button sets batch 1 of 5"). If the tool's own instructions ask you to load a Figma skill before calling it, do so; the cores need no authoring guidance from it.
-- Save the call's JSON result before anything else. Record every result before deriving the next plan, so the next package carries the ledger Figma last returned. `record` refuses an error result; a result with `conflicts` keeps the old section.
+- The call's JSON result is saved before anything else: the PostToolUse hook [hooks/use-figma-result.mjs](hooks/use-figma-result.mjs) writes it as `result.json` beside the package and says so in the call's result. When it says nothing was saved, or says nothing (a session without the hook), save the returned JSON there yourself. Record every result before deriving the next plan, so the next package carries the ledger Figma last returned. `record` refuses an error result; a result with `conflicts` keeps the old section.
 - A read-only call (`--read-only`, or a sets read mode) needs no `record` unless this file says so.
 
 ### What a package is
@@ -64,7 +64,7 @@ From a worktree the path starts with `.claude/worktrees/<worktree>/`. Copy the s
 - **The path is relative to the main checkout** (git's main working tree), because the desktop host loads project hooks and sets `$CLAUDE_PROJECT_DIR` from the main checkout, also for a session in a worktree. The packager computes it, and refuses to write a package outside the main checkout: write it under the main checkout (a worktree under it works).
 - **If the hook refuses**, it blocks the call with a one-line reason. Fix the cause and re-package; never edit the stub.
 - **If `use_figma` returns `Error: package not injected`**, this session has no hook, and nothing changed in Figma. A session started before the hook was registered has none: project hooks load only at session start. Deliver the full contents of `build-components.mcp.js` as `code` instead (inline delivery). The core's integrity gate catches any drift in an inline copy before its first change.
-- **The hook and its settings come from the main checkout.** A change to the hook or to `.claude/settings.json` takes effect only once it is merged into the main checkout, the checkout is pulled, and a new session starts. Registering the hook is the owner's step: they paste [hooks/settings.snippet.json](hooks/settings.snippet.json) into the project's `.claude/settings.json`. Agents never edit settings. `onFailure` needs Claude Code v2.1.295 or later. When the main checkout is behind its upstream on the hook or the settings, the hook still swaps, but warns that it is stale. Tell the owner to pull the main checkout and start a new session.
+- **The hook and its settings come from the main checkout.** A change to the hook or to `.claude/settings.json` takes effect only once it is merged into the main checkout, the checkout is pulled, and a new session starts. Registering the hooks is the owner's step: they paste [hooks/settings.snippet.json](hooks/settings.snippet.json), the package hook and the result hook, into the project's `.claude/settings.json`. Agents never edit settings. `onFailure` needs Claude Code v2.1.295 or later. When the main checkout is behind its upstream on the hook or the settings, the hook still swaps, but warns that it is stale. Tell the owner to pull the main checkout and start a new session.
 
 ## 1. Foundations
 
@@ -95,7 +95,7 @@ The Base Component (every axis at its default) is built alone on the Contract's 
 
 ```
 node skills/to-design/scripts/build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out .scratch/to-design/<run> [--read-only] [--page <name>] [--adopt]
-# package with builder-core-components.js, use_figma, save result.json, ledger.mjs record (not after --read-only)
+# package with builder-core-components.js, use_figma (its hook saves result.json), ledger.mjs record (not after --read-only)
 node skills/to-design/scripts/base-loop.mjs readback .scratch/to-design/<run>/result.json --out .scratch/to-design/<run>/readback.json
 node skills/to-design/scripts/base-loop.mjs diff <component.json> .scratch/to-design/<run>/readback.json
 ```
@@ -202,4 +202,4 @@ Code Connect needs published components, so it runs only after step 6. The mappi
 
 ## Tests
 
-`node --test skills/to-design/tests/*.test.mjs` runs every slice against a mock Figma (`tests/mock-figma.mjs`), the packager, the hook, the base loop and the coverage checks. The full suite, from the project root: `node skills/adapter-carbon/scripts/sources.mjs`, then `npm test`.
+`node --test skills/to-design/tests/*.test.mjs` runs every slice against a mock Figma (`tests/mock-figma.mjs`), the packager, both hooks, the base loop and the coverage checks. The full suite, from the project root: `node skills/adapter-carbon/scripts/sources.mjs`, then `npm test`.
