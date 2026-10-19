@@ -2,10 +2,6 @@
 
 `npm test` runs every skill's suite; CI runs it on each PR. Run `node skills/adapter-carbon/scripts/sources.mjs` and `node skills/adapter-generic/scripts/sources.mjs` first, or the adapter tests that need them skip. Run `node skills/to-handoff/scripts/deps.mjs` too, or the to-handoff tests and adapter-generic's catalog measurements skip. The vibe-to-figma tests need both the adapter-generic tools and those deps.
 
-## Worktree agents
-
-An agent isolated in a worktree runs each command as its own plain call from the worktree root, with literal paths and one `git` command per call. Put multi-step logic in a script file and run that. The worktree guard refuses shell variables, loops and heredocs around commands.
-
 ## Agent skills
 
 ### Issue tracker
