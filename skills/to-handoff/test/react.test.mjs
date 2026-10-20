@@ -54,13 +54,15 @@ test('Vite: one screen per <Route path>, with its conditions, holes, repeats and
   ]);
   const [members, invite] = doc.screens;
   const empty = elements(members.root, el => el.classes.includes('empty'))[0];
-  assert.deepEqual(empty.cond, [{ expr: 'members.length === 0', value: true }]);
+  assert.deepEqual(empty.cond.map(c => ({ ...c, ast: { atom: c.ast.atom, at: doc.at(c.ast.offset) } })),
+    [{ expr: 'members.length === 0', ast: { atom: 'members.length === 0', at: 'src/pages/Members.tsx:9:8' }, value: true }]);
   const item = elements(members.root, el => el.classes.includes('member'))[0];
   assert.deepEqual(item.repeat, { list: 'members', item: 'm' });
   const send = elements(invite.root, el => el.component)[0];
   assert.equal(doc.at(send.offset), 'src/pages/Invite.tsx:22:9');
-  assert.deepEqual(send.attrHoles.map(h => h.ternary), [{ cond: 'isSending', then: { text: 'disabled' }, else: { text: '' } }]);
-  assert.deepEqual(send.children[0].parts[0].ternary, { cond: 'isSending', then: { text: 'Sending…' }, else: { text: 'Send invite' } });
+  const withoutAst = ({ ast, ...ternary }) => ternary;
+  assert.deepEqual(send.attrHoles.map(h => withoutAst(h.ternary)), [{ cond: 'isSending', then: { text: 'disabled' }, else: { text: '' } }]);
+  assert.deepEqual(withoutAst(send.children[0].parts[0].ternary), { cond: 'isSending', then: { text: 'Sending…' }, else: { text: 'Send invite' } });
   const notice = elements(invite.root, el => el.classes.includes('notice'))[0];
   assert.deepEqual(notice.children[0].parts, ['Invite sent to ', { expr: 'email' }, '.']);
   assert.deepEqual(doc.standIns.mocks.map(m => ({ name: m.name, at: doc.at(m.offset) })), [{ name: 'mockMembers', at: 'src/data/members.ts:3:14' }]);
@@ -113,7 +115,7 @@ test('Next: one screen per app/**/page.tsx inside its layouts; loading.tsx is a 
     ['page', [{ expr: 'app/loading.tsx', value: false }]],
   ]);
   const problem = elements(subscribe.root, el => el.classes.includes('problem'))[0];
-  assert.deepEqual(problem.cond, [{ expr: 'app/loading.tsx', value: false }, { expr: 'hasError', value: true }]);
+  assert.deepEqual(problem.cond.map(c => ({ expr: c.expr, value: c.value })), [{ expr: 'app/loading.tsx', value: false }, { expr: 'hasError', value: true }]);
   assert.deepEqual(doc.fonts.map(f => ({ module: f.module, name: f.name, at: doc.at(f.offset) })), [{ module: 'geist/font/sans', name: 'GeistSans', at: 'app/layout.tsx:2:10' }]);
   assert.ok(doc.files.includes('lib/releases.ts') && doc.files.includes('app/globals.css') && !doc.files.includes('app/api/subscribe/route.ts'));
   assert.deepEqual(doc.standIns.mocks.map(m => m.name), ['mockReleases']);
