@@ -29,14 +29,15 @@ import { validateHandoff } from './validate.mjs';
 import { render } from './render-html.mjs';
 import { approve, check, review } from './signoff.mjs';
 
-// `69 requests: 44 condition, 23 recognise, 1 feature, 1 acceptance`: most first, a tie in the order they were asked.
+// generate's requests counted by kind for stderr (#219), most first, a tie in the order asked:
+// `69 requests: 44 condition, 23 recognise, 1 feature, 1 acceptance`.
 const requestCounts = requests => {
   const counts = new Map();
   for (const r of requests) counts.set(r.kind, (counts.get(r.kind) || 0) + 1);
   const kinds = [...counts].sort((a, b) => b[1] - a[1]).map(([kind, n]) => `${n} ${kind}`);
   return `${requests.length} request${requests.length === 1 ? '' : 's'}: ${kinds.join(', ')}`;
 };
-const printDropped =dropped => { for (const x of dropped || []) console.error(`dropped owner decision ${x.key}: ${x.reason}`); };
+const printDropped = dropped => { for (const x of dropped || []) console.error(`dropped owner decision ${x.key}: ${x.reason}`); };
 
 async function main(argv) {
   const { positionals, values } = parseArgs({ args: argv, allowPositionals: true, options: {

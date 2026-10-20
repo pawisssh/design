@@ -48,7 +48,7 @@ export function hasPreviewPackages(dir = PREVIEW_DIR) {
   return lockOf(dir) === lockOf(PINNED_DIR) && existsSync(join(dir, 'node_modules/react-dom/package.json'));
 }
 
-/** Install the pinned packages into `dir` with `npm ci --ignore-scripts`, beside it first. Skips when already installed. */
+/** Install the pinned packages into `dir` with `npm ci --ignore-scripts`, beside it first (#219). Skips when already installed. */
 export function fetchPreviewPackages(dir = PREVIEW_DIR) {
   installAtomically(dir, hasPreviewPackages, tmp => {
     for (const f of ['package.json', 'package-lock.json']) copyFileSync(join(PINNED_DIR, f), join(tmp, f));

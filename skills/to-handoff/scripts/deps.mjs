@@ -5,8 +5,7 @@
 //
 // Packages come from deps/package.json and its lockfile, installed with `npm ci --ignore-scripts` into
 // gitignored scratch, so each tarball is checked against its lockfile `integrity` and nothing from a package
-// runs at install. The install goes into a fresh folder beside <dir> and is renamed into place, so a run at the same
-// time never sees <dir> half-installed (#219). The repo keeps zero dependencies; tests that need a package skip when it is absent.
+// runs at install. The repo keeps zero dependencies; tests that need a package skip when it is absent.
 //
 // The browser is the system Chrome (playwright-core's `chrome` channel). Without one, the command fetches
 // Chromium's headless shell into <dir>/browsers with playwright-core's own installer, which checks no pinned
@@ -62,7 +61,7 @@ export function fetchDeps(dir = DEPS_DIR) {
 
 /**
  * Unless `complete(dir)`, run `install` into a fresh folder beside `dir` and rename it into place, so a run at the same
- * time never sees `dir` half-installed; a run that loses the race drops its copy. A `dir` already there but not
+ * time never sees `dir` half-installed (#219); a run that loses the race drops its copy. A `dir` already there but not
  * complete (an older lockfile) keeps its other files, here the runtime reader's runs and the fetched browser: only
  * `entries` move in, one rename each, in order, so the last one (the lockfile) makes `dir` complete.
  * adapter-generic's sources.mjs keeps the same function.
@@ -71,15 +70,17 @@ function installAtomically(dir, complete, install, entries) {
   if (complete(dir)) return;
   mkdirSync(dirname(dir), { recursive: true });
   const tmp = mkdtempSync(join(dirname(dir), `.${basename(dir)}.install-`));
-  const taken = e => e.code === 'ENOTEMPTY' || e.code === 'EEXIST';
+  const occupied = e => e.code === 'ENOTEMPTY' || e.code === 'EEXIST';
   try {
     install(tmp);
     if (!complete(tmp)) throw new Error(`the install in ${tmp} is incomplete`);
-    try { renameSync(tmp, dir); return; } catch (e) { if (!taken(e)) throw e; }
+    try { renameSync(tmp, dir); return; } catch (e) { if (!occupied(e)) throw e; }
     if (complete(dir)) return;
     for (const entry of entries) {
       for (let i = 0; ; i++) {
-        try { renameSync(join(tmp, entry), join(dir, entry)); break; } catch (e) { if (!taken(e) || i === 3) throw e; }
+        try { renameSync(join(tmp, entry), join(dir, entry)); break; } catch (e) { if (!occupied(e) || i === 3) throw e; }
+        // Another run may have finished meanwhile: keep its install rather than move it aside.
+        if (complete(dir)) return;
         try { renameSync(join(dir, entry), join(tmp, `.old-${i}`)); } catch (e) { if (e.code !== 'ENOENT') throw e; }
       }
     }

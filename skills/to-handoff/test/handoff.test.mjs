@@ -390,11 +390,17 @@ test('the CLI refuses with decision requests and exit code 2 when decisions are 
   const { requests } = JSON.parse(out);
   assert.ok(requests.length > 1);
   assert.ok(!existsSync(join(ds, 'handoffs')));
-  // stderr's first line counts the requests by kind (#219): most first, a tie in the order they were asked.
-  const counts = new Map();
-  for (const r of requests) counts.set(r.kind, (counts.get(r.kind) || 0) + 1);
-  const kinds = [...counts].sort((a, b) => b[1] - a[1]).map(([kind, n]) => `${n} ${kind}`);
-  assert.equal(err.split('\n')[0], `${requests.length} requests: ${kinds.join(', ')}`);
+  // stderr's first line counts the requests by kind (#219): every kind once, most first, a tie in the order first asked.
+  const [, total, list] = err.split('\n')[0].match(/^(\d+) requests: (.+)$/);
+  assert.equal(Number(total), requests.length);
+  const listed = list.split(', ').map(x => x.match(/^(\d+) (\S+)$/)).map(([, n, kind]) => ({ n: Number(n), kind }));
+  for (const { n, kind } of listed) assert.equal(n, requests.filter(r => r.kind === kind).length, kind);
+  assert.deepEqual(listed.map(x => x.kind).sort(), [...new Set(requests.map(r => r.kind))].sort());
+  const first = kind => requests.findIndex(r => r.kind === kind);
+  for (let i = 1; i < listed.length; i++) {
+    const [a, b] = [listed[i - 1], listed[i]];
+    assert.ok(a.n > b.n || (a.n === b.n && first(a.kind) < first(b.kind)), `${a.kind} before ${b.kind}`);
+  }
 });
 
 test('a media query at the breakpoints: where it applies, the two a px width falls between, else the widths seen (#146)', () => {

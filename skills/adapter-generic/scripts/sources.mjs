@@ -6,7 +6,7 @@
 // Each npm tarball is checked against its registry sha512 `integrity`, and only the named members are extracted
 // with `tar`. No tool is installed and no lifecycle script runs. The reading tier executes only Tailwind's
 // compiler (tailwind.mjs), over the consumer project's CSS. The preview renderer's packages are installed with
-// `npm ci --ignore-scripts` (beside their folder, then renamed into place), and the renderer runs the project's components (preview.mjs). shadcn and
+// `npm ci --ignore-scripts`, and the renderer runs the project's components (preview.mjs). shadcn and
 // tw-animate-css are read as stylesheets only: the fixture's CSS imports them. Downloads are untrusted data and live
 // in gitignored scratch.
 import { createHash } from 'node:crypto';
@@ -105,15 +105,17 @@ export function installAtomically(dir, complete, install, entries) {
   if (complete(dir)) return;
   mkdirSync(dirname(dir), { recursive: true });
   const tmp = mkdtempSync(join(dirname(dir), `.${basename(dir)}.install-`));
-  const taken = e => e.code === 'ENOTEMPTY' || e.code === 'EEXIST';
+  const occupied = e => e.code === 'ENOTEMPTY' || e.code === 'EEXIST';
   try {
     install(tmp);
     if (!complete(tmp)) throw new Error(`the install in ${tmp} is incomplete`);
-    try { renameSync(tmp, dir); return; } catch (e) { if (!taken(e)) throw e; }
+    try { renameSync(tmp, dir); return; } catch (e) { if (!occupied(e)) throw e; }
     if (complete(dir)) return;
     for (const entry of entries) {
       for (let i = 0; ; i++) {
-        try { renameSync(join(tmp, entry), join(dir, entry)); break; } catch (e) { if (!taken(e) || i === 3) throw e; }
+        try { renameSync(join(tmp, entry), join(dir, entry)); break; } catch (e) { if (!occupied(e) || i === 3) throw e; }
+        // Another run may have finished meanwhile: keep its install rather than move it aside.
+        if (complete(dir)) return;
         try { renameSync(join(dir, entry), join(tmp, `.old-${i}`)); } catch (e) { if (e.code !== 'ENOENT') throw e; }
       }
     }
