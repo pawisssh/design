@@ -8,18 +8,10 @@ import assert from 'node:assert/strict';
 import { existsSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { contentHash } from '../../contract/scripts/contract.mjs';
-import { approveFolder } from '../scripts/approve.mjs';
 import { gate, heldOf, nextStep, parseResolve, readRecord, settled, variantFingerprints, writeRecord } from '../scripts/build.mjs';
-import { buildFolder } from '../scripts/folder.mjs';
-import { AT, FILE_KEY, RED, builtProject, drafts, drive, exported, fadeDisabled } from './drive.mjs';
+import { AT, FILE_KEY, RED, builtProject, drive, inputFaded } from './drive.mjs';
 import { contractPath, read, scratch, skip } from './helpers.mjs';
 
-/** The built project, with input's source changed and the change approved, and a reader of the mock's nodes. */
-async function changed(p, from, to) {
-  fadeDisabled(join(p.project, 'components/ui/input.tsx'), from, to);
-  await buildFolder({ project: p.project, root: p.root, drafts });
-  await approveFolder({ dir: p.dir, project: p.project, exported: exported(p.dir), said: 'approve', at: AT, test: true });
-}
 const nodeOf = mock => id => mock.figma.getNodeByIdAsync(id);
 const sentOf = steps => steps.filter(s => s.step === 'sets').map(s => s.plan.selection.entries.map(e => e[0]));
 const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-6, `${a} is not ${b}`);
@@ -35,7 +27,7 @@ test('a variant edited in Figma whose code changed is left as it is and reported
   for (const id of [ids[2], ids[0], ledger.sets.label.variants[0]]) (await node(id)).fills = RED;
   const was = (await node(ids[2])).opacity;
 
-  await changed(p, 50, 40);
+  await inputFaded(p, 50, 40);
   const r = await drive({ dir, mock, ledger, record, namespace: 'v0-app' });
   assert.equal(r.n.status, 'built', JSON.stringify(r.n));
   // Both changed variants are read back, nothing written by the read; only index 5 is sent.
@@ -71,7 +63,7 @@ test('a variant edited in Figma whose code changed is left as it is and reported
 
   // Another change: the held variant is read back against the Contract it was built from, the other against the
   // baseline's. It is still edited, so it stays held; index 5 updates again.
-  await changed(p, 40, 30);
+  await inputFaded(p, 40, 30);
   const third = await drive({ dir, mock, ledger: r.ledger, record: r.record, namespace: 'v0-app' });
   assert.equal(third.n.status, 'built', JSON.stringify(third.n));
   assert.deepEqual(readOf(third.steps), [[2], [5]]);
@@ -105,7 +97,7 @@ test('--keep-figma keeps the edit and builds the code change elsewhere; a varian
   (await node(ids[2])).fills = RED;
   (await node(ids[5])).remove();
 
-  await changed(p, 50, 40);
+  await inputFaded(p, 50, 40);
   const r = await drive({ dir, mock, ledger, record, namespace: 'v0-app' });
   assert.equal(r.n.status, 'built', JSON.stringify(r.n));
   // Neither is written: the update is one call for the set alone, and the removed variant is not built again.
@@ -132,7 +124,7 @@ test('--keep-figma keeps the edit and builds the code change elsewhere; a varian
   assert.deepEqual((await node(ids[2])).fills, RED);
 
   // Its code changes again: it is read back against today's Contract, still differs from it, and is held again.
-  await changed(p, 40, 30);
+  await inputFaded(p, 40, 30);
   const again = await drive({ dir, mock, ledger: after.ledger, record: after.record, namespace: 'v0-app' });
   assert.equal(again.n.status, 'built', JSON.stringify(again.n));
   assert.deepEqual(again.n.held.map(c => [c.variant, c.reason]), [[names[2], 'edited'], [names[5], 'missing']]);
@@ -147,7 +139,7 @@ test('--take-code builds a variant removed in Figma again; a held variant whose 
   const names = variantFingerprints(gate({ dir, fileKey: FILE_KEY, ledger }).contracts.input).map(v => v.name);
   (await node(ids[2])).fills = RED;
   (await node(ids[5])).remove();
-  await changed(p, 50, 40);
+  await inputFaded(p, 50, 40);
   const r = await drive({ dir, mock, ledger, record, namespace: 'v0-app' });
   assert.deepEqual(r.n.held.map(c => [c.variant, c.reason]), [[names[2], 'edited'], [names[5], 'missing']]);
 
@@ -164,7 +156,7 @@ test('--take-code builds a variant removed in Figma again; a held variant whose 
 
   // The code goes back to what the edited variant was built from: its edit is one of a variant whose code did not
   // change, so it is neither read nor reported; the other changed variants are updated as ever.
-  await changed(p, 40, 50);
+  await inputFaded(p, 40, 50);
   const back = await drive({ dir, mock, ledger: taken.ledger, record: taken.record, namespace: 'v0-app' });
   assert.equal(back.n.status, 'built', JSON.stringify(back.n));
   assert.deepEqual(back.n.held, []);
@@ -194,7 +186,7 @@ test('a baseline from before #181 gets its Contract on a run with no change; mid
   // The code changed before the upgrade: no Contract to read the changed variants against, so neither is written.
   const ids = ledger.sets.input.variants;
   const was = (await node(ids[5])).opacity;
-  await changed(p, 50, 40);
+  await inputFaded(p, 50, 40);
   const r = await drive({ dir, mock, ledger, record: legacy, namespace: 'v0-app' });
   assert.equal(r.n.status, 'built', JSON.stringify(r.n));
   assert.deepEqual(readOf(r.steps), []);
