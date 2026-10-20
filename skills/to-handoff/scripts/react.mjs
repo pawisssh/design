@@ -181,9 +181,9 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
         const ret = ts.isReturnStatement(st.thenStatement) ? st.thenStatement
           : ts.isBlock(st.thenStatement) && st.thenStatement.statements.length === 1 && ts.isReturnStatement(st.thenStatement.statements[0]) ? st.thenStatement.statements[0] : null;
         if (ret && ret.expression) {
-          const c = text(s, st.expression);
-          out.push({ expr: ret.expression, cond: [...guards, { expr: c, value: true }] });
-          guards.push({ expr: c, value: false });
+          const c = conditionOf(s, st.expression);
+          out.push({ expr: ret.expression, cond: [...guards, { ...c, value: true }] });
+          guards.push({ ...c, value: false });
         }
       } else if (ts.isReturnStatement(st) && st.expression) { out.push({ expr: st.expression, cond: guards.slice() }); break; }
     }
@@ -214,6 +214,30 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
   const isChildren = (e, ctx) => (ts.isIdentifier(e) && e.text === 'children' && !(ctx.props && ctx.props.param))
     || (ts.isPropertyAccessExpression(e) && e.name.text === 'children' && ts.isIdentifier(e.expression) && ctx.props && e.expression.text === ctx.props.param);
 
+  // ---------- conditions (#213) ----------
+
+  // A condition expression as {expr, ast}: ast is recognise.mjs's {or|and|not|atom} tree read from the TypeScript
+  // AST, so a template literal or a parenthesized comparison is never split; each atom keeps its offset.
+  const conditionOf = (s, node) => {
+    const tree = n => {
+      while (ts.isParenthesizedExpression(n)) n = n.expression;
+      if (ts.isPrefixUnaryExpression(n) && n.operator === ts.SyntaxKind.ExclamationToken) return { not: tree(n.operand) };
+      const op = ts.isBinaryExpression(n) && n.operatorToken.kind;
+      if (op === ts.SyntaxKind.AmpersandAmpersandToken) return { and: [tree(n.left), tree(n.right)].flatMap(x => x.and || [x]) };
+      if (op === ts.SyntaxKind.BarBarToken) return { or: [tree(n.left), tree(n.right)].flatMap(x => x.or || [x]) };
+      return { atom: text(s, n), offset: s.base + n.getStart(s.sf) };
+    };
+    return { expr: text(s, node), ast: tree(node) };
+  };
+  // An attribute expression that reads as a condition: a negation, a comparison or logical operator, or an is/has… name.
+  const TESTS = new Set([ts.SyntaxKind.AmpersandAmpersandToken, ts.SyntaxKind.BarBarToken, ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken,
+    ts.SyntaxKind.EqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsToken, ts.SyntaxKind.LessThanToken, ts.SyntaxKind.GreaterThanToken, ts.SyntaxKind.LessThanEqualsToken, ts.SyntaxKind.GreaterThanEqualsToken]);
+  const testLike = (s, e) => {
+    if (ts.isPrefixUnaryExpression(e)) return e.operator === ts.SyntaxKind.ExclamationToken;
+    if (ts.isBinaryExpression(e)) return TESTS.has(e.operatorToken.kind);
+    return (ts.isIdentifier(e) || ts.isPropertyAccessExpression(e) || ts.isCallExpression(e)) && /^(is|has|can|should|show)[A-Z]/.test(text(s, e));
+  };
+
   // ---------- JSX -> the element tree ----------
 
   const unwrap = e => {
@@ -222,7 +246,8 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
   };
   const hasJsx = n => ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n) || ts.isJsxFragment(n) || Boolean(ts.forEachChild(n, hasJsx));
   const rendersMarkup = (e, ctx) => hasJsx(e) || isChildren(e, ctx);
-  const withCond = (ctx, expr, value) => ({ ...ctx, cond: [...ctx.cond, { expr, value }] });
+  const withCond = (ctx, c, value) => ({ ...ctx, cond: [...ctx.cond, { ...c, value }] });
+  const ternaryOf = (s, e, ctx) => ({ expr: text(s, e), ternary: { cond: text(s, e.condition), ast: conditionOf(s, e.condition).ast, then: branchOf(s, e.whenTrue, ctx), else: branchOf(s, e.whenFalse, ctx) } });
   const branchOf = (s, e, ctx) => {
     e = unwrap(e);
     if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return { text: e.text };
@@ -234,7 +259,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
     if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e) || ts.isNumericLiteral(e)) return e.text;
     const v = propValue(e, ctx);
     if (v !== undefined) return v;
-    if (ts.isConditionalExpression(e)) return { expr: text(s, e), ternary: { cond: text(s, e.condition), then: branchOf(s, e.whenTrue, ctx), else: branchOf(s, e.whenFalse, ctx) } };
+    if (ts.isConditionalExpression(e)) return ternaryOf(s, e, ctx);
     return { expr: text(s, e) };
   };
   const SILENT = new Set([ts.SyntaxKind.NullKeyword, ts.SyntaxKind.TrueKeyword, ts.SyntaxKind.FalseKeyword]);
@@ -249,13 +274,13 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
     if (isChildren(e, ctx)) return ctx.children ? ctx.children(ctx) : [];
     if (!rendersMarkup(e, ctx)) return [{ type: 'text', parts: [textPart(e, ctx)], offset: s.base + e.getStart(s.sf), parent: ctx.parent }];
     if (ts.isConditionalExpression(e)) {
-      const c = text(s, e.condition);
+      const c = conditionOf(s, e.condition);
       return [...nodes(e.whenTrue, withCond(ctx, c, true)), ...nodes(e.whenFalse, withCond(ctx, c, false))];
     }
     if (ts.isBinaryExpression(e)) {
       const op = e.operatorToken.kind;
-      if (op === ts.SyntaxKind.AmpersandAmpersandToken) return nodes(e.right, withCond(ctx, text(s, e.left), true));
-      if (op === ts.SyntaxKind.BarBarToken || op === ts.SyntaxKind.QuestionQuestionToken) return nodes(e.right, withCond(ctx, text(s, e.left), false));
+      if (op === ts.SyntaxKind.AmpersandAmpersandToken) return nodes(e.right, withCond(ctx, conditionOf(s, e.left), true));
+      if (op === ts.SyntaxKind.BarBarToken || op === ts.SyntaxKind.QuestionQuestionToken) return nodes(e.right, withCond(ctx, conditionOf(s, e.left), false));
     }
     if (ts.isCallExpression(e) && ts.isPropertyAccessExpression(e.expression) && e.expression.name.text === 'map') {
       const fn = unwrap(e.arguments[0]);
@@ -300,7 +325,8 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
     return out;
   };
 
-  // A JSX element's props: [{name, value, offset}], value a string, a boolean, {expr}, {expr, ternary} or {jsx}.
+  // A JSX element's props: [{name, value, offset, test}], value a string, a boolean, {expr}, {expr, ternary},
+  // {parts} (a template literal, its holes as text parts) or {jsx}. `test` is an {expr} that reads as a condition.
   const propsOf = (opening, ctx) => {
     const s = ctx.s;
     const out = [];
@@ -309,7 +335,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
       const name = a.name.getText(s.sf);
       const offset = s.base + a.getStart(s.sf);
       const init = a.initializer;
-      let value;
+      let value, test = null;
       if (!init) value = true;
       else if (ts.isStringLiteral(init)) value = init.text;
       else if (ts.isJsxExpression(init) && init.expression) {
@@ -320,11 +346,12 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
         else if (e.kind === ts.SyntaxKind.TrueKeyword) value = true;
         else if (e.kind === ts.SyntaxKind.FalseKeyword) value = false;
         else if (hasJsx(e)) value = { jsx: e };
-        else if (ts.isConditionalExpression(e)) value = { expr: text(s, e), ternary: { cond: text(s, e.condition), then: branchOf(s, e.whenTrue, ctx), else: branchOf(s, e.whenFalse, ctx) } };
-        else value = { expr: text(s, e) };
+        else if (ts.isConditionalExpression(e)) value = ternaryOf(s, e, ctx);
+        else if (ts.isTemplateExpression(e)) value = { parts: mergeStrings([e.head.text, ...e.templateSpans.flatMap(sp => [textPart(unwrap(sp.expression), ctx), sp.literal.text])].filter(p => p !== '')) };
+        else { value = { expr: text(s, e) }; if (BOOLEAN_PROPS.has(name) || testLike(s, e)) test = conditionOf(s, e); }
       } else if (ts.isJsxElement(init) || ts.isJsxSelfClosingElement(init)) value = { jsx: init };
       else continue;
-      out.push({ name, value, offset });
+      out.push({ name, value, offset, test });
     }
     return out;
   };
@@ -362,13 +389,14 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
     return [el];
   };
 
-  const setAttr = (el, { name, value, offset }, link) => {
+  const setAttr = (el, { name, value, offset, test }, link) => {
     if (name === 'key' || name === 'ref' || /^on[A-Z]/.test(name) || value === false || (value && value.jsx)) return;
     const attr = link && name === 'to' ? 'href' : ATTR_NAMES[name] || name;
     if (value === true) el.attrs[attr] = '';
     else if (typeof value === 'string') el.attrs[attr] = value;
-    else if (!value.ternary && (BOOLEAN_PROPS.has(name) || conditionLike(value.expr))) {
-      el.attrHoles.push({ expr: value.expr, ternary: { cond: value.expr, then: { text: attr }, else: { text: '' } }, offset });
+    else if (value.parts) el.attrs[attr] = { parts: value.parts };
+    else if (test && attr !== 'class' && attr !== 'style') {
+      el.attrHoles.push({ expr: value.expr, ternary: { cond: test.expr, ast: test.ast, then: { text: attr }, else: { text: '' } }, offset });
     } else el.attrs[attr] = { parts: [value] };
   };
 
@@ -538,7 +566,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
           // The root not-found answers unmatched URLs, never "no record" (#62): it is scaffolding.
           if (name === 'not-found' && d === app) { ignored.push(`${f} (root not-found)`); continue; }
           const inner = content;
-          content = ctx => [...(renderComponent(def(f), {}, null, withCond(ctx, f, true)) || []), ...inner(withCond(ctx, f, false))];
+          content = ctx => [...(renderComponent(def(f), {}, null, withCond(ctx, { expr: f }, true)) || []), ...inner(withCond(ctx, { expr: f }, false))];
         }
         const layout = special(d, 'layout');
         if (!layout) return;
@@ -715,4 +743,3 @@ const mergeStrings = parts => parts.reduce((out, p) => {
   return out;
 }, []);
 
-const conditionLike = expr => /^!|[=!]==?|&&|\|\||[<>]|^(is|has|can|should|show)[A-Z]/.test(expr);

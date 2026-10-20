@@ -213,6 +213,54 @@ test('generate: Next boundary files are states by name: a feature not-found.tsx 
   assert.ok(result.handoff.source.ignored.includes('app/not-found.tsx (root not-found)'));
 });
 
+// #213: the condition shapes of a one-file Vite app, each on its own line of fixtures/conditions-app/src/App.tsx.
+const CONDITIONS = fileURLToPath(new URL('fixtures/conditions-app', import.meta.url));
+const CONDITIONS_DECISIONS = JSON.parse(readFileSync(join(CONDITIONS, 'decisions.json'), 'utf8'));
+const conditionRequests = async () => (await generate({ prototype: CONDITIONS, designSystem: designSystem(), decisions: {} })).requests.filter(r => r.kind === 'condition');
+const conditionsScreen = () => readReact(CONDITIONS).screens[0];
+const partConds = attr => attr.parts.map(p => (typeof p === 'string' ? p : p.ternary ? p.ternary.cond : p.expr));
+
+test('read: a template-literal className is the class with its ternary as a part; the class string is never a condition', { skip: noTs }, async () => {
+  const [tab] = elements(conditionsScreen().root, el => el.tag === 'button');
+  assert.deepEqual(tab.attrHoles, []);
+  assert.deepEqual(partConds(tab.attrs.class), ['tab ', "mode === 'fixed'"]);
+  assert.deepEqual((await conditionRequests()).filter(r => r.key.includes('`')).map(r => r.key), []);
+});
+
+test('read: a && inside a template-literal className stays one ternary test, not two broken conditions', { skip: noTs }, async () => {
+  const [total] = elements(conditionsScreen().root, el => el.tag === 'p' && el.attrs.class && el.attrs.class.parts);
+  assert.deepEqual(partConds(total.attrs.class), ['total ', 'amount > 0 && amount < limit']);
+  assert.deepEqual((await conditionRequests()).filter(r => /limit|\$\{/.test(r.key)).map(r => r.key), []);
+});
+
+test('read: a style object with a ternary inside is a dynamic style value, not a condition', { skip: noTs }, async () => {
+  const [bar] = elements(conditionsScreen().root, el => el.tag === 'div' && el.classes.includes('bar'));
+  assert.deepEqual(bar.attrHoles, []);
+  assert.deepEqual(partConds(bar.attrs.style), ["{ left: drift < 0 ? '40%' : '50%' }"]);
+  assert.deepEqual((await conditionRequests()).filter(r => r.key.startsWith('condition:{')).map(r => r.key), []);
+});
+
+test('generate: a && chain keeps each operand whole, a parenthesized comparison with its operator', { skip: noTs }, async () => {
+  assert.deepEqual((await conditionRequests()).map(r => r.key), ["condition:mode === 'diy'", 'condition:(amount * (pl / 100)) > 0', 'condition:over']);
+});
+
+test('generate: a condition request is evidenced at each of its atom\'s source sites', { skip: noTs }, async () => {
+  assert.deepEqual((await conditionRequests()).map(r => [r.key, r.evidence.at]), [
+    ["condition:mode === 'diy'", ['src/App.tsx:18:8']],
+    ['condition:(amount * (pl / 100)) > 0', ['src/App.tsx:18:26']],
+    ['condition:over', ['src/App.tsx:18:56']],
+  ]);
+});
+
+test('generate: a property named _error reads as the error state, not a condition to decide', { skip: noTs }, async () => {
+  assert.equal((await conditionRequests()).find(r => r.key === 'condition:result._error'), undefined);
+  const result = await generate({ prototype: CONDITIONS, designSystem: designSystem(), decisions: CONDITIONS_DECISIONS });
+  assert.deepEqual(result.requests, []);
+  const [screen] = result.handoff.screens;
+  assert.equal(screen.states.error.missing, undefined);
+  assert.match(screen.states.error.content, /`result\._error` is true/);
+});
+
 test('read: next/font loaders in a layout are the fonts it loads, each at its binding', { skip: noTs }, () => {
   const root = project({
     'package.json': '{"name": "fonts", "dependencies": {"next": "15.5.28", "react": "19.1.10"}}',

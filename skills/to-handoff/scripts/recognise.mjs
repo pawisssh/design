@@ -53,7 +53,7 @@ export function stateOfAtom(atom) {
   if (file) return FRAMEWORK_STATES[file[1]];
   if (/(\.length\s*===?\s*0\b|^!\s*[\w.]+\.length$|\bisEmpty\b)/.test(atom)) return 'empty';
   if (/\b(is)?(Loading|Sending|Submitting|Fetching|Pending|Saving)\b|\b(loading|sending|submitting|fetching|pending|saving)\b/.test(atom)) return 'loading';
-  if (/\b(is)?(Error|Failed)\b|\b(error|failed|hasError)\b/.test(atom)) return 'error';
+  if (/\b(is)?(Error|Failed)\b|\b_?(error|failed|hasError)\b/.test(atom)) return 'error';
   if (/\b(is)?(Submitted|Sent|Success|Done|Saved)\b|\b(submitted|sent|success|done|saved)\b/.test(atom)) return 'success';
   return null;
 }

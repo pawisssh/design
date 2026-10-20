@@ -22,7 +22,7 @@ import { readHtml, walk } from './reader.mjs';
 import { readReact } from './react.mjs';
 import { STEP_KINDS, run } from './runtime.mjs';
 import {
-  CONTENT_PROPS, STANDARD_STATES, atomIn, atomsOf, candidateOf, evaluate, isPlaceholderText, librarySignature, ownDeclarations, parseCondition, standIns, stateOfAtom,
+  CONTENT_PROPS, STANDARD_STATES, atomIn, candidateOf, evaluate, isPlaceholderText, librarySignature, ownDeclarations, parseCondition, standIns, stateOfAtom,
 } from './recognise.mjs';
 
 const PROTOTYPE_MODE = 'light';
@@ -110,13 +110,16 @@ const among = (candidates, extra = []) => answer =>
 
 // ---------- text ----------
 
+/** A reader condition's tree: an el.cond entry's {expr} or a ternary's {cond}, as the React reader's AST when it gives one. */
+const conditionOf = c => c.ast || parseCondition(c.expr !== undefined ? c.expr : c.cond);
+
 /** The display text of reader parts in `state`: a dynamic value shows as `{expr}` without its first segment. */
 function textOf(parts, valueOf) {
   const show = expr => `{${expr.replace(/^[A-Za-z_$][\w$]*\./, '')}}`;
   const branch = b => (b.text !== undefined ? b.text : b.expr !== undefined ? show(b.expr) : '');
   return parts.map(p => {
     if (typeof p === 'string') return p;
-    if (p.ternary) return branch(evaluate(parseCondition(p.ternary.cond), valueOf) ? p.ternary.then : p.ternary.else);
+    if (p.ternary) return branch(evaluate(conditionOf(p.ternary), valueOf) ? p.ternary.then : p.ternary.else);
     if (p.text !== undefined) return p.text;
     if (p.markup) return '';
     return show(p.expr);
@@ -305,18 +308,28 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   function statesOf(screen) {
     const screenId = screen.id;
     const mount = screen.mount || findTag(screen.root, 'body');
-    const conds = [];
+    // Each atom with its source sites (#213): the React reader's atom offsets, else where the condition first shows.
+    const sites = new Map();
+    const firstAt = new Map();
+    const add = (c, offset) => {
+      if (!firstAt.has(c)) firstAt.set(c, offset);
+      const visit = n => {
+        if (n.atom === undefined) return (n.not ? [n.not] : n.or || n.and).forEach(visit);
+        if (!sites.has(n.atom)) sites.set(n.atom, new Set());
+        sites.get(n.atom).add(at(n.offset !== undefined ? n.offset : firstAt.get(c)));
+      };
+      visit(conditionOf(c));
+    };
     walk(screen.root, el => {
-      for (const c of el.cond) conds.push(c.expr);
-      for (const h of el.attrHoles) if (h.ternary) conds.push(h.ternary.cond);
-      for (const t of textNodes(el)) for (const p of t.parts) if (p && p.ternary) conds.push(p.ternary.cond);
+      for (const c of el.cond) add(c, el.offset);
+      for (const h of el.attrHoles) if (h.ternary) add(h.ternary, h.offset);
+      for (const t of textNodes(el)) for (const p of t.parts) if (p && p.ternary) add(p.ternary, t.offset);
     });
-    const atoms = [];
-    for (const c of conds) atomsOf(parseCondition(c), atoms);
+    const atoms = [...sites.keys()];
     const defaults = {};
     for (const atom of atoms.filter(a => !stateOfAtom(a))) {
       const answer = d.ask(`condition:${atom}`, {
-        kind: 'condition', question: `Is \`${atom}\` true or false when the screen first shows?`, candidates: [false, true],
+        kind: 'condition', question: `Is \`${atom}\` true or false when the screen first shows?`, candidates: [false, true], evidence: { at: [...sites.get(atom)] },
       }, a => (typeof a === 'boolean' ? null : `${JSON.stringify(a)} is not true or false`));
       defaults[atom] = Boolean(answer);
     }
@@ -326,7 +339,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const atomsIn = s => atomIn(s, defaults);
     const shownIn = el => {
       if (!el.cond.length) return null;
-      const ins = present.filter(s => el.cond.every(c => evaluate(parseCondition(c.expr), atomsIn(s)) === c.value));
+      const ins = present.filter(s => el.cond.every(c => evaluate(conditionOf(c), atomsIn(s)) === c.value));
       return ins.length === present.length ? null : ins;
     };
 
@@ -521,7 +534,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
         const entry = {};
         for (const h of el.attrHoles) {
           if (!h.ternary) continue;
-          const branch = evaluate(parseCondition(h.ternary.cond), atomsIn(s)) ? h.ternary.then : h.ternary.else;
+          const branch = evaluate(conditionOf(h.ternary), atomsIn(s)) ? h.ternary.then : h.ternary.else;
           const word = branch.text !== undefined ? branch.text.trim() : '';
           if (byAttr[word]) entry.state = byAttr[word];
         }
