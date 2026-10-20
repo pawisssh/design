@@ -596,12 +596,12 @@ function standInsOf(ts, sources) {
     const findTimers = n => { if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === 'setTimeout') timers.push(n); ts.forEachChild(n, findTimers); };
     findTimers(s.sf);
     // A timer whose callback only resets state to null, undefined or '' clears a message after the work (#217).
-    const reset = x => x.kind === ts.SyntaxKind.NullKeyword || (ts.isIdentifier(x) && x.text === 'undefined') || (ts.isStringLiteralLike(x) && x.text === '');
-    const resets = x => ts.isCallExpression(x) && ts.isIdentifier(x.expression) && /^set[A-Z]/.test(x.expression.text) && x.arguments.length === 1 && reset(x.arguments[0]);
+    const empty = x => x.kind === ts.SyntaxKind.NullKeyword || (ts.isIdentifier(x) && x.text === 'undefined') || (ts.isStringLiteralLike(x) && x.text === '');
+    const resets = x => ts.isCallExpression(x) && ts.isIdentifier(x.expression) && /^set[A-Z]/.test(x.expression.text) && x.arguments.length === 1 && empty(x.arguments[0]);
     const clears = timer => {
       const cb = timer.arguments[0];
       if (!cb || !(ts.isArrowFunction(cb) || ts.isFunctionExpression(cb))) return false;
-      if (!ts.isBlock(cb.body)) return resets(cb.body);
+      if (!ts.isBlock(cb.body)) { let e = cb.body; while (ts.isParenthesizedExpression(e)) e = e.expression; return resets(e); }
       return cb.body.statements.length > 0 && cb.body.statements.every(st => ts.isExpressionStatement(st) && resets(st.expression));
     };
     const seen = new Set();

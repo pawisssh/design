@@ -236,6 +236,7 @@ test('a setTimeout that only clears a status message after the work is not simul
     if (!raw) { state.msg = 'No save found'; render(); setTimeout(() => { state.msg = null; render(); }, 2000); return; }
     try { state.funds = JSON.parse(raw).funds; render(); } catch { state.msg = 'Load failed'; setTimeout(() => { state.msg = ''; render(); }, 2000); }
   }
+  function copyLink() { state.msg = 'Copied'; render(); setTimeout(function () { state.msg = \`\`; render(); }, TOAST_MS); }
   function saveAndConfirm() {
     state.isSaving = true; render();
     setTimeout(() => { state.isSaving = false; state.done = true; render(); setTimeout(() => { state.msg = undefined; render(); }, 3000); }, 600);

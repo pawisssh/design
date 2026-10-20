@@ -125,9 +125,9 @@ export function standIns(scripts) {
     for (const m of s.text.matchAll(/\b(?:const|let|var)\s+(mock[A-Z]\w*)\s*=/g)) mocks.push({ name: m[1], offset: s.offset + m.index + m[0].indexOf(m[1]) });
     for (const m of s.text.matchAll(/function\s+(\w+)\s*\([^)]*\)\s*\{/g)) {
       const body = blockAt(s.text, m.index + m[0].length - 1);
-      const timer = [...body.matchAll(/setTimeout\(/g)].map(x => ({ t: x.index, args: blockAt(body, x.index + x[0].length - 1).slice(1, -1) })).find(x => !clears(x.args));
+      const timer = [...body.matchAll(/setTimeout\(/g)].map(x => ({ at: x.index, args: blockAt(body, x.index + x[0].length - 1).slice(1, -1) })).find(x => !clears(x.args));
       if (!timer) continue;
-      const { t } = timer, delay = /,\s*(\d+)\s*$/.exec(timer.args);
+      const t = timer.at, delay = /,\s*(\d+)\s*$/.exec(timer.args);
       const trues = text => [...text.matchAll(/(state\.\w+)\s*=\s*true\b/g)].map(x => x[1]);
       simulated.push({ name: m[1], delay: delay ? Number(delay[1]) : null, offset: s.offset + m.index, before: trues(body.slice(0, t)), after: trues(body.slice(t)) });
     }
@@ -135,12 +135,12 @@ export function standIns(scripts) {
   return { mocks, simulated };
 }
 
-// A setTimeout's arguments whose callback only resets state to null, undefined or '' (and re-renders): #217.
+// A setTimeout's arguments whose callback only resets state to null, undefined or '' (and re-renders) (#217).
 function clears(args) {
-  const cb = /^\s*(?:\(\s*\)\s*=>|function\s*\(\s*\))\s*(?:\{([^{}]*)\}|([^{};]*?))\s*,\s*\d+\s*$/.exec(args);
+  const cb = /^\s*(?:\(\s*\)\s*=>|function\s*\(\s*\))\s*(?:\{([^{}]*)\}|([^{};]*?))\s*(?:,\s*[\w.]+\s*)?$/.exec(args);
   if (!cb) return false;
   const statements = (cb[1] ?? cb[2]).split(';').map(x => x.trim()).filter(Boolean);
-  return statements.some(x => x !== 'render()') && statements.every(x => x === 'render()' || /^state\.\w+\s*=\s*(null|undefined|''|"")$/.test(x));
+  return statements.some(x => x !== 'render()') && statements.every(x => x === 'render()' || /^state\.\w+\s*=\s*(null|undefined|''|""|``)$/.test(x));
 }
 
 /** The text from the bracket at `open` (`{` or `(`) to its matching close. */

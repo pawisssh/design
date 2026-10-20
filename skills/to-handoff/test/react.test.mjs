@@ -133,7 +133,7 @@ function App() {
   const [done, setDone] = useState(false);
   const handleLoadState = () => {
     const raw = localStorage.getItem('save');
-    if (!raw) { setMsg('No save found'); setTimeout(() => setMsg(null), 2000); return; }
+    if (!raw) { setMsg('No save found'); setTimeout(() => (setMsg(null)), 2000); return; }
     try { setFunds(JSON.parse(raw).funds); } catch { setMsg('Load failed'); setTimeout(() => { setMsg(''); }, 2000); }
   };
   async function save() {
@@ -147,6 +147,7 @@ function App() {
     setMsg('Saving…'); setTimeout(() => setMsg(null), 1500);
     setBusy(true); setTimeout(() => { setBusy(false); setDone(true); }, 900);
   }
+  // A callback passed by name is not followed: still flagged (a known gap).
   const clear = () => setMsg(null);
   function later() { setTimeout(clear, 2000); }
   return <main><button onClick={handleLoadState}>Load</button><button onClick={save}>Save</button><p>{msg}</p></main>;
