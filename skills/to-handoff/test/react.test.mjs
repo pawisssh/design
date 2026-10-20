@@ -120,6 +120,48 @@ test('Next: one screen per app/**/page.tsx inside its layouts; loading.tsx is a 
   assert.deepEqual(doc.standIns.simulated.map(f => [f.name, f.delay]), [['getReleases', 300]]);
 });
 
+test('a setTimeout that only clears a status message after the work is not simulated work (#217)', { skip: noTs }, () => {
+  const dir = project({
+    'package.json': JSON.stringify({ name: 'slots', dependencies: { react: '19.3.1' }, devDependencies: { vite: '8.3.4' } }),
+    'index.html': '<!doctype html><html><head><title>Slots</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>',
+    'src/main.tsx': `import { createRoot } from 'react-dom/client';
+import { useState } from 'react';
+function App() {
+  const [msg, setMsg] = useState<string | null>(null);
+  const [funds, setFunds] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const handleLoadState = () => {
+    const raw = localStorage.getItem('save');
+    if (!raw) { setMsg('No save found'); setTimeout(() => setMsg(null), 2000); return; }
+    try { setFunds(JSON.parse(raw).funds); } catch { setMsg('Load failed'); setTimeout(() => { setMsg(''); }, 2000); }
+  };
+  async function save() {
+    setBusy(true);
+    await new Promise(r => setTimeout(r, 800));
+    setBusy(false);
+    setDone(true);
+    setTimeout(() => setMsg(undefined), 3000);
+  }
+  function confirmThenSave() {
+    setMsg('Saving…'); setTimeout(() => setMsg(null), 1500);
+    setBusy(true); setTimeout(() => { setBusy(false); setDone(true); }, 900);
+  }
+  const clear = () => setMsg(null);
+  function later() { setTimeout(clear, 2000); }
+  return <main><button onClick={handleLoadState}>Load</button><button onClick={save}>Save</button><p>{msg}</p></main>;
+}
+createRoot(document.getElementById('root')!).render(<App />);
+`,
+  });
+  const doc = readReact(dir, {});
+  assert.deepEqual(doc.standIns.simulated.map(f => ({ name: f.name, delay: f.delay, before: f.before, after: f.after })), [
+    { name: 'save', delay: 800, before: ['busy'], after: ['done'] },
+    { name: 'confirmThenSave', delay: 900, before: ['busy'], after: ['done'] },
+    { name: 'later', delay: 2000, before: [], after: [] },
+  ]);
+});
+
 test('Next: a Code Library component from components.json aliases.ui is a leaf; asChild lifts its only child', { skip: noTs }, () => {
   const doc = readReact(NEXT, { packages: PACKAGES });
   assert.equal(doc.uiDir, 'components/ui/');
