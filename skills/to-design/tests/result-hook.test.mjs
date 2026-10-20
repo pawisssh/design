@@ -8,7 +8,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { PKG, project, runHook as runHookAt, stubFor, toolInput } from './hook-fixture.mjs';
 
 const HOOK = new URL('../hooks/use-figma-result.mjs', import.meta.url).pathname;
-const SNIPPET = new URL('../hooks/settings.snippet.json', import.meta.url).pathname;
+const SNIPPET_HOOKS = JSON.parse(readFileSync(new URL('../hooks/settings.snippet.json', import.meta.url), 'utf8')).hooks;
 const RESULT = '.scratch/to-design/pkg/result.json';
 const CODE = `// Native build package: ${'b'.repeat(64)}\nasync function buildComponentSets() {}\n`;
 const BODY = JSON.stringify({ slice: 'sets', fileKey: 'abc123', summary: { created: 1 } });
@@ -110,7 +110,7 @@ test('a result.json that is a symlink out of the project is replaced, never writ
 });
 
 test('the settings snippet registers the result hook after each use_figma call, never blocking', () => {
-  const { hooks } = JSON.parse(readFileSync(SNIPPET, 'utf8'));
+  const hooks = SNIPPET_HOOKS;
   const [entry] = hooks.PostToolUse;
   assert.equal(entry.matcher, 'mcp__.*__use_figma');
   assert.deepEqual(entry.hooks[0].args, ['${CLAUDE_PROJECT_DIR}/skills/to-design/hooks/use-figma-result.mjs']);
@@ -118,12 +118,16 @@ test('the settings snippet registers the result hook after each use_figma call, 
   assert.equal(hooks.PreToolUse[0].hooks[0].onFailure, 'block');
 });
 
-// Registering the hooks is the owner's step: a change to the snippet stays red here until they commit it to the
-// project's settings on the same branch.
+// Settings drift (#203): registering the hooks is the owner's step, so a change to the snippet stays red here until
+// they commit it to the project's settings on the same branch. Settings may hold more hooks than the snippet.
 test('the project settings register every hook the snippet does', () => {
   const settings = JSON.parse(readFileSync(new URL('../../../.claude/settings.json', import.meta.url), 'utf8')).hooks || {};
-  for (const [event, entries] of Object.entries(JSON.parse(readFileSync(SNIPPET, 'utf8')).hooks))
-    for (const entry of entries)
-      assert.ok((settings[event] || []).some(e => isDeepStrictEqual(e, entry)),
-        `.claude/settings.json has no ${event} entry equal to the snippet's ${JSON.stringify(entry)}: the owner pastes hooks/settings.snippet.json into it`);
+  for (const [event, entries] of Object.entries(SNIPPET_HOOKS)) {
+    for (const { matcher, hooks } of entries) {
+      for (const hook of hooks) {
+        const registered = (settings[event] || []).some(e => e.matcher === matcher && (e.hooks || []).some(h => isDeepStrictEqual(h, hook)));
+        assert.ok(registered, `.claude/settings.json has no ${event} hook for ${matcher} equal to the snippet's ${JSON.stringify(hook)}: the owner pastes hooks/settings.snippet.json into it`);
+      }
+    }
+  }
 });
