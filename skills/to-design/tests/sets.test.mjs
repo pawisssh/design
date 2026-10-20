@@ -171,6 +171,44 @@ test('after an omit edit the rebuild finds every kept variant by name and moves 
   assert.deepEqual(report.orphaned.sort(), focus.sort());
 });
 
+// The Button with an edit that changes its contentHash but not its expansion (a Base loop's approval), approved again.
+const reapproved = () => {
+  const c = asDraft(BUTTON);
+  c.figma = { ...c.figma, description: `${c.figma.description} (edited)` };
+  return approve(c, LATER);
+};
+
+// The live text-input rebuild: a set built with no Base Component, then a Base loop that built the base loose on its
+// page and changed the Contract's hash. The rebuild keeps the recorded ids, and the loose base takes no name twice.
+test('after a contentHash change with a loose Base Component, the rebuild keeps every recorded variant id and duplicates no name', async () => {
+  const env = await setup({ withBase: false });
+  await buildAll(env);
+  const before = [...env.ledger.sets.button.variants];
+  const edited = reapproved();
+  assert.notEqual(edited.selection.approval.contentHash, BUTTON.selection.approval.contentHash);
+  assert.deepEqual(expand(edited).map(t => variantName(edited, t)), expand(BUTTON).map(t => variantName(BUTTON, t)), 'the same expansion');
+  const { plan, state } = basePlan(edited, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: LATER, adopt: true });
+  const built = await runPackage(pack(plan, state, COMPONENTS_CORE).code, env.mock.figma);
+  assert.equal(built.summary.conflicts, 0, JSON.stringify(built.conflicts));
+  env.ledger = recordResult(env.ledger, built);
+  const base = await env.mock.figma.getNodeByIdAsync(env.ledger.bases.button.id);
+  assert.equal(base.parent.type, 'PAGE', 'the Base loop built the base loose on the page');
+  assert.ok(!before.includes(base.id));
+  // the plan carries the recorded ids (checked before any core run: two variants of one name never settle in the grid)
+  const at = expand(edited).findIndex(t => variantName(edited, t) === base.name);
+  const { state: carried } = setsPlan(edited, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: LATER, indexes: [at] });
+  assert.equal(carried.sets.button.hints[at], before[at], 'the recorded id at the base index is carried, as a hint');
+
+  const runs = await buildAll(env, edited, { at: LATER });
+  for (const { result } of runs) assert.equal(result.summary.created, 0, JSON.stringify(result.summary));
+  const set = await setNode(env);
+  const names = set.children.map(k => k.name);
+  assert.equal(new Set(names).size, names.length, 'no variant name twice');
+  assert.equal(set.children.length, TOTAL);
+  assert.deepEqual(env.ledger.sets.button.variants, before, 'every recorded variant id kept');
+  assert.equal(env.ledger.sets.button.contentHash, edited.selection.approval.contentHash);
+});
+
 // selection.member, the bitset of the whole selection: build-plan writes it, the core decodes it to tell the
 // variants dropped. Kind and Size have 7 values; tuples 3|4 and 39|40 sit either side of a hex digit, 244 in the
 // last, partial one.

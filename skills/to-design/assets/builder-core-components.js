@@ -435,8 +435,14 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     for (const e of E) {
       let node = prev && prev.variants ? await get(prev.variants[e[0]]) : null;
       if (node && (node.type !== 'COMPONENT' || !home || !node.parent || node.parent.id !== home.id)) node = null;
+      const name = nameOf(e.slice(1));
+      // an id recorded for another Contract is taken only from a node under the entry's own name
+      const hint = !node && prev && prev.hints ? await get(prev.hints[e[0]]) : null;
+      if (hint && hint.type === 'COMPONENT' && home && hint.parent && hint.parent.id === home.id && hint.name === name) node = hint;
+      // a variant of the name in its home comes before the Base Component, which a Base loop may have built loose
+      // beside the set: it never joins next to a variant of its own name
+      if (!node) node = kids[name] || null;
       if (!node && e[0] === plan.baseIndex && baseNode && baseNode.type === 'COMPONENT') node = baseNode;
-      if (!node) node = kids[nameOf(e.slice(1))] || null;
       found[e[0]] = node;
     }
     // this call's variant ids by expansion index; the ledger merges them into the family's list (state carries only these)

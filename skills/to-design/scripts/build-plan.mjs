@@ -343,6 +343,9 @@ export function setsPlan(contract, docText, ledger, {
   // The family's phase, from its ledger record: no set yet (the first build), combined but not placed, or built.
   const rec = ledger.sets && ledger.sets[family];
   const ids = rec && rec.contentHash === hash && Array.isArray(rec.variants) && rec.variants.length === total ? rec.variants : [];
+  // A record from another Contract keeps its ids as hints: the core takes one only from a node under the entry's own
+  // name, so an edit that left the expansion as it was (a Base loop's approval) rebuilds the set's own variants.
+  const hints = rec && !ids.length && Array.isArray(rec.variants) ? rec.variants : [];
   const combined = !!(rec && rec.set);
   const unplaced = combined && rec.placed === false;
   if (!combined && (next || mode === 'build' || mode === 'combine') && total > MAX_COMBINE)
@@ -566,15 +569,17 @@ export function setsPlan(contract, docText, ledger, {
   // The family's ledger record, with the variant ids of this call's entries only: a call carries no other ids.
   if (rec) {
     // Ids are recorded by expansion index, and another Contract may expand differently (an omit edit shifts the
-    // indexes), so they are carried only for the Contract the set was built from; otherwise the core finds each
-    // variant by name in the set (or loose on the page).
+    // indexes), so they are carried only for the Contract the set was built from; otherwise as `hints`, and the core
+    // finds each variant by name in the set (or loose on the page).
     const carried = {};
     for (const i of picked) if (ids[i]) carried[i] = ids[i];
     // A tuple the selection takes back reuses its orphan's id (#67). The other orphans stay in the ledger:
     // a build package carries none of them.
     const { orphans = {}, ...kept } = rec;
     for (const i of picked) { const o = orphans[variantName(contract, tuples[i])]; if (o && !carried[i]) carried[i] = o.id; }
-    state.sets[family] = { ...kept, variants: carried };
+    const hinted = {};
+    for (const i of picked) if (hints[i] && !carried[i]) hinted[i] = hints[i];
+    state.sets[family] = { ...kept, variants: carried, ...(Object.keys(hinted).length ? { hints: hinted } : {}) };
     // the prune modes read the orphans, by name, and work only on a set every batch was rebuilt from this Contract;
     // coverage reads their ids, to tell an orphan from a node under its name
     if (mode.startsWith('prune') || mode === 'coverage') state.sets[family].orphans = Object.fromEntries(Object.entries(orphans).map(([n, o]) => [n, o.id]));
