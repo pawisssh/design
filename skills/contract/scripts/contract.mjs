@@ -33,9 +33,19 @@ function clone(v) {
   if (typeof v === 'number') return isFinite(v) ? (v === 0 ? 0 : v) : null;
   if (typeof v === 'function' || typeof v === 'symbol') return undefined;
   if (v === null || typeof v !== 'object') return v;
-  if (Array.isArray(v)) return v.map(x => { const c = clone(x); return c === undefined ? null : c; });
+  if (Array.isArray(v)) {
+    const out = [];
+    for (let i = 0; i < v.length; i++) { const c = clone(v[i]); out.push(c === undefined ? null : c); }
+    return out;
+  }
   const out = {};
-  for (const k of Object.keys(v)) { const c = clone(v[k]); if (c !== undefined) out[k] = c; }
+  for (const k of Object.keys(v)) {
+    const c = clone(v[k]);
+    if (c === undefined) continue;
+    // a "__proto__" key is a field, as JSON.parse makes it, not the prototype
+    if (k === '__proto__') Object.defineProperty(out, k, { value: c, enumerable: true, writable: true, configurable: true });
+    else out[k] = c;
+  }
   return out;
 }
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);

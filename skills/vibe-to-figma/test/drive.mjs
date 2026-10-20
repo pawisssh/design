@@ -70,37 +70,40 @@ export const exported = (dir, edits) => { const model = reviewModel(dir); const 
 /** Input's disabled State at another opacity (50 to 40, then to 30): its two disabled variants change (indexes 2 and 5). */
 export const fadeDisabled = (file, from = 50, to = 40) => writeFileSync(file, readFileSync(file, 'utf8').replace(`disabled:opacity-${from}`, `disabled:opacity-${to}`));
 
-// The v0 project and its folder depend only on the opacities input's disabled State went through since the first
-// build (`fades`, from 50), and a build on the mock writes nothing into them. So each state is built and approved once
-// per test file, under .scratch/, as {project, ds} under a root never written after; the tests copy it. The first
-// state starts from the v0 project's folder as first built, before any approve.
-let first;
-const firstBuilt = () => (first ??= (async () => {
+// A root holding {project, ds}: the v0 project's copy and its Design System folders, the folder at ds/v0-app.
+const paths = root => ({ project: join(root, 'project'), root: join(root, 'ds'), dir: join(root, 'ds/v0-app') });
+
+// The v0 project's folder as first built, before any approve: built once per test file, under a root never written after.
+let drafted;
+const draftedRoot = () => (drafted ??= (async () => {
   const root = scratch();
-  cpSync(V0, join(root, 'project'), { recursive: true });
-  await buildFolder({ project: join(root, 'project'), root: join(root, 'ds'), drafts });
+  cpSync(V0, paths(root).project, { recursive: true });
+  await buildFolder({ project: paths(root).project, root: paths(root).root, drafts });
   return root;
 })());
 
 /** A copy of the v0 project with its folder built and not approved: {project, root, dir}. */
 export async function draftedProject() {
   const root = scratch();
-  cpSync(await firstBuilt(), root, { recursive: true });
-  return { project: join(root, 'project'), root: join(root, 'ds'), dir: join(root, 'ds/v0-app') };
+  cpSync(await draftedRoot(), root, { recursive: true });
+  return paths(root);
 }
 
+// The v0 project and its folder depend only on the opacities input's disabled State went through since the first
+// build (`fades`, from 50), and a build on the mock writes nothing into them. So each state is built and approved once
+// per test file, under .scratch/, as {project, ds} under a root never written after; the tests copy it. The first
+// state is the drafted one, approved.
 const states = new Map();
 function stateAfter(fades) {
   const key = fades.join(' ');
   if (!states.has(key)) states.set(key, (async () => {
     const root = scratch();
-    const project = join(root, 'project');
+    const { project, dir } = paths(root);
     if (fades.length) {
       cpSync(await stateAfter(fades.slice(0, -1)), root, { recursive: true });
       fadeDisabled(join(project, 'components/ui/input.tsx'), fades.at(-2) ?? 50, fades.at(-1));
-      await buildFolder({ project, root: join(root, 'ds'), drafts });
-    } else cpSync(await firstBuilt(), root, { recursive: true });
-    const dir = join(root, 'ds/v0-app');
+      await buildFolder({ project, root: paths(root).root, drafts });
+    } else cpSync(await draftedRoot(), root, { recursive: true });
     // The first review narrows Button; a change's review exports the page as the folder now stands.
     await approveFolder({ dir, project, exported: exported(dir, fades.length ? {} : NARROW), said: 'approve', at: AT, test: true });
     return root;
@@ -112,11 +115,11 @@ function stateAfter(fades) {
 export async function builtProject() {
   const root = scratch();
   cpSync(await stateAfter([]), root, { recursive: true });
-  const dir = join(root, 'ds/v0-app');
+  const { dir } = paths(root);
   const mock = smokeDraft();
   const first = await drive({ dir, mock, namespace: 'v0-app' });
   assert.equal(first.n.status, 'built', JSON.stringify(first.n));
-  return { project: join(root, 'project'), root: join(root, 'ds'), dir, fades: [], mock, ledger: first.ledger, record: first.record };
+  return { ...paths(root), fades: [], mock, ledger: first.ledger, record: first.record };
 }
 
 /** builtProject's `p` with input's disabled opacity changed from `from` to `to`, and the change approved. */
