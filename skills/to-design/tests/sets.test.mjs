@@ -179,10 +179,10 @@ const reapproved = () => {
   return approve(c, LATER);
 };
 
-// The live text-input rebuild: a set built with no Base Component, then a Base loop that built the base loose on its
-// page and changed the Contract's hash. The rebuild keeps the recorded variants, their ids and so their instances:
-// the one under the base's name takes the approved values, and the loose base is left as it is, named as unused.
-test('after a contentHash change with a loose Base Component, the rebuild keeps every recorded variant id and duplicates no name', async () => {
+// The live text-input rebuild: a set built with no Base Component, then a Base loop that built the base on its page,
+// outside the set, and changed the Contract's hash. The rebuild keeps the recorded variants, their ids and so their instances:
+// the one under the base's name takes the approved values, and the base is left as it is, named as unused.
+test('after a contentHash change with a Base Component outside the set, the rebuild keeps every recorded variant id and duplicates no name', async () => {
   const env = await setup({ withBase: false });
   await buildAll(env);
   const before = [...env.ledger.sets.button.variants];
@@ -194,20 +194,21 @@ test('after a contentHash change with a loose Base Component, the rebuild keeps 
   assert.equal(built.summary.conflicts, 0, JSON.stringify(built.conflicts));
   env.ledger = recordResult(env.ledger, built);
   const base = await env.mock.figma.getNodeByIdAsync(env.ledger.bases.button.id);
-  assert.equal(base.parent.type, 'PAGE', 'the Base loop built the base loose on the page');
+  assert.equal(base.parent.type, 'PAGE', 'the Base loop built the base on the page, outside the set');
   assert.ok(!before.includes(base.id));
-  // the plan carries the recorded ids (checked before any core run: two variants of one name never settle in the grid)
+  // a read-only reconcile finds the set's own variants, the one under the base's name too (checked before any build
+  // call: two variants of one name in the set never settle in the grid)
   const at = expand(edited).findIndex(t => variantName(edited, t) === base.name);
-  const { state: carried } = setsPlan(edited, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: LATER, indexes: [at] });
-  assert.equal((carried.sets.button.hints || {})[at], before[at], 'the recorded id at the base index is carried, as a hint');
+  const found = (await sets(env, { mode: 'reconcile' }, { contract: edited, drop: true })).result.ledger.sets.button.variants;
+  assert.deepEqual([found[at], Object.values(found)], [before[at], before], 'every recorded variant found, the base not taken');
 
   const baseIds = new Set([base, ...base.findAll(() => true)].map(n => n.id));
   const from = env.mock.log.length;
   const runs = await buildAll(env, edited, { at: LATER });
-  assert.deepEqual(env.mock.log.slice(from).filter(([, ...ids]) => ids.some(id => baseIds.has(id))), [], 'nothing written to the loose base');
+  assert.deepEqual(env.mock.log.slice(from).filter(([, ...ids]) => ids.some(id => baseIds.has(id))), [], 'nothing written to the base');
   for (const { result } of runs) {
     assert.equal(result.summary.created, 0, JSON.stringify(result.summary));
-    assert.deepEqual(result.unusedBase, { id: base.id, name: base.name }, 'the loose base is named as unused');
+    assert.deepEqual(result.unusedBase, { id: base.id, name: base.name }, 'the base is named as unused');
   }
   const set = await setNode(env);
   const names = set.children.map(k => k.name);
@@ -221,13 +222,9 @@ test('after a contentHash change with a loose Base Component, the rebuild keeps 
   const sample = await sets(env, { mode: 'sample', sample: [at] }, { contract: edited });
   const s = checkSample(edited, sample.result, env.ledger, DOC);
   assert.deepEqual([s.problems, s.sampled], [[], 1]);
-  // the loose base is still there, on its page, where the Base loop left it
+  // the base is still there, on its page, where the Base loop left it
   assert.equal(await env.mock.figma.getNodeByIdAsync(base.id), base);
   assert.equal(base.parent.type, 'PAGE');
-  // with no id or hint at all (a ledger that lost them), the variant of the base's name in the set still comes first
-  env.ledger.sets.button.variants = before.map(() => null);
-  await sets(env, { indexes: [at] }, { contract: edited });
-  assert.deepEqual([set.children.length, env.ledger.sets.button.variants[at], base.parent.type], [TOTAL, before[at], 'PAGE']);
 });
 
 // selection.member, the bitset of the whole selection: build-plan writes it, the core decodes it to tell the
