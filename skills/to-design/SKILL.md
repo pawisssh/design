@@ -138,6 +138,7 @@ Core: `builder-core-components.js`. `sets` takes an approved Contract only: it r
   - **Place.** A place call always resumes from the file.
   - **Append.** Before retrying an append, run `--mode reconcile` (read only: it finds the set's variants by name, and reports the ones the selection dropped). A family too large for one reconcile call needs `--batch`; the derive says how many. Record its result, and only then re-derive and retry the batch.
 - **After a Contract edit** (a new omit, a re-approval), rebuild every batch, then see [Dropped variants](#dropped-variants-orphans-and-prune) below.
+  The plan carries the ledger's old variant ids as hints, and the core takes one only from a node under that variant's name, so a re-approval that leaves the variants as they were keeps every id, and so every instance. A Base Component that a Base loop built loose beside the set is not pulled in next to the variant of its name: that variant takes the approved values, and every build call and `ledger.mjs record` report the base as `unusedBase` (`{id, name}`). Nothing deletes it; tell the owner, who can remove it by hand.
 
 **The Figma structure** (checked by `coverage.mjs`):
 

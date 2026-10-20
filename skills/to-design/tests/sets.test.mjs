@@ -171,15 +171,17 @@ test('after an omit edit the rebuild finds every kept variant by name and moves 
   assert.deepEqual(report.orphaned.sort(), focus.sort());
 });
 
-// The Button with an edit that changes its contentHash but not its expansion (a Base loop's approval), approved again.
+// The Button after a Base loop: an owner tweak to the root's max width (320 -> 288) that changes its contentHash but
+// not its expansion, approved again.
 const reapproved = () => {
   const c = asDraft(BUTTON);
-  c.figma = { ...c.figma, description: `${c.figma.description} (edited)` };
+  c.layout[0].set.Button.maxWidth = { ...c.layout[0].set.Button.maxWidth, raw: 288 };
   return approve(c, LATER);
 };
 
 // The live text-input rebuild: a set built with no Base Component, then a Base loop that built the base loose on its
-// page and changed the Contract's hash. The rebuild keeps the recorded ids, and the loose base takes no name twice.
+// page and changed the Contract's hash. The rebuild keeps the recorded variants, their ids and so their instances:
+// the one under the base's name takes the approved values, and the loose base is left as it is, named as unused.
 test('after a contentHash change with a loose Base Component, the rebuild keeps every recorded variant id and duplicates no name', async () => {
   const env = await setup({ withBase: false });
   await buildAll(env);
@@ -197,16 +199,35 @@ test('after a contentHash change with a loose Base Component, the rebuild keeps 
   // the plan carries the recorded ids (checked before any core run: two variants of one name never settle in the grid)
   const at = expand(edited).findIndex(t => variantName(edited, t) === base.name);
   const { state: carried } = setsPlan(edited, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: LATER, indexes: [at] });
-  assert.equal(carried.sets.button.hints[at], before[at], 'the recorded id at the base index is carried, as a hint');
+  assert.equal((carried.sets.button.hints || {})[at], before[at], 'the recorded id at the base index is carried, as a hint');
 
+  const baseIds = new Set([base, ...base.findAll(() => true)].map(n => n.id));
+  const from = env.mock.log.length;
   const runs = await buildAll(env, edited, { at: LATER });
-  for (const { result } of runs) assert.equal(result.summary.created, 0, JSON.stringify(result.summary));
+  assert.deepEqual(env.mock.log.slice(from).filter(([, ...ids]) => ids.some(id => baseIds.has(id))), [], 'nothing written to the loose base');
+  for (const { result } of runs) {
+    assert.equal(result.summary.created, 0, JSON.stringify(result.summary));
+    assert.deepEqual(result.unusedBase, { id: base.id, name: base.name }, 'the loose base is named as unused');
+  }
   const set = await setNode(env);
   const names = set.children.map(k => k.name);
   assert.equal(new Set(names).size, names.length, 'no variant name twice');
   assert.equal(set.children.length, TOTAL);
   assert.deepEqual(env.ledger.sets.button.variants, before, 'every recorded variant id kept');
   assert.equal(env.ledger.sets.button.contentHash, edited.selection.approval.contentHash);
+  // the recorded variant under the base's name reads back as the approved Contract
+  const variant = await env.mock.figma.getNodeByIdAsync(before[at]);
+  assert.deepEqual([variant.parent.id, variant.maxWidth], [set.id, 288]);
+  const sample = await sets(env, { mode: 'sample', sample: [at] }, { contract: edited });
+  const s = checkSample(edited, sample.result, env.ledger, DOC);
+  assert.deepEqual([s.problems, s.sampled], [[], 1]);
+  // the loose base is still there, on its page, where the Base loop left it
+  assert.equal(await env.mock.figma.getNodeByIdAsync(base.id), base);
+  assert.equal(base.parent.type, 'PAGE');
+  // with no id or hint at all (a ledger that lost them), the variant of the base's name in the set still comes first
+  env.ledger.sets.button.variants = before.map(() => null);
+  await sets(env, { indexes: [at] }, { contract: edited });
+  assert.deepEqual([set.children.length, env.ledger.sets.button.variants[at], base.parent.type], [TOTAL, before[at], 'PAGE']);
 });
 
 // selection.member, the bitset of the whole selection: build-plan writes it, the core decodes it to tell the

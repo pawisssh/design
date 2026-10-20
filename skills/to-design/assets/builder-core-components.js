@@ -432,18 +432,15 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const kids = {};
     if (home) for (const k of home.children) if (k.type === 'COMPONENT') kids[k.name] = k;
     const found = {};
+    const inHome = n => n && n.type === 'COMPONENT' && home && n.parent.id === home.id;
     for (const e of E) {
-      let node = prev && prev.variants ? await get(prev.variants[e[0]]) : null;
-      if (node && (node.type !== 'COMPONENT' || !home || !node.parent || node.parent.id !== home.id)) node = null;
       const name = nameOf(e.slice(1));
+      let node = prev && await get(prev.variants[e[0]]);
       // an id recorded for another Contract is taken only from a node under the entry's own name
-      const hint = !node && prev && prev.hints ? await get(prev.hints[e[0]]) : null;
-      if (hint && hint.type === 'COMPONENT' && home && hint.parent && hint.parent.id === home.id && hint.name === name) node = hint;
+      if (!inHome(node)) { node = prev && await get(prev.hints[e[0]]); if (!inHome(node) || node.name !== name) node = null; }
       // a variant of the name in its home comes before the Base Component, which a Base loop may have built loose
       // beside the set: it never joins next to a variant of its own name
-      if (!node) node = kids[name] || null;
-      if (!node && e[0] === plan.baseIndex && baseNode && baseNode.type === 'COMPONENT') node = baseNode;
-      found[e[0]] = node;
+      found[e[0]] = node || kids[name] || (e[0] === plan.baseIndex && baseNode);
     }
     // this call's variant ids by expansion index; the ledger merges them into the family's list (state carries only these)
     const variants = {};
@@ -764,6 +761,8 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const dropped = drops();
     const summary = { created: createdCount, updated: tally(), variants: set.children.length, missing: missing.length, dropped: dropped.length, conflicts: 0 };
     if (W) Object.assign(summary, { placed: !cut, left: unplaced() });
+    // a Base Component left outside the set, beside a variant of its name: never deleted here, the owner tidies it
+    if (baseNode && baseNode.parent.id !== set.id) report.unusedBase = { id: baseNode.id, name: baseNode.name };
     return Object.assign(report, {
       summary, made, updated: counts, missing, dropped, conflicts, defaultVariant: set.defaultVariant ? set.defaultVariant.name : null, ledger: ledger(keys, W ? !cut : true),
     });
