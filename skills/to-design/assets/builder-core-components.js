@@ -435,9 +435,10 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     for (const e of E) {
       let node = prev && prev.variants ? await get(prev.variants[e[0]]) : null;
       if (node && (node.type !== 'COMPONENT' || !home || !node.parent || node.parent.id !== home.id)) node = null;
-      if (!node && e[0] === plan.baseIndex && baseNode && baseNode.type === 'COMPONENT') node = baseNode;
-      if (!node) node = kids[nameOf(e.slice(1))] || null;
-      found[e[0]] = node;
+      // a variant of its name in the set comes before the Base Component, which a Base loop after a Contract edit may
+      // have built on the page outside the set: the rebuild keeps the variant, its id and instances, and never puts
+      // the base beside it under the same name (the plan carries no ids for another Contract)
+      found[e[0]] = node || kids[nameOf(e.slice(1))] || (e[0] === plan.baseIndex && baseNode);
     }
     // this call's variant ids by expansion index; the ledger merges them into the family's list (state carries only these)
     const variants = {};
@@ -758,6 +759,8 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const dropped = drops();
     const summary = { created: createdCount, updated: tally(), variants: set.children.length, missing: missing.length, dropped: dropped.length, conflicts: 0 };
     if (W) Object.assign(summary, { placed: !cut, left: unplaced() });
+    // that Base Component, outside the set beside the variant of its name: never deleted here, the owner tidies it
+    if (baseNode && baseNode.parent.id !== set.id && set.children.some(k => k.name === baseNode.name)) report.unusedBase = { id: baseNode.id, name: baseNode.name };
     return Object.assign(report, {
       summary, made, updated: counts, missing, dropped, conflicts, defaultVariant: set.defaultVariant ? set.defaultVariant.name : null, ledger: ledger(keys, W ? !cut : true),
     });
