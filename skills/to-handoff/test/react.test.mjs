@@ -54,13 +54,15 @@ test('Vite: one screen per <Route path>, with its conditions, holes, repeats and
   ]);
   const [members, invite] = doc.screens;
   const empty = elements(members.root, el => el.classes.includes('empty'))[0];
-  assert.deepEqual(empty.cond, [{ expr: 'members.length === 0', value: true }]);
+  assert.deepEqual(empty.cond.map(c => ({ ...c, ast: { atom: c.ast.atom, at: doc.at(c.ast.offset) } })),
+    [{ expr: 'members.length === 0', ast: { atom: 'members.length === 0', at: 'src/pages/Members.tsx:9:8' }, value: true }]);
   const item = elements(members.root, el => el.classes.includes('member'))[0];
   assert.deepEqual(item.repeat, { list: 'members', item: 'm' });
   const send = elements(invite.root, el => el.component)[0];
   assert.equal(doc.at(send.offset), 'src/pages/Invite.tsx:22:9');
-  assert.deepEqual(send.attrHoles.map(h => h.ternary), [{ cond: 'isSending', then: { text: 'disabled' }, else: { text: '' } }]);
-  assert.deepEqual(send.children[0].parts[0].ternary, { cond: 'isSending', then: { text: 'Sending…' }, else: { text: 'Send invite' } });
+  const withoutAst = ({ ast, ...ternary }) => ternary;
+  assert.deepEqual(send.attrHoles.map(h => withoutAst(h.ternary)), [{ cond: 'isSending', then: { text: 'disabled' }, else: { text: '' } }]);
+  assert.deepEqual(withoutAst(send.children[0].parts[0].ternary), { cond: 'isSending', then: { text: 'Sending…' }, else: { text: 'Send invite' } });
   const notice = elements(invite.root, el => el.classes.includes('notice'))[0];
   assert.deepEqual(notice.children[0].parts, ['Invite sent to ', { expr: 'email' }, '.']);
   assert.deepEqual(doc.standIns.mocks.map(m => ({ name: m.name, at: doc.at(m.offset) })), [{ name: 'mockMembers', at: 'src/data/members.ts:3:14' }]);
@@ -113,7 +115,7 @@ test('Next: one screen per app/**/page.tsx inside its layouts; loading.tsx is a 
     ['page', [{ expr: 'app/loading.tsx', value: false }]],
   ]);
   const problem = elements(subscribe.root, el => el.classes.includes('problem'))[0];
-  assert.deepEqual(problem.cond, [{ expr: 'app/loading.tsx', value: false }, { expr: 'hasError', value: true }]);
+  assert.deepEqual(problem.cond.map(c => ({ expr: c.expr, value: c.value })), [{ expr: 'app/loading.tsx', value: false }, { expr: 'hasError', value: true }]);
   assert.deepEqual(doc.fonts.map(f => ({ module: f.module, name: f.name, at: doc.at(f.offset) })), [{ module: 'geist/font/sans', name: 'GeistSans', at: 'app/layout.tsx:2:10' }]);
   assert.ok(doc.files.includes('lib/releases.ts') && doc.files.includes('app/globals.css') && !doc.files.includes('app/api/subscribe/route.ts'));
   assert.deepEqual(doc.standIns.mocks.map(m => m.name), ['mockReleases']);
@@ -254,6 +256,54 @@ test('generate: Next boundary files are states by name: a feature not-found.tsx 
   const states = Object.fromEntries(result.handoff.screens.map(s => [s.id, STANDARD.filter(x => !s.states[x].missing)]));
   assert.deepEqual(states, { index: ['default'], 'loading-demo': ['default', 'empty', 'error'] });
   assert.ok(result.handoff.source.ignored.includes('app/not-found.tsx (root not-found)'));
+});
+
+// #213: the condition shapes of a one-file Vite app, each on its own line of fixtures/conditions-app/src/App.tsx.
+const CONDITIONS = fileURLToPath(new URL('fixtures/conditions-app', import.meta.url));
+const CONDITIONS_DECISIONS = JSON.parse(readFileSync(join(CONDITIONS, 'decisions.json'), 'utf8'));
+const conditionRequests = async () => (await generate({ prototype: CONDITIONS, designSystem: designSystem(), decisions: {} })).requests.filter(r => r.kind === 'condition');
+const conditionsScreen = () => readReact(CONDITIONS).screens[0];
+const partConds = attr => attr.parts.map(p => (typeof p === 'string' ? p : p.ternary ? p.ternary.cond : p.expr));
+
+test('read: a template-literal className is the class with its ternary as a part; the class string is never a condition', { skip: noTs }, async () => {
+  const [tab] = elements(conditionsScreen().root, el => el.tag === 'button');
+  assert.deepEqual(tab.attrHoles, []);
+  assert.deepEqual(partConds(tab.attrs.class), ['tab ', "mode === 'fixed'"]);
+  assert.deepEqual((await conditionRequests()).filter(r => r.key.includes('`')).map(r => r.key), []);
+});
+
+test('read: a && inside a template-literal className stays one ternary test, not two broken conditions', { skip: noTs }, async () => {
+  const [total] = elements(conditionsScreen().root, el => el.tag === 'p' && el.attrs.class && el.attrs.class.parts);
+  assert.deepEqual(partConds(total.attrs.class), ['total ', 'amount > 0 && amount < limit']);
+  assert.deepEqual((await conditionRequests()).filter(r => /limit|\$\{/.test(r.key)).map(r => r.key), []);
+});
+
+test('read: a style object with a ternary inside is a dynamic style value, not a condition', { skip: noTs }, async () => {
+  const [bar] = elements(conditionsScreen().root, el => el.tag === 'div' && el.classes.includes('bar'));
+  assert.deepEqual(bar.attrHoles, []);
+  assert.deepEqual(partConds(bar.attrs.style), ["{ left: drift < 0 ? '40%' : '50%' }"]);
+  assert.deepEqual((await conditionRequests()).filter(r => r.key.startsWith('condition:{')).map(r => r.key), []);
+});
+
+test('generate: a && chain keeps each operand whole, a parenthesized comparison with its operator', { skip: noTs }, async () => {
+  assert.deepEqual((await conditionRequests()).map(r => r.key), ["condition:mode === 'diy'", 'condition:(amount * (pl / 100)) > 0', 'condition:over']);
+});
+
+test('generate: a condition request is evidenced at each of its atom\'s source sites', { skip: noTs }, async () => {
+  assert.deepEqual((await conditionRequests()).map(r => [r.key, r.evidence.at]), [
+    ["condition:mode === 'diy'", ['src/App.tsx:18:8']],
+    ['condition:(amount * (pl / 100)) > 0', ['src/App.tsx:18:26']],
+    ['condition:over', ['src/App.tsx:18:56']],
+  ]);
+});
+
+test('generate: a property named _error reads as the error state, not a condition to decide', { skip: noTs }, async () => {
+  assert.equal((await conditionRequests()).find(r => r.key === 'condition:result._error'), undefined);
+  const result = await generate({ prototype: CONDITIONS, designSystem: designSystem(), decisions: CONDITIONS_DECISIONS });
+  assert.deepEqual(result.requests, []);
+  const [screen] = result.handoff.screens;
+  assert.equal(screen.states.error.missing, undefined);
+  assert.match(screen.states.error.content, /`result\._error` is true/);
 });
 
 test('read: next/font loaders in a layout are the fonts it loads, each at its binding', { skip: noTs }, () => {
