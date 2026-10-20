@@ -3,7 +3,7 @@ name: test
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, claude/nifty-bun-8b2028]
 
 permissions:
   contents: read
@@ -23,6 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         shard: [1, 2, 3, 4]
+        conc: [default, 2, 3]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,7 +39,8 @@ jobs:
       - run: node skills/to-handoff/scripts/deps.mjs
       # Through NODE_OPTIONS: `npm test -- --test-shard=n/4` appends the flag after the file globs, where
       # node --test ignores it.
-      - run: npm test
+      - run: nproc; node -p "require('os').availableParallelism()"; node --version
+      - run: node --test ${{ matrix.conc != 'default' && format('--test-concurrency={0}', matrix.conc) || '' }} skills/*/test/*.test.mjs skills/*/tests/*.test.mjs
         env:
           NODE_OPTIONS: --test-shard=${{ matrix.shard }}/4
 
