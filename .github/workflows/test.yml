@@ -3,7 +3,7 @@ name: test
 on:
   pull_request:
   push:
-    branches: [main, claude/nifty-bun-8b2028]
+    branches: [main]
 
 permissions:
   contents: read
@@ -16,14 +16,14 @@ concurrency:
 
 jobs:
   # npm test split four ways by file, each shard on its own runner: one runner ran it in about 20 minutes,
-  # CPU-bound. The four sum to every file npm test runs.
+  # CPU-bound. The four sum to every file npm test runs. The runner has 2 vCPUs, so node --test runs a shard's files one
+  # at a time; --test-concurrency 2 or 3 made no shard reliably faster, its files only slowing each other down.
   shard:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         shard: [1, 2, 3, 4]
-        conc: [default, 2, 3]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -39,8 +39,7 @@ jobs:
       - run: node skills/to-handoff/scripts/deps.mjs
       # Through NODE_OPTIONS: `npm test -- --test-shard=n/4` appends the flag after the file globs, where
       # node --test ignores it.
-      - run: nproc; node -p "require('os').availableParallelism()"; node --version
-      - run: node --test ${{ matrix.conc != 'default' && format('--test-concurrency={0}', matrix.conc) || '' }} skills/*/test/*.test.mjs skills/*/tests/*.test.mjs
+      - run: npm test
         env:
           NODE_OPTIONS: --test-shard=${{ matrix.shard }}/4
 
