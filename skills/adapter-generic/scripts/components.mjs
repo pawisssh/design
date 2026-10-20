@@ -434,7 +434,8 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     if (d && d.from && d.from.multiplier && d.from.factor) env[d.from.multiplier] = round(d.value / d.from.factor);
     if (/^radius-/.test(k)) env[`--${k}`] = d.value;
   }
-  const tokenFor = (text, scope) => Object.keys(foundations.variables).sort(byKey).find(k => {
+  const variableKeys = Object.keys(foundations.variables).sort(byKey);
+  const tokenFor = (text, scope) => variableKeys.find(k => {
     const v = foundations.variables[k];
     return v.codeSyntax && v.codeSyntax.WEB === text && (v.scopes || []).includes(scope);
   });

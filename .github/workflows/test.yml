@@ -16,7 +16,9 @@ concurrency:
 
 jobs:
   # npm test split four ways by file, each shard on its own runner: one runner ran it in about 20 minutes,
-  # CPU-bound. The four sum to every file npm test runs.
+  # CPU-bound. The four sum to every file npm test runs. The runner has 2 vCPUs, so node --test runs a shard's files one
+  # at a time. --test-concurrency 2 or 3 left the slowest shard, the one the run waits on, about as slow (379s to 360s
+  # and 366s): its files ran side by side but each took up to twice as long.
   shard:
     runs-on: ubuntu-latest
     strategy:

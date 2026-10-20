@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,8 +17,8 @@ import { approveFolder } from '../scripts/approve.mjs';
 import { CORES, baselined, gate, nextStep, pendingUpdate, variantFingerprints } from '../scripts/build.mjs';
 import { buildFolder, carryOmits } from '../scripts/folder.mjs';
 import { buildReview, reviewModel } from '../scripts/review.mjs';
-import { AT, FILE_KEY, RED, builtProject, drafts, drive, exported, fadeDisabled } from './drive.mjs';
-import { READABLE, V0, contractPath, read, scratch, selections, skip, snapshot, v0Folder } from './helpers.mjs';
+import { AT, FILE_KEY, RED, builtProject, draftedProject, drafts, drive, exported, fadeDisabled, inputFaded } from './drive.mjs';
+import { READABLE, contractPath, read, selections, skip, snapshot, v0Folder } from './helpers.mjs';
 
 const { reviewExport } = createRequire(import.meta.url)('../assets/review-export.js');
 const REVIEW = fileURLToPath(new URL('../scripts/review.mjs', import.meta.url));
@@ -172,24 +172,18 @@ test('carryOmits matches by axis value: variants new to the redraft keep the Ada
 });
 
 test('a change undone before its update is checked is sent again: the update\'s writes leave the baseline', { skip }, async () => {
-  const { project, root, dir, mock, ledger, record } = await builtProject();
-  const file = join(project, 'components/ui/input.tsx');
-  const source = readFileSync(file, 'utf8');
+  const p = await builtProject();
+  const { dir, mock, ledger, record } = p;
   const ids = ledger.sets.input.variants;
   const opacity = async () => (await mock.figma.getNodeByIdAsync(ids[2])).opacity;
   const was = await opacity();
-  const rerun = async () => {
-    await buildFolder({ project, root, drafts });
-    await approveFolder({ dir, project, exported: exported(dir), said: 'approve', at: AT, test: true });
-  };
-  fadeDisabled(file);
-  await rerun();
+  // Each change is rerun: its folder built again and approved.
+  await inputFaded(p, 50, 40);
   // The update call is in, its coverage check not yet: the owner puts the code back.
   const half = await drive({ dir, mock, ledger, record, namespace: 'v0-app', until: s => s.step === 'sets' });
   assert.deepEqual(half.steps.at(-1).plan.selection.entries.map(e => e[0]), [2, 5]);
   assert.notEqual(await opacity(), was);
-  writeFileSync(file, source);
-  await rerun();
+  await inputFaded(p, 40, 50);
   const { n, ledger: next, record: kept, steps } = await drive({ dir, mock, ledger: half.ledger, record: half.record, namespace: 'v0-app' });
   assert.equal(n.status, 'built', JSON.stringify(n));
   const sent = steps.filter(s => s.step === 'sets');
@@ -335,15 +329,12 @@ test('a component removed from the project: its approved Contract is set aside, 
 });
 
 test('a draft Contract whose component is removed, or that the Adapter now skips, is set aside, so approve goes on without it', { skip }, async () => {
-  const root = scratch();
-  const project = join(root, 'project');
-  cpSync(V0, project, { recursive: true });
-  const { dir } = await buildFolder({ project, root: join(root, 'ds'), drafts });
+  const { project, root, dir } = await draftedProject();
   // A Contract under a family the Adapter cannot read (sonner's Toaster), as an earlier Adapter might have left it.
   const label = read(contractPath(dir, 'label'));
   writeFileSync(contractPath(dir, 'sonner'), JSON.stringify({ ...label, family: { ...label.family, key: 'sonner' } }, null, 2) + '\n');
   dropTextarea(project);
-  const r = await buildFolder({ project, root: join(root, 'ds'), drafts });
+  const r = await buildFolder({ project, root, drafts });
   assert.deepEqual(r.setAside.map(s => s.family), ['sonner', 'textarea']);
   assert.match(r.setAside[0].reason, /^skipped: .*Toaster .*not a flex or grid container/);
   assert.equal(r.setAside[1].reason, 'not used by the screens');
@@ -355,11 +346,7 @@ test('a draft Contract whose component is removed, or that the Adapter now skips
 });
 
 test('a removed component that comes back has its set-aside Contract as its prior: the owner\'s omit and Drafted value come back with it', { skip }, async () => {
-  const root = scratch();
-  const project = join(root, 'project');
-  cpSync(V0, project, { recursive: true });
-  const ds = join(root, 'ds');
-  const { dir } = await buildFolder({ project, root: ds, drafts });
+  const { project, root: ds, dir } = await draftedProject();
   // The owner renames Textarea's invalid axis in chat (an owner entry, ADR 0010) and unticks its focus State.
   const file = contractPath(dir, 'textarea');
   const edited = read(file);

@@ -26,7 +26,28 @@ export function baseTuple(contract) {
 }
 
 const SECTIONS = ['layout', 'paint'];
-const clone = o => JSON.parse(JSON.stringify(o));
+// A copy of plain JSON data, as a JSON round trip gives it but without the text in between (resolve copies per tuple):
+// an undefined, function or symbol drops out of an object and is null in an array, as is a number that is not finite;
+// -0 is 0.
+function clone(v) {
+  if (typeof v === 'number') return isFinite(v) ? (v === 0 ? 0 : v) : null;
+  if (typeof v === 'function' || typeof v === 'symbol') return undefined;
+  if (v === null || typeof v !== 'object') return v;
+  if (Array.isArray(v)) {
+    const out = [];
+    for (let i = 0; i < v.length; i++) { const c = clone(v[i]); out.push(c === undefined ? null : c); }
+    return out;
+  }
+  const out = {};
+  for (const k of Object.keys(v)) {
+    const c = clone(v[k]);
+    if (c === undefined) continue;
+    // a "__proto__" key is a field, as JSON.parse makes it, not the prototype
+    if (k === '__proto__') Object.defineProperty(out, k, { value: c, enumerable: true, writable: true, configurable: true });
+    else out[k] = c;
+  }
+  return out;
+}
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 
 /**
@@ -59,7 +80,7 @@ export function resolve(contract, tuple) {
           const [n, f] = splitRef(v.sameAs);
           v = nodes[n] && nodes[n][f];
         }
-        if (v !== undefined && !(isObj(v) && 'sameAs' in v)) fields[field] = clone(v);
+        if (v !== value && v !== undefined && !(isObj(v) && 'sameAs' in v)) fields[field] = clone(v);
       }
   }
   out.layout = resolved.layout;
