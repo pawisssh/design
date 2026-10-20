@@ -16,6 +16,7 @@ import { parseInline } from '../scripts/css.mjs';
 import { matchDeclaration, matchText } from '../scripts/match.mjs';
 import { innerHtmlTemplates } from '../scripts/reader.mjs';
 import { mediaAtBreakpoints } from '../scripts/generate.mjs';
+import { standIns } from '../scripts/recognise.mjs';
 import { BUTTON, DECISIONS, PROTOTYPE, designSystem, fixture, repo } from './helpers.mjs';
 
 const BUTTON_BYTES = readFileSync(BUTTON, 'utf8');
@@ -222,6 +223,33 @@ test('states, Stand-ins and the missing error state come from the Prototype', { 
   assert.ok(handoff.data.some(d => d.source === 'simulated'));
   assert.ok(Object.values(handoff.copy).some(c => c.placeholder && /Lorem ipsum/.test(c.text)));
   assert.ok(handoff.acceptance.length > 0 && handoff.acceptance.every(a => a.by === 'agent'));
+});
+
+test('a setTimeout that only clears a status message after the work is not simulated work (#217)', () => {
+  const text = `
+  function sendInvites() {
+    state.isSending = true; render();
+    setTimeout(() => { state.isSending = false; state.sent = true; render(); }, 800);
+  }
+  function loadState() {
+    const raw = localStorage.getItem('save');
+    if (!raw) { state.msg = 'No save found'; render(); setTimeout(() => { state.msg = null; render(); }, 2000); return; }
+    try { state.funds = JSON.parse(raw).funds; render(); } catch { state.msg = 'Load failed'; setTimeout(() => { state.msg = ''; render(); }, 2000); }
+  }
+  function copyLink() { state.msg = 'Copied'; render(); setTimeout(function () { state.msg = \`\`; render(); }, TOAST_MS); }
+  function saveAndConfirm() {
+    state.isSaving = true; render();
+    setTimeout(() => { state.isSaving = false; state.done = true; render(); setTimeout(() => { state.msg = undefined; render(); }, 3000); }, 600);
+  }
+  function confirmThenSave() {
+    state.msg = 'Saving…'; setTimeout(() => { state.msg = null; }, 1500);
+    state.isSaving = true; setTimeout(() => { state.isSaving = false; state.saved = true; }, 900);
+  }`;
+  assert.deepEqual(standIns([{ text, offset: 0 }]).simulated.map(f => ({ name: f.name, delay: f.delay, before: f.before, after: f.after })), [
+    { name: 'sendInvites', delay: 800, before: ['state.isSending'], after: ['state.sent'] },
+    { name: 'saveAndConfirm', delay: 600, before: ['state.isSaving'], after: ['state.done'] },
+    { name: 'confirmThenSave', delay: 900, before: ['state.isSaving'], after: ['state.saved'] },
+  ]);
 });
 
 test('generate with an empty decisions file returns decision requests and writes nothing', { skip: noDeps }, async () => {
