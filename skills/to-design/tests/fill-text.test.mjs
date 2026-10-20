@@ -1,4 +1,4 @@
-// A layer whose Contract width is fill is built wider than 0 px, and one stuck at 0 px reads back as its size.
+// A layer whose Contract width is fill is built wider than 0 px, and one stuck at 0 px reads back as its size (#224).
 // Run with `node --test skills/to-design/tests/*.test.mjs`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

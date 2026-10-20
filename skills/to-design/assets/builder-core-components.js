@@ -81,7 +81,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     if (f === 'direction') return keyOf(AXIS, n.layoutMode) || 'none';
     if (f === 'width' || f === 'height') {
       const s = f === 'width' ? n.layoutSizingHorizontal : n.layoutSizingVertical;
-      // A fill stuck at 0 px reads as its size, so a build repairs it.
+      // A fill stuck at 0 px reads as its size, so a build repairs it (#224).
       const fill = () => (n[f] >= 1 ? 'fill' : val(n, f));
       if (s === 'FILL') return fill();
       if (s !== 'FIXED') return String(s).toLowerCase();
@@ -184,7 +184,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     if (f === 'direction') n.layoutMode = AXIS[want] || 'NONE';
     else if (f === 'width' || f === 'height') {
       const k = f === 'width' ? 'layoutSizingHorizontal' : 'layoutSizingVertical';
-      // A 0 px node (a new text) keeps 0 px under FILL (probed live)
+      // A 0 px node (a new text) keeps 0 px under FILL (probed live in #224)
       if (want === 'fill' && !(n[f] >= 1)) num(n, f, { raw: 1 });
       if (typeof want === 'string') n[k] = want.toUpperCase();
       else { n[k] = 'FIXED'; num(n, f, want); }
