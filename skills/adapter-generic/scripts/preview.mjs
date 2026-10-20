@@ -29,13 +29,13 @@
 // the Contract's snapshot, when a pinned package is not the Contract's `source.packages` version, or when any installed
 // package's version differs from the one the project's lockfile resolves.
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { copyFileSync, existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolve } from '../../contract/scripts/contract.mjs';
 import { familyRoot, readSource } from './source.mjs';
-import { DEFAULT_DIR, FIXTURE, REPO_ROOT, hasTools, sha256, toolDir } from './sources.mjs';
+import { DEFAULT_DIR, FIXTURE, REPO_ROOT, hasTools, installAtomically, sha256, toolDir } from './sources.mjs';
 import { build } from './tailwind.mjs';
 
 export const PREVIEW_DIR = join(REPO_ROOT, '.scratch/adapter-generic/preview');
@@ -48,12 +48,12 @@ export function hasPreviewPackages(dir = PREVIEW_DIR) {
   return lockOf(dir) === lockOf(PINNED_DIR) && existsSync(join(dir, 'node_modules/react-dom/package.json'));
 }
 
-/** Install the pinned packages into `dir` with `npm ci --ignore-scripts`. Skips when already installed. */
+/** Install the pinned packages into `dir` with `npm ci --ignore-scripts`, beside it first. Skips when already installed. */
 export function fetchPreviewPackages(dir = PREVIEW_DIR) {
-  if (hasPreviewPackages(dir)) return dir;
-  mkdirSync(dir, { recursive: true });
-  for (const f of ['package.json', 'package-lock.json']) copyFileSync(join(PINNED_DIR, f), join(dir, f));
-  execFileSync('npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: dir, stdio: 'inherit' });
+  installAtomically(dir, hasPreviewPackages, tmp => {
+    for (const f of ['package.json', 'package-lock.json']) copyFileSync(join(PINNED_DIR, f), join(tmp, f));
+    execFileSync('npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: tmp, stdio: 'inherit' });
+  }, ['node_modules', 'package.json', 'package-lock.json']);
   return dir;
 }
 

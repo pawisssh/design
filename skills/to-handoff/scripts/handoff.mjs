@@ -29,7 +29,14 @@ import { validateHandoff } from './validate.mjs';
 import { render } from './render-html.mjs';
 import { approve, check, review } from './signoff.mjs';
 
-const printDropped = dropped => { for (const x of dropped || []) console.error(`dropped owner decision ${x.key}: ${x.reason}`); };
+// `69 requests: 44 condition, 23 recognise, 1 feature, 1 acceptance`: most first, a tie in the order they were asked.
+const requestCounts = requests => {
+  const counts = new Map();
+  for (const r of requests) counts.set(r.kind, (counts.get(r.kind) || 0) + 1);
+  const kinds = [...counts].sort((a, b) => b[1] - a[1]).map(([kind, n]) => `${n} ${kind}`);
+  return `${requests.length} request${requests.length === 1 ? '' : 's'}: ${kinds.join(', ')}`;
+};
+const printDropped =dropped => { for (const x of dropped || []) console.error(`dropped owner decision ${x.key}: ${x.reason}`); };
 
 async function main(argv) {
   const { positionals, values } = parseArgs({ args: argv, allowPositionals: true, options: {
@@ -45,6 +52,7 @@ async function main(argv) {
   if (command === 'generate') {
     const decisions = values.decisions ? JSON.parse(readFileSync(values.decisions, 'utf8')) : {};
     const result = await generate({ prototype: input, designSystem: values.ds, decisions, runtime: !values.static });
+    if (result.requests.length) console.error(requestCounts(result.requests));
     printDropped(result.dropped);
     if (result.requests.length) { console.log(JSON.stringify({ requests: result.requests }, null, 2)); return 2; }
     const check = validateHandoff(result.handoff, await loadDesignSystem(values.ds));

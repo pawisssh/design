@@ -60,6 +60,8 @@ What generate does without asking:
 
 The store writes only when the content changes. Each write bumps `revision` and leaves `status: "pending"` and `approval: null`. A re-run on the same inputs is byte-identical and reports `unchanged`. generate validates before it reports.
 
+With requests open, stderr's first line counts them by kind (`69 requests: 44 condition, 23 recognise, …`). To read a written Handoff, run `review` (section 5) instead of parsing `handoff.json`.
+
 ## 3. The runtime reader
 
 `scripts/runtime.mjs` never touches the owner's checkout. It works on a copy in `.scratch/to-handoff/runs/`, which it removes after the run:

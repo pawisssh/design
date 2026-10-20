@@ -383,12 +383,18 @@ test('the CLI refuses with decision requests and exit code 2 when decisions are 
   const ds = designSystem();
   const empty = join(ds, 'decisions.json');
   writeFileSync(empty, '{}');
-  let code = 0, out = '';
+  let code = 0, out = '', err = '';
   try { execFileSync(process.execPath, [repo('skills/to-handoff/scripts/handoff.mjs'), 'generate', PROTOTYPE, '--ds', ds, '--decisions', empty, '--static'], { encoding: 'utf8', stdio: 'pipe' }); }
-  catch (e) { code = e.status; out = e.stdout; }
+  catch (e) { code = e.status; out = e.stdout; err = e.stderr; }
   assert.equal(code, 2);
-  assert.ok(JSON.parse(out).requests.length > 0);
+  const { requests } = JSON.parse(out);
+  assert.ok(requests.length > 1);
   assert.ok(!existsSync(join(ds, 'handoffs')));
+  // stderr's first line counts the requests by kind (#219): most first, a tie in the order they were asked.
+  const counts = new Map();
+  for (const r of requests) counts.set(r.kind, (counts.get(r.kind) || 0) + 1);
+  const kinds = [...counts].sort((a, b) => b[1] - a[1]).map(([kind, n]) => `${n} ${kind}`);
+  assert.equal(err.split('\n')[0], `${requests.length} requests: ${kinds.join(', ')}`);
 });
 
 test('a media query at the breakpoints: where it applies, the two a px width falls between, else the widths seen (#146)', () => {
