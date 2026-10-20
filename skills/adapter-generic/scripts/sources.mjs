@@ -11,8 +11,8 @@
 // in gitignored scratch.
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
@@ -85,16 +85,43 @@ export async function fetchTools(dir = DEFAULT_DIR) {
     const bytes = Buffer.from(await res.arrayBuffer());
     const got = 'sha512-' + createHash('sha512').update(bytes).digest('base64');
     if (got !== pin.integrity) throw new Error(`${name}@${pin.version}: integrity ${got} does not match the pin ${pin.integrity}`);
-    // Extract into a fresh empty directory, then move it into place: a half-extracted tool never looks valid.
-    mkdirSync(dirname(out), { recursive: true });
-    const tmp = mkdtempSync(join(dirname(out), '.extract-'));
-    writeFileSync(join(tmp, 'package.tgz'), bytes);
-    execFileSync('tar', ['-xzf', join(tmp, 'package.tgz'), '-C', tmp, ...pin.extract]);
-    rmSync(join(tmp, 'package.tgz'));
-    rmSync(out, { recursive: true, force: true });
-    execFileSync('mv', [tmp, out]);
+    // Extracted beside its folder, then moved into place: a half-extracted tool never looks valid.
+    installAtomically(out, d => pin.extract.every(m => existsSync(join(d, m))), tmp => {
+      writeFileSync(join(tmp, 'package.tgz'), bytes);
+      execFileSync('tar', ['-xzf', join(tmp, 'package.tgz'), '-C', tmp, ...pin.extract]);
+      rmSync(join(tmp, 'package.tgz'));
+    }, ['package']);
   }
   return dir;
+}
+
+/**
+ * Unless `complete(dir)`, run `install` into a fresh folder beside `dir` and rename it into place, so a run at the same
+ * time never sees `dir` half-installed (#219); a run that loses the race drops its copy. A `dir` already there but not
+ * complete (an older lockfile) keeps its other files: only `entries` move in, one rename each, in order, so the last
+ * one makes `dir` complete. To-handoff's deps.mjs keeps the same function.
+ */
+export function installAtomically(dir, complete, install, entries) {
+  if (complete(dir)) return;
+  mkdirSync(dirname(dir), { recursive: true });
+  const tmp = mkdtempSync(join(dirname(dir), `.${basename(dir)}.install-`));
+  const occupied = e => e.code === 'ENOTEMPTY' || e.code === 'EEXIST';
+  try {
+    install(tmp);
+    if (!complete(tmp)) throw new Error(`the install in ${tmp} is incomplete`);
+    try { renameSync(tmp, dir); return; } catch (e) { if (!occupied(e)) throw e; }
+    if (complete(dir)) return;
+    for (const entry of entries) {
+      for (let i = 0; ; i++) {
+        try { renameSync(join(tmp, entry), join(dir, entry)); break; } catch (e) { if (!occupied(e) || i === 3) throw e; }
+        // Another run may have finished meanwhile: keep its install rather than move it aside.
+        if (complete(dir)) return;
+        try { renameSync(join(dir, entry), join(tmp, `.old-${i}`)); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+      }
+    }
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
 }
 
 // ---------- CLI ----------

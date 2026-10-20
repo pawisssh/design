@@ -11,9 +11,9 @@
 // Chromium's headless shell into <dir>/browsers with playwright-core's own installer, which checks no pinned
 // hash: unlike the packages, that download is trusted as playwright-core's CDN serves it.
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -47,17 +47,46 @@ export function hasRuntime(dir = DEPS_DIR) {
 
 /** Install the pinned packages into `dir`, and Chromium when there is no system Chrome. Skips what is there. */
 export function fetchDeps(dir = DEPS_DIR) {
-  if (!hasDeps(dir)) {
-    mkdirSync(dir, { recursive: true });
-    for (const f of ['package.json', 'package-lock.json']) copyFileSync(join(PINNED_DIR, f), join(dir, f));
-    execFileSync('npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: dir, stdio: 'inherit' });
-  }
+  installAtomically(dir, hasDeps, tmp => {
+    for (const f of ['package.json', 'package-lock.json']) copyFileSync(join(PINNED_DIR, f), join(tmp, f));
+    execFileSync('npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: tmp, stdio: 'inherit' });
+  }, ['node_modules', 'package.json', 'package-lock.json']);
   if (!findBrowser(dir)) {
     execFileSync(process.execPath, [join(dir, 'node_modules/playwright-core/cli.js'), 'install', 'chromium-headless-shell'], {
       cwd: dir, stdio: 'inherit', env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: join(dir, 'browsers') },
     });
   }
   return dir;
+}
+
+/**
+ * Unless `complete(dir)`, run `install` into a fresh folder beside `dir` and rename it into place, so a run at the same
+ * time never sees `dir` half-installed (#219); a run that loses the race drops its copy. A `dir` already there but not
+ * complete (an older lockfile) keeps its other files, here the runtime reader's runs and the fetched browser: only
+ * `entries` move in, one rename each, in order, so the last one (the lockfile) makes `dir` complete.
+ * adapter-generic's sources.mjs keeps the same function.
+ */
+function installAtomically(dir, complete, install, entries) {
+  if (complete(dir)) return;
+  mkdirSync(dirname(dir), { recursive: true });
+  const tmp = mkdtempSync(join(dirname(dir), `.${basename(dir)}.install-`));
+  const occupied = e => e.code === 'ENOTEMPTY' || e.code === 'EEXIST';
+  try {
+    install(tmp);
+    if (!complete(tmp)) throw new Error(`the install in ${tmp} is incomplete`);
+    try { renameSync(tmp, dir); return; } catch (e) { if (!occupied(e)) throw e; }
+    if (complete(dir)) return;
+    for (const entry of entries) {
+      for (let i = 0; ; i++) {
+        try { renameSync(join(tmp, entry), join(dir, entry)); break; } catch (e) { if (!occupied(e) || i === 3) throw e; }
+        // Another run may have finished meanwhile: keep its install rather than move it aside.
+        if (complete(dir)) return;
+        try { renameSync(join(dir, entry), join(tmp, `.old-${i}`)); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+      }
+    }
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
 }
 
 /**

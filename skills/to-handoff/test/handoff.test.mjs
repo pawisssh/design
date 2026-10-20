@@ -383,12 +383,24 @@ test('the CLI refuses with decision requests and exit code 2 when decisions are 
   const ds = designSystem();
   const empty = join(ds, 'decisions.json');
   writeFileSync(empty, '{}');
-  let code = 0, out = '';
+  let code = 0, out = '', err = '';
   try { execFileSync(process.execPath, [repo('skills/to-handoff/scripts/handoff.mjs'), 'generate', PROTOTYPE, '--ds', ds, '--decisions', empty, '--static'], { encoding: 'utf8', stdio: 'pipe' }); }
-  catch (e) { code = e.status; out = e.stdout; }
+  catch (e) { code = e.status; out = e.stdout; err = e.stderr; }
   assert.equal(code, 2);
-  assert.ok(JSON.parse(out).requests.length > 0);
+  const { requests } = JSON.parse(out);
+  assert.ok(requests.length > 1);
   assert.ok(!existsSync(join(ds, 'handoffs')));
+  // stderr's first line counts the requests by kind (#219): every kind once, most first, a tie in the order first asked.
+  const [, total, list] = err.split('\n')[0].match(/^(\d+) requests: (.+)$/);
+  assert.equal(Number(total), requests.length);
+  const listed = list.split(', ').map(x => x.match(/^(\d+) (\S+)$/)).map(([, n, kind]) => ({ n: Number(n), kind }));
+  for (const { n, kind } of listed) assert.equal(n, requests.filter(r => r.kind === kind).length, kind);
+  assert.deepEqual(listed.map(x => x.kind).sort(), [...new Set(requests.map(r => r.kind))].sort());
+  const first = kind => requests.findIndex(r => r.kind === kind);
+  for (let i = 1; i < listed.length; i++) {
+    const [a, b] = [listed[i - 1], listed[i]];
+    assert.ok(a.n > b.n || (a.n === b.n && first(a.kind) < first(b.kind)), `${a.kind} before ${b.kind}`);
+  }
 });
 
 test('a media query at the breakpoints: where it applies, the two a px width falls between, else the widths seen (#146)', () => {
