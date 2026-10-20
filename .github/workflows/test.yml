@@ -39,10 +39,14 @@ jobs:
       # measurements, use the runner's Chrome.
       - run: node skills/to-handoff/scripts/deps.mjs
       # Through NODE_OPTIONS: `npm test -- --test-shard=n/4` appends the flag after the file globs, where
-      # node --test ignores it.
+      # node --test ignores it. TAP goes to the log, and slowest-files.mjs adds the shard's ten slowest files to the
+      # job summary, so a slow shard names its files without parsing the log.
       - run: npm test
         env:
-          NODE_OPTIONS: --test-shard=${{ matrix.shard }}/4
+          NODE_OPTIONS: >-
+            --test-shard=${{ matrix.shard }}/4
+            --test-reporter=tap --test-reporter-destination=stdout
+            --test-reporter=${{ github.workspace }}/.github/slowest-files.mjs --test-reporter-destination=stdout
 
   # The one check to require: green only when every shard is. A cancelled run leaves it cancelled, not red.
   test:
