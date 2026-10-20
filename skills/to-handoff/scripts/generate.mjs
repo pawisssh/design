@@ -111,7 +111,7 @@ const among = (candidates, extra = []) => answer =>
 // ---------- text ----------
 
 /** A reader condition's tree: an el.cond entry's {expr} or a ternary's {cond}, as the React reader's AST when it gives one. */
-const conditionOf = c => c.ast || parseCondition(c.expr !== undefined ? c.expr : c.cond);
+const conditionTree = c => c.ast || parseCondition(c.expr !== undefined ? c.expr : c.cond);
 
 /** The display text of reader parts in `state`: a dynamic value shows as `{expr}` without its first segment. */
 function textOf(parts, valueOf) {
@@ -119,7 +119,7 @@ function textOf(parts, valueOf) {
   const branch = b => (b.text !== undefined ? b.text : b.expr !== undefined ? show(b.expr) : '');
   return parts.map(p => {
     if (typeof p === 'string') return p;
-    if (p.ternary) return branch(evaluate(conditionOf(p.ternary), valueOf) ? p.ternary.then : p.ternary.else);
+    if (p.ternary) return branch(evaluate(conditionTree(p.ternary), valueOf) ? p.ternary.then : p.ternary.else);
     if (p.text !== undefined) return p.text;
     if (p.markup) return '';
     return show(p.expr);
@@ -310,15 +310,15 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const mount = screen.mount || findTag(screen.root, 'body');
     // Each atom with its source sites (#213): the React reader's atom offsets, else where the condition first shows.
     const sites = new Map();
-    const firstAt = new Map();
+    const firstShown = new Map();
     const add = (c, offset) => {
-      if (!firstAt.has(c)) firstAt.set(c, offset);
+      if (!firstShown.has(c)) firstShown.set(c, offset);
       const visit = n => {
         if (n.atom === undefined) return (n.not ? [n.not] : n.or || n.and).forEach(visit);
         if (!sites.has(n.atom)) sites.set(n.atom, new Set());
-        sites.get(n.atom).add(at(n.offset !== undefined ? n.offset : firstAt.get(c)));
+        sites.get(n.atom).add(at(n.offset !== undefined ? n.offset : firstShown.get(c)));
       };
-      visit(conditionOf(c));
+      visit(conditionTree(c));
     };
     walk(screen.root, el => {
       for (const c of el.cond) add(c, el.offset);
@@ -339,7 +339,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const atomsIn = s => atomIn(s, defaults);
     const shownIn = el => {
       if (!el.cond.length) return null;
-      const ins = present.filter(s => el.cond.every(c => evaluate(conditionOf(c), atomsIn(s)) === c.value));
+      const ins = present.filter(s => el.cond.every(c => evaluate(conditionTree(c), atomsIn(s)) === c.value));
       return ins.length === present.length ? null : ins;
     };
 
@@ -534,7 +534,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
         const entry = {};
         for (const h of el.attrHoles) {
           if (!h.ternary) continue;
-          const branch = evaluate(conditionOf(h.ternary), atomsIn(s)) ? h.ternary.then : h.ternary.else;
+          const branch = evaluate(conditionTree(h.ternary), atomsIn(s)) ? h.ternary.then : h.ternary.else;
           const word = branch.text !== undefined ? branch.text.trim() : '';
           if (byAttr[word]) entry.state = byAttr[word];
         }
@@ -977,7 +977,13 @@ function slotTuple(def, own) {
   return tuple;
 }
 
-const propText = v => (typeof v === 'string' ? JSON.stringify(v) : `{${(v.parts || []).map(p => p.expr || p).join('')}}`);
+// A prop's source text: a string as JSON, one hole as {expr}, holes among text as the template literal they read from.
+const propText = v => {
+  if (typeof v === 'string') return JSON.stringify(v);
+  const parts = v.parts || [];
+  if (parts.length === 1 && typeof parts[0] !== 'string') return `{${parts[0].expr}}`;
+  return `{\`${parts.map(p => (typeof p === 'string' ? p : `\${${p.expr}}`)).join('')}\`}`;
+};
 
 // ---------- media queries at the breakpoints ----------
 

@@ -31,13 +31,6 @@ export function parseCondition(text) {
   return or();
 }
 
-export function atomsOf(ast, out = []) {
-  if (ast.atom !== undefined) { if (!out.includes(ast.atom)) out.push(ast.atom); }
-  else if (ast.not) atomsOf(ast.not, out);
-  else for (const x of ast.or || ast.and) atomsOf(x, out);
-  return out;
-}
-
 export function evaluate(ast, value) {
   if (ast.atom !== undefined) return value(ast.atom);
   if (ast.not) return !evaluate(ast.not, value);
@@ -53,6 +46,7 @@ export function stateOfAtom(atom) {
   if (file) return FRAMEWORK_STATES[file[1]];
   if (/(\.length\s*===?\s*0\b|^!\s*[\w.]+\.length$|\bisEmpty\b)/.test(atom)) return 'empty';
   if (/\b(is)?(Loading|Sending|Submitting|Fetching|Pending|Saving)\b|\b(loading|sending|submitting|fetching|pending|saving)\b/.test(atom)) return 'loading';
+  // An `_error` property (`result._error`) is the error state too (#213).
   if (/\b(is)?(Error|Failed)\b|\b_?(error|failed|hasError)\b/.test(atom)) return 'error';
   if (/\b(is)?(Submitted|Sent|Success|Done|Saved)\b|\b(submitted|sent|success|done|saved)\b/.test(atom)) return 'success';
   return null;

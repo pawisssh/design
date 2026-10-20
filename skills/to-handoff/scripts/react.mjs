@@ -230,11 +230,11 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
     return { expr: text(s, node), ast: tree(node) };
   };
   // An attribute expression that reads as a condition: a negation, a comparison or logical operator, or an is/has… name.
-  const TESTS = new Set([ts.SyntaxKind.AmpersandAmpersandToken, ts.SyntaxKind.BarBarToken, ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken,
+  const TEST_OPERATORS = new Set([ts.SyntaxKind.AmpersandAmpersandToken, ts.SyntaxKind.BarBarToken, ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken,
     ts.SyntaxKind.EqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsToken, ts.SyntaxKind.LessThanToken, ts.SyntaxKind.GreaterThanToken, ts.SyntaxKind.LessThanEqualsToken, ts.SyntaxKind.GreaterThanEqualsToken]);
   const testLike = (s, e) => {
     if (ts.isPrefixUnaryExpression(e)) return e.operator === ts.SyntaxKind.ExclamationToken;
-    if (ts.isBinaryExpression(e)) return TESTS.has(e.operatorToken.kind);
+    if (ts.isBinaryExpression(e)) return TEST_OPERATORS.has(e.operatorToken.kind);
     return (ts.isIdentifier(e) || ts.isPropertyAccessExpression(e) || ts.isCallExpression(e)) && /^(is|has|can|should|show)[A-Z]/.test(text(s, e));
   };
 
@@ -247,7 +247,10 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
   const hasJsx = n => ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n) || ts.isJsxFragment(n) || Boolean(ts.forEachChild(n, hasJsx));
   const rendersMarkup = (e, ctx) => hasJsx(e) || isChildren(e, ctx);
   const withCond = (ctx, c, value) => ({ ...ctx, cond: [...ctx.cond, { ...c, value }] });
-  const ternaryOf = (s, e, ctx) => ({ expr: text(s, e), ternary: { cond: text(s, e.condition), ast: conditionOf(s, e.condition).ast, then: branchOf(s, e.whenTrue, ctx), else: branchOf(s, e.whenFalse, ctx) } });
+  const ternaryOf = (s, e, ctx) => {
+    const c = conditionOf(s, e.condition);
+    return { expr: text(s, e), ternary: { cond: c.expr, ast: c.ast, then: branchOf(s, e.whenTrue, ctx), else: branchOf(s, e.whenFalse, ctx) } };
+  };
   const branchOf = (s, e, ctx) => {
     e = unwrap(e);
     if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return { text: e.text };
@@ -326,7 +329,8 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
   };
 
   // A JSX element's props: [{name, value, offset, test}], value a string, a boolean, {expr}, {expr, ternary},
-  // {parts} (a template literal, its holes as text parts) or {jsx}. `test` is an {expr} that reads as a condition.
+  // {parts} (a template literal, its holes as text parts, #213) or {jsx}. `test` is the {expr, ast} condition an
+  // {expr} reads as, on a boolean prop or a test-shaped expression.
   const propsOf = (opening, ctx) => {
     const s = ctx.s;
     const out = [];
@@ -395,6 +399,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
     if (value === true) el.attrs[attr] = '';
     else if (typeof value === 'string') el.attrs[attr] = value;
     else if (value.parts) el.attrs[attr] = { parts: value.parts };
+    // A class or style is a value, never a boolean hole, whatever its expression reads like (#213).
     else if (test && attr !== 'class' && attr !== 'style') {
       el.attrHoles.push({ expr: value.expr, ternary: { cond: test.expr, ast: test.ast, then: { text: attr }, else: { text: '' } }, offset });
     } else el.attrs[attr] = { parts: [value] };
