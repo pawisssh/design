@@ -81,15 +81,15 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     if (f === 'direction') return keyOf(AXIS, n.layoutMode) || 'none';
     if (f === 'width' || f === 'height') {
       const s = f === 'width' ? n.layoutSizingHorizontal : n.layoutSizingVertical;
-      // A fill stuck at 0 px (see writeField) reads as its size, so the diff shows it and the next build repairs it.
-      const filled = () => (n[f] >= 1 ? 'fill' : val(n, f));
-      if (s === 'FILL') return filled();
+      // A fill stuck at 0 px reads as its size, so a build repairs it.
+      const fill = () => (n[f] >= 1 ? 'fill' : val(n, f));
+      if (s === 'FILL') return fill();
       if (s !== 'FIXED') return String(s).toLowerCase();
       // A hidden child of an auto layout reports FILL as FIXED; its grow (main axis) or stretch (cross axis) still says fill.
       const dir = !n.visible && n.parent && n.parent.layoutMode;
       if (dir === 'HORIZONTAL' || dir === 'VERTICAL') {
         const main = (f === 'width') === (dir === 'HORIZONTAL');
-        if (main ? n.layoutGrow === 1 : n.layoutAlign === 'STRETCH') return filled();
+        if (main ? n.layoutGrow === 1 : n.layoutAlign === 'STRETCH') return fill();
       }
       return val(n, f);
     }
@@ -184,8 +184,8 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     if (f === 'direction') n.layoutMode = AXIS[want] || 'NONE';
     else if (f === 'width' || f === 'height') {
       const k = f === 'width' ? 'layoutSizingHorizontal' : 'layoutSizingVertical';
-      // Probed live: a 0 px node (a new text layer) keeps 0 px under FILL; a nonzero size first lets it fill.
-      if (want === 'fill' && !(n[f] >= 1)) n.resize(f === 'width' ? 1 : n.width, f === 'height' ? 1 : n.height);
+      // A 0 px node (a new text) keeps 0 px under FILL (probed live)
+      if (want === 'fill' && !(n[f] >= 1)) num(n, f, { raw: 1 });
       if (typeof want === 'string') n[k] = want.toUpperCase();
       else { n[k] = 'FIXED'; num(n, f, want); }
     } else if (f === 'alignMain') n.primaryAxisAlignItems = ALIGN[want];

@@ -1,8 +1,4 @@
-// A text layer whose Contract width is fill (seen in a Carbon live test, 2026-10-20): Figma keeps a 0 px wide node at 0 px when FILL is set,
-// and a new text layer starts 0 px wide, so every fill text of the Text Input Base Component read 0 px and wrapped one
-// letter per line, while the readback still said `fill`. Probed live: FIXED -> FILL and FILL again stay 0 px; a
-// resize to a nonzero width, then FILL, takes the parent's width. The mock lays nothing out, so a 0 px node keeps
-// 0 px under FILL as it does there.
+// A layer whose Contract width is fill is built wider than 0 px, and one stuck at 0 px reads back as its size.
 // Run with `node --test skills/to-design/tests/*.test.mjs`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -54,6 +50,9 @@ async function setup() {
   return { mock, base };
 }
 
+// Probed live: Figma keeps a 0 px node at 0 px under FILL (FILL again, or FIXED then FILL, stay 0 px), and a new
+// text layer starts 0 px wide; a resize to any nonzero width, then FILL, takes the parent's width. The mock lays
+// nothing out, so a 0 px node keeps 0 px under FILL there too.
 const textsOf = async (mock, id) => (await mock.figma.getNodeByIdAsync(id)).findAll(n => n.type === 'TEXT');
 
 test('every text layer the Contract fills is built wider than 0 px', async () => {
@@ -70,8 +69,8 @@ test('a fill text that measures 0 px reads back as 0 px, not fill, and the next 
   for (const t of await textsOf(mock, result.readback.id)) if (FILL_TEXTS.includes(t.name)) t.width = 0;
 
   const stale = await base({ readOnly: true });
-  const d = diff(TEXT_INPUT, stale.readback, DOC);
-  assert.deepEqual(d.changes.map(c => `${c.node}.${c.field}`).sort(), FILL_TEXTS.map(n => `${n}.width`).sort());
+  const found = diff(TEXT_INPUT, stale.readback, DOC);
+  assert.deepEqual(found.changes.map(c => `${c.node}.${c.field}`).sort(), FILL_TEXTS.map(n => `${n}.width`).sort());
   assert.deepEqual(stale.readback.layout.Value.width, { raw: 0 });
 
   const fixed = await base();
