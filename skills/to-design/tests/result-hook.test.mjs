@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { PKG, project, runHook as runHookAt, stubFor, toolInput } from './hook-fixture.mjs';
 
 const HOOK = new URL('../hooks/use-figma-result.mjs', import.meta.url).pathname;
@@ -115,4 +116,14 @@ test('the settings snippet registers the result hook after each use_figma call, 
   assert.deepEqual(entry.hooks[0].args, ['${CLAUDE_PROJECT_DIR}/skills/to-design/hooks/use-figma-result.mjs']);
   assert.ok(!('onFailure' in entry.hooks[0]));
   assert.equal(hooks.PreToolUse[0].hooks[0].onFailure, 'block');
+});
+
+// Registering the hooks is the owner's step: a change to the snippet stays red here until they commit it to the
+// project's settings on the same branch.
+test('the project settings register every hook the snippet does', () => {
+  const settings = JSON.parse(readFileSync(new URL('../../../.claude/settings.json', import.meta.url), 'utf8')).hooks || {};
+  for (const [event, entries] of Object.entries(JSON.parse(readFileSync(SNIPPET, 'utf8')).hooks))
+    for (const entry of entries)
+      assert.ok((settings[event] || []).some(e => isDeepStrictEqual(e, entry)),
+        `.claude/settings.json has no ${event} entry equal to the snippet's ${JSON.stringify(entry)}: the owner pastes hooks/settings.snippet.json into it`);
 });
