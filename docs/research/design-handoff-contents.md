@@ -1,4 +1,4 @@
-# What must a Handoff for one vibe-coded feature carry, and how does each Rendering show it?
+# What must a Handoff for one Prototype's feature carry, and how does each Rendering show it?
 
 Research for the Handoff's content model. Related: [#63](https://github.com/pawisssh/design/issues/63) (what the HTML Rendering should look like), map [#52](https://github.com/pawisssh/design/issues/52). Vocabulary follows `GLOSSARY.md` (Handoff, Rendering, Prototype, Stand-in, Off-system value, Sign-off, Drift, Contract, Foundations document, Usage, Mode).
 
@@ -6,42 +6,11 @@ Researched 2026-10-21. The repo side is read at commit `c650fc6`:
 
 - the schema: `skills/to-handoff/handoff.schema.json`;
 - what generate writes: `skills/to-handoff/scripts/generate.mjs`;
-- what validate accepts: `scripts/validate.mjs`;
-- what the HTML Rendering shows: `scripts/render-html.mjs`;
+- what validate accepts: `skills/to-handoff/scripts/validate.mjs`;
+- what the HTML Rendering shows: `skills/to-handoff/scripts/render-html.mjs`;
 - the two committed recorded Handoffs: `design-systems/carbon/handoffs/invite-teammates` and `design-systems/shadcn/handoffs/request-access`.
 
-**partial** marks a key that the schema allows but generate never writes. Such a key does not count as covered.
-
-The sources below are paraphrased, not quoted.
-
-Short prefixes:
-
-- `FIG-STATUS` = https://help.figma.com/hc/en-us/articles/26781702258583-Dev-Mode-statuses-and-notifications
-- `FIG-ANNOT` = https://help.figma.com/hc/en-us/articles/20774752502935-Add-measurements-and-annotate-designs
-- `FIG-COMPARE` = https://help.figma.com/hc/en-us/articles/15023193382935-Compare-changes-in-Dev-Mode
-- `FIG-DEV` = https://help.figma.com/hc/en-us/articles/15023124644247-Guide-to-Dev-Mode
-- `FIG-INSPECT` = https://help.figma.com/hc/en-us/articles/22012921621015-Guide-to-inspecting
-- `FIG-VARS` = https://help.figma.com/hc/en-us/articles/27882809912471-Variables-in-Dev-Mode
-- `FIG-VARMODE` = https://help.figma.com/hc/en-us/articles/15253268379799-Variable-modes-in-prototypes
-- `FIG-EASING` = https://help.figma.com/hc/en-us/articles/360051748654-Prototype-easing-and-spring-animations
-- `FIG-FLOWS` = https://help.figma.com/hc/en-us/articles/360039823894-Create-and-manage-prototype-flows
-- `FIG-CC` = https://help.figma.com/hc/en-us/articles/23920389749655-Code-Connect
-- `CC` = https://developers.figma.com/docs/code-connect/
-- `DTCG` = https://www.designtokens.org/tr/2025.10/format/ (Design Tokens Format Module 2025.10, 28 October 2025)
-- `DTCG-RES` = https://www.designtokens.org/tr/drafts/resolver/ (Design Tokens Resolver Module, draft)
-- `WCAG` = https://www.w3.org/TR/WCAG22/ (W3C Recommendation, 12 December 2024)
-- `APG-KB` = https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/
-- `APG-LM` = https://www.w3.org/WAI/ARIA/apg/practices/landmark-regions/
-- `APG-DIALOG` = https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/
-- `I18N-DIR` = https://www.w3.org/International/questions/qa-html-dir
-- `I18N-SIZE` = https://www.w3.org/International/articles/article-text-size
-- `CARBON-CHECK` = https://carbondesignsystem.com/contributing/component-checklist/
-- `CARBON-MOTION` = https://carbondesignsystem.com/elements/motion/overview/
-- `GOVUK-ERR` = https://design-system.service.gov.uk/components/error-message/
-- `PRIMER-A11Y` = https://primer.style/accessibility/annotation-toolkit/basics/features/
-- `PRIMER-ORDER` = https://primer.style/accessibility/annotation-toolkit/tutorials/ordering/
-- `ATL-A11Y` = https://atlassian.design/foundations/accessibility
-- `M3-RTL` = https://m3.material.io/foundations/layout/bidirectionality-rtl. The page renders client-side, so this note relies on the search index's text of it and did not read the page.
+**partial** marks content the Handoff holds only in part. Most often it is a key that the schema allows but generate never writes, and such a key does not count as covered. Where the reason is different (field validation, data shape, the changelog), the finding says so.
 
 ## Answer
 
@@ -77,7 +46,7 @@ Short prefixes:
    - i18n and RTL;
    - headings and status announcements;
    - motion values;
-   - icon and asset delivery, which To-handoff lists as out of scope;
+   - icon and asset delivery (To-handoff puts icons as the icon property out of scope for React Prototypes, and has no asset list at all);
    - analytics events.
 
 4. **The two Renderings must place the same content.**
@@ -90,7 +59,39 @@ Short prefixes:
 5. **The repo has no Figma Rendering today.** Vibe-to-Figma builds Component Sets on the Design Library side, not a Handoff's screens. A Figma Rendering would:
    - place instances of those Component Sets in frames, one per screen × state × breakpoint;
    - carry a stamp with the Handoff's `revision` and `contentHash`, like any published Rendering (ADR 0007);
-   - be a copy that nothing reads back, under ADR 0017's one-way rule.
+   - be a copy, never a source, like any published Rendering (ADR 0007). Nothing reads it back into the Handoff.
+
+## Sources
+
+The sources below are paraphrased. The one exception is a single quote from `I18N-DIR`.
+
+Short prefixes:
+
+- `FIG-STATUS` = https://help.figma.com/hc/en-us/articles/26781702258583-Dev-Mode-statuses-and-notifications
+- `FIG-ANNOT` = https://help.figma.com/hc/en-us/articles/20774752502935-Add-measurements-and-annotate-designs
+- `FIG-COMPARE` = https://help.figma.com/hc/en-us/articles/15023193382935-Compare-changes-in-Dev-Mode
+- `FIG-DEV` = https://help.figma.com/hc/en-us/articles/15023124644247-Guide-to-Dev-Mode
+- `FIG-INSPECT` = https://help.figma.com/hc/en-us/articles/22012921621015-Guide-to-inspecting
+- `FIG-VARS` = https://help.figma.com/hc/en-us/articles/27882809912471-Variables-in-Dev-Mode
+- `FIG-VARMODE` = https://help.figma.com/hc/en-us/articles/15253268379799-Variable-modes-in-prototypes
+- `FIG-EASING` = https://help.figma.com/hc/en-us/articles/360051748654-Prototype-easing-and-spring-animations
+- `FIG-FLOWS` = https://help.figma.com/hc/en-us/articles/360039823894-Create-and-manage-prototype-flows
+- `FIG-CC` = https://help.figma.com/hc/en-us/articles/23920389749655-Code-Connect
+- `CC` = https://developers.figma.com/docs/code-connect/
+- `DTCG` = https://www.designtokens.org/tr/2025.10/format/ (Design Tokens Format Module 2025.10, 28 October 2025)
+- `DTCG-RES` = https://www.designtokens.org/tr/drafts/resolver/ (Design Tokens Resolver Module, draft)
+- `WCAG` = https://www.w3.org/TR/WCAG22/ (W3C Recommendation, 12 December 2024)
+- `APG-KB` = https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/
+- `APG-LM` = https://www.w3.org/WAI/ARIA/apg/practices/landmark-regions/
+- `APG-DIALOG` = https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/
+- `I18N-DIR` = https://www.w3.org/International/questions/qa-html-dir
+- `I18N-SIZE` = https://www.w3.org/International/articles/article-text-size
+- `CARBON-CHECK` = https://carbondesignsystem.com/contributing/component-checklist/
+- `CARBON-MOTION` = https://carbondesignsystem.com/elements/motion/overview/
+- `GOVUK-ERR` = https://design-system.service.gov.uk/components/error-message/
+- `PRIMER-A11Y` = https://primer.style/accessibility/annotation-toolkit/basics/features/
+- `PRIMER-ORDER` = https://primer.style/accessibility/annotation-toolkit/tutorials/ordering/
+- `M3-RTL` = https://m3.material.io/foundations/layout/bidirectionality-rtl. The page renders client-side, so this note relies on the search index's text of it and did not read the page.
 
 ## Findings
 
@@ -105,7 +106,7 @@ Short prefixes:
 | `usages[]` | One of: a Contract with a `tuple`; a Proposal; or `raw` with a `reason`. Also `state` (authored State values only, such as `disabled`), `properties`, `items` (Repeated children), `in`, `modes`, `offAxis` and `match.by`. | Yes. |
 | `copy` | `text`, `placeholder`, `at` | Yes. |
 | `values[]` | Off-system values: `raw`, `role`, `reason`, `nearest[]`, `primitive`, `at` | Yes. |
-| `flow[]` | `from`, `trigger`, `to`, `source` (mock, simulated or missing) | Yes, from simulated functions and timers. `SKILL.md` puts overlay flow transitions out of scope. |
+| `flow[]` | `from`, `trigger`, `to`, `source` (mock, simulated or missing) | Yes, from simulated functions and timers. `SKILL.md` puts overlay flow transitions out of scope for React Prototypes. |
 | `data[]` | `id`, `source` (mock, simulated or real), `shape`, `note`, `question`, `at` | Yes, except `shape`, which neither `data.push` site writes. |
 | `acceptance[]` | `id`, `screen`, `state` (standard states only), `given`, `when`, `then`, `by` | Yes, from the `acceptance` decision. |
 | `openQuestions[]` | Kinds `font`, `mode-map`, `breakpoint`, `no-contract`, `off-axis`, `missing-state`, `stand-in`, `prop`, `runtime` and `split`, each addressed to the owner or the developer | Yes. |
@@ -154,7 +155,7 @@ What the sources offer:
   - 2.2.2 Pause, Stop, Hide (A).
 
 **Asset and icon delivery: missing.**
-- To-handoff lists icons as the icon property among the things out of scope (`to-handoff/SKILL.md`). The Handoff has no asset list and no icon key on a Usage.
+- For React Prototypes, To-handoff lists icons as the icon property among the things out of scope (`to-handoff/SKILL.md`). Whatever the Prototype, the Handoff has no asset list and no icon key on a Usage.
 - Dev Mode detects icons on its own and offers them as downloadable assets (`FIG-INSPECT`). That is Figma's reading of a frame, not Handoff content.
 - RTL also touches assets. Directional icons are mirrored. Clocks, media controls and physical objects are not (`M3-RTL`, from the search index only).
 
@@ -194,7 +195,6 @@ What the sources offer:
 - **Status announcements: missing.**
   - Announcing loading, success and error falls under WCAG 4.1.3 Status Messages (AA).
   - Primer has a live-region stamp (`PRIMER-A11Y`).
-- **Atlassian's kit.** Atlassian lists accessibility annotations for passing accessibility requirements to engineers (`ATL-A11Y`). The kit is for Atlassians only, so this note cannot cite what it contains.
 
 **Analytics and tracking events: missing.**
 - The Handoff has no key for them.
@@ -207,6 +207,7 @@ States beyond the five:
 - The schema allows extra names in `screens[].states` (`additionalProperties`).
 - Validate rejects any state name outside `default`, `loading`, `empty`, `error` and `success`. It applies the same rule to `region.states`, `text.states`, `usage.states` and `acceptance[].state`.
 - So partial data, offline and permission-denied states have nowhere to go.
+- **Practitioner consensus only:** none of the primary sources read for this note lists these three states. They come from common practice.
 
 Field validation:
 - What exists:
@@ -258,7 +259,7 @@ Figma's model is coarser:
 
 Rules that apply to both Renderings:
 - A Rendering lays out the Handoff's content and never adds or drops any (GLOSSARY, Rendering).
-- Each Rendering carries a stamp, `r<revision> · <contentHash>`, and its Sign-off state (ADR 0007).
+- Each published Rendering carries a stamp with the Handoff's revision and `contentHash` (ADR 0007). The HTML Rendering adds its Sign-off state to the stamp (`render-html.mjs`).
 
 **What the HTML Rendering does today (`render-html.mjs`)**
 
@@ -268,7 +269,7 @@ The page has a header stamp and six sections.
 - **Overview.**
   - Holds `feature` and the pins.
   - Prints *Not specified* for each optional key that is absent (`flow`, `interactions`, `data`, `a11y`, `tokensToAdd`).
-  - Shows each present optional key as a table (`flow`) or as raw JSON.
+  - Shows each present optional key as a table (`flow`), a flagged list (`data`) or raw JSON.
 - **Needs a look.**
   - Counts every flag: ≠ Off-system, ≈ near, ◇ agent pick, + Proposal, ∅ no Contract, ↯ off-axis, ! missing, ◌ Stand-in, ◐ draft Contract.
   - Links each flag to the `q-…` question that settles it.
@@ -278,7 +279,7 @@ The page has a header stamp and six sections.
 - **Components.**
   - Live Code Library renders inside the mapped Mode's class, with per-state renders of each Usage and its nested container Usages.
   - A code snippet from the Contract's `code` in a read-only `<textarea>`. The snippet can be selected, but there is no copy button.
-  - A mode toggle that covers every Theme mode and applies each Mode's `selector` class.
+  - A toggle that covers every Mode and applies each Mode's `selector` class.
 - **Tokens & values.** A table.
 - **Copy & questions.** A table.
 
@@ -313,7 +314,7 @@ The layout below is this note's own proposal, built from the features each sourc
 
 **Figma features, in three groups**
 
-Group 1: features that carry Handoff content.
+Features that carry Handoff content:
 
 | Figma feature | Handoff content it carries | Source |
 | --- | --- | --- |
@@ -323,7 +324,7 @@ Group 1: features that carry Handoff content.
 | Prototype connections | `flow[]`. Dev Mode's Inspect lists the prototype interactions applied to a layer. A transition's easing is a Bézier preset, a custom Bézier, a spring preset or a custom spring. | `FIG-DEV`, `FIG-EASING` |
 | Annotations | `copy`, Off-system values, questions, `a11y`, `interactions`, `data`. Adding an annotation needs a Full seat with edit access. | `FIG-ANNOT` |
 
-Group 2: what Figma generates on its own. It must not override the Handoff.
+What Figma generates on its own, which must not override the Handoff:
 
 - **Generated code and measurements.**
   - Dev Mode fills the Code section from the selected layer (`FIG-INSPECT`).
@@ -332,7 +333,7 @@ Group 2: what Figma generates on its own. It must not override the Handoff.
   - For an Off-system value, both show the raw number without the Handoff's reason or nearest token. The Rendering must carry those in a Development annotation.
 - **Detected icons as downloadable assets** (`FIG-INSPECT`). The Handoff has no asset list behind them, so they stay outside its content until icons are in scope.
 
-Group 3: workflow status. None of it is Sign-off.
+Workflow status, none of which is Sign-off:
 
 - **The statuses.**
   - Ready for dev can mark sections, frames and components. Completed exists only on Organization and Enterprise plans.
@@ -342,7 +343,7 @@ Group 3: workflow status. None of it is Sign-off.
   - A Figma Rendering marks its frames Ready for dev only once the Handoff it was rendered from is signed off.
   - Its stamp names that revision.
 - **Drift comes from `check`.** Library and variable updates do not set Changed (`FIG-STATUS`), so a developer learns about Drift from `check`, not from Figma.
-- **No reading back.** Edits made to a Figma Rendering are never read back into the Handoff or the Prototype (ADR 0017).
+- **No reading back.** A published Rendering is a copy, never a source (ADR 0007), so edits made to a Figma Rendering never reach the Handoff.
 
 ## Summary table
 
@@ -364,7 +365,7 @@ Group 3: workflow status. None of it is Sign-off.
 | Copy | `copy{}.text`, `.placeholder` | Repo |
 | Content limits, truncation, long and short copy | **missing** | `CARBON-CHECK`, `I18N-SIZE`, WCAG 1.4.12 |
 | i18n, RTL, language of parts | **missing** | `I18N-DIR`, `I18N-SIZE`, WCAG 3.1.2, `M3-RTL` (search index only) |
-| Icons and assets | **missing**: out of scope in To-handoff | `FIG-INSPECT`, `M3-RTL` (search index only) |
+| Icons and assets | **missing**: no asset list; the icon property is out of scope for React Prototypes | `FIG-INSPECT`, `M3-RTL` (search index only) |
 | Focus order | **partial**: `a11y.focusOrder` exists but is never written | WCAG 2.4.3, `APG-KB`, `CARBON-CHECK`, `PRIMER-ORDER` |
 | Keyboard behaviour and focus after actions | **partial**: free text in `interactions`, never written | WCAG 2.1.1, `APG-DIALOG` |
 | Accessible names | **partial**: `a11y.labels` exists but is never written | WCAG 4.1.2, 3.3.2 |
