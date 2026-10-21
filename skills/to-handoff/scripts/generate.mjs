@@ -367,10 +367,10 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const usageStates = Object.fromEntries(present.map(s => [s, {}]));
 
     const recognised = [];
-    // A container: a Code Library component holding another module's components (a Card around a form). It is
-    // walked with its own parts, so the usages inside it are their own. With a Contract it is that Contract by
-    // import, and each usage inside names it in `in` (#194); without one it is a wrapper whose look stays in the
-    // region, and a note names it (#125).
+    // A container: a Code Library component holding components that are not its parts (a Card around a form, a
+    // Carbon Theme around its Buttons, #226). It is walked with its own parts, so the usages inside it are their
+    // own. With a Contract it is that Contract by import, and each usage inside names it in `in` (#194); without
+    // one it is a wrapper whose look stays in the region, and a note names it (#125).
     const containers = new Map();
     const parts = new Set();
     const holdsOtherComponent = el => { let found = false; walk(el, x => { if (x !== el && x.component && !isPart(el, x)) found = true; }); return found; };
@@ -954,14 +954,14 @@ function importTuple(def, el) {
 /**
  * Whether component `x` is a part of the container `outer` (a CardFooter in a Card) rather than a component of its
  * own (a Button in a Card). A local ui file is one module per family, so its module is the family. A package's
- * module holds every component (all of @carbon/react), so there a part is named after its container (ModalBody in Modal).
+ * module holds every component (all of @carbon/react), so there a part is named after its container (ModalBody in Modal) (#226).
  */
 function isPart(outer, x) {
   const a = outer.component, b = x.component;
   return a.module === b.module && (a.kind !== 'ds' || b.export.startsWith(a.export));
 }
 
-/** A container's own parts: its module's components, reached without entering another module's component. */
+/** A container's own parts: the components `isPart` accepts, reached without entering a component that is not one. */
 function partsOf(el) {
   const out = [];
   const visit = x => {
