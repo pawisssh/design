@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // The Generic Adapter's preview renderer for To-preview and To-handoff (#123): the project's own component, rendered
 // with react-dom/server, over the project's own CSS compiled by Tailwind.
-//   node skills/adapter-generic/scripts/preview.mjs [--dir <dir>]   fetch the pinned packages into .scratch/adapter-generic/preview
+//   node skills/adapter-generic/scripts/preview.mjs [--project <dir>] [--dir <dir>]   install the packages for a project into .scratch/adapter-generic/preview
 //
 // To-preview finds this module by convention (skills/adapter-<source.adapter>/scripts/preview.mjs) and calls
 // previewRenderer(contract), which resolves to:
@@ -29,13 +29,13 @@
 // the Contract's snapshot, when a pinned package is not the Contract's `source.packages` version, or when any installed
 // package's version differs from the one the project's lockfile resolves.
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolve } from '../../contract/scripts/contract.mjs';
 import { familyRoot, readSource } from './source.mjs';
-import { DEFAULT_DIR, FIXTURE, REPO_ROOT, hasTools, installAtomically, projectPins, sha256, toolDir } from './sources.mjs';
+import { DEFAULT_DIR, FIXTURE, REPO_ROOT, downloadVerified, hasTools, installAtomically, projectPins, sha256, toolDir } from './sources.mjs';
 import { build } from './tailwind.mjs';
 
 export const PREVIEW_DIR = join(REPO_ROOT, '.scratch/adapter-generic/preview');
@@ -43,18 +43,72 @@ const PINNED_DIR = fileURLToPath(new URL('../preview/', import.meta.url));
 const lockOf = dir => (existsSync(join(dir, 'package-lock.json')) ? readFileSync(join(dir, 'package-lock.json'), 'utf8') : null);
 const fail = message => { throw new Error(message); };
 
-/** True when the pinned packages are installed in `dir` from the committed lockfile. */
-export function hasPreviewPackages(dir = PREVIEW_DIR) {
-  return lockOf(dir) === lockOf(PINNED_DIR) && existsSync(join(dir, 'node_modules/react-dom/package.json'));
+// The packages that follow the project's lockfile (#256): react and react-dom, and the scheduler react-dom depends on.
+const FROM_PROJECT = ['react', 'react-dom', 'scheduler'];
+const textOf = json => `${JSON.stringify(json, null, 2)}\n`;
+
+/**
+ * What the preview renderer installs for `project`: the committed set (preview/), with `react`, `react-dom` and `scheduler`
+ * at the versions the project's lockfile resolves, and that lockfile's own `integrity`. `key` names the folder it installs
+ * into, `packageJson` and `lock` are what `npm ci` reads there, and `changed` lists the packages whose tarball is not the
+ * committed set's, which fetchPreviewPackages verifies itself. A package's `resolved` URL is built from the registry, never
+ * taken from the lockfile. Throws, naming the package, when the lockfile disagrees.
+ */
+export function previewLock(project) {
+  const read = dir => file => JSON.parse(readFileSync(join(dir, file), 'utf8'));
+  const packageJson = read(PINNED_DIR)('package.json');
+  const lock = read(PINNED_DIR)('package-lock.json');
+  const path = join(project, 'package-lock.json');
+  if (!existsSync(path)) fail('no package-lock.json: the preview renderer installs the React it resolves');
+  const have = JSON.parse(readFileSync(path, 'utf8')).packages || {};
+  const changed = [];
+  for (const name of FROM_PROJECT) {
+    const entry = have[`node_modules/${name}`] || fail(`package-lock.json resolves no ${name}, which the preview renderer installs`);
+    const pin = lock.packages[`node_modules/${name}`];
+    if (!/^sha512-/.test(entry.integrity || '')) fail(`package-lock.json gives ${name}@${entry.version} no sha512 integrity (${entry.integrity || 'none'}), the only one the preview step checks`);
+    if (entry.version === pin.version && entry.integrity !== pin.integrity)
+      fail(`${name}@${entry.version}: the lockfile's integrity ${entry.integrity} does not match the Adapter's pin ${pin.integrity}`);
+    if (entry.version !== pin.version) changed.push(name);
+    const { version, integrity } = entry;
+    lock.packages[`node_modules/${name}`] = { version, resolved: `https://registry.npmjs.org/${name}/-/${name}-${version}.tgz`, integrity,
+      ...Object.fromEntries(['license', 'engines', 'dependencies', 'peerDependencies'].filter(k => k in entry).map(k => [k, entry[k]])) };
+  }
+  const react = have['node_modules/react'].version;
+  const dom = have['node_modules/react-dom'].version;
+  if (react !== dom) fail(`the project resolves react-dom@${dom} but react@${react}`);
+  for (const deps of [packageJson.dependencies, lock.packages[''].dependencies]) Object.assign(deps, { react, 'react-dom': dom });
+  const key = `react@${react}-scheduler@${have['node_modules/scheduler'].version}`;
+  return { key, packageJson, lock, changed };
 }
 
-/** Install the pinned packages into `dir` with `npm ci --ignore-scripts`, beside it first (#219). Skips when already installed. */
-export function fetchPreviewPackages(dir = PREVIEW_DIR) {
-  installAtomically(dir, hasPreviewPackages, tmp => {
-    for (const f of ['package.json', 'package-lock.json']) copyFileSync(join(PINNED_DIR, f), join(tmp, f));
+// Complete once the packages and the lockfile they were installed from are both there.
+const installedFrom = (lock, folder) => lockOf(folder) === textOf(lock) && existsSync(join(folder, 'node_modules/react-dom/package.json'));
+
+/** True when the packages for `project` are installed in their folder of `dir`, from the lockfile previewLock gives. */
+export function hasPreviewPackages(dir = PREVIEW_DIR, project = FIXTURE) {
+  const { key, lock } = previewLock(project);
+  return installedFrom(lock, join(dir, key));
+}
+
+/**
+ * Install the packages for `project` into their folder of `dir` with `npm ci --ignore-scripts`, beside it first (#219).
+ * The tarballs of the packages that follow the project are verified against its integrity first (#256). Skips when
+ * already installed. Resolves to the folder.
+ */
+export async function fetchPreviewPackages(dir = PREVIEW_DIR, project = FIXTURE) {
+  const { key, packageJson, lock, changed } = previewLock(project);
+  const out = join(dir, key);
+  if (installedFrom(lock, out)) return out;
+  for (const name of changed) {
+    const { version, integrity } = lock.packages[`node_modules/${name}`];
+    await downloadVerified(name, version, integrity);
+  }
+  installAtomically(out, folder => installedFrom(lock, folder), tmp => {
+    writeFileSync(join(tmp, 'package.json'), textOf(packageJson));
+    writeFileSync(join(tmp, 'package-lock.json'), textOf(lock));
     execFileSync('npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: tmp, stdio: 'inherit' });
   }, ['node_modules', 'package.json', 'package-lock.json']);
-  return dir;
+  return out;
 }
 
 // The package an import names: `react/jsx-runtime` -> react, `@radix-ui/react-slot` -> itself.
@@ -78,11 +132,13 @@ function unguard(css) {
 }
 
 /**
- * The renderer for one Generic Adapter Contract, read from `project` (the fixture by default). Rejects when the
- * packages or tools are missing, the project is not the Contract's snapshot, or a package differs from the project's.
+ * The renderer for one Generic Adapter Contract, read from `project` (the fixture by default); `dir` is the folder the
+ * packages for each React are installed in. Rejects when the packages or tools are missing, the project is not the Contract's snapshot, or a package differs from the project's.
  */
-export async function previewRenderer(contract, { project = FIXTURE, dir = PREVIEW_DIR, tools = DEFAULT_DIR } = {}) {
-  if (!hasPreviewPackages(dir)) fail(`Generic preview packages missing in ${dir}; run: node skills/adapter-generic/scripts/preview.mjs`);
+export async function previewRenderer(contract, { project = FIXTURE, dir: base = PREVIEW_DIR, tools = DEFAULT_DIR } = {}) {
+  const { key, lock } = previewLock(project);
+  const dir = join(base, key);
+  if (!installedFrom(lock, dir)) fail(`Generic preview packages missing in ${dir}; run: node skills/adapter-generic/scripts/preview.mjs --project ${project}`);
   const pins = projectPins(project);
   if (!hasTools(tools, pins)) fail(`Generic Adapter tools missing in ${tools}; run: node skills/adapter-generic/scripts/foundations.mjs --project ${project}`);
   for (const [f, hash] of Object.entries(contract.source.files))
@@ -201,7 +257,7 @@ export async function previewRenderer(contract, { project = FIXTURE, dir = PREVI
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const args = process.argv.slice(2);
-  const dir = args.includes('--dir') ? args[args.indexOf('--dir') + 1] : PREVIEW_DIR;
-  try { fetchPreviewPackages(dir); console.log(`Generic preview packages OK in ${dir}`); }
+  const flag = (name, fallback) => (args.includes(name) ? args[args.indexOf(name) + 1] : fallback);
+  try { console.log(`Generic preview packages OK in ${await fetchPreviewPackages(flag('--dir', PREVIEW_DIR), flag('--project', FIXTURE))}`); }
   catch (e) { console.error(`FAIL: ${e.message}`); process.exit(1); }
 }

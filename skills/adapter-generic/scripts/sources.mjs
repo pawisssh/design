@@ -133,6 +133,17 @@ export function hasTools(dir = DEFAULT_DIR, pins = TOOLS) {
   return Object.entries(pins).every(([name, pin]) => hasTool(name, pin, dir, pins));
 }
 
+/** The registry tarball of `name@version`, as bytes, once its sha512 matches `integrity`. Throws, naming the package, when it does not. */
+export async function downloadVerified(name, version, integrity) {
+  const url = `https://registry.npmjs.org/${name}/-/${name.split('/').pop()}-${version}.tgz`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`GET ${url}: HTTP ${res.status}`);
+  const bytes = Buffer.from(await res.arrayBuffer());
+  const got = 'sha512-' + createHash('sha512').update(bytes).digest('base64');
+  if (got !== integrity) throw new Error(`${name}@${version}: integrity ${got} does not match the expected ${integrity}`);
+  return bytes;
+}
+
 /**
  * Download and extract every tool of `pins` into `dir`, verifying each tarball against its pin's `integrity`: the
  * Adapter's for its own pins, the project lockfile's for the Tailwind that follows it (projectPins). Skips tools already
@@ -142,12 +153,7 @@ export async function fetchTools(dir = DEFAULT_DIR, pins = TOOLS) {
   for (const [name, pin] of Object.entries(pins)) {
     if (hasTool(name, pin, dir, pins)) continue;
     const out = dirname(toolDir(name, dir, pins));
-    const url = `https://registry.npmjs.org/${name}/-/${name.split('/').pop()}-${pin.version}.tgz`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`GET ${url}: HTTP ${res.status}`);
-    const bytes = Buffer.from(await res.arrayBuffer());
-    const got = 'sha512-' + createHash('sha512').update(bytes).digest('base64');
-    if (got !== pin.integrity) throw new Error(`${name}@${pin.version}: integrity ${got} does not match the expected ${pin.integrity}`);
+    const bytes = await downloadVerified(name, pin.version, pin.integrity);
     // Extracted beside its folder, then moved into place: a half-extracted tool never looks valid.
     installAtomically(out, d => verified(d, pin), tmp => {
       writeFileSync(join(tmp, 'package.tgz'), bytes);
@@ -196,7 +202,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const dir = await fetchTools(values.dir || DEFAULT_DIR);
     console.log(`${Object.entries(TOOLS).map(([n, p]) => `${n}@${p.version}`).join(', ')} in ${dir}`);
     console.log('Generic Adapter tools OK');
-    // The preview renderer's pinned React packages (#123), so one fetch step readies every test. A child process:
+    // The preview renderer's packages for the reference project (#123), so one fetch step readies every test. A child process:
     // preview.mjs imports this module, so importing it here would wait on itself.
     execFileSync(process.execPath, [fileURLToPath(new URL('./preview.mjs', import.meta.url))], { stdio: 'inherit' });
   } catch (e) {
