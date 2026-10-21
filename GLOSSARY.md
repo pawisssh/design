@@ -103,7 +103,7 @@ A colour, spacing, size, radius or type value in a feature's input that matches 
 _Avoid_: Raw value (when the unmatched kind is meant), hard-coded value, magic number
 
 **Prototype**:
-Feature code made quickly to show what a feature should do, such as a v0 or Lovable app or a single HTML file, given to To-handoff as input. It is read, never edited, and its code is never handed to developers.
+Feature code made quickly to show what a feature should do, such as a v0 or Lovable app or a single HTML file, given to To-handoff or Vibe-to-Figma as input. Only Figma-to-Vibe edits it, and only when the owner asks; its code is never handed to developers.
 _Avoid_: Mockup, vibe code, POC, prototype Contract (that is a Contract approved only for a trial build)
 
 **Usage**:
@@ -173,3 +173,11 @@ _Avoid_: code-to-canvas
 **To-handoff**:
 The skill that turns one feature, given as prototype code, a Figma URL, an artifact URL or a description, into a Handoff for developers written against a Design System's Contracts and Component Proposals.
 _Avoid_: design-handoff, handoff doc skill, spec generator
+
+**Vibe-to-Figma**:
+The skill that turns a Prototype into its own Design System folder and, after the owner approves, Component Sets in Figma. It only ever carries code to Figma.
+_Avoid_: sync, two-way sync
+
+**Figma-to-Vibe**:
+The skill that carries the owner's edits to a Prototype's Component Sets in Figma back into the Prototype's code, when the owner asks. Vibe-to-Figma's reverse.
+_Avoid_: Design-to-vibe, pull, write-back

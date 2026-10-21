@@ -14,3 +14,4 @@ Re-open a decision when its trigger happens.
 | [0011 Slot-dependent styling becomes a Slot axis](0011-slot-dependent-styling-becomes-a-slot-axis.md) | A family needs more than two Slot axes, or Figma does not show a False/True Slot axis as a toggle |
 | [0012 Styling set by surroundings is a Mode or the parent's Contract](0012-styling-set-by-surroundings-is-a-mode-or-the-parents-contract.md) | A family a destination spec uses is styled by an ancestor that is neither a Mode nor its parent's Contract |
 | [0013 Form-control content is one node per version](0013-form-control-content-is-one-node-per-version.md) | A family needs a border whose width changes on one side per variant, or Repeated children that nest (SelectItemGroup) |
+| [0014 Vibe-to-Figma stays one-way](0014-vibe-to-figma-stays-one-way.md) | The owner wants a Figma edit to reach the code without running Figma-to-Vibe |
