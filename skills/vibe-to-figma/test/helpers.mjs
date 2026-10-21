@@ -94,3 +94,7 @@ export async function pathAFolder() {
   const dir = join(root, 'path-a-app');
   return { proto, root, dir, library: join(dir, 'library') };
 }
+
+/** A stand-in preview renderer, and the review data embedded in a built page. */
+export const stub = () => ({ stylesheet: '.lib{color:red}', modeClass: m => `mode-${m}`, render: t => `<div class="lib">${Object.values(t).join(' ')}</div>` });
+export const embedded = html => JSON.parse(html.match(/<script type="application\/json" id="review">([\s\S]*?)<\/script>/)[1]);

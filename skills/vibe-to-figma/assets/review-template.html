@@ -81,14 +81,13 @@
   function familiesPanel() {
     const { families, unmatched, skipped } = model.extracted;
     const byFamily = families.map(f => {
-      const given = Object.fromEntries(f.sites.map(s => [site(s), s]));
       return [
         h("h2", {}, f.family + " · " + f.sites.length + " site" + (f.sites.length === 1 ? "" : "s")),
         h("p", { className: "vr-note" }, f.description + " · <" + f.tag + "> · " + (f.by === "owner" ? "set by the owner: " + f.evidence.join("; ") : "grouped by the agent: " + f.evidence.join("; "))),
         table(["Site", "Source"], f.sites.map(s => [h("code", {}, site(s)), snippet(s)])),
         ...(f.axes.length ? [table(["Axis", "Value", "Classes", "Given by"], f.axes.flatMap(a => a.values.map(v => [
           h("span", {}, a.label + " (", h("code", {}, a.key), ")"), h("span", {}, v.label + " (", h("code", {}, v.key), ")" + (a.default === v.key ? " · default" : "")),
-          h("code", {}, v.classes.join(" ") || "none"), h("code", {}, v.sites.filter(x => given[x]).join(", ") || v.sites.join(", "))])))]
+          h("code", {}, v.classes.join(" ") || "none"), h("code", {}, v.sites.join(", "))])))]
           : [h("p", { className: "vr-note" }, "No axis: every site renders the same.")]),
       ];
     });

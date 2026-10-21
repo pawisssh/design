@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Vibe-to-Figma's review page (#177): one local page for a Design System folder. Its first tab is Foundations
-// (colors, Text Styles; an Extracted Library's folder puts a Families tab before it, #262), then one tab per Contract holding To-preview's own catalog page for it, unchanged, in an
+// (colors, Text Styles), then one tab per Contract holding To-preview's own catalog page for it, unchanged, in an
 // iframe. Drafted values show read-only; the owner changes them in chat. One export button writes every family's
 // ticks to one file, <name>.review.json, which approve.mjs reads. Published as a private Artifact (#178), the page saves
 // the ticks in the Artifact's db instead and restores them on a reload (assets/review-store.js).

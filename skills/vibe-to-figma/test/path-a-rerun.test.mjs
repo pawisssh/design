@@ -10,12 +10,9 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeJson } from '../../contract/scripts/io.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
-import { read, scratch, skip, tree } from './helpers.mjs';
+import { PATH_A as FIXTURE, PATH_A_ANSWERS as ANSWERS, PATH_A_FAMILIES as FAMILIES, read, scratch, skip, tree } from './helpers.mjs';
 
-const FIXTURE = fileURLToPath(new URL('./fixtures/path-a-app', import.meta.url));
-const ANSWERS = fileURLToPath(new URL('./fixtures/path-a-app.answers.json', import.meta.url));
 const FOLDER = fileURLToPath(new URL('../scripts/folder.mjs', import.meta.url));
-const FAMILIES = ['action-button', 'card', 'icon-button', 'pill-button', 'segment'];
 
 /** A copy of the Prototype with its folder built from the committed answers: {proto, root, dir, edit(from, to), rerun()}. */
 async function world() {

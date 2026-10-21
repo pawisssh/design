@@ -36,4 +36,3 @@ export async function catalog(tab, family) {
   throw new Error(`no ${family} catalog`);
 }
 export const checked = f => f.evaluate(() => [...document.querySelectorAll('.tp-cell')].filter(c => c.querySelector('input').checked).map(c => c.dataset.id));
-

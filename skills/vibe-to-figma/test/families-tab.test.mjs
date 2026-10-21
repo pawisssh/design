@@ -13,13 +13,11 @@ import { buildFolder } from '../scripts/folder.mjs';
 import { buildReview, reviewModel } from '../scripts/review.mjs';
 import { hasRuntime, loadChromium } from '../../to-handoff/scripts/deps.mjs';
 import { open } from './browser.mjs';
-import { PATH_A_ANSWERS, PATH_A_FAMILIES, pathAFolder, read, skip, v0Folder } from './helpers.mjs';
+import { PATH_A_ANSWERS, PATH_A_FAMILIES, embedded, pathAFolder, read, skip, stub, v0Folder } from './helpers.mjs';
 
 const require = createRequire(import.meta.url);
 const { reviewExport } = require('../assets/review-export.js');
 const { DOC, canonical, storedTicks, restorable } = require('../assets/review-store.js');
-const stub = () => ({ stylesheet: '.lib{color:red}', modeClass: m => `mode-${m}`, render: t => `<div class="lib">${Object.values(t).join(' ')}</div>` });
-const embedded = html => JSON.parse(html.match(/<script type="application\/json" id="review">([\s\S]*?)<\/script>/)[1]);
 /** The line of the first line of the Prototype's App.tsx that holds `text`. */
 const lineOf = (proto, text) => readFileSync(join(proto, 'src/App.tsx'), 'utf8').split('\n').findIndex(l => l.includes(text)) + 1;
 
