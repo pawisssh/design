@@ -28,7 +28,7 @@ import { fileURLToPath } from 'node:url';
 import { closure } from '../../contract/scripts/contract.mjs';
 import { contractFor, readFamily } from './components.mjs';
 import { readFontLoaders } from './source.mjs';
-import { DEFAULT_DIR, FIXTURE, REPO_ROOT, STYLESHEETS, TOOLS, fetchTools, hasTools, sha256, snapshotId, toolDir } from './sources.mjs';
+import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, hasTools, projectPins, sha256, snapshotId, stylesheets, toolDir } from './sources.mjs';
 import { build, utilityRule } from './tailwind.mjs';
 import { evaluate, isSynthesized, lengthPx, literalForm, round } from './values.mjs';
 
@@ -116,12 +116,9 @@ export async function generate({ project, families = [], drafts = [], tools = DE
   const config = JSON.parse(readText('components.json'));
   const cssFile = config.tailwind && config.tailwind.css;
   if (!cssFile) fail('components.json names no tailwind.css');
-  if (!existsSync(join(project, 'package-lock.json'))) fail('no package-lock.json: the Adapter reads resolved versions from it');
-  const lock = JSON.parse(readText('package-lock.json'));
-  for (const name of STYLESHEETS) {
-    const got = (lock.packages[`node_modules/${name}`] || {}).version;
-    if (got !== TOOLS[name].version) fail(`the project resolves ${name}@${got}, but the Adapter pins ${name}@${TOOLS[name].version}`);
-  }
+  // Tailwind is the version the lockfile resolves; shadcn and tw-animate-css are read only when the CSS imports them (#253).
+  const pins = projectPins(project);
+  if (!hasTools(tools, pins)) await fetchTools(tools, pins);
   const layout = LAYOUTS.find(f => existsSync(join(project, f)));
   const files = {};
   for (const f of ['components.json', cssFile, 'package-lock.json', ...(layout ? [layout] : [])].sort(byKey)) files[f] = `sha256:${sha256(readFileSync(join(project, f)))}`;
@@ -152,10 +149,10 @@ export async function generate({ project, families = [], drafts = [], tools = DE
     if (/^-?\d*\.?\d+(rem|px)$/.test(mode[0][name])) env[name] = lengthPx(mode[0][name], name);
     else notes.push({ level: 'warning', at: `${cssFile} ${MODES[0][0]} ${name}`, message: `Not a colour or a length (${mode[0][name]}); not read.` });
   }
-  const twTheme = readFileSync(join(toolDir('tailwindcss', tools), 'theme.css'), 'utf8');
+  const twTheme = readFileSync(join(toolDir('tailwindcss', tools, pins), 'theme.css'), 'utf8');
   const spacing = theme['--spacing']
     ? { text: theme['--spacing'].value, source: theme['--spacing'].at }
-    : { text: /--spacing:\s*([^;]+);/.exec(twTheme)[1].trim(), source: `tailwindcss@${TOOLS.tailwindcss.version} theme.css --spacing` };
+    : { text: /--spacing:\s*([^;]+);/.exec(twTheme)[1].trim(), source: `tailwindcss@${pins.tailwindcss.version} theme.css --spacing` };
   env['--spacing'] = lengthPx(spacing.text, spacing.source);
 
   // 2. Theme: every colour a mode declares; its @theme role gives the scopes.
@@ -218,7 +215,7 @@ export async function generate({ project, families = [], drafts = [], tools = DE
   //    project @theme value overrides Tailwind's own.
   const twVars = {}; // theme.css's @theme holds @keyframes too, so its declarations are matched, not parsed as one block
   for (const m of twTheme.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/(--[\w-]+)\s*:\s*([^;{}]+);/g)) if (!(m[1] in twVars)) twVars[m[1]] = m[2].trim();
-  const typeVar = k => (theme[k] ? { value: theme[k].value, at: theme[k].at } : twVars[k] !== undefined ? { value: twVars[k], at: `tailwindcss@${TOOLS.tailwindcss.version} theme.css ${k}` } : null);
+  const typeVar = k => (theme[k] ? { value: theme[k].value, at: theme[k].at } : twVars[k] !== undefined ? { value: twVars[k], at: `tailwindcss@${pins.tailwindcss.version} theme.css ${k}` } : null);
   const keysOf = re => [...new Set([...Object.keys(twVars), ...Object.keys(theme)].filter(k => re.test(k)))];
   const loaders = layout ? readFontLoaders(readText(layout), layout, { tools }) : [];
   const fonts = {};
@@ -253,7 +250,7 @@ export async function generate({ project, families = [], drafts = [], tools = DE
   // 5. Compile every utility with Tailwind: its declaration is the codeSyntax, and its px must equal the value.
   //    Each Text Style's size and weight utilities must compile to the theme variables it was read from.
   const typeUtilities = [...new Set(Object.values(textStyles).flatMap(s => s.utilities))];
-  const compiled = await build(css, [...Object.values(variables).filter(v => v.utility).map(v => v.utility), ...typeUtilities].sort(byKey), { base: join(project, cssFile, '..'), tools });
+  const compiled = await build(css, [...Object.values(variables).filter(v => v.utility).map(v => v.utility), ...typeUtilities].sort(byKey), { base: join(project, cssFile, '..'), tools, pins });
   checks.compiled = 0;
   for (const [name, v] of Object.entries(variables)) {
     if (!v.utility) continue;
@@ -293,7 +290,7 @@ export async function generate({ project, families = [], drafts = [], tools = DE
     designSystem: { key: designSystem.key, name: designSystem.name },
     source: {
       codeLibrary: 'shadcn/ui', adapter: 'generic',
-      packages: Object.fromEntries(STYLESHEETS.map(n => [n, TOOLS[n].version])),
+      packages: Object.fromEntries(stylesheets(pins).map(n => [n, pins[n].version])),
       files, snapshotId: snapshotId(files),
     },
     closure: { contracts: [], tokens: [] },
@@ -307,7 +304,7 @@ export async function generate({ project, families = [], drafts = [], tools = DE
     textStyles,
     checks: {
       css: { against: cssFile, converted: checks.converted, by: 'skills/contract/scripts/color.mjs convert' },
-      compiled: { against: `tailwindcss@${TOOLS.tailwindcss.version} compile() over ${cssFile}`, matched: checks.compiled },
+      compiled: { against: `tailwindcss@${pins.tailwindcss.version} compile() over ${cssFile}`, matched: checks.compiled },
     },
     notes: [...notes,
       { level: 'info', at: 'variables', message: 'Only the project\'s own CSS is read. Tailwind\'s default theme (its colour palette, shadows) is not carried, except its type scale and font weights, which the Text Styles hold.' },
@@ -432,7 +429,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     families.push(...readdirSync(join(REPO_ROOT, CONTRACTS)).map(f => /^(.+)\.component\.json$/.exec(f)).filter(Boolean).map(m => m[1]));
   try {
     if (families.some(f => !f || f.startsWith('-'))) throw new Error('--family needs a family key');
-    if (!hasTools(tools)) await fetchTools(tools);
     // The committed Contracts give the closure, so an owner's omit narrows it (#177).
     const contracts = {};
     for (const f of families) {

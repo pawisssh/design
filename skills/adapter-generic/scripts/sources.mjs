@@ -11,7 +11,7 @@
 // in gitignored scratch.
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -21,7 +21,9 @@ export const DEFAULT_DIR = join(REPO_ROOT, '.scratch/adapter-generic/tools');
 // The reference project: `shadcn@4.22.0 init --base radix --preset nova`, as source plus lockfile (see its NOTICE).
 export const FIXTURE = join(REPO_ROOT, 'skills/adapter-generic/fixtures/radix-nova');
 
-// `stylesheet`: the project resolves it too (its lockfile must agree) and its CSS may `@import` it.
+// `stylesheet`: the project resolves it too and its CSS may `@import` it. `typescript` and `stylesheet` packages other
+// than tailwindcss are pinned for every project; tailwindcss follows the project's lockfile (projectPins), and these
+// are the version and integrity of the reference project (the fixture) and of what `sources.mjs` fetches by default.
 export const TOOLS = {
   tailwindcss: {
     version: '4.3.3',
@@ -51,14 +53,48 @@ export const TOOLS = {
   },
 };
 
-/** The pinned packages the project itself resolves and imports, by name. */
-export const STYLESHEETS = Object.keys(TOOLS).filter(n => TOOLS[n].stylesheet).sort();
+/**
+ * The packages one project is read with: {name: pin}, each pin {version, integrity, extract, stylesheet?}.
+ * - `tailwindcss` is the version the project's lockfile resolves, with the lockfile's own `integrity`; it must be a 4.x.
+ *   The Adapter's pin of that version is used only to cross-check an integrity it also knows.
+ * - `shadcn` and `tw-animate-css` are present only when the project's CSS imports them, and the lockfile must then
+ *   resolve the pinned version of each.
+ * - `typescript` is the Adapter's pin.
+ * Throws, naming the package, when the lockfile disagrees.
+ */
+export function projectPins(project) {
+  const fail = msg => { throw new Error(msg); };
+  const read = rel => (existsSync(join(project, rel)) ? readFileSync(join(project, rel), 'utf8') : fail(`no ${rel}: the Adapter reads resolved versions from it`));
+  const cssFile = (JSON.parse(read('components.json')).tailwind || {}).css || fail('components.json names no tailwind.css');
+  const resolved = JSON.parse(read('package-lock.json')).packages || {};
+  const lock = name => resolved[`node_modules/${name}`];
+
+  const tw = lock('tailwindcss') || fail('package-lock.json resolves no tailwindcss');
+  if (!/^4\./.test(tw.version)) fail(`the project resolves tailwindcss@${tw.version}, but the Adapter compiles Tailwind 4 only`);
+  if (!tw.integrity) fail(`package-lock.json gives no integrity for tailwindcss@${tw.version}`);
+  const known = TOOLS.tailwindcss;
+  if (tw.version === known.version && tw.integrity !== known.integrity)
+    fail(`tailwindcss@${tw.version}: the lockfile's integrity ${tw.integrity} does not match the Adapter's pin ${known.integrity}`);
+  const pins = { typescript: TOOLS.typescript, tailwindcss: { ...known, version: tw.version, integrity: tw.integrity } };
+
+  const imported = new Set([...read(cssFile).matchAll(/@import\s+(?:url\(\s*)?["']([^"']+)["']/g)].map(m => m[1].replace(/^((?:@[^/]+\/)?[^/]+).*$/, '$1')));
+  for (const name of Object.keys(TOOLS).filter(n => TOOLS[n].stylesheet && n !== 'tailwindcss').sort()) {
+    if (!imported.has(name)) continue;
+    const got = (lock(name) || {}).version;
+    if (got !== TOOLS[name].version) fail(`the project resolves ${name}@${got}, but the Adapter pins ${name}@${TOOLS[name].version}`);
+    pins[name] = TOOLS[name];
+  }
+  return pins;
+}
+
+/** The pinned packages of `pins` whose CSS the project imports, by name. */
+export const stylesheets = pins => Object.keys(pins).filter(n => pins[n].stylesheet).sort();
 
 /** Hex sha256 of a string or bytes. */
 export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 
 /** The extracted `package/` folder of a pinned tool. */
-export const toolDir = (name, dir = DEFAULT_DIR) => join(dir, `${name}@${TOOLS[name].version}`, 'package');
+export const toolDir = (name, dir = DEFAULT_DIR, pins = TOOLS) => join(dir, `${name}@${pins[name].version}`, 'package');
 
 /**
  * `source.snapshotId` from a `source.files` map {path: "sha256:<hex>"}: the sha256 of the `shasum -a 256` manifest,
@@ -69,16 +105,35 @@ export function snapshotId(files) {
   return 'sha256:' + sha256(manifest);
 }
 
-/** True when every pinned tool is extracted in `dir`. */
-export function hasTools(dir = DEFAULT_DIR) {
-  return Object.entries(TOOLS).every(([name, pin]) => pin.extract.every(m => existsSync(join(dirname(toolDir(name, dir)), m))));
+// A tool folder holds the integrity it was verified against (`.integrity`), so a lockfile that names another one for the
+// same version is checked again and not trusted. A folder from before the marker is trusted for the Adapter's own pins.
+const MARK = '.integrity';
+
+/** True when `out` (a tool's `name@version` folder) holds `pin`'s members and the integrity they were verified against. */
+const verified = (out, pin) => pin.extract.every(m => existsSync(join(out, m)))
+  && existsSync(join(out, MARK)) && readFileSync(join(out, MARK), 'utf8') === pin.integrity;
+
+/** True when `pin` is extracted in `dir`, and was verified against its integrity. */
+function hasTool(name, pin, dir, pins) {
+  const out = dirname(toolDir(name, dir, pins));
+  const known = TOOLS[name] && TOOLS[name].version === pin.version && TOOLS[name].integrity === pin.integrity;
+  return known ? pin.extract.every(m => existsSync(join(out, m))) : verified(out, pin);
 }
 
-/** Download and extract every pinned tool into `dir`, verifying each tarball. Skips tools already present. */
-export async function fetchTools(dir = DEFAULT_DIR) {
-  for (const [name, pin] of Object.entries(TOOLS)) {
-    const out = dirname(toolDir(name, dir));
-    if (pin.extract.every(m => existsSync(join(out, m)))) continue;
+/** True when every tool of `pins` (every pinned tool by default; `projectPins(project)` for a project) is extracted in `dir`. */
+export function hasTools(dir = DEFAULT_DIR, pins = TOOLS) {
+  return Object.entries(pins).every(([name, pin]) => hasTool(name, pin, dir, pins));
+}
+
+/**
+ * Download and extract every tool of `pins` into `dir`, verifying each tarball against its pin's `integrity`: the
+ * Adapter's for its own pins, the project lockfile's for the Tailwind that follows it (projectPins). Skips tools already
+ * present. Nothing is installed and no script runs.
+ */
+export async function fetchTools(dir = DEFAULT_DIR, pins = TOOLS) {
+  for (const [name, pin] of Object.entries(pins)) {
+    if (hasTool(name, pin, dir, pins)) continue;
+    const out = dirname(toolDir(name, dir, pins));
     const url = `https://registry.npmjs.org/${name}/-/${name.split('/').pop()}-${pin.version}.tgz`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`GET ${url}: HTTP ${res.status}`);
@@ -86,11 +141,12 @@ export async function fetchTools(dir = DEFAULT_DIR) {
     const got = 'sha512-' + createHash('sha512').update(bytes).digest('base64');
     if (got !== pin.integrity) throw new Error(`${name}@${pin.version}: integrity ${got} does not match the pin ${pin.integrity}`);
     // Extracted beside its folder, then moved into place: a half-extracted tool never looks valid.
-    installAtomically(out, d => pin.extract.every(m => existsSync(join(d, m))), tmp => {
+    installAtomically(out, d => verified(d, pin), tmp => {
       writeFileSync(join(tmp, 'package.tgz'), bytes);
       execFileSync('tar', ['-xzf', join(tmp, 'package.tgz'), '-C', tmp, ...pin.extract]);
       rmSync(join(tmp, 'package.tgz'));
-    }, ['package']);
+      writeFileSync(join(tmp, MARK), pin.integrity);
+    }, ['package', MARK]);
   }
   return dir;
 }

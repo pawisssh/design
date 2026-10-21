@@ -35,7 +35,7 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolve } from '../../contract/scripts/contract.mjs';
 import { familyRoot, readSource } from './source.mjs';
-import { DEFAULT_DIR, FIXTURE, REPO_ROOT, hasTools, installAtomically, sha256, toolDir } from './sources.mjs';
+import { DEFAULT_DIR, FIXTURE, REPO_ROOT, hasTools, installAtomically, projectPins, sha256, toolDir } from './sources.mjs';
 import { build } from './tailwind.mjs';
 
 export const PREVIEW_DIR = join(REPO_ROOT, '.scratch/adapter-generic/preview');
@@ -83,7 +83,8 @@ function unguard(css) {
  */
 export async function previewRenderer(contract, { project = FIXTURE, dir = PREVIEW_DIR, tools = DEFAULT_DIR } = {}) {
   if (!hasPreviewPackages(dir)) fail(`Generic preview packages missing in ${dir}; run: node skills/adapter-generic/scripts/preview.mjs`);
-  if (!hasTools(tools)) fail(`Generic Adapter tools missing in ${tools}; run: node skills/adapter-generic/scripts/sources.mjs`);
+  const pins = projectPins(project);
+  if (!hasTools(tools, pins)) fail(`Generic Adapter tools missing in ${tools}; run: node skills/adapter-generic/scripts/foundations.mjs --project ${project}`);
   for (const [f, hash] of Object.entries(contract.source.files))
     if (`sha256:${sha256(readFileSync(join(project, f)))}` !== hash) fail(`${f} differs from the Contract's snapshot; regenerate the Contract first`);
   const pinned = Object.keys(JSON.parse(readFileSync(join(PINNED_DIR, 'package.json'), 'utf8')).dependencies);
@@ -148,7 +149,7 @@ export async function previewRenderer(contract, { project = FIXTURE, dir = PREVI
     }
     for (const c of components) c.classes.forEach(add);
   }
-  const stylesheet = unguard(await build(readFileSync(join(project, cssFile), 'utf8'), [...candidates].sort(), { base: join(project, cssFile, '..'), tools }));
+  const stylesheet = unguard(await build(readFileSync(join(project, cssFile), 'utf8'), [...candidates].sort(), { base: join(project, cssFile, '..'), tools, pins }));
 
   // Each anatomy child as an element: an icon slot an <svg> with its Slot axis's attribute, a part its component, a
   // text layer its text.
