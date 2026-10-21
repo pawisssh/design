@@ -463,6 +463,13 @@ test('generate: a Theme the Adapter has no mode for is a question, and the surfa
   }
 });
 
+test('generate: a <Theme> with no theme prop falls back to the surfaces without a question (#228)', { skip: noTs }, async () => {
+  const { result, check } = await themed(inner => `<Theme>${inner}</Theme>`);
+  assert.deepEqual(check.errors, []);
+  assert.deepEqual(result.handoff.source.modes, { light: 'white' });
+  assert.ok(!result.handoff.openQuestions.some(q => q.kind === 'mode-map'));
+});
+
 test('generate: with no theme wrapper the surfaces still pick the mode (#228)', { skip: noTs }, async () => {
   const { result, check } = await themed(inner => `<div>${inner}</div>`);
   assert.deepEqual(check.errors, []);
