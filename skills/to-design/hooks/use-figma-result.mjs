@@ -46,7 +46,8 @@ function locate() {
   return null;
 }
 
-// The call's text: an MCP result is a list of content blocks, bare or under `content`.
+// The call's text. Live check, 2026-10-20 (the result-hook-live session): use_figma's result reaches the hook as a bare
+// list of content blocks, [{type: 'text', text}]. A list under `content`, or a string, is read too.
 function responseText(r) {
   if (typeof r === 'string') return r;
   const blocks = Array.isArray(r) ? r : Array.isArray(r?.content) ? r.content : null;

@@ -26,10 +26,11 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { closure } from '../../contract/scripts/contract.mjs';
+import { compiledRules } from './cascade.mjs';
 import { contractFor, readFamily } from './components.mjs';
 import { readFontLoaders } from './source.mjs';
 import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, projectPins, sha256, snapshotId, stylesheets, toolDir } from './sources.mjs';
-import { build, utilityRule } from './tailwind.mjs';
+import { build, themeCss, utilityRule } from './tailwind.mjs';
 import { evaluate, isSynthesized, lengthPx, literalForm, round } from './values.mjs';
 
 // Mode selector -> mode. The first is the default; a mode that omits a property inherits the default's value.
@@ -149,7 +150,7 @@ export async function generate({ project, families = [], drafts = [], tools = DE
     if (/^-?\d*\.?\d+(rem|px)$/.test(mode[0][name])) env[name] = lengthPx(mode[0][name], name);
     else notes.push({ level: 'warning', at: `${cssFile} ${MODES[0][0]} ${name}`, message: `Not a colour or a length (${mode[0][name]}); not read.` });
   }
-  const twTheme = readFileSync(join(toolDir('tailwindcss', tools, pins), 'theme.css'), 'utf8');
+  const twTheme = themeCss(tools, pins);
   const spacing = theme['--spacing']
     ? { text: theme['--spacing'].value, source: theme['--spacing'].at }
     : { text: /--spacing:\s*([^;]+);/.exec(twTheme)[1].trim(), source: `tailwindcss@${pins.tailwindcss.version} theme.css --spacing` };
@@ -317,10 +318,17 @@ export async function generate({ project, families = [], drafts = [], tools = DE
   //    joins `source.files`, and its Contract, built against the whole document, gives the closure and usedBy. A
   //    given Contract at the same snapshot gives them instead: its selection is the owner's, the draft's is not.
   const read = [];
+  const palette = new Set(); // the default-palette tokens a family read (#254)
   for (const family of [...new Set(families)].sort(byKey)) {
     const f = await readFamily({ project, family, foundations: doc, tools });
     for (const [k, v] of Object.entries(f.synthesized)) {
       if (variables[k]) fail(`the Synthesized token ${k} of ${family} is also synthesized for ${variables[k].family}`);
+      variables[k] = v;
+    }
+    // A default-palette colour (#254) is one token whichever families read it.
+    for (const [k, v] of Object.entries(f.palette)) {
+      if (variables[k] && !palette.has(k)) fail(`the Tailwind palette colour ${k} read for ${family} is also a token of the project (${variables[k].source}); rename one`);
+      palette.add(k);
       variables[k] = v;
     }
     files[f.file] = f.files[f.file];
@@ -340,9 +348,15 @@ export async function generate({ project, families = [], drafts = [], tools = DE
         tokens.add(t);
         const v = doc.variables[t] || doc.textStyles[t];
         if (v && !v.usedBy.includes(family)) v.usedBy.push(family); // a Synthesized token already names its family
+        // a palette colour a bound Synthesized token aliases (`bg-slate-900/50`) is used by that family too
+        for (const form of Object.values((v && v.values) || {})) {
+          const a = palette.has(form.alias) ? doc.variables[form.alias] : palette.has(form.from && form.from.alias) ? doc.variables[form.from.alias] : null;
+          if (a && !a.usedBy.includes(family)) a.usedBy.push(family);
+        }
       }
     }
     doc.closure.tokens = [...tokens].sort(byKey);
+    if (palette.size) await crossCheckPalette({ doc, palette, css, project, cssFile, tools, pins, checks });
     // contractFor() throws on any validate error, rule 6 (scopes) among them, so a written document has none.
     doc.checks.scopes = { by: 'skills/contract/scripts/contract.mjs validate, rule 6', contracts: read.length, errors: 0 };
   }
@@ -356,6 +370,30 @@ export async function generate({ project, families = [], drafts = [], tools = DE
     ...read.map(([family, f]) => `${family}: ${Object.keys(f.synthesized).length} Synthesized tokens; closure ${doc.closure.tokens.length} tokens`),
   ];
   return { doc, text, documentHash: `sha256:${sha256(text)}`, summary };
+}
+
+/**
+ * The cross-check of the Tailwind default-palette tokens the families read (#254): `bg-<name>` compiles to the token's
+ * codeSyntax and the compiled theme layer holds the CSS its value was converted from. Counts them in the document's
+ * `checks.compiled`, replaces its note on the default theme, and fails on a Figma name two variables share.
+ */
+async function crossCheckPalette({ doc, palette, css, project, cssFile, tools, pins, checks }) {
+  const compiled = await build(css, [...palette].map(k => `bg-${k.slice(6)}`).sort(byKey), { base: join(project, cssFile, '..'), tools, pins });
+  const theme = Object.assign({}, ...compiledRules(compiled, 'theme').map(r => r.decls));
+  for (const k of [...palette].sort(byKey)) {
+    const v = doc.variables[k], utility = `bg-${k.slice(6)}`;
+    const decl = Object.values(utilityRule(compiled, utility) || fail(`${k}: Tailwind compiles no rule for ${utility}`))[0];
+    if (decl !== v.codeSyntax.WEB) fail(`${k}: ${utility} compiles to ${decl}, not ${v.codeSyntax.WEB}`);
+    for (const [mode, form] of Object.entries(v.values))
+      if (theme[`--${k}`] !== form.from.css) fail(`${k} (${mode}): Tailwind compiles --${k} to ${theme[`--${k}`]}, but the document holds ${form.from.css}`);
+    checks.compiled++;
+  }
+  doc.checks.compiled.matched = checks.compiled;
+  const names = Object.values(doc.variables).map(v => v.name);
+  const dupes = names.filter((n, i) => names.indexOf(n) !== i);
+  if (dupes.length) fail(`duplicate Figma variable names: ${[...new Set(dupes)].join(', ')}`);
+  const note = doc.notes.find(n => n.at === 'variables');
+  note.message = `Only the project's own CSS is read, and the Tailwind default-palette colours a family uses (${[...palette].sort(byKey).map(k => k.slice(6)).join(', ')}), valued from Tailwind's theme. Tailwind's other defaults (shadows) are not carried, except its type scale and font weights, which the Text Styles hold.`;
 }
 
 /** A font a `@theme --font-<k>` names (#160): {family, source}. Pushes a note on how it was read; throws when none is. */

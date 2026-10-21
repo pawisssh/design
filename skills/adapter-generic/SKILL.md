@@ -138,11 +138,11 @@ Every variable with a utility is compiled with Tailwind in one `build()`: `bg-<n
 | `--text-<k>`, `--font-weight-<w>` | Text Styles | (see [Text Styles](#text-styles)) | `text-<k>`, `font-<w>` |
 | anything else | not carried | warning note | |
 
-A literal `@theme --color-*` (not `var(…)`) gets a warning note and is not carried yet.
+A literal `@theme --color-*` (not `var(…)`) gets a warning note and is not carried yet, except as a [default-palette colour](#not-carried-notes-in-the-document) a family uses.
 
 ### Not carried (notes in the document)
 
-- **Tailwind's default theme.** Its palette and shadows are not carried, and its font stacks name no font. Only its type scale and font weights are read, into the Text Styles.
+- **Tailwind's default theme.** Its shadows are not carried, and its font stacks name no font. Its type scale and font weights are read into the Text Styles. Its colour palette is carried only for the colours a family uses: a utility such as `bg-slate-900`, `border-slate-200` or `hover:bg-orange-50` adds the COLOR token `Color/slate-900` (`codeSyntax.WEB` `var(--color-slate-900)`), valued from Tailwind's own theme through the shared converter, so the Contract binds a variable and the closure and `usedBy` name it. A project `@theme` value for the same name wins. Each is checked against the compiled CSS like any token. A project whose families use none (shadcn's) keeps the same document. An arbitrary colour (`text-[#1A1F26]`) has no token: it stays a `warning` raw, which does not block approval.
 
 ## 3. Component step
 

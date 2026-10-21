@@ -59,8 +59,8 @@ import { candidateRules, compiledRules, winner } from './cascade.mjs';
 import { mergeDrafts, subjects } from './drafts.mjs';
 import { familyRoot, readSource } from './source.mjs';
 import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, projectPins, sha256, snapshotId } from './sources.mjs';
-import { build } from './tailwind.mjs';
-import { CLIPPED, evaluate, isSynthesized, lengthPx, literalForm, resolvedText, round } from './values.mjs';
+import { build, themeCss } from './tailwind.mjs';
+import { CLIPPED, evaluate, isPalette, isSynthesized, lengthPx, literalForm, resolvedText, round } from './values.mjs';
 
 // Attribute states with known state words: the attribute becomes an axis, absent by default (#119).
 const ATTR_AXES = {
@@ -156,9 +156,10 @@ function variantsOf(candidate) {
 }
 
 /**
- * Read one family at the exact tier. Returns {name, file, files, axes, anatomy, layout, paint, synthesized, notes, omit,
- * expectedCount}: `synthesized` maps each Synthesized token's flat name to its Foundations variable, by name, and
- * `paint` binds it as {token}. `foundations` need only hold the Code Library tokens. Throws on anything it cannot
+ * Read one family at the exact tier. Returns {name, file, files, axes, anatomy, layout, paint, synthesized, palette, notes,
+ * omit, expectedCount}: `synthesized` maps each Synthesized token's flat name to its Foundations variable, by name, and
+ * `paint` binds it as {token}; `palette` does the same for the Tailwind default-palette colours the family's rules
+ * read (#254), which `foundations` need not hold. `foundations` need only hold the Code Library tokens. Throws on anything it cannot
  * read exactly (see the header).
  */
 export async function readFamily({ project, family, foundations, tools = DEFAULT_DIR }) {
@@ -453,10 +454,28 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     return { px, text, prop: props.find(p => p in r.decls), value: token ? { token }
       : { raw: px, level: 'info', reason: `${r.candidate}: ${text} = ${px}px; no Foundations variable compiles to it` } };
   };
+  const palette = {}; // the default-palette tokens this family reads, as this run derives them
+  const tailwindTheme = themeCss(tools, pins).replace(/\/\*[\s\S]*?\*\//g, '');
+  // A Foundations variable by flat name. Tailwind's default palette (#254) is not in the document until a family uses
+  // it: a `--color-<name>` its own theme.css declares is added to `palette` here, valued as the compiled theme layer gives it.
+  const variable = name => {
+    if (foundations.variables[name] && !isPalette(foundations.variables[name])) return foundations.variables[name];
+    if (palette[name]) return palette[name];
+    const own = /^color-[\w-]+$/.test(name) && new RegExp(`(^|[;{\\s])--${name}:\\s*([^;]+);`).exec(tailwindTheme);
+    if (!own || theme[`--${name}`] === undefined) return null;
+    const css = theme[`--${name}`];
+    const form = (() => { try { return literalForm(css); } catch (e) { return fail(`--${name} (${css}): ${e.message}`); } })();
+    const fromProject = css !== own[2].trim();
+    palette[name] = { collection: 'theme', name: `Color/${name.slice(6)}`, type: 'COLOR',
+      source: fromProject ? `${cssFile} @theme --${name}` : `tailwindcss@${pins.tailwindcss.version} theme.css --${name}`,
+      scopes: ['ALL_FILLS', 'EFFECT_COLOR', 'STROKE_COLOR'], codeSyntax: { WEB: `var(--${name})` },
+      values: Object.fromEntries(modes.map(m => [m.key, form])), usedBy: [] };
+    return palette[name];
+  };
   const colour = (text, r) => {
     if (text === 'transparent') return 'none';
     const v = /^var\(--([\w-]+)\)$/.exec(text);
-    if (v) return foundations.variables[v[1]] && foundations.variables[v[1]].type === 'COLOR' ? { token: v[1] }
+    if (v) return (variable(v[1]) || {}).type === 'COLOR' ? { token: v[1] }
       : fail(`${r.candidate} (${at(r.entry)}): ${text} is not a Foundations colour`);
     if (/^color-mix\(/.test(text)) return { mix: text }; // a Synthesized token's, whatever the Modes do (step 6)
     if (/^currentcolor$/i.test(text)) fail(`${r.candidate} (${at(r.entry)}): currentcolor is not read yet`);
@@ -663,7 +682,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   // opacity or a mix is evaluated over each token's own CSS in that Mode, so a token's alpha multiplies
   // (0.15 x 0.3 = 0.045), and flattened to RGBA, since a Figma alias cannot carry alpha.
   const cssOf = (name, r, mode) => {
-    const v = foundations.variables[name];
+    const v = variable(name);
     if (!v || v.type !== 'COLOR') fail(`${r.candidate} (${at(r.entry)}): var(--${name}) is not a Foundations colour`);
     return v.values[mode].from.css;
   };
@@ -674,7 +693,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     if (value === 'none') return literalForm('transparent');
     const text = r.decls[prop];
     let m = /^var\(--([\w-]+)\)$/.exec(text);
-    if (m) return { alias: m[1], resolved: foundations.variables[m[1]].values[mode].resolved };
+    if (m) return { alias: m[1], resolved: variable(m[1]).values[mode].resolved };
     m = /^color-mix\(in (\w+), var\(--([\w-]+)\) (\d*\.?\d+)%, transparent\)$/.exec(text);
     const c = evaluated(text.replace(/var\(--([\w-]+)\)/g, (_, name) => cssOf(name, r, mode)), r);
     const clipped = c.clipped ? `; ${CLIPPED}` : '';
@@ -864,6 +883,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const properties = texts.map(n => ({ key: n.key, label: n.label, type: 'TEXT', default: n.label, binds: [{ node: n.node, field: 'characters' }], code: n.code }));
   return { name: Name, file, files: sortedFiles, element: root.element, axes, anatomy, properties, layout, paint,
     synthesized: Object.fromEntries(Object.keys(synthesized).sort(byKey).map(k => [k, synthesized[k]])),
+    palette: Object.fromEntries(Object.keys(palette).sort(byKey).map(k => [k, palette[k]])),
     notes, omit, expectedCount, alias: `${ui}/${family}`, renderer, facts };
 }
 
@@ -1026,13 +1046,16 @@ export async function generate({ project, family, foundations, prior = null, dra
   if (prior && prior.family.key !== family) fail(`the prior Contract is for "${prior.family.key}", not "${family}"`);
   const f = await readFamily({ project, family, foundations, tools });
   const json = v => JSON.stringify(v);
-  const stale = Object.keys(f.synthesized).filter(k => json(foundations.variables[k]) !== json(f.synthesized[k]));
+  // As the document holds a palette token, usedBy aside (the Contracts that bind it fill that in).
+  const unused = v => v && { ...v, usedBy: [] };
+  const stale = [...Object.keys(f.synthesized).filter(k => json(foundations.variables[k]) !== json(f.synthesized[k])),
+    ...Object.keys(f.palette).filter(k => json(unused(foundations.variables[k])) !== json(f.palette[k]))];
   for (const [k, v] of Object.entries(foundations.variables))
     if (v.family === family && isSynthesized(v) && !f.synthesized[k]) stale.push(k);
   const exact = stale.length ? null : contractFor(f, family, foundations);
   const listed = exact && (foundations.closure.contracts || []).some(c => c.family === family && c.snapshotId === exact.source.snapshotId);
   if (stale.length || !listed)
-    fail(`the Foundations document does not hold ${f.name} as its source reads now (${stale.length ? `Synthesized tokens ${stale.sort(byKey).join(', ')}` : 'its closure has no entry for this snapshot'}); regenerate it with foundations.mjs --family ${family}`);
+    fail(`the Foundations document does not hold ${f.name} as its source reads now (${stale.length ? `Synthesized or palette tokens ${stale.sort(byKey).join(', ')}` : 'its closure has no entry for this snapshot'}); regenerate it with foundations.mjs --family ${family}`);
   const { contract, report, requests } = mergeDrafts({ contract: exact, subjects: subjects(f, exact), prior, drafts });
   const counts = ['carried', 'reopened', 'missing', 'vanished', 'owner', 'ownerCheck', 'unused'].map(k => `${k} ${report[k].length}`).join(', ');
   const summary = [

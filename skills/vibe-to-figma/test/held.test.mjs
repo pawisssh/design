@@ -5,9 +5,10 @@
 // a copy of the v0 project under .scratch/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { contentHash } from '../../contract/scripts/contract.mjs';
+import { documentHash } from '../../to-design/scripts/build-plan.mjs';
 import { gate, heldOf, nextStep, parseResolve, readRecord, settled, variantFingerprints, writeRecord } from '../scripts/build.mjs';
 import { AT, FILE_KEY, RED, builtProject, drive, inputFaded } from './drive.mjs';
 import { contractPath, read, scratch, skip } from './helpers.mjs';
@@ -172,16 +173,18 @@ test('--take-code builds a variant removed in Figma again; a held variant whose 
   assert.ok(!('take' in out.built.input) && !('held' in out.built.input));
 });
 
-test('a baseline from before #181 gets its Contract on a run with no change; mid-update, its variants are not written over', { skip }, async () => {
+test('a baseline from before #181 gets its Contract, and a record its Foundations document, on a run with no change; mid-update, its variants are not written over', { skip }, async () => {
   const p = await builtProject();
   const { dir, mock, ledger, record } = p;
   const node = nodeOf(mock);
   const legacy = { ...record, built: Object.fromEntries(Object.entries(record.built).map(([f, { contract, ...b }]) => [f, b])) };
   delete legacy.contracts;
+  delete legacy.foundations;
   const upgraded = nextStep({ dir, fileKey: FILE_KEY, ledger, record: legacy, namespace: 'v0-app', at: AT });
   assert.equal(upgraded.status, 'built');
   assert.deepEqual(upgraded.record.built, record.built);
   assert.deepEqual(upgraded.record.contracts, record.contracts);
+  assert.equal(upgraded.record.foundations, readFileSync(join(dir, 'v0-app.foundations.json'), 'utf8'));
 
   // The code changed before the upgrade: no Contract to read the changed variants against, so neither is written.
   const ids = ledger.sets.input.variants;
@@ -215,6 +218,28 @@ test('the build record keeps its Contracts as files beside it, drops one no base
   assert.ok(!('contracts' in read(file)));
   assert.ok(existsSync(join(dir, 'X.v0-app.build.contracts')));
   assert.deepEqual(readdirSync(join(dir, 'X.v0-app.build.contracts')), []);
+});
+
+test('the build record keeps its Foundations document as a file beside it, and reads on without a lost or another one', () => {
+  const dir = scratch();
+  const file = join(dir, 'X.v0-app.build.json');
+  const doc = '{"designSystem":{"key":"v0-app"}}\n';
+  const record = { namespace: 'v0-app', foundations: doc };
+  writeRecord(file, record);
+  assert.equal(read(file).foundations, documentHash(doc));
+  assert.equal(readFileSync(join(dir, 'X.v0-app.build.foundations.json'), 'utf8'), doc);
+  assert.deepEqual(readRecord(file), record);
+  writeRecord(file, { ...record, foundations: doc.replace('v0-app', 'v1') });
+  assert.equal(readRecord(file).foundations, doc.replace('v0-app', 'v1'));
+  // a document that is not the one the record names, or is gone, is not read back
+  writeFileSync(join(dir, 'X.v0-app.build.foundations.json'), doc);
+  assert.deepEqual(readRecord(file), { namespace: 'v0-app' });
+  rmSync(join(dir, 'X.v0-app.build.foundations.json'));
+  assert.deepEqual(readRecord(file), { namespace: 'v0-app' });
+  // a record without one leaves no document file behind
+  writeFileSync(join(dir, 'X.v0-app.build.foundations.json'), doc);
+  writeRecord(file, { namespace: 'v0-app' });
+  assert.ok(!existsSync(join(dir, 'X.v0-app.build.foundations.json')));
 });
 
 test('a build record written before the rename reads its `conflicts` as held', () => {
