@@ -171,6 +171,62 @@ test('after an omit edit the rebuild finds every kept variant by name and moves 
   assert.deepEqual(report.orphaned.sort(), focus.sort());
 });
 
+// The Button after a Base loop: an owner tweak to the root's max width (320 -> 288) that changes its contentHash but
+// not its expansion, approved again.
+const reapproved = () => {
+  const c = asDraft(BUTTON);
+  c.layout[0].set.Button.maxWidth = { ...c.layout[0].set.Button.maxWidth, raw: 288 };
+  return approve(c, LATER);
+};
+
+// The live text-input rebuild: a set built with no Base Component, then a Base loop that built the base on its page,
+// outside the set, and changed the Contract's hash. The rebuild keeps the recorded variants, their ids and so their instances:
+// the one under the base's name takes the approved values, and the base is left as it is, named as unused.
+test('after a contentHash change with a Base Component outside the set, the rebuild keeps every recorded variant id and duplicates no name', async () => {
+  const env = await setup({ withBase: false });
+  await buildAll(env);
+  const before = [...env.ledger.sets.button.variants];
+  const edited = reapproved();
+  assert.notEqual(edited.selection.approval.contentHash, BUTTON.selection.approval.contentHash);
+  assert.deepEqual(expand(edited).map(t => variantName(edited, t)), expand(BUTTON).map(t => variantName(BUTTON, t)), 'the same expansion');
+  const { plan, state } = basePlan(edited, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: LATER, adopt: true });
+  const built = await runPackage(pack(plan, state, COMPONENTS_CORE).code, env.mock.figma);
+  assert.equal(built.summary.conflicts, 0, JSON.stringify(built.conflicts));
+  env.ledger = recordResult(env.ledger, built);
+  const base = await env.mock.figma.getNodeByIdAsync(env.ledger.bases.button.id);
+  assert.equal(base.parent.type, 'PAGE', 'the Base loop built the base on the page, outside the set');
+  assert.ok(!before.includes(base.id));
+  // a read-only reconcile finds the set's own variants, the one under the base's name too (checked before any build
+  // call: two variants of one name in the set never settle in the grid)
+  const at = expand(edited).findIndex(t => variantName(edited, t) === base.name);
+  const found = (await sets(env, { mode: 'reconcile' }, { contract: edited, drop: true })).result.ledger.sets.button.variants;
+  assert.deepEqual([found[at], Object.values(found)], [before[at], before], 'every recorded variant found, the base not taken');
+
+  const baseIds = new Set([base, ...base.findAll(() => true)].map(n => n.id));
+  const from = env.mock.log.length;
+  const runs = await buildAll(env, edited, { at: LATER });
+  assert.deepEqual(env.mock.log.slice(from).filter(([, ...ids]) => ids.some(id => baseIds.has(id))), [], 'nothing written to the base');
+  for (const { result } of runs) {
+    assert.equal(result.summary.created, 0, JSON.stringify(result.summary));
+    assert.deepEqual(result.unusedBase, { id: base.id, name: base.name }, 'the base is named as unused');
+  }
+  const set = await setNode(env);
+  const names = set.children.map(k => k.name);
+  assert.equal(new Set(names).size, names.length, 'no variant name twice');
+  assert.equal(set.children.length, TOTAL);
+  assert.deepEqual(env.ledger.sets.button.variants, before, 'every recorded variant id kept');
+  assert.equal(env.ledger.sets.button.contentHash, edited.selection.approval.contentHash);
+  // the recorded variant under the base's name reads back as the approved Contract
+  const variant = await env.mock.figma.getNodeByIdAsync(before[at]);
+  assert.deepEqual([variant.parent.id, variant.maxWidth], [set.id, 288]);
+  const sample = await sets(env, { mode: 'sample', sample: [at] }, { contract: edited });
+  const s = checkSample(edited, sample.result, env.ledger, DOC);
+  assert.deepEqual([s.problems, s.sampled], [[], 1]);
+  // the base is still there, on its page, where the Base loop left it
+  assert.equal(await env.mock.figma.getNodeByIdAsync(base.id), base);
+  assert.equal(base.parent.type, 'PAGE');
+});
+
 // selection.member, the bitset of the whole selection: build-plan writes it, the core decodes it to tell the
 // variants dropped. Kind and Size have 7 values; tuples 3|4 and 39|40 sit either side of a hex digit, 244 in the
 // last, partial one.

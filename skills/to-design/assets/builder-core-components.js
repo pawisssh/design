@@ -81,12 +81,15 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     if (f === 'direction') return keyOf(AXIS, n.layoutMode) || 'none';
     if (f === 'width' || f === 'height') {
       const s = f === 'width' ? n.layoutSizingHorizontal : n.layoutSizingVertical;
+      // A fill stuck at 0 px reads as its size, so a build repairs it (#224).
+      const fill = () => (n[f] >= 1 ? 'fill' : val(n, f));
+      if (s === 'FILL') return fill();
       if (s !== 'FIXED') return String(s).toLowerCase();
       // A hidden child of an auto layout reports FILL as FIXED; its grow (main axis) or stretch (cross axis) still says fill.
       const dir = !n.visible && n.parent && n.parent.layoutMode;
       if (dir === 'HORIZONTAL' || dir === 'VERTICAL') {
         const main = (f === 'width') === (dir === 'HORIZONTAL');
-        if (main ? n.layoutGrow === 1 : n.layoutAlign === 'STRETCH') return 'fill';
+        if (main ? n.layoutGrow === 1 : n.layoutAlign === 'STRETCH') return fill();
       }
       return val(n, f);
     }
@@ -181,6 +184,8 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     if (f === 'direction') n.layoutMode = AXIS[want] || 'NONE';
     else if (f === 'width' || f === 'height') {
       const k = f === 'width' ? 'layoutSizingHorizontal' : 'layoutSizingVertical';
+      // A 0 px node (a new text) keeps 0 px under FILL (probed live in #224)
+      if (want === 'fill' && !(n[f] >= 1)) num(n, f, { raw: 1 });
       if (typeof want === 'string') n[k] = want.toUpperCase();
       else { n[k] = 'FIXED'; num(n, f, want); }
     } else if (f === 'alignMain') n.primaryAxisAlignItems = ALIGN[want];
@@ -430,9 +435,10 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     for (const e of E) {
       let node = prev && prev.variants ? await get(prev.variants[e[0]]) : null;
       if (node && (node.type !== 'COMPONENT' || !home || !node.parent || node.parent.id !== home.id)) node = null;
-      if (!node && e[0] === plan.baseIndex && baseNode && baseNode.type === 'COMPONENT') node = baseNode;
-      if (!node) node = kids[nameOf(e.slice(1))] || null;
-      found[e[0]] = node;
+      // a variant of its name in the set comes before the Base Component, which a Base loop after a Contract edit may
+      // have built on the page outside the set: the rebuild keeps the variant, its id and instances, and never puts
+      // the base beside it under the same name (the plan carries no ids for another Contract)
+      found[e[0]] = node || kids[nameOf(e.slice(1))] || (e[0] === plan.baseIndex && baseNode);
     }
     // this call's variant ids by expansion index; the ledger merges them into the family's list (state carries only these)
     const variants = {};
@@ -753,6 +759,8 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const dropped = drops();
     const summary = { created: createdCount, updated: tally(), variants: set.children.length, missing: missing.length, dropped: dropped.length, conflicts: 0 };
     if (W) Object.assign(summary, { placed: !cut, left: unplaced() });
+    // that Base Component, outside the set beside the variant of its name: never deleted here, the owner tidies it
+    if (baseNode && baseNode.parent.id !== set.id && set.children.some(k => k.name === baseNode.name)) report.unusedBase = { id: baseNode.id, name: baseNode.name };
     return Object.assign(report, {
       summary, made, updated: counts, missing, dropped, conflicts, defaultVariant: set.defaultVariant ? set.defaultVariant.name : null, ledger: ledger(keys, W ? !cut : true),
     });

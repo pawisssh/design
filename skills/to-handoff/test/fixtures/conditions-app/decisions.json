@@ -1,0 +1,31 @@
+{
+  "condition:mode === 'diy'": true,
+  "condition:(amount * (pl / 100)) > 0": false,
+  "condition:over": false,
+  "recognise:button": {
+    "raw": true,
+    "reason": "a plain tab button; the shapes under test are its conditions"
+  },
+  "token:font-size:16px": "body-02-font-size",
+  "feature": {
+    "goal": "Work out a withdrawal across funds."
+  },
+  "acceptance": [
+    {
+      "id": "calculator-opens",
+      "screen": "index",
+      "state": "default",
+      "given": "no withdrawal yet",
+      "when": "the page opens",
+      "then": "the Fixed tab and the total show"
+    },
+    {
+      "id": "calculator-fails",
+      "screen": "index",
+      "state": "error",
+      "given": "a withdrawal the funds cannot cover",
+      "when": "the total is worked out",
+      "then": "the error shows"
+    }
+  ]
+}

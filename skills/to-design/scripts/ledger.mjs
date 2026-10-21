@@ -182,6 +182,8 @@ function main() {
   const dropped = result.dropped || [];
   const names = tracked => dropped.filter(d => kept.has(d[1]) === tracked).map(d => d[0]);
   const report = dropped.length ? { orphaned: names(true), extra: names(false) } : {};
+  // a Base Component the build left outside the set, beside the variant of its name, for the owner to tidy by hand
+  if (result.unusedBase) report.unusedBase = result.unusedBase;
   console.log(JSON.stringify({ status: 'recorded', ledger: path, slice: result.slice, summary: result.summary, ...report }));
 }
 

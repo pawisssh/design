@@ -16,6 +16,7 @@ import { parseInline } from '../scripts/css.mjs';
 import { matchDeclaration, matchText } from '../scripts/match.mjs';
 import { innerHtmlTemplates } from '../scripts/reader.mjs';
 import { mediaAtBreakpoints } from '../scripts/generate.mjs';
+import { standIns } from '../scripts/recognise.mjs';
 import { BUTTON, DECISIONS, PROTOTYPE, designSystem, fixture, repo } from './helpers.mjs';
 
 const BUTTON_BYTES = readFileSync(BUTTON, 'utf8');
@@ -224,6 +225,33 @@ test('states, Stand-ins and the missing error state come from the Prototype', { 
   assert.ok(handoff.acceptance.length > 0 && handoff.acceptance.every(a => a.by === 'agent'));
 });
 
+test('a setTimeout that only clears a status message after the work is not simulated work (#217)', () => {
+  const text = `
+  function sendInvites() {
+    state.isSending = true; render();
+    setTimeout(() => { state.isSending = false; state.sent = true; render(); }, 800);
+  }
+  function loadState() {
+    const raw = localStorage.getItem('save');
+    if (!raw) { state.msg = 'No save found'; render(); setTimeout(() => { state.msg = null; render(); }, 2000); return; }
+    try { state.funds = JSON.parse(raw).funds; render(); } catch { state.msg = 'Load failed'; setTimeout(() => { state.msg = ''; render(); }, 2000); }
+  }
+  function copyLink() { state.msg = 'Copied'; render(); setTimeout(function () { state.msg = \`\`; render(); }, TOAST_MS); }
+  function saveAndConfirm() {
+    state.isSaving = true; render();
+    setTimeout(() => { state.isSaving = false; state.done = true; render(); setTimeout(() => { state.msg = undefined; render(); }, 3000); }, 600);
+  }
+  function confirmThenSave() {
+    state.msg = 'Saving…'; setTimeout(() => { state.msg = null; }, 1500);
+    state.isSaving = true; setTimeout(() => { state.isSaving = false; state.saved = true; }, 900);
+  }`;
+  assert.deepEqual(standIns([{ text, offset: 0 }]).simulated.map(f => ({ name: f.name, delay: f.delay, before: f.before, after: f.after })), [
+    { name: 'sendInvites', delay: 800, before: ['state.isSending'], after: ['state.sent'] },
+    { name: 'saveAndConfirm', delay: 600, before: ['state.isSaving'], after: ['state.done'] },
+    { name: 'confirmThenSave', delay: 900, before: ['state.isSaving'], after: ['state.saved'] },
+  ]);
+});
+
 test('generate with an empty decisions file returns decision requests and writes nothing', { skip: noDeps }, async () => {
   const ds = designSystem();
   const result = await generate({ prototype: PROTOTYPE, designSystem: ds, decisions: {} });
@@ -383,12 +411,24 @@ test('the CLI refuses with decision requests and exit code 2 when decisions are 
   const ds = designSystem();
   const empty = join(ds, 'decisions.json');
   writeFileSync(empty, '{}');
-  let code = 0, out = '';
+  let code = 0, out = '', err = '';
   try { execFileSync(process.execPath, [repo('skills/to-handoff/scripts/handoff.mjs'), 'generate', PROTOTYPE, '--ds', ds, '--decisions', empty, '--static'], { encoding: 'utf8', stdio: 'pipe' }); }
-  catch (e) { code = e.status; out = e.stdout; }
+  catch (e) { code = e.status; out = e.stdout; err = e.stderr; }
   assert.equal(code, 2);
-  assert.ok(JSON.parse(out).requests.length > 0);
+  const { requests } = JSON.parse(out);
+  assert.ok(requests.length > 1);
   assert.ok(!existsSync(join(ds, 'handoffs')));
+  // stderr's first line counts the requests by kind (#219): every kind once, most first, a tie in the order first asked.
+  const [, total, list] = err.split('\n')[0].match(/^(\d+) requests: (.+)$/);
+  assert.equal(Number(total), requests.length);
+  const listed = list.split(', ').map(x => x.match(/^(\d+) (\S+)$/)).map(([, n, kind]) => ({ n: Number(n), kind }));
+  for (const { n, kind } of listed) assert.equal(n, requests.filter(r => r.kind === kind).length, kind);
+  assert.deepEqual(listed.map(x => x.kind).sort(), [...new Set(requests.map(r => r.kind))].sort());
+  const first = kind => requests.findIndex(r => r.kind === kind);
+  for (let i = 1; i < listed.length; i++) {
+    const [a, b] = [listed[i - 1], listed[i]];
+    assert.ok(a.n > b.n || (a.n === b.n && first(a.kind) < first(b.kind)), `${a.kind} before ${b.kind}`);
+  }
 });
 
 test('a media query at the breakpoints: where it applies, the two a px width falls between, else the widths seen (#146)', () => {
