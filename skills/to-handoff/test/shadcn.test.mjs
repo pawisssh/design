@@ -75,8 +75,8 @@ test('generate: a Code Library container with no Contract is walked like a wrapp
   assert.equal(usages.find(u => u.raw && u.raw.element === 'Card'), undefined, 'Card is no usage');
   assert.deepEqual(usages.filter(u => u.in), []);
   assert.deepEqual(handoff.source.notes.filter(n => /Card/.test(n.text)), [{ level: 'info', text:
-    'Region `flex`: `Card` (@/components/ui/card, app/page.tsx:18:7) holds other Code Library usages, so it is read as a wrapper: its parts\' styles and text stay in the region, and the usages inside it are their own.' }]);
-  assert.deepEqual(handoff.screens[0].regions.find(r => r.id === 'flex').text.map(t => [t.copy, handoff.copy[t.copy].text]).slice(0, 2), [
+    'Region `main`: `Card` (@/components/ui/card, app/page.tsx:18:7) holds other Code Library usages, so it is read as a wrapper: its parts\' styles and text stay in the region, and the usages inside it are their own.' }]);
+  assert.deepEqual(handoff.screens[0].regions.find(r => r.id === 'main').text.map(t => [t.copy, handoff.copy[t.copy].text]).slice(0, 2), [
     ['card-title', 'Request workspace access'],
     ['card-description', 'Tell us who you are and an admin will approve you within a day.'],
   ]);
@@ -86,38 +86,38 @@ test('generate: a Code Library container with a Contract is its Usage by import,
   const ds = shadcnDesignSystem();
   const { handoff } = await generate({ prototype: V0, designSystem: ds, decisions: DECISIONS });
   assert.deepEqual(validateHandoff(handoff, await loadDesignSystem(ds)).errors, []);
-  const flex = handoff.screens[0].regions.find(r => r.id === 'flex');
-  const card = flex.usages.find(u => u.contract === 'card');
+  const main = handoff.screens[0].regions.find(r => r.id === 'main');
+  const card = main.usages.find(u => u.contract === 'card');
   assert.deepEqual(card, {
-    id: 'w-full', contract: 'card', tuple: { 'card-footer': 'card-footer' },
-    properties: { title: 'copy:w-full-title', description: 'copy:w-full-description' },
+    id: 'card', contract: 'card', tuple: { 'card-footer': 'card-footer' },
+    properties: { title: 'copy:card-title', description: 'copy:card-description' },
     match: { by: 'import' },
-    offAxis: [{ property: 'CardFooter.className', raw: '"justify-between text-xs text-muted-foreground"', reason: 'CardFooter className is no card axis or property', question: 'q-prop-w-full' }],
-    question: 'q-prop-w-full',
+    offAxis: [{ property: 'CardFooter.className', raw: '"justify-between text-xs text-muted-foreground"', reason: 'CardFooter className is no card axis or property', question: 'q-prop-card' }],
+    question: 'q-prop-card',
     at: 'app/page.tsx:18:7',
   });
-  assert.deepEqual(handoff.copy['w-full-title'], { text: 'Request workspace access', at: 'app/page.tsx:22:24' });
-  assert.deepEqual(handoff.copy['w-full-description'], { text: 'Tell us who you are and an admin will approve you within a day.', at: 'app/page.tsx:25:13' });
-  assert.equal(handoff.openQuestions.find(q => q.id === 'q-prop-w-full').text,
+  assert.deepEqual(handoff.copy['card-title'], { text: 'Request workspace access', at: 'app/page.tsx:22:24' });
+  assert.deepEqual(handoff.copy['card-description'], { text: 'Tell us who you are and an admin will approve you within a day.', at: 'app/page.tsx:25:13' });
+  assert.equal(handoff.openQuestions.find(q => q.id === 'q-prop-card').text,
     '`CardFooter` at app/page.tsx:31:9 sets className="justify-between text-xs text-muted-foreground", which is no card axis or property. Which value is it, or does the Contract need it?');
   // `usages` stays flat, in reading order: the Card first, then each Usage inside it.
   assert.deepEqual(handoff.screens[0].regions.flatMap(r => r.usages).map(u => [u.id, u.in]), [
-    ['w-full', undefined],
-    ['button', 'w-full'], ['alert', 'w-full'],
-    ['label', 'w-full'], ['name', 'w-full'], ['label-2', 'w-full'], ['email', 'w-full'],
-    ['label-3', 'w-full'], ['select', 'w-full'], ['label-4', 'w-full'], ['reason', 'w-full'],
-    ['button-2', 'w-full'], ['button-3', 'w-full'],
+    ['card', undefined],
+    ['button', 'card'], ['alert', 'card'],
+    ['label', 'card'], ['name', 'card'], ['label-2', 'card'], ['email', 'card'],
+    ['label-3', 'card'], ['select', 'card'], ['label-4', 'card'], ['reason', 'card'],
+    ['button-2', 'card'], ['button-3', 'card'],
     ['toaster', undefined],
   ]);
   // Text in no part the Contract knows stays region text; the Card's own copy leaves it.
-  assert.deepEqual(flex.text.map(t => [handoff.copy[t.copy].text, t.at]), [
+  assert.deepEqual(main.text.map(t => [handoff.copy[t.copy].text, t.at]), [
     ['Thanks! Your request is in.', 'app/request-access-form.tsx:47:36'],
     ['Already a member?', 'app/page.tsx:32:17'],
   ]);
   assert.deepEqual(handoff.source.notes.filter(n => /Card/.test(n.text)), []);
   assert.ok('card' in handoff.source.contracts);
   // The states still see the conditional content inside the Card.
-  assert.equal(handoff.screens[0].states.error.content, '`status === "error"` is true; conditional content shown: .grid, alert');
+  assert.equal(handoff.screens[0].states.error.content, '`status === "error"` is true; conditional content shown: form, alert');
 });
 
 test('generate: a Card with no CardFooter has the Slot axis\'s empty value', { skip: noTs }, async () => {
@@ -207,7 +207,7 @@ test('render: a container Usage\'s card lists the Usages nested in it, indented,
   const result = await generate({ prototype: V0, designSystem: ds, decisions: DECISIONS });
   const card = (html, id) => html.slice(html.indexOf(`<article class="card" id="usage-${id}">`)).split('</article>')[0];
   const html = readFileSync(await render({ handoffPath: result.path, designSystem: ds }), 'utf8');
-  assert.ok(card(html, 'w-full').endsWith('<p>Nested in w-full:</p><ul>'
+  assert.ok(card(html, 'card').endsWith('<p>Nested in card:</p><ul>'
     + '<li><a href="#usage-button">button</a> · <code>button</code> variant=outline</li>'
     + '<li><a href="#usage-alert">alert</a> · <code>alert</code> variant=destructive</li>'
     + '<li><a href="#usage-label">label</a> · <code>label</code></li>'
@@ -220,7 +220,7 @@ test('render: a container Usage\'s card lists the Usages nested in it, indented,
     + '<li><a href="#usage-reason">reason</a> · <code>textarea</code></li>'
     + '<li><a href="#usage-button-2">button-2</a> · <code>button</code></li>'
     + '<li><a href="#usage-button-3">button-3</a> · <code>button</code> variant=link size=sm</li>'
-    + '</ul>\n'), card(html, 'w-full'));
+    + '</ul>\n'), card(html, 'card'));
   // A card nothing names in `in` lists nothing.
   for (const id of ['button', 'alert', 'toaster']) assert.ok(!card(html, id).includes('Nested in'), id);
 
@@ -229,11 +229,11 @@ test('render: a container Usage\'s card lists the Usages nested in it, indented,
   for (const u of h.screens[0].regions.flatMap(r => r.usages)) if (u.id === 'button-2' || u.id === 'button-3') u.in = 'alert';
   writeFileSync(result.path, JSON.stringify(h, null, 2) + '\n');
   const chained = readFileSync(await render({ handoffPath: result.path, designSystem: ds }), 'utf8');
-  assert.ok(card(chained, 'w-full').includes('<li><a href="#usage-alert">alert</a> · <code>alert</code> variant=destructive<ul>'
+  assert.ok(card(chained, 'card').includes('<li><a href="#usage-alert">alert</a> · <code>alert</code> variant=destructive<ul>'
     + '<li><a href="#usage-button-2">button-2</a> · <code>button</code></li>'
     + '<li><a href="#usage-button-3">button-3</a> · <code>button</code> variant=link size=sm</li>'
-    + '</ul></li>'), card(chained, 'w-full'));
-  assert.ok(card(chained, 'w-full').endsWith('<li><a href="#usage-reason">reason</a> · <code>textarea</code></li></ul>\n'));
+    + '</ul></li>'), card(chained, 'card'));
+  assert.ok(card(chained, 'card').endsWith('<li><a href="#usage-reason">reason</a> · <code>textarea</code></li></ul>\n'));
   assert.ok(card(chained, 'alert').endsWith('<p>Nested in alert:</p><ul>'
     + '<li><a href="#usage-button-2">button-2</a> · <code>button</code></li>'
     + '<li><a href="#usage-button-3">button-3</a> · <code>button</code> variant=link size=sm</li>'

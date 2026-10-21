@@ -240,7 +240,7 @@ test('review shows each container Usage with the Usages nested in it indented un
   const nesting = text => text.slice(text.indexOf('\nNesting\n') + 1, text.indexOf('\nPending Proposals'));
   assert.equal(nesting((await review({ handoffPath, designSystem: ds })).text), [
     'Nesting',
-    '  w-full: card card-footer=card-footer',
+    '  card: card card-footer=card-footer',
     '    button: button variant=outline',
     '    alert: alert variant=destructive',
     '    label: label',
