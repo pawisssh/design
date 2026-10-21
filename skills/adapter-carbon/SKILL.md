@@ -12,7 +12,7 @@ The Adapter for the Carbon React Code Library. There is one Adapter skill per Co
 - A draft Contract per Component Family, read from Carbon source at the pinned tag and commit.
 - The Carbon foundations document, generated from the pinned Carbon token sources. It carries Carbon's whole theme (every Theme token, the whole palette, every Layout group and every Type style) plus the component tokens of each family that has a Contract, and records the union of all Contracts' token references as `closure`. It is never edited by hand.
 - The Carbon React preview renderer that `to-preview` uses to render specimens.
-- The handoff Adapter that `to-handoff` finds by convention, [`scripts/handoff-adapter.mjs`](scripts/handoff-adapter.mjs): Carbon's role groups for matching Prototype values, the surfaces that map a Prototype to a Theme mode, the step for writing a missing Contract, `checkContract` (the check a Contract written mid-run must pass), and the preview renderer for the Rendering.
+- The handoff Adapter that `to-handoff` finds by convention, [`scripts/handoff-adapter.mjs`](scripts/handoff-adapter.mjs): Carbon's role groups for matching Prototype values, the surfaces that map a Prototype to a Theme mode, `themeWrapper` (the `<Theme theme>` prop and the Theme mode each value names), the step for writing a missing Contract, `checkContract` (the check a Contract written mid-run must pass), and the preview renderer for the Rendering.
 
 The committed outputs for the pilot (Carbon `v11.118.0`, commit `44f90d8`) are in [`design-systems/carbon/`](../../design-systems/carbon/). The Button Contract there was written by an agent and is the reference output: read it next to this guide.
 
