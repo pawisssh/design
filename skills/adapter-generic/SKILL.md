@@ -25,7 +25,7 @@ node skills/adapter-generic/scripts/sources.mjs
 - `shadcn` and `tw-animate-css` are read only as stylesheets, and only when the project's CSS imports them. A project whose CSS imports neither needs neither in its lockfile; one that imports them needs the pinned versions.
 - `typescript` is read only as a parser: the component step reads each component file's AST and never type-checks or runs it.
 
-The command then fetches the [preview renderer](#4-preview-renderer)'s packages. Done when it prints `Generic Adapter tools OK` and `Generic preview packages OK`.
+The command then installs the [preview renderer](#4-preview-renderer)'s packages for the reference project; for another project run `node skills/adapter-generic/scripts/preview.mjs --project <dir>`. Done when it prints `Generic Adapter tools OK` and `Generic preview packages OK`.
 
 The reading tier (steps 2 and 3) executes only Tailwind's own compiler, over the project's CSS ([`scripts/tailwind.mjs`](scripts/tailwind.mjs)):
 
@@ -308,7 +308,12 @@ A value that neither the source nor a rule here states is drafted by an agent. T
 - `stylesheet`: the project's global CSS compiled by the pinned Tailwind over every class of the component files the render loads, Preflight and the base layer included. Tailwind's `@supports (color: color-mix(…))` guards are unwrapped, because To-preview's state forcing does not read inside `@supports`.
 - `modeClass(mode)`: `mode-<key>`, used only for Light, which records no selector. Dark switches by its `selector`, `.dark`.
 
-Unlike the reading tier, it runs code: the project's component files, transpiled with the pinned TypeScript, and the packages they import. Those are pinned in [`preview/package.json`](preview/package.json) and its lockfile, at the versions the fixture's lockfile resolves, and installed with `npm ci --ignore-scripts` into gitignored `.scratch/adapter-generic/preview/`. A bare import the file does not pin fails. It refuses when a project file is not the Contract's snapshot, when a pinned package is not the Contract's `source.packages` version, or when any installed package's version differs from the project's lockfile.
+Unlike the reading tier, it runs code: the project's component files, transpiled with the pinned TypeScript, and the packages they import. Those are pinned in [`preview/package.json`](preview/package.json) and its lockfile, at the versions the fixture's lockfile resolves, and installed with `npm ci --ignore-scripts` into gitignored `.scratch/adapter-generic/preview/`. A bare import the file does not pin fails.
+
+- **Follows the project's lockfile:** `react`, `react-dom` and the `scheduler` react-dom depends on. Each is at the version the project's `package-lock.json` resolves and is verified against that lockfile's sha512 `integrity`: the tarball is fetched and checked before `npm ci` runs, and a mismatch is refused, naming the package. The registry URL is built from the name and version, never taken from the lockfile's `resolved`. The packages install into a folder keyed by those versions (`.scratch/adapter-generic/preview/react@19.2.4-scheduler@0.27.0/`), so projects on different React versions sit side by side. `react` and `react-dom` must resolve the same version, and the lockfile must give all three a sha512 `integrity`.
+- **The Adapter's pins:** the rest of `preview/package.json` (`radix-ui`, `lucide-react`, `class-variance-authority`, `cn`). A project whose lockfile resolves one of them differently is refused.
+
+It refuses when a project file is not the Contract's snapshot, when a pinned package is not the Contract's `source.packages` version, or when any installed package's version differs from the project's lockfile.
 
 ```
 node skills/to-preview/scripts/catalog.mjs design-systems/shadcn/contracts/button.component.json
@@ -324,4 +329,4 @@ What is pinned: `typescript`, `shadcn` and `tw-animate-css` in `TOOLS` in `sourc
 
 What follows the lockfile: the version of `tailwindcss` (any 4.x), fetched and verified against the lockfile's own `integrity`. `source.packages` records the stylesheet packages the run read: `tailwindcss` at the lockfile's version, plus `shadcn` and `tw-animate-css` when the CSS imports them. Moving the reference project's Tailwind means changing the `tailwindcss` entry in `TOOLS` and the fixture's lockfile together; the Foundations document must then be regenerated.
 
-The preview renderer's packages are pinned in [`preview/package.json`](preview/package.json) and its lockfile, which must resolve every package at the version the project's lockfile does: the renderer refuses otherwise, naming the package. To move one, change it in the project, then in `preview/package.json`, and run `npm install --package-lock-only --ignore-scripts` in `preview/`.
+The preview renderer's packages other than `react`, `react-dom` and `scheduler` are pinned in [`preview/package.json`](preview/package.json) and its lockfile, which must resolve every one at the version the project's lockfile does: the renderer refuses otherwise, naming the package. To move one, change it in the project, then in `preview/package.json`, and run `npm install --package-lock-only --ignore-scripts` in `preview/`. The `react`, `react-dom` and `scheduler` entries there are the reference project's: they are replaced by the project's own when the packages are installed, so moving them in the fixture's lockfile means moving them here too (`lockfile-react.test.mjs` checks the two agree).
