@@ -173,16 +173,18 @@ test('--take-code builds a variant removed in Figma again; a held variant whose 
   assert.ok(!('take' in out.built.input) && !('held' in out.built.input));
 });
 
-test('a baseline from before #181 gets its Contract on a run with no change; mid-update, its variants are not written over', { skip }, async () => {
+test('a baseline from before #181 gets its Contract, and a record its Foundations document, on a run with no change; mid-update, its variants are not written over', { skip }, async () => {
   const p = await builtProject();
   const { dir, mock, ledger, record } = p;
   const node = nodeOf(mock);
   const legacy = { ...record, built: Object.fromEntries(Object.entries(record.built).map(([f, { contract, ...b }]) => [f, b])) };
   delete legacy.contracts;
+  delete legacy.foundations;
   const upgraded = nextStep({ dir, fileKey: FILE_KEY, ledger, record: legacy, namespace: 'v0-app', at: AT });
   assert.equal(upgraded.status, 'built');
   assert.deepEqual(upgraded.record.built, record.built);
   assert.deepEqual(upgraded.record.contracts, record.contracts);
+  assert.equal(upgraded.record.foundations, readFileSync(join(dir, 'v0-app.foundations.json'), 'utf8'));
 
   // The code changed before the upgrade: no Contract to read the changed variants against, so neither is written.
   const ids = ledger.sets.input.variants;
@@ -234,6 +236,10 @@ test('the build record keeps its Foundations document as a file beside it, and r
   assert.deepEqual(readRecord(file), { namespace: 'v0-app' });
   rmSync(join(dir, 'X.v0-app.build.foundations.json'));
   assert.deepEqual(readRecord(file), { namespace: 'v0-app' });
+  // a record without one leaves no document file behind
+  writeFileSync(join(dir, 'X.v0-app.build.foundations.json'), doc);
+  writeRecord(file, { namespace: 'v0-app' });
+  assert.ok(!existsSync(join(dir, 'X.v0-app.build.foundations.json')));
 });
 
 test('a build record written before the rename reads its `conflicts` as held', () => {

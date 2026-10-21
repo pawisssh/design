@@ -15,8 +15,7 @@
 // first build would combine more than MAX_COMBINE variants stops the run before any write, for the owner to decide.
 // The ledger is the Design System's own, <fileKey>.<name>.ledger.json in the main checkout's .scratch/to-design/, so
 // a file that holds another Design System (the smoke draft's Carbon) keeps its ledger untouched. Beside it,
-// <fileKey>.<name>.build.json keeps the namespace, the coverage pages and verdicts, and any rebuild under way, and
-// <fileKey>.<name>.build.foundations.json the Foundations document the ledger was last built from.
+// <fileKey>.<name>.build.json keeps the namespace, the coverage pages and verdicts, and any rebuild under way.
 // A set that fails its coverage check stops the run; --rebuild <family> then builds its batches again inside the set
 // (the builder rebuilds a layer tree unlike the Contract's anatomy and wires it again), and its coverage is read again.
 // A rerun touches only what changed (#180). A set that passes its coverage check leaves a baseline in the build record:
@@ -98,7 +97,7 @@ export function writeRecord(recordFile, record) {
   if (foundations) {
     rest.foundations = documentHash(foundations);
     if (!existsSync(foundationsFile(recordFile)) || readFileSync(foundationsFile(recordFile), 'utf8') !== foundations) writeFileSync(foundationsFile(recordFile), foundations);
-  }
+  } else rmSync(foundationsFile(recordFile), { force: true });
   mkdirSync(contractsDir(recordFile), { recursive: true });
   for (const [h, c] of Object.entries(contracts)) if (!existsSync(contractFile(recordFile, h))) writeFileSync(contractFile(recordFile, h), JSON.stringify(c) + '\n');
   const keep = new Set(Object.keys(contracts).map(h => contractFile(recordFile, h)));
@@ -195,6 +194,11 @@ export function variantFingerprints(contract) {
     return { name: variantName(contract, t), fingerprint: `sha256:${sha256(tree + canonical({ layout, paint, binds }))}` };
   });
 }
+
+// Live check, 2026-10-20: it had to copy the Foundations document from another worktree. The record keeps the document
+// once the ledger holds all of it, on the step that records its last chunk or on any later next, so a file built before
+// this gets it too; a person or a live check in another checkout reads it from beside the record.
+const keptFoundations = (record, docText, ledger) => (foundationsNext(docText, ledger) ? record : { ...record, foundations: docText });
 
 /**
  * The build record with a baseline, `built: {family: {contentHash, set, contract, variants: {name: [fingerprint, id]},
@@ -416,7 +420,7 @@ export function nextStep({ dir, fileKey, ledger = null, record = {}, namespace =
   const unknown = rebuild.filter(f => !g.families.includes(f));
   if (unknown.length) throw new Error(`--rebuild ${unknown.join(', ')}: not an approved family of ${dir} built here`);
   assertNamespace(record, namespace);
-  record = unverifiable(resolved(settled(baselined(record, g, ledger), g), g, resolve), g, ledger, fileKey, at);
+  record = keptFoundations(unverifiable(resolved(settled(baselined(record, g, ledger), g), g, resolve), g, ledger, fileKey, at), g.docText, ledger);
   const n = nextOf({ g, fileKey, ledger, record, namespace, coveragePerCall, rebuild, at });
   return { ...n, record };
 }
@@ -492,12 +496,7 @@ export function recordStep({ dir, fileKey, ledger = null, record = {}, result, n
   assertNamespace(record, namespace);
   const out = recorded({ dir, fileKey, ledger, record, result, skip, at });
   if (!(result.conflicts || []).length) out.record = { ...out.record, namespace };
-  // the Foundations document the ledger now holds is kept with the record, so a run in another checkout, whose folder
-  // is elsewhere or has moved on, still has the document the file was built from
-  if (result.slice === 'foundations') {
-    const docText = readFileSync(folderFiles(dir).foundations, 'utf8');
-    if (out.ledger?.foundations?.documentHash === documentHash(docText)) out.record = { ...out.record, foundations: docText };
-  }
+  out.record = keptFoundations(out.record, readFileSync(folderFiles(dir).foundations, 'utf8'), out.ledger);
   return out;
 }
 
