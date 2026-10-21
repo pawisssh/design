@@ -4,7 +4,7 @@ The judgement calls `/code-review` checks a diff against. Anything a test or a s
 
 ## Comments
 
-**A behaviour's comment sits beside the code that does it.** Put the comment on the function or block that implements the behaviour, citing its issue when there is one (`// in (#193): …`); without one, say where the behaviour comes from instead, such as a dated live check. A module's header comment stays a short summary of what the module is for. When a change adds a behaviour, add the comment beside it and leave the header as it is.
+**A behaviour's comment sits beside the code that does it.** Put the comment on the function or block that implements the behaviour, citing its issue when there is one (`// in (#193): …`); without one, name its source instead (`// live check, 2026-10-20: …`). A module's header comment stays a short summary of what the module is for. When a change adds a behaviour, add the comment beside it and leave the header as it is.
 
 ## Shared helpers
 
