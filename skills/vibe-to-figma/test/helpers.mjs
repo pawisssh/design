@@ -18,8 +18,8 @@ export const READABLE = ['alert', 'button', 'card', 'input', 'label', 'select', 
 export const skip = (!hasTools() && 'Generic Adapter tools missing; run: node skills/adapter-generic/scripts/sources.mjs')
   || (!hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs');
 // To-design's packager writes a package only inside the main working tree, where the use_figma hook resolves it, so a
-// worktree checked out outside it (under /tmp, say) cannot package a call. A plain clone has no MAIN: false, not null,
-// since node --test reports a test given `skip: null` as skipped while still running it, so a failure there never shows.
+// worktree checked out outside it (under /tmp, say) cannot package a call. In a plain clone MAIN is null, and packageSkip
+// must still be false: node --test reports `skip: null` as skipped while it runs the test, so a failure would not show.
 const MAIN = mainCheckoutOf(REPO_ROOT);
 export const packageSkip = skip || (!!MAIN && relative(realpathSync(MAIN), realpathSync(REPO_ROOT)).startsWith('..')
   && `this worktree is outside its main working tree ${MAIN}, where To-design's packager writes packages`);
