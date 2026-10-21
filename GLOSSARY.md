@@ -16,6 +16,14 @@ _Avoid_: Figma library, design kit
 One or more published Figma library files the owner already has for the same Code Library, made outside To-design, whose variables and Text Styles a Design Library binds to instead of having its own. To-design reads it and never changes it.
 _Avoid_: Existing library, team library, kit, external library, adopted library
 
+**Extracted Library**:
+A Code Library generated from a Prototype that has none, with one component per Component Family found among the Prototype's repeated elements. An Adapter reads it, and developers adopt it instead of the Prototype's code.
+_Avoid_: Generated library, inline library, synthetic library
+
+**Family map**:
+The record of which elements of a Prototype make up each Component Family of its Extracted Library, including the owner's corrections.
+_Avoid_: Clusters, grouping
+
 **Design System**:
 One Foundations document and the Contracts and Component Proposals planned with it, for one Code Library; Design Libraries are built from it, and handoffs refer to it.
 _Avoid_: DS, system
