@@ -15,7 +15,8 @@
 // first build would combine more than MAX_COMBINE variants stops the run before any write, for the owner to decide.
 // The ledger is the Design System's own, <fileKey>.<name>.ledger.json in the main checkout's .scratch/to-design/, so
 // a file that holds another Design System (the smoke draft's Carbon) keeps its ledger untouched. Beside it,
-// <fileKey>.<name>.build.json keeps the namespace, the coverage pages and verdicts, and any rebuild under way.
+// <fileKey>.<name>.build.json keeps the namespace, the coverage pages and verdicts, and any rebuild under way, and
+// <fileKey>.<name>.build.foundations.json the Foundations document the ledger was last built from.
 // A set that fails its coverage check stops the run; --rebuild <family> then builds its batches again inside the set
 // (the builder rebuilds a layer tree unlike the Contract's anatomy and wires it again), and its coverage is read again.
 // A rerun touches only what changed (#180). A set that passes its coverage check leaves a baseline in the build record:
@@ -64,6 +65,8 @@ export const buildRecordPath = ledger => ledger.replace(/\.ledger\.json$/, '.bui
 // The record's Contracts (`contracts`, by contentHash) are kept as files beside it, one per Contract, not in it.
 const contractsDir = recordFile => recordFile.replace(/\.json$/, '.contracts');
 const contractFile = (recordFile, hash) => join(contractsDir(recordFile), `${hash.replace(/^sha256:/, '')}.json`);
+// The record's Foundations document (`foundations`, its text) is kept as a file beside it too, its documentHash in it.
+const foundationsFile = recordFile => recordFile.replace(/\.json$/, '.foundations.json');
 
 // held (#181): a record written before the rename keeps its held variants as `conflicts`; they are read as `held`, so
 // none is lost and written over.
@@ -73,19 +76,29 @@ function withHeld(record) {
   return { ...record, built };
 }
 
-/** The build record at its path with its Contracts, or {} when there is none. */
+/** The build record at its path with its Contracts and its Foundations document, or {} when there is none. */
 export function readRecord(recordFile) {
   if (!existsSync(recordFile)) return {};
-  const { contracts: hashes, ...record } = withHeld(JSON.parse(readFileSync(recordFile, 'utf8')));
+  const { contracts: hashes, foundations: docHash, ...record } = withHeld(JSON.parse(readFileSync(recordFile, 'utf8')));
+  const docText = docHash && existsSync(foundationsFile(recordFile)) ? readFileSync(foundationsFile(recordFile), 'utf8') : null;
+  // a document file gone, or another document than the record names, is no document kept
+  if (docText && documentHash(docText) === docHash) record.foundations = docText;
   if (!hashes) return record;
   // a Contract file gone is a Contract not kept: its variants are not read back, and are held while they change
   const stored = hashes.filter(h => existsSync(contractFile(recordFile, h)));
   return { ...record, contracts: Object.fromEntries(stored.map(h => [h, JSON.parse(readFileSync(contractFile(recordFile, h), 'utf8'))])) };
 }
 
-/** Writes the build record, its Contracts as files beside it (a Contract no longer kept is removed) and their hashes in it. */
+/**
+ * Writes the build record, its Contracts as files beside it (a Contract no longer kept is removed) and their hashes in
+ * it, and its Foundations document as a file beside it with its documentHash in it.
+ */
 export function writeRecord(recordFile, record) {
-  const { contracts = {}, ...rest } = record;
+  const { contracts = {}, foundations, ...rest } = record;
+  if (foundations) {
+    rest.foundations = documentHash(foundations);
+    if (!existsSync(foundationsFile(recordFile)) || readFileSync(foundationsFile(recordFile), 'utf8') !== foundations) writeFileSync(foundationsFile(recordFile), foundations);
+  }
   mkdirSync(contractsDir(recordFile), { recursive: true });
   for (const [h, c] of Object.entries(contracts)) if (!existsSync(contractFile(recordFile, h))) writeFileSync(contractFile(recordFile, h), JSON.stringify(c) + '\n');
   const keep = new Set(Object.keys(contracts).map(h => contractFile(recordFile, h)));
@@ -479,6 +492,12 @@ export function recordStep({ dir, fileKey, ledger = null, record = {}, result, n
   assertNamespace(record, namespace);
   const out = recorded({ dir, fileKey, ledger, record, result, skip, at });
   if (!(result.conflicts || []).length) out.record = { ...out.record, namespace };
+  // the Foundations document the ledger now holds is kept with the record, so a run in another checkout, whose folder
+  // is elsewhere or has moved on, still has the document the file was built from
+  if (result.slice === 'foundations') {
+    const docText = readFileSync(folderFiles(dir).foundations, 'utf8');
+    if (out.ledger?.foundations?.documentHash === documentHash(docText)) out.record = { ...out.record, foundations: docText };
+  }
   return out;
 }
 

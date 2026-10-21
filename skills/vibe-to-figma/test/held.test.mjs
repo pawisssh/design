@@ -5,9 +5,10 @@
 // a copy of the v0 project under .scratch/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { contentHash } from '../../contract/scripts/contract.mjs';
+import { documentHash } from '../../to-design/scripts/build-plan.mjs';
 import { gate, heldOf, nextStep, parseResolve, readRecord, settled, variantFingerprints, writeRecord } from '../scripts/build.mjs';
 import { AT, FILE_KEY, RED, builtProject, drive, inputFaded } from './drive.mjs';
 import { contractPath, read, scratch, skip } from './helpers.mjs';
@@ -215,6 +216,24 @@ test('the build record keeps its Contracts as files beside it, drops one no base
   assert.ok(!('contracts' in read(file)));
   assert.ok(existsSync(join(dir, 'X.v0-app.build.contracts')));
   assert.deepEqual(readdirSync(join(dir, 'X.v0-app.build.contracts')), []);
+});
+
+test('the build record keeps its Foundations document as a file beside it, and reads on without a lost or another one', () => {
+  const dir = scratch();
+  const file = join(dir, 'X.v0-app.build.json');
+  const doc = '{"designSystem":{"key":"v0-app"}}\n';
+  const record = { namespace: 'v0-app', foundations: doc };
+  writeRecord(file, record);
+  assert.equal(read(file).foundations, documentHash(doc));
+  assert.equal(readFileSync(join(dir, 'X.v0-app.build.foundations.json'), 'utf8'), doc);
+  assert.deepEqual(readRecord(file), record);
+  writeRecord(file, { ...record, foundations: doc.replace('v0-app', 'v1') });
+  assert.equal(readRecord(file).foundations, doc.replace('v0-app', 'v1'));
+  // a document that is not the one the record names, or is gone, is not read back
+  writeFileSync(join(dir, 'X.v0-app.build.foundations.json'), doc);
+  assert.deepEqual(readRecord(file), { namespace: 'v0-app' });
+  rmSync(join(dir, 'X.v0-app.build.foundations.json'));
+  assert.deepEqual(readRecord(file), { namespace: 'v0-app' });
 });
 
 test('a build record written before the rename reads its `conflicts` as held', () => {
