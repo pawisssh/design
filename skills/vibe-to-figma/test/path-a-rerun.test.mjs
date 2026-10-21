@@ -5,30 +5,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { cpSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeJson } from '../../contract/scripts/io.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
-import { read, scratch, skip } from './helpers.mjs';
+import { read, scratch, skip, tree } from './helpers.mjs';
 
 const FIXTURE = fileURLToPath(new URL('./fixtures/path-a-app', import.meta.url));
 const ANSWERS = fileURLToPath(new URL('./fixtures/path-a-app.answers.json', import.meta.url));
 const FOLDER = fileURLToPath(new URL('../scripts/folder.mjs', import.meta.url));
 const FAMILIES = ['action-button', 'card', 'icon-button', 'pill-button', 'segment'];
-
-/** Every file under `dir` as text, keyed by its path relative to it. */
-function tree(dir) {
-  const out = {};
-  (function walk(d) {
-    for (const name of readdirSync(d).sort()) {
-      const path = join(d, name);
-      if (statSync(path).isDirectory()) walk(path);
-      else out[relative(dir, path)] = readFileSync(path, 'utf8');
-    }
-  })(dir);
-  return out;
-}
 
 /** A copy of the Prototype with its folder built from the committed answers: {proto, root, dir, edit(from, to), rerun()}. */
 async function world() {

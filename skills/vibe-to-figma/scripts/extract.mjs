@@ -2,7 +2,7 @@
 // Extracted Library, one generated React + cva component per Component Family found among its repeated elements.
 // The JSX is read statically with TypeScript; the Prototype is never run.
 //
-//   extract({project, answers}) -> {library, families, requests, skipped, map, used}
+//   extract({project, answers, map}) -> {library, families, requests, skipped, map, used}
 //
 // Each rule's comment sits beside the code that applies it. The library is a pure function of the Prototype and the
 // answers: each component file holds only its family's class strings and names.
@@ -463,7 +463,7 @@ const siteKey = s => `${s.file}|${s.path}`;
  * family. A map that names a site twice, or a family that is not a key, is refused with the plain reason.
  */
 function readMap(map) {
-  const out = { families: {}, sites: new Map(), dropped: new Set(), droppedList: map ? map.dropped || [] : [] };
+  const out = { families: {}, sites: new Map(), dropped: new Set(), droppedList: (map && map.dropped) || [] };
   if (!map) return out;
   const claim = (where, site, by, family) => {
     const k = siteKey(site);
@@ -480,7 +480,7 @@ function readMap(map) {
   return out;
 }
 
-/** The stored answers with their axis and value ids brought to the current ones: an id that no longer exists (its classes changed) hands its names to the one new id in its place, in order. */
+/** (#261) The stored answers with their axis and value ids brought to the current ones: an id that no longer exists (its classes changed) hands its names to the one new id in its place, in order. */
 function rekey(stored, derived) {
   const out = { ...stored, axes: {} };
   for (const a of derived.axes) {
@@ -495,7 +495,7 @@ function rekey(stored, derived) {
   return out;
 }
 
-/** The answers of several layers as one, each key from the first layer that gives it; the grid is the first one that names exactly the answered axes. */
+/** (#261) The answers of several layers as one, each key from the first layer that gives it; the grid is the first one that names exactly the answered axes. */
 function answersFor(derived, layers) {
   const out = { description: undefined, grid: undefined, text: undefined, axes: {} };
   for (const l of layers) { out.description ??= l.description; out.text ??= l.text; }
@@ -564,7 +564,7 @@ export function extract({ project, answers = {}, map = null }) {
   // The Family map (#261): sites are matched to their recorded family by file and JSX path, never by line or classes, so a
   // rerun neither asks again nor loses the owner's corrections. A site the owner dropped is no candidate.
   const prior = readMap(map);
-  const seen = new Set(sites.map(siteKey));
+  const present = new Set(sites.map(siteKey));
   const candidates = sites.filter(s => s.candidate && !prior.dropped.has(siteKey(s)));
   const groups = new Map();
   for (const s of candidates) {
@@ -646,7 +646,7 @@ export function extract({ project, answers = {}, map = null }) {
   library['package-lock.json'] = lockfile(project, String(manifest.name || 'prototype').replace(/^@[^/]+\//, ''));
 
   // A dropped site stays recorded while its element is in the code.
-  const dropped = [...prior.droppedList.filter(d => seen.has(siteKey(d))), ...drops].sort((x, y) => byKey(siteKey(x), siteKey(y)));
+  const dropped = [...prior.droppedList.filter(d => present.has(siteKey(d))), ...drops].sort((x, y) => byKey(siteKey(x), siteKey(y)));
   const next = { version: 1, families: Object.fromEntries(familyList.map(f => {
     const { record } = f;
     const owner = record && record.by === 'owner';

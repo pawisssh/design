@@ -5,13 +5,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validate } from '../../contract/scripts/contract.mjs';
 import { sha256 } from '../../adapter-generic/scripts/sources.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
-import { read, scratch, skip } from './helpers.mjs';
+import { read, scratch, skip, tree } from './helpers.mjs';
 
 const PROTOTYPE = fileURLToPath(new URL('./fixtures/path-a-app', import.meta.url));
 const ANSWERS = fileURLToPath(new URL('./fixtures/path-a-app.answers.json', import.meta.url));
@@ -19,19 +19,6 @@ const FOLDER = fileURLToPath(new URL('../scripts/folder.mjs', import.meta.url));
 const FAMILIES = ['action-button', 'card', 'icon-button', 'pill-button', 'segment'];
 const cli = (...args) => spawnSync(process.execPath, [FOLDER, PROTOTYPE, ...args], { encoding: 'utf8' });
 const answers = () => read(ANSWERS);
-
-/** Every file under `dir` as text, keyed by its path relative to it. */
-function tree(dir) {
-  const out = {};
-  (function walk(d) {
-    for (const name of readdirSync(d).sort()) {
-      const path = join(d, name);
-      if (statSync(path).isDirectory()) walk(path);
-      else out[relative(dir, path)] = readFileSync(path, 'utf8');
-    }
-  })(dir);
-  return out;
-}
 
 test('the first run writes one requests file and exits 2; nothing else is written', { skip }, () => {
   const root = scratch(), requests = join(root, 'requests.json');
