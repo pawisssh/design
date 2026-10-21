@@ -1,11 +1,11 @@
 {
   "name": "design",
   "private": true,
-  "description": "No dependencies. `npm test` runs every skill's node:test suite.",
+  "description": "No dependencies. `npm test` runs every skill's node:test suite and the repo hooks' (.claude/hooks).",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test --test-concurrency=${TEST_CONCURRENCY:-4} skills/*/test/*.test.mjs skills/*/tests/*.test.mjs"
+    "test": "node --test --test-concurrency=${TEST_CONCURRENCY:-4} skills/*/test/*.test.mjs skills/*/tests/*.test.mjs .claude/hooks/test/*.test.mjs"
   }
 }
