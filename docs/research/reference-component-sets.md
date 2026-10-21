@@ -29,7 +29,7 @@ All page locations were confirmed with `[meta]` on the page.
 
 Key facts:
 
-- **Two different sets share the name "Health Check Task Lists":** `99:35445` (the task row) and `100:5853` (the version row) `[meta]`. Later tickets must refer to them by node ID.
+- **Two different sets share the name "Health Check Task Lists":** `99:35445` (the task row) and `100:5853` (the version row) `[meta]`. The name alone does not tell them apart; the node IDs do.
 - **The two list-row sets carry one row family's states in Status.** In both `706:7182` and `99:35445`, the booleans Task, Report, Calendar and Overdue are fixed by Status. Only `706:7182` has a free second axis, Type `[meta]`.
 - **The reference lists one row per health check; the Prototype lists one row per customer.**
   - In Filter=Ready to Report, Robert Brown appears twice: once with Mutual Fund (`99:39009`) and once with Bond (`99:39010`) `[ctx]`.
