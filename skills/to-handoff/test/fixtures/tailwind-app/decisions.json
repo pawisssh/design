@@ -1,0 +1,47 @@
+{
+  "recognise:button.flex-1.py-1.5.rounded-lg": {
+    "contract": "button",
+    "tuple": {
+      "variant": "ghost",
+      "size": "sm"
+    },
+    "via": "element"
+  },
+  "recognise:button.border.px-2.rounded-md.shrink-0": {
+    "contract": "button",
+    "tuple": {
+      "variant": "outline",
+      "size": "sm"
+    },
+    "via": "element"
+  },
+  "recognise:button.ml-auto.p-1": {
+    "contract": "button",
+    "tuple": {
+      "variant": "ghost",
+      "size": "icon"
+    },
+    "via": "element"
+  },
+  "recognise:button.px-2.text-xs": {
+    "contract": "button",
+    "tuple": {
+      "variant": "link",
+      "size": "sm"
+    },
+    "via": "element"
+  },
+  "feature": {
+    "goal": "Pick how to split a withdrawal across funds."
+  },
+  "acceptance": [
+    {
+      "id": "split-even",
+      "screen": "index",
+      "state": "default",
+      "given": "three funds",
+      "when": "Even is pressed",
+      "then": "the withdrawal splits evenly"
+    }
+  ]
+}

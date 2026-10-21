@@ -2,7 +2,7 @@
   "condition:mode === 'diy'": true,
   "condition:(amount * (pl / 100)) > 0": false,
   "condition:over": false,
-  "recognise:button": {
+  "recognise:button.tab": {
     "raw": true,
     "reason": "a plain tab button; the shapes under test are its conditions"
   },

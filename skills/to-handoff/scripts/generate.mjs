@@ -126,6 +126,13 @@ function textOf(parts, valueOf) {
   }).join('').replace(/\s+/g, ' ').trim();
 }
 
+/** The first three words of display text as an id, its `{expr}` values left out: `{n} funds to sell now` -> funds-to-sell. */
+function firstWords(text) {
+  let s = text, was;
+  do { was = s; s = s.replace(/\{[^{}]*\}/g, ' '); } while (s !== was);
+  return kebab(s.split(/\s+/).filter(w => /[a-z0-9]/i.test(w)).slice(0, 3).join(' '));
+}
+
 const textNodes = el => el.children.filter(c => c.type === 'text');
 const elementText = (el, valueOf) => {
   const out = [];
@@ -164,6 +171,12 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   const d = decider(decisions, (stored && stored.ownerDecisions) || {});
   const cache = new Map();
   const style = el => computed(rules, el, cache);
+  // In a Tailwind Prototype a utility class names nothing (#216): only a class an authored rule selects names its element.
+  const authored = new Set(rules.flatMap(r => r.parsed.parts.flatMap(p => p.compound.classes)));
+  const names = c => !doc.tailwind || authored.has(c);
+  const firstClass = el => { const c = el.classes.find(names); return c ? `.${c}` : el.tag; };
+  // An element's own name for an id: its id attribute, else its first named class.
+  const nameOf = el => (typeof el.attrs.id === 'string' ? el.attrs.id : el.classes.find(names)) || null;
   const theme = collectionOf(foundations, Object.values(foundations.collections).find(c => !c.hidden && c.modes.length > 1).modes[0].key);
 
   // Custom properties the Prototype defines on :root, for references such as var(--border).
@@ -447,8 +460,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const labelFor = id => { let found = null; walk(screen.root, x => { if (!found && x.tag === 'label' && x.attrs.for === id) found = x; }); return found; };
     const usages = new Map();
     for (const { el, cand, answer, key, byImport, unmapped = [], stray = [], within } of recognised) {
-      const base = typeof el.attrs.id === 'string' ? el.attrs.id : el.classes[0] || el.tag;
-      const id = uniqueId(usageIds, kebab(base));
+      const id = uniqueId(usageIds, kebab(nameOf(el) || el.tag));
       const u = { id };
       const states = shownIn(el);
       if (!answer) { usages.set(el, u); continue; }
@@ -603,7 +615,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const lead = [];
     while (i < kids.length && (HEADINGS.has(kids[i].tag) || kids[i].tag === 'p') && !usages.has(kids[i])) lead.push(kids[i++]);
     if (lead.length) groups.push({ id: 'header', els: lead, landmark: null });
-    for (; i < kids.length; i++) groups.push({ id: kebab(typeof kids[i].attrs.id === 'string' ? kids[i].attrs.id : kids[i].classes[0] || kids[i].tag), els: [kids[i]] });
+    for (; i < kids.length; i++) groups.push({ id: kebab(nameOf(kids[i]) || kids[i].tag), els: [kids[i]] });
 
     // The shell: html, body and the mount element.
     const shellEls = [];
@@ -685,7 +697,8 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
         s.partial = { fontSize: token };
         s.raw = raw;
       } else s.raw = raw;
-      const base = typeof el.attrs.id === 'string' ? el.attrs.id : el.classes[0] || el.tag;
+      // Copy whose classes are all utilities takes its first words (#216).
+      const base = nameOf(el) || (el.classes.length && firstWords(text)) || el.tag;
       const entry = { copy: addCopy(kebab(base), text, t.offset).slice(5), at: where };
       const states = shownIn(el);
       if (states) entry.states = states;
@@ -1139,7 +1152,6 @@ function tupleProblem(def, tuple, name) {
   return null;
 }
 const viaProblem = via => (via === undefined || via === 'library' || via === 'element' ? null : `via "${via}" is not library or element`);
-const firstClass = el => (el.classes[0] ? `.${el.classes[0]}` : el.tag);
 function landmarkOf(el) {
   if (typeof el.attrs.role === 'string' && LANDMARK_ROLES.has(el.attrs.role)) return el.attrs.role;
   return LANDMARKS[el.tag] || null;

@@ -88,9 +88,9 @@ export const atomIn = (state, defaults) => atom => {
 const SEMANTIC = new Set(['button', 'input', 'select', 'textarea']);
 const ROLES = new Set(['status', 'alert', 'alertdialog', 'dialog', 'tab', 'tablist', 'switch', 'checkbox', 'radio', 'menu', 'menuitem', 'progressbar', 'tooltip', 'navigation', 'search']);
 
-/** The stable signature of an element: tag, sorted classes, then [type] and [role]. */
+/** The stable signature of an element: tag, sorted classes (a template literal's static ones, #216), then [type] and [role]. */
 export function signature(el) {
-  const classes = el.classes.slice().sort().map(c => `.${c}`).join('');
+  const classes = [...el.classes, ...(el.staticClasses || [])].sort().map(c => `.${c}`).join('');
   const type = el.tag === 'input' && typeof el.attrs.type === 'string' ? `[type=${el.attrs.type}]` : '';
   const role = typeof el.attrs.role === 'string' ? `[role=${el.attrs.role}]` : '';
   return `${el.tag}${classes}${type}${role}`;

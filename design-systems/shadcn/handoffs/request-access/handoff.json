@@ -101,13 +101,13 @@
           "usages": []
         },
         {
-          "id": "flex",
+          "id": "main",
           "landmark": "main",
           "at": "app/page.tsx:17:5",
           "styles": [],
           "text": [
             {
-              "copy": "font-medium",
+              "copy": "thanks-your-request",
               "at": "app/request-access-form.tsx:47:36",
               "states": [
                 "success"
@@ -126,14 +126,14 @@
           ],
           "usages": [
             {
-              "id": "w-full",
+              "id": "card",
               "contract": "card",
               "tuple": {
                 "card-footer": "card-footer"
               },
               "properties": {
-                "title": "copy:w-full-title",
-                "description": "copy:w-full-description"
+                "title": "copy:card-title",
+                "description": "copy:card-description"
               },
               "match": {
                 "by": "import"
@@ -143,10 +143,10 @@
                   "property": "CardFooter.className",
                   "raw": "\"justify-between text-xs text-muted-foreground\"",
                   "reason": "CardFooter className is no card axis or property",
-                  "question": "q-prop-w-full"
+                  "question": "q-prop-card"
                 }
               ],
-              "question": "q-prop-w-full",
+              "question": "q-prop-card",
               "at": "app/page.tsx:18:7"
             },
             {
@@ -161,7 +161,7 @@
               "match": {
                 "by": "import"
               },
-              "in": "w-full",
+              "in": "card",
               "states": [
                 "success"
               ],
@@ -180,7 +180,7 @@
               "match": {
                 "by": "import"
               },
-              "in": "w-full",
+              "in": "card",
               "states": [
                 "error"
               ],
@@ -196,7 +196,7 @@
               "match": {
                 "by": "import"
               },
-              "in": "w-full",
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -220,7 +220,7 @@
                 }
               ],
               "question": "q-prop-name",
-              "in": "w-full",
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -238,7 +238,7 @@
               "match": {
                 "by": "import"
               },
-              "in": "w-full",
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -262,7 +262,7 @@
                 }
               ],
               "question": "q-prop-email",
-              "in": "w-full",
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -280,7 +280,7 @@
               "match": {
                 "by": "import"
               },
-              "in": "w-full",
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -298,7 +298,7 @@
               "match": {
                 "by": "import"
               },
-              "in": "w-full",
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -316,7 +316,7 @@
               "match": {
                 "by": "import"
               },
-              "in": "w-full",
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -340,7 +340,7 @@
                 }
               ],
               "question": "q-prop-reason",
-              "in": "w-full",
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -358,7 +358,7 @@
               "match": {
                 "by": "import"
               },
-              "in": "w-full",
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -379,7 +379,7 @@
               "match": {
                 "by": "import"
               },
-              "in": "w-full",
+              "in": "card",
               "at": "app/page.tsx:33:11"
             }
           ]
@@ -405,7 +405,7 @@
       ],
       "states": {
         "default": {
-          "content": "every state condition is false; conditional content shown: .grid",
+          "content": "every state condition is false; conditional content shown: form",
           "screenshots": {
             "sm": "screens/index.default.sm.png",
             "md": "screens/index.default.md.png",
@@ -415,7 +415,7 @@
           }
         },
         "loading": {
-          "content": "`pending` or `status === \"loading\"` is true; conditional content shown: .grid",
+          "content": "`pending` or `status === \"loading\"` is true; conditional content shown: form",
           "trigger": "pending or status === \"loading\"",
           "usageStates": {
             "button-2": {
@@ -438,7 +438,7 @@
           "question": "q-state-empty"
         },
         "error": {
-          "content": "`status === \"error\"` is true; conditional content shown: .grid, alert",
+          "content": "`status === \"error\"` is true; conditional content shown: form, alert",
           "trigger": "status === \"error\"",
           "screenshots": {
             "sm": "screens/index.error.sm.png",
@@ -449,7 +449,7 @@
           }
         },
         "success": {
-          "content": "`status === \"success\"` is true; conditional content shown: .flex",
+          "content": "`status === \"success\"` is true; conditional content shown: div",
           "trigger": "status === \"success\"",
           "screenshots": {
             "sm": "screens/index.success.sm.png",
@@ -463,11 +463,11 @@
     }
   ],
   "copy": {
-    "w-full-title": {
+    "card-title": {
       "text": "Request workspace access",
       "at": "app/page.tsx:22:24"
     },
-    "w-full-description": {
+    "card-description": {
       "text": "Tell us who you are and an admin will approve you within a day.",
       "at": "app/page.tsx:25:13"
     },
@@ -515,7 +515,7 @@
       "text": "Sign in",
       "at": "app/page.tsx:34:34"
     },
-    "font-medium": {
+    "thanks-your-request": {
       "text": "Thanks! Your request is in.",
       "at": "app/request-access-form.tsx:47:36"
     },
@@ -565,7 +565,7 @@
   ],
   "openQuestions": [
     {
-      "id": "q-prop-w-full",
+      "id": "q-prop-card",
       "kind": "prop",
       "to": "owner",
       "text": "`CardFooter` at app/page.tsx:31:9 sets className=\"justify-between text-xs text-muted-foreground\", which is no card axis or property. Which value is it, or does the Contract need it?",

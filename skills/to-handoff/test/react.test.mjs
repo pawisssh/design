@@ -15,7 +15,7 @@ import { run } from '../scripts/runtime.mjs';
 import { walk } from '../scripts/reader.mjs';
 import { loadDesignSystem } from '../scripts/system.mjs';
 import { validateHandoff } from '../scripts/validate.mjs';
-import { BUTTON, designSystem, repo } from './helpers.mjs';
+import { BUTTON, designSystem, repo, shadcnDesignSystem } from './helpers.mjs';
 import { check } from '../scripts/signoff.mjs';
 
 const VITE = fileURLToPath(new URL('fixtures/vite-app', import.meta.url));
@@ -370,6 +370,30 @@ test('stateOfAtom: a status-named comparison with a value it cannot place keeps 
 test('generate: a status value it cannot place stays a condition question', { skip: noTs }, async () => {
   const app = statusApp("      {status === 'IDLE' && <p>Idle</p>}{status !== 'READY' && <p>Not ready</p>}");
   assert.deepEqual((await conditionKeys(app)).filter(k => /status/.test(k)), ["condition:status === 'IDLE'", "condition:status !== 'READY'"]);
+});
+
+// #216: a Tailwind app whose classNames are template literals, one shape per line of fixtures/tailwind-app/src/App.tsx.
+const TAILWIND = fileURLToPath(new URL('fixtures/tailwind-app', import.meta.url));
+const recogniseRequests = async () => (await generate({ prototype: TAILWIND, designSystem: shadcnDesignSystem(), decisions: {} })).requests.filter(r => r.kind === 'recognise');
+
+test('generate: a template-literal className signs by its static classes; a token touching a hole is left out', { skip: noTs }, async () => {
+  assert.deepEqual((await recogniseRequests()).map(r => [r.key, r.evidence.at]), [
+    ['recognise:button.flex-1.py-1.5.rounded-lg', ['src/App.tsx:13:7', 'src/App.tsx:14:7']],
+    ['recognise:button.border.px-2.rounded-md.shrink-0', ['src/App.tsx:15:7']],
+    ['recognise:button.ml-auto.p-1', ['src/App.tsx:16:7']],
+    ['recognise:button.px-2.text-xs', ['src/App.tsx:17:7']],
+  ]);
+});
+
+test('generate: in a Tailwind app, region, usage and copy ids come from authored names, tags and copy, never a utility class', { skip: noTs }, async () => {
+  const decisions = JSON.parse(readFileSync(join(TAILWIND, 'decisions.json'), 'utf8'));
+  const result = await generate({ prototype: TAILWIND, designSystem: shadcnDesignSystem(), decisions });
+  assert.deepEqual(result.requests, []);
+  const [screen] = result.handoff.screens;
+  assert.deepEqual(screen.regions.map(r => r.id), ['shell', 'div']);
+  assert.deepEqual(usagesOf(screen).map(u => u.id), ['button', 'button-2', 'button-3', 'button-4', 'button-5']);
+  // Copy with only utility classes takes its first words; `.summary` is authored in summary.css, so it names its copy.
+  assert.deepEqual(screen.regions[1].text.map(t => t.copy), ['version-4-5-precision', 'summary']);
 });
 
 test('read: next/font loaders in a layout are the fonts it loads, each at its binding', { skip: noTs }, () => {
