@@ -202,7 +202,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const dir = await fetchTools(values.dir || DEFAULT_DIR);
     console.log(`${Object.entries(TOOLS).map(([n, p]) => `${n}@${p.version}`).join(', ')} in ${dir}`);
     console.log('Generic Adapter tools OK');
-    // The preview renderer's pinned React packages (#123), so one fetch step readies every test. A child process:
+    // The preview renderer's packages for the reference project (#123), so one fetch step readies every test. A child process:
     // preview.mjs imports this module, so importing it here would wait on itself.
     execFileSync(process.execPath, [fileURLToPath(new URL('./preview.mjs', import.meta.url))], { stdio: 'inherit' });
   } catch (e) {

@@ -22,6 +22,7 @@ const R19 = {
   scheduler: { version: '0.27.0', integrity: 'sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==' },
 };
 const KEY = 'react@19.2.4-scheduler@0.27.0';
+const buttonContract = () => JSON.parse(readFileSync(new URL('contracts/button.component.json', SHADCN), 'utf8'));
 
 /** A copy of the fixture project whose lockfile's `packages` map is edited by `edit`. */
 function variant(edit) {
@@ -58,8 +59,8 @@ test('a lockfile that resolves another React 19.x gives a lock at its versions, 
     assert.equal(entry.resolved, `https://registry.npmjs.org/${name}/-/${name}-${pin.version}.tgz`, `${name} comes from the registry, not the lockfile's resolved URL`);
   }
   assert.deepEqual(lock.packages['node_modules/react-dom'].dependencies, { scheduler: '^0.27.0' });
-  for (const key of Object.keys(committed.packages).filter(k => !['', ...Object.keys(R19).map(n => `node_modules/${n}`)].includes(k)))
-    assert.deepEqual(lock.packages[key], committed.packages[key], key);
+  for (const path of Object.keys(committed.packages).filter(k => !['', ...Object.keys(R19).map(n => `node_modules/${n}`)].includes(k)))
+    assert.deepEqual(lock.packages[path], committed.packages[path], path);
 });
 
 test('a lockfile integrity that disagrees with the Adapter\'s own pin of that version is refused, naming the package', () => {
@@ -75,9 +76,8 @@ test('a lockfile that gives no sha512 integrity, no scheduler, or two Reacts is 
 
 test('missing packages are refused with the command that installs them for this project', { skip }, async () => {
   const base = mkdtempSync(join(tmpdir(), 'generic-react-'));
-  const contract = JSON.parse(readFileSync(new URL('contracts/button.component.json', SHADCN), 'utf8'));
   assert.equal(hasPreviewPackages(base), false);
-  await assert.rejects(previewRenderer(contract, { dir: base }), /packages missing in .*react@19\.1\.0-scheduler@0\.26\.0; run: node .*preview\.mjs --project /);
+  await assert.rejects(previewRenderer(buttonContract(), { dir: base }), /packages missing in .*react@19\.1\.0-scheduler@0\.26\.0; run: node .*preview\.mjs --project /);
 });
 
 test('a tampered integrity is refused before anything is installed, naming the package', { skip }, async () => {
@@ -90,10 +90,19 @@ test('a tampered integrity is refused before anything is installed, naming the p
   assert.equal(existsSync(join(base, KEY)), false);
 });
 
+test('the Adapter\'s other pins still hold: a project that resolves class-variance-authority or cn differently is refused, naming the package', { skip }, async () => {
+  for (const [name, version] of [['class-variance-authority', '0.7.2'], ['cn', '0.5.1']]) {
+    const project = variant(p => { p[`node_modules/${name}`].version = version; });
+    const contract = buttonContract();
+    contract.source.files['package-lock.json'] = `sha256:${sha256(readFileSync(join(project, 'package-lock.json')))}`;
+    await assert.rejects(previewRenderer(contract, { project }), new RegExp(`${name} 0\\.\\d+\\.\\d+ is installed, but the project resolves ${version.replace(/\./g, '\\.')}`));
+  }
+});
+
 test('a project that resolves another React 19.x renders with it, and the v0 fixture still renders with 19.1.0', { skip, timeout: 600000 }, async () => {
   const project = react19();
   const lockfile = readFileSync(join(project, 'package-lock.json'));
-  const contract = JSON.parse(readFileSync(new URL('contracts/button.component.json', SHADCN), 'utf8'));
+  const contract = buttonContract();
   Object.assign(contract.source.packages, { react: '19.2.4', 'react-dom': '19.2.4' });
   contract.source.files['package-lock.json'] = `sha256:${sha256(lockfile)}`;
   await fetchPreviewPackages(PREVIEW_DIR, project);
@@ -107,6 +116,6 @@ test('a project that resolves another React 19.x renders with it, and the v0 fix
 
   assert.ok(hasPreviewPackages(PREVIEW_DIR, FIXTURE), 'the fixture\'s set is a folder of its own');
   assert.equal(version('react@19.1.0-scheduler@0.26.0', 'react'), '19.1.0');
-  const v0 = await previewRenderer(JSON.parse(readFileSync(new URL('contracts/button.component.json', SHADCN), 'utf8')));
+  const v0 = await previewRenderer(buttonContract());
   assert.match(v0.render({}), /^<button data-slot="button"/);
 });

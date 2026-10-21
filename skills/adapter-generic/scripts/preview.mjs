@@ -25,11 +25,9 @@
 //
 // Unlike the reading tier, which executes nothing, this renderer runs code: the project's component files,
 // transpiled with the pinned TypeScript, and the packages they import, from preview/package.json and its lockfile,
-// installed with `npm ci --ignore-scripts` into gitignored scratch. `react`, `react-dom` and the `scheduler` react-dom
-// needs are the versions the project's own lockfile resolves, each verified against its `integrity` (#256); the folder is
-// keyed by them. It refuses when the project's files are not the Contract's snapshot, when a pinned package is not the
-// Contract's `source.packages` version, or when any installed package's version differs from the one the project's
-// lockfile resolves.
+// installed with `npm ci --ignore-scripts` into gitignored scratch. It refuses when the project's files are not
+// the Contract's snapshot, when a pinned package is not the Contract's `source.packages` version, or when any installed
+// package's version differs from the one the project's lockfile resolves.
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -138,8 +136,9 @@ function unguard(css) {
  * packages for each React are installed in. Rejects when the packages or tools are missing, the project is not the Contract's snapshot, or a package differs from the project's.
  */
 export async function previewRenderer(contract, { project = FIXTURE, dir: base = PREVIEW_DIR, tools = DEFAULT_DIR } = {}) {
-  const dir = join(base, previewLock(project).key);
-  if (!hasPreviewPackages(base, project)) fail(`Generic preview packages missing in ${dir}; run: node ${join(REPO_ROOT, 'skills/adapter-generic/scripts/preview.mjs')} --project ${project}`);
+  const { key, lock } = previewLock(project);
+  const dir = join(base, key);
+  if (!installedFrom(lock, dir)) fail(`Generic preview packages missing in ${dir}; run: node skills/adapter-generic/scripts/preview.mjs --project ${project}`);
   const pins = projectPins(project);
   if (!hasTools(tools, pins)) fail(`Generic Adapter tools missing in ${tools}; run: node skills/adapter-generic/scripts/foundations.mjs --project ${project}`);
   for (const [f, hash] of Object.entries(contract.source.files))
