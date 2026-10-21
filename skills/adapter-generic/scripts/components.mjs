@@ -48,7 +48,7 @@
 // Generation throws (the CLI exits 1 and writes nothing) on anything it cannot read exactly: compound variants, an
 // attribute state with no known state words, layout other than flex, a one-column grid or a plain box, an opacity or an effect's
 // shape that differs by Mode, relative colour syntax, a Synthesized name a Code Library token already has, or a
-// Foundations document from another snapshot or without the family's Synthesized or palette tokens.
+// Foundations document from another snapshot or without the family's Synthesized tokens.
 import { existsSync, readFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -58,8 +58,8 @@ import { writeJson } from '../../contract/scripts/io.mjs';
 import { candidateRules, compiledRules, winner } from './cascade.mjs';
 import { mergeDrafts, subjects } from './drafts.mjs';
 import { familyRoot, readSource } from './source.mjs';
-import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, projectPins, sha256, snapshotId, toolDir } from './sources.mjs';
-import { build } from './tailwind.mjs';
+import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, projectPins, sha256, snapshotId } from './sources.mjs';
+import { build, themeCss } from './tailwind.mjs';
 import { CLIPPED, evaluate, isSynthesized, lengthPx, literalForm, resolvedText, round } from './values.mjs';
 
 // Attribute states with known state words: the attribute becomes an axis, absent by default (#119).
@@ -451,10 +451,10 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     return { px, text, prop: props.find(p => p in r.decls), value: token ? { token }
       : { raw: px, level: 'info', reason: `${r.candidate}: ${text} = ${px}px; no Foundations variable compiles to it` } };
   };
+  const palette = {}; // the default-palette tokens this family reads that the document does not hold yet
+  const tailwindTheme = themeCss(tools, pins).replace(/\/\*[\s\S]*?\*\//g, '');
   // A Foundations variable by flat name. Tailwind's default palette (#254) is not in the document until a family uses
-  // it: a `--color-<name>` its own theme.css declares is added here, valued as the compiled theme layer gives it.
-  const palette = {};
-  const tailwindTheme = readFileSync(join(toolDir('tailwindcss', tools, pins), 'theme.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  // it: a `--color-<name>` its own theme.css declares is added to `palette` here, valued as the compiled theme layer gives it.
   const variable = name => {
     if (foundations.variables[name]) return foundations.variables[name];
     if (palette[name]) return palette[name];
@@ -472,7 +472,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const colour = (text, r) => {
     if (text === 'transparent') return 'none';
     const v = /^var\(--([\w-]+)\)$/.exec(text);
-    if (v) return variable(v[1]) && variable(v[1]).type === 'COLOR' ? { token: v[1] }
+    if (v) return (variable(v[1]) || {}).type === 'COLOR' ? { token: v[1] }
       : fail(`${r.candidate} (${at(r.entry)}): ${text} is not a Foundations colour`);
     if (/^color-mix\(/.test(text)) return { mix: text }; // a Synthesized token's, whatever the Modes do (step 6)
     if (/^currentcolor$/i.test(text)) fail(`${r.candidate} (${at(r.entry)}): currentcolor is not read yet`);
@@ -1043,8 +1043,8 @@ export async function generate({ project, family, foundations, prior = null, dra
   if (prior && prior.family.key !== family) fail(`the prior Contract is for "${prior.family.key}", not "${family}"`);
   const f = await readFamily({ project, family, foundations, tools });
   const json = v => JSON.stringify(v);
-  const stale = [...Object.keys(f.synthesized).filter(k => json(foundations.variables[k]) !== json(f.synthesized[k])),
-    ...Object.keys(f.palette).filter(k => json(foundations.variables[k]) !== json(f.palette[k]))];
+  // A palette token the family reads that the document lacks is stale too (readFamily adds only the ones it does not hold).
+  const stale = [...Object.keys(f.synthesized).filter(k => json(foundations.variables[k]) !== json(f.synthesized[k])), ...Object.keys(f.palette)];
   for (const [k, v] of Object.entries(foundations.variables))
     if (v.family === family && isSynthesized(v) && !f.synthesized[k]) stale.push(k);
   const exact = stale.length ? null : contractFor(f, family, foundations);

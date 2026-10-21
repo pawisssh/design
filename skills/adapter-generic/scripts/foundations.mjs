@@ -10,8 +10,7 @@
 // skills/contract/references/foundations-schema.md.
 //
 // One run writes both (#70 §1, #120): after the Code Library tokens, each family's Synthesized tokens are re-derived
-// from its source (components.mjs readFamily) and added, with the Tailwind default-palette colours it uses (#254, `Color/slate-900`
-// over `var(--color-slate-900)`, kept only if a Contract binds them), its file joins the snapshot, and its Contract is built
+// from its source (components.mjs readFamily) and added, its file joins the snapshot, and its Contract is built
 // against the result to fill the closure, usedBy and the scope check.
 //
 // What it reads: `components.json` (which CSS file), that CSS, `package-lock.json` (which versions the project
@@ -31,7 +30,7 @@ import { compiledRules } from './cascade.mjs';
 import { contractFor, readFamily } from './components.mjs';
 import { readFontLoaders } from './source.mjs';
 import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, projectPins, sha256, snapshotId, stylesheets, toolDir } from './sources.mjs';
-import { build, utilityRule } from './tailwind.mjs';
+import { build, themeCss, utilityRule } from './tailwind.mjs';
 import { evaluate, isSynthesized, lengthPx, literalForm, round } from './values.mjs';
 
 // Mode selector -> mode. The first is the default; a mode that omits a property inherits the default's value.
@@ -151,7 +150,7 @@ export async function generate({ project, families = [], drafts = [], tools = DE
     if (/^-?\d*\.?\d+(rem|px)$/.test(mode[0][name])) env[name] = lengthPx(mode[0][name], name);
     else notes.push({ level: 'warning', at: `${cssFile} ${MODES[0][0]} ${name}`, message: `Not a colour or a length (${mode[0][name]}); not read.` });
   }
-  const twTheme = readFileSync(join(toolDir('tailwindcss', tools, pins), 'theme.css'), 'utf8');
+  const twTheme = themeCss(tools, pins);
   const spacing = theme['--spacing']
     ? { text: theme['--spacing'].value, source: theme['--spacing'].at }
     : { text: /--spacing:\s*([^;]+);/.exec(twTheme)[1].trim(), source: `tailwindcss@${pins.tailwindcss.version} theme.css --spacing` };

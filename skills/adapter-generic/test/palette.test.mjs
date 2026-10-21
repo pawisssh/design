@@ -9,7 +9,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { generate as contractFor } from '../scripts/components.mjs';
 import { generate as library } from '../scripts/foundations.mjs';
-import { DEFAULT_DIR, FIXTURE, hasTools, projectPins, toolDir } from '../scripts/sources.mjs';
+import { DEFAULT_DIR, FIXTURE, hasTools, projectPins } from '../scripts/sources.mjs';
+import { themeCss } from '../scripts/tailwind.mjs';
 import { approve, closure } from '../../contract/scripts/contract.mjs';
 import { convert } from '../../contract/scripts/color.mjs';
 
@@ -31,8 +32,7 @@ function withClasses(classes) {
 
 // The value Tailwind's own theme gives a palette colour.
 function themeValue(name) {
-  const css = readFileSync(join(toolDir('tailwindcss', DEFAULT_DIR, projectPins(FIXTURE)), 'theme.css'), 'utf8');
-  return new RegExp(`--color-${name}:\\s*([^;]+);`).exec(css)[1].trim();
+  return new RegExp(`--color-${name}:\\s*([^;]+);`).exec(themeCss(DEFAULT_DIR, projectPins(FIXTURE)))[1].trim();
 }
 
 const drafts = JSON.parse(readFileSync(new URL('../fixtures/drafts/button.json', import.meta.url), 'utf8')).drafts;
@@ -100,7 +100,8 @@ test('a palette colour with an opacity or a Dark override aliases the palette to
   assert.match(text, /"alias":"color-slate-900"/);
   assert.match(text, /"alias":"color-slate-700"/);
   for (const k of ['color-slate-900', 'color-slate-700']) assert.ok(doc.variables[k], `${k} is in the document`);
-  assert.ok(contract);
+  const bound = new Set(closure(contract));
+  assert.ok([...bound].some(k => doc.variables[k] && /^synthesized: /.test(doc.variables[k].source)), 'the Synthesized tokens are bound');
 });
 
 test('a family that uses no palette colour leaves the document without palette tokens', { skip }, async () => {
