@@ -41,10 +41,8 @@ jobs:
       # Without its packages, the to-handoff tests skip; the runtime tests, and adapter-generic's catalog
       # measurements, use the Mac's Chrome.
       - run: node skills/to-handoff/scripts/deps.mjs
-      # npm test runs at its default --test-concurrency=4. TAP goes to the log, and slowest-files.mjs adds the
-      # slowest files to the end of the log and to the job summary.
+      # npm test runs at its default --test-concurrency=4, slowest files first (scripts/test.mjs). TAP goes to the log,
+      # and slowest-files.mjs adds the slowest files to the end of the log and to the job summary.
       - run: npm test
         env:
-          NODE_OPTIONS: >-
-            --test-reporter=tap --test-reporter-destination=stdout
-            --test-reporter=${{ github.workspace }}/.github/slowest-files.mjs --test-reporter-destination=stdout
+          TEST_REPORTERS: tap,.github/slowest-files.mjs

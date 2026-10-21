@@ -6,6 +6,6 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test --test-concurrency=${TEST_CONCURRENCY:-4} skills/*/test/*.test.mjs skills/*/tests/*.test.mjs"
+    "test": "node scripts/test.mjs"
   }
 }
