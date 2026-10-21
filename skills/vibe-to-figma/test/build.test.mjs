@@ -55,12 +55,15 @@ test('after "approve", Foundations then every Component Set by B′, each passin
   assert.deepEqual(plain.n.conflicts.map(c => [c.kind, c.reason]), [['collection', 'unowned'], ['collection', 'unowned']]);
   assert.ok(!plain.ledger.foundations);
   assert.ok(!('namespace' in plain.record));
+  assert.ok(!('foundations' in plain.record));
   // In its own namespace it builds, on from the conflict.
   const { n, ledger, record, steps } = await drive({ dir, mock, ledger: plain.ledger, record: plain.record, namespace: 'v0-app', coveragePerCall: 4 });
   assert.equal(n.status, 'built', JSON.stringify(n));
   assert.deepEqual(n.families.map(f => f.family), READABLE);
   assert.deepEqual(n.drafts, []);
   assert.equal(ledger.foundations.designSystem, 'v0-app');
+  // The record keeps the Foundations document the ledger was built from.
+  assert.equal(record.foundations, readFileSync(join(dir, 'v0-app.foundations.json'), 'utf8'));
   const names = (await mock.figma.variables.getLocalVariableCollectionsAsync()).map(c => c.name).sort();
   assert.deepEqual(names, ['Layout', 'Theme', 'v0-app Layout', 'v0-app Theme']);
   assert.ok(mock.figma.root.children.some(p => p.name === 'v0-app Templates'));

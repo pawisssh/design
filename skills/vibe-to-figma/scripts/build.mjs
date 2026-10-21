@@ -64,6 +64,8 @@ export const buildRecordPath = ledger => ledger.replace(/\.ledger\.json$/, '.bui
 // The record's Contracts (`contracts`, by contentHash) are kept as files beside it, one per Contract, not in it.
 const contractsDir = recordFile => recordFile.replace(/\.json$/, '.contracts');
 const contractFile = (recordFile, hash) => join(contractsDir(recordFile), `${hash.replace(/^sha256:/, '')}.json`);
+// The record's Foundations document (`foundations`, its text) is kept as a file beside it too, its documentHash in it.
+const foundationsFile = recordFile => recordFile.replace(/\.json$/, '.foundations.json');
 
 // held (#181): a record written before the rename keeps its held variants as `conflicts`; they are read as `held`, so
 // none is lost and written over.
@@ -73,19 +75,29 @@ function withHeld(record) {
   return { ...record, built };
 }
 
-/** The build record at its path with its Contracts, or {} when there is none. */
+/** The build record at its path with its Contracts and its Foundations document, or {} when there is none. */
 export function readRecord(recordFile) {
   if (!existsSync(recordFile)) return {};
-  const { contracts: hashes, ...record } = withHeld(JSON.parse(readFileSync(recordFile, 'utf8')));
+  const { contracts: hashes, foundations: docHash, ...record } = withHeld(JSON.parse(readFileSync(recordFile, 'utf8')));
+  const docText = docHash && existsSync(foundationsFile(recordFile)) ? readFileSync(foundationsFile(recordFile), 'utf8') : null;
+  // a document file gone, or another document than the record names, is no document kept
+  if (docText && documentHash(docText) === docHash) record.foundations = docText;
   if (!hashes) return record;
   // a Contract file gone is a Contract not kept: its variants are not read back, and are held while they change
   const stored = hashes.filter(h => existsSync(contractFile(recordFile, h)));
   return { ...record, contracts: Object.fromEntries(stored.map(h => [h, JSON.parse(readFileSync(contractFile(recordFile, h), 'utf8'))])) };
 }
 
-/** Writes the build record, its Contracts as files beside it (a Contract no longer kept is removed) and their hashes in it. */
+/**
+ * Writes the build record, its Contracts as files beside it (a Contract no longer kept is removed) and their hashes in
+ * it, and its Foundations document as a file beside it with its documentHash in it.
+ */
 export function writeRecord(recordFile, record) {
-  const { contracts = {}, ...rest } = record;
+  const { contracts = {}, foundations, ...rest } = record;
+  if (foundations) {
+    rest.foundations = documentHash(foundations);
+    if (!existsSync(foundationsFile(recordFile)) || readFileSync(foundationsFile(recordFile), 'utf8') !== foundations) writeFileSync(foundationsFile(recordFile), foundations);
+  } else rmSync(foundationsFile(recordFile), { force: true });
   mkdirSync(contractsDir(recordFile), { recursive: true });
   for (const [h, c] of Object.entries(contracts)) if (!existsSync(contractFile(recordFile, h))) writeFileSync(contractFile(recordFile, h), JSON.stringify(c) + '\n');
   const keep = new Set(Object.keys(contracts).map(h => contractFile(recordFile, h)));
@@ -182,6 +194,11 @@ export function variantFingerprints(contract) {
     return { name: variantName(contract, t), fingerprint: `sha256:${sha256(tree + canonical({ layout, paint, binds }))}` };
   });
 }
+
+// Live check, 2026-10-20: it had to copy the Foundations document from another worktree. The record keeps the document
+// once the ledger holds all of it, on the step that records its last chunk or on any later next, so a file built before
+// this gets it too; a person or a live check in another checkout reads it from beside the record.
+const keptFoundations = (record, docText, ledger) => (foundationsNext(docText, ledger) ? record : { ...record, foundations: docText });
 
 /**
  * The build record with a baseline, `built: {family: {contentHash, set, contract, variants: {name: [fingerprint, id]},
@@ -403,7 +420,7 @@ export function nextStep({ dir, fileKey, ledger = null, record = {}, namespace =
   const unknown = rebuild.filter(f => !g.families.includes(f));
   if (unknown.length) throw new Error(`--rebuild ${unknown.join(', ')}: not an approved family of ${dir} built here`);
   assertNamespace(record, namespace);
-  record = unverifiable(resolved(settled(baselined(record, g, ledger), g), g, resolve), g, ledger, fileKey, at);
+  record = keptFoundations(unverifiable(resolved(settled(baselined(record, g, ledger), g), g, resolve), g, ledger, fileKey, at), g.docText, ledger);
   const n = nextOf({ g, fileKey, ledger, record, namespace, coveragePerCall, rebuild, at });
   return { ...n, record };
 }
@@ -479,6 +496,7 @@ export function recordStep({ dir, fileKey, ledger = null, record = {}, result, n
   assertNamespace(record, namespace);
   const out = recorded({ dir, fileKey, ledger, record, result, skip, at });
   if (!(result.conflicts || []).length) out.record = { ...out.record, namespace };
+  out.record = keptFoundations(out.record, readFileSync(folderFiles(dir).foundations, 'utf8'), out.ledger);
   return out;
 }
 
