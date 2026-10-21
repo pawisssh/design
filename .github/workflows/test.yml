@@ -54,4 +54,6 @@ jobs:
       # A block of 8+ lines the pull request adds under skills/ that the repo already has fails the run; it runs even
       # when a test fails, so both are reported.
       - if: github.event_name == 'pull_request' && !cancelled()
-        run: node .github/duplicates.mjs origin/${{ github.base_ref }}
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: node .github/duplicates.mjs "origin/$BASE_REF"
