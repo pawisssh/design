@@ -15,19 +15,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # npm test split four ways by file, each shard on its own runner: one runner ran it in about 20 minutes,
-  # CPU-bound. The four sum to every file npm test runs. The runner has 2 vCPUs, so node --test runs a shard's files one
-  # at a time. The test script defaults to --test-concurrency=4 for local runs (a 9-way default starves the shadcn runtime
-  # test); CI pins TEST_CONCURRENCY=1, as measured: 2 or 3 left the slowest shard, the one the run waits on, about as slow
-  # (379s to 360s and 366s), its files running side by side but each taking up to twice as long.
-  shard:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
+  # npm test on the owner's Mac, a self-hosted runner registered to this repo only (label `design`), beside the echo
+  # repo's runner on the same machine. GitHub-hosted runners stopped starting jobs while the account's billing failed;
+  # self-hosted jobs still run. One runner takes one job at a time, so runs queue rather than share the CPU.
+  test:
+    runs-on: [self-hosted, macOS, ARM64, design]
+    timeout-minutes: 45
     steps:
+      # clean: false, then a clean that keeps only the pinned tools the sources.mjs and deps.mjs steps verify and
+      # extract: any other untracked file goes, a test file from another branch or a test's output left in .scratch.
       - uses: actions/checkout@v4
+        with:
+          clean: false
+      - run: |
+          git clean -ffdx -e .scratch
+          mkdir -p .scratch && find .scratch -mindepth 1 -maxdepth 1 ! -name adapter-carbon ! -name adapter-generic ! -name to-handoff -exec rm -rf {} +
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -37,23 +39,12 @@ jobs:
       # tests that need them skip.
       - run: node skills/adapter-generic/scripts/sources.mjs
       # Without its packages, the to-handoff tests skip; the runtime tests, and adapter-generic's catalog
-      # measurements, use the runner's Chrome.
+      # measurements, use the Mac's Chrome.
       - run: node skills/to-handoff/scripts/deps.mjs
-      # Through NODE_OPTIONS: `npm test -- --test-shard=n/4` appends the flag after the file globs, where
-      # node --test ignores it. TAP goes to the log, and slowest-files.mjs adds the shard's ten slowest files to the end
-      # of the log and to the job summary, so a slow shard names its files without parsing TAP.
+      # npm test runs at its default --test-concurrency=4. TAP goes to the log, and slowest-files.mjs adds the
+      # slowest files to the end of the log and to the job summary.
       - run: npm test
         env:
-          TEST_CONCURRENCY: 1
           NODE_OPTIONS: >-
-            --test-shard=${{ matrix.shard }}/4
             --test-reporter=tap --test-reporter-destination=stdout
             --test-reporter=${{ github.workspace }}/.github/slowest-files.mjs --test-reporter-destination=stdout
-
-  # The one check to require: green only when every shard is. A cancelled run leaves it cancelled, not red.
-  test:
-    needs: shard
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
-    steps:
-      - run: test "${{ needs.shard.result }}" = success

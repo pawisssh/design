@@ -1,0 +1,97 @@
+{
+  "groups": {
+    "button-28fc2ac5": {
+      "family": "icon-button",
+      "description": "A small square icon button; its tone sets the icon colour and the hover wash.",
+      "axes": {
+        "hover:bg-color+text-color": {
+          "key": "tone",
+          "label": "Tone",
+          "values": {
+            "v-518527de": {
+              "key": "positive",
+              "label": "Positive"
+            },
+            "v-52fbde14": {
+              "key": "danger",
+              "label": "Danger"
+            },
+            "v-a2543b56": {
+              "key": "warning",
+              "label": "Warning"
+            }
+          }
+        }
+      },
+      "grid": {
+        "columns": [
+          "tone"
+        ],
+        "rows": []
+      }
+    },
+    "button-bc8d48ab": {
+      "family": "segment",
+      "description": "One option of a segmented toggle; the picked option is raised on a white chip.",
+      "axes": {
+        "bg-color+shadow+text-color": {
+          "key": "selected",
+          "label": "Selected",
+          "values": {
+            "v-023d46a0": {
+              "key": "on",
+              "label": "On"
+            },
+            "v-9a5c37d2": {
+              "key": "off",
+              "label": "Off"
+            }
+          }
+        }
+      },
+      "grid": {
+        "columns": [
+          "selected"
+        ],
+        "rows": []
+      },
+      "text": "Day"
+    },
+    "button-2454a6b5": {
+      "family": "action-button",
+      "description": "A solid red action button; it greys out while disabled.",
+      "axes": {}
+    },
+    "button-5bbb1d9b": {
+      "family": "pill-button",
+      "description": "A pill-shaped toggle button, green while active and outlined while not.",
+      "axes": {
+        "bg-color+border-color+border-width+text-color": {
+          "key": "active",
+          "label": "Active",
+          "values": {
+            "v-329e36c9": {
+              "key": "on",
+              "label": "On"
+            },
+            "v-0c8c97ce": {
+              "key": "off",
+              "label": "Off"
+            }
+          }
+        }
+      },
+      "grid": {
+        "columns": [
+          "active"
+        ],
+        "rows": []
+      }
+    },
+    "div-1fa6b3d0": {
+      "family": "card",
+      "description": "A bordered white card with a soft shadow.",
+      "axes": {}
+    }
+  }
+}

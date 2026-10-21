@@ -1,6 +1,6 @@
 ---
 name: vibe-to-figma
-description: One command from a React + shadcn + Tailwind Prototype (a v0 or Lovable app) to its own Design System folder and, after the owner approves, Component Sets in Figma. Use when the owner wants a Prototype's Component Families laid out as Figma Component Sets, or runs /vibe-to-figma.
+description: One command from a React + Tailwind Prototype (a v0 or Lovable app, with shadcn or with Tailwind in its JSX) to its own Design System folder and, after the owner approves, Component Sets in Figma. Use when the owner wants a Prototype's Component Families laid out as Figma Component Sets, or runs /vibe-to-figma.
 ---
 
 # Vibe-to-Figma
@@ -18,7 +18,7 @@ Today it has the Design System folder ([#176](https://github.com/pawisssh/design
 `folder.mjs` chooses its path before it fetches a tool or reads a component (`choosePath(project)`, [`scripts/path.mjs`](scripts/path.mjs); [#252](https://github.com/pawisssh/design/issues/252), spec [#249](https://github.com/pawisssh/design/issues/249), [ADR 0016](../../docs/adr/0016-a-prototype-with-no-code-library-gets-an-extracted-library.md)). Three outcomes:
 
 - **`components.json`:** the shadcn path below, unchanged.
-- **No `components.json`, a React project that lists `tailwindcss` in package.json and carries Tailwind utilities in its source className strings:** path A. Until the Extracted Library lands, the CLI stops with a plain "path A ... not built yet" message (exit 1).
+- **No `components.json`, a React project that lists `tailwindcss` in package.json and carries Tailwind utilities in its source className strings:** path A, below: the folder step extracts a library from the JSX ([#257](https://github.com/pawisssh/design/issues/257)). A Prototype with nothing to extract stops with a plain "path A found no Component Family" message (exit 1).
 - **Anything else:** refused with one message (exit 1, no stack trace) naming what was found and what the skill needs: plain HTML; a Carbon app (use the Carbon Adapter); a React project styled by SCSS or CSS classes; a React project with no `tailwindcss` or no Tailwind utilities in className; no React at all. `--all` gets the same message.
 
 ## Inputs
@@ -43,6 +43,23 @@ It writes `design-systems/<name>/`: `<name>.foundations.json` and `contracts/<fa
 - **Removed components.** A Contract in `contracts/` whose family the run has no Contract for is set aside: moved, byte-unchanged, to `design-systems/<name>/removed/<family>.component.json`. This happens whether the Contract is approved or a draft. The report gives the reason for each: `not used by the screens` (`not in the Code Library` with `--all`), or `skipped: <the Adapter's reason>` when the Adapter can no longer read the family. So `contracts/` always holds exactly the Contracts the Foundations closure lists, and the review, the approve and the build go on without the removed ones. The narrowed closure is a Foundations document no approve covers, so with no draft the review page is its Foundations tab alone, and the owner's `approve` of it comes before the build's Foundations call. Before this, the approve and the build refused such a Contract as not in the closure. When the family comes back, its set-aside copy is its prior, as a draft: the component step carries its Drafted values, and `carryOmits` carries the owner's omits (at the same snapshot, its selection stands as it was). It goes back into `contracts/` as a draft, even when nothing changed, so the owner reviews it again, and the set-aside copy is deleted once it is written. Figma is not touched: the build names the family's set orphaned (see the build).
 
 Done when the CLI prints `OK`.
+
+### Path A: the Extracted Library
+
+A Prototype with no `components.json` has no Code Library, so `folder.mjs` makes one ([ADR 0016](../../docs/adr/0016-a-prototype-with-no-code-library-gets-an-extracted-library.md); [`scripts/extract.mjs`](scripts/extract.mjs)). The JSX is read statically with TypeScript and never run. The Contracts are then read through the Generic Adapter from the generated library, never from the Prototype.
+
+```
+node skills/vibe-to-figma/scripts/folder.mjs <project> [--name <name>] [--root <dir>] [--drafts <answers>]... [--requests <file>]
+```
+
+`--all` is ignored on path A: the families are what the JSX repeats, not a folder's files.
+
+- **Which elements.** A candidate is interactive (`button`, `input`, `select`, `textarea`, `a`) or paints itself (its own background, border, radius, shadow, ring or outline), and either repeats (two or more sites) or has a className ternary. Placement classes (margins, widths, `flex-1`, positioning, `self-*`) are stripped first. Layout-only wrappers and one-off plain elements are no family.
+- **Groups.** A group is the candidates of one tag with one paint signature (the paint classes every rendering has, colours masked). Constants and local `const` or `let` class strings resolve within the file. A className the script cannot read (a call, a prop, an import) is skipped and named with its reason, `file:line`, in the report and in the requests file; the run goes on.
+- **Axes, by rule.** A ternary is one axis; a nested one is one axis with N values. A ternary that mirrors the element's own `disabled` is folded into `disabled:` utilities (the State), not an axis. Colours that change together across sites are one axis; other independent differences are one axis each. A `disabled:` utility never splits a group. The default is the value most sites use. Group, axis and value ids derive from content, so an answer survives a merge.
+- **Judgement, once.** The first run writes one requests file (default `.scratch/vibe-to-figma/<name>.requests.json`, `{name, path: "A", groups, skipped}`) and exits 2, writing nothing else. Each group lists its sites, its common classes, its axes with their values' classes, and what is `open`. The agent answers in one drafts file, `{"groups": {"<group id>": {"family", "description", "axes": {"<axis id>": {"key", "label", "values": {"<value id>": {"key", "label"}}}}, "grid", "text"}}}`: `family` a lower-case key (the same key on two groups of one tag merges them; `null` drops the group), `grid` `{columns, rows}` naming the answered axes (the canonical State axis is added to it), `text` the default text when no site holds any. Run again with `--drafts <file>`. Whatever an answer still misses reopens as a request of its own and nothing is built until none is open. The fixture's answers are [`test/fixtures/path-a-app.answers.json`](test/fixtures/path-a-app.answers.json).
+- **What it writes.** In `design-systems/<name>/`: `library/` (the Extracted Library: `components.json`, the Prototype's Tailwind stylesheet, a `package-lock.json` that keeps the Prototype's resolved `react`, `react-dom`, `tailwindcss`, `tw-animate-css` and `shadcn` and pins the rest to the Adapter's preview set, and `components/ui/<family>.tsx`, one React + cva component per family), `<name>.family-map.json` (the Family map: each family's sites by file and JSX path, not line or classes, with `by`, `evidence` and a `fingerprint`), `<name>.foundations.json` and `contracts/<family>.component.json`. A rerun with the same answers writes nothing; a file is written only when its bytes change.
+- **Today's limits.** Colours must be arbitrary values (`bg-[#16a34a]`) and radii arbitrary or plain `rounded`: the Adapter does not yet read Tailwind's palette colours ([#254](https://github.com/pawisssh/design/issues/254)) or its `rounded-md`/`-full` radius scale (no ticket yet). Splitting one group into two families, compound families, Slot axes and reruns after the JSX changes are later tickets of [#249](https://github.com/pawisssh/design/issues/249).
 
 ## 2. The review page
 
