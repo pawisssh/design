@@ -334,6 +334,35 @@ test('generate: a property named _error reads as the error state, not a conditio
   assert.match(screen.states.error.content, /`result\._error` is true/);
 });
 
+// #229: a string status compared with an enum-like literal. A copy of the conditions app with its comparisons on line 20.
+const statusApp = line => {
+  const app = project({});
+  cpSync(CONDITIONS, app, { recursive: true });
+  const page = join(app, 'src/App.tsx');
+  writeFileSync(page, readFileSync(page, 'utf8').replace('    </main>', `${line}\n    </main>`));
+  return app;
+};
+const conditionKeys = async prototype => (await generate({ prototype, designSystem: designSystem(), decisions: {} })).requests.filter(r => r.kind === 'condition').map(r => r.key);
+
+test('generate: a status compared with GENERATING reads as loading and READY as success', { skip: noTs }, async () => {
+  const app = statusApp("      {reportStatus === 'GENERATING' && <p>Working</p>}{reportStatus === 'READY' && <p>Done</p>}");
+  const keys = await conditionKeys(app);
+  assert.deepEqual(keys.filter(k => /reportStatus/.test(k)), []);
+  const result = await generate({ prototype: app, designSystem: designSystem(), decisions: CONDITIONS_DECISIONS });
+  const [screen] = result.handoff.screens;
+  assert.equal(screen.states.loading.missing, undefined);
+  assert.equal(screen.states.success.missing, undefined);
+  assert.match(screen.states.loading.content, /`reportStatus === 'GENERATING'` is true/);
+  assert.match(screen.states.success.content, /`reportStatus === 'READY'` is true/);
+  assert.equal(screen.states.loading.trigger, "reportStatus === 'GENERATING'");
+  assert.equal(screen.states.success.trigger, "reportStatus === 'READY'");
+});
+
+test('generate: a status value it cannot place stays a condition question', { skip: noTs }, async () => {
+  const app = statusApp("      {status === 'IDLE' && <p>Idle</p>}{status !== 'READY' && <p>Not ready</p>}");
+  assert.deepEqual((await conditionKeys(app)).filter(k => /status/.test(k)), ["condition:status === 'IDLE'", "condition:status !== 'READY'"]);
+});
+
 test('read: next/font loaders in a layout are the fonts it loads, each at its binding', { skip: noTs }, () => {
   const root = project({
     'package.json': '{"name": "fonts", "dependencies": {"next": "15.5.28", "react": "19.1.10"}}',

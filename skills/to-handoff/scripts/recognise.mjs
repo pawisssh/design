@@ -40,10 +40,30 @@ export function evaluate(ast, value) {
 // Next.js boundary files (#62): the React reader names their condition by file.
 const FRAMEWORK_STATES = { loading: 'loading', error: 'error', 'not-found': 'empty' };
 
+// A status kept as a string (#229): the values of `status === 'GENERATING'`, lowercased with separators dropped.
+const STATUS_VALUES = {
+  loading: ['loading', 'generating', 'pending', 'processing', 'inprogress', 'fetching', 'saving', 'submitting', 'sending'],
+  success: ['ready', 'done', 'success', 'succeeded', 'complete', 'completed', 'saved', 'sent', 'submitted'],
+  error: ['failed', 'failure', 'error'],
+};
+const STATUS_COMPARE = /^(?:(['"`])(\w[\w -]*)\1\s*={2,3}\s*([\w.?]+)|([\w.?]+)\s*={2,3}\s*(['"`])(\w[\w -]*)\5)$/;
+
+/** The standard state a comparison of a status-like identifier with a string stands for, null when it can't be placed. */
+function stateOfStatusCompare(atom) {
+  const m = STATUS_COMPARE.exec(atom);
+  if (!m) return undefined;
+  const [value, name] = m[2] ? [m[2], m[3]] : [m[6], m[4]];
+  if (!/(?:^|[.?])(?:status|state|\w*Status)$/.test(name)) return undefined;
+  const key = value.toLowerCase().replace(/[^a-z]/g, '');
+  return Object.keys(STATUS_VALUES).find(s => STATUS_VALUES[s].includes(key)) || null;
+}
+
 /** The standard state a state-shaped atom stands for (#62), or null for a plain condition. */
 export function stateOfAtom(atom) {
   const file = /(?:^|\/)(loading|error|not-found)\.[jt]sx?$/.exec(atom);
   if (file) return FRAMEWORK_STATES[file[1]];
+  const compared = stateOfStatusCompare(atom);
+  if (compared !== undefined) return compared;
   if (/(\.length\s*===?\s*0\b|^!\s*[\w.]+\.length$|\bisEmpty\b)/.test(atom)) return 'empty';
   if (/\b(is)?(Loading|Sending|Submitting|Fetching|Pending|Saving)\b|\b(loading|sending|submitting|fetching|pending|saving)\b/.test(atom)) return 'loading';
   // An `_error` property (`result._error`) is the error state too (#213).
