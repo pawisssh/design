@@ -80,13 +80,13 @@ test('a project that is not a directory is refused plainly', () => {
   assert.match(r.message, /no such directory/);
 });
 
-test('buildFolder refuses before reading anything, and says path A is not built yet', async () => {
+test('buildFolder refuses before reading anything; path A with nothing to extract says so', async () => {
   await assert.rejects(buildFolder({ project: fixture('html-app'), root: tmpdir() }), /plain HTML/);
-  await assert.rejects(buildFolder({ project: fixture('tailwind-no-shadcn'), root: tmpdir() }), /path A.*not built yet/);
+  await assert.rejects(buildFolder({ project: fixture('tailwind-no-shadcn'), root: tmpdir() }), /path A found no Component Family/);
 });
 
 test('the CLI exits 1 with one plain message, no stack trace and no ENOENT, with or without --all', () => {
-  for (const [name, found] of [['html-app', /plain HTML/], ['carbon-scss-app', /Carbon/], ['tailwind-no-shadcn', /path A.*not built yet/]]) {
+  for (const [name, found] of [['html-app', /plain HTML/], ['carbon-scss-app', /Carbon/], ['tailwind-no-shadcn', /path A found no Component Family/]]) {
     for (const extra of [[], ['--all']]) {
       const r = cli(fixture(name), ...extra);
       assert.equal(r.status, 1, `${name} ${extra}`);
