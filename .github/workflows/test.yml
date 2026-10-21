@@ -29,7 +29,7 @@ jobs:
           clean: false
       - run: |
           git clean -ffdx -e .scratch
-          find .scratch -mindepth 1 -maxdepth 1 ! -name adapter-carbon ! -name adapter-generic ! -name to-handoff -exec rm -rf {} +
+          mkdir -p .scratch && find .scratch -mindepth 1 -maxdepth 1 ! -name adapter-carbon ! -name adapter-generic ! -name to-handoff -exec rm -rf {} +
       - uses: actions/setup-node@v4
         with:
           node-version: 22
