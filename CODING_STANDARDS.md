@@ -9,3 +9,7 @@ The judgement calls `/code-review` checks a diff against. Anything a test or a s
 ## Shared helpers
 
 **Each shared helper lives in one place.** When a script or test needs something another file in the same skill already does (a repo path, reading JSON, a hash, the text that names a Usage), import that helper, or move it somewhere both files can import it from. Don't write a second copy. Two copies of the same few lines drift apart the next time only one of them is changed.
+
+## Domain docs
+
+**A diff to `GLOSSARY.md` or `docs/adr/` follows the domain-modeling skill's formats.** Glossary entries follow its `GLOSSARY-FORMAT.md`: one or two sentences saying what a term is, no implementation detail, and an opinionated `_Avoid_` list. ADRs follow its `ADR-FORMAT.md`: they record only decisions that are hard to reverse, surprising and the result of a real trade-off. Every claim a doc makes about the code must match the code, and every term it uses must be the one `GLOSSARY.md` defines.

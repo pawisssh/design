@@ -1,7 +1,7 @@
 {
   "name": "design",
   "private": true,
-  "description": "No dependencies. `npm test` runs every skill's node:test suite.",
+  "description": "No dependencies. `npm test` runs every skill's node:test suite and the repo's own checks in test/.",
   "engines": {
     "node": ">=22"
   },
