@@ -16,11 +16,10 @@ concurrency:
 
 jobs:
   # npm test split four ways by file, each shard on its own runner: one runner ran it in about 20 minutes,
-  # CPU-bound. The four sum to every file npm test runs. The runner has 2 vCPUs, so node --test alone would run a shard's
-  # files one at a time; the test script sets --test-concurrency=4 (a local run's default concurrency starves the shadcn
-  # runtime test), and NODE_OPTIONS rejects that flag, so the shards run four files at once too. --test-concurrency 2 or
-  # 3 left the slowest shard, the one the run waits on, about as slow (379s to 360s and 366s): its files ran side by
-  # side but each took up to twice as long. Not re-measured at 4.
+  # CPU-bound. The four sum to every file npm test runs. The runner has 2 vCPUs, so node --test runs a shard's files one
+  # at a time. The test script defaults to --test-concurrency=4 for local runs (a 9-way default starves the shadcn runtime
+  # test); CI pins TEST_CONCURRENCY=1, as measured: 2 or 3 left the slowest shard, the one the run waits on, about as slow
+  # (379s to 360s and 366s), its files running side by side but each taking up to twice as long.
   shard:
     runs-on: ubuntu-latest
     strategy:
@@ -45,6 +44,7 @@ jobs:
       # of the log and to the job summary, so a slow shard names its files without parsing TAP.
       - run: npm test
         env:
+          TEST_CONCURRENCY: 1
           NODE_OPTIONS: >-
             --test-shard=${{ matrix.shard }}/4
             --test-reporter=tap --test-reporter-destination=stdout
