@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { nextNumber, numbersIn, problems } from '../scripts/adr.mjs';
+import { nextNumber, numbersIn, problems } from '../../scripts/adr.mjs';
 
 test('the repo has no duplicate ADR number and no reference to a missing ADR', () => {
   assert.deepEqual(problems(), []);
