@@ -69,7 +69,7 @@ node skills/vibe-to-figma/scripts/folder.mjs <project> [--name <name>] [--root <
     - *drop W:* delete W's entry and move its sites to `dropped` with `"by": "owner"`.
     - *rename Y:* change the entry's key. The renamed family is a new Contract (the old one is set aside, its Figma set orphaned).
   - A map that lists a site twice, or a key that is not lower-case, stops the run with the reason.
-- **Today's limits.** Colours must be arbitrary values (`bg-[#16a34a]`) and radii arbitrary or plain `rounded`: the Adapter does not yet read Tailwind's palette colours ([#254](https://github.com/pawisssh/design/issues/254)) or its `rounded-md`/`-full` radius scale (no ticket yet). Compound families and Slot axes are later tickets of [#249](https://github.com/pawisssh/design/issues/249).
+- **Today's limits.** Radii must be arbitrary or plain `rounded`: the Adapter does not yet read Tailwind's `rounded-md`/`-full` radius scale (no ticket yet). A Tailwind palette colour a family uses (`bg-slate-900`) becomes a Foundations token; an arbitrary colour (`bg-[#16a34a]`) stays a raw. Compound families and Slot axes are later tickets of [#249](https://github.com/pawisssh/design/issues/249).
 
 ## 2. The review page
 

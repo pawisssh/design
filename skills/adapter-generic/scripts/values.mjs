@@ -6,6 +6,8 @@ const fail = msg => { throw new Error(msg); };
 export const CLIPPED = 'outside sRGB, clipped per channel';
 /** A Foundations variable that is a Synthesized token (#120), not a Code Library token: its source says so. */
 export const isSynthesized = v => /^synthesized: /.test(v.source);
+/** A Foundations variable that is a Tailwind default-palette colour (#254), read for a family: its source says so. */
+export const isPalette = v => /^(tailwindcss@\S+ theme\.css|\S+ @theme) --color-[\w-]+$/.test(v.source);
 export const round = x => Math.round(x * 1e4) / 1e4; // px to 4 decimals, so 10 x 2.2 is 22, not 22.000000000000004
 
 /** "0.625rem" or "4px" -> px. */
