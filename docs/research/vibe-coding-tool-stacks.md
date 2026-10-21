@@ -32,11 +32,17 @@ Researched 2026-10-22. A claim from a page that shows its own last-updated date 
    | Claude (chat artifacts, Claude Design) | Plain HTML: a single self-contained page (docs, 2025-11-12 and retrieved) | inline CSS (docs) | none | none stated | Legacy artifacts: view, copy or download the code. Designs: `.zip`, PDF, PowerPoint or standalone HTML (docs) | none: artifacts live on claude.ai |
    | Cursor, Claude Code | No default: they work in the folder or repo you open (docs) | follows the repo | follows the repo | follows the repo | none needed: the code is local | none |
 
-3. **What this means for the map.** The owner's own Prototypes are React + Tailwind (batch-sell), React + Carbon + SCSS, and plain HTML (health-check).
+3. **What this means for the map.** The map lists the owner's own Prototypes:
+   - `batch-sell-main`: Vite + React 19 + Tailwind v4, lucide;
+   - `health-check-main`: plain HTML;
+   - `health-check-management-main`: Vite + React 19 + Carbon + SCSS.
+
+   Against those, the tools rank the kinds this way:
    - **React + Tailwind + shadcn/ui** is the kind most tools hand over. Weight it highest.
-   - **React + Tailwind without shadcn/ui** is the default of Bolt and AI Studio, and batch-sell is one. Weight it second.
-   - **Plain HTML** is Claude's default, and health-check is one. Only one tool family produces it, but that family is the owner's own tool.
+   - **React + Tailwind without shadcn/ui** is the default of Bolt and AI Studio. Weight it second. `batch-sell-main` has the same shape as the AI Studio sample: Vite, React 19, Tailwind 4, lucide, no router. Bolt's starter is the same kind on Tailwind 3.
+   - **Plain HTML** is Claude's default, and `health-check-main` is one. Only one tool family produces it, but that family is the owner's own tool.
    - **React + Carbon + SCSS** is no tool's default. It appears only when someone asks for Carbon. Weight it by the owner's own projects, not by the tools.
+   - **Vue, Svelte, Angular and others** are no tool's default either. Bolt keeps starters for Angular, Vue and Qwik, and v0, Replit and Figma Make use other frameworks when asked. Lovable's design systems are React only. They rank below every React kind.
 
 4. **Within React + Tailwind, styling is not what splits the tools.** The repo's gates split them by four other things:
    - the Tailwind major version;
@@ -44,7 +50,7 @@ Researched 2026-10-22. A claim from a page that shows its own last-updated date 
    - the framework and router;
    - where the app sits in the repo.
 
-   The table below runs the repo's own `choosePath` (`skills/vibe-to-figma/scripts/path.mjs`) read-only on each pinned sample. It then reads the other gates by hand. No sample was run through `/vibe-to-figma` or `/to-handoff`. So "stops at" means the first gate the sample does not meet, by the code at `1594a3f`.
+   The table below runs the repo's own `choosePath` (`skills/vibe-to-figma/scripts/path.mjs`) read-only on each pinned sample. It then reads the other gates by hand. No sample was run through `/vibe-to-figma` or `/to-handoff`. So "stops at" means the first of the gates checked here that the sample does not meet, by the code at `1594a3f`. Other steps may run before that gate. For example, path A runs `extract.mjs` before the Adapter's Tailwind check, and `extract.mjs` was not read end to end.
 
    | Sample | `choosePath` | Tailwind resolved | Lockfile | React reader (`to-handoff/scripts/react.mjs`) | First gate it stops at |
    | --- | --- | --- | --- | --- | --- |
@@ -59,7 +65,14 @@ Researched 2026-10-22. A claim from a page that shows its own last-updated date 
    | Base44 | shadcn | 3.4.19 | `package-lock.json` | Vite + react-router-dom; `.jsx` is read (`react.mjs:24`) | Tailwind 3 (`sources.mjs:72`) |
    | Claude | refused | — | — | — | `path.mjs:60`: plain HTML, with no `package.json` |
 
-   The Generic Adapter calls `projectPins` (`sources.mjs:64`) from `foundations.mjs:121`, `components.mjs:169` and `preview.mjs:142`. So both Vibe-to-Figma paths need a `package-lock.json` that resolves Tailwind 4. Path A's Extracted Library also copies the Prototype's lockfile entries (`vibe-to-figma/scripts/extract.mjs:394`). Of the nine samples, only v0's and AI Studio's pass every gate checked here.
+   The Generic Adapter calls `projectPins` (`sources.mjs:64`) from `foundations.mjs:121`, `components.mjs:169` and `preview.mjs:142`. So both Vibe-to-Figma paths need a `package-lock.json` that resolves Tailwind 4. Path A's Extracted Library also copies the Prototype's lockfile entries (`vibe-to-figma/scripts/extract.mjs:394`). Of the eight pinned samples, only v0's and AI Studio's pass every gate checked here.
+
+5. **Some claims in the repo need correcting.**
+   - The map's "What works today" table says `/vibe-to-figma` works for React + shadcn + Tailwind from v0 and Lovable. By the gates above, that holds for the v0 sample only. Neither Lovable template passes:
+     - the new template has no `package-lock.json` and no `index.html`;
+     - the older template is on Tailwind 3.
+   - The same pairing appears in `skills/vibe-to-figma/SKILL.md`, which describes the shadcn path as React + shadcn + Tailwind as v0 and Lovable write it.
+   - `choosePath` gives Figma Make's bundle a misleading refusal: plain HTML, with no React. The bundle is a React app whose React is declared only in optional `peerDependencies`.
 
 ## Findings
 
