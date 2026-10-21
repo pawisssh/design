@@ -1,10 +1,4 @@
-// `npm test`: every skill's node:test suite, the slowest files first. The `node --test` CLI sorts files alphabetically
-// whatever order they are passed in, so a long file can start late and stretch the end of the run; run() keeps the
-// order it is given. Files are named as in the old command: skills/*/test/*.test.mjs and skills/*/tests/*.test.mjs.
-//
-// TEST_CONCURRENCY: files run at once (default 4; a higher setting starved the shadcn Next-build runtime test, #247).
-// TEST_REPORTERS: comma-separated reporters, each a node:test built-in or a module path; default `spec`. NODE_OPTIONS
-// `--test-reporter` does not apply to run(), so CI names its reporters here.
+// `npm test`: every skill's node:test suite, started through run() so the slowest files go first.
 import { readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -28,12 +22,15 @@ const SLOWEST = [
 
 const root = resolve(import.meta.dirname, '..');
 
+// skills/*/test/*.test.mjs and skills/*/tests/*.test.mjs. The `node --test` CLI sorts files alphabetically whatever
+// order they are passed in, so a long file can start late and stretch the end of the run; run() keeps the order it is
+// given, so the slowest files go first and the rest follow in sorted order.
 function testFiles() {
   const found = [];
   for (const skill of readdirSync(join(root, 'skills')).sort()) {
     for (const dir of ['test', 'tests']) {
       let names;
-      try { names = readdirSync(join(root, 'skills', skill, dir)); } catch { continue; }
+      try { names = readdirSync(join(root, 'skills', skill, dir)); } catch (e) { if (e.code === 'ENOENT') continue; throw e; }
       for (const name of names.sort()) if (name.endsWith('.test.mjs')) found.push(`skills/${skill}/${dir}/${name}`);
     }
   }
@@ -49,18 +46,21 @@ async function reporter(name) {
   return (await import(pathToFileURL(resolve(name)).href)).default;
 }
 
+// Files run at once. A higher setting starved the shadcn Next-build runtime test into its timeout (#247).
 const concurrency = Number(process.env.TEST_CONCURRENCY) || 4;
+// Comma-separated reporters, each a node:test built-in or a module path from the working directory. NODE_OPTIONS
+// `--test-reporter` does not apply to run(), so CI names its reporters here.
 const names = (process.env.TEST_REPORTERS || 'spec').split(',').map(s => s.trim()).filter(Boolean);
 
 const stream = run({ files: testFiles(), concurrency });
 stream.on('test:fail', () => { process.exitCode = 1; });
 
 // Every reporter reads the whole event stream, so each gets its own copy of it.
-const done = names.map(async name => {
-  const copy = new PassThrough({ objectMode: true });
-  stream.pipe(copy);
-  const out = copy.compose(await reporter(name));
+const reporting = names.map(async name => {
+  const events = new PassThrough({ objectMode: true });
+  stream.pipe(events);
+  const out = events.compose(await reporter(name));
   out.pipe(process.stdout, { end: false });
-  await new Promise((ok, fail) => out.on('end', ok).on('error', fail));
+  await new Promise((resolve, reject) => out.on('end', resolve).on('error', reject));
 });
-await Promise.all(done);
+await Promise.all(reporting);
