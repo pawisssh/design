@@ -182,14 +182,31 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const score = deltaE(pageHex, tokenHex(adapter.surfaces.page)) + (container ? deltaE(bg(container), tokenHex(adapter.surfaces.layer)) : 0);
     return { mode: m, score: Math.round(score * 10000) / 10000 };
   });
-  const best = scores.slice().sort((a, b) => a.score - b.score || theme.modes.indexOf(a.mode) - theme.modes.indexOf(b.mode))[0].mode;
+  const surfaceBest = scores.slice().sort((a, b) => a.score - b.score || theme.modes.indexOf(a.mode) - theme.modes.indexOf(b.mode))[0].mode;
+  const surfaceNote = `Single-mode Prototype: its page surface (${pageHex})${container ? ` and first container (${firstClass(container)} ${bg(container)})` : ''} map best to ${surfaceBest.label} `
+    + `(${scores.map(s => `${s.mode.label} ΔE ${s.score}`).join(', ')}). The other ${theme.name} modes render unverified.`;
+  // A Code Library's theme wrapper that names a mode is the mode (#228); the surfaces above are the fallback.
+  const wrapper = adapter.themeWrapper;
+  let wrapped = null;
+  if (wrapper) for (const screen of doc.screens) walk(screen.root, el => { if (!wrapped && el.component && el.component.kind === 'ds' && el.component.export === wrapper.component && wrapper.prop in el.attrs) wrapped = el; });
+  const named = wrapped && typeof wrapped.attrs[wrapper.prop] === 'string' ? wrapper.modes[wrapped.attrs[wrapper.prop]] : undefined;
+  const wrappedMode = theme.modes.find(m => m.key === named);
+  const best = wrappedMode || surfaceBest;
   const mode = best.key;
   const ctx = { system, mode, custom };
   const notes = [{
     level: 'info',
-    text: `Single-mode Prototype: its page surface (${pageHex})${container ? ` and first container (${firstClass(container)} ${bg(container)})` : ''} map best to ${best.label} `
-      + `(${scores.map(s => `${s.mode.label} ΔE ${s.score}`).join(', ')}). The other ${theme.name} modes render unverified.`,
+    text: wrappedMode
+      ? `\`<${wrapper.component} ${wrapper.prop}="${wrapped.attrs[wrapper.prop]}">\` (${at(wrapped.offset)}) sets the Prototype's mode to ${best.label}; the page surfaces are not compared. The other ${theme.name} modes render unverified.`
+      : surfaceNote,
   }];
+  // A wrapper whose value the Adapter has no mode for, or that is not a literal, is the owner's question: the surfaces stand in.
+  const wrapperQuestion = wrapped && !wrappedMode ? {
+    id: 'q-mode-theme', kind: 'mode-map', to: 'owner',
+    text: `\`<${wrapper.component}>\` (${at(wrapped.offset)}) sets ${typeof wrapped.attrs[wrapper.prop] === 'string' ? `${wrapper.prop}="${wrapped.attrs[wrapper.prop]}"` : `a ${wrapper.prop} that is not a literal`}, `
+      + `which is not one of ${system.key}'s ${Object.keys(wrapper.modes).join(', ')}. Which ${theme.name} mode is the Prototype in? The surfaces stand in (${surfaceBest.label}) until you answer.`,
+  } : null;
+  if (wrapperQuestion) notes.push({ level: 'info', text: surfaceNote });
 
   // ---- feature-level: copy, Off-system values, fonts and questions are shared by every screen ----
   const breakpoints = adapter.breakpoints || DEFAULT_BREAKPOINTS;
@@ -206,6 +223,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   const uniqueId = (set, id) => { let key = id, n = 2; while (set.has(key)) key = `${id}-${n++}`; set.add(key); return key; };
   const questions = [];
   const question = q => { if (!questions.some(x => x.id === q.id)) questions.push(q); return q.id; };
+  if (wrapperQuestion) question(wrapperQuestion);
   const usedContracts = new Set(), usedProposals = new Set();
   const families = [...Object.keys(system.contracts).map(k => `contract:${k}`), ...Object.keys(system.proposals).map(k => `proposal:${k}`)];
   const values = [];

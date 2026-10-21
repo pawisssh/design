@@ -421,3 +421,52 @@ test('runtime: generate on the Next fixture takes screenshots for both routes fr
     assert.equal(shot, `screens/${screen.id}.default.${bp}.png`);
   assert.ok(existsSync(join(dirname(result.path), 'screens/subscribe.default.' + h.screens[1].breakpoints[0] + '.png')));
 });
+
+// #228: a Code Library's theme wrapper names the mode; the surface comparison is only the fallback.
+const themed = wrapper => {
+  const ds = designSystem();
+  const dir = project({
+    'package.json': JSON.stringify({ name: 'themed', dependencies: { '@carbon/react': '1.118.0', react: '19.3.1' }, devDependencies: { vite: '8.3.4' } }),
+    'index.html': '<!doctype html><html><head><title>Themed</title></head><body><div id="app"></div><script type="module" src="/src/main.tsx"></script></body></html>',
+    'src/main.tsx': `import { createRoot } from 'react-dom/client';
+import { Theme, Button } from '@carbon/react';
+createRoot(document.getElementById('app')!).render(
+  ${wrapper('<Button kind="primary" size="md">Save</Button>')}
+);
+`,
+  });
+  const decisions = { feature: { goal: 'Save.' }, acceptance: [{ id: 'save', screen: 'index', state: 'default', given: 'the page', when: 'it opens', then: 'Save shows' }] };
+  return generate({ prototype: dir, designSystem: ds, decisions }).then(async result => ({ ds, result, check: result.handoff && validateHandoff(result.handoff, await loadDesignSystem(ds)) }));
+};
+const modeNotes = h => h.source.notes.filter(n => /mode/i.test(n.text));
+
+test('generate: <Theme theme="g10"> is the mode, with no mode question and no surface comparison (#228)', { skip: noTs }, async () => {
+  const { result, check } = await themed(inner => `<Theme theme="g10">${inner}</Theme>`);
+  assert.deepEqual(result.requests, []);
+  assert.deepEqual(check.errors, []);
+  assert.deepEqual(result.handoff.source.modes, { light: 'g10' });
+  assert.ok(!result.handoff.openQuestions.some(q => q.kind === 'mode-map'));
+  assert.match(modeNotes(result.handoff).map(n => n.text).join('\n'), /Theme theme="g10".*Gray 10/);
+  assert.ok(!result.handoff.source.notes.some(n => /ΔE/.test(n.text)), 'no surface scores when the wrapper names the mode');
+});
+
+test('generate: a Theme the Adapter has no mode for is a question, and the surface comparison still renders (#228)', { skip: noTs }, async () => {
+  for (const wrapper of [inner => `<Theme theme="sepia">${inner}</Theme>`, inner => `<Theme theme={dark ? 'g100' : 'g10'}>${inner}</Theme>`]) {
+    const { result, check } = await themed(wrapper);
+    assert.deepEqual(check.errors, []);
+    const [q] = result.handoff.openQuestions.filter(q => q.kind === 'mode-map');
+    assert.deepEqual({ id: q.id, to: q.to }, { id: 'q-mode-theme', to: 'owner' });
+    assert.match(q.text, /src\/main\.tsx:\d+:\d+/);
+    assert.match(q.text, /white, g10, g90, g100/);
+    assert.deepEqual(result.handoff.source.modes, { light: 'white' }, 'the surface match is the stand-in until the owner answers');
+    assert.ok(result.handoff.source.notes.some(n => /ΔE/.test(n.text)));
+  }
+});
+
+test('generate: with no theme wrapper the surfaces still pick the mode (#228)', { skip: noTs }, async () => {
+  const { result, check } = await themed(inner => `<div>${inner}</div>`);
+  assert.deepEqual(check.errors, []);
+  assert.deepEqual(result.handoff.source.modes, { light: 'white' });
+  assert.ok(result.handoff.source.notes.some(n => /map best to White/.test(n.text)));
+  assert.ok(!result.handoff.openQuestions.some(q => q.kind === 'mode-map'));
+});

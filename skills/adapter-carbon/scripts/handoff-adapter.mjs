@@ -20,6 +20,11 @@ export const roleGroups = {
 // The tokens the mode map compares a Prototype's surfaces against (#61 "mode map by page surface").
 export const surfaces = { page: 'background', layer: 'layer-01' };
 
+// The wrapper that sets a subtree's Theme mode (#228): `<Theme theme="g10">`. `modes` maps each value of its `prop`
+// to a Mode key of the Foundations document's Theme collection. To-handoff reads a value not listed here as a
+// question, not a guess.
+export const themeWrapper = { component: 'Theme', prop: 'theme', modes: { white: 'white', g10: 'g10', g90: 'g90', g100: 'g100' } };
+
 // The breakpoints the runtime reader screenshots each state at (#113): `breakpoints` of @carbon/layout 11.61.0
 // (the pinned preview package), min-widths in px. The Foundations document carries no breakpoints, so the
 // Adapter names them; skills/adapter-carbon/test/preview.test.mjs checks them against the package.
