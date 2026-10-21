@@ -6,6 +6,6 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test skills/*/test/*.test.mjs skills/*/tests/*.test.mjs"
+    "test": "node --test --test-concurrency=4 skills/*/test/*.test.mjs skills/*/tests/*.test.mjs"
   }
 }
