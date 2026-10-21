@@ -159,4 +159,4 @@ Tests: `skills/vibe-to-figma/test/build.test.mjs` drives the whole loop on To-de
 
 ## Left for later tickets
 
-- **Pulling Figma edits back into code**, and merging both sides automatically: phase 2 of [#175](https://github.com/pawisssh/design/issues/175). It is a separate skill, Figma-to-Vibe, never part of this one ([ADR 0014](../../docs/adr/0014-vibe-to-figma-stays-one-way.md)).
+- **Pulling Figma edits back into code**, and merging both sides automatically: phase 2 of [#175](https://github.com/pawisssh/design/issues/175). It is a separate skill, Figma-to-Vibe, never part of this one ([ADR 0017](../../docs/adr/0017-vibe-to-figma-stays-one-way.md)).
