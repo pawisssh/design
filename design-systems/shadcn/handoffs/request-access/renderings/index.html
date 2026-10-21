@@ -590,7 +590,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <body class="page">
 <header class="top">
 <h1>Request access</h1>
-<p class="stamp">r9 · ff9950600060 · pending sign-off</p>
+<p class="stamp">r9 · 8cefcb37737a · pending sign-off</p>
 <label>Mode <select id="mode"><option value="light" data-class="mode-light" selected>Light</option><option value="dark" data-class="dark">Dark</option></select></label>
 <p class="unverified" id="unverified" hidden>Unverified: the Prototype maps only light → Light.</p>
 </header>
@@ -612,7 +612,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <section class="group" id="look"><h2>Needs a look</h2>
 <p class="counts"><span class="flag" data-g="∅">∅ no Contract</span> 1 · <span class="flag" data-g="↯">↯ off-axis</span> 4 · <span class="flag" data-g="!">! missing state</span> 1</p>
 <div class="table-wrap"><table><tr><th>flag</th><th>what</th><th>why</th><th>where</th></tr>
-<tr><td><span class="flag" data-g="↯">↯ off-axis</span></td><td><code>w-full</code> <code>CardFooter.className: &quot;justify-between text-xs text-muted-foreground&quot;</code></td><td>CardFooter className is no card axis or property <a class="flag" data-g="?" href="#q-prop-w-full">? q-prop-w-full</a></td><td>app/page.tsx:18:7</td></tr>
+<tr><td><span class="flag" data-g="↯">↯ off-axis</span></td><td><code>card</code> <code>CardFooter.className: &quot;justify-between text-xs text-muted-foreground&quot;</code></td><td>CardFooter className is no card axis or property <a class="flag" data-g="?" href="#q-prop-card">? q-prop-card</a></td><td>app/page.tsx:18:7</td></tr>
 <tr><td><span class="flag" data-g="↯">↯ off-axis</span></td><td><code>name</code> <code>required: &quot;&quot;</code></td><td>required is no input axis or property <a class="flag" data-g="?" href="#q-prop-name">? q-prop-name</a></td><td>app/request-access-form.tsx:66:9</td></tr>
 <tr><td><span class="flag" data-g="↯">↯ off-axis</span></td><td><code>email</code> <code>required: &quot;&quot;</code></td><td>required is no input axis or property <a class="flag" data-g="?" href="#q-prop-email">? q-prop-email</a></td><td>app/request-access-form.tsx:70:9</td></tr>
 <tr><td><span class="flag" data-g="↯">↯ off-axis</span></td><td><code>reason</code> <code>rows: &quot;3&quot;</code></td><td>rows is no textarea axis or property <a class="flag" data-g="?" href="#q-prop-reason">? q-prop-reason</a></td><td>app/request-access-form.tsx:87:9</td></tr>
@@ -629,17 +629,17 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <tr><th>success</th><td><a href="../screens/index.success.sm.png"><img src="../screens/index.success.sm.png" alt="success at sm" loading="lazy"></a></td><td><a href="../screens/index.success.md.png"><img src="../screens/index.success.md.png" alt="success at md" loading="lazy"></a></td><td><a href="../screens/index.success.lg.png"><img src="../screens/index.success.lg.png" alt="success at lg" loading="lazy"></a></td><td><a href="../screens/index.success.xl.png"><img src="../screens/index.success.xl.png" alt="success at xl" loading="lazy"></a></td><td><a href="../screens/index.success.2xl.png"><img src="../screens/index.success.2xl.png" alt="success at 2xl" loading="lazy"></a></td></tr>
 </table></div>
 <div class="tabs" role="tablist"><button type="button" class="tab" data-state="default" aria-selected="true">default</button><button type="button" class="tab" data-state="loading" aria-selected="false">loading</button><button type="button" class="tab" data-state="empty" aria-selected="false">empty !</button><button type="button" class="tab" data-state="error" aria-selected="false">error</button><button type="button" class="tab" data-state="success" aria-selected="false">success</button></div>
-<div class="panel" data-panel="default"><h3>default</h3><p>every state condition is false; conditional content shown: .grid</p>
+<div class="panel" data-panel="default"><h3>default</h3><p>every state condition is false; conditional content shown: form</p>
 
 <div class="shots"><figure class="shot"><figcaption>sm</figcaption><a href="../screens/index.default.sm.png"><img src="../screens/index.default.sm.png" alt="default at sm" loading="lazy"></a></figure><figure class="shot"><figcaption>md</figcaption><a href="../screens/index.default.md.png"><img src="../screens/index.default.md.png" alt="default at md" loading="lazy"></a></figure><figure class="shot"><figcaption>lg</figcaption><a href="../screens/index.default.lg.png"><img src="../screens/index.default.lg.png" alt="default at lg" loading="lazy"></a></figure><figure class="shot"><figcaption>xl</figcaption><a href="../screens/index.default.xl.png"><img src="../screens/index.default.xl.png" alt="default at xl" loading="lazy"></a></figure><figure class="shot"><figcaption>2xl</figcaption><a href="../screens/index.default.2xl.png"><img src="../screens/index.default.2xl.png" alt="default at 2xl" loading="lazy"></a></figure></div></div>
-<div class="panel" data-panel="loading" hidden><h3>loading</h3><p>`pending` or `status === &quot;loading&quot;` is true; conditional content shown: .grid</p><p>Trigger: <code>pending or status === &quot;loading&quot;</code></p>
+<div class="panel" data-panel="loading" hidden><h3>loading</h3><p>`pending` or `status === &quot;loading&quot;` is true; conditional content shown: form</p><p>Trigger: <code>pending or status === &quot;loading&quot;</code></p>
 <ul><li><code>button-2</code> is <code>disabled</code> · label “Sending…”</li></ul>
 <div class="shots"><figure class="shot"><figcaption>sm</figcaption><a href="../screens/index.loading.sm.png"><img src="../screens/index.loading.sm.png" alt="loading at sm" loading="lazy"></a></figure><figure class="shot"><figcaption>md</figcaption><a href="../screens/index.loading.md.png"><img src="../screens/index.loading.md.png" alt="loading at md" loading="lazy"></a></figure><figure class="shot"><figcaption>lg</figcaption><a href="../screens/index.loading.lg.png"><img src="../screens/index.loading.lg.png" alt="loading at lg" loading="lazy"></a></figure><figure class="shot"><figcaption>xl</figcaption><a href="../screens/index.loading.xl.png"><img src="../screens/index.loading.xl.png" alt="loading at xl" loading="lazy"></a></figure><figure class="shot"><figcaption>2xl</figcaption><a href="../screens/index.loading.2xl.png"><img src="../screens/index.loading.2xl.png" alt="loading at 2xl" loading="lazy"></a></figure></div></div>
 <div class="panel" data-panel="empty" hidden><h3>empty</h3><p><span class="flag" data-g="!">! missing state</span> The Prototype has no empty state: no condition reads like empty. What should the screen show? <a class="flag" data-g="?" href="#q-state-empty">? q-state-empty</a></p></div>
-<div class="panel" data-panel="error" hidden><h3>error</h3><p>`status === &quot;error&quot;` is true; conditional content shown: .grid, alert</p><p>Trigger: <code>status === &quot;error&quot;</code></p>
+<div class="panel" data-panel="error" hidden><h3>error</h3><p>`status === &quot;error&quot;` is true; conditional content shown: form, alert</p><p>Trigger: <code>status === &quot;error&quot;</code></p>
 
 <div class="shots"><figure class="shot"><figcaption>sm</figcaption><a href="../screens/index.error.sm.png"><img src="../screens/index.error.sm.png" alt="error at sm" loading="lazy"></a></figure><figure class="shot"><figcaption>md</figcaption><a href="../screens/index.error.md.png"><img src="../screens/index.error.md.png" alt="error at md" loading="lazy"></a></figure><figure class="shot"><figcaption>lg</figcaption><a href="../screens/index.error.lg.png"><img src="../screens/index.error.lg.png" alt="error at lg" loading="lazy"></a></figure><figure class="shot"><figcaption>xl</figcaption><a href="../screens/index.error.xl.png"><img src="../screens/index.error.xl.png" alt="error at xl" loading="lazy"></a></figure><figure class="shot"><figcaption>2xl</figcaption><a href="../screens/index.error.2xl.png"><img src="../screens/index.error.2xl.png" alt="error at 2xl" loading="lazy"></a></figure></div></div>
-<div class="panel" data-panel="success" hidden><h3>success</h3><p>`status === &quot;success&quot;` is true; conditional content shown: .flex</p><p>Trigger: <code>status === &quot;success&quot;</code></p>
+<div class="panel" data-panel="success" hidden><h3>success</h3><p>`status === &quot;success&quot;` is true; conditional content shown: div</p><p>Trigger: <code>status === &quot;success&quot;</code></p>
 
 <div class="shots"><figure class="shot"><figcaption>sm</figcaption><a href="../screens/index.success.sm.png"><img src="../screens/index.success.sm.png" alt="success at sm" loading="lazy"></a></figure><figure class="shot"><figcaption>md</figcaption><a href="../screens/index.success.md.png"><img src="../screens/index.success.md.png" alt="success at md" loading="lazy"></a></figure><figure class="shot"><figcaption>lg</figcaption><a href="../screens/index.success.lg.png"><img src="../screens/index.success.lg.png" alt="success at lg" loading="lazy"></a></figure><figure class="shot"><figcaption>xl</figcaption><a href="../screens/index.success.xl.png"><img src="../screens/index.success.xl.png" alt="success at xl" loading="lazy"></a></figure><figure class="shot"><figcaption>2xl</figcaption><a href="../screens/index.success.2xl.png"><img src="../screens/index.success.2xl.png" alt="success at 2xl" loading="lazy"></a></figure></div></div>
 <h3>Acceptance</h3>
@@ -647,17 +647,17 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 </section>
 <section class="group" id="usages"><h2>Components</h2>
 <div class="cards">
-<article class="card" id="usage-w-full">
-<header><h3>w-full</h3><p><code>card</code> card-footer=card-footer · flex · app/page.tsx:18:7</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="↯">↯ off-axis</span></p></header>
+<article class="card" id="usage-card">
+<header><h3>card</h3><p><code>card</code> card-footer=card-footer · main · app/page.tsx:18:7</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="↯">↯ off-axis</span></p></header>
 <div class="specimen mode-root mode-light" data-mode-root><div data-slot="card" data-size="default" class="group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[&gt;img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl"><div data-slot="card-header" class="group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)">Header</div><div data-slot="card-title" class="font-heading text-base leading-snug font-medium group-data-[size=sm]/card:text-sm">Request workspace access</div><div data-slot="card-description" class="text-sm text-muted-foreground">Tell us who you are and an admin will approve you within a day.</div><div data-slot="card-action" class="col-start-2 row-span-2 row-start-1 self-start justify-self-end">Action</div><div data-slot="card-content" class="px-(--card-spacing)">Content</div><div data-slot="card-footer" class="flex items-center rounded-b-xl border-t bg-muted/50 p-(--card-spacing)">Footer</div></div></div>
 
 <textarea class="snippet" readonly wrap="off" rows="2">import { Card } from "@/components/ui/card"
 <Card /></textarea>
-<p class="note"><span class="flag" data-g="↯">↯ off-axis</span> CardFooter className is no card axis or property (`CardFooter` at app/page.tsx:31:9 sets className=&quot;justify-between text-xs text-muted-foreground&quot;, which is no card axis or property. Which value is it, or does the Contract need it?) <a class="flag" data-g="?" href="#q-prop-w-full">? q-prop-w-full</a></p>
-<p class="note">`CardFooter` at app/page.tsx:31:9 sets className=&quot;justify-between text-xs text-muted-foreground&quot;, which is no card axis or property. Which value is it, or does the Contract need it? <a class="flag" data-g="?" href="#q-prop-w-full">? q-prop-w-full</a></p><p>Nested in w-full:</p><ul><li><a href="#usage-button">button</a> · <code>button</code> variant=outline</li><li><a href="#usage-alert">alert</a> · <code>alert</code> variant=destructive</li><li><a href="#usage-label">label</a> · <code>label</code></li><li><a href="#usage-name">name</a> · <code>input</code></li><li><a href="#usage-label-2">label-2</a> · <code>label</code></li><li><a href="#usage-email">email</a> · <code>input</code></li><li><a href="#usage-label-3">label-3</a> · <code>label</code></li><li><a href="#usage-select">select</a> · <code>select</code></li><li><a href="#usage-label-4">label-4</a> · <code>label</code></li><li><a href="#usage-reason">reason</a> · <code>textarea</code></li><li><a href="#usage-button-2">button-2</a> · <code>button</code></li><li><a href="#usage-button-3">button-3</a> · <code>button</code> variant=link size=sm</li></ul>
+<p class="note"><span class="flag" data-g="↯">↯ off-axis</span> CardFooter className is no card axis or property (`CardFooter` at app/page.tsx:31:9 sets className=&quot;justify-between text-xs text-muted-foreground&quot;, which is no card axis or property. Which value is it, or does the Contract need it?) <a class="flag" data-g="?" href="#q-prop-card">? q-prop-card</a></p>
+<p class="note">`CardFooter` at app/page.tsx:31:9 sets className=&quot;justify-between text-xs text-muted-foreground&quot;, which is no card axis or property. Which value is it, or does the Contract need it? <a class="flag" data-g="?" href="#q-prop-card">? q-prop-card</a></p><p>Nested in card:</p><ul><li><a href="#usage-button">button</a> · <code>button</code> variant=outline</li><li><a href="#usage-alert">alert</a> · <code>alert</code> variant=destructive</li><li><a href="#usage-label">label</a> · <code>label</code></li><li><a href="#usage-name">name</a> · <code>input</code></li><li><a href="#usage-label-2">label-2</a> · <code>label</code></li><li><a href="#usage-email">email</a> · <code>input</code></li><li><a href="#usage-label-3">label-3</a> · <code>label</code></li><li><a href="#usage-select">select</a> · <code>select</code></li><li><a href="#usage-label-4">label-4</a> · <code>label</code></li><li><a href="#usage-reason">reason</a> · <code>textarea</code></li><li><a href="#usage-button-2">button-2</a> · <code>button</code></li><li><a href="#usage-button-3">button-3</a> · <code>button</code> variant=link size=sm</li></ul>
 </article>
 <article class="card" id="usage-button">
-<header><h3>button</h3><p><code>button</code> variant=outline · flex · app/request-access-form.tsx:48:9 · shows in success</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
+<header><h3>button</h3><p><code>button</code> variant=outline · main · app/request-access-form.tsx:48:9 · shows in success</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
 <div class="specimen mode-root mode-light" data-mode-root><button data-slot="button" data-variant="outline" data-size="default" class="group/button inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*=&#x27;size-&#x27;])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2">Send another request</button></div>
 
 <textarea class="snippet" readonly wrap="off" rows="2">import { Button } from "@/components/ui/button"
@@ -666,7 +666,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 
 </article>
 <article class="card" id="usage-alert">
-<header><h3>alert</h3><p><code>alert</code> variant=destructive · flex · app/request-access-form.tsx:58:9 · shows in error</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
+<header><h3>alert</h3><p><code>alert</code> variant=destructive · main · app/request-access-form.tsx:58:9 · shows in error</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
 <div class="specimen mode-root mode-light" data-mode-root><div data-slot="alert" role="alert" class="group/alert relative grid w-full gap-0.5 rounded-lg border px-2.5 py-2 text-left text-sm has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[&gt;svg]:grid-cols-[auto_1fr] has-[&gt;svg]:gap-x-2 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg:not([class*=&#x27;size-&#x27;])]:size-4 bg-card text-destructive *:data-[slot=alert-description]:text-destructive/90 *:[svg]:text-current"><div data-slot="alert-title" class="font-medium group-has-[&gt;svg]/alert:col-start-2 [&amp;_a]:underline [&amp;_a]:underline-offset-3 [&amp;_a]:hover:text-foreground">Something went wrong</div><div data-slot="alert-description" class="text-sm text-balance text-muted-foreground md:text-pretty [&amp;_a]:underline [&amp;_a]:underline-offset-3 [&amp;_a]:hover:text-foreground [&amp;_p:not(:last-child)]:mb-4">We could not send your request. Try again.</div></div></div>
 
 <textarea class="snippet" readonly wrap="off" rows="2">import { Alert } from "@/components/ui/alert"
@@ -675,7 +675,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 
 </article>
 <article class="card" id="usage-label">
-<header><h3>label</h3><p><code>label</code>  · flex · app/request-access-form.tsx:65:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
+<header><h3>label</h3><p><code>label</code>  · main · app/request-access-form.tsx:65:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
 <div class="specimen mode-root mode-light" data-mode-root><label data-slot="label" class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50">Full name</label></div>
 
 <textarea class="snippet" readonly wrap="off" rows="2">import { Label } from "@/components/ui/label"
@@ -684,7 +684,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 
 </article>
 <article class="card" id="usage-name">
-<header><h3>name</h3><p><code>input</code>  · flex · app/request-access-form.tsx:66:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="↯">↯ off-axis</span></p></header>
+<header><h3>name</h3><p><code>input</code>  · main · app/request-access-form.tsx:66:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="↯">↯ off-axis</span></p></header>
 <div class="specimen mode-root mode-light" data-mode-root><input data-slot="input" class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"/></div>
 
 <textarea class="snippet" readonly wrap="off" rows="2">import { Input } from "@/components/ui/input"
@@ -693,7 +693,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <p class="note">`Input` at app/request-access-form.tsx:66:9 sets required=&quot;&quot;, which is no input axis or property. Which value is it, or does the Contract need it? <a class="flag" data-g="?" href="#q-prop-name">? q-prop-name</a></p>
 </article>
 <article class="card" id="usage-label-2">
-<header><h3>label-2</h3><p><code>label</code>  · flex · app/request-access-form.tsx:69:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
+<header><h3>label-2</h3><p><code>label</code>  · main · app/request-access-form.tsx:69:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
 <div class="specimen mode-root mode-light" data-mode-root><label data-slot="label" class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50">Work email</label></div>
 
 <textarea class="snippet" readonly wrap="off" rows="2">import { Label } from "@/components/ui/label"
@@ -702,7 +702,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 
 </article>
 <article class="card" id="usage-email">
-<header><h3>email</h3><p><code>input</code>  · flex · app/request-access-form.tsx:70:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="↯">↯ off-axis</span></p></header>
+<header><h3>email</h3><p><code>input</code>  · main · app/request-access-form.tsx:70:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="↯">↯ off-axis</span></p></header>
 <div class="specimen mode-root mode-light" data-mode-root><input data-slot="input" class="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"/></div>
 
 <textarea class="snippet" readonly wrap="off" rows="2">import { Input } from "@/components/ui/input"
@@ -711,7 +711,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <p class="note">`Input` at app/request-access-form.tsx:70:9 sets required=&quot;&quot;, which is no input axis or property. Which value is it, or does the Contract need it? <a class="flag" data-g="?" href="#q-prop-email">? q-prop-email</a></p>
 </article>
 <article class="card" id="usage-label-3">
-<header><h3>label-3</h3><p><code>label</code>  · flex · app/request-access-form.tsx:73:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
+<header><h3>label-3</h3><p><code>label</code>  · main · app/request-access-form.tsx:73:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
 <div class="specimen mode-root mode-light" data-mode-root><label data-slot="label" class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50">Team</label></div>
 
 <textarea class="snippet" readonly wrap="off" rows="2">import { Label } from "@/components/ui/label"
@@ -720,7 +720,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 
 </article>
 <article class="card" id="usage-select">
-<header><h3>select</h3><p><code>select</code>  · flex · app/request-access-form.tsx:74:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
+<header><h3>select</h3><p><code>select</code>  · main · app/request-access-form.tsx:74:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
 <div class="specimen mode-root mode-light" data-mode-root><button type="button" role="combobox" aria-expanded="false" aria-autocomplete="none" dir="ltr" data-state="closed" data-placeholder="" data-slot="select-trigger" data-size="default" class="flex w-fit items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*=&#x27;size-&#x27;])]:size-4"><span data-slot="select-value" style="pointer-events:none">Pick a team</span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down pointer-events-none size-4 text-muted-foreground" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button><select aria-hidden="true" tabindex="-1" style="position:absolute;border:0;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;word-wrap:normal"><option value="" selected=""></option></select></div>
 
 <textarea class="snippet" readonly wrap="off" rows="2">import { Select } from "@/components/ui/select"
@@ -729,7 +729,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 
 </article>
 <article class="card" id="usage-label-4">
-<header><h3>label-4</h3><p><code>label</code>  · flex · app/request-access-form.tsx:86:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
+<header><h3>label-4</h3><p><code>label</code>  · main · app/request-access-form.tsx:86:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
 <div class="specimen mode-root mode-light" data-mode-root><label data-slot="label" class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50">Why do you need access?</label></div>
 
 <textarea class="snippet" readonly wrap="off" rows="2">import { Label } from "@/components/ui/label"
@@ -738,7 +738,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 
 </article>
 <article class="card" id="usage-reason">
-<header><h3>reason</h3><p><code>textarea</code>  · flex · app/request-access-form.tsx:87:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="↯">↯ off-axis</span></p></header>
+<header><h3>reason</h3><p><code>textarea</code>  · main · app/request-access-form.tsx:87:9 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span> <span class="flag" data-g="↯">↯ off-axis</span></p></header>
 <div class="specimen mode-root mode-light" data-mode-root><textarea data-slot="textarea" class="flex field-sizing-content min-h-16 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"></textarea></div>
 
 <textarea class="snippet" readonly wrap="off" rows="2">import { Textarea } from "@/components/ui/textarea"
@@ -747,7 +747,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <p class="note">`Textarea` at app/request-access-form.tsx:87:9 sets rows=&quot;3&quot;, which is no textarea axis or property. Which value is it, or does the Contract need it? <a class="flag" data-g="?" href="#q-prop-reason">? q-prop-reason</a></p>
 </article>
 <article class="card" id="usage-button-2">
-<header><h3>button-2</h3><p><code>button</code>  · flex · components/submit-button.tsx:11:5 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
+<header><h3>button-2</h3><p><code>button</code>  · main · components/submit-button.tsx:11:5 · shows in default, loading, error</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
 <div class="specimen mode-root mode-light" data-mode-root><button data-slot="button" data-variant="default" data-size="default" class="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*=&#x27;size-&#x27;])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2">Request access</button></div>
 <div class="states-row mode-root mode-light" data-mode-root><figure><figcaption>loading · disabled</figcaption><button data-slot="button" data-variant="default" data-size="default" class="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*=&#x27;size-&#x27;])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2" disabled="">Sending…</button></figure></div>
 <textarea class="snippet" readonly wrap="off" rows="2">import { Button } from "@/components/ui/button"
@@ -756,7 +756,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 
 </article>
 <article class="card" id="usage-button-3">
-<header><h3>button-3</h3><p><code>button</code> variant=link size=sm · flex · app/page.tsx:33:11</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
+<header><h3>button-3</h3><p><code>button</code> variant=link size=sm · main · app/page.tsx:33:11</p><p><span class="flag" data-g="✓">✓ import</span></p></header>
 <div class="specimen mode-root mode-light" data-mode-root><button data-slot="button" data-variant="link" data-size="sm" class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 text-primary underline-offset-4 hover:underline h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&amp;_svg:not([class*=&#x27;size-&#x27;])]:size-3.5">Sign in</button></div>
 
 <textarea class="snippet" readonly wrap="off" rows="2">import { Button } from "@/components/ui/button"
@@ -781,8 +781,8 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 </table></div>
 <h3>Text</h3>
 <div class="table-wrap"><table><tr><th>region</th><th>text</th><th>Text Style</th><th></th><th>where</th></tr>
-<tr><td>flex</td><td>“Thanks! Your request is in.”</td><td><code>text-sm-medium</code></td><td><span class="flag" data-g="=">= exact</span></td><td>app/request-access-form.tsx:47:36 · success</td></tr>
-<tr><td>flex</td><td>“Already a member?”</td><td><code>text-xs-normal</code></td><td><span class="flag" data-g="=">= exact</span></td><td>app/page.tsx:32:17</td></tr>
+<tr><td>main</td><td>“Thanks! Your request is in.”</td><td><code>text-sm-medium</code></td><td><span class="flag" data-g="=">= exact</span></td><td>app/request-access-form.tsx:47:36 · success</td></tr>
+<tr><td>main</td><td>“Already a member?”</td><td><code>text-xs-normal</code></td><td><span class="flag" data-g="=">= exact</span></td><td>app/page.tsx:32:17</td></tr>
 </table></div>
 <h3>Off-system values</h3>
 <div class="table-wrap"><table><tr><th>id</th><th>raw</th><th>role</th><th>reason</th><th>nearest</th></tr>
@@ -791,8 +791,8 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 </section>
 <section class="group" id="copy"><h2>Copy &amp; questions</h2>
 <div class="table-wrap"><table><tr><th>id</th><th>text</th><th>where</th></tr>
-<tr><td><code>w-full-title</code></td><td>Request workspace access</td><td>app/page.tsx:22:24</td></tr>
-<tr><td><code>w-full-description</code></td><td>Tell us who you are and an admin will approve you within a day.</td><td>app/page.tsx:25:13</td></tr>
+<tr><td><code>card-title</code></td><td>Request workspace access</td><td>app/page.tsx:22:24</td></tr>
+<tr><td><code>card-description</code></td><td>Tell us who you are and an admin will approve you within a day.</td><td>app/page.tsx:25:13</td></tr>
 <tr><td><code>button-label</code></td><td>Send another request</td><td>app/request-access-form.tsx:49:11</td></tr>
 <tr><td><code>alert-title</code></td><td>Something went wrong</td><td>app/request-access-form.tsx:60:23</td></tr>
 <tr><td><code>alert-description</code></td><td>We could not send your request. Try again.</td><td>app/request-access-form.tsx:61:29</td></tr>
@@ -804,11 +804,11 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <tr><td><code>button-2-label</code></td><td>Request access</td><td>app/request-access-form.tsx:90:10</td></tr>
 <tr><td><code>button-2-label-loading</code></td><td>Sending…</td><td>app/request-access-form.tsx:90:10</td></tr>
 <tr><td><code>button-3-label</code></td><td>Sign in</td><td>app/page.tsx:34:34</td></tr>
-<tr><td><code>font-medium</code></td><td>Thanks! Your request is in.</td><td>app/request-access-form.tsx:47:36</td></tr>
-<tr><td><code>span</code></td><td>Already a member?</td><td>app/page.tsx:32:17</td></tr>
+<tr><td><code>thanks-your-request</code></td><td>Thanks! Your request is in.</td><td>app/request-access-form.tsx:47:36</td></tr>
+<tr><td><code>already-a-member</code></td><td>Already a member?</td><td>app/page.tsx:32:17</td></tr>
 </table></div>
 <h3>Open questions</h3>
-<ul><li id="q-prop-w-full"><code>q-prop-w-full</code> · prop · to owner: `CardFooter` at app/page.tsx:31:9 sets className=&quot;justify-between text-xs text-muted-foreground&quot;, which is no card axis or property. Which value is it, or does the Contract need it?</li>
+<ul><li id="q-prop-card"><code>q-prop-card</code> · prop · to owner: `CardFooter` at app/page.tsx:31:9 sets className=&quot;justify-between text-xs text-muted-foreground&quot;, which is no card axis or property. Which value is it, or does the Contract need it?</li>
 <li id="q-prop-name"><code>q-prop-name</code> · prop · to owner: `Input` at app/request-access-form.tsx:66:9 sets required=&quot;&quot;, which is no input axis or property. Which value is it, or does the Contract need it? <strong>Code-only: required is form validation and changes nothing the Input shows, so the Input Contract needs no axis or property for it.</strong></li>
 <li id="q-prop-email"><code>q-prop-email</code> · prop · to owner: `Input` at app/request-access-form.tsx:70:9 sets required=&quot;&quot;, which is no input axis or property. Which value is it, or does the Contract need it? <strong>Code-only: required is form validation and changes nothing the Input shows, so the Input Contract needs no axis or property for it.</strong></li>
 <li id="q-prop-reason"><code>q-prop-reason</code> · prop · to owner: `Textarea` at app/request-access-form.tsx:87:9 sets rows=&quot;3&quot;, which is no textarea axis or property. Which value is it, or does the Contract need it? <strong>Code-only: the Textarea sizes to its content (field-sizing-content) from a min-h-16 floor, so rows changes nothing it shows; the Textarea Contract needs no axis or property for it.</strong></li>

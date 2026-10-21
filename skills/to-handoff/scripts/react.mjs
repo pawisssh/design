@@ -53,7 +53,7 @@ export function codeLibraryDir(root, ts, kind = reactKind(root), paths = compile
 }
 
 /**
- * readReact(root, {depsDir, packages}) -> {kind, title, files, at, rules, standIns, fonts, screens, uiDir, ignored}.
+ * readReact(root, {depsDir, packages}) -> {kind, title, files, at, rules, standIns, fonts, screens, uiDir, ignored, tailwind}.
  * `packages` are the Design System's code packages (each Contract's `code.package`): their components are
  * leaves, and a package that resolves to a project file is that file under any import of it. `screens` is
  * [{id, name, route, offset, root, mount}], `files` the files read (relative paths), `fonts` the next/font and
@@ -390,6 +390,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
       delete el.attrs.asChild;
     }
     if (typeof el.attrs.class === 'string') el.classes = el.attrs.class.split(/\s+/).filter(Boolean);
+    else if (el.attrs.class && el.attrs.class.parts) el.staticClasses = staticClasses(el.attrs.class.parts);
     return [el];
   };
 
@@ -594,6 +595,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
   return {
     kind, title: read.title || packageOf(root).name || posix.basename(root), files: space.files.map(f => f.rel).sort(), at: space.at, rules,
     standIns: standInsOf(ts, [...sources.values()]), fonts, screens: read.screens, uiDir, ignored: [...new Set(ignored)].sort(),
+    tailwind: usesTailwind(root),
   };
 }
 
@@ -664,6 +666,23 @@ function standInsOf(ts, sources) {
 }
 
 // ---------- helpers ----------
+
+// The classes a template-literal className always has (#216): whole tokens of its string parts, never one a hole touches (`w-${n}`).
+function staticClasses(parts) {
+  return parts.flatMap((p, i) => {
+    if (typeof p !== 'string') return [];
+    const tokens = p.split(/\s+/);
+    if (i > 0 && !/^\s/.test(p)) tokens.shift();
+    if (i < parts.length - 1 && !/\s$/.test(p)) tokens.pop();
+    return tokens.filter(Boolean);
+  });
+}
+
+// A Tailwind project (#216): its classes are utilities unless an authored rule selects them.
+function usesTailwind(root) {
+  const pkg = packageOf(root);
+  return Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }).some(n => n === 'tailwindcss' || n.startsWith('@tailwindcss/'));
+}
 
 function packageOf(root) {
   const file = join(root, 'package.json');
