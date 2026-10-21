@@ -3,7 +3,7 @@
 // no fixture install, no Next or Vite, no browser. The Carbon import is matched by its specifier string.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,7 +14,7 @@ import { run } from '../scripts/runtime.mjs';
 import { walk } from '../scripts/reader.mjs';
 import { loadDesignSystem } from '../scripts/system.mjs';
 import { validateHandoff } from '../scripts/validate.mjs';
-import { BUTTON, designSystem } from './helpers.mjs';
+import { BUTTON, designSystem, repo } from './helpers.mjs';
 import { check } from '../scripts/signoff.mjs';
 
 const VITE = fileURLToPath(new URL('fixtures/vite-app', import.meta.url));
@@ -208,6 +208,34 @@ test('generate: a Vite Prototype is a valid Handoff with a screen per route; the
   assert.ok(h.flow.some(f => f.from === 'invite/loading' && f.to === 'invite/error' && f.source === 'missing'));
   assert.deepEqual(h.data.map(x => [x.id, x.source, x.at]), [['members', 'mock', 'src/data/members.ts:3:14'], ['send-invite', 'simulated', 'src/pages/Invite.tsx:9:3']]);
   assert.ok(readFileSync(ds + '/contracts/button.component.json').equals(button) && readFileSync(BUTTON).equals(button), 'the Button Contract is byte-unchanged');
+});
+
+test('generate: a Carbon wrapper holding Carbon components is a container; Theme, Modal and what they hold are walked (#226)', { skip: noTs }, async () => {
+  const ds = designSystem();
+  copyFileSync(repo('skills/contract/test/fixtures/form-controls/text-input.component.json'), join(ds, 'contracts/text-input.component.json'));
+  const dir = project({
+    'package.json': JSON.stringify({ name: 'themed', dependencies: { '@carbon/react': '1.118.0', react: '19.3.1' }, devDependencies: { vite: '8.3.4' } }),
+    'index.html': '<!doctype html><html><head><title>Themed</title></head><body><div id="app"></div><script type="module" src="/src/main.tsx"></script></body></html>',
+    'src/main.tsx': `import { createRoot } from 'react-dom/client';
+import { Theme, Button, Modal, ModalBody, TextInput } from '@carbon/react';
+createRoot(document.getElementById('app')!).render(
+  <Theme theme="g10">
+    <Button kind="primary" size="md">Save</Button>
+    <Modal open modalHeading="Invite">
+      <ModalBody>
+        <TextInput id="email" labelText="Email" />
+      </ModalBody>
+    </Modal>
+  </Theme>
+);
+`,
+  });
+  const result = await generate({ prototype: dir, designSystem: ds, decisions: { feature: { goal: 'Invite a teammate.' }, acceptance: [{ id: 'invite-opens', screen: 'index', state: 'default', given: 'the page', when: 'it opens', then: 'the invite modal shows' }] } });
+  assert.deepEqual(result.requests, []);
+  assert.deepEqual(usagesOf(result.handoff.screens[0]).map(u => [u.contract, u.match && u.match.by, u.at]), [
+    ['button', 'import', 'src/main.tsx:5:5'],
+    ['text-input', 'import', 'src/main.tsx:8:9'],
+  ]);
 });
 
 test('generate: a Next Prototype is a valid Handoff; a Code Library Button is decided once per signature, via library', { skip: noTs }, async () => {

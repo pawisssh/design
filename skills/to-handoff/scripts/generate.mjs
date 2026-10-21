@@ -367,18 +367,19 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const usageStates = Object.fromEntries(present.map(s => [s, {}]));
 
     const recognised = [];
-    // A container: a Code Library component holding another module's components (a Card around a form). It is
-    // walked with its own parts, so the usages inside it are their own. With a Contract it is that Contract by
-    // import, and each usage inside names it in `in` (#194); without one it is a wrapper whose look stays in the
-    // region, and a note names it (#125).
+    // A container: a Code Library component holding components that are not its parts (a Card around a form, a
+    // Carbon Theme around its Buttons, #226). It is walked with its own parts, so the usages inside it are their
+    // own. With a Contract it is that Contract by import, and each usage inside names it in `in` (#194); without
+    // one it is a wrapper whose look stays in the region, and a note names it (#125).
     const containers = new Map();
     const parts = new Set();
-    const holdsOtherModule = el => { let found = false; walk(el, x => { if (x !== el && x.component && x.component.module !== el.component.module) found = true; }); return found; };
-    const visit = (el, through = new Set(), within = null) => {
+    const holdsOtherComponent = el => { let found = false; walk(el, x => { if (x !== el && x.component && !isPart(el, x)) found = true; }); return found; };
+    const visit = (el, through = [], within = null) => {
       if (el.type !== 'element' || consumed.has(el)) return;
-      if (el.component && (through.has(el.component.module) || holdsOtherModule(el))) {
+      const isPartOfOuter = el.component && through.some(outer => isPart(outer, el));
+      if (el.component && (isPartOfOuter || holdsOtherComponent(el))) {
         let inner = within;
-        if (!through.has(el.component.module)) {
+        if (!isPartOfOuter) {
           const contract = el.component.kind === 'ds' && contractOfImport(el.component);
           if (contract) {
             const def = system.contracts[contract];
@@ -393,7 +394,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
             inner = el;
           } else containers.set(el, el.component);
         }
-        for (const c of el.children) visit(c, new Set([...through, el.component.module]), inner);
+        for (const c of el.children) visit(c, [...through, el], inner);
         return;
       }
       const contract = el.component && el.component.kind === 'ds' && contractOfImport(el.component);
@@ -950,12 +951,22 @@ function importTuple(def, el) {
   return { tuple, unmapped, stray };
 }
 
-/** A container's own parts: its module's components, reached without entering another module's component. */
+/**
+ * Whether component `x` is a part of the container `outer` (a CardFooter in a Card) rather than a component of its
+ * own (a Button in a Card). A local ui file is one module per family, so its module is the family. A package's
+ * module holds every component (all of @carbon/react), so there a part is named after its container (ModalBody in Modal) (#226).
+ */
+function isPart(outer, x) {
+  const a = outer.component, b = x.component;
+  return a.module === b.module && (a.kind !== 'ds' || b.export.startsWith(a.export));
+}
+
+/** A container's own parts: the components `isPart` accepts, reached without entering a component that is not one. */
 function partsOf(el) {
   const out = [];
   const visit = x => {
     if (x.type !== 'element') return;
-    if (x !== el && x.component) { if (x.component.module !== el.component.module) return; out.push(x); }
+    if (x !== el && x.component) { if (!isPart(el, x)) return; out.push(x); }
     x.children.forEach(visit);
   };
   visit(el);
