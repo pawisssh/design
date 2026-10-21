@@ -28,7 +28,7 @@ import { fileURLToPath } from 'node:url';
 import { closure } from '../../contract/scripts/contract.mjs';
 import { contractFor, readFamily } from './components.mjs';
 import { readFontLoaders } from './source.mjs';
-import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, hasTools, projectPins, sha256, snapshotId, stylesheets, toolDir } from './sources.mjs';
+import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, projectPins, sha256, snapshotId, stylesheets, toolDir } from './sources.mjs';
 import { build, utilityRule } from './tailwind.mjs';
 import { evaluate, isSynthesized, lengthPx, literalForm, round } from './values.mjs';
 
@@ -118,7 +118,7 @@ export async function generate({ project, families = [], drafts = [], tools = DE
   if (!cssFile) fail('components.json names no tailwind.css');
   // Tailwind is the version the lockfile resolves; shadcn and tw-animate-css are read only when the CSS imports them (#253).
   const pins = projectPins(project);
-  if (!hasTools(tools, pins)) await fetchTools(tools, pins);
+  await fetchTools(tools, pins);
   const layout = LAYOUTS.find(f => existsSync(join(project, f)));
   const files = {};
   for (const f of ['components.json', cssFile, 'package-lock.json', ...(layout ? [layout] : [])].sort(byKey)) files[f] = `sha256:${sha256(readFileSync(join(project, f)))}`;

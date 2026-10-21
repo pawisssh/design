@@ -58,7 +58,7 @@ import { writeJson } from '../../contract/scripts/io.mjs';
 import { candidateRules, compiledRules, winner } from './cascade.mjs';
 import { mergeDrafts, subjects } from './drafts.mjs';
 import { familyRoot, readSource } from './source.mjs';
-import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, hasTools, projectPins, sha256, snapshotId } from './sources.mjs';
+import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, projectPins, sha256, snapshotId } from './sources.mjs';
 import { build } from './tailwind.mjs';
 import { CLIPPED, evaluate, isSynthesized, lengthPx, literalForm, resolvedText, round } from './values.mjs';
 
@@ -166,7 +166,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const config = JSON.parse(readText('components.json'));
   const cssFile = config.tailwind && config.tailwind.css;
   const pins = projectPins(project);
-  if (!hasTools(tools, pins)) await fetchTools(tools, pins);
+  await fetchTools(tools, pins);
   const ui = (config.aliases && config.aliases.ui) || '@/components/ui';
   if (!ui.startsWith('@/')) fail(`components.json aliases.ui "${ui}" is not under "@/"`);
   const file = `${ui.slice(2)}/${family}.tsx`;

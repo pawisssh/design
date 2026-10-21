@@ -21,9 +21,8 @@ export const DEFAULT_DIR = join(REPO_ROOT, '.scratch/adapter-generic/tools');
 // The reference project: `shadcn@4.22.0 init --base radix --preset nova`, as source plus lockfile (see its NOTICE).
 export const FIXTURE = join(REPO_ROOT, 'skills/adapter-generic/fixtures/radix-nova');
 
-// `stylesheet`: the project resolves it too and its CSS may `@import` it. `typescript` and `stylesheet` packages other
-// than tailwindcss are pinned for every project; tailwindcss follows the project's lockfile (projectPins), and these
-// are the version and integrity of the reference project (the fixture) and of what `sources.mjs` fetches by default.
+// `stylesheet`: the project resolves it too and its CSS may `@import` it. These are what `sources.mjs` fetches by
+// default and the reference project (the fixture) resolves; for another project `tailwindcss` follows its lockfile (projectPins, #253).
 export const TOOLS = {
   tailwindcss: {
     version: '4.3.3',
@@ -54,7 +53,7 @@ export const TOOLS = {
 };
 
 /**
- * The packages one project is read with: {name: pin}, each pin {version, integrity, extract, stylesheet?}.
+ * The packages one project is read with (#253): {name: pin}, each pin {version, integrity, extract, stylesheet?}.
  * - `tailwindcss` is the version the project's lockfile resolves, with the lockfile's own `integrity`; it must be a 4.x.
  *   The Adapter's pin of that version is used only to cross-check an integrity it also knows.
  * - `shadcn` and `tw-animate-css` are present only when the project's CSS imports them, and the lockfile must then
@@ -71,13 +70,22 @@ export function projectPins(project) {
 
   const tw = lock('tailwindcss') || fail('package-lock.json resolves no tailwindcss');
   if (!/^4\./.test(tw.version)) fail(`the project resolves tailwindcss@${tw.version}, but the Adapter compiles Tailwind 4 only`);
-  if (!tw.integrity) fail(`package-lock.json gives no integrity for tailwindcss@${tw.version}`);
+  if (!/^sha512-/.test(tw.integrity || '')) fail(`package-lock.json gives tailwindcss@${tw.version} no sha512 integrity (${tw.integrity || 'none'}), the only one the tools step checks`);
   const known = TOOLS.tailwindcss;
   if (tw.version === known.version && tw.integrity !== known.integrity)
     fail(`tailwindcss@${tw.version}: the lockfile's integrity ${tw.integrity} does not match the Adapter's pin ${known.integrity}`);
   const pins = { typescript: TOOLS.typescript, tailwindcss: { ...known, version: tw.version, integrity: tw.integrity } };
 
-  const imported = new Set([...read(cssFile).matchAll(/@import\s+(?:url\(\s*)?["']([^"']+)["']/g)].map(m => m[1].replace(/^((?:@[^/]+\/)?[^/]+).*$/, '$1')));
+  // The packages the CSS imports, through the relative stylesheets it imports (comments aside).
+  const imported = new Set();
+  const scan = rel => {
+    const css = read(rel).replace(/\/\*[\s\S]*?\*\//g, '');
+    for (const [, id] of css.matchAll(/@import\s+(?:url\(\s*)?["']([^"']+)["']/g)) {
+      if (!id.startsWith('.')) imported.add(id.replace(/^((?:@[^/]+\/)?[^/]+).*$/, '$1'));
+      else if (existsSync(join(project, dirname(rel), id))) scan(join(dirname(rel), id));
+    }
+  };
+  scan(cssFile);
   for (const name of Object.keys(TOOLS).filter(n => TOOLS[n].stylesheet && n !== 'tailwindcss').sort()) {
     if (!imported.has(name)) continue;
     const got = (lock(name) || {}).version;
@@ -105,7 +113,7 @@ export function snapshotId(files) {
   return 'sha256:' + sha256(manifest);
 }
 
-// A tool folder holds the integrity it was verified against (`.integrity`), so a lockfile that names another one for the
+// (#253) A tool folder holds the integrity it was verified against (`.integrity`), so a lockfile that names another one for the
 // same version is checked again and not trusted. A folder from before the marker is trusted for the Adapter's own pins.
 const MARK = '.integrity';
 
@@ -139,7 +147,7 @@ export async function fetchTools(dir = DEFAULT_DIR, pins = TOOLS) {
     if (!res.ok) throw new Error(`GET ${url}: HTTP ${res.status}`);
     const bytes = Buffer.from(await res.arrayBuffer());
     const got = 'sha512-' + createHash('sha512').update(bytes).digest('base64');
-    if (got !== pin.integrity) throw new Error(`${name}@${pin.version}: integrity ${got} does not match the pin ${pin.integrity}`);
+    if (got !== pin.integrity) throw new Error(`${name}@${pin.version}: integrity ${got} does not match the expected ${pin.integrity}`);
     // Extracted beside its folder, then moved into place: a half-extracted tool never looks valid.
     installAtomically(out, d => verified(d, pin), tmp => {
       writeFileSync(join(tmp, 'package.tgz'), bytes);

@@ -12,7 +12,8 @@ import { DEFAULT_DIR, TOOLS, stylesheets, toolDir } from './sources.mjs';
 function resolveStylesheet(id, base, tools, pins) {
   if (id.startsWith('.')) return join(base, id);
   const m = /^((?:@[^/]+\/)?[^/]+)(\/.+)?$/.exec(id);
-  if (!m || stylesheets(pins).indexOf(m[1]) < 0) throw new Error(`@import "${id}": not a pinned stylesheet package (${stylesheets(pins).join(', ')})`);
+  const allowed = stylesheets(pins);
+  if (!m || allowed.indexOf(m[1]) < 0) throw new Error(`@import "${id}": not a pinned stylesheet package (${allowed.join(', ')})`);
   const pkg = toolDir(m[1], tools, pins);
   const exports = JSON.parse(readFileSync(join(pkg, 'package.json'), 'utf8')).exports || {};
   let target = exports[m[2] ? '.' + m[2] : '.'];

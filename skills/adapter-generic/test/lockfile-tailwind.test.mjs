@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { readFamily } from '../scripts/components.mjs';
 import { generate } from '../scripts/foundations.mjs';
-import { DEFAULT_DIR, FIXTURE, TOOLS, fetchTools, hasTools, projectPins, toolDir } from '../scripts/sources.mjs';
+import { DEFAULT_DIR, FIXTURE, fetchTools, hasTools, projectPins, toolDir } from '../scripts/sources.mjs';
 
 const skip = hasTools() ? false : 'Generic Adapter tools missing: run node skills/adapter-generic/scripts/sources.mjs';
 const CSS = 'app/globals.css';
@@ -89,6 +89,21 @@ test('a project that resolves no Tailwind 4 is refused, naming the version', { s
   assert.throws(() => projectPins(none), /package-lock\.json resolves no tailwindcss/);
 });
 
-test('the shadcn fixture compiles with the pin, as before', { skip }, () => {
-  assert.equal(projectPins(FIXTURE).tailwindcss.version, TOOLS.tailwindcss.version);
+test('an @import of shadcn through a relative stylesheet still needs the pinned version; one in a comment does not', { skip }, () => {
+  const nested = variant(s => {
+    s.css = s.css.replace('@import "shadcn/tailwind.css";', '@import "./shadcn.css";');
+    delete s.lock['node_modules/shadcn'];
+  });
+  writeFileSync(join(nested, 'app/shadcn.css'), '@import "shadcn/tailwind.css";\n');
+  assert.throws(() => projectPins(nested), /resolves shadcn@undefined/);
+  const commented = variant(s => {
+    s.css = s.css.replace('@import "shadcn/tailwind.css";', '/* @import "shadcn/tailwind.css"; */');
+    delete s.lock['node_modules/shadcn'];
+  });
+  assert.deepEqual(Object.keys(projectPins(commented)).sort(), ['tailwindcss', 'tw-animate-css', 'typescript']);
+});
+
+test('a lockfile integrity that is not sha512 is refused, naming the package', { skip }, () => {
+  const sha1 = variant(s => { s.lock['node_modules/tailwindcss'].integrity = 'sha1-abc='; });
+  assert.throws(() => projectPins(sha1), /tailwindcss@4\.3\.3 no sha512 integrity/);
 });
