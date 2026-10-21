@@ -24,9 +24,12 @@ jobs:
     steps:
       # clean: false, then a clean that keeps only the pinned tools the sources.mjs and deps.mjs steps verify and
       # extract: any other untracked file goes, a test file from another branch or a test's output left in .scratch.
+      # fetch-depth: 0 gives duplicates.mjs the pull request's base to diff against; on this runner's kept clone, a
+      # later fetch only adds what is new.
       - uses: actions/checkout@v4
         with:
           clean: false
+          fetch-depth: 0
       - run: |
           git clean -ffdx -e .scratch
           mkdir -p .scratch && find .scratch -mindepth 1 -maxdepth 1 ! -name adapter-carbon ! -name adapter-generic ! -name to-handoff -exec rm -rf {} +
@@ -48,3 +51,7 @@ jobs:
           NODE_OPTIONS: >-
             --test-reporter=tap --test-reporter-destination=stdout
             --test-reporter=${{ github.workspace }}/.github/slowest-files.mjs --test-reporter-destination=stdout
+      # A block of 8+ lines the pull request adds under skills/ that the repo already has fails the run; it runs even
+      # when a test fails, so both are reported.
+      - if: github.event_name == 'pull_request' && !cancelled()
+        run: node .github/duplicates.mjs origin/${{ github.base_ref }}
