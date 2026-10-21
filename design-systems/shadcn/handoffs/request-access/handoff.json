@@ -117,7 +117,7 @@
               }
             },
             {
-              "copy": "span",
+              "copy": "already-a-member",
               "at": "app/page.tsx:32:17",
               "style": {
                 "textStyle": "text-xs-normal"
@@ -519,7 +519,7 @@
       "text": "Thanks! Your request is in.",
       "at": "app/request-access-form.tsx:47:36"
     },
-    "span": {
+    "already-a-member": {
       "text": "Already a member?",
       "at": "app/page.tsx:32:17"
     }
