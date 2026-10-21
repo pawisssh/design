@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { hasRuntime, loadChromium } from '../../to-handoff/scripts/deps.mjs';
 import { approveFolder, storedExport } from '../scripts/approve.mjs';
 import { buildReview, reviewModel } from '../scripts/review.mjs';
+import { catalog, checked, open, status, written } from './browser.mjs';
 import { READABLE, V0, selections, skip, snapshot, v0Folder } from './helpers.mjs';
 
 const require = createRequire(import.meta.url);
@@ -37,13 +38,14 @@ test('the saved ticks give back exactly the combined export the page would write
   }
 });
 
-test('the page restores only ticks saved on this version of it, and each family\'s only at its snapshot', { skip }, async () => {
+test('the page restores ticks saved for this design system, and each family\'s only at its snapshot', { skip }, async () => {
   const { dir } = await v0Folder();
   const model = reviewModel(dir);
   const stored = storedTicks(reviewExport(model, selections(dir, untickXs)));
   assert.deepEqual(restorable(model, null), { patches: {}, stale: [] });
   assert.deepEqual(restorable(model, stored), { patches: stored.families, stale: [] });
-  assert.deepEqual(restorable(model, { ...stored, documentHash: 'sha256:0' }), { patches: {}, stale: ['the saved ticks are from another Foundations document'] });
+  // Any redraft moves the Foundations document's hash; the families it left alone keep their ticks.
+  assert.deepEqual(restorable(model, { ...stored, documentHash: 'sha256:0' }), { patches: stored.families, stale: [] });
   assert.deepEqual(restorable(model, { ...stored, designSystem: 'other' }), { patches: {}, stale: ['the saved ticks are for another design system'] });
   const old = structuredClone(stored);
   old.families.card.snapshotId = 'sha256:old';
@@ -83,40 +85,6 @@ test('saved ticks approve refuses as the export does: another Foundations docume
 // ---- In a browser -------------------------------------------------------------------------------------------------
 const browserSkip = skip || (!hasRuntime() && 'To-handoff runtime or browser missing: run node skills/to-handoff/scripts/deps.mjs');
 const stub = () => ({ stylesheet: '', modeClass: m => `mode-${m}`, render: t => `<div>${Object.values(t).join(' ')}</div>` });
-
-// The page served at a URL, so that a reload is a real one. `db` is this process's store: {path: document}, each kept
-// with its keys sorted as the Artifact's db hands them back; `written` counts its sets. `claude: false` loads it with
-// no runtime.
-const written = new WeakMap();
-async function open(browser, html, { db, owner = true, claude = true }) {
-  const tab = await browser.newPage();
-  await tab.route('http://review.test/', route => route.fulfill({ contentType: 'text/html', body: html }));
-  if (claude) {
-    await tab.exposeFunction('dbGet', path => (path in db ? db[path] : null));
-    await tab.exposeFunction('dbSet', (path, data) => { db[path] = JSON.parse(canonical(data)); written.set(db, (written.get(db) || 0) + 1); });
-    await tab.addInitScript(isOwner => {
-      // As the Artifact's db does, a set takes only plain JSON data of this window: an object made in a catalog's
-      // iframe is refused.
-      const plain = v => v === null || ['string', 'number', 'boolean'].includes(typeof v)
-        || (Array.isArray(v) && Object.getPrototypeOf(v) === Array.prototype && v.every(plain))
-        || (typeof v === 'object' && Object.getPrototypeOf(v) === Object.prototype && Object.values(v).every(plain));
-      const set = async (path, data) => {
-        if (!plain(data)) throw Object.assign(new Error('arguments must be plain JSON data'), { code: 'invalid_argument' });
-        return window.dbSet(path, data);
-      };
-      const doc = path => ({ get: async () => { const d = await window.dbGet(path); return { exists: d !== null, data: () => d }; }, set: data => set(path, data) });
-      window.claude = { use: async name => (name === 'db' ? { doc } : name === 'user' ? { isOwner: async () => isOwner } : null) };
-    }, owner);
-  }
-  await tab.goto('http://review.test/', { waitUntil: 'load' });
-  return tab;
-}
-const status = tab => tab.evaluate(() => document.getElementById('status').textContent);
-async function catalog(tab, family) {
-  for (const f of tab.frames()) if (f !== tab.mainFrame() && await (await f.frameElement()).getAttribute('data-family') === family) return f;
-  throw new Error(`no ${family} catalog`);
-}
-const checked = f => f.evaluate(() => [...document.querySelectorAll('.tp-cell')].filter(c => c.querySelector('input').checked).map(c => c.dataset.id));
 
 test('as an Artifact: ticks save to the db as the owner ticks, and survive a reload', { skip: browserSkip }, async () => {
   const { dir } = await v0Folder();
@@ -172,18 +140,18 @@ test('as an Artifact: ticks save to the db as the owner ticks, and survive a rel
   } finally { await browser.close(); }
 });
 
-test('as an Artifact: ticks saved on another version of the page are not restored; a viewer who is not the owner saves nothing', { skip: browserSkip }, async () => {
+test('as an Artifact: ticks saved for another design system are not restored; a viewer who is not the owner saves nothing', { skip: browserSkip }, async () => {
   const { dir } = await v0Folder();
   const { html } = await buildReview({ dir, renderer: stub });
   const { chromium, launchOptions } = loadChromium();
   const browser = await chromium.launch(launchOptions);
   try {
     const model = reviewModel(dir);
-    const old = { ...storedTicks(reviewExport(model, selections(dir, untickXs))), documentHash: 'sha256:0' };
+    const old = { ...storedTicks(reviewExport(model, selections(dir, untickXs))), designSystem: 'other' };
     const db = { [DOC]: old };
     const tab = await open(browser, html, { db, owner: false });
     await tab.waitForFunction(() => /only the owner's are/.test(document.getElementById('status').textContent));
-    assert.match(await status(tab), /from another Foundations document/);
+    assert.match(await status(tab), /for another design system/);
     assert.equal((await checked(await catalog(tab, 'button'))).length, model.families.find(f => f.family === 'button').variants);
     await (await catalog(tab, 'select')).evaluate(() => document.querySelector('.tp-cell input:not(:disabled)').click());
     await tab.evaluate(() => new Promise(r => setTimeout(r, 600)));

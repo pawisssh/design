@@ -95,7 +95,7 @@ export function folderName(project, name) {
 export async function buildFolder({ project: prototype, name, root = DESIGN_SYSTEMS, all = false, drafts = {}, answers = {}, tools = DEFAULT_DIR, depsDir } = {}) {
   const route = routeOf(prototype);
   // Path A (#257, ADR 0016): extract.mjs reads the Prototype's JSX into an Extracted Library, written to
-  // design-systems/<name>/library/ with the Family map, <name>.family-map.json. The Contracts are then read from that library,
+  // design-systems/<name>/library/ with the Family map, <name>.family-map.json, and the report the review page's Families tab reads, <name>.families-report.json. The Contracts are then read from that library,
   // never from the Prototype. The agent's one batch of judgement is a drafts file holding {"groups": {...}}; while any of it
   // is open nothing is written, `extraction` holds the open groups and the CLI exits 2.
   const key = folderName(prototype, name);
@@ -112,7 +112,7 @@ export async function buildFolder({ project: prototype, name, root = DESIGN_SYST
     if (found.requests.length) return { name: key, dir, foundations: null, contracts, used: [], families: [], skipped, setAside: [], written: [], unchanged: [], requests: {}, extraction: found.requests, library: null };
     if (!found.families.length) throw new Error(`path A found no Component Family in ${prototype}: no interactive or self-painting element repeats, and none has a className ternary${skipped.length ? ` (${skipped.length} className expressions were skipped; see the report)` : ''}`);
     project = join(dir, 'library');
-    const files = { ...found.library, [`../${key}.family-map.json`]: `${JSON.stringify(found.map, null, 2)}\n` };
+    const files = { ...found.library, [`../${key}.family-map.json`]: `${JSON.stringify(found.map, null, 2)}\n`, [`../${key}.families-report.json`]: `${JSON.stringify(found.report, null, 2)}\n` };
     library = { dir: project, written: [], unchanged: [] };
     for (const [path, text] of Object.entries(files)) (writeIfChanged(join(project, path), text) ? library.written : library.unchanged).push(path);
     // The library is regenerated each run: a component of a family renamed or dropped goes.

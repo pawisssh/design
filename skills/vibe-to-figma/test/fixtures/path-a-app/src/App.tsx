@@ -60,6 +60,9 @@ export default function App() {
       <div className={`${CARD} mt-4`}>
         <span className="text-sm">Fund</span>
       </div>
+      <div className="rounded-[4px] bg-[#fef9c3] p-2">
+        <span className="text-sm">Heads up</span>
+      </div>
     </div>
   );
 }

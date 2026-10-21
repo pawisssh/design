@@ -13,14 +13,14 @@
     return { designSystem: exported.designSystem, documentHash: exported.documentHash, families };
   }
 
-  // The saved patches this page can restore -> {patches: {<family>: patch}, stale: [reason]}. A document saved for
-  // another design system or against another Foundations document restores nothing, and a family's patch restores
-  // only at its Contract's snapshot; the rest show as the Contract has them.
+  // The saved patches this page can restore -> {patches: {<family>: patch}, stale: [reason]}. A document saved for another
+  // design system restores nothing. A family's patch restores only at its Contract's snapshot, whatever Foundations
+  // document it was saved against (#262): a rerun that redrafts one family moves the document, and the untouched
+  // families keep their ticks. The rest show as the Contract has them.
   function restorable(model, stored) {
     const patches = {}, stale = [];
     if (!stored) return { patches, stale };
     if (stored.designSystem !== model.designSystem) return { patches, stale: ["the saved ticks are for another design system"] };
-    if (stored.documentHash !== model.foundations.documentHash) return { patches, stale: ["the saved ticks are from another Foundations document"] };
     for (const f of model.families) {
       const patch = (stored.families || {})[f.family];
       if (!patch || typeof patch !== "object") continue;

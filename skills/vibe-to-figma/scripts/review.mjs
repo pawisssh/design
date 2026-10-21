@@ -15,7 +15,7 @@
 // Specimens render with the Adapter's preview renderer over the project (skills/adapter-<source.adapter>/scripts/
 // preview.mjs, as To-preview's catalog finds it). The page defaults to .scratch/vibe-to-figma/<name>/review.html.
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { draftedValue, expand, sha256 } from '../../contract/scripts/contract.mjs';
@@ -52,8 +52,22 @@ export const foundationsApproval = dir => {
 const lineHeight = l => (l.unit === 'PIXELS' ? `${l.value}px` : l.unit === 'PERCENT' ? `${l.value}%` : 'normal');
 
 /**
+ * The Families tab's data (#262): {families: [{family, tag, by, evidence, description, sites: [{file, line, path, tag,
+ * snippet}], axes: [{id, key, label, default, values: [{id, key, label, classes, sites: ['file:line']}]}]}], unmatched:
+ * [{file, line, path, tag, snippet, reason}], skipped: [{site, tag, snippet, reason}]}, read from the report path A's folder
+ * step writes beside the Foundations document (<name>.families-report.json), or null for a folder with none: a shadcn
+ * folder has no such tab.
+ */
+function extractedOf(dir, files) {
+  const path = join(dir, `${basename(files.foundations).slice(0, -'.foundations.json'.length)}.families-report.json`);
+  if (!existsSync(path)) return null;
+  const report = readJson(path);
+  return { families: Object.entries(report.families).map(([family, f]) => ({ family, ...f })), unmatched: report.unmatched, skipped: report.skipped };
+}
+
+/**
  * reviewModel(dir) -> {designSystem, foundations: {documentHash, approved, colors: {modes, variables}, textStyles},
- * families, kept}. `approved` says the folder's Foundations approval covers this document.
+ * [extracted], families, kept}. `extracted` is the Families tab's data, only for an Extracted Library (extractedOf). `approved` says the folder's Foundations approval covers this document.
  * `colors` is the COLOR variables of the first multi-mode collection (Theme) with each mode's resolved value;
  * `families` lists each draft Contract, the ones on the page: {family, name, description, status, snapshotId, variants,
  * drafted: [{key, value, by}]}. `kept` lists the approved ones, which keep their approval and are not reviewed again.
@@ -82,9 +96,10 @@ export function reviewModel(dir) {
     });
   }
   const documentHash = `sha256:${sha256(text)}`;
+  const extracted = extractedOf(dir, files);
   const approval = foundationsApproval(dir);
   const approved = !!approval && approval.designSystem === doc.designSystem.key && approval.documentHash === documentHash;
-  return { designSystem: doc.designSystem.key, foundations: { documentHash, approved, colors, textStyles }, families, kept };
+  return { designSystem: doc.designSystem.key, foundations: { documentHash, approved, colors, textStyles }, ...(extracted && { extracted }), families, kept };
 }
 
 /**
@@ -102,7 +117,7 @@ export async function buildReview({ dir, renderer }) {
     const contract = readJson(files.contracts[family]);
     catalogs[family] = buildCatalog({ contract, foundations, renderer: await renderer(contract) });
   }
-  const data = JSON.stringify({ model, tabs: ['foundations', ...Object.keys(catalogs)], catalogs }).replace(/</g, '\\u003c');
+  const data = JSON.stringify({ model, tabs: [...(model.extracted ? ['families'] : []), 'foundations', ...Object.keys(catalogs)], catalogs }).replace(/</g, '\\u003c');
   const script = text => `<script>\n${text.replace(/<\/script/gi, '<\\/script')}\n</script>`;
   const html = asset('review-template.html')
     .replace('<title>Design System review</title>', () => `<title>${model.designSystem} review</title>`)
