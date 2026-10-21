@@ -2,14 +2,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildFolder } from '../scripts/folder.mjs';
 import { choosePath } from '../scripts/path.mjs';
+import { V0 } from './helpers.mjs';
 
-const V0 = fileURLToPath(new URL('../../to-handoff/test/fixtures/v0-app', import.meta.url));
 const fixture = name => fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
 const FOLDER = fileURLToPath(new URL('../scripts/folder.mjs', import.meta.url));
 const cli = (...args) => spawnSync(process.execPath, [FOLDER, ...args], { encoding: 'utf8' });
@@ -49,6 +49,28 @@ test('a React project styled by CSS classes only, or with no Tailwind in its JSX
     const scss = choosePath(dir);
     assert.equal(scss.path, 'refused');
     assert.match(scss.message, /SCSS or CSS classes/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('what counts as Tailwind: opacity, fractions, semantic colours, ${} templates and class strings held in constants', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'vibe-to-figma-path-'));
+  const app = (source, tailwind = true) => { mkdirSync(join(dir, 'src'), { recursive: true }); writeFileSync(join(dir, 'package.json'), JSON.stringify({ dependencies: { react: '19.2.4' }, devDependencies: tailwind ? { tailwindcss: '4.2.2' } : {} })); writeFileSync(join(dir, 'src/App.tsx'), source); return choosePath(dir).path; };
+  try {
+    assert.equal(app('export default () => <i className="w-1/2 h-10 bg-primary text-foreground hover:bg-primary/90" />;'), 'A');
+    assert.equal(app('export default () => <i className={`p-4 ${on ? "m-2" : ""} w-4 gap-2`} />;'), 'A');
+    assert.equal(app('const base = cva("p-4 m-2 w-4 flex"); export default () => <i className={base()} />;'), 'A');
+    assert.equal(app('export default () => <i className="container p-3 mb-2 text-center" />;', false), 'refused'); // Bootstrap
+    assert.equal(app('export default () => <i className="card rounded border truncate underline italic" />;'), 'refused');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a broken symlink, a missing or invalid package.json are refused plainly, not with a stack trace', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'vibe-to-figma-path-'));
+  try {
+    symlinkSync(join(dir, 'gone'), join(dir, 'dangling'));
+    assert.match(choosePath(dir).message, /no package\.json and no components\.json/);
+    writeFileSync(join(dir, 'package.json'), '{ not json');
+    assert.match(choosePath(dir).message, /package\.json that is not valid JSON/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
