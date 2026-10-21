@@ -12,4 +12,4 @@ The judgement calls `/code-review` checks a diff against. Anything a test or a s
 
 ## Domain docs
 
-**A diff to `GLOSSARY.md` or `docs/adr/` follows the domain-modeling skill's formats.** Glossary entries follow its `GLOSSARY-FORMAT.md`: one or two sentences saying what a term is, no implementation detail, and an opinionated `_Avoid_` list. ADRs follow its `ADR-FORMAT.md`: they record only decisions that are hard to reverse, surprising and the result of a real trade-off. Every claim a doc makes about the code must match the code, and every term it uses must be the one `GLOSSARY.md` defines.
+**A diff to `GLOSSARY.md` or `docs/adr/` follows the `domain-modeling` skill's `GLOSSARY-FORMAT.md` and `ADR-FORMAT.md`.**

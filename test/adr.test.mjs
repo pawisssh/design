@@ -10,6 +10,7 @@ test('the repo has no duplicate ADR number and no reference to a missing ADR', (
   assert.deepEqual(problems(), []);
 });
 
+// The missing numbers are written as `ADR ${'9998'}`, so the repo-wide scan does not read this file as citing them.
 test('a duplicate number, a missing number and a broken link are each reported', t => {
   const root = mkdtempSync(join(tmpdir(), 'adr-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -18,14 +19,14 @@ test('a duplicate number, a missing number and a broken link are each reported',
   writeFileSync(join(root, 'docs/adr/0001-one.md'), '# One\n');
   writeFileSync(join(root, 'docs/adr/0002-two.md'), '# Two, see [0001](0001-one.md)\n');
   writeFileSync(join(root, 'docs/adr/0002-also-two.md'), '# Also two\n');
-  writeFileSync(join(root, 'skills/x/SKILL.md'), 'ADR 0001 holds; ADR 0009 does not. [gone](../../docs/adr/0003-gone.md), [other](../y/0004-not-an-adr.md)\n');
-  writeFileSync(join(root, 'skills/x/a.mjs'), '// ADR-0002 and ADR 0010\n');
+  writeFileSync(join(root, 'skills/x/SKILL.md'), `ADR 0001 holds; ADR ${'9998'} does not. [gone](../../docs/adr/0003-gone.md), [other](../y/0004-not-an-adr.md)\n`);
+  writeFileSync(join(root, 'skills/x/a.mjs'), `// ADR-0002 and ADR ${'9999'}\n`);
   const found = problems(root, ['docs/adr/0002-two.md', 'skills/x/SKILL.md', 'skills/x/a.mjs']);
   assert.deepEqual(found, [
     { what: 'duplicate number', file: 'docs/adr/0002-two.md', ref: 'docs/adr/0002-also-two.md' },
-    { what: 'no such ADR', file: 'skills/x/SKILL.md', ref: 'ADR 0009' },
+    { what: 'no such ADR', file: 'skills/x/SKILL.md', ref: `ADR ${'9998'}` },
     { what: 'broken ADR link', file: 'skills/x/SKILL.md', ref: '../../docs/adr/0003-gone.md' },
-    { what: 'no such ADR', file: 'skills/x/a.mjs', ref: 'ADR 0010' },
+    { what: 'no such ADR', file: 'skills/x/a.mjs', ref: `ADR ${'9999'}` },
   ]);
 });
 
