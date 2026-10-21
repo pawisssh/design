@@ -8,6 +8,11 @@ import { dirname, join, relative, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { DEFAULT_DIR, TOOLS, stylesheets, toolDir } from './sources.mjs';
 
+/** Tailwind's own default theme (`theme.css` of the pinned `tailwindcss` of `pins`), as text. */
+export function themeCss(tools, pins) {
+  return readFileSync(join(toolDir('tailwindcss', tools, pins), 'theme.css'), 'utf8');
+}
+
 /** A stylesheet id, as an `@import` names it, to a file path. Throws for anything outside the pinned packages of `pins`. */
 function resolveStylesheet(id, base, tools, pins) {
   if (id.startsWith('.')) return join(base, id);
