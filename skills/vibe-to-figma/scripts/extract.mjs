@@ -2,7 +2,7 @@
 // Extracted Library, one generated React + cva component per Component Family found among its repeated elements.
 // The JSX is read statically with TypeScript; the Prototype is never run.
 //
-//   extract({project, answers}) -> {library, families, requests, skipped, map, used}
+//   extract({project, answers, map}) -> {library, families, requests, skipped, map, used}
 //
 // Each rule's comment sits beside the code that applies it. The library is a pure function of the Prototype and the
 // answers: each component file holds only its family's class strings and names.
@@ -411,14 +411,14 @@ const FAMILY_KEY = /^[a-z][a-z0-9-]*$/;
 const VALUE_KEY = /^[a-z0-9][a-z0-9-]*$/;
 
 /** The group request the agent answers: where the sites are, what they share and how they differ. */
-function requestOf(id, tag, sites, derived, open, problems) {
+function requestOf(id, tag, sites, derived, open, problems, existing = []) {
   const text = sites.map(s => s.text).filter(Boolean);
   const classes = [...derived.base, ...derived.axes.flatMap(a => a.values.flatMap(v => v.classes))];
   const styled = classes.some(c => split(c).variants.length === 0 && (TEXT_SIZE.test(split(c).util) || WEIGHT.test(split(c).util)));
   return { id, tag, sites: sites.map(s => s.at), common: derived.base,
     axes: derived.axes.map(a => ({ id: a.id, categories: a.categories, default: a.default, values: a.values })),
     text: text.length ? mostFrequent(text) : null,
-    needsText: !text.length && styled, open, ...(problems.length && { problems }) };
+    needsText: !text.length && styled, open, ...(open.includes('family') && existing.length && { families: existing }), ...(problems.length && { problems }) };
 }
 
 /**
@@ -455,6 +455,65 @@ function missing(group, family, derived) {
   return { open, problems };
 }
 
+const siteKey = s => `${s.file}|${s.path}`;
+
+/**
+ * readMap(map) -> {families, sites, dropped, droppedList} (#261): the committed Family map as extract() reads it. `families` is the map's
+ * own entries, `sites` maps a site's file and JSX path to {family, by}, `dropped` the sites the owner or the agent said are no
+ * family. A map that names a site twice, or a family that is not a key, is refused with the plain reason.
+ */
+function readMap(map) {
+  const out = { families: {}, sites: new Map(), dropped: new Set(), droppedList: (map && map.dropped) || [] };
+  if (!map) return out;
+  const claim = (where, site, by, family) => {
+    const k = siteKey(site);
+    if (out.sites.has(k) || out.dropped.has(k)) throw new Error(`the Family map names ${site.file} ${site.path} twice (${where})`);
+    if (family === null) out.dropped.add(k); else out.sites.set(k, { family, by });
+  };
+  for (const [key, entry] of Object.entries(map.families || {})) {
+    if (!FAMILY_KEY.test(key)) throw new Error(`the Family map's family "${key}" is not a lower-case key`);
+    if (!['agent', 'owner'].includes(entry.by) || !Array.isArray(entry.sites)) throw new Error(`the Family map's family "${key}" needs \`by\` ("agent" or "owner") and a \`sites\` list`);
+    out.families[key] = entry;
+    for (const site of entry.sites) claim(`family ${key}`, site, entry.by, key);
+  }
+  for (const site of out.droppedList) claim('dropped', site, site.by, null);
+  return out;
+}
+
+/** (#261) The stored answers with their axis and value ids brought to the current ones: an id that no longer exists (its classes changed) hands its names to the one new id in its place, in order. */
+function rekey(stored, derived) {
+  const out = { ...stored, axes: {} };
+  for (const a of derived.axes) {
+    const s = (stored.axes || {})[a.id];
+    if (!s) continue;
+    const have = s.values || {}, values = {};
+    for (const v of a.values) if (v.id in have) values[v.id] = have[v.id];
+    const added = a.values.map(v => v.id).filter(id => !(id in have)), gone = Object.keys(have).filter(id => !a.values.some(v => v.id === id));
+    if (added.length === gone.length) added.forEach((id, i) => { values[id] = have[gone[i]]; });
+    out.axes[a.id] = { key: s.key, label: s.label, values };
+  }
+  return out;
+}
+
+/** (#261) The answers of several layers as one, each key from the first layer that gives it; the grid is the first one that names exactly the answered axes. */
+function answersFor(derived, layers) {
+  const out = { description: undefined, grid: undefined, text: undefined, axes: {} };
+  for (const l of layers) { out.description ??= l.description; out.text ??= l.text; }
+  for (const a of derived.axes) {
+    const m = out.axes[a.id] = { values: {} };
+    for (const l of layers) {
+      const given = (l.axes || {})[a.id];
+      if (!given) continue;
+      m.key ??= given.key; m.label ??= given.label;
+      for (const [id, v] of Object.entries(given.values || {})) m.values[id] ??= v;
+    }
+  }
+  const keys = derived.axes.map(a => out.axes[a.id].key);
+  const fits = g => g && Array.isArray(g.columns) && Array.isArray(g.rows) && new Set([...g.columns, ...g.rows]).size === keys.length && keys.every(k => [...g.columns, ...g.rows].includes(k));
+  out.grid = layers.map(l => l.grid).find(fits) ?? layers.map(l => l.grid).find(Boolean);
+  return out;
+}
+
 // ---------- the library ----------
 
 function componentFile(key, tag, derived, names) {
@@ -488,7 +547,7 @@ function componentFile(key, tag, derived, names) {
  * - `map` the Family map: each family's member sites, by file and JSX path.
  * Nothing is written.
  */
-export function extract({ project, answers = {} }) {
+export function extract({ project, answers = {}, map = null }) {
   const ts = loadTypescript();
   const skipped = [];
   let sites = [];
@@ -502,59 +561,68 @@ export function extract({ project, answers = {} }) {
     }
   }
 
+  // The Family map (#261): sites are matched to their recorded family by file and JSX path, never by line or classes, so a
+  // rerun neither asks again nor loses the owner's corrections. A site the owner dropped is no candidate.
+  const prior = readMap(map);
+  const present = new Set(sites.map(siteKey));
+  const candidates = sites.filter(s => s.candidate && !prior.dropped.has(siteKey(s)));
   const groups = new Map();
-  for (const s of sites.filter(s => s.candidate)) {
-    const id = groupId(s);
-    groups.set(id, [...(groups.get(id) || []), s]);
+  for (const s of candidates) {
+    s.group = groupId(s);
+    groups.set(s.group, [...(groups.get(s.group) || []), s]);
   }
-  for (const [id, list] of groups) if (list.length < 2 && !list.some(s => s.ternary)) groups.delete(id);
   const ids = sorted([...groups.keys()]);
-  // What the library needs is checked before any request is written, so the agent never answers for a run that cannot finish.
-  if (ids.length) { cssEntry(project); prototypeLock(project); }
 
-  // Group the groups into families by the agent's names.
+  // Each site's family. An owner's entry is final. Otherwise this run's answer for the site's group, then the site's own
+  // recorded family, then the family most of its group's recorded sites have, so a site that joins a known group joins its
+  // family. Only a group with none of these is new: it goes to the agent, with the existing family names offered.
   const given = answers.groups || {};
-  const requests = [];
-  const families = new Map(); // key -> [group ids]
+  const existing = sorted(Object.keys(prior.families));
+  const requests = [], drops = [], assigned = new Map();
   for (const id of ids) {
-    const a = given[id];
-    const sitesOf = groups.get(id);
-    if (a === undefined || a.family === undefined) {
-      const derived = deriveAxes(sitesOf);
-      requests.push(requestOf(id, sitesOf[0].tag, sitesOf, derived, ['family', ...missing({ axes: {} }, '', derived).open], []));
-    } else if (a.family !== null) {
-      if (!FAMILY_KEY.test(a.family)) requests.push({ ...requestOf(id, sitesOf[0].tag, sitesOf, deriveAxes(sitesOf), ['family'], []), problems: [`family "${a.family}" is not a lower-case key`] });
-      else families.set(a.family, [...(families.get(a.family) || []), id]);
+    const list = groups.get(id), a = given[id] || {};
+    const recorded = list.map(s => prior.sites.get(siteKey(s))).filter(Boolean);
+    const common = mostFrequent(sorted(recorded.map(r => r.family)));
+    const owned = s => (prior.sites.get(siteKey(s)) || {}).by === 'owner';
+    const free = list.filter(s => !owned(s));
+    for (const s of list.filter(owned)) assigned.set(siteKey(s), prior.sites.get(siteKey(s)).family);
+    if (a.family === null) { for (const s of free) drops.push({ file: s.file, path: s.path, by: 'agent', evidence: `group ${id}: answered as no family` }); continue; }
+    if (a.family !== undefined && !FAMILY_KEY.test(a.family)) { requests.push({ ...requestOf(id, list[0].tag, list, deriveAxes(list), ['family'], [], existing), problems: [`family "${a.family}" is not a lower-case key`] }); continue; }
+    if (a.family === undefined && !recorded.length && !free.some(s => s.ternary) && list.length < 2) continue;
+    if (a.family === undefined && !recorded.length) {
+      const derived = deriveAxes(list);
+      requests.push(requestOf(id, list[0].tag, list, derived, ['family', ...missing({ axes: {} }, '', derived).open], [], existing));
+      continue;
     }
+    for (const s of free) assigned.set(siteKey(s), a.family ?? (prior.sites.get(siteKey(s)) || {}).family ?? common);
   }
+
+  const families = new Map(); // key -> member sites
+  for (const s of candidates) if (assigned.has(siteKey(s))) families.set(assigned.get(siteKey(s)), [...(families.get(assigned.get(siteKey(s))) || []), s]);
+
+  // What the library needs is checked before any request is written, so the agent never answers for a run that cannot finish.
+  if (requests.length || families.size) { cssEntry(project); prototypeLock(project); }
 
   const built = [];
-  for (const [key, members] of families) {
-    const memberSites = members.flatMap(id => groups.get(id));
+  for (const key of sorted([...families.keys()])) {
+    const memberSites = families.get(key);
+    const members = sorted(unique(memberSites.map(s => s.group)));
     const tags = unique(memberSites.map(s => s.tag));
     const derived = deriveAxes(memberSites);
-    // The family's answers: the first group that gives each one.
-    const merged = { axes: {}, description: undefined, grid: undefined, text: undefined };
-    for (const id of members) {
-      const a = given[id];
-      merged.description = merged.description || a.description;
-      merged.grid = merged.grid || a.grid;
-      merged.text = merged.text || a.text;
-      for (const [axisId, axis] of Object.entries(a.axes || {})) {
-        const m = merged.axes[axisId] = merged.axes[axisId] || { values: {} };
-        m.key = m.key || axis.key; m.label = m.label || axis.label;
-        for (const [vid, v] of Object.entries(axis.values || {})) m.values[vid] = m.values[vid] || v;
-      }
-    }
+    const record = prior.families[key];
+    // The family's answers: the owner's recorded ones, then this run's, then the agent's recorded ones, each key from the first layer that gives it.
+    const fresh = answersFor(derived, members.map(id => given[id] || {}));
+    const stored = rekey(record ? record.answers || {} : {}, derived);
+    const merged = answersFor(derived, record && record.by === 'owner' ? [stored, fresh] : [fresh, stored]);
     const { open, problems } = missing(merged, key, derived);
     if (tags.length > 1) problems.push(`family ${key} merges groups of different tags (${tags.join(', ')})`);
     const text = memberSites.map(s => s.text).filter(Boolean);
     if (!text.length && merged.text === undefined) {
-      const probe = requestOf(members[0], tags[0], memberSites, derived, [], []);
+      const probe = requestOf(members[0], tags[0], memberSites, derived, [], [], existing);
       if (probe.needsText) open.push('text');
     }
-    if (open.length || problems.length) requests.push(requestOf(members[0], tags[0], memberSites, derived, open, problems));
-    else built.push({ key, members, memberSites, derived, merged, tag: tags[0] });
+    if (open.length || problems.length) requests.push({ ...requestOf(members[0], tags[0], memberSites, derived, open, problems, existing), family: key });
+    else built.push({ key, members, memberSites, derived, merged, tag: tags[0], record });
   }
 
   if (requests.length || !built.length) return { library: {}, families: [], used: [], requests, skipped, map: null };
@@ -567,8 +635,8 @@ export function extract({ project, answers = {} }) {
     library[`components/ui/${f.key}.tsx`] = componentFile(f.key, f.tag, f.derived, names);
     const texts = f.memberSites.map(s => s.text).filter(Boolean);
     const text = texts.length ? mostFrequent(texts) : f.merged.text;
-    familyList.push({ key: f.key, tag: f.tag, groups: f.members, description: f.merged.description, grid: f.merged.grid, text, names,
-      sites: f.memberSites.map(s => ({ file: s.file, path: s.path, line: s.line })), derived: f.derived });
+    familyList.push({ key: f.key, tag: f.tag, groups: f.members, description: f.merged.description, grid: f.merged.grid, text, answeredText: f.merged.text, names, record: f.record,
+      sites: f.memberSites.map(s => ({ file: s.file, path: s.path, line: s.line, group: s.group })).sort((x, y) => byKey(siteKey(x), siteKey(y))), derived: f.derived });
   }
   const entry = cssEntry(project);
   const sheets = stylesheets(project, entry);
@@ -577,11 +645,20 @@ export function extract({ project, answers = {} }) {
   Object.assign(library, sheets);
   library['package-lock.json'] = lockfile(project, String(manifest.name || 'prototype').replace(/^@[^/]+\//, ''));
 
-  const map = { version: 1, families: Object.fromEntries(familyList.map(f => [f.key, {
-    by: 'agent',
-    evidence: f.groups.map(g => `group ${g}: ${f.tag}, ${f.sites.length} site${f.sites.length === 1 ? '' : 's'}`),
-    fingerprint: `sha256:${sha256(f.derived.base.join(' ') + JSON.stringify(f.derived.axes.map(a => [a.id, a.values.map(v => v.id)])))}`,
-    sites: f.sites.map(({ file, path }) => ({ file, path })),
-  }])) };
-  return { library, families: familyList, used: familyList.map(f => f.key), requests: [], skipped, map };
+  // A dropped site stays recorded while its element is in the code.
+  const dropped = [...prior.droppedList.filter(d => present.has(siteKey(d))), ...drops].sort((x, y) => byKey(siteKey(x), siteKey(y)));
+  const next = { version: 1, families: Object.fromEntries(familyList.map(f => {
+    const { record } = f;
+    const owner = record && record.by === 'owner';
+    const groupSites = id => f.sites.filter(s => s.group === id).length;
+    return [f.key, {
+      by: owner ? 'owner' : 'agent',
+      evidence: owner ? record.evidence : f.groups.map(g => `group ${g}: ${f.tag}, ${groupSites(g)} site${groupSites(g) === 1 ? '' : 's'}`),
+      fingerprint: `sha256:${sha256(f.derived.base.join(' ') + JSON.stringify(f.derived.axes.map(a => [a.id, a.values.map(v => v.id)])))}`,
+      sites: f.sites.map(({ file, path }) => ({ file, path })),
+      answers: { description: f.description, ...(f.grid && { grid: f.grid }), ...(f.answeredText !== undefined && { text: f.answeredText }),
+        axes: Object.fromEntries(f.derived.axes.map(a => [a.id, f.names[a.id]])) },
+    }];
+  })), ...(dropped.length && { dropped }) };
+  return { library, families: familyList, used: familyList.map(f => f.key), requests: [], skipped, map: next };
 }

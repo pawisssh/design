@@ -106,7 +106,8 @@ export async function buildFolder({ project: prototype, name, root = DESIGN_SYST
   const skip = (family, e) => skipped.push({ family, reason: e.message });
   let project = prototype, used, library = null, extraction = null;
   if (route.path === 'A') {
-    const found = extract({ project: prototype, answers });
+    const mapPath = join(dir, `${key}.family-map.json`);
+    const found = extract({ project: prototype, answers, map: existsSync(mapPath) ? readJson(mapPath) : null });
     skipped.push(...found.skipped.map(s => ({ family: s.site, reason: s.reason })));
     if (found.requests.length) return { name: key, dir, foundations: null, contracts, used: [], families: [], skipped, setAside: [], written: [], unchanged: [], requests: {}, extraction: found.requests, library: null };
     if (!found.families.length) throw new Error(`path A found no Component Family in ${prototype}: no interactive or self-painting element repeats, and none has a className ternary${skipped.length ? ` (${skipped.length} className expressions were skipped; see the report)` : ''}`);
