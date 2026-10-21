@@ -4,35 +4,23 @@
 //
 //   extract({project, answers}) -> {library, families, requests, skipped, map, used}
 //
-// - An element is a candidate when it is interactive (button, input, select, textarea, a) or paints itself (its own
-//   background, border, radius, shadow or ring), and its group has 2 or more sites or one of them has a className
-//   ternary. Placement classes (margins, widths, flex-1, positioning) are stripped before anything is compared.
-// - A group is the candidates of one tag with one paint signature: their common classes, colours masked.
-// - Axes, by rule: a ternary is one axis, a nested one an N-value axis; a ternary that mirrors the element's own
-//   `disabled` is folded into `disabled:` utilities (the disabled State, no axis); classes that change together across
-//   sites are one axis, and any other independent difference is one axis each. `disabled:` utilities never split a
-//   group. Constants and local `const`/`let` class strings resolve within the file; a className that cannot resolve is
-//   skipped with its reason.
-// - The agent's one batch of judgement is `answers`, {groups: {<group id>: {family, description, grid, text?, axes:
-//   {<axis id>: {key, label, values: {<value id>: {key, label}}}}}}}. Group, axis and value ids derive from content (the
-//   signature, the class categories an axis covers, the canonical class set), so a merge does not reshuffle them.
-//   `family: null` drops a group; groups answered with one family name merge. Whatever the answers leave open comes
-//   back in `requests`, each with the `open` keys it still needs; nothing is built until none is open.
-// - The library is a pure function of the Prototype and the answers: each component file holds only its family's
-//   class strings and names.
-import { createHash } from 'node:crypto';
+// Each rule's comment sits beside the code that applies it. The library is a pure function of the Prototype and the
+// answers: each component file holds only its family's class strings and names.
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, extname, join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { readJson } from '../../contract/scripts/io.mjs';
+import { sha256 } from '../../adapter-generic/scripts/sources.mjs';
 import { loadTypescript } from '../../to-handoff/scripts/deps.mjs';
 
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', 'out']);
 const INTERACTIVE = new Set(['button', 'input', 'select', 'textarea', 'a']);
 const MAX_RENDERINGS = 64;
-const PREVIEW = JSON.parse(readFileSync(new URL('../../adapter-generic/preview/package.json', import.meta.url), 'utf8')).dependencies;
+const PREVIEW = readJson(fileURLToPath(new URL('../../adapter-generic/preview/package.json', import.meta.url))).dependencies;
 // The packages the library's lockfile takes from the Prototype's: what the Adapter compiles with, and what a component renders with.
 const FROM_PROTOTYPE = ['react', 'react-dom', 'tailwindcss', 'tw-animate-css', 'shadcn'];
 
-const sha = text => createHash('sha256').update(text).digest('hex');
+const mostFrequent = list => list.reduce((best, t) => (list.filter(x => x === t).length > list.filter(x => x === best).length ? t : best), list[0]);
 const byKey = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const sorted = list => [...list].sort(byKey);
 const unique = list => [...new Set(list)];
@@ -55,6 +43,8 @@ function split(cls) {
   return { variants: parts, util: cls.slice(start) };
 }
 
+// Placement classes (#257) say where an element sits in its parent, not what it is: they are stripped before anything is
+// compared, so margins, widths, `flex-1`, positioning and `self-*` never split a group or make an axis.
 const PLACEMENT = /^(?:-?m[xytblrse]?-|flex-(?:1|auto|none|initial)$|(?:grow|shrink)(?:-|$)|basis-|w-|min-w-|max-w-|absolute$|relative$|fixed$|sticky$|static$|-?inset-|-?(?:top|right|bottom|left|start|end)-|-?z-|-?order-|col-(?:span|start|end)-|row-(?:span|start|end)-|self-|justify-self-|place-self-)/;
 const isPlacement = cls => PLACEMENT.test(split(cls).util.replace(/^!/, ''));
 
@@ -106,11 +96,12 @@ const KIND = {
 const tokens = text => text.split(/\s+/).filter(Boolean);
 const normal = text => text.replace(/\s+/g, '').replace(/^\((.*)\)$/, '$1');
 
-/** The JSX of one source file: [{file, line, tag, path, node, text, interactive, ...}] and the className expressions it cannot read. */
+/** The JSX of one source file: [{file, line, tag, path, node, text, ternary, at}] and the className expressions it cannot read. */
 function readFile(ts, file, source) {
   const sf = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, extname(file) === '.jsx' ? ts.ScriptKind.JSX : ts.ScriptKind.TSX);
   const line = n => sf.getLineAndCharacterOfPosition(n.getStart()).line + 1;
   const sites = [], skipped = [];
+  const tagNameOf = x => (ts.isJsxElement(x) ? x.openingElement.tagName.getText() : x.tagName.getText());
 
   // A `let` that is assigned again cannot be read from its initializer.
   const assigned = new Set();
@@ -132,8 +123,17 @@ function readFile(ts, file, source) {
   const isFunction = n => ts.isFunctionDeclaration(n) || ts.isFunctionExpression(n) || ts.isArrowFunction(n);
   const scopesOf = node => {
     const scopes = [];
-    for (let n = node.parent; n; n = n.parent)
-      if (isFunction(n) && n.body && ts.isBlock(n.body)) scopes.push(declarations(n.body.statements));
+    for (let n = node.parent; n; n = n.parent) {
+      if (!isFunction(n)) continue;
+      // A parameter (a prop) hides a module constant of the same name; its value is the caller's.
+      const params = {};
+      const bind = name => {
+        if (ts.isIdentifier(name)) params[name.text] = { param: true };
+        else if (ts.isObjectBindingPattern(name) || ts.isArrayBindingPattern(name)) name.elements.forEach(e => ts.isBindingElement(e) && bind(e.name));
+      };
+      n.parameters.forEach(p => bind(p.name));
+      scopes.push({ ...(n.body && ts.isBlock(n.body) ? declarations(n.body.statements) : {}), ...params });
+    }
     return [...scopes, moduleScope];
   };
   const componentOf = node => {
@@ -153,9 +153,18 @@ function readFile(ts, file, source) {
       return resolve(node.expression, scopes, ctx, seen);
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return { c: tokens(node.text) };
     if (ts.isTemplateExpression(node)) {
+      // A class name built from parts (`bg-${c}-500`) cannot be read: each expression must stand between spaces.
+      const texts = [node.head.text, ...node.templateSpans.map(sp => sp.literal.text)];
+      texts.forEach((t, i) => {
+        if ((i > 0 && t && !/^\s/.test(t)) || (i < texts.length - 1 && t && !/\s$/.test(t))) unresolved('builds a class name from parts, which is not read');
+      });
       const parts = [{ c: tokens(node.head.text) }];
       for (const span of node.templateSpans) parts.push(resolve(span.expression, scopes, ctx, seen), { c: tokens(span.literal.text) });
       return { cat: parts };
+    }
+    if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+      const [l, r] = [node.left, node.right].map(n => (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n) ? n.text : null));
+      if ((l !== null && l && !/\s$/.test(l)) || (r !== null && r && !/^\s/.test(r)) || (l === null && r === null)) unresolved('builds a class name from parts, which is not read');
     }
     if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken)
       return { cat: [resolve(node.left, scopes, ctx, seen), { c: [] }, resolve(node.right, scopes, ctx, seen)] };
@@ -180,11 +189,12 @@ function readFile(ts, file, source) {
       if (seen.includes(node.text)) unresolved('refers to itself');
       const decl = scopes.map(s => s[node.text]).find(Boolean);
       if (!decl) unresolved('is not a constant or local variable of this file (a prop or an import?)');
+      if (decl.param) unresolved('is a parameter of its component (a prop)');
       if (decl.mutable && assigned.has(node.text)) unresolved('is a `let` that is assigned again');
       return resolve(decl.init, scopes, ctx, [...seen, node.text]);
     }
-    if (ts.isNullLiteral && node.kind === ts.SyntaxKind.NullKeyword) return { c: [] };
-    return unresolved(`is ${KIND[ts.SyntaxKind[node.kind]] || ts.SyntaxKind[node.kind]}, which is not read`.replace('is a function call', 'is a function call'));
+    if (node.kind === ts.SyntaxKind.NullKeyword) return { c: [] };
+    return unresolved(`is ${KIND[ts.SyntaxKind[node.kind]] || ts.SyntaxKind[node.kind]}, which is not read`);
   }
   const plain = n => n.c !== undefined;
   const flat = n => n.c;
@@ -211,7 +221,7 @@ function readFile(ts, file, source) {
         try {
           if (!expr) throw new Unresolved('`className` has no value');
           const tree = resolve(expr, scopesOf(node), ctx);
-          sites.push({ file, line: line(node), tag, path: pathOf(node), node: tree, ternary: ctx.mirrored || hasPick(tree), text: textOf(node), at, component: componentOf(node) });
+          sites.push({ file, line: line(node), tag, path: pathOf(node), node: tree, ternary: ctx.mirrored || hasPick(tree), text: textOf(node), at });
         } catch (e) {
           if (!(e instanceof Unresolved)) throw e;
           skipped.push({ site: at, tag, reason: e.message });
@@ -241,10 +251,8 @@ function readFile(ts, file, source) {
           if (ts.isJsxElement(c) || ts.isJsxSelfClosingElement(c)) siblings.push(c);
           else collect(c);
         });
-      })(parent ? (ts.isJsxElement(parent) ? parent : parent) : sf);
-      const own = n;
-      const tagOf = x => (ts.isJsxElement(x) ? x.openingElement.tagName.getText() : x.tagName.getText());
-      steps.unshift(`${tagOf(own)}[${siblings.indexOf(own)}]`);
+      })(parent ? parent : sf);
+      steps.unshift(`${tagNameOf(n)}[${siblings.indexOf(n)}]`);
     }
     return `${componentOf(node)}:${steps.join('/')}`;
   }
@@ -274,13 +282,17 @@ function choicesOf(node) {
 
 const strip = list => unique(list.filter(c => !isPlacement(c)));
 
+/**
+ * A site's renderings (#257): the class lists it can produce, placement and `disabled:` utilities set aside (the latter
+ * are the family's State). It is a candidate when it is interactive or paints itself (a background, border, radius,
+ * shadow, ring or outline of its own); a group of candidates is a family only with 2 or more sites or a className ternary.
+ */
 function prepare(site) {
   const lists = renderings(site.node).map(strip);
   const disabled = unique(lists.flat().filter(isDisabledState));
   const plainLists = lists.map(l => l.filter(c => !isDisabledState(c)));
   const choices = choicesOf(site.node).map(opts => opts.map(strip).map(l => l.filter(c => !isDisabledState(c))));
-  const common = plainLists.reduce((a, l) => a.filter(c => l.includes(c)));
-  return { ...site, lists: plainLists, disabled, choices, common, candidate: INTERACTIVE.has(site.tag) || lists.flat().some(paints) };
+  return { ...site, lists: plainLists, disabled, choices, candidate: INTERACTIVE.has(site.tag) || lists.flat().some(paints) };
 }
 
 /**
@@ -290,13 +302,15 @@ function prepare(site) {
 function groupId(site) {
   const masked = site.lists.map(l => l.map(mask));
   const common = masked.reduce((a, l) => a.filter(c => l.includes(c)));
-  return `${site.tag}-${sha(`${site.tag}|${sorted(common.filter(paints)).join(' ')}`).slice(0, 8)}`;
+  return `${site.tag}-${sha256(`${site.tag}|${sorted(common.filter(paints)).join(' ')}`).slice(0, 8)}`;
 }
 
 /**
- * deriveAxes(sites) -> {base, axes}: `base` the classes every rendering has, each axis {id, categories, values:
- * [{id, classes, sites}], default}. The categories that one ternary changes, and those that change together across
- * renderings, are one axis.
+ * deriveAxes(sites) -> {base, axes} (#257): `base` the classes every rendering has plus the sites' `disabled:` utilities,
+ * each axis {id, categories, values: [{id, classes, sites}], default}. A ternary is one axis (a nested one an N-value
+ * axis); the categories that one ternary changes, and those that change together across renderings, are one axis; any
+ * other independent difference is one axis each. The default is the value most sites use. Ids derive from content
+ * (the categories, the canonical class set), so an answer survives a merge.
  */
 function deriveAxes(sites) {
   const all = sites.flatMap(s => s.lists.map(classes => ({ site: s, classes })));
@@ -326,15 +340,15 @@ function deriveAxes(sites) {
     const values = new Map();
     residual.forEach((l, i) => {
       const classes = sorted(l.filter(c => categories.includes(category(c))));
-      const id = classes.length ? `v-${sha(classes.join(' ')).slice(0, 8)}` : 'v-none';
+      const id = classes.length ? `v-${sha256(classes.join(' ')).slice(0, 8)}` : 'v-none';
       if (!values.has(id)) values.set(id, { id, classes, sites: [], keys: new Set() });
       const v = values.get(id);
       const s = all[i].site;
-      if (!v.keys.has(s.path)) { v.keys.add(s.path); v.sites.push(s.at); }
+      if (!v.keys.has(`${s.file}|${s.path}`)) { v.keys.add(`${s.file}|${s.path}`); v.sites.push(s.at); }
     });
     const list = [...values.values()].map(({ id, classes, sites: where }) => ({ id, classes, sites: where }));
-    const fallback = list.reduce((best, v) => (v.sites.length > best.sites.length ? v : best), list[0]);
-    return { id: categories.join('+'), categories, values: list, default: fallback.id };
+    const usual = list.reduce((best, v) => (v.sites.length > best.sites.length ? v : best), list[0]);
+    return { id: categories.join('+'), categories, values: list, default: usual.id };
   }).sort((a, b) => byKey(a.id, b.id));
   return { base: sorted([...base, ...sites.flatMap(s => s.disabled)].filter((c, i, l) => l.indexOf(c) === i)), axes };
 }
@@ -353,7 +367,7 @@ function* sourceFiles(dir) {
 }
 
 /** The stylesheet that imports Tailwind (`@import "tailwindcss"`), the shallowest first. */
-export function cssEntry(project) {
+function cssEntry(project) {
   const found = [...sourceFiles(project)].filter(f => extname(f) === '.css' && /@import\s+(?:url\(\s*)?["']tailwindcss["']/.test(readFileSync(f, 'utf8')))
     .map(f => relative(project, f)).sort((a, b) => a.split('/').length - b.split('/').length || byKey(a, b));
   if (!found.length) throw new Error('no stylesheet of the project imports tailwindcss (@import "tailwindcss")');
@@ -374,15 +388,19 @@ function stylesheets(project, entry) {
   return out;
 }
 
-function lockfile(project, name) {
+/** The library's lockfile (#257): the Prototype's own entries for FROM_PROTOTYPE (so the Adapter compiles with the Tailwind it resolves), the preview set's versions for the rest. */
+function prototypeLock(project) {
   const path = join(project, 'package-lock.json');
   if (!existsSync(path)) throw new Error('no package-lock.json: the Extracted Library takes its resolved versions from it');
-  const have = JSON.parse(readFileSync(path, 'utf8')).packages || {};
+  return readJson(path).packages || {};
+}
+function lockfile(project, name) {
+  const have = prototypeLock(project);
   const packages = {};
   for (const pkg of sorted([...FROM_PROTOTYPE, ...Object.keys(PREVIEW)])) {
     const entry = have[`node_modules/${pkg}`];
     if (entry && FROM_PROTOTYPE.includes(pkg)) packages[`node_modules/${pkg}`] = entry;
-    else if (PREVIEW[pkg]) packages[`node_modules/${pkg}`] = entry && !FROM_PROTOTYPE.includes(pkg) ? entry : { version: PREVIEW[pkg] };
+    else if (PREVIEW[pkg]) packages[`node_modules/${pkg}`] = { version: PREVIEW[pkg] };
   }
   return `${JSON.stringify({ name: `${name}-library`, lockfileVersion: 3, requires: true, packages: { '': { name: `${name}-library` }, ...packages } }, null, 2)}\n`;
 }
@@ -399,11 +417,15 @@ function requestOf(id, tag, sites, derived, open, problems) {
   const styled = classes.some(c => split(c).variants.length === 0 && (TEXT_SIZE.test(split(c).util) || WEIGHT.test(split(c).util)));
   return { id, tag, sites: sites.map(s => s.at), common: derived.base,
     axes: derived.axes.map(a => ({ id: a.id, categories: a.categories, default: a.default, values: a.values })),
-    text: text.length ? text.reduce((best, t) => (text.filter(x => x === t).length > text.filter(x => x === best).length ? t : best), text[0]) : null,
+    text: text.length ? mostFrequent(text) : null,
     needsText: !text.length && styled, open, ...(problems.length && { problems }) };
 }
 
-/** Everything the answers must say about a family (a list of groups): [keys still open], [problems]. */
+/**
+ * What the answers still owe a family (#257), as {open, problems}: `open` the keys not answered yet, `problems` the answers
+ * that are wrong. The answers are {groups: {<group id>: {family, description, grid, text?, axes: {<axis id>: {key,
+ * label, values: {<value id>: {key, label}}}}}}}; `family: null` drops a group, and groups answered with one family name merge.
+ */
 function missing(group, family, derived) {
   const open = [], problems = [];
   if (!group.description) open.push('description');
@@ -460,8 +482,8 @@ function componentFile(key, tag, derived, names) {
 /**
  * extract({project, answers}) -> {library, families, requests, skipped, map, used}:
  * - `library` {path: text} is the Extracted Library (empty while a request is open);
- * - `families` [{key, tag, groups, sites: [{file, path, line}]}], `used` their keys;
- * - `requests` the groups with a judgement still open (see the header); `skipped` [{site, tag, reason}] the className
+ * - `families` [{key, tag, groups, description, grid, text, names, derived, sites: [{file, path, line}]}], `used` their keys;
+ * - `requests` the groups with a judgement still open (each with the `open` keys it still needs; nothing is built until none is open); `skipped` [{site, tag, reason}] the className
  *   expressions the script could not resolve;
  * - `map` the Family map: each family's member sites, by file and JSX path.
  * Nothing is written.
@@ -487,6 +509,8 @@ export function extract({ project, answers = {} }) {
   }
   for (const [id, list] of groups) if (list.length < 2 && !list.some(s => s.ternary)) groups.delete(id);
   const ids = sorted([...groups.keys()]);
+  // What the library needs is checked before any request is written, so the agent never answers for a run that cannot finish.
+  if (ids.length) { cssEntry(project); prototypeLock(project); }
 
   // Group the groups into families by the agent's names.
   const given = answers.groups || {};
@@ -542,13 +566,13 @@ export function extract({ project, answers = {} }) {
       values: Object.fromEntries(a.values.map(v => [v.id, f.merged.axes[a.id].values[v.id]])) }]));
     library[`components/ui/${f.key}.tsx`] = componentFile(f.key, f.tag, f.derived, names);
     const texts = f.memberSites.map(s => s.text).filter(Boolean);
-    const text = texts.length ? texts.reduce((best, t) => (texts.filter(x => x === t).length > texts.filter(x => x === best).length ? t : best), texts[0]) : f.merged.text;
+    const text = texts.length ? mostFrequent(texts) : f.merged.text;
     familyList.push({ key: f.key, tag: f.tag, groups: f.members, description: f.merged.description, grid: f.merged.grid, text, names,
       sites: f.memberSites.map(s => ({ file: s.file, path: s.path, line: s.line })), derived: f.derived });
   }
   const entry = cssEntry(project);
   const sheets = stylesheets(project, entry);
-  const manifest = JSON.parse(readFileSync(join(project, 'package.json'), 'utf8'));
+  const manifest = readJson(join(project, 'package.json'));
   library['components.json'] = `${JSON.stringify({ $schema: 'https://ui.shadcn.com/schema.json', tailwind: { css: entry }, aliases: { ui: '@/components/ui', utils: '@/lib/utils' } }, null, 2)}\n`;
   Object.assign(library, sheets);
   library['package-lock.json'] = lockfile(project, String(manifest.name || 'prototype').replace(/^@[^/]+\//, ''));
@@ -556,7 +580,7 @@ export function extract({ project, answers = {} }) {
   const map = { version: 1, families: Object.fromEntries(familyList.map(f => [f.key, {
     by: 'agent',
     evidence: f.groups.map(g => `group ${g}: ${f.tag}, ${f.sites.length} site${f.sites.length === 1 ? '' : 's'}`),
-    fingerprint: `sha256:${sha(f.derived.base.join(' ') + JSON.stringify(f.derived.axes.map(a => [a.id, a.values.map(v => v.id)])))}`,
+    fingerprint: `sha256:${sha256(f.derived.base.join(' ') + JSON.stringify(f.derived.axes.map(a => [a.id, a.values.map(v => v.id)])))}`,
     sites: f.sites.map(({ file, path }) => ({ file, path })),
   }])) };
   return { library, families: familyList, used: familyList.map(f => f.key), requests: [], skipped, map };

@@ -6,12 +6,6 @@
 //   node skills/vibe-to-figma/scripts/folder.mjs <project> [--all] [--name <name>] [--root <dir>]
 //     [--drafts <file>]... [--requests <file>]
 //
-// A Prototype with no components.json takes path A (#257, ADR 0016): extract.mjs reads its JSX into an Extracted
-// Library, written to design-systems/<name>/library/ with the Family map, <name>.family-map.json. The Contracts are
-// then read from that library, never from the Prototype. The agent's one batch of judgement (the families' names, the
-// axes' and values' labels, descriptions, grids) is a drafts file holding {"groups": {...}}; while any is open the CLI
-// writes the requests file and exits 2, and nothing else is written.
-//
 // A family the Adapter cannot read (sonner's Toaster) is skipped and named in the report with the Adapter's
 // reason; the run goes on. While any Drafted value is open, the CLI writes every family's requests to one file
 // (default .scratch/vibe-to-figma/<name>.requests.json) and exits 2; the agent answers with a drafts file,
@@ -29,7 +23,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as contractModule from '../../contract/scripts/contract.mjs';
 import { applyOmit, asDraft, matches, validate } from '../../contract/scripts/contract.mjs';
-import { writeJson } from '../../contract/scripts/io.mjs';
+import { readJson, writeJson } from '../../contract/scripts/io.mjs';
 import { generate as contractOf, readFamily } from '../../adapter-generic/scripts/components.mjs';
 import { generate as foundationsOf } from '../../adapter-generic/scripts/foundations.mjs';
 import { DEFAULT_DIR, REPO_ROOT, fetchTools, hasTools } from '../../adapter-generic/scripts/sources.mjs';
@@ -100,6 +94,10 @@ export function folderName(project, name) {
  */
 export async function buildFolder({ project: prototype, name, root = DESIGN_SYSTEMS, all = false, drafts = {}, answers = {}, tools = DEFAULT_DIR, depsDir } = {}) {
   const route = routeOf(prototype);
+  // Path A (#257, ADR 0016): extract.mjs reads the Prototype's JSX into an Extracted Library, written to
+  // design-systems/<name>/library/ with the Family map, <name>.family-map.json. The Contracts are then read from that library,
+  // never from the Prototype. The agent's one batch of judgement is a drafts file holding {"groups": {...}}; while any of it
+  // is open nothing is written, `extraction` holds the open groups and the CLI exits 2.
   const key = folderName(prototype, name);
   const dir = join(root, key);
   const designSystem = { key, name: key };
@@ -116,6 +114,9 @@ export async function buildFolder({ project: prototype, name, root = DESIGN_SYST
     const files = { ...found.library, [`../${key}.family-map.json`]: `${JSON.stringify(found.map, null, 2)}\n` };
     library = { dir: project, written: [], unchanged: [] };
     for (const [path, text] of Object.entries(files)) (writeIfChanged(join(project, path), text) ? library.written : library.unchanged).push(path);
+    // The library is regenerated each run: a component of a family renamed or dropped goes.
+    const ui = join(project, 'components/ui');
+    for (const f of existsSync(ui) ? readdirSync(ui) : []) if (!(`components/ui/${f}` in files)) rmSync(join(ui, f), { force: true });
     used = found.used;
     drafts = { ...draftsOf(found), ...drafts };
   } else used = usedFamilies(prototype, { all, depsDir }).families;
@@ -226,14 +227,14 @@ export function carryOmits(prior, contract) {
 
 /** One drafts file: {"drafts": {family: {key: value}}}, or the Adapter's {"family", "drafts": {key: value}}. */
 export function readDrafts(file) {
-  const json = JSON.parse(readFileSync(file, 'utf8'));
+  const json = readJson(file);
   return typeof json.family === 'string' ? { [json.family]: json.drafts } : json.drafts || {};
 }
 
 /** One drafts file's path A answers: {"groups": {<group id>: {...}}}, or {} when it holds none. */
 export function readAnswers(file) {
-  const json = JSON.parse(readFileSync(file, 'utf8'));
-  return json.groups ? { groups: json.groups } : {};
+  const { groups } = readJson(file);
+  return groups ? { groups } : {};
 }
 
 // ---------- CLI ----------
@@ -255,8 +256,9 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const root = opt('--root') ? resolve(opt('--root')) : DESIGN_SYSTEMS;
     const r = await buildFolder({ project, name: opt('--name'), root, all: args.includes('--all'), drafts, answers });
     const rel = p => relative(process.cwd(), p);
+    const requestsFile = name => resolve(opt('--requests') || join(REPO_ROOT, `.scratch/vibe-to-figma/${name}.requests.json`));
     if (r.extraction) {
-      const requestsPath = resolve(opt('--requests') || join(REPO_ROOT, `.scratch/vibe-to-figma/${r.name}.requests.json`));
+      const requestsPath = requestsFile(r.name);
       writeJson(requestsPath, { name: r.name, path: 'A', groups: r.extraction, skipped: r.skipped.map(s => ({ site: s.family, reason: s.reason })) });
       console.log([
         ...r.skipped.map(s => `skipped ${s.family}: ${s.reason}`),
@@ -276,7 +278,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     ].join('\n'));
     const open = Object.keys(r.requests);
     if (open.length) {
-      const requestsPath = resolve(opt('--requests') || join(REPO_ROOT, `.scratch/vibe-to-figma/${r.name}.requests.json`));
+      const requestsPath = requestsFile(r.name);
       writeJson(requestsPath, { name: r.name, requests: r.requests });
       console.log(`${open.reduce((n, f) => n + r.requests[f].length, 0)} Drafted values needed for ${open.join(', ')}: wrote ${rel(requestsPath)}\n`
         + 'Draft each one, then run again with --drafts <file> holding {"drafts": {"<family>": {"<key>": <value>}}}.');

@@ -4,12 +4,12 @@
 // of judgement.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validate } from '../../contract/scripts/contract.mjs';
+import { sha256 } from '../../adapter-generic/scripts/sources.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
 import { read, scratch, skip } from './helpers.mjs';
 
@@ -19,7 +19,6 @@ const FOLDER = fileURLToPath(new URL('../scripts/folder.mjs', import.meta.url));
 const FAMILIES = ['action-button', 'card', 'icon-button', 'pill-button', 'segment'];
 const cli = (...args) => spawnSync(process.execPath, [FOLDER, PROTOTYPE, ...args], { encoding: 'utf8' });
 const answers = () => read(ANSWERS);
-const sha = text => `sha256:${createHash('sha256').update(text).digest('hex')}`;
 
 /** Every file under `dir` as text, keyed by its path relative to it. */
 function tree(dir) {
@@ -92,8 +91,13 @@ test('every Contract validates and is drafted from the Extracted Library, not th
     assert.ok(files.includes(`components/ui/${family}.tsx`), `${family}'s source is its library file`);
     assert.ok(files.every(f => existsSync(join(dir, 'library', f))), 'every source file is in the library');
     assert.ok(!files.some(f => f.startsWith('src/') && f !== 'src/index.css') && !files.includes('src/App.tsx'), 'none is a Prototype file');
-    assert.equal(contract.source.files[`components/ui/${family}.tsx`], sha(readFileSync(join(dir, 'library/components/ui', `${family}.tsx`), 'utf8')));
+    assert.equal(contract.source.files[`components/ui/${family}.tsx`], `sha256:${sha256(readFileSync(join(dir, 'library/components/ui', `${family}.tsx`), 'utf8'))}`);
   }
+  // The library pins what the Prototype resolves: its own tailwindcss entry (version and integrity), and a CSS entry that is its stylesheet.
+  const lock = name => read(join(name, 'package-lock.json')).packages['node_modules/tailwindcss'];
+  assert.deepEqual(lock(join(dir, 'library')), lock(PROTOTYPE));
+  assert.equal(read(join(dir, 'library/components.json')).tailwind.css, 'src/index.css');
+  assert.equal(readFileSync(join(dir, 'library/src/index.css'), 'utf8'), readFileSync(join(PROTOTYPE, 'src/index.css'), 'utf8'));
   const icon = read(join(dir, 'contracts/icon-button.component.json'));
   assert.deepEqual(icon.axes.map(a => [a.key, a.values.map(v => v.key)]), [['tone', ['positive', 'danger', 'warning']], ['state', ['enabled']]]);
   assert.equal(icon.family.description, 'A small square icon button; its tone sets the icon colour and the hover wash.');
@@ -113,6 +117,16 @@ test('a second run with the same answers writes nothing, byte for byte', { skip 
   assert.deepEqual(again.unchanged, FAMILIES);
   assert.equal(again.foundations.written, false);
   assert.deepEqual(again.library.written, []);
+});
+
+test('a family renamed in the answers leaves no stale component in the library', { skip }, async () => {
+  const root = scratch();
+  await buildFolder({ project: PROTOTYPE, root, answers: answers() });
+  const renamed = answers();
+  renamed.groups['div-1fa6b3d0'].family = 'panel';
+  await buildFolder({ project: PROTOTYPE, root, answers: renamed });
+  const ui = readdirSync(join(root, 'path-a-app/library/components/ui'));
+  assert.ok(ui.includes('panel.tsx') && !ui.includes('card.tsx'));
 });
 
 test('a group the answers leave open stops the run before any file is written', { skip }, async () => {

@@ -2,7 +2,7 @@
 // of answers names them. Each rule is tested through the one entry, `extract`, on a few lines of JSX.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { hasTypescript } from '../../to-handoff/scripts/deps.mjs';
@@ -91,7 +91,7 @@ test('colours that change together across sites are one axis; the default is the
   assert.equal(g.axes.length, 1, 'text colour and hover background co-vary');
   assert.equal(g.axes[0].values.length, 2);
   assert.deepEqual(g.axes[0].values.map(v => v.sites.length).sort(), [1, 2]);
-  const r = extract({ project: dir, answers: answerAll(g ? [g] : []) });
+  const r = extract({ project: dir, answers: answerAll([g]) });
   const file = Object.entries(r.library).find(([p]) => p.startsWith('components/ui/'))[1];
   assert.match(file, /defaultVariants: \{ a0: "v1" \}/, 'v1 is the red the two sites use');
 });
@@ -143,7 +143,7 @@ test('an answer that misses an axis or value reopens only that key', { skip }, (
   assert.deepEqual(r.requests[0].open, [`axes.${first.requests[0].axes[0].id}.values.${first.requests[0].axes[0].values[1].id}`]);
 });
 
-test('a group answered null is dropped; two groups answered with one family name are merged', { skip }, () => {
+test('a group answered null is dropped', { skip }, () => {
   const dir = app(`return (<div><button className="${BTN} p-1">A</button><button className="${BTN} p-1">B</button><a className="rounded border p-2">x</a><a className="rounded border p-2">y</a></div>);`);
   const first = extract({ project: dir });
   assert.equal(first.requests.length, 2);
@@ -177,4 +177,22 @@ test('two groups answered with one family name are one family; groups of differe
   assert.equal(r.families[0].sites.length, 4);
   answers.groups[first.requests.find(g => g.tag === 'a').id].family = 'button';
   assert.match(extract({ project: dir, answers }).requests[0].problems[0], /different tags/);
+});
+
+test('a class name built from parts, or a prop that shadows a constant, is skipped with its reason', { skip }, () => {
+  const dir = proto({ 'src/App.tsx': `function Tag({ s }) { return <button className={s}>z</button>; }
+export default function App() {
+  const c = "red", s = "rounded bg-[#111111]";
+  return (<div><button className={\`${BTN} bg-\${c}-500\`}>x</button><button className={"a" + c}>y</button><Tag s="x" /></div>);
+}\n` });
+  const r = extract({ project: dir });
+  assert.deepEqual(r.requests, []);
+  assert.equal(r.skipped.length, 3);
+  assert.ok(r.skipped.every(x => /builds a class name from parts|is a parameter/.test(x.reason)));
+});
+
+test('a Prototype with no lockfile fails before any request is made', { skip }, () => {
+  const dir = app('return (<div><button className="rounded p-1">a</button><button className="rounded p-1">b</button></div>);');
+  rmSync(join(dir, 'package-lock.json'));
+  assert.throws(() => extract({ project: dir }), /no package-lock\.json/);
 });
