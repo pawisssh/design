@@ -20,9 +20,9 @@ Today it has the exact tier: the Foundations step ([#118](https://github.com/paw
 node skills/adapter-generic/scripts/sources.mjs
 ```
 
-[`scripts/sources.mjs`](scripts/sources.mjs) pins `tailwindcss@4.3.3`, `typescript@6.0.3`, `shadcn@4.22.0` and `tw-animate-css@1.4.0`. It fetches each npm tarball into gitignored `.scratch/adapter-generic/tools/`, checks it against its registry sha512 `integrity`, and extracts only the named members with `tar`. Nothing is installed and no lifecycle script runs.
+[`scripts/sources.mjs`](scripts/sources.mjs) pins `typescript@6.0.3`, `shadcn@4.22.0` and `tw-animate-css@1.4.0`, and `tailwindcss@4.3.3` for the reference project. `tailwindcss` follows the project: it is the 4.x version the project's lockfile resolves, and a lockfile that resolves no Tailwind 4 is refused. Running `sources.mjs` fetches the pinned set, and the Foundations and component steps fetch the project's Tailwind on first use. Each npm tarball goes into gitignored `.scratch/adapter-generic/tools/`; the step checks it against its sha512 `integrity` (the Adapter's own for its pins, the lockfile's for the project's Tailwind), and extracts only the named members with `tar`. Nothing is installed and no lifecycle script runs. A fetched tool folder records the integrity it was verified against, so a lockfile that names another one for the same version is checked again, and a lockfile whose integrity for 4.3.3 differs from the pin's is refused, naming the package.
 
-- `shadcn` and `tw-animate-css` are read only as stylesheets, because the project's CSS imports them.
+- `shadcn` and `tw-animate-css` are read only as stylesheets, and only when the project's CSS imports them. A project whose CSS imports neither needs neither in its lockfile; one that imports them needs the pinned versions.
 - `typescript` is read only as a parser: the component step reads each component file's AST and never type-checks or runs it.
 
 The command then fetches the [preview renderer](#4-preview-renderer)'s packages. Done when it prints `Generic Adapter tools OK` and `Generic preview packages OK`.
@@ -320,6 +320,8 @@ Tests: `node --test skills/adapter-generic/test/*.test.mjs`. They skip, saying s
 
 ## Moving a pin
 
-Change `TOOLS` in `sources.mjs` (the version and its registry `integrity`). The Adapter refuses a project whose lockfile resolves another version of a `stylesheet` package (`shadcn`, `tailwindcss`, `tw-animate-css`), because the compiled cross-check must run the Tailwind the project runs. `source.packages` records those three. After the change, regenerate the document.
+What is pinned: `typescript`, `shadcn` and `tw-animate-css` in `TOOLS` in `sources.mjs` (the version and its registry `integrity`), and the `tailwindcss` entry as the reference project's version. To move one of those, change its entry. The Adapter refuses a project that imports `shadcn` or `tw-animate-css` and whose lockfile resolves another version, because the compiled cross-check must run what the project runs.
+
+What follows the lockfile: the version of `tailwindcss` (any 4.x), fetched and verified against the lockfile's own `integrity`. `source.packages` records the stylesheet packages the run read: `tailwindcss` at the lockfile's version, plus `shadcn` and `tw-animate-css` when the CSS imports them. Moving the reference project's Tailwind means changing the `tailwindcss` entry in `TOOLS` and the fixture's lockfile together; the Foundations document must then be regenerated.
 
 The preview renderer's packages are pinned in [`preview/package.json`](preview/package.json) and its lockfile, which must resolve every package at the version the project's lockfile does: the renderer refuses otherwise, naming the package. To move one, change it in the project, then in `preview/package.json`, and run `npm install --package-lock-only --ignore-scripts` in `preview/`.

@@ -58,7 +58,7 @@ import { writeJson } from '../../contract/scripts/io.mjs';
 import { candidateRules, compiledRules, winner } from './cascade.mjs';
 import { mergeDrafts, subjects } from './drafts.mjs';
 import { familyRoot, readSource } from './source.mjs';
-import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, hasTools, sha256, snapshotId } from './sources.mjs';
+import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, projectPins, sha256, snapshotId } from './sources.mjs';
 import { build } from './tailwind.mjs';
 import { CLIPPED, evaluate, isSynthesized, lengthPx, literalForm, resolvedText, round } from './values.mjs';
 
@@ -165,6 +165,8 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const readText = rel => readFileSync(join(project, rel), 'utf8');
   const config = JSON.parse(readText('components.json'));
   const cssFile = config.tailwind && config.tailwind.css;
+  const pins = projectPins(project);
+  await fetchTools(tools, pins);
   const ui = (config.aliases && config.aliases.ui) || '@/components/ui';
   if (!ui.startsWith('@/')) fail(`components.json aliases.ui "${ui}" is not under "@/"`);
   const file = `${ui.slice(2)}/${family}.tsx`;
@@ -211,7 +213,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   // 2. Compile every utility and sort its rules by condition.
   const candidates = [...new Set(entries.map(e => e.candidate))].sort(byKey);
   const partCandidates = parts.flatMap(p => p.entries.map(e => e.candidate));
-  const compiled = await build(readText(cssFile), [...new Set([...candidates, ...partCandidates])].sort(byKey), { base: join(project, cssFile, '..'), tools });
+  const compiled = await build(readText(cssFile), [...new Set([...candidates, ...partCandidates])].sort(byKey), { base: join(project, cssFile, '..'), tools, pins });
   const rules = compiledRules(compiled);
   // The project's base layer gives a border with no colour utility its colour (`* { @apply border-border }`).
   const baseBorder = compiledRules(compiled, 'base').filter(r => r.selector === '*' && 'border-color' in r.decls).pop();
@@ -1056,7 +1058,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const tools = path('--tools', DEFAULT_DIR);
     const foundationsPath = path('--foundations', join(REPO_ROOT, 'design-systems/shadcn/shadcn.foundations.json'));
     const out = path('-o', join(REPO_ROOT, `design-systems/shadcn/contracts/${family}.component.json`));
-    if (!hasTools(tools)) await fetchTools(tools);
     const requestsPath = path('--requests', join(REPO_ROOT, `.scratch/adapter-generic/drafts/${family}.requests.json`));
     const foundations = JSON.parse(readFileSync(foundationsPath, 'utf8'));
     const prior = existsSync(out) ? JSON.parse(readFileSync(out, 'utf8')) : null;
