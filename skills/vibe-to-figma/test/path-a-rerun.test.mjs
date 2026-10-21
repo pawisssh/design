@@ -98,7 +98,13 @@ test('a line inserted above a site keeps its family', { skip }, async () => {
   const again = await w.rerun();
   assert.equal(again.extraction, null);
   assert.deepEqual(again.written, []);
-  assert.deepEqual(tree(w.root), before, 'the map records no line, so it is byte-identical');
+  // The map records no line, so it and everything generated from it are byte-identical. The report records each site's
+  // line for the review page (#262), so it moves with the code and nothing else in it.
+  const lines = files => Object.fromEntries(Object.entries(files).map(([k, v]) => [k, k.endsWith('.families-report.json') ? v.replace(/"line": \d+/g, '"line": 0').replace(/\.tsx:\d+"/g, '.tsx:0"') : v]));
+  const now = tree(w.root);
+  assert.deepEqual(lines(now), lines(before));
+  const [report] = Object.keys(now).filter(k => k.endsWith('.families-report.json'));
+  assert.notEqual(now[report], before[report], 'the report follows the lines');
 });
 
 test('a new repeated element is requested with the existing names offered; nothing else is asked', { skip }, async () => {

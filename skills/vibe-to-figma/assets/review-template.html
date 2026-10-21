@@ -74,6 +74,33 @@
         s.fontFamily + " " + s.fontStyle, s.fontSize + " / " + s.lineHeight, String(s.fontWeight)])),
     ];
   }
+  // The Families tab (#262), only for an Extracted Library: what the script found in the Prototype, before anything reaches
+  // Figma. Read-only; the owner corrects the grouping in chat and the page is published again.
+  const site = s => s.file + ":" + s.line;
+  const snippet = s => h("code", {}, s.snippet);
+  function familiesPanel() {
+    const { families, unmatched, skipped } = model.extracted;
+    const byFamily = families.map(f => {
+      const given = Object.fromEntries(f.sites.map(s => [site(s), s]));
+      return [
+        h("h2", {}, f.family + " · " + f.sites.length + " site" + (f.sites.length === 1 ? "" : "s")),
+        h("p", { className: "vr-note" }, f.description + " · <" + f.tag + "> · " + (f.by === "owner" ? "set by the owner: " + f.evidence.join("; ") : "grouped by the agent: " + f.evidence.join("; "))),
+        table(["Site", "Source"], f.sites.map(s => [h("code", {}, site(s)), snippet(s)])),
+        ...(f.axes.length ? [table(["Axis", "Value", "Classes", "Given by"], f.axes.flatMap(a => a.values.map(v => [
+          h("span", {}, a.label + " (", h("code", {}, a.key), ")"), h("span", {}, v.label + " (", h("code", {}, v.key), ")" + (a.default === v.key ? " · default" : "")),
+          h("code", {}, v.classes.join(" ") || "none"), h("code", {}, v.sites.filter(x => given[x]).join(", ") || v.sites.join(", "))])))]
+          : [h("p", { className: "vr-note" }, "No axis: every site renders the same.")]),
+      ];
+    });
+    return [
+      h("p", { className: "vr-note" }, families.length + " Component Families found in the Prototype, built into the Extracted Library the other tabs render. Nothing reaches Figma before you approve. To correct a grouping, say so in chat: merge X into Y, split Z, drop W, rename Y. The page is published again to the same link, and your ticks stay."),
+      ...byFamily.flat(),
+      h("h2", {}, "Elements no family took (" + unmatched.length + ")"),
+      ...(unmatched.length ? [table(["Site", "Source", "Why"], unmatched.map(u => [h("code", {}, site(u)), snippet(u), u.reason]))] : [h("p", { className: "vr-note" }, "None.")]),
+      h("h2", {}, "Skipped sites (" + skipped.length + ")"),
+      ...(skipped.length ? [table(["Site", "Source", "Reason"], skipped.map(u => [h("code", {}, u.site), h("code", {}, u.snippet || ""), u.reason]))] : [h("p", { className: "vr-note" }, "None.")]),
+    ];
+  }
   function familyPanel(f) {
     const head = h("div", { className: "vr-family-head" },
       h("h2", {}, f.name),
@@ -93,8 +120,9 @@
   const frames = [];
   const tabs = review.tabs.map((key, i) => {
     const f = model.families.find(x => x.family === key);
-    const tab = h("button", { role: "tab", id: "tab-" + key, "aria-controls": "panel-" + key, "aria-selected": String(i === 0) }, f ? f.name : "Foundations");
-    const panel = h("section", { role: "tabpanel", id: "panel-" + key, "aria-labelledby": "tab-" + key, hidden: i !== 0 }, ...(f ? familyPanel(f) : foundationsPanel()));
+    const extracted = !f && key === "families" && model.extracted;
+    const tab = h("button", { role: "tab", id: "tab-" + key, "aria-controls": "panel-" + key, "aria-selected": String(i === 0) }, f ? f.name : extracted ? "Families" : "Foundations");
+    const panel = h("section", { role: "tabpanel", id: "panel-" + key, "aria-labelledby": "tab-" + key, hidden: i !== 0 }, ...(f ? familyPanel(f) : extracted ? familiesPanel() : foundationsPanel()));
     const frame = panel.querySelector("iframe");
     if (frame) frames.push(frame);
     tab.onclick = () => {
@@ -175,7 +203,7 @@
       : (restored ? "Restored the saved ticks of " + restored + " of " + frames.length + " families. " : "") + (stale.length ? stale.join("; ") + ", so those show as their Contracts have them. " : "")
       + (s.owner ? "Ticks save as you go. Say \"approve\" in chat." : "Your ticks are not saved: only the owner's are.");
     if (!s.owner) return;
-    saving.last = saving.sent = saved && !stale.length ? window.ReviewStore.canonical(saved) : null;
+    saving.last = saving.sent = saved && !stale.length && saved.documentHash === model.foundations.documentHash ? window.ReviewStore.canonical(saved) : null;
     // A page whose state is not saved yet (first open, or a new version) saves it once, so approve reads what it shows.
     save(s);
     // A tick saves 400 ms after the last one, or at once when the owner leaves the page for the chat, so approve does

@@ -75,3 +75,22 @@ export function tree(dir) {
   })(dir);
   return out;
 }
+
+export const PATH_A = fileURLToPath(new URL('./fixtures/path-a-app', import.meta.url));
+export const PATH_A_ANSWERS = fileURLToPath(new URL('./fixtures/path-a-app.answers.json', import.meta.url));
+export const PATH_A_FAMILIES = ['action-button', 'card', 'icon-button', 'pill-button', 'segment'];
+
+let builtA;
+/** A fresh copy of the path A fixture's Prototype and its Design System folder, built from the committed answers: {proto, root, dir, library}. */
+export async function pathAFolder() {
+  if (!builtA) {
+    const root = scratch();
+    await buildFolder({ project: PATH_A, root, answers: read(PATH_A_ANSWERS) });
+    builtA = root;
+  }
+  const base = scratch(), proto = join(base, 'proto'), root = join(base, 'out');
+  cpSync(PATH_A, proto, { recursive: true });
+  cpSync(builtA, root, { recursive: true });
+  const dir = join(root, 'path-a-app');
+  return { proto, root, dir, library: join(dir, 'library') };
+}

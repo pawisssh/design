@@ -51,7 +51,7 @@ const textOf = json => `${JSON.stringify(json, null, 2)}\n`;
  * What the preview renderer installs for `project`: the committed set (preview/), with `react`, `react-dom` and `scheduler`
  * at the versions the project's lockfile resolves, and that lockfile's own `integrity`. `key` names the folder it installs
  * into, `packageJson` and `lock` are what `npm ci` reads there, and `changed` lists the packages whose tarball is not the
- * committed set's, which fetchPreviewPackages verifies itself. A package's `resolved` URL is built from the registry, never
+ * committed set's, which fetchPreviewPackages verifies itself, and `pruned` says the project lists only some of the pinned packages (below). A package's `resolved` URL is built from the registry, never
  * taken from the lockfile. Throws, naming the package, when the lockfile disagrees.
  */
 export function previewLock(project) {
@@ -77,8 +77,28 @@ export function previewLock(project) {
   const dom = have['node_modules/react-dom'].version;
   if (react !== dom) fail(`the project resolves react-dom@${dom} but react@${react}`);
   for (const deps of [packageJson.dependencies, lock.packages[''].dependencies]) Object.assign(deps, { react, 'react-dom': dom });
-  const key = `react@${react}-scheduler@${have['node_modules/scheduler'].version}`;
-  return { key, packageJson, lock, changed };
+  let key = `react@${react}-scheduler@${have['node_modules/scheduler'].version}`;
+  // A project whose lockfile lists only some of the pinned packages (an Extracted Library imports react, cva and cn, #262)
+  // gets only those and what they depend on, in a folder of their own: its installed versions must all be ones it resolves.
+  const wanted = Object.keys(packageJson.dependencies).filter(name => FROM_PROJECT.includes(name) || have[`node_modules/${name}`]);
+  const pruned = wanted.length < Object.keys(packageJson.dependencies).length;
+  if (pruned) {
+    const keep = new Set();
+    const visit = name => {
+      const path = `node_modules/${name}`;
+      if (keep.has(path) || !lock.packages[path]) return;
+      keep.add(path);
+      const { dependencies, optionalDependencies, peerDependencies } = lock.packages[path];
+      for (const dep of Object.keys({ ...dependencies, ...optionalDependencies, ...peerDependencies })) visit(dep);
+    };
+    wanted.forEach(visit);
+    lock.packages = Object.fromEntries(Object.entries(lock.packages).filter(([path]) =>
+      path === '' || [...keep].some(k => path === k || path.startsWith(`${k}/node_modules/`))));
+    for (const deps of [packageJson.dependencies, lock.packages[''].dependencies])
+      for (const name of Object.keys(deps)) if (!wanted.includes(name)) delete deps[name];
+    key += `-${sha256(wanted.join()).slice(0, 8)}`;
+  }
+  return { key, packageJson, lock, changed, pruned };
 }
 
 // Complete once the packages and the lockfile they were installed from are both there.
@@ -136,14 +156,14 @@ function unguard(css) {
  * packages for each React are installed in. Rejects when the packages or tools are missing, the project is not the Contract's snapshot, or a package differs from the project's.
  */
 export async function previewRenderer(contract, { project = FIXTURE, dir: base = PREVIEW_DIR, tools = DEFAULT_DIR } = {}) {
-  const { key, lock } = previewLock(project);
+  const { key, lock, packageJson, pruned } = previewLock(project);
   const dir = join(base, key);
   if (!installedFrom(lock, dir)) fail(`Generic preview packages missing in ${dir}; run: node skills/adapter-generic/scripts/preview.mjs --project ${project}`);
   const pins = projectPins(project);
   if (!hasTools(tools, pins)) fail(`Generic Adapter tools missing in ${tools}; run: node skills/adapter-generic/scripts/foundations.mjs --project ${project}`);
   for (const [f, hash] of Object.entries(contract.source.files))
     if (`sha256:${sha256(readFileSync(join(project, f)))}` !== hash) fail(`${f} differs from the Contract's snapshot; regenerate the Contract first`);
-  const pinned = Object.keys(JSON.parse(readFileSync(join(PINNED_DIR, 'package.json'), 'utf8')).dependencies);
+  const pinned = Object.keys(packageJson.dependencies);
   const installed = JSON.parse(lockOf(dir)).packages;
   for (const name of pinned) {
     const { version } = installed[`node_modules/${name}`];
@@ -153,6 +173,7 @@ export async function previewRenderer(contract, { project = FIXTURE, dir: base =
   for (const [key, pkg] of Object.entries(installed)) {
     if (!key) continue;
     const want = (projectLock[key] || {}).version;
+    if (pruned && want === undefined) continue; // a dependency of what the project lists, at the committed set's version
     if (want !== pkg.version) fail(`${key.replace(/^node_modules\//, '')} ${pkg.version} is installed, but the project resolves ${want || 'none'}`);
   }
   const req = createRequire(join(dir, 'package.json'));

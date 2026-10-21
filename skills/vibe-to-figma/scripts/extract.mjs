@@ -16,9 +16,12 @@ import { loadTypescript } from '../../to-handoff/scripts/deps.mjs';
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', 'out']);
 const INTERACTIVE = new Set(['button', 'input', 'select', 'textarea', 'a']);
 const MAX_RENDERINGS = 64;
+const SNIPPET_MAX = 240;
 const PREVIEW = readJson(fileURLToPath(new URL('../../adapter-generic/preview/package.json', import.meta.url))).dependencies;
 // The packages the library's lockfile takes from the Prototype's: what the Adapter compiles with, and what a component renders with.
-const FROM_PROTOTYPE = ['react', 'react-dom', 'tailwindcss', 'tw-animate-css', 'shadcn'];
+// The other packages the generated components import, at the Adapter's pins; no icon package or Radix (#262).
+const GENERATED_IMPORTS = ['class-variance-authority', 'cn'];
+const FROM_PROTOTYPE = ['react', 'react-dom', 'scheduler', 'tailwindcss', 'tw-animate-css', 'shadcn'];
 
 const mostFrequent = list => list.reduce((best, t) => (list.filter(x => x === t).length > list.filter(x => x === best).length ? t : best), list[0]);
 const byKey = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -101,6 +104,11 @@ function readFile(ts, file, source) {
   const sf = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, extname(file) === '.jsx' ? ts.ScriptKind.JSX : ts.ScriptKind.TSX);
   const line = n => sf.getLineAndCharacterOfPosition(n.getStart()).line + 1;
   const sites = [], skipped = [];
+  // The element's opening tag as written, on one line: what the review page shows of a site (#262).
+  const snippetOf = opening => {
+    const text = opening.getText().replace(/\s+/g, ' ').replace(/\{ /g, '{').replace(/ \}/g, '}').replace(/ >$/, '>');
+    return text.length > SNIPPET_MAX ? `${text.slice(0, SNIPPET_MAX - 1)}…` : text;
+  };
   const tagNameOf = x => (ts.isJsxElement(x) ? x.openingElement.tagName.getText() : x.tagName.getText());
 
   // A `let` that is assigned again cannot be read from its initializer.
@@ -221,10 +229,10 @@ function readFile(ts, file, source) {
         try {
           if (!expr) throw new Unresolved('`className` has no value');
           const tree = resolve(expr, scopesOf(node), ctx);
-          sites.push({ file, line: line(node), tag, path: pathOf(node), node: tree, ternary: ctx.mirrored || hasPick(tree), text: textOf(node), at });
+          sites.push({ file, line: line(node), tag, path: pathOf(node), node: tree, ternary: ctx.mirrored || hasPick(tree), text: textOf(node), at, snippet: snippetOf(opening) });
         } catch (e) {
           if (!(e instanceof Unresolved)) throw e;
-          skipped.push({ site: at, tag, reason: e.message });
+          skipped.push({ site: at, tag, reason: e.message, snippet: snippetOf(opening) });
         }
       }
     }
@@ -397,7 +405,7 @@ function prototypeLock(project) {
 function lockfile(project, name) {
   const have = prototypeLock(project);
   const packages = {};
-  for (const pkg of sorted([...FROM_PROTOTYPE, ...Object.keys(PREVIEW)])) {
+  for (const pkg of sorted([...FROM_PROTOTYPE, ...GENERATED_IMPORTS])) {
     const entry = have[`node_modules/${pkg}`];
     if (entry && FROM_PROTOTYPE.includes(pkg)) packages[`node_modules/${pkg}`] = entry;
     else if (PREVIEW[pkg]) packages[`node_modules/${pkg}`] = { version: PREVIEW[pkg] };
@@ -557,7 +565,7 @@ export function extract({ project, answers = {}, map = null }) {
     const read = readFile(ts, file, readFileSync(abs, 'utf8'));
     skipped.push(...read.skipped);
     for (const site of read.sites) {
-      try { sites.push(prepare(site)); } catch (e) { if (!(e instanceof Unresolved)) throw e; skipped.push({ site: site.at, tag: site.tag, reason: e.message }); }
+      try { sites.push(prepare(site)); } catch (e) { if (!(e instanceof Unresolved)) throw e; skipped.push({ site: site.at, tag: site.tag, reason: e.message, snippet: site.snippet }); }
     }
   }
 
@@ -625,7 +633,7 @@ export function extract({ project, answers = {}, map = null }) {
     else built.push({ key, members, memberSites, derived, merged, tag: tags[0], record });
   }
 
-  if (requests.length || !built.length) return { library: {}, families: [], used: [], requests, skipped, map: null };
+  if (requests.length || !built.length) return { library: {}, families: [], used: [], requests, skipped, map: null, report: null };
 
   const library = {};
   const familyList = [];
@@ -636,7 +644,7 @@ export function extract({ project, answers = {}, map = null }) {
     const texts = f.memberSites.map(s => s.text).filter(Boolean);
     const text = texts.length ? mostFrequent(texts) : f.merged.text;
     familyList.push({ key: f.key, tag: f.tag, groups: f.members, description: f.merged.description, grid: f.merged.grid, text, answeredText: f.merged.text, names, record: f.record,
-      sites: f.memberSites.map(s => ({ file: s.file, path: s.path, line: s.line, group: s.group })).sort((x, y) => byKey(siteKey(x), siteKey(y))), derived: f.derived });
+      sites: f.memberSites.map(s => ({ file: s.file, path: s.path, line: s.line, group: s.group, snippet: s.snippet })).sort((x, y) => byKey(siteKey(x), siteKey(y))), derived: f.derived });
   }
   const entry = cssEntry(project);
   const sheets = stylesheets(project, entry);
@@ -660,5 +668,30 @@ export function extract({ project, answers = {}, map = null }) {
         axes: Object.fromEntries(f.derived.axes.map(a => [a.id, f.names[a.id]])) },
     }];
   })), ...(dropped.length && { dropped }) };
-  return { library, families: familyList, used: familyList.map(f => f.key), requests: [], skipped, map: next };
+  const report = reportOf({ families: familyList, map: next, sites, assigned, prior, drops, skipped });
+  return { library, families: familyList, used: familyList.map(f => f.key), requests: [], skipped, map: next, report };
+}
+
+/**
+ * The review page's record of a run (#262): what the owner checks before anything reaches Figma. Each family with its sites
+ * (file:line, JSX path, source snippet), its axes with the sites that give each value, the candidate elements no family
+ * took with the reason, and the sites skipped. Lines and snippets are for display, so this file is rewritten when the code
+ * above a site moves; the Contracts do not read it.
+ */
+function reportOf({ families, map, sites, assigned, prior, drops, skipped }) {
+  const dropped = new Map([...prior.droppedList, ...drops].map(d => [siteKey(d), d]));
+  const place = s => ({ file: s.file, path: s.path, line: s.line, tag: s.tag, snippet: s.snippet });
+  const at = (a, b) => byKey(a.file, b.file) || a.line - b.line || byKey(a.path, b.path);
+  return {
+    version: 1,
+    families: Object.fromEntries(families.map(f => [f.key, {
+      tag: f.tag, by: map.families[f.key].by, evidence: map.families[f.key].evidence, description: f.description,
+      sites: f.sites.map(place).sort(at),
+      axes: f.derived.axes.map(a => ({ id: a.id, key: f.names[a.id].key, label: f.names[a.id].label, default: f.names[a.id].values[a.default].key,
+        values: a.values.map(v => ({ id: v.id, key: f.names[a.id].values[v.id].key, label: f.names[a.id].values[v.id].label, classes: v.classes, sites: v.sites })) })),
+    }])),
+    unmatched: sites.filter(s => s.candidate && !assigned.has(siteKey(s))).map(s => ({ ...place(s),
+      reason: dropped.has(siteKey(s)) ? dropped.get(siteKey(s)).evidence : 'it appears once and has no className ternary' })).sort(at),
+    skipped,
+  };
 }
