@@ -22,12 +22,14 @@ jobs:
     runs-on: [self-hosted, macOS, ARM64, design]
     timeout-minutes: 45
     steps:
-      # clean: false, then a clean that keeps .scratch: the pinned tools the three fetch steps below verify and
-      # extract stay between runs, while any other untracked file (a test file from another branch) goes.
+      # clean: false, then a clean that keeps only the pinned tools the sources.mjs and deps.mjs steps verify and
+      # extract: any other untracked file goes, a test file from another branch or a test's output left in .scratch.
       - uses: actions/checkout@v4
         with:
           clean: false
-      - run: git clean -ffdx -e .scratch
+      - run: |
+          git clean -ffdx -e .scratch
+          find .scratch -mindepth 1 -maxdepth 1 ! -name adapter-carbon ! -name adapter-generic ! -name to-handoff -exec rm -rf {} +
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -39,7 +41,7 @@ jobs:
       # Without its packages, the to-handoff tests skip; the runtime tests, and adapter-generic's catalog
       # measurements, use the Mac's Chrome.
       - run: node skills/to-handoff/scripts/deps.mjs
-      # npm test runs at its default --test-concurrency=4. TAP goes to the log, and slowest-files.mjs adds the ten
+      # npm test runs at its default --test-concurrency=4. TAP goes to the log, and slowest-files.mjs adds the
       # slowest files to the end of the log and to the job summary.
       - run: npm test
         env:
