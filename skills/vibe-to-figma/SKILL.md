@@ -18,8 +18,8 @@ Today it has the Design System folder ([#176](https://github.com/pawisssh/design
 `folder.mjs` chooses its path before it fetches a tool or reads a component (`choosePath(project)`, [`scripts/path.mjs`](scripts/path.mjs); [#252](https://github.com/pawisssh/design/issues/252), spec [#249](https://github.com/pawisssh/design/issues/249), [ADR 0016](../../docs/adr/0016-a-prototype-with-no-code-library-gets-an-extracted-library.md)). Three outcomes:
 
 - **`components.json`:** the shadcn path below, unchanged.
-- **No `components.json`, a React project with Tailwind utilities in its JSX/TSX className:** path A. Until the Extracted Library lands, the CLI stops with a plain "path A ... not built yet" message (exit 1).
-- **Anything else:** refused with one message (exit 1, no stack trace) naming what was found and what the skill needs: plain HTML; a Carbon app (use the Carbon Adapter); a React project styled by SCSS or CSS classes; a React project with no Tailwind in className; no React at all. `--all` gets the same message.
+- **No `components.json`, a React project that lists `tailwindcss` in package.json and carries Tailwind utilities in its source className strings:** path A. Until the Extracted Library lands, the CLI stops with a plain "path A ... not built yet" message (exit 1).
+- **Anything else:** refused with one message (exit 1, no stack trace) naming what was found and what the skill needs: plain HTML; a Carbon app (use the Carbon Adapter); a React project styled by SCSS or CSS classes; a React project with no `tailwindcss` or no Tailwind utilities in className; no React at all. `--all` gets the same message.
 
 ## Inputs
 
