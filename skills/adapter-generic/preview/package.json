@@ -1,7 +1,7 @@
 {
   "name": "adapter-generic-preview",
   "private": true,
-  "description": "Pinned packages for the Generic Adapter's preview renderer: the versions the fixture project's lockfile resolves for what its components import. Installed into .scratch/adapter-generic/preview by scripts/preview.mjs with npm ci --ignore-scripts; never installed here.",
+  "description": "Pinned packages for the Generic Adapter's preview renderer: the versions the fixture project's lockfile resolves for what its components import. scripts/preview.mjs installs them with npm ci --ignore-scripts, never here, into a folder of .scratch/adapter-generic/preview keyed by React's version; react, react-dom and scheduler are replaced there by the versions the project being previewed resolves.",
   "dependencies": {
     "class-variance-authority": "0.7.1",
     "cn": "0.5.0",

@@ -10,7 +10,7 @@ import { installAtomically } from '../scripts/sources.mjs';
 
 const SOURCES = new URL('../scripts/sources.mjs', import.meta.url).href;
 const ENTRIES = ['node_modules', 'package-lock.json'];
-// Complete once the packages and the pinned lockfile are both there, as hasPreviewPackages checks.
+// Complete once the packages and the lockfile they were installed from are both there, as hasPreviewPackages checks.
 const complete = dir => existsSync(join(dir, 'node_modules/react/package.json'))
   && existsSync(join(dir, 'package-lock.json')) && readFileSync(join(dir, 'package-lock.json'), 'utf8') === 'pinned';
 // The lockfile first, then the packages a file at a time, as `npm ci` leaves a folder while it runs.
