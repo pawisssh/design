@@ -2,7 +2,7 @@
 // (a test approval is written only under .scratch/), with the Adapter's committed fixtures/drafts as the agent's
 // answers. Each test takes its own copy; after() removes them all.
 import { after } from 'node:test';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -61,4 +61,17 @@ export function selections(dir, edits = {}) {
     const patch = model.omitPatch();
     return [family, { patch, checked: { family, snapshotId: patch.snapshotId, checked: model.checkedTuples() } }];
   }));
+}
+
+/** Every file under `dir` as text, keyed by its path relative to it. */
+export function tree(dir) {
+  const out = {};
+  (function walk(d) {
+    for (const name of readdirSync(d).sort()) {
+      const path = join(d, name);
+      if (statSync(path).isDirectory()) walk(path);
+      else out[relative(dir, path)] = readFileSync(path, 'utf8');
+    }
+  })(dir);
+  return out;
 }
