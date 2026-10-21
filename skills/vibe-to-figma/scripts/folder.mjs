@@ -27,11 +27,19 @@ import { writeJson } from '../../contract/scripts/io.mjs';
 import { generate as contractOf, readFamily } from '../../adapter-generic/scripts/components.mjs';
 import { generate as foundationsOf } from '../../adapter-generic/scripts/foundations.mjs';
 import { DEFAULT_DIR, REPO_ROOT, fetchTools, hasTools } from '../../adapter-generic/scripts/sources.mjs';
+import { choosePath } from './path.mjs';
 import { usedFamilies } from './used.mjs';
 
 export const DESIGN_SYSTEMS = join(REPO_ROOT, 'design-systems');
 const NAME = /^[a-z0-9][a-z0-9._-]*$/;
 const CatalogSelection = createRequire(import.meta.url)('../../to-preview/assets/selection-model.js');
+
+/** Throws the plain message unless `project` takes the shadcn path (#252). Path A is chosen but not built yet. */
+export function assertShadcn(project) {
+  const route = choosePath(project);
+  if (route.path === 'refused') throw new Error(route.message);
+  if (route.path === 'A') throw new Error('path A (a React + Tailwind project with no components.json) is chosen, but not built yet: the Extracted Library is a later ticket of #249');
+}
 
 /** The folder name: the override, else package.json `name` without its npm scope. */
 export function folderName(project, name) {
@@ -53,6 +61,7 @@ export function folderName(project, name) {
  * ("skipped: <the Adapter's reason>").
  */
 export async function buildFolder({ project, name, root = DESIGN_SYSTEMS, all = false, drafts = {}, tools = DEFAULT_DIR, depsDir } = {}) {
+  assertShadcn(project);
   const key = folderName(project, name);
   const dir = join(root, key);
   const designSystem = { key, name: key };
@@ -179,6 +188,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   try {
     const project = args[0] && !args[0].startsWith('-') ? resolve(args[0]) : null;
     if (!project) throw new Error('usage: folder.mjs <project> [--all] [--name <name>] [--root <dir>] [--drafts <file>]... [--requests <file>]');
+    assertShadcn(project);
     if (!hasTools()) await fetchTools();
     const drafts = {};
     args.forEach((a, i) => { if (a === '--drafts') Object.assign(drafts, readDrafts(resolve(args[i + 1]))); });

@@ -13,9 +13,17 @@ Runs the existing skills end to end on a Prototype (spec [#175](https://github.c
 
 Today it has the Design System folder ([#176](https://github.com/pawisssh/design/issues/176)), the review page and the one approve ([#177](https://github.com/pawisssh/design/issues/177)), the review page as a private Artifact whose ticks persist ([#178](https://github.com/pawisssh/design/issues/178)), the Figma build into the linked file ([#179](https://github.com/pawisssh/design/issues/179)), reruns that touch only the components whose code changed ([#180](https://github.com/pawisssh/design/issues/180)), and Figma edits that are never overwritten ([#181](https://github.com/pawisssh/design/issues/181)). What is still open is under [Left for later tickets](#left-for-later-tickets).
 
+## Which path
+
+`folder.mjs` chooses its path before it fetches a tool or reads a component (`choosePath(project)`, [`scripts/path.mjs`](scripts/path.mjs); [#252](https://github.com/pawisssh/design/issues/252), spec [#249](https://github.com/pawisssh/design/issues/249), [ADR 0016](../../docs/adr/0016-a-prototype-with-no-code-library-gets-an-extracted-library.md)). Three outcomes:
+
+- **`components.json`:** the shadcn path below, unchanged.
+- **No `components.json`, a React project with Tailwind utilities in its JSX/TSX className:** path A. Until the Extracted Library lands, the CLI stops with a plain "path A ... not built yet" message (exit 1).
+- **Anything else:** refused with one message (exit 1, no stack trace) naming what was found and what the skill needs: plain HTML; a Carbon app (use the Carbon Adapter); a React project styled by SCSS or CSS classes; a React project with no Tailwind in className; no React at all. `--all` gets the same message.
+
 ## Inputs
 
-- **A Prototype:** React + shadcn + Tailwind, as v0 and Lovable write it: Next.js App Router or Vite + react-router, `components.json`, its global CSS, `package-lock.json` and the Code Library under `aliases.ui`. The Generic Adapter's pins apply: the lockfile must resolve its `shadcn`, `tailwindcss` and `tw-animate-css` versions.
+- **A Prototype (shadcn path):** React + shadcn + Tailwind, as v0 and Lovable write it: Next.js App Router or Vite + react-router, `components.json`, its global CSS, `package-lock.json` and the Code Library under `aliases.ui`. The Generic Adapter's pins apply: the lockfile must resolve its `shadcn`, `tailwindcss` and `tw-animate-css` versions.
 - **Tools:** `node skills/adapter-generic/scripts/sources.mjs` (the Adapter's tools) and `node skills/to-handoff/scripts/deps.mjs` (the React reader's TypeScript).
 
 ## 1. The Design System folder
