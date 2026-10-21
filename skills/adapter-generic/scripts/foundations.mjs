@@ -10,7 +10,8 @@
 // skills/contract/references/foundations-schema.md.
 //
 // One run writes both (#70 §1, #120): after the Code Library tokens, each family's Synthesized tokens are re-derived
-// from its source (components.mjs readFamily) and added, its file joins the snapshot, and its Contract is built
+// from its source (components.mjs readFamily) and added, with the Tailwind default-palette colours it uses (#254, `Color/slate-900`
+// over `var(--color-slate-900)`, kept only if a Contract binds them), its file joins the snapshot, and its Contract is built
 // against the result to fill the closure, usedBy and the scope check.
 //
 // What it reads: `components.json` (which CSS file), that CSS, `package-lock.json` (which versions the project
@@ -26,6 +27,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { closure } from '../../contract/scripts/contract.mjs';
+import { compiledRules } from './cascade.mjs';
 import { contractFor, readFamily } from './components.mjs';
 import { readFontLoaders } from './source.mjs';
 import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, projectPins, sha256, snapshotId, stylesheets, toolDir } from './sources.mjs';
@@ -317,10 +319,17 @@ export async function generate({ project, families = [], drafts = [], tools = DE
   //    joins `source.files`, and its Contract, built against the whole document, gives the closure and usedBy. A
   //    given Contract at the same snapshot gives them instead: its selection is the owner's, the draft's is not.
   const read = [];
+  const palette = new Set(); // the default-palette tokens a family read (#254)
   for (const family of [...new Set(families)].sort(byKey)) {
     const f = await readFamily({ project, family, foundations: doc, tools });
     for (const [k, v] of Object.entries(f.synthesized)) {
       if (variables[k]) fail(`the Synthesized token ${k} of ${family} is also synthesized for ${variables[k].family}`);
+      variables[k] = v;
+    }
+    // A default-palette colour (#254) is one token whichever families read it.
+    for (const [k, v] of Object.entries(f.palette)) {
+      if (variables[k] && !palette.has(k)) fail(`the Tailwind palette colour ${k} read for ${family} is also a token of the project (${variables[k].source}); rename one`);
+      palette.add(k);
       variables[k] = v;
     }
     files[f.file] = f.files[f.file];
@@ -343,6 +352,12 @@ export async function generate({ project, families = [], drafts = [], tools = DE
       }
     }
     doc.closure.tokens = [...tokens].sort(byKey);
+    // Only the palette colours a Contract binds, or a bound Synthesized token aliases, are carried: an owner's omit may
+    // leave one unused.
+    const aliased = new Set([...tokens].flatMap(t => Object.values((variables[t] || {}).values || {}).flatMap(form => [form.alias, form.from && form.from.alias])));
+    for (const k of palette) if (!tokens.has(k) && !aliased.has(k)) { delete variables[k]; palette.delete(k); }
+    doc.variables = ordered(variables);
+    if (palette.size) await crossCheckPalette({ doc, palette, css, project, cssFile, tools, pins, checks });
     // contractFor() throws on any validate error, rule 6 (scopes) among them, so a written document has none.
     doc.checks.scopes = { by: 'skills/contract/scripts/contract.mjs validate, rule 6', contracts: read.length, errors: 0 };
   }
@@ -356,6 +371,30 @@ export async function generate({ project, families = [], drafts = [], tools = DE
     ...read.map(([family, f]) => `${family}: ${Object.keys(f.synthesized).length} Synthesized tokens; closure ${doc.closure.tokens.length} tokens`),
   ];
   return { doc, text, documentHash: `sha256:${sha256(text)}`, summary };
+}
+
+/**
+ * The cross-check of the Tailwind default-palette tokens a Contract binds (#254): `bg-<name>` compiles to the token's
+ * codeSyntax and the compiled theme layer holds the CSS its value was converted from. Counts them in the document's
+ * `checks.compiled`, replaces its note on the default theme, and fails on a Figma name two variables share.
+ */
+async function crossCheckPalette({ doc, palette, css, project, cssFile, tools, pins, checks }) {
+  const compiled = await build(css, [...palette].map(k => `bg-${k.slice(6)}`).sort(byKey), { base: join(project, cssFile, '..'), tools, pins });
+  const theme = Object.assign({}, ...compiledRules(compiled, 'theme').map(r => r.decls));
+  for (const k of [...palette].sort(byKey)) {
+    const v = doc.variables[k], utility = `bg-${k.slice(6)}`;
+    const decl = Object.values(utilityRule(compiled, utility) || fail(`${k}: Tailwind compiles no rule for ${utility}`))[0];
+    if (decl !== v.codeSyntax.WEB) fail(`${k}: ${utility} compiles to ${decl}, not ${v.codeSyntax.WEB}`);
+    for (const [mode, form] of Object.entries(v.values))
+      if (theme[`--${k}`] !== form.from.css) fail(`${k} (${mode}): Tailwind compiles --${k} to ${theme[`--${k}`]}, but the document holds ${form.from.css}`);
+    checks.compiled++;
+  }
+  doc.checks.compiled.matched = checks.compiled;
+  const names = Object.values(doc.variables).map(v => v.name);
+  const dupes = names.filter((n, i) => names.indexOf(n) !== i);
+  if (dupes.length) fail(`duplicate Figma variable names: ${[...new Set(dupes)].join(', ')}`);
+  const note = doc.notes.find(n => n.at === 'variables');
+  note.message = `Only the project's own CSS is read, and the Tailwind default-palette colours a family uses (${[...palette].sort(byKey).map(k => k.slice(6)).join(', ')}), valued from Tailwind's theme. Tailwind's other defaults (shadows) are not carried, except its type scale and font weights, which the Text Styles hold.`;
 }
 
 /** A font a `@theme --font-<k>` names (#160): {family, source}. Pushes a note on how it was read; throws when none is. */
