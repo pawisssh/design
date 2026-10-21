@@ -16,3 +16,4 @@ Re-open a decision when its trigger happens.
 | [0013 Form-control content is one node per version](0013-form-control-content-is-one-node-per-version.md) | A family needs a border whose width changes on one side per variant, or Repeated children that nest (SelectItemGroup) |
 | [0014 Vibe-to-Figma supports a Tailwind app without shadcn](0014-vibe-to-figma-supports-a-tailwind-app-without-shadcn.md) | A Prototype that is neither React + Tailwind nor shadcn has to reach Figma |
 | [0015 The runtime reader reads computed paint, spacing and radius](0015-the-runtime-reader-reads-computed-paint-spacing-and-radius.md) | A runtime run's tie requests or Off-system values are too many for the owner to review at Sign-off |
+| [0016 A Prototype with no Code Library gets an Extracted Library](0016-a-prototype-with-no-code-library-gets-an-extracted-library.md) | A Prototype styled by CSS or SCSS classes, or plain HTML, has to become a Design System |
