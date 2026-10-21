@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { hasRuntime, hasTypescript } from '../scripts/deps.mjs';
 import { generate } from '../scripts/generate.mjs';
 import { readReact } from '../scripts/react.mjs';
+import { stateOfAtom } from '../scripts/recognise.mjs';
 import { run } from '../scripts/runtime.mjs';
 import { walk } from '../scripts/reader.mjs';
 import { loadDesignSystem } from '../scripts/system.mjs';
@@ -289,7 +290,7 @@ test('generate: Next boundary files are states by name: a feature not-found.tsx 
 // #213: the condition shapes of a one-file Vite app, each on its own line of fixtures/conditions-app/src/App.tsx.
 const CONDITIONS = fileURLToPath(new URL('fixtures/conditions-app', import.meta.url));
 const CONDITIONS_DECISIONS = JSON.parse(readFileSync(join(CONDITIONS, 'decisions.json'), 'utf8'));
-const conditionRequests = async () => (await generate({ prototype: CONDITIONS, designSystem: designSystem(), decisions: {} })).requests.filter(r => r.kind === 'condition');
+const conditionRequests = async (prototype = CONDITIONS) => (await generate({ prototype, designSystem: designSystem(), decisions: {} })).requests.filter(r => r.kind === 'condition');
 const conditionsScreen = () => readReact(CONDITIONS).screens[0];
 const partConds = attr => attr.parts.map(p => (typeof p === 'string' ? p : p.ternary ? p.ternary.cond : p.expr));
 
@@ -342,20 +343,28 @@ const statusApp = line => {
   writeFileSync(page, readFileSync(page, 'utf8').replace('    </main>', `${line}\n    </main>`));
   return app;
 };
-const conditionKeys = async prototype => (await generate({ prototype, designSystem: designSystem(), decisions: {} })).requests.filter(r => r.kind === 'condition').map(r => r.key);
+const conditionKeys = async prototype => (await conditionRequests(prototype)).map(r => r.key);
 
-test('generate: a status compared with GENERATING reads as loading and READY as success', { skip: noTs }, async () => {
-  const app = statusApp("      {reportStatus === 'GENERATING' && <p>Working</p>}{reportStatus === 'READY' && <p>Done</p>}");
+test('generate: a status compared with GENERATING reads as loading, READY as success and FAILED as error', { skip: noTs }, async () => {
+  const app = statusApp("      {reportStatus === 'GENERATING' && <p>Working</p>}{reportStatus === 'READY' && <p>Done</p>}{\"FAILED\" === reportStatus && <p>Failed</p>}");
   const keys = await conditionKeys(app);
   assert.deepEqual(keys.filter(k => /reportStatus/.test(k)), []);
   const result = await generate({ prototype: app, designSystem: designSystem(), decisions: CONDITIONS_DECISIONS });
   const [screen] = result.handoff.screens;
   assert.equal(screen.states.loading.missing, undefined);
   assert.equal(screen.states.success.missing, undefined);
+  assert.equal(screen.states.error.trigger, "result._error or \"FAILED\" === reportStatus");
   assert.match(screen.states.loading.content, /`reportStatus === 'GENERATING'` is true/);
   assert.match(screen.states.success.content, /`reportStatus === 'READY'` is true/);
   assert.equal(screen.states.loading.trigger, "reportStatus === 'GENERATING'");
   assert.equal(screen.states.success.trigger, "reportStatus === 'READY'");
+});
+
+test('stateOfAtom: a status-named comparison with a value it cannot place keeps the word rules', () => {
+  assert.equal(stateOfAtom("appState === 'READY'"), 'success');
+  assert.equal(stateOfAtom("status === 'Pending approval'"), 'loading');
+  assert.equal(stateOfAtom("status === 'IDLE'"), null);
+  assert.equal(stateOfAtom("status !== 'READY'"), null);
 });
 
 test('generate: a status value it cannot place stays a condition question', { skip: noTs }, async () => {

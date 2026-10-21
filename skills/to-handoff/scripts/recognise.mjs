@@ -46,24 +46,29 @@ const STATUS_VALUES = {
   success: ['ready', 'done', 'success', 'succeeded', 'complete', 'completed', 'saved', 'sent', 'submitted'],
   error: ['failed', 'failure', 'error'],
 };
-const STATUS_COMPARE = /^(?:(['"`])(\w[\w -]*)\1\s*={2,3}\s*([\w.?]+)|([\w.?]+)\s*={2,3}\s*(['"`])(\w[\w -]*)\5)$/;
+// `status === 'READY'` or `'READY' === status`, as {name, value}; `!==` and other operators are not a state.
+const STATUS_COMPARE = /^(?:(?<q>['"`])(?<value>\w[\w -]*)\k<q>\s*={2,3}\s*(?<name>[\w.?]+)|(?<name2>[\w.?]+)\s*={2,3}\s*(?<q2>['"`])(?<value2>\w[\w -]*)\k<q2>)$/;
+const STATUS_NAME = /(?:^|[.?])(?:status|state|\w*(?:Status|State))$/;
 
-/** The standard state a comparison of a status-like identifier with a string stands for, null when it can't be placed. */
-function stateOfStatusCompare(atom) {
-  const m = STATUS_COMPARE.exec(atom);
-  if (!m) return undefined;
-  const [value, name] = m[2] ? [m[2], m[3]] : [m[6], m[4]];
-  if (!/(?:^|[.?])(?:status|state|\w*Status)$/.test(name)) return undefined;
+/** The standard state a status string stands for (#229), or null when it can't be placed. */
+function stateOfStatusValue(value) {
   const key = value.toLowerCase().replace(/[^a-z]/g, '');
   return Object.keys(STATUS_VALUES).find(s => STATUS_VALUES[s].includes(key)) || null;
 }
+
+const statusCompare = atom => {
+  const g = STATUS_COMPARE.exec(atom)?.groups;
+  return g && (g.name ? { name: g.name, value: g.value } : { name: g.name2, value: g.value2 });
+};
 
 /** The standard state a state-shaped atom stands for (#62), or null for a plain condition. */
 export function stateOfAtom(atom) {
   const file = /(?:^|\/)(loading|error|not-found)\.[jt]sx?$/.exec(atom);
   if (file) return FRAMEWORK_STATES[file[1]];
-  const compared = stateOfStatusCompare(atom);
-  if (compared !== undefined) return compared;
+  // A status kept as a string (#229); a value it can't place falls through to the word rules below.
+  const compare = statusCompare(atom);
+  const placed = compare && STATUS_NAME.test(compare.name) && stateOfStatusValue(compare.value);
+  if (placed) return placed;
   if (/(\.length\s*===?\s*0\b|^!\s*[\w.]+\.length$|\bisEmpty\b)/.test(atom)) return 'empty';
   if (/\b(is)?(Loading|Sending|Submitting|Fetching|Pending|Saving)\b|\b(loading|sending|submitting|fetching|pending|saving)\b/.test(atom)) return 'loading';
   // An `_error` property (`result._error`) is the error state too (#213).
