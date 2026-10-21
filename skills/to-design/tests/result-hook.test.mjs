@@ -24,15 +24,25 @@ function runHook(root, code, response, id = 'toolu_1') {
   return { ...run, said: run.stdout ? JSON.parse(run.stdout).hookSpecificOutput.additionalContext : '' };
 }
 
+// The tool_response as use_figma sends it (the hook's responseText says where that was read).
 test('a package call\'s JSON result is saved as result.json beside its package', () => {
   const { root, stub } = packaged();
-  for (const response of [[{ type: 'text', text: BODY }], { content: [{ type: 'text', text: BODY }] }, BODY]) {
+  const run = runHook(root, stub, [{ type: 'text', text: BODY }]);
+  assert.equal(run.status, 0, run.stderr);
+  assert.equal(readFileSync(join(root, RESULT), 'utf8'), BODY);
+  assert.match(run.said, /saved the result to \.scratch\/to-design\/pkg\/result\.json/);
+  assert.equal(readFileSync(join(root, '.scratch/to-design/use-figma-result.log'), 'utf8').trim().split('\n').length, 1);
+});
+
+test('a result as a list under content, or as a string, is saved too', () => {
+  const { root, stub } = packaged();
+  for (const response of [{ content: [{ type: 'text', text: BODY }] }, BODY]) {
     const run = runHook(root, stub, response);
     assert.equal(run.status, 0, run.stderr);
     assert.equal(readFileSync(join(root, RESULT), 'utf8'), BODY);
     assert.match(run.said, /saved the result to \.scratch\/to-design\/pkg\/result\.json/);
   }
-  assert.equal(readFileSync(join(root, '.scratch/to-design/use-figma-result.log'), 'utf8').trim().split('\n').length, 3);
+  assert.equal(readFileSync(join(root, '.scratch/to-design/use-figma-result.log'), 'utf8').trim().split('\n').length, 2);
 });
 
 test('with the swapped code, the package is the one the package hook logged for this call', () => {
