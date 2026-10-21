@@ -382,6 +382,8 @@ test('generate: a template-literal className signs by its static classes; a toke
     ['recognise:button.border.px-2.rounded-md.shrink-0', ['src/App.tsx:15:7']],
     ['recognise:button.ml-auto.p-1', ['src/App.tsx:16:7']],
     ['recognise:button.px-2.text-xs', ['src/App.tsx:17:7']],
+    ['recognise:input.text-right.w-14[type=text]', ['src/App.tsx:18:7']],
+    ['recognise:input.text-right.w-8[type=text]', ['src/App.tsx:19:7']],
   ]);
 });
 
@@ -391,9 +393,9 @@ test('generate: in a Tailwind app, region, usage and copy ids come from authored
   assert.deepEqual(result.requests, []);
   const [screen] = result.handoff.screens;
   assert.deepEqual(screen.regions.map(r => r.id), ['shell', 'div']);
-  assert.deepEqual(usagesOf(screen).map(u => u.id), ['button', 'button-2', 'button-3', 'button-4', 'button-5']);
-  // Copy with only utility classes takes its first words; `.summary` is authored in summary.css, so it names its copy.
-  assert.deepEqual(screen.regions[1].text.map(t => t.copy), ['version-4-5-precision', 'summary']);
+  assert.deepEqual(usagesOf(screen).map(u => u.id), ['button', 'button-2', 'button-3', 'button-4', 'button-5', 'input', 'input-2']);
+  // Copy with no name of its own takes its first words, values left out; `.summary` is authored in summary.css, so it names its copy.
+  assert.deepEqual(screen.regions[1].text.map(t => t.copy), ['version-4-5-precision', 'summary', 'funds-left']);
 });
 
 test('read: next/font loaders in a layout are the fonts it loads, each at its binding', { skip: noTs }, () => {

@@ -173,10 +173,10 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   const style = el => computed(rules, el, cache);
   // In a Tailwind Prototype a utility class names nothing (#216): only a class an authored rule selects names its element.
   const authored = new Set(rules.flatMap(r => r.parsed.parts.flatMap(p => p.compound.classes)));
-  const names = c => !doc.tailwind || authored.has(c);
-  const firstClass = el => { const c = el.classes.find(names); return c ? `.${c}` : el.tag; };
-  // An element's own name for an id: its id attribute, else its first named class.
-  const nameOf = el => (typeof el.attrs.id === 'string' ? el.attrs.id : el.classes.find(names)) || null;
+  const namingClass = el => el.classes.find(c => !doc.tailwind || authored.has(c));
+  const firstClass = el => { const c = namingClass(el); return c ? `.${c}` : el.tag; };
+  // An element's own name for an id: its id attribute, else its first naming class.
+  const nameOf = el => (typeof el.attrs.id === 'string' ? el.attrs.id : namingClass(el)) || null;
   const theme = collectionOf(foundations, Object.values(foundations.collections).find(c => !c.hidden && c.modes.length > 1).modes[0].key);
 
   // Custom properties the Prototype defines on :root, for references such as var(--border).
@@ -697,8 +697,8 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
         s.partial = { fontSize: token };
         s.raw = raw;
       } else s.raw = raw;
-      // Copy whose classes are all utilities takes its first words (#216).
-      const base = nameOf(el) || (el.classes.length && firstWords(text)) || el.tag;
+      // In a Tailwind Prototype, copy with no name of its own takes its component's name, else its first words (#216).
+      const base = nameOf(el) || (!el.component && doc.tailwind && firstWords(text)) || el.tag;
       const entry = { copy: addCopy(kebab(base), text, t.offset).slice(5), at: where };
       const states = shownIn(el);
       if (states) entry.states = states;
