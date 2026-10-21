@@ -60,7 +60,7 @@ import { mergeDrafts, subjects } from './drafts.mjs';
 import { familyRoot, readSource } from './source.mjs';
 import { DEFAULT_DIR, FIXTURE, REPO_ROOT, fetchTools, projectPins, sha256, snapshotId } from './sources.mjs';
 import { build, themeCss } from './tailwind.mjs';
-import { CLIPPED, evaluate, isSynthesized, lengthPx, literalForm, resolvedText, round } from './values.mjs';
+import { CLIPPED, evaluate, isPalette, isSynthesized, lengthPx, literalForm, resolvedText, round } from './values.mjs';
 
 // Attribute states with known state words: the attribute becomes an axis, absent by default (#119).
 const ATTR_AXES = {
@@ -451,12 +451,12 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     return { px, text, prop: props.find(p => p in r.decls), value: token ? { token }
       : { raw: px, level: 'info', reason: `${r.candidate}: ${text} = ${px}px; no Foundations variable compiles to it` } };
   };
-  const palette = {}; // the default-palette tokens this family reads that the document does not hold yet
+  const palette = {}; // the default-palette tokens this family reads, as this run derives them
   const tailwindTheme = themeCss(tools, pins).replace(/\/\*[\s\S]*?\*\//g, '');
   // A Foundations variable by flat name. Tailwind's default palette (#254) is not in the document until a family uses
   // it: a `--color-<name>` its own theme.css declares is added to `palette` here, valued as the compiled theme layer gives it.
   const variable = name => {
-    if (foundations.variables[name]) return foundations.variables[name];
+    if (foundations.variables[name] && !isPalette(foundations.variables[name])) return foundations.variables[name];
     if (palette[name]) return palette[name];
     const own = /^color-[\w-]+$/.test(name) && new RegExp(`(^|[;{\\s])--${name}:\\s*([^;]+);`).exec(tailwindTheme);
     if (!own || theme[`--${name}`] === undefined) return null;
@@ -1043,8 +1043,10 @@ export async function generate({ project, family, foundations, prior = null, dra
   if (prior && prior.family.key !== family) fail(`the prior Contract is for "${prior.family.key}", not "${family}"`);
   const f = await readFamily({ project, family, foundations, tools });
   const json = v => JSON.stringify(v);
-  // A palette token the family reads that the document lacks is stale too (readFamily adds only the ones it does not hold).
-  const stale = [...Object.keys(f.synthesized).filter(k => json(foundations.variables[k]) !== json(f.synthesized[k])), ...Object.keys(f.palette)];
+  // As the document holds a palette token, usedBy aside (the Contracts that bind it fill that in).
+  const unused = v => v && { ...v, usedBy: [] };
+  const stale = [...Object.keys(f.synthesized).filter(k => json(foundations.variables[k]) !== json(f.synthesized[k])),
+    ...Object.keys(f.palette).filter(k => json(unused(foundations.variables[k])) !== json(f.palette[k]))];
   for (const [k, v] of Object.entries(foundations.variables))
     if (v.family === family && isSynthesized(v) && !f.synthesized[k]) stale.push(k);
   const exact = stale.length ? null : contractFor(f, family, foundations);

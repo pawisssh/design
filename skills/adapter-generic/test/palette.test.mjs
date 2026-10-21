@@ -100,6 +100,7 @@ test('a palette colour with an opacity or a Dark override aliases the palette to
   assert.match(text, /"alias":"color-slate-900"/);
   assert.match(text, /"alias":"color-slate-700"/);
   for (const k of ['color-slate-900', 'color-slate-700']) assert.ok(doc.variables[k], `${k} is in the document`);
+  for (const k of ['color-slate-900', 'color-slate-700']) assert.deepEqual(doc.variables[k].usedBy, ['button'], `${k} is used by Button`);
   const bound = new Set(closure(contract));
   assert.ok([...bound].some(k => doc.variables[k] && /^synthesized: /.test(doc.variables[k].source)), 'the Synthesized tokens are bound');
 });

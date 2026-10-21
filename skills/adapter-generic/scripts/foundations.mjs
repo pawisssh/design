@@ -348,14 +348,14 @@ export async function generate({ project, families = [], drafts = [], tools = DE
         tokens.add(t);
         const v = doc.variables[t] || doc.textStyles[t];
         if (v && !v.usedBy.includes(family)) v.usedBy.push(family); // a Synthesized token already names its family
+        // a palette colour a bound Synthesized token aliases (`bg-slate-900/50`) is used by that family too
+        for (const form of Object.values((v && v.values) || {})) {
+          const a = palette.has(form.alias) ? doc.variables[form.alias] : palette.has(form.from && form.from.alias) ? doc.variables[form.from.alias] : null;
+          if (a && !a.usedBy.includes(family)) a.usedBy.push(family);
+        }
       }
     }
     doc.closure.tokens = [...tokens].sort(byKey);
-    // Only the palette colours a Contract binds, or a bound Synthesized token aliases, are carried: an owner's omit may
-    // leave one unused.
-    const aliased = new Set([...tokens].flatMap(t => Object.values((variables[t] || {}).values || {}).flatMap(form => [form.alias, form.from && form.from.alias])));
-    for (const k of palette) if (!tokens.has(k) && !aliased.has(k)) { delete variables[k]; palette.delete(k); }
-    doc.variables = ordered(variables);
     if (palette.size) await crossCheckPalette({ doc, palette, css, project, cssFile, tools, pins, checks });
     // contractFor() throws on any validate error, rule 6 (scopes) among them, so a written document has none.
     doc.checks.scopes = { by: 'skills/contract/scripts/contract.mjs validate, rule 6', contracts: read.length, errors: 0 };
@@ -373,7 +373,7 @@ export async function generate({ project, families = [], drafts = [], tools = DE
 }
 
 /**
- * The cross-check of the Tailwind default-palette tokens a Contract binds (#254): `bg-<name>` compiles to the token's
+ * The cross-check of the Tailwind default-palette tokens the families read (#254): `bg-<name>` compiles to the token's
  * codeSyntax and the compiled theme layer holds the CSS its value was converted from. Counts them in the document's
  * `checks.compiled`, replaces its note on the default theme, and fails on a Figma name two variables share.
  */
