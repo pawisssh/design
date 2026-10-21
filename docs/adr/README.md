@@ -14,5 +14,4 @@ Re-open a decision when its trigger happens.
 | [0011 Slot-dependent styling becomes a Slot axis](0011-slot-dependent-styling-becomes-a-slot-axis.md) | A family needs more than two Slot axes, or Figma does not show a False/True Slot axis as a toggle |
 | [0012 Styling set by surroundings is a Mode or the parent's Contract](0012-styling-set-by-surroundings-is-a-mode-or-the-parents-contract.md) | A family a destination spec uses is styled by an ancestor that is neither a Mode nor its parent's Contract |
 | [0013 Form-control content is one node per version](0013-form-control-content-is-one-node-per-version.md) | A family needs a border whose width changes on one side per variant, or Repeated children that nest (SelectItemGroup) |
-| [0014 Vibe-to-Figma supports a Tailwind app without shadcn](0014-vibe-to-figma-supports-a-tailwind-app-without-shadcn.md) | A Prototype that is neither React nor Tailwind becomes a common input |
 | [0015 The runtime reader reads computed paint, spacing and radius](0015-the-runtime-reader-reads-computed-paint-spacing-and-radius.md) | A runtime run's tie requests or Off-system values are too many for the owner to review at Sign-off |
