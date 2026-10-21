@@ -3,8 +3,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { homedir, tmpdir } from 'node:os';
+import { join, relative } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 
 const HOOK = new URL('../pr-review-gate.mjs', import.meta.url).pathname;
 const SNIPPET_HOOKS = JSON.parse(readFileSync(new URL('../settings.snippet.json', import.meta.url), 'utf8')).hooks;
@@ -59,6 +60,11 @@ test('the commit is the one the command opens the PR from: a cd before gh, or --
     ['gh pr create --head side', side],
     ['gh pr create --head=owner:side', side],
     ['gh pr create -H side', side],
+    [`(cd ${other} && gh pr create)`, side],
+    [`true || cd ${other}; gh pr create`, side],
+    [`cd ~/${relative(homedir(), other)} && gh pr create`, side],
+    ['gh pr create --body "curl -H \\"Authorization: x\\""', head],
+    ['gh pr create --fill && gh pr view -H nope', head],
   ]) {
     const run = runHook(mkdtempSync(join(tmpdir(), 'pr-gate-seen-')), command, { cwd: root });
     assert.equal(run.out?.permissionDecision, 'deny', command);
@@ -68,11 +74,14 @@ test('the commit is the one the command opens the PR from: a cd before gh, or --
 
 test('gh pr create only where a command starts is gated', () => {
   const { root } = project();
-  for (const command of ['git push && gh pr create', 'true; gh pr create', 'false || gh pr create', '(gh pr create)', 'ls\ngh pr create']) {
+  for (const command of ['git push && gh pr create', 'true; gh pr create', 'false || gh pr create', '(gh pr create)', 'ls\ngh pr create',
+    'gh pr new', 'gh -R a/b pr create', 'gh --repo=a/b pr create', 'GH_REPO=a/b gh pr create', 'env X=1 gh pr create', 'timeout 60 gh pr create',
+    '/opt/homebrew/bin/gh pr create', 'sleep 1 & gh pr create', '{ gh pr create; }', 'if true; then gh pr create; fi']) {
     const run = runHook(mkdtempSync(join(tmpdir(), 'pr-gate-seen-')), command, { cwd: root });
     assert.equal(run.out?.permissionDecision, 'deny', command);
   }
-  for (const command of ['gh pr view', 'gh pr list', "grep -n 'gh pr create' notes.md", 'git commit -m "gate gh pr create"', 'echo gh pr create']) {
+  for (const command of ['gh pr view', 'gh pr list', "grep -n 'gh pr create' notes.md", 'git commit -m "gate gh pr create"', 'echo gh pr create',
+    'echo "a; gh pr create"', 'grep "(gh pr create" f', 'git commit -m "one\ngh pr create"', "echo 'x && gh pr create'"]) {
     const run = runHook(root, command);
     assert.equal(run.status, 0, command);
     assert.equal(run.stdout, '', command);
@@ -94,8 +103,22 @@ test('anything the gate cannot read passes the call through, silently', () => {
   }
 });
 
-test('the settings snippet runs the gate on Bash, and a failed run does not block the call', () => {
+test('the settings snippet runs the gate on Bash, with no onFailure: block', () => {
   const [entry] = SNIPPET_HOOKS.PreToolUse.filter(e => e.hooks.some(h => h.args?.some(a => a.endsWith('/pr-review-gate.mjs'))));
   assert.equal(entry.matcher, 'Bash');
   assert.deepEqual(entry.hooks, [{ type: 'command', command: 'node', args: ['${CLAUDE_PROJECT_DIR}/.claude/hooks/pr-review-gate.mjs'], timeout: 5 }]);
+});
+
+// Settings drift, as the use_figma hooks' test (skills/to-design/tests/result-hook.test.mjs): registering the gate is
+// the owner's step, so this stays red until they commit it to the project's settings on the same branch.
+test('the project settings register the gate as the snippet does', () => {
+  const settings = JSON.parse(readFileSync(new URL('../../settings.json', import.meta.url), 'utf8')).hooks || {};
+  for (const [event, entries] of Object.entries(SNIPPET_HOOKS)) {
+    for (const { matcher, hooks } of entries) {
+      for (const hook of hooks) {
+        const registered = (settings[event] || []).some(e => e.matcher === matcher && (e.hooks || []).some(h => isDeepStrictEqual(h, hook)));
+        assert.ok(registered, `.claude/settings.json has no ${event} hook for ${matcher} equal to the snippet's ${JSON.stringify(hook)}: the owner adds .claude/hooks/settings.snippet.json's entry to it`);
+      }
+    }
+  }
 });

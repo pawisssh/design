@@ -1,6 +1,6 @@
 ## Tests
 
-`npm test` runs every skill's suite; CI runs it on each PR. Run `node skills/adapter-carbon/scripts/sources.mjs` and `node skills/adapter-generic/scripts/sources.mjs` first, or the adapter tests that need them skip. Run `node skills/to-handoff/scripts/deps.mjs` too, or the to-handoff tests and adapter-generic's catalog measurements skip. The vibe-to-figma tests need both the adapter-generic tools and those deps.
+`npm test` runs every skill's suite and the repo hooks' (`.claude/hooks/test`); CI runs it on each PR. Run `node skills/adapter-carbon/scripts/sources.mjs` and `node skills/adapter-generic/scripts/sources.mjs` first, or the adapter tests that need them skip. Run `node skills/to-handoff/scripts/deps.mjs` too, or the to-handoff tests and adapter-generic's catalog measurements skip. The vibe-to-figma tests need both the adapter-generic tools and those deps.
 
 ## Agent skills
 
