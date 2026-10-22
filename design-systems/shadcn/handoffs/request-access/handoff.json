@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 10,
+  "revision": 11,
   "status": "pending",
   "approval": null,
   "feature": {
@@ -414,7 +414,7 @@
         },
         "loading": {
           "content": "`pending` or `status === \"loading\"` is true; conditional content shown: form",
-          "trigger": "onSubmit() sets status === \"loading\" before POST /api/request-access answers (stub route)",
+          "trigger": "onSubmit() sets status === \"loading\" before POST /api/request-access answers (stub API)",
           "usageStates": {
             "button-2": {
               "state": "disabled",
@@ -437,7 +437,7 @@
         },
         "error": {
           "content": "`status === \"error\"` is true; conditional content shown: form, alert",
-          "trigger": "onSubmit() sets status === \"error\" when POST /api/request-access fails (stub route)",
+          "trigger": "onSubmit() sets status === \"error\" when POST /api/request-access fails (stub API)",
           "screenshots": {
             "sm": "screens/index.error.sm.png",
             "md": "screens/index.error.md.png",
@@ -448,7 +448,7 @@
         },
         "success": {
           "content": "`status === \"success\"` is true; conditional content shown: div",
-          "trigger": "onSubmit() sets status === \"success\" when POST /api/request-access answers (stub route)",
+          "trigger": "onSubmit() sets status === \"success\" when POST /api/request-access answers (stub API)",
           "screenshots": {
             "sm": "screens/index.success.sm.png",
             "md": "screens/index.success.md.png",
@@ -649,7 +649,7 @@
     {
       "id": "request-access",
       "source": "simulated",
-      "note": "`POST /api/request-access` is a stub route the Prototype serves itself (app/api/request-access/route.ts): it answers after 800ms and can fail with 500",
+      "note": "`POST /api/request-access` is a stub API the Prototype serves itself (app/api/request-access/route.ts): it answers after 800ms and can fail with 500",
       "at": "app/request-access-form.tsx:31:23",
       "question": "q-data-request-access"
     }

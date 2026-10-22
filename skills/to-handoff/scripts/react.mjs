@@ -608,14 +608,15 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
 
 /**
  * {mocks: [{name, offset}], simulated: [{name, delay, offset, before, after}], stubs: [{route, method, file, name,
- * offset, reads, before, after}]}: `mock…` constants and literal exports of a data/ or fixtures/ file; functions
+ * offset, sets, before, after}]}: `mock…` constants and literal exports of a data/ or fixtures/ file; functions
  * that wait on a setTimeout, with the state each `setX(true)` sets before the timer (`before`) and after it
  * (`after`), named by its useState pair. A timer that only clears state after the work, `setTimeout(() =>
- * setMsg(null), 2000)`, is not simulated work. A stub is a `fetch('<path>')` of a route the Prototype serves
- * itself (#341), with the states its function sets before and after the call: `setStatus("loading")` is
+ * setMsg(null), 2000)`, is not simulated work. A stub is a string-literal `fetch('<path>')` of a static route the
+ * Prototype serves itself (#341), with the state variables its innermost function sets (`sets`, named only when
+ * that function is) and the states it sets before and after the call: `setStatus("loading")` is
  * `status === "loading"`, and any argument but false or an empty value may set a boolean (`setHasError(!res.ok)`).
  */
-function standInsOf(ts, sources, routes = []) {
+function standInsOf(ts, sources, routes) {
   const mocks = [], simulated = [], stubs = [];
   for (const s of sources) {
     const setters = {};
@@ -677,24 +678,25 @@ function standInsOf(ts, sources, routes = []) {
     for (const call of fetches) {
       const route = routes.find(r => r.route === call.arguments[0].text.replace(/[?#].*$/, ''));
       if (!route) continue;
+      // The innermost function, named or not: an inline handler's setters are its own, not the component's.
       let fn = call.parent;
-      while (fn && !nameOf(fn)) fn = fn.parent;
+      while (fn && !ts.isFunctionLike(fn)) fn = fn.parent;
       const opts = call.arguments[1];
       const m = opts && ts.isObjectLiteralExpression(opts) && opts.properties.find(p => ts.isPropertyAssignment(p) && p.name.getText(s.sf) === 'method');
-      const sets = [];
+      const calls = [];
       const scan = x => {
         const a = ts.isCallExpression(x) && ts.isIdentifier(x.expression) && /^set[A-Z]/.test(x.expression.text) && x.arguments[0];
-        if (a && a.kind !== ts.SyntaxKind.FalseKeyword && !empty(a)) sets.push(x);
+        if (a && a.kind !== ts.SyntaxKind.FalseKeyword && !empty(a)) calls.push(x);
         ts.forEachChild(x, scan);
       };
-      if (fn) scan(fn.body);
+      if (fn && fn.body) scan(fn.body);
       const name = c => setters[c.expression.text] || c.expression.text.replace(/^set(.)/, (_, ch) => ch.toLowerCase());
       const atom = c => (ts.isStringLiteralLike(c.arguments[0]) ? `${name(c)} === ${c.arguments[0].getText(s.sf)}` : name(c));
       const start = call.getStart(s.sf);
       stubs.push({
         route: route.route, method: m && ts.isStringLiteralLike(m.initializer) ? m.initializer.text.toUpperCase() : 'GET', file: route.file,
-        name: fn ? nameOf(fn) : null, offset: s.base + start, reads: [...new Set(sets.map(name))],
-        before: sets.filter(c => c.getStart(s.sf) < start).map(atom), after: sets.filter(c => c.getStart(s.sf) > start).map(atom),
+        name: fn ? nameOf(fn) : null, offset: s.base + start, sets: [...new Set(calls.map(name))],
+        before: calls.filter(c => c.getStart(s.sf) < start).map(atom), after: calls.filter(c => c.getStart(s.sf) > start).map(atom),
       });
     }
   }

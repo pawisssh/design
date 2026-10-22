@@ -716,10 +716,11 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       for (const a of f.after) if (stateOfAtom(a)) trigger[stateOfAtom(a)] = `${f.name}() sets ${a} after a ${f.delay}ms timer (simulated)`;
     }
     // A stub-route fetch (#341) belongs to the screen whose conditions read a state its function sets.
-    const stubs = sim.stubs.filter(f => !multi || f.reads.some(v => atoms.some(a => new RegExp(`\\b${v}\\b`).test(a))));
+    const stubs = sim.stubs.filter(f => !multi || f.sets.some(v => atoms.some(a => new RegExp(`\\b${v}\\b`).test(a))));
     for (const f of stubs) {
-      for (const a of f.before) if (stateOfAtom(a)) trigger[stateOfAtom(a)] = `${f.name}() sets ${a} before ${f.method} ${f.route} answers (stub route)`;
-      for (const a of f.after) if (stateOfAtom(a)) trigger[stateOfAtom(a)] = `${f.name}() sets ${a} when ${f.method} ${f.route} ${stateOfAtom(a) === 'error' ? 'fails' : 'answers'} (stub route)`;
+      const by = f.name ? `${f.name}()` : 'an inline handler';
+      for (const a of f.before) if (stateOfAtom(a)) trigger[stateOfAtom(a)] = `${by} sets ${a} before ${f.method} ${f.route} answers (stub API)`;
+      for (const a of f.after) if (stateOfAtom(a)) trigger[stateOfAtom(a)] = `${by} sets ${a} when ${f.method} ${f.route} ${stateOfAtom(a) === 'error' ? 'fails' : 'answers'} (stub API)`;
     }
     for (const s of STANDARD_STATES) {
       if (!present.includes(s)) {
@@ -750,13 +751,17 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       if (from && to) flow.push({ from: stateRef(from), trigger: `${f.delay}ms timer`, to: stateRef(to), source: 'simulated' });
       if (from && !present.includes('error')) flow.push({ from: stateRef(from), trigger: `${f.name}() fails`, to: stateRef('error'), source: 'missing' });
     }
+    // Two fetches of one route from one state give one row per transition.
+    const transition = (from, trigger, to, source) => {
+      if (!flow.some(x => x.from === stateRef(from) && x.trigger === trigger && x.to === stateRef(to))) flow.push({ from: stateRef(from), trigger, to: stateRef(to), source });
+    };
     for (const f of stubs) {
       const call = `${f.method} ${f.route}`;
       const from = f.before.map(stateOfAtom).find(Boolean) || 'default', after = f.after.map(stateOfAtom);
-      if (from !== 'default') flow.push({ from: stateRef('default'), trigger: f.name ? `${f.name}() calls ${call}` : `calls ${call}`, to: stateRef(from), source: 'simulated' });
-      if (after.includes('error')) flow.push({ from: stateRef(from), trigger: `${call} fails`, to: stateRef('error'), source: 'simulated' });
-      else if (!present.includes('error')) flow.push({ from: stateRef(from), trigger: `${call} fails`, to: stateRef('error'), source: 'missing' });
-      if (after.includes('success')) flow.push({ from: stateRef(from), trigger: `${call} answers ok`, to: stateRef('success'), source: 'simulated' });
+      if (from !== 'default') transition('default', `${f.name ? `${f.name}()` : 'an inline handler'} calls ${call}`, from, 'simulated');
+      if (after.includes('error')) transition(from, `${call} fails`, 'error', 'simulated');
+      else if (!present.includes('error')) transition(from, `${call} fails`, 'error', 'missing');
+      if (after.includes('success')) transition(from, `${call} answers ok`, 'success', 'simulated');
     }
 
     return { id: screenId, name: screen.name, at: at(screen.offset), breakpoints: breakpoints.map(b => b.key), regions, states: screenStates };
@@ -863,8 +868,9 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   for (const f of sim.stubs) {
     const id = kebab(f.route.replace(/^\/api\//, '')) || 'api';
     if (data.some(x => x.id === id)) continue;
-    const pretends = [f.delay ? `answers after ${f.delay}ms` : 'answers at once', f.failures.length ? `can fail with ${f.failures.join(' or ')}` : 'never fails'].join(' and ');
-    data.push({ id, source: 'simulated', note: `\`${f.method} ${f.route}\` is a stub route the Prototype serves itself (${f.file}): it ${pretends}`, at: at(f.offset),
+    // A failure the reader can't see (a throw, a status in a variable) is still possible: no status means no claim.
+    const pretends = [f.delay ? `answers after ${f.delay}ms` : 'answers at once', ...(f.failures.length ? [`can fail with ${f.failures.join(' or ')}`] : [])].join(' and ');
+    data.push({ id, source: 'simulated', note: `\`${f.method} ${f.route}\` is a stub API the Prototype serves itself (${f.file}): it ${pretends}`, at: at(f.offset),
       question: question({ id: `q-data-${id}`, kind: 'stand-in', to: 'developer', text: `What does \`${f.method} ${f.route}\` do in the real backend: what does it take and return, and how does it fail? The Prototype serves a stub for it.` }) });
   }
   // Above six routes, a Handoff is hard to review in one sitting (#62).

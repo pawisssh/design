@@ -118,6 +118,27 @@ export default function Page() {
   assert.ok(!doc.files.includes('app/api/other/route.ts'));
 });
 
+test('Next: a stub fetch in an inline handler takes that handler\'s setters, not its component\'s (#341)', { skip: noTs }, () => {
+  const dir = project({
+    'package.json': JSON.stringify({ name: 'inline', dependencies: { next: '15.5.28', react: '19.1.10' } }),
+    'app/layout.tsx': 'export default function Layout({ children }) { return <html><body>{children}</body></html>; }\n',
+    'app/page.tsx': `'use client';
+import { useState } from 'react';
+export default function Page() {
+  const [saving, setSaving] = useState(false);
+  const [open, setOpen] = useState(false);
+  return <div>
+    <button onClick={() => setOpen(true)}>Open</button>
+    <button onClick={async () => { setSaving(true); await fetch('/api/save', { method: 'POST' }); }}>Save</button>
+  </div>;
+}
+`,
+    'app/api/save/route.ts': 'export async function POST() { return Response.json({ ok: true }); }\n',
+  });
+  const [stub] = readReact(dir, { packages: PACKAGES }).standIns.stubs;
+  assert.deepEqual({ name: stub.name, sets: stub.sets, before: stub.before, after: stub.after }, { name: null, sets: ['saving'], before: ['saving'], after: [] });
+});
+
 test('Next: one screen per app/**/page.tsx inside its layouts; loading.tsx is a framework state; a fetched API route is a Stand-in', { skip: noTs }, () => {
   const doc = readReact(NEXT, { packages: PACKAGES });
   assert.equal(doc.kind, 'react-next');
@@ -288,7 +309,8 @@ test('generate: a Next Prototype is a valid Handoff; a Code Library Button is de
   // The subscribe screen's own API route is a Stand-in (#341): subscribe() sets isSubmitting, then hasError when it fails.
   const stub = h.data.find(x => x.id === 'subscribe');
   assert.deepEqual({ source: stub.source, at: stub.at, question: stub.question }, { source: 'simulated', at: 'app/subscribe/subscribe-form.tsx:13:28', question: 'q-data-subscribe' });
-  assert.match(stub.note, /answers at once and never fails/);
+  // The route answers no literal error status, so the note claims no failure; hasError still reads as the fail path.
+  assert.match(stub.note, /: it answers at once$/);
   assert.deepEqual(h.flow.filter(f => f.from.startsWith('subscribe/')), [
     { from: 'subscribe/default', trigger: 'subscribe() calls POST /api/subscribe', to: 'subscribe/loading', source: 'simulated' },
     { from: 'subscribe/loading', trigger: 'POST /api/subscribe fails', to: 'subscribe/error', source: 'simulated' },

@@ -151,7 +151,7 @@ test('read: a fetch to an API route the Prototype serves itself is a stub-route 
   const doc = readReact(V0, { packages: [BUTTON_PACKAGE] });
   assert.deepEqual(doc.standIns.stubs.map(f => ({ ...f, offset: undefined, at: doc.at(f.offset) })), [{
     route: '/api/request-access', method: 'POST', file: 'app/api/request-access/route.ts', name: 'onSubmit', offset: undefined, at: 'app/request-access-form.tsx:31:23',
-    delay: 800, failures: [500], reads: ['status'], before: ['status === "loading"'], after: ['status === "error"', 'status === "success"'],
+    delay: 800, failures: [500], sets: ['status'], before: ['status === "loading"'], after: ['status === "error"', 'status === "success"'],
   }]);
   // The route is read, so editing the stub is Drift; it is no longer ignored, and its own timer is the stub's latency, not simulated work.
   assert.ok(doc.files.includes('app/api/request-access/route.ts'));
