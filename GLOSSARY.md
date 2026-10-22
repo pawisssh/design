@@ -127,7 +127,7 @@ One of the five states every screen in a Handoff accounts for: default, loading,
 _Avoid_: Core state, base state, State (that is a Property Axis of a Contract)
 
 **Extra state**:
-A screen state beyond the Standard states that the Prototype shows or the owner names, such as offline or permission denied. A screen has as many as it needs, or none.
+A screen state beyond the Standard states that the Prototype shows or the owner names, such as offline or permission denied. A field's validation error is not one.
 _Avoid_: Custom state, edge state, State (that is a Property Axis of a Contract)
 
 **Stand-in**:
