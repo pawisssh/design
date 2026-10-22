@@ -1,0 +1,35 @@
+1si24ci401-spec_play_points2026: none
+Abhisheksingh17cyber_clean-ui-internity: Syne (Google Fonts)
+Alegrand048_SaludAvisa: none
+Andreicr1_Hedge_Control_Alcast_Frontend: 72 (font-family via --sapFontFamily)
+BDTBRG_Younger-blog: Inter, Playfair Display, SFMono-Regular, Georgia (Google Fonts, font-family via --font-family, font-family)
+Beca-lab_VinskaKarta: none
+BilalAbd2008_Comprehensive-ERP-System-Design: none
+Bochok24_YLC: Plus Jakarta Sans (Google Fonts, font-family via --font-family)
+CORE-BRIM-TECH_cloud-scope-inventory: none
+CodingSardine_Pu: Inter (Google Fonts, font-family)
+Crypto-Dashboard-Kursovay_crypto-dashboard-frontend: none
+JuanCamiloTorres15_PROYECTO-2.0: none
+KOver410_wearwhere_fe_react: Oswald, Montserrat (Google Fonts, font-family)
+Karl-Sue_aws-personal-page: Lora, Georgia, Courier New (Google Fonts, font-family)
+Max-Ambrogio_Ambrogio.com: Syncopate, JetBrains Mono (font-family, Google Fonts)
+NguyenAnhTu20924_EducationHust: none
+Nizar-GH_agrimarket: Inter (font-family)
+RalphJosehDsouza_Unemplyment_maxxing: Plus Jakarta Sans, Barlow Condensed (Google Fonts, font-family)
+Subu2006_Krishi-Mitra-AI: none
+Syntropys_web_frontend: Inter, Fraunces, JetBrains Mono (font-family, @font-face, --font-sans, font-family via --font-sans, font-family via --font-serif, font-family via --font-mono)
+TecReaGroup_birthday_calendar: none
+Tsepo-Mohlomi_CyberPaladinsStudyApp: none
+VincentCYS_vincentcys.github.io: none
+Weedanta_Capstone: none
+anujrwt08_portfolio-resume-2.0: skipped (no src/)
+barrulus_emacs-keybinds: JetBrains Mono (Google Fonts)
+bytedoger_awesome-OpenPrice: Inter (Google Fonts, font-family)
+cloudflips32_TrueAid: Plus Jakarta Sans (Google Fonts, font-family via --font-family)
+codedbyjt_vl-portfolio: none
+csamulde542948-pixel_SMSAPIWebsiteInterface: Fustat, JetBrains Mono, Inter (Google Fonts, font-family via --font-display, font-family via --font-mono, --font-sans, --font-sans via --font-sans)
+lost-found: none
+portfolio: Helvetica Neue (--font-sans)
+smart-parking: Inter (Google Fonts, font-family)
+
+names a font: 17, names none: 15, skipped: 1
