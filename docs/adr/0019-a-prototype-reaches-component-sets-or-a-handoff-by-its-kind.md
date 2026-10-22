@@ -54,7 +54,7 @@ yarn's lockfile is not lifted: no tool writes it by default.
 **Not decided here:**
 - **A React app that mixes Tailwind utilities with its own class-styled components** ([#331](https://github.com/pawisssh/design/issues/331)).
 - **Where a React + CSS or SCSS family's Contract anchors** ([#315](https://github.com/pawisssh/design/issues/315)).
-- **What an Extracted Library holds for a Container family** ([#332](https://github.com/pawisssh/design/issues/332)).
+- **What an Extracted Library holds for a Container family** ([#332](https://github.com/pawisssh/design/issues/332)). Decided since in [ADR 0016](0016-a-prototype-with-no-code-library-gets-an-extracted-library.md)'s amendment of 2026-10-23.
 - **A plain HTML page styled only by Tailwind's CDN script or by `style=""`.** No sample of either has been read. #337 takes the Tailwind 3 Play CDN.
 - **Which Design System a Handoff uses** when a Prototype has both its own folder and a packaged Code Library's. This is the second half of #321's D6.
 
