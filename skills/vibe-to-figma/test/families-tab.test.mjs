@@ -123,7 +123,7 @@ test('after an owner merge the rebuilt page shows the merged family, and the unt
   const stored = storedTicks(reviewExport(before, picked));
   assert.equal(picked['icon-button'].patch.omit.length, 1);
 
-  // The owner: "merge pill-button into action-button" (SKILL.md records it in the Family map, then reruns).
+  // The owner: "merge pill-button into action-button" (references/path-a.md records it in the Family map, then reruns).
   const mapPath = join(dir, 'path-a-app.family-map.json');
   const map = read(mapPath);
   map.families['action-button'] = { ...map.families['action-button'], by: 'owner', evidence: ['owner: merge pill-button into action-button'],
