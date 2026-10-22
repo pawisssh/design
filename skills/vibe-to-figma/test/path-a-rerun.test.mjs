@@ -10,12 +10,9 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeJson } from '../../contract/scripts/io.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
-import { read, scratch, skip, tree } from './helpers.mjs';
+import { PATH_A as FIXTURE, PATH_A_ANSWERS as ANSWERS, PATH_A_FAMILIES as FAMILIES, read, scratch, skip, tree } from './helpers.mjs';
 
-const FIXTURE = fileURLToPath(new URL('./fixtures/path-a-app', import.meta.url));
-const ANSWERS = fileURLToPath(new URL('./fixtures/path-a-app.answers.json', import.meta.url));
 const FOLDER = fileURLToPath(new URL('../scripts/folder.mjs', import.meta.url));
-const FAMILIES = ['action-button', 'card', 'icon-button', 'pill-button', 'segment'];
 
 /** A copy of the Prototype with its folder built from the committed answers: {proto, root, dir, edit(from, to), rerun()}. */
 async function world() {
@@ -98,7 +95,13 @@ test('a line inserted above a site keeps its family', { skip }, async () => {
   const again = await w.rerun();
   assert.equal(again.extraction, null);
   assert.deepEqual(again.written, []);
-  assert.deepEqual(tree(w.root), before, 'the map records no line, so it is byte-identical');
+  // The map records no line, so it and everything generated from it are byte-identical. The report records each site's
+  // line for the review page (#262), so it moves with the code and nothing else in it.
+  const lines = files => Object.fromEntries(Object.entries(files).map(([k, v]) => [k, k.endsWith('.families-report.json') ? v.replace(/"line": \d+/g, '"line": 0').replace(/\.tsx:\d+"/g, '.tsx:0"') : v]));
+  const now = tree(w.root);
+  assert.deepEqual(lines(now), lines(before));
+  const [report] = Object.keys(now).filter(k => k.endsWith('.families-report.json'));
+  assert.notEqual(now[report], before[report], 'the report follows the lines');
 });
 
 test('a new repeated element is requested with the existing names offered; nothing else is asked', { skip }, async () => {

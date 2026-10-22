@@ -9,12 +9,10 @@ import { join } from 'node:path';
 import * as contractModule from '../../contract/scripts/contract.mjs';
 import { buildCatalog } from '../../to-preview/scripts/catalog.mjs';
 import { buildReview, reviewModel } from '../scripts/review.mjs';
-import { READABLE, read, selections, skip, v0Folder } from './helpers.mjs';
+import { READABLE, embedded, read, selections, skip, stub, v0Folder } from './helpers.mjs';
 
 const require = createRequire(import.meta.url);
 const { reviewExport } = require('../assets/review-export.js');
-const stub = () => ({ stylesheet: '.lib{color:red}', modeClass: m => `mode-${m}`, render: t => `<div class="lib">${Object.values(t).join(' ')}</div>` });
-const embedded = html => JSON.parse(html.match(/<script type="application\/json" id="review">([\s\S]*?)<\/script>/)[1]);
 
 test('the model: Foundations colors and Text Styles, then each Contract with its drafted values, read-only', { skip }, async () => {
   const { dir } = await v0Folder();

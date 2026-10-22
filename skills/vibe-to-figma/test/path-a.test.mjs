@@ -11,12 +11,9 @@ import { fileURLToPath } from 'node:url';
 import { validate } from '../../contract/scripts/contract.mjs';
 import { sha256 } from '../../adapter-generic/scripts/sources.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
-import { read, scratch, skip, tree } from './helpers.mjs';
+import { PATH_A as PROTOTYPE, PATH_A_ANSWERS as ANSWERS, PATH_A_FAMILIES as FAMILIES, read, scratch, skip, tree } from './helpers.mjs';
 
-const PROTOTYPE = fileURLToPath(new URL('./fixtures/path-a-app', import.meta.url));
-const ANSWERS = fileURLToPath(new URL('./fixtures/path-a-app.answers.json', import.meta.url));
 const FOLDER = fileURLToPath(new URL('../scripts/folder.mjs', import.meta.url));
-const FAMILIES = ['action-button', 'card', 'icon-button', 'pill-button', 'segment'];
 const cli = (...args) => spawnSync(process.execPath, [FOLDER, PROTOTYPE, ...args], { encoding: 'utf8' });
 const answers = () => read(ANSWERS);
 

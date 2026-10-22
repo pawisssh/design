@@ -185,7 +185,10 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const sortedFiles = Object.fromEntries(Object.keys(files).sort(byKey).map(f => [f, files[f]]));
   // The packages the preview renderer runs the component with, at the versions the project's lockfile resolves.
   const lock = JSON.parse(readText('package-lock.json')).packages;
-  const renderer = Object.fromEntries(Object.keys(JSON.parse(readFileSync(PREVIEW_PACKAGES, 'utf8')).dependencies)
+  // react and react-dom are always required; any other pinned package is one a project that does not list it does not use (an
+  // Extracted Library imports only cva and cn, #262), and the preview renderer installs just the ones the lockfile lists.
+  const pinnedPackages = Object.keys(JSON.parse(readFileSync(PREVIEW_PACKAGES, 'utf8')).dependencies);
+  const renderer = Object.fromEntries(pinnedPackages.filter(name => ['react', 'react-dom'].includes(name) || lock[`node_modules/${name}`])
     .map(name => [name, (lock[`node_modules/${name}`] || fail(`package-lock.json resolves no ${name}, which the preview renderer pins`)).version]));
 
   // 1. Source: the root component and its cva call. A root with no cva (Card) is one variant: its own className.
