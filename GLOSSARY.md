@@ -122,6 +122,14 @@ _Avoid_: Instance (that is the Figma node), component reference, match
 A Code Library component whose subtree holds Usages of other Code Library components, such as a Card around a form. With a Contract, it is a Usage that the others nest in through `in`; one whose children are all its own parts is a leaf.
 _Avoid_: Wrapper (that is the reading of a container with no Contract), parent
 
+**Standard state**:
+One of the five states every screen in a Handoff accounts for: default, loading, empty, error and success.
+_Avoid_: Core state, base state, State (that is a Property Axis of a Contract)
+
+**Extra state**:
+A screen state beyond the Standard states that the Prototype shows or the owner names, such as offline or permission denied. A screen has as many as it needs, or none.
+_Avoid_: Custom state, edge state, State (that is a Property Axis of a Contract)
+
 **Stand-in**:
 Anything in a Prototype that fakes what the real feature will do, such as mock data, a stub API, fake latency or placeholder copy. The Handoff records what it pretends to do, never how.
 _Avoid_: Mock (when more than data is meant), fake, throwaway code
