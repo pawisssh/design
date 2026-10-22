@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 9,
+  "revision": 11,
   "status": "pending",
   "approval": null,
   "feature": {
@@ -13,6 +13,7 @@
     "kind": "react-next",
     "prototype": {
       "files": {
+        "app/api/request-access/route.ts": "sha256:09495a7dc61f62615d1aba40431acd7c044d8ba089c2bd8dd54914a31a6cff4c",
         "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
         "app/layout.tsx": "sha256:27471c24f05b096454dc3c3cc5ee4bc992eee8e5aedb6dc8e0b53c62148780f8",
         "app/page.tsx": "sha256:dee906d9e5007717ffca7f94e1e7f29122c29e7b569e1502d4e84c1a4d23c2a8",
@@ -27,7 +28,7 @@
         "components/ui/sonner.tsx": "sha256:2dd975ad2170ba2570b00e58713dcbda90f26a7fffdaceb1ef7255f450c2d2a6",
         "components/ui/textarea.tsx": "sha256:82601c91ffc6c727d924162c78d7cb853114bcced4e2eb922a68ca12d4239c0f"
       },
-      "snapshotId": "sha256:4b294d0b16ab600455b84072c830fc529b05afe04d6bd1d06e8f03d91d82a2ae"
+      "snapshotId": "sha256:b817f7e067204abc73dddaf830a922c49afa7d24d36e14d33a74ec72e0848ee2"
     },
     "designSystem": "shadcn",
     "contracts": {
@@ -73,9 +74,6 @@
         "level": "info",
         "text": "Single-mode Prototype: its page surface (#ffffff) map best to Light (Light ΔE 0, Dark ΔE 0.8552). The other Theme modes render unverified."
       }
-    ],
-    "ignored": [
-      "app/api/request-access/route.ts (API route)"
     ]
   },
   "screens": [
@@ -416,7 +414,7 @@
         },
         "loading": {
           "content": "`pending` or `status === \"loading\"` is true; conditional content shown: form",
-          "trigger": "pending or status === \"loading\"",
+          "trigger": "onSubmit() sets status === \"loading\" before POST /api/request-access answers (stub API)",
           "usageStates": {
             "button-2": {
               "state": "disabled",
@@ -439,7 +437,7 @@
         },
         "error": {
           "content": "`status === \"error\"` is true; conditional content shown: form, alert",
-          "trigger": "status === \"error\"",
+          "trigger": "onSubmit() sets status === \"error\" when POST /api/request-access fails (stub API)",
           "screenshots": {
             "sm": "screens/index.error.sm.png",
             "md": "screens/index.error.md.png",
@@ -450,7 +448,7 @@
         },
         "success": {
           "content": "`status === \"success\"` is true; conditional content shown: div",
-          "trigger": "status === \"success\"",
+          "trigger": "onSubmit() sets status === \"success\" when POST /api/request-access answers (stub API)",
           "screenshots": {
             "sm": "screens/index.success.sm.png",
             "md": "screens/index.success.md.png",
@@ -618,10 +616,44 @@
       "text": "The Prototype loads Geist from next/font/google (app/layout.tsx:2:10), Geist_Mono from next/font/google (app/layout.tsx:2:17); the Text Styles use Geist. Use Geist?",
       "answer": "Geist and Geist Mono, as the Prototype loads them.",
       "by": "owner"
+    },
+    {
+      "id": "q-data-request-access",
+      "kind": "stand-in",
+      "to": "developer",
+      "text": "What does `POST /api/request-access` do in the real backend: what does it take and return, and how does it fail? The Prototype serves a stub for it.",
+      "answer": null
     }
   ],
-  "flow": [],
-  "data": [],
+  "flow": [
+    {
+      "from": "default",
+      "trigger": "onSubmit() calls POST /api/request-access",
+      "to": "loading",
+      "source": "simulated"
+    },
+    {
+      "from": "loading",
+      "trigger": "POST /api/request-access fails",
+      "to": "error",
+      "source": "simulated"
+    },
+    {
+      "from": "loading",
+      "trigger": "POST /api/request-access answers ok",
+      "to": "success",
+      "source": "simulated"
+    }
+  ],
+  "data": [
+    {
+      "id": "request-access",
+      "source": "simulated",
+      "note": "`POST /api/request-access` is a stub API the Prototype serves itself (app/api/request-access/route.ts): it answers after 800ms and can fail with 500",
+      "at": "app/request-access-form.tsx:31:23",
+      "question": "q-data-request-access"
+    }
+  ],
   "ownerDecisions": {
     "question:q-font": {
       "answer": "Geist and Geist Mono, as the Prototype loads them."

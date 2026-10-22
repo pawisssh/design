@@ -134,7 +134,7 @@ export function ownDeclarations(rules, el) {
 
 /**
  * Mock data (`const mock… =`) and simulated work (`setTimeout` in a function) in the scripts.
- * Returns {mocks: [{name, offset}], simulated: [{name, delay, offset, before: [atom], after: [atom]}]}:
+ * Returns {mocks: [{name, offset}], simulated: [{name, delay, offset, before: [atom], after: [atom]}], stubs: []}:
  * `before` are the `state.x = true` writes before the timer, `after` the ones inside its callback. A timer that
  * only clears state after the work, `setTimeout(() => { state.msg = null; render(); }, 2000)`, is not simulated work.
  */
@@ -151,7 +151,8 @@ export function standIns(scripts) {
       simulated.push({ name: m[1], delay: delay ? Number(delay[1]) : null, offset: s.offset + m.index, before: trues(body.slice(0, t)), after: trues(body.slice(t)) });
     }
   }
-  return { mocks, simulated };
+  // A single HTML file serves no API routes, so it has no stub-route Stand-ins (#341).
+  return { mocks, simulated, stubs: [] };
 }
 
 // A setTimeout's arguments whose callback only resets state to null, undefined or '' (and re-renders) (#217).

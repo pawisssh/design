@@ -147,6 +147,37 @@ test('generate: the v0 Prototype is a valid Handoff; each shadcn Button and the 
   assert.deepEqual(Object.keys(result.handoff.source.contracts), ['alert', 'button', 'card', 'input', 'label', 'select', 'textarea']);
 });
 
+test('read: a fetch to an API route the Prototype serves itself is a stub-route Stand-in, with the states its caller sets (#341)', { skip: noTs }, () => {
+  const doc = readReact(V0, { packages: [BUTTON_PACKAGE] });
+  assert.deepEqual(doc.standIns.stubs.map(f => ({ ...f, offset: undefined, at: doc.at(f.offset) })), [{
+    route: '/api/request-access', method: 'POST', file: 'app/api/request-access/route.ts', name: 'onSubmit', offset: undefined, at: 'app/request-access-form.tsx:31:23',
+    delay: 800, failures: [500], sets: ['status'], before: ['status === "loading"'], after: ['status === "error"', 'status === "success"'],
+  }]);
+  // The route is read, so editing the stub is Drift; it is no longer ignored, and its own timer is the stub's latency, not simulated work.
+  assert.ok(doc.files.includes('app/api/request-access/route.ts'));
+  assert.deepEqual(doc.ignored.filter(x => /API route/.test(x)), []);
+  assert.deepEqual(doc.standIns.simulated, []);
+});
+
+test('generate: the stub route is a data Stand-in with a developer question, and the submit flow goes loading, then success or error (#341)', { skip: noTs }, async () => {
+  const ds = shadcnDesignSystem();
+  const result = await generate({ prototype: V0, designSystem: ds, decisions: DECISIONS });
+  const h = result.handoff;
+  assert.deepEqual(h.data.map(x => [x.id, x.source, x.at, x.question]), [['request-access', 'simulated', 'app/request-access-form.tsx:31:23', 'q-data-request-access']]);
+  const q = h.openQuestions.find(x => x.id === 'q-data-request-access');
+  assert.deepEqual({ kind: q.kind, to: q.to }, { kind: 'stand-in', to: 'developer' });
+  // What the Stand-in pretends to do (a delay, a 500), never how: the route's `includes("fail")` stays out of the Handoff.
+  assert.match(h.data[0].note, /POST \/api\/request-access.*800ms.*500/);
+  for (const text of [h.data[0].note, q.text]) assert.doesNotMatch(text, /includes|"fail"|email/);
+  assert.deepEqual(h.flow, [
+    { from: 'default', trigger: 'onSubmit() calls POST /api/request-access', to: 'loading', source: 'simulated' },
+    { from: 'loading', trigger: 'POST /api/request-access fails', to: 'error', source: 'simulated' },
+    { from: 'loading', trigger: 'POST /api/request-access answers ok', to: 'success', source: 'simulated' },
+  ]);
+  assert.match(h.screens[0].states.loading.trigger, /onSubmit\(\) sets status === "loading" before POST \/api\/request-access/);
+  assert.deepEqual(validateHandoff(h, await loadDesignSystem(ds)).errors, []);
+});
+
 test('generate: a family with no Contract is drafted mid-run by the Generic procedure, used, and written into contracts/ as the Adapter wrote it', { skip: noTs }, async () => {
   const ds = shadcnDesignSystem();
   const { handoff } = await generate({ prototype: V0, designSystem: ds, decisions: DECISIONS });

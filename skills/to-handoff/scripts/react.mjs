@@ -538,12 +538,12 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
     if (!rootLayout) throw new Error(`${app}/ has no root layout`);
     for (const dir of ['.', 'src']) { const m = special(dir, 'middleware'); if (m) ignored.push(`${m} (middleware)`); }
     // Pages, by sorted folder walk: route groups drop out of the path; private and parallel-route folders are ignored.
-    const pages = [];
+    const pages = [], routes = [];
     const visit = (dir, segs) => {
       const page = special(dir, 'page');
       if (page) pages.push({ dir, page, route: '/' + segs.join('/') });
       const handler = special(dir, 'route');
-      if (handler) ignored.push(`${handler} (API route)`);
+      if (handler) { ignored.push(`${handler} (API route)`); routes.push({ route: '/' + segs.join('/'), file: handler }); }
       for (const ent of readdirSync(join(root, dir), { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
         if (!ent.isDirectory()) continue;
         const sub = posix.join(dir, ent.name);
@@ -587,14 +587,19 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
       if (!rootEl) throw new Error(`${rootLayout} renders no <html>`);
       return { id: screenIdOf(route), name: metadataTitle(page) || route, route, offset: pageAt, root: rootEl, mount: mount || findEl(rootEl, e => e.tag === 'body') };
     });
-    return { title: metadataTitle(rootLayout), screens };
+    return { title: metadataTitle(rootLayout), screens, routes };
   };
 
   const read = kind === 'react-vite' ? readVite() : readNext();
   rules.forEach((r, i) => { r.order = i; });
+  const standIns = standInsOf(ts, [...sources.values()], read.routes || []);
+  // A route a fetch calls is read after the scan (#341), so its own timer is the stub's latency, not simulated work,
+  // and it is pinned: editing the stub is Drift. Routes nothing fetches stay ignored.
+  for (const f of standIns.stubs) Object.assign(f, stubRoute(ts, source(f.file), f.method));
+  const fetched = new Set(standIns.stubs.map(f => `${f.file} (API route)`));
   return {
     kind, title: read.title || packageOf(root).name || posix.basename(root), files: space.files.map(f => f.rel).sort(), at: space.at, rules,
-    standIns: standInsOf(ts, [...sources.values()]), fonts, screens: read.screens, uiDir, ignored: [...new Set(ignored)].sort(),
+    standIns, fonts, screens: read.screens, uiDir, ignored: [...new Set(ignored)].filter(x => !fetched.has(x)).sort(),
     tailwind: usesTailwind(root),
   };
 }
@@ -602,13 +607,17 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
 // ---------- Stand-ins (#62) by name and shape, over the files the reader read ----------
 
 /**
- * {mocks: [{name, offset}], simulated: [{name, delay, offset, before, after}]}: `mock…` constants and literal
- * exports of a data/ or fixtures/ file; functions that wait on a setTimeout, with the state each `setX(true)`
- * sets before the timer (`before`) and after it (`after`), named by its useState pair. A timer that only clears
- * state after the work, `setTimeout(() => setMsg(null), 2000)`, is not simulated work.
+ * {mocks: [{name, offset}], simulated: [{name, delay, offset, before, after}], stubs: [{route, method, file, name,
+ * offset, sets, before, after}]}: `mock…` constants and literal exports of a data/ or fixtures/ file; functions
+ * that wait on a setTimeout, with the state each `setX(true)` sets before the timer (`before`) and after it
+ * (`after`), named by its useState pair. A timer that only clears state after the work, `setTimeout(() =>
+ * setMsg(null), 2000)`, is not simulated work. A stub is a string-literal `fetch('<path>')` of a static route the
+ * Prototype serves itself (#341), with the state variables its innermost function sets (`sets`, named only when
+ * that function is) and the states it sets before and after the call: `setStatus("loading")` is
+ * `status === "loading"`, and any argument but false or an empty value may set a boolean (`setHasError(!res.ok)`).
  */
-function standInsOf(ts, sources) {
-  const mocks = [], simulated = [];
+function standInsOf(ts, sources, routes) {
+  const mocks = [], simulated = [], stubs = [];
   for (const s of sources) {
     const setters = {};
     const visit = n => {
@@ -627,9 +636,14 @@ function standInsOf(ts, sources) {
     // Each setTimeout's innermost named function, with the setX(true) calls in it before and after the timer.
     const nameOf = n => (ts.isFunctionDeclaration(n) && n.name ? n.name.text
       : (ts.isArrowFunction(n) || ts.isFunctionExpression(n)) && ts.isVariableDeclaration(n.parent) && ts.isIdentifier(n.parent.name) ? n.parent.name.text : null);
-    const timers = [];
-    const findTimers = n => { if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === 'setTimeout') timers.push(n); ts.forEachChild(n, findTimers); };
-    findTimers(s.sf);
+    const timers = [], fetches = [];
+    const calledAs = (n, name) => ts.isCallExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === name;
+    const findCalls = n => {
+      if (calledAs(n, 'setTimeout')) timers.push(n);
+      if (calledAs(n, 'fetch') && n.arguments[0] && ts.isStringLiteralLike(n.arguments[0])) fetches.push(n);
+      ts.forEachChild(n, findCalls);
+    };
+    findCalls(s.sf);
     // A timer whose callback only resets state to null, undefined or '' clears a message after the work (#217).
     const empty = x => x.kind === ts.SyntaxKind.NullKeyword || (ts.isIdentifier(x) && x.text === 'undefined') || (ts.isStringLiteralLike(x) && x.text === '');
     const resets = x => ts.isCallExpression(x) && ts.isIdentifier(x.expression) && /^set[A-Z]/.test(x.expression.text) && x.arguments.length === 1 && empty(x.arguments[0]);
@@ -661,8 +675,47 @@ function standInsOf(ts, sources) {
         after: calls.filter(c => c.getStart(s.sf) > start).map(atom),
       });
     }
+    for (const call of fetches) {
+      const route = routes.find(r => r.route === call.arguments[0].text.replace(/[?#].*$/, ''));
+      if (!route) continue;
+      // The innermost function, named or not: an inline handler's setters are its own, not the component's.
+      let fn = call.parent;
+      while (fn && !ts.isFunctionLike(fn)) fn = fn.parent;
+      const opts = call.arguments[1];
+      const m = opts && ts.isObjectLiteralExpression(opts) && opts.properties.find(p => ts.isPropertyAssignment(p) && p.name.getText(s.sf) === 'method');
+      const calls = [];
+      const scan = x => {
+        const a = ts.isCallExpression(x) && ts.isIdentifier(x.expression) && /^set[A-Z]/.test(x.expression.text) && x.arguments[0];
+        if (a && a.kind !== ts.SyntaxKind.FalseKeyword && !empty(a)) calls.push(x);
+        ts.forEachChild(x, scan);
+      };
+      if (fn && fn.body) scan(fn.body);
+      const name = c => setters[c.expression.text] || c.expression.text.replace(/^set(.)/, (_, ch) => ch.toLowerCase());
+      const atom = c => (ts.isStringLiteralLike(c.arguments[0]) ? `${name(c)} === ${c.arguments[0].getText(s.sf)}` : name(c));
+      const start = call.getStart(s.sf);
+      stubs.push({
+        route: route.route, method: m && ts.isStringLiteralLike(m.initializer) ? m.initializer.text.toUpperCase() : 'GET', file: route.file,
+        name: fn ? nameOf(fn) : null, offset: s.base + start, sets: [...new Set(calls.map(name))],
+        before: calls.filter(c => c.getStart(s.sf) < start).map(atom), after: calls.filter(c => c.getStart(s.sf) > start).map(atom),
+      });
+    }
   }
-  return { mocks, simulated };
+  return { mocks, simulated, stubs };
+}
+
+// What a stub route pretends to do (#341), never how: the longest literal setTimeout it waits on, and the error
+// statuses (`{status: 500}`) it can answer, in its `method` handler when it exports one, else the whole file.
+function stubRoute(ts, s, method) {
+  const handler = s.exports.get(method);
+  let delay = null;
+  const failures = new Set();
+  const visit = n => {
+    if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === 'setTimeout' && n.arguments[1] && ts.isNumericLiteral(n.arguments[1])) delay = Math.max(delay ?? 0, Number(n.arguments[1].text));
+    if (ts.isPropertyAssignment(n) && n.name.getText(s.sf) === 'status' && ts.isNumericLiteral(n.initializer) && Number(n.initializer.text) >= 400) failures.add(Number(n.initializer.text));
+    ts.forEachChild(n, visit);
+  };
+  visit(handler || s.sf);
+  return { delay, failures: [...failures].sort((a, b) => a - b) };
 }
 
 // ---------- helpers ----------

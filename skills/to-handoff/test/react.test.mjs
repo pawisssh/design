@@ -100,7 +100,46 @@ createRoot(document.getElementById('app')!).render(<RouterProvider router={route
   assert.deepEqual(elements(cart.mount, el => el !== cart.mount).map(el => el.classes[0] || el.tag), ['frame', 'nav', 'cart']);
 });
 
-test('Next: one screen per app/**/page.tsx inside its layouts; loading.tsx is a framework state; API routes are ignored', { skip: noTs }, () => {
+test('Next: a fetch to another site or to a path no route serves is no Stand-in; a route nothing fetches stays ignored (#341)', { skip: noTs }, () => {
+  const dir = project({
+    'package.json': JSON.stringify({ name: 'fetches', dependencies: { next: '15.5.28', react: '19.1.10' } }),
+    'app/layout.tsx': 'export default function Layout({ children }) { return <html><body>{children}</body></html>; }\n',
+    'app/page.tsx': `'use client';
+export default function Page() {
+  async function load() { await fetch('https://example.com/api/other'); await fetch('/api/missing'); }
+  return <button onClick={load}>Load</button>;
+}
+`,
+    'app/api/other/route.ts': 'export async function GET() { return Response.json({ ok: true }); }\n',
+  });
+  const doc = readReact(dir, { packages: PACKAGES });
+  assert.deepEqual(doc.standIns.stubs, []);
+  assert.deepEqual(doc.ignored, ['app/api/other/route.ts (API route)']);
+  assert.ok(!doc.files.includes('app/api/other/route.ts'));
+});
+
+test('Next: a stub fetch in an inline handler takes that handler\'s setters, not its component\'s (#341)', { skip: noTs }, () => {
+  const dir = project({
+    'package.json': JSON.stringify({ name: 'inline', dependencies: { next: '15.5.28', react: '19.1.10' } }),
+    'app/layout.tsx': 'export default function Layout({ children }) { return <html><body>{children}</body></html>; }\n',
+    'app/page.tsx': `'use client';
+import { useState } from 'react';
+export default function Page() {
+  const [saving, setSaving] = useState(false);
+  const [open, setOpen] = useState(false);
+  return <div>
+    <button onClick={() => setOpen(true)}>Open</button>
+    <button onClick={async () => { setSaving(true); await fetch('/api/save', { method: 'POST' }); }}>Save</button>
+  </div>;
+}
+`,
+    'app/api/save/route.ts': 'export async function POST() { return Response.json({ ok: true }); }\n',
+  });
+  const [stub] = readReact(dir, { packages: PACKAGES }).standIns.stubs;
+  assert.deepEqual({ name: stub.name, sets: stub.sets, before: stub.before, after: stub.after }, { name: null, sets: ['saving'], before: ['saving'], after: [] });
+});
+
+test('Next: one screen per app/**/page.tsx inside its layouts; loading.tsx is a framework state; a fetched API route is a Stand-in', { skip: noTs }, () => {
   const doc = readReact(NEXT, { packages: PACKAGES });
   assert.equal(doc.kind, 'react-next');
   assert.equal(doc.title, 'Release notes');
@@ -108,7 +147,7 @@ test('Next: one screen per app/**/page.tsx inside its layouts; loading.tsx is a 
     { id: 'index', route: '/', at: 'app/page.tsx:8:5', root: 'html', mount: 'body' },
     { id: 'subscribe', route: '/subscribe', at: 'app/subscribe/page.tsx:5:5', root: 'html', mount: 'body' },
   ]);
-  assert.deepEqual(doc.ignored, ['app/api/subscribe/route.ts (API route)']);
+  assert.deepEqual(doc.ignored, []);
   const [index, subscribe] = doc.screens;
   assert.deepEqual(index.mount.children.map(c => [c.classes[0], c.cond]), [
     ['topbar', []],
@@ -118,9 +157,13 @@ test('Next: one screen per app/**/page.tsx inside its layouts; loading.tsx is a 
   const problem = elements(subscribe.root, el => el.classes.includes('problem'))[0];
   assert.deepEqual(problem.cond.map(c => ({ expr: c.expr, value: c.value })), [{ expr: 'app/loading.tsx', value: false }, { expr: 'hasError', value: true }]);
   assert.deepEqual(doc.fonts.map(f => ({ module: f.module, name: f.name, at: doc.at(f.offset) })), [{ module: 'geist/font/sans', name: 'GeistSans', at: 'app/layout.tsx:2:10' }]);
-  assert.ok(doc.files.includes('lib/releases.ts') && doc.files.includes('app/globals.css') && !doc.files.includes('app/api/subscribe/route.ts'));
+  assert.ok(doc.files.includes('lib/releases.ts') && doc.files.includes('app/globals.css') && doc.files.includes('app/api/subscribe/route.ts'));
   assert.deepEqual(doc.standIns.mocks.map(m => m.name), ['mockReleases']);
   assert.deepEqual(doc.standIns.simulated.map(f => [f.name, f.delay]), [['getReleases', 300]]);
+  // setHasError(!response.ok) may set hasError: a non-false argument after the fetch reaches its state.
+  assert.deepEqual(doc.standIns.stubs.map(f => ({ route: f.route, method: f.method, name: f.name, at: doc.at(f.offset), delay: f.delay, failures: f.failures, before: f.before, after: f.after })), [
+    { route: '/api/subscribe', method: 'POST', name: 'subscribe', at: 'app/subscribe/subscribe-form.tsx:13:28', delay: null, failures: [], before: ['isSubmitting'], after: ['hasError'] },
+  ]);
 });
 
 test('a setTimeout that only clears a status message after the work is not simulated work (#217)', { skip: noTs }, () => {
@@ -246,7 +289,7 @@ test('generate: a Next Prototype is a valid Handoff; a Code Library Button is de
   const h = result.handoff;
   assert.deepEqual(validateHandoff(h, await loadDesignSystem(ds)).errors, []);
   assert.deepEqual({ kind: h.source.kind, key: h.feature.key, ignored: h.source.ignored, screens: h.screens.map(s => [s.id, s.at]) }, {
-    kind: 'react-next', key: 'release-notes', ignored: ['app/api/subscribe/route.ts (API route)'],
+    kind: 'react-next', key: 'release-notes', ignored: undefined,
     screens: [['index', 'app/page.tsx:8:5'], ['subscribe', 'app/subscribe/page.tsx:5:5']],
   });
   const [index, subscribe] = h.screens;
@@ -263,6 +306,15 @@ test('generate: a Next Prototype is a valid Handoff; a Code Library Button is de
   assert.equal(index.states.error.question, 'q-state-error-index');
   // next/font is a font question with its import site.
   assert.match(h.openQuestions.find(q => q.id === 'q-font').text, /GeistSans from geist\/font\/sans \(app\/layout\.tsx:2:10\)/);
+  // The subscribe screen's own API route is a Stand-in (#341): subscribe() sets isSubmitting, then hasError when it fails.
+  const stub = h.data.find(x => x.id === 'subscribe');
+  assert.deepEqual({ source: stub.source, at: stub.at, question: stub.question }, { source: 'simulated', at: 'app/subscribe/subscribe-form.tsx:13:28', question: 'q-data-subscribe' });
+  // The route answers no literal error status, so the note claims no failure; hasError still reads as the fail path.
+  assert.match(stub.note, /: it answers at once$/);
+  assert.deepEqual(h.flow.filter(f => f.from.startsWith('subscribe/')), [
+    { from: 'subscribe/default', trigger: 'subscribe() calls POST /api/subscribe', to: 'subscribe/loading', source: 'simulated' },
+    { from: 'subscribe/loading', trigger: 'POST /api/subscribe fails', to: 'subscribe/error', source: 'simulated' },
+  ]);
 });
 
 test('generate: Next boundary files are states by name: a feature not-found.tsx is empty, error.tsx error; the root not-found is ignored', { skip: noTs }, async () => {
