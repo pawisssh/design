@@ -47,4 +47,4 @@ Used by `/wayfinder`. The **map** is a single issue with **child** issues as tic
   ```
   Where sub-issues aren't enabled, read the map body's task list instead and drop any child with an open issue in its `Blocked by` line.
 - **Claim**: `gh issue edit <n> --add-assignee @me`, the session's first write.
-- **Resolve**: `gh issue comment <n> --body "<answer>"`, then `gh issue close <n>`, then `node scripts/map.mjs decide <map> <n> "<gist>"`. It appends the context pointer (gist + link) to the map's Decisions-so-far without dropping a line another session added, and it reports any closed ticket the map links nowhere.
+- **Resolve**: `gh issue comment <n> --body "<answer>"`, then `gh issue close <n>`, then `node scripts/map.mjs decide <map> <n> "<gist>"`. It appends the context pointer (gist + link) to the map's Decisions-so-far, re-reading the map just before the write and checking it after, then reports any closed ticket the map lists nowhere, such as a line another session's write dropped. A ticket closed as not planned goes under Out of scope by hand instead.

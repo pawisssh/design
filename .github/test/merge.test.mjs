@@ -1,4 +1,5 @@
-// The merge script's gate (scripts/merge.mjs): the latest `test` run on the head must have passed.
+// The merge script's checks (scripts/merge.mjs): the latest `test` run on the head must have passed, and the areas
+// each side of a moved main touches.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { areas, testVerdict } from '../../scripts/merge.mjs';

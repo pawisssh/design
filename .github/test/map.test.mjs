@@ -46,3 +46,17 @@ test('a closed ticket the map links nowhere is reported, unless it was a duplica
   ];
   assert.deepEqual(unlinked(body, kids).map(c => c.number), [2]);
 });
+
+test('a link in another ticket\'s gist is not the ticket\'s own line', () => {
+  const body = map(`\n- [Seven](${url(7)}): settled; implement in [Nine](${url(9)})\n`);
+  const line = decisionLine({ title: 'Nine', html_url: url(9) }, 'ninth');
+  assert.equal(withDecision(body, line, 9), map(`\n- [Seven](${url(7)}): settled; implement in [Nine](${url(9)})\n${line}\n`));
+  assert.deepEqual(unlinked(body, [{ number: 9, state: 'closed', state_reason: 'completed' }]).map(c => c.number), [9]);
+});
+
+test('a ticket listed under Out of scope gets no Decisions line, and a link under Not yet specified lists nothing', () => {
+  const body = map('') + `\n## Out of scope\n\n- [Four](${url(4)}): past the destination\n`;
+  assert.equal(withDecision(body, decisionLine({ title: 'Four', html_url: url(4) }, 'again'), 4), body);
+  const fog = map('').replace('- fog', `- [Six](${url(6)}) may graduate`);
+  assert.deepEqual(unlinked(fog, [{ number: 6, state: 'closed', state_reason: 'completed' }]).map(c => c.number), [6]);
+});
