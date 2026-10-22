@@ -26,7 +26,7 @@
       "state": "loading",
       "given": "a filled form",
       "when": "Request access is pressed",
-      "then": "the button shows Sending… and is disabled"
+      "then": "the button shows Sending\u2026 and is disabled"
     },
     {
       "id": "send-fails",
