@@ -865,9 +865,14 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       question: question({ id: `q-data-${id}`, kind: 'stand-in', to: 'developer', text: `What does \`${f.name}()\` call, and how does it fail? The Prototype simulates it with a timer.` }) });
   }
   // A route the Prototype serves itself is a stub API (#341): the entry says what it pretends to do, never how.
+  // One entry per route; an id another Stand-in has already taken gains `-api` (#352), then a number.
+  const stubRoutes = new Set();
   for (const f of sim.stubs) {
-    const id = kebab(f.route.replace(/^\/api\//, '')) || 'api';
-    if (data.some(x => x.id === id)) continue;
+    if (stubRoutes.has(f.route)) continue;
+    stubRoutes.add(f.route);
+    const base = kebab(f.route.replace(/^\/api\//, '')) || 'api';
+    let id = base;
+    for (let n = 1; data.some(x => x.id === id); n++) id = n === 1 ? `${base}-api` : `${base}-api-${n}`;
     // A failure the reader can't see (a throw, a status in a variable) is still possible: no status means no claim.
     const pretends = [f.delay ? `answers after ${f.delay}ms` : 'answers at once', ...(f.failures.length ? [`can fail with ${f.failures.join(' or ')}`] : [])].join(' and ');
     data.push({ id, source: 'simulated', note: `\`${f.method} ${f.route}\` is a stub API the Prototype serves itself (${f.file}): it ${pretends}`, at: at(f.offset),

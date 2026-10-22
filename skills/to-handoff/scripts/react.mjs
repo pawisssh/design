@@ -592,10 +592,13 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
 
   const read = kind === 'react-vite' ? readVite() : readNext();
   rules.forEach((r, i) => { r.order = i; });
+  const scanned = sources.size;
   const standIns = standInsOf(ts, [...sources.values()], read.routes || []);
   // A route a fetch calls is read after the scan (#341), so its own timer is the stub's latency, not simulated work,
-  // and it is pinned: editing the stub is Drift. Routes nothing fetches stay ignored.
+  // and it is pinned: editing the stub is Drift. Routes nothing fetches stay ignored. The modules read for the
+  // routes are scanned for mock data only (#352): their fetches and timers are how the stub works.
   for (const f of standIns.stubs) Object.assign(f, stubRoute(ts, source(f.file), f.method));
+  standIns.mocks.push(...standInsOf(ts, [...sources.values()].slice(scanned), []).mocks);
   const fetched = new Set(standIns.stubs.map(f => `${f.file} (API route)`));
   return {
     kind, title: read.title || packageOf(root).name || posix.basename(root), files: space.files.map(f => f.rel).sort(), at: space.at, rules,
@@ -611,13 +614,18 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
  * offset, sets, before, after}]}: `mock…` constants and literal exports of a data/ or fixtures/ file; functions
  * that wait on a setTimeout, with the state each `setX(true)` sets before the timer (`before`) and after it
  * (`after`), named by its useState pair. A timer that only clears state after the work, `setTimeout(() =>
- * setMsg(null), 2000)`, is not simulated work. A stub is a string-literal `fetch('<path>')` of a static route the
- * Prototype serves itself (#341), with the state variables its innermost function sets (`sets`, named only when
- * that function is) and the states it sets before and after the call: `setStatus("loading")` is
- * `status === "loading"`, and any argument but false or an empty value may set a boolean (`setHasError(!res.ok)`).
+ * setMsg(null), 2000)`, is not simulated work. A stub is a `fetch('<path>')` or `` fetch(`<path>`) `` of a route
+ * the Prototype serves itself (#341, #352), `route` its folder pattern (`/api/items/[id]`), with the state variables
+ * its innermost function sets (`sets`, named only when that function is) and the states it sets before and after
+ * the call: `setStatus("loading")` is `status === "loading"`, and any argument but false or an empty value may set a
+ * boolean (`setHasError(!res.ok)`).
  */
 function standInsOf(ts, sources, routes) {
   const mocks = [], simulated = [], stubs = [];
+  // Next tries a static segment before a dynamic one, and a dynamic one before a catch-all (#352).
+  const kind = p => (/^\[\[\.\.\./.test(p) ? '3' : /^\[\.\.\./.test(p) ? '2' : /^\[/.test(p) ? '1' : '0');
+  const ranked = routes.map(r => ({ ...r, parts: r.route.split('/').filter(Boolean) })).map(r => ({ ...r, rank: r.parts.map(kind).join('') }))
+    .sort((a, b) => (a.rank < b.rank ? -1 : a.rank > b.rank ? 1 : 0));
   for (const s of sources) {
     const setters = {};
     const visit = n => {
@@ -640,7 +648,7 @@ function standInsOf(ts, sources, routes) {
     const calledAs = (n, name) => ts.isCallExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === name;
     const findCalls = n => {
       if (calledAs(n, 'setTimeout')) timers.push(n);
-      if (calledAs(n, 'fetch') && n.arguments[0] && ts.isStringLiteralLike(n.arguments[0])) fetches.push(n);
+      if (calledAs(n, 'fetch') && n.arguments[0] && (ts.isStringLiteralLike(n.arguments[0]) || ts.isTemplateExpression(n.arguments[0]))) fetches.push(n);
       ts.forEachChild(n, findCalls);
     };
     findCalls(s.sf);
@@ -676,7 +684,8 @@ function standInsOf(ts, sources, routes) {
       });
     }
     for (const call of fetches) {
-      const route = routes.find(r => r.route === call.arguments[0].text.replace(/[?#].*$/, ''));
+      const segs = fetchedPath(ts, call.arguments[0]);
+      const route = segs && ranked.find(r => routeMatches(r.parts, segs));
       if (!route) continue;
       // The innermost function, named or not: an inline handler's setters are its own, not the component's.
       let fn = call.parent;
@@ -701,6 +710,25 @@ function standInsOf(ts, sources, routes) {
     }
   }
   return { mocks, simulated, stubs };
+}
+
+// A fetched URL's path segments (#352), a template hole's segment as null; null for a URL that is not a
+// same-origin path (`https://…`, `//host/…`, `${base}/…`). The query and hash drop, with any hole in them, and so does a trailing slash.
+function fetchedPath(ts, arg) {
+  const text = ts.isTemplateExpression(arg) ? arg.head.text + arg.templateSpans.map(sp => `\0${sp.literal.text}`).join('') : arg.text;
+  const path = text.replace(/[?#][^]*$/, '').replace(/(.)\/$/, '$1');
+  return /^\/(?!\/)/.test(path) ? path.split('/').slice(1).map(seg => (seg.includes('\0') ? null : seg)).filter((seg, i, all) => seg !== '' || all.length > 1) : null;
+}
+
+// Whether a route's folder segments serve a fetched path (#352): `[x]` takes one segment, `[...x]` one or more,
+// `[[...x]]` any; a hole (null) takes only a dynamic segment, never a static one.
+function routeMatches(parts, segs) {
+  if (!parts.length) return !segs.length;
+  const [p, ...rest] = parts;
+  if (/^\[\[\.\.\./.test(p)) return true;
+  if (/^\[\.\.\./.test(p)) return segs.length > 0;
+  if (!segs.length) return false;
+  return (/^\[/.test(p) ? segs[0] !== '' : segs[0] === p) && routeMatches(rest, segs.slice(1));
 }
 
 // What a stub route pretends to do (#341), never how: the longest literal setTimeout it waits on, and the error
