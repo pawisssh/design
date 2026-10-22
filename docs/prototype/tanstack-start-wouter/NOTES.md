@@ -133,10 +133,11 @@ tagged with `data-handoff-at` by To-handoff's own `tagJsx` (169 files, none fail
 | Serve, as `runtime.mjs` does | `vite preview --port P --host 127.0.0.1 --strictPort` | **every page 500.** `preview` is a `serve` command, so the Cloudflare plugin is off and TanStack Start's own preview plugin looks for a Node `dist/server/server.js` that the Worker build never wrote. |
 | Serve the Worker | `wrangler dev -c dist/server/wrangler.json --ip 127.0.0.1 --port P` (wrangler 4.76 from the app's own deps) | ready in ~4 s, in local workerd (`@cloudflare/workerd-darwin-arm64`, 112 MB native binary, installed as an optional dependency, no script needed). |
 
-Served by workerd, every screen is **server-rendered**, and the tags survive into the markup: `/` 200 with 161
-tagged elements, `/app/dashboard` 200 with 106, `/app/catalog` 200 with 77 (its `CatalogFilters`, `select` and
-`EmptyState` among them), `/app/` a 307 (the redirect route), an unknown path 404 from the root's
-`notFoundComponent`. The page `<title>` comes from each route's `head()` (`Dashboard — Stackwise`). In system Chrome
+Served by workerd, all 15 screens answer 200 **server-rendered**, and the tags survive into the markup: `/` with
+161 tagged elements, `/app/dashboard` 106, `/app/catalog` 77 (its `CatalogFilters`, `select` and `EmptyState` among
+them), the others 48 to 171. Thirteen carry their own route file's sites; `/app/analytics` and `/app/settings` render
+only the layout (46), because their own `can(...)` check returns `null` for a visitor outside the demo. `/app/` is a
+307 (the redirect route), an unknown path a 404 from the root's `notFoundComponent`. The page `<title>` comes from each route's `head()` (`Dashboard — Stackwise`). In system Chrome
 with every request off 127.0.0.1 blocked (only the app's Supabase host was asked for), `/app/dashboard` hydrated
 with no page error and the same 106 tagged elements.
 
