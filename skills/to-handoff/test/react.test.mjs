@@ -15,7 +15,7 @@ import { run } from '../scripts/runtime.mjs';
 import { walk } from '../scripts/reader.mjs';
 import { loadDesignSystem } from '../scripts/system.mjs';
 import { validateHandoff } from '../scripts/validate.mjs';
-import { BUTTON, designSystem, repo, shadcnDesignSystem } from './helpers.mjs';
+import { BUTTON, decided, designSystem, repo, shadcnDesignSystem } from './helpers.mjs';
 import { check } from '../scripts/signoff.mjs';
 
 const VITE = fileURLToPath(new URL('fixtures/vite-app', import.meta.url));
@@ -197,10 +197,7 @@ test('generate: every Stand-in keeps its own data id and question: a stub gains 
     items: "import { mockItems } from '../../../lib/items';\nexport async function GET() { return Response.json(mockItems); }\n", 'foo-bar': GET, 'foo/bar': GET,
   }, { 'app/data.ts': "export const mockItems = [{ id: 1, name: 'Lamp' }];\n", 'lib/items.ts': "export const mockItems = [{ id: 2, name: 'Desk' }];\n" });
   writeFileSync(join(dir, 'app/page.tsx'), `import { mockItems } from './data';\n${readFileSync(join(dir, 'app/page.tsx'), 'utf8').replace("'use client';\n", '')}`);
-  const decisions = {
-    'recognise:button': { contract: 'button', tuple: { kind: 'primary' }, via: 'element' }, feature: { goal: 'Load the items.' },
-    acceptance: [{ id: 'load', screen: 'index', state: 'default', given: 'the page', when: 'Load is pressed', then: 'the items load' }],
-  };
+  const decisions = decided({ 'recognise:button': { contract: 'button', tuple: { kind: 'primary' }, via: 'element' } });
   const { requests, handoff } = await generate({ prototype: dir, designSystem: designSystem(), decisions });
   assert.deepEqual(requests, []);
   assert.deepEqual(handoff.data.map(x => [x.id, x.source, x.question]), [
@@ -349,7 +346,7 @@ createRoot(document.getElementById('app')!).render(
 );
 `,
   });
-  const result = await generate({ prototype: dir, designSystem: ds, decisions: { feature: { goal: 'Invite a teammate.' }, acceptance: [{ id: 'invite-opens', screen: 'index', state: 'default', given: 'the page', when: 'it opens', then: 'the invite modal shows' }] } });
+  const result = await generate({ prototype: dir, designSystem: ds, decisions: decided() });
   assert.deepEqual(result.requests, []);
   assert.deepEqual(usagesOf(result.handoff.screens[0]).map(u => [u.contract, u.match && u.match.by, u.at]), [
     ['button', 'import', 'src/main.tsx:5:5'],
@@ -403,10 +400,7 @@ test('generate: Next boundary files are states by name: a feature not-found.tsx 
     'app/loading-demo/error.tsx': 'export default function Failed() { return <p>Something broke</p>; }',
     'app/loading-demo/not-found.tsx': 'export default function NoRecord() { return <p>No such demo</p>; }',
   });
-  const decisions = {
-    'token:font-size:16px': 'body-02-font-size', feature: { goal: 'Show the boundaries.' },
-    acceptance: [{ id: 'home', screen: 'index', state: 'default', given: 'a visitor', when: 'the page opens', then: 'Home shows' }],
-  };
+  const decisions = decided({ 'token:font-size:16px': 'body-02-font-size' });
   const result = await generate({ prototype: root, designSystem: designSystem(), decisions });
   assert.deepEqual(result.requests.map(r => r.key), [], 'no condition request for a boundary file');
   const states = Object.fromEntries(result.handoff.screens.map(s => [s.id, STANDARD.filter(x => !s.states[x].missing)]));
@@ -626,7 +620,7 @@ createRoot(document.getElementById('app')!).render(
 );
 `,
   });
-  const decisions = { feature: { goal: 'Save.' }, acceptance: [{ id: 'save', screen: 'index', state: 'default', given: 'the page', when: 'it opens', then: 'Save shows' }] };
+  const decisions = decided();
   return generate({ prototype: dir, designSystem: ds, decisions }).then(async result => ({ ds, result, check: result.handoff && validateHandoff(result.handoff, await loadDesignSystem(ds)) }));
 };
 const modeNotes = h => h.source.notes.filter(n => /mode/i.test(n.text));

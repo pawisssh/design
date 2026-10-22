@@ -24,6 +24,14 @@ export function designSystem() {
   return dir;
 }
 
+// The decisions every generate run asks for, a feature goal and one acceptance row on the index screen, plus
+// `extra`. Until each request is answered, generate returns `handoff: undefined` with its `requests`.
+export const decided = (extra = {}) => ({
+  feature: { goal: 'Show the Prototype.' },
+  acceptance: [{ id: 'opens', screen: 'index', state: 'default', given: 'the page', when: 'it opens', then: 'it shows' }],
+  ...extra,
+});
+
 // The v0 request-access Prototype, and the committed shadcn Foundations document and Contracts, named one by one,
 // in a temp Design System.
 export const V0 = fileURLToPath(new URL('fixtures/v0-app', import.meta.url));
