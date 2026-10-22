@@ -1,6 +1,6 @@
 # Design System Skills
 
-Agent skills that describe a component library written in code once, then use that description to build a matching component library in Figma and to hand features off to developers against the real components.
+Agent skills that take a Prototype, such as an app made with an AI tool, to Component Sets in Figma or to a Handoff for developers. Both go through a Design System: one described once from a Code Library the developers already use, or one made from the Prototype itself.
 
 ## Libraries
 
@@ -17,7 +17,7 @@ One or more published Figma library files the owner already has for the same Cod
 _Avoid_: Existing library, team library, kit, external library, adopted library
 
 **Extracted Library**:
-A Code Library generated from a Prototype that has none, with one component per Component Family found among the Prototype's repeated elements. An Adapter reads it, and developers adopt it instead of the Prototype's code.
+A Code Library generated from a Prototype that has none, with one component per Component Family found in the Prototype's code, styled as the Prototype styles that family, whether by class strings or by CSS rules. An Adapter reads it, and developers adopt it instead of the Prototype's code.
 _Avoid_: Generated library, inline library, synthetic library
 
 **Family map**:
@@ -43,7 +43,7 @@ A Property Axis whose values say whether one slot of a Component Family is fille
 _Avoid_: Icon axis, presence variant, boolean variant
 
 **Base Component**:
-The single final variant of a Component Family with every Property Axis at its default, such as Button Primary/Large/Enabled. It is built in Figma and approved by the user before the other variants are derived from it.
+The single final variant of a Component Family with every Property Axis at its default, such as Button Primary/Large/Enabled. It is built in Figma and approved by the owner before the other variants are derived from it.
 _Avoid_: Master, template, first variant
 
 **Sub-component**:
@@ -111,8 +111,16 @@ A colour, spacing, size, radius or type value in a feature's input that matches 
 _Avoid_: Raw value (when the unmatched kind is meant), hard-coded value, magic number
 
 **Prototype**:
-Feature code made quickly to show what a feature should do, such as a v0 or Lovable app or a single HTML file, given to To-handoff or Vibe-to-Figma as input. Only Figma-to-Vibe edits it, and only when the owner asks; its code is never handed to developers.
+Feature code made quickly to show what a feature should do, such as a v0 or Lovable app or a single HTML file, given to From-Prototype, To-handoff or Vibe-to-Figma as input. Only Figma-to-Vibe edits it, and only when the owner asks; its code is never handed to developers.
 _Avoid_: Mockup, vibe code, POC, prototype Contract (that is a Contract approved only for a trial build)
+
+**Prototype kind**:
+A Prototype's framework plus the way it is styled, such as React + Tailwind or plain HTML + CSS classes.
+_Avoid_: Stack, type, flavour
+
+**Owner**:
+The person a run of the skills answers to: the one in that run's chat. Only their own messages approve a Contract, a Design System's review, a Base Component or a Handoff's Sign-off, or answer an owner question.
+_Avoid_: User (for the approver), reviewer
 
 **Usage**:
 One element of a feature's input, as the Handoff records it: a Contract with a tuple of its axis values (and its Repeated children, if the family has them), a Component Proposal, or a raw element with a reason. It always records how it was recognised.
@@ -177,6 +185,10 @@ The Orphans the owner confirmed, by name, for To-design to delete; for variants,
 _Avoid_: prune.json (that is the file, not the concept), delete list, cleanup
 
 ## Skills
+
+**From-Prototype**:
+The skill a run on a Prototype starts with. It names the Prototype kind, says which outputs that kind can have, and runs Vibe-to-Figma and To-handoff for the ones the owner asks for: Component Sets in Figma, a Handoff, or both.
+_Avoid_: Entry flow, pipeline, wizard, vibe-to-handoff
 
 **To-preview**:
 The skill that shows a Contract's combinations, rendered with the real Code Library, so the owner can leave out the ones they don't want. It never approves anything.
