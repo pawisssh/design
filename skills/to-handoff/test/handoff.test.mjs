@@ -37,6 +37,8 @@ async function run() {
 const usages = h => h.screens.flatMap(s => s.regions.flatMap(r => r.usages || []));
 const usage = (h, id) => usages(h).find(u => u.id === id);
 const styles = h => h.screens.flatMap(s => s.regions.flatMap(r => r.styles || []));
+// fn edits a copy of the Handoff; the result is its validation messages, one per line.
+const editor = (handoff, system) => fn => { const h = JSON.parse(JSON.stringify(handoff)); fn(h); return validateHandoff(h, system).errors.map(e => e.message).join('\n'); };
 
 test('generate -> validate on the fixture with a fixed decisions.json: no requests, a valid Handoff, stored by feature key', { skip: noDeps }, async () => {
   const { ds, result, handoff, system } = await run();
@@ -293,7 +295,7 @@ test('the Button Contract stays byte-unchanged, keeps its approved contentHash a
 
 test('validateHandoff refuses a bad tuple, an unknown or non-theme token, a missing copy id and a retired Proposal', { skip: noDeps }, async () => {
   const { handoff, system } = await run();
-  const edit = fn => { const h = JSON.parse(JSON.stringify(handoff)); fn(h); return validateHandoff(h, system).errors.map(e => e.message).join('\n'); };
+  const edit = editor(handoff, system);
   assert.match(edit(h => { usages(h).find(u => u.id === 'send').tuple.kind = 'success'; }), /send.*kind.*success/);
   assert.match(edit(h => { styles(h).find(s => s.token === 'layer-01').token = 'layer-99'; }), /unknown token "layer-99"/);
   assert.match(edit(h => { styles(h).find(s => s.token === 'layer-01').token = 'button-primary'; }), /component token/);
@@ -305,9 +307,16 @@ test('validateHandoff refuses a bad tuple, an unknown or non-theme token, a miss
   assert.match(validateHandoff(handoff, retired).errors.map(e => e.message).join('\n'), /`avatar-stack` retired into `button`: migrate/);
 });
 
+test('validateHandoff refuses a duplicate data id and a duplicate question id (#370)', { skip: noDeps }, async () => {
+  const { handoff, system } = await run();
+  const edit = editor(handoff, system);
+  assert.match(edit(h => { h.data[1].id = h.data[0].id; }), /data\[1\]: duplicate data id "invites"/);
+  assert.match(edit(h => { h.openQuestions.push({ ...h.openQuestions[0] }); }), /openQuestions\[\d+\]: duplicate question id "q-/);
+});
+
 test('validateHandoff checks each usage\'s in (#193): a Contract usage on the same screen, and no cycle', { skip: noDeps }, async () => {
   const { handoff, system } = await run();
-  const edit = fn => { const h = JSON.parse(JSON.stringify(handoff)); fn(h); return validateHandoff(h, system).errors.map(e => e.message).join('\n'); };
+  const edit = editor(handoff, system);
   const set = (h, id, target) => { usage(h, id).in = target; };
   assert.equal(edit(h => { set(h, 'send', 'cancel'); set(h, 'cancel', 'copy'); }), '');
   assert.match(edit(h => set(h, 'send', 'nope')), /`send`: in "nope" names no usage on this screen/);

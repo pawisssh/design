@@ -147,6 +147,11 @@ export function validateHandoff(handoff, system) {
     state(a.state, `acceptance[${i}]`);
   });
   (h.data || []).forEach((x, i) => questionRef(x.question, `data[${i}]`));
+  // A data entry or question is answered by its id (#370): two of one id would share an answer.
+  for (const [path, list, what] of [['data', h.data, 'data'], ['openQuestions', h.openQuestions, 'question']]) {
+    const seen = new Set();
+    (list || []).forEach((x, i) => { if (seen.has(x.id)) err(what, `${path}[${i}]`, `${path}[${i}]: duplicate ${what} id "${x.id}"`); seen.add(x.id); });
+  }
   for (const [key, ref] of Object.entries((h.a11y && h.a11y.labels) || {})) copyRef(ref, `a11y.labels.${key}`);
   if (h.source && h.source.contracts) for (const k of Object.keys(h.source.contracts)) if (!contracts[k]) err('source', 'source.contracts', `source.contracts: no Contract "${k}" in ${system.key}`);
   if (h.source && h.source.modes) for (const [m, key] of Object.entries(h.source.modes))
