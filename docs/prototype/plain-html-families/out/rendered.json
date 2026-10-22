@@ -1,0 +1,1357 @@
+{
+  "browser": "system Chrome (/Applications/Google Chrome.app/Contents/MacOS/Google Chrome)",
+  "width": 390,
+  "timing": {
+    "load": 795,
+    "textSamples": 5007,
+    "read": 40,
+    "states": 2239,
+    "total": 10670
+  },
+  "network": [
+    {
+      "url": "http://<server>/banner-app.html",
+      "status": 200
+    },
+    {
+      "url": "http://<server>/styles.css",
+      "status": 200
+    },
+    {
+      "url": "http://<server>/assets/ai-icon.svg",
+      "status": 200
+    },
+    {
+      "url": "http://<server>/app.js",
+      "status": 200
+    },
+    {
+      "url": "https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js",
+      "status": 200
+    },
+    {
+      "url": "https://site-assets.fontawesome.com/releases/v6.5.1/css/all.css",
+      "status": 403
+    },
+    {
+      "url": "https://site-assets.fontawesome.com/releases/v6.5.1/css/all.css",
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://site-assets.fontawesome.com/releases/v6.5.1/css/sharp-solid.css",
+      "status": 403
+    },
+    {
+      "url": "https://site-assets.fontawesome.com/releases/v6.5.1/css/sharp-solid.css",
+      "failed": "net::ERR_ABORTED"
+    }
+  ],
+  "fonts": [],
+  "textSamples": [
+    {
+      "at": 0,
+      "texts": {
+        "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)": "",
+        "body > div:nth-child(1) > div:nth-child(2) > h2:nth-child(1)": "คุยกับ Charlie AI",
+        "body > div:nth-child(1) > div:nth-child(2) > p:nth-child(2)": "ถามข้อมูลกองทุน, มุมมองการลงทุนล่าสุด, จัดพอร์ตกองทุนประหยัดภาษี, สถานการณ์ตลาดวันนี้,\n                ตรวจสุขภาพพอร์ตหุ้นของคุณ",
+        "body > div:nth-child(1) > div:nth-child(3) > a:nth-child(1)": "ลองคุย"
+      }
+    },
+    {
+      "at": 600,
+      "texts": {
+        "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)": "คุยกับ Ch",
+        "body > div:nth-child(1) > div:nth-child(2) > h2:nth-child(1)": "คุยกับ Charlie AI",
+        "body > div:nth-child(1) > div:nth-child(2) > p:nth-child(2)": "ถามข้อมูลกองทุน, มุมมองการลงทุนล่าสุด, จัดพอร์ตกองทุนประหยัดภาษี, สถานการณ์ตลาดวันนี้,\n                ตรวจสุขภาพพอร์ตหุ้นของคุณ",
+        "body > div:nth-child(1) > div:nth-child(3) > a:nth-child(1)": "ลองคุย"
+      }
+    },
+    {
+      "at": 1500,
+      "texts": {
+        "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)": "คุยกับ Charlie AI",
+        "body > div:nth-child(1) > div:nth-child(2) > h2:nth-child(1)": "คุยกับ Charlie AI",
+        "body > div:nth-child(1) > div:nth-child(2) > p:nth-child(2)": "ถามข้อมูลกองทุน, มุมมองการลงทุนล่าสุด, จัดพอร์ตกองทุนประหยัดภาษี, สถานการณ์ตลาดวันนี้,\n                ตรวจสุขภาพพอร์ตหุ้นของคุณ",
+        "body > div:nth-child(1) > div:nth-child(3) > a:nth-child(1)": "ลองคุย"
+      }
+    },
+    {
+      "at": 3000,
+      "texts": {
+        "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)": "คุยกับ Charlie AI",
+        "body > div:nth-child(1) > div:nth-child(2) > h2:nth-child(1)": "คุยกับ Charlie AI",
+        "body > div:nth-child(1) > div:nth-child(2) > p:nth-child(2)": "ถามข้อมูลกองทุน, มุมมองการลงทุนล่าสุด, จัดพอร์ตกองทุนประหยัดภาษี, สถานการณ์ตลาดวันนี้,\n                ตรวจสุขภาพพอร์ตหุ้นของคุณ",
+        "body > div:nth-child(1) > div:nth-child(3) > a:nth-child(1)": "ลองคุย"
+      }
+    },
+    {
+      "at": 5000,
+      "texts": {
+        "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)": "วิเคราะห์พอร์ตหุ",
+        "body > div:nth-child(1) > div:nth-child(2) > h2:nth-child(1)": "คุยกับ Charlie AI",
+        "body > div:nth-child(1) > div:nth-child(2) > p:nth-child(2)": "ถามข้อมูลกองทุน, มุมมองการลงทุนล่าสุด, จัดพอร์ตกองทุนประหยัดภาษี, สถานการณ์ตลาดวันนี้,\n                ตรวจสุขภาพพอร์ตหุ้นของคุณ",
+        "body > div:nth-child(1) > div:nth-child(3) > a:nth-child(1)": "ลองคุย"
+      }
+    }
+  ],
+  "elements": [
+    {
+      "path": "body > div:nth-child(1)",
+      "tag": "div",
+      "label": ".container",
+      "depth": 1,
+      "children": [
+        "div",
+        "div",
+        "div"
+      ],
+      "rect": {
+        "w": 366,
+        "h": 330
+      },
+      "style": {
+        "display": "flex",
+        "flex-direction": "column",
+        "align-items": "normal",
+        "justify-content": "normal",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "16px",
+        "padding-bottom": "0px",
+        "padding-left": "16px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "cursor": "auto",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1)",
+      "tag": "div",
+      "label": ".chat-card",
+      "depth": 2,
+      "children": [
+        "div",
+        "div",
+        "div"
+      ],
+      "rect": {
+        "w": 334,
+        "h": 150
+      },
+      "style": {
+        "display": "flex",
+        "flex-direction": "column",
+        "align-items": "flex-start",
+        "justify-content": "normal",
+        "gap": "normal",
+        "background-color": "rgb(255, 255, 255)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "1px",
+        "border-top-color": "rgba(1, 23, 43, 0.05)",
+        "border-top-left-radius": "16px",
+        "box-shadow": "rgba(0, 0, 0, 0.25) 0px 30px 60px -40px",
+        "padding-top": "8px",
+        "padding-right": "0px",
+        "padding-bottom": "8px",
+        "padding-left": "0px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "cursor": "auto",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(1)",
+      "tag": "div",
+      "label": ".header",
+      "depth": 3,
+      "children": [
+        "div"
+      ],
+      "rect": {
+        "w": 332,
+        "h": 40
+      },
+      "style": {
+        "display": "flex",
+        "flex-direction": "row",
+        "align-items": "flex-start",
+        "justify-content": "normal",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "8px",
+        "padding-right": "16px",
+        "padding-bottom": "8px",
+        "padding-left": "16px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "cursor": "auto",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1)",
+      "tag": "div",
+      "label": ".ai-icon",
+      "depth": 4,
+      "children": [
+        "img"
+      ],
+      "rect": {
+        "w": 24,
+        "h": 24
+      },
+      "style": {
+        "display": "block",
+        "flex-direction": "row",
+        "align-items": "normal",
+        "justify-content": "normal",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "cursor": "auto",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > img:nth-child(1)",
+      "tag": "img",
+      "label": "img",
+      "depth": 5,
+      "children": [],
+      "rect": {
+        "w": 24,
+        "h": 24
+      },
+      "style": {
+        "display": "block",
+        "flex-direction": "row",
+        "align-items": "normal",
+        "justify-content": "normal",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "cursor": "auto",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": {
+        "src": "assets/ai-icon.svg",
+        "natural": [
+          24,
+          24
+        ],
+        "complete": true
+      },
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2)",
+      "tag": "div",
+      "label": ".body",
+      "depth": 3,
+      "children": [
+        "div"
+      ],
+      "rect": {
+        "w": 332,
+        "h": 40
+      },
+      "style": {
+        "display": "flex",
+        "flex-direction": "row",
+        "align-items": "flex-start",
+        "justify-content": "normal",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "8px",
+        "padding-right": "16px",
+        "padding-bottom": "8px",
+        "padding-left": "16px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "cursor": "auto",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1)",
+      "tag": "div",
+      "label": ".input-area",
+      "depth": 4,
+      "children": [
+        "span",
+        "span"
+      ],
+      "rect": {
+        "w": 300,
+        "h": 24
+      },
+      "style": {
+        "display": "flex",
+        "flex-direction": "row",
+        "align-items": "center",
+        "justify-content": "normal",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "cursor": "auto",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)",
+      "tag": "span",
+      "label": ".typed-text",
+      "depth": 5,
+      "children": [],
+      "rect": {
+        "w": 112.8,
+        "h": 24
+      },
+      "style": {
+        "display": "block",
+        "flex-direction": "row",
+        "align-items": "normal",
+        "justify-content": "normal",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "font-size": "17px",
+        "font-weight": "400",
+        "line-height": "24px",
+        "letter-spacing": "0.16px",
+        "cursor": "auto",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": "วิเคราะห์พอร์ตหุ"
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(2)",
+      "tag": "span",
+      "label": ".cursor",
+      "depth": 5,
+      "children": [],
+      "rect": {
+        "w": 10,
+        "h": 20
+      },
+      "style": {
+        "display": "block",
+        "flex-direction": "row",
+        "align-items": "normal",
+        "justify-content": "normal",
+        "gap": "normal",
+        "background-color": "rgb(24, 23, 231)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "cursor": "auto",
+        "opacity": "0"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(3)",
+      "tag": "div",
+      "label": ".action",
+      "depth": 3,
+      "children": [
+        "div",
+        "div"
+      ],
+      "rect": {
+        "w": 332,
+        "h": 52
+      },
+      "style": {
+        "display": "flex",
+        "flex-direction": "row",
+        "align-items": "center",
+        "justify-content": "space-between",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "16px",
+        "padding-bottom": "0px",
+        "padding-left": "16px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "cursor": "auto",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(1)",
+      "tag": "div",
+      "label": ".action-left",
+      "depth": 4,
+      "children": [
+        "button"
+      ],
+      "rect": {
+        "w": 128,
+        "h": 36
+      },
+      "style": {
+        "display": "flex",
+        "flex-direction": "row",
+        "align-items": "center",
+        "justify-content": "flex-start",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "cursor": "auto",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(1) > button:nth-child(1)",
+      "tag": "button",
+      "label": ".add-button",
+      "depth": 5,
+      "children": [
+        "i"
+      ],
+      "rect": {
+        "w": 36,
+        "h": 36
+      },
+      "style": {
+        "display": "flex",
+        "flex-direction": "row",
+        "align-items": "center",
+        "justify-content": "center",
+        "gap": "normal",
+        "background-color": "rgba(1, 23, 43, 0.1)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "50%",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "font-size": "13.3333px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "cursor": "pointer",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(1) > button:nth-child(1) > i:nth-child(1)",
+      "tag": "i",
+      "label": ".fa-sharp.fa-solid.fa-plus",
+      "depth": 6,
+      "children": [],
+      "rect": {
+        "w": 0,
+        "h": 0
+      },
+      "style": {
+        "display": "block",
+        "flex-direction": "row",
+        "align-items": "normal",
+        "justify-content": "normal",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "16px",
+        "letter-spacing": "normal",
+        "cursor": "pointer",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(2)",
+      "tag": "div",
+      "label": ".action-right",
+      "depth": 4,
+      "children": [
+        "button"
+      ],
+      "rect": {
+        "w": 128,
+        "h": 36
+      },
+      "style": {
+        "display": "flex",
+        "flex-direction": "row",
+        "align-items": "center",
+        "justify-content": "flex-end",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "cursor": "auto",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(2) > button:nth-child(1)",
+      "tag": "button",
+      "label": ".send-button",
+      "depth": 5,
+      "children": [
+        "i"
+      ],
+      "rect": {
+        "w": 56,
+        "h": 36
+      },
+      "style": {
+        "display": "flex",
+        "flex-direction": "row",
+        "align-items": "center",
+        "justify-content": "center",
+        "gap": "normal",
+        "background-color": "rgb(1, 23, 43)",
+        "color": "rgb(255, 255, 255)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(255, 255, 255)",
+        "border-top-left-radius": "200px",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "font-size": "13.3333px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "cursor": "pointer",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(2) > button:nth-child(1) > i:nth-child(1)",
+      "tag": "i",
+      "label": ".fa-sharp.fa-solid.fa-arrow-up",
+      "depth": 6,
+      "children": [],
+      "rect": {
+        "w": 0,
+        "h": 0
+      },
+      "style": {
+        "display": "block",
+        "flex-direction": "row",
+        "align-items": "normal",
+        "justify-content": "normal",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(255, 255, 255)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "16px",
+        "letter-spacing": "normal",
+        "cursor": "pointer",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(2)",
+      "tag": "div",
+      "label": ".info-section",
+      "depth": 2,
+      "children": [
+        "h2",
+        "p"
+      ],
+      "rect": {
+        "w": 334,
+        "h": 112
+      },
+      "style": {
+        "display": "flex",
+        "flex-direction": "column",
+        "align-items": "flex-start",
+        "justify-content": "center",
+        "gap": "4px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "8px",
+        "padding-right": "0px",
+        "padding-bottom": "8px",
+        "padding-left": "0px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "cursor": "auto",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(2) > h2:nth-child(1)",
+      "tag": "h2",
+      "label": ".title",
+      "depth": 3,
+      "children": [],
+      "rect": {
+        "w": 334,
+        "h": 32
+      },
+      "style": {
+        "display": "block",
+        "flex-direction": "row",
+        "align-items": "normal",
+        "justify-content": "normal",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "font-size": "20px",
+        "font-weight": "500",
+        "line-height": "32px",
+        "letter-spacing": "normal",
+        "cursor": "auto",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": "คุยกับ Charlie AI"
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(2) > p:nth-child(2)",
+      "tag": "p",
+      "label": ".intro",
+      "depth": 3,
+      "children": [],
+      "rect": {
+        "w": 334,
+        "h": 60
+      },
+      "style": {
+        "display": "block",
+        "flex-direction": "row",
+        "align-items": "normal",
+        "justify-content": "normal",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "font-size": "13px",
+        "font-weight": "400",
+        "line-height": "20px",
+        "letter-spacing": "0.32px",
+        "cursor": "auto",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": "ถามข้อมูลกองทุน, มุมมองการลงทุนล่าสุด, จัดพอร์ตกองทุนประหยัดภาษี, สถานการณ์ตลาดวันนี้,\n                ตรวจสุขภาพพอร์ตหุ้นของคุณ"
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(3)",
+      "tag": "div",
+      "label": ".cta-section",
+      "depth": 2,
+      "children": [
+        "a"
+      ],
+      "rect": {
+        "w": 334,
+        "h": 52
+      },
+      "style": {
+        "display": "flex",
+        "flex-direction": "row",
+        "align-items": "center",
+        "justify-content": "normal",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "8px",
+        "padding-right": "0px",
+        "padding-bottom": "8px",
+        "padding-left": "0px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "cursor": "auto",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(3) > a:nth-child(1)",
+      "tag": "a",
+      "label": ".cta-button",
+      "depth": 3,
+      "children": [
+        "i"
+      ],
+      "rect": {
+        "w": 76.5,
+        "h": 36
+      },
+      "style": {
+        "display": "flex",
+        "flex-direction": "row",
+        "align-items": "center",
+        "justify-content": "center",
+        "gap": "8px",
+        "background-color": "rgba(1, 23, 43, 0.1)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "8px",
+        "box-shadow": "none",
+        "padding-top": "6px",
+        "padding-right": "12px",
+        "padding-bottom": "6px",
+        "padding-left": "12px",
+        "font-size": "15px",
+        "font-weight": "500",
+        "line-height": "24px",
+        "letter-spacing": "0.16px",
+        "cursor": "pointer",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": "ลองคุย"
+    },
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(3) > a:nth-child(1) > i:nth-child(1)",
+      "tag": "i",
+      "label": ".fa-sharp.fa-solid.fa-chevron-right",
+      "depth": 4,
+      "children": [],
+      "rect": {
+        "w": 0,
+        "h": 0
+      },
+      "style": {
+        "display": "block",
+        "flex-direction": "row",
+        "align-items": "normal",
+        "justify-content": "normal",
+        "gap": "normal",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "color": "rgb(1, 23, 43)",
+        "border-top-width": "0px",
+        "border-top-color": "rgb(1, 23, 43)",
+        "border-top-left-radius": "0px",
+        "box-shadow": "none",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "font-size": "14px",
+        "font-weight": "500",
+        "line-height": "24px",
+        "letter-spacing": "0.16px",
+        "cursor": "pointer",
+        "opacity": "1"
+      },
+      "before": null,
+      "img": null,
+      "text": ""
+    }
+  ],
+  "states": {
+    "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(1) > button:nth-child(1)": {
+      "label": ".add-button",
+      "default": {
+        "bg": "rgba(1, 23, 43, 0.1)",
+        "transform": "none"
+      },
+      "hover": {
+        "bg": "rgba(1, 23, 43, 0.15)",
+        "transform": "none"
+      },
+      "pressed": {
+        "bg": "rgba(1, 23, 43, 0.15)",
+        "transform": "matrix(0.95, 0, 0, 0.95, 0, 0)"
+      }
+    },
+    "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(2) > button:nth-child(1)": {
+      "label": ".send-button",
+      "default": {
+        "bg": "rgb(1, 23, 43)",
+        "transform": "none"
+      },
+      "hover": {
+        "bg": "rgb(10, 42, 74)",
+        "transform": "none"
+      },
+      "pressed": {
+        "bg": "rgb(10, 42, 74)",
+        "transform": "matrix(0.95, 0, 0, 0.95, 0, 0)"
+      }
+    },
+    "body > div:nth-child(1) > div:nth-child(3) > a:nth-child(1)": {
+      "label": ".cta-button",
+      "default": {
+        "bg": "rgba(1, 23, 43, 0.1)",
+        "transform": "none"
+      },
+      "hover": {
+        "bg": "rgba(1, 23, 43, 0.15)",
+        "transform": "none"
+      },
+      "pressed": {
+        "bg": "rgba(1, 23, 43, 0.15)",
+        "transform": "matrix(0.98, 0, 0, 0.98, 0, 0)"
+      }
+    }
+  },
+  "dprDiff": [
+    {
+      "path": "body > div:nth-child(1) > div:nth-child(1)",
+      "label": ".chat-card",
+      "dpr1": "1px",
+      "dpr2": "2px"
+    }
+  ],
+  "cssom": {
+    "sheets": [
+      {
+        "href": "https://site-assets.fontawesome.com/releases/v6.5.1/css/all.css",
+        "blocked": "SecurityError"
+      },
+      {
+        "href": "https://site-assets.fontawesome.com/releases/v6.5.1/css/sharp-solid.css",
+        "blocked": "SecurityError"
+      },
+      {
+        "href": "http://<server>/styles.css",
+        "rules": 36
+      }
+    ],
+    "matched": {
+      ".container": [
+        {
+          "selector": ".container",
+          "state": null,
+          "media": null,
+          "text": "width: 100%; max-width: 400px; min-width: 320px; padding: 0px 16px; display: flex; flex-direction: column;"
+        }
+      ],
+      ".chat-card": [
+        {
+          "selector": ".chat-card",
+          "state": null,
+          "media": null,
+          "text": "display: flex; flex-direction: column; align-items: flex-start; background: var(--background-white); border: 1px solid var(--border-subtle); border-radius: var(--card-radius); padding: 8px 0px; width: 100%; margin: 8px 0px; box-shadow: rgba(0, 0, 0, 0.25) 0px 30px 60px -40px;"
+        }
+      ],
+      ".header": [
+        {
+          "selector": ".header",
+          "state": null,
+          "media": null,
+          "text": "display: flex; align-items: flex-start; padding: 8px 16px; width: 100%;"
+        }
+      ],
+      ".ai-icon": [
+        {
+          "selector": ".ai-icon",
+          "state": null,
+          "media": null,
+          "text": "width: 24px; height: 24px; flex-shrink: 0;"
+        }
+      ],
+      "img": [
+        {
+          "selector": ".ai-icon img",
+          "state": null,
+          "media": null,
+          "text": "width: 100%; height: 100%; display: block;"
+        }
+      ],
+      ".body": [
+        {
+          "selector": ".body",
+          "state": null,
+          "media": null,
+          "text": "display: flex; flex-wrap: wrap; align-items: flex-start; padding: 8px 16px; width: 100%;"
+        }
+      ],
+      ".input-area": [
+        {
+          "selector": ".input-area",
+          "state": null,
+          "media": null,
+          "text": "flex: 1 1 0%; display: flex; align-items: center; min-width: 0px; min-height: 24px; overflow: hidden;"
+        }
+      ],
+      ".typed-text": [
+        {
+          "selector": ".typed-text",
+          "state": null,
+          "media": null,
+          "text": "font-family: var(--body-font-family); font-size: var(--body-01-size); font-weight: var(--body-01-weight); line-height: var(--body-01-line-height); letter-spacing: var(--body-01-letter-spacing); color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+        }
+      ],
+      ".cursor": [
+        {
+          "selector": ".cursor",
+          "state": null,
+          "media": null,
+          "text": "display: inline-block; width: 10px; height: 20px; background: var(--icon-highlight); flex-shrink: 0; animation: 1s step-end 0s infinite normal none running blink; vertical-align: middle; margin-left: 1px;"
+        }
+      ],
+      ".action": [
+        {
+          "selector": ".action",
+          "state": null,
+          "media": null,
+          "text": "display: flex; align-items: center; justify-content: space-between; padding: 0px 16px; width: 100%; height: 52px;"
+        }
+      ],
+      ".action-left": [
+        {
+          "selector": ".action-left",
+          "state": null,
+          "media": null,
+          "text": "display: flex; align-items: center; width: 128px;"
+        },
+        {
+          "selector": ".action-left",
+          "state": null,
+          "media": null,
+          "text": "justify-content: flex-start;"
+        }
+      ],
+      ".add-button": [
+        {
+          "selector": ".add-button",
+          "state": null,
+          "media": null,
+          "text": "display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: var(--button-secondary); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: 50%; cursor: pointer; color: var(--text-primary); transition: background 0.15s;"
+        },
+        {
+          "selector": ".add-button:hover",
+          "state": ":hover",
+          "media": null,
+          "text": "background: rgba(1, 23, 43, 0.15);"
+        },
+        {
+          "selector": ".add-button:active",
+          "state": ":active",
+          "media": null,
+          "text": "transform: scale(0.95);"
+        }
+      ],
+      ".fa-sharp.fa-solid.fa-plus": [
+        {
+          "selector": ".add-button i",
+          "state": null,
+          "media": null,
+          "text": "font-size: 16px; line-height: 1;"
+        }
+      ],
+      ".action-right": [
+        {
+          "selector": ".action-right",
+          "state": null,
+          "media": null,
+          "text": "display: flex; align-items: center; width: 128px;"
+        },
+        {
+          "selector": ".action-right",
+          "state": null,
+          "media": null,
+          "text": "justify-content: flex-end;"
+        }
+      ],
+      ".send-button": [
+        {
+          "selector": ".send-button",
+          "state": null,
+          "media": null,
+          "text": "display: flex; align-items: center; justify-content: center; width: 56px; height: 36px; background: var(--button-primary); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: var(--button-pill-radius); cursor: pointer; color: white; transition: background 0.15s;"
+        },
+        {
+          "selector": ".send-button:hover",
+          "state": ":hover",
+          "media": null,
+          "text": "background: rgb(10, 42, 74);"
+        },
+        {
+          "selector": ".send-button:active",
+          "state": ":active",
+          "media": null,
+          "text": "transform: scale(0.95);"
+        }
+      ],
+      ".fa-sharp.fa-solid.fa-arrow-up": [
+        {
+          "selector": ".send-button i",
+          "state": null,
+          "media": null,
+          "text": "font-size: 16px; line-height: 1;"
+        }
+      ],
+      ".info-section": [
+        {
+          "selector": ".info-section",
+          "state": null,
+          "media": null,
+          "text": "display: flex; flex-direction: column; gap: 4px; align-items: flex-start; justify-content: center; padding: 8px 0px; color: var(--text-primary);"
+        }
+      ],
+      ".title": [
+        {
+          "selector": ".title",
+          "state": null,
+          "media": null,
+          "text": "font-family: var(--body-font-family); font-size: var(--title-03-size); font-weight: var(--title-03-weight); line-height: var(--title-03-line-height); letter-spacing: var(--title-03-letter-spacing); width: 100%;"
+        }
+      ],
+      ".intro": [
+        {
+          "selector": ".intro",
+          "state": null,
+          "media": null,
+          "text": "font-family: var(--body-font-family); font-size: var(--footnote-01-size); font-weight: var(--footnote-01-weight); line-height: var(--footnote-01-line-height); letter-spacing: var(--footnote-01-letter-spacing); width: 100%;"
+        }
+      ],
+      ".cta-section": [
+        {
+          "selector": ".cta-section",
+          "state": null,
+          "media": null,
+          "text": "display: flex; align-items: center; padding: 8px 0px;"
+        }
+      ],
+      ".cta-button": [
+        {
+          "selector": ".cta-button",
+          "state": null,
+          "media": null,
+          "text": "display: inline-flex; align-items: center; justify-content: center; gap: var(--button-spacing); padding: var(--button-rect-vertical-padding) var(--button-rect-horizontal-padding); min-height: 36px; max-height: 36px; background: var(--button-secondary); color: var(--text-primary); font-family: var(--body-font-family); font-size: var(--label-01-size); font-weight: var(--label-01-weight); line-height: var(--label-01-line-height); letter-spacing: var(--label-01-letter-spacing); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: var(--button-rect-radius); cursor: pointer; text-decoration: none; transition: background 0.15s;"
+        },
+        {
+          "selector": ".cta-button:hover",
+          "state": ":hover",
+          "media": null,
+          "text": "background: rgba(1, 23, 43, 0.15);"
+        },
+        {
+          "selector": ".cta-button:active",
+          "state": ":active",
+          "media": null,
+          "text": "transform: scale(0.98);"
+        }
+      ],
+      ".fa-sharp.fa-solid.fa-chevron-right": [
+        {
+          "selector": ".cta-button i",
+          "state": null,
+          "media": null,
+          "text": "font-size: 14px; color: var(--icon-primary);"
+        }
+      ]
+    }
+  },
+  "groups": {
+    "counts": {
+      "elements": 22,
+      "naiveGroups": 21,
+      "repeatedGroups": 1,
+      "similarGroups": 9,
+      "candidates": 5,
+      "filteredGroups": 4,
+      "looseGroups": 4
+    },
+    "repeated": [
+      [
+        ".header",
+        ".body"
+      ]
+    ],
+    "similar": [
+      [
+        ".container",
+        ".header",
+        ".ai-icon",
+        ".body",
+        ".input-area",
+        ".action",
+        ".action-left",
+        ".action-right",
+        ".info-section",
+        ".cta-section"
+      ],
+      [
+        ".chat-card"
+      ],
+      [
+        "img"
+      ],
+      [
+        ".typed-text",
+        ".cursor"
+      ],
+      [
+        ".add-button",
+        ".send-button"
+      ],
+      [
+        ".fa-sharp.fa-solid.fa-plus",
+        ".fa-sharp.fa-solid.fa-arrow-up",
+        ".fa-sharp.fa-solid.fa-chevron-right"
+      ],
+      [
+        ".title"
+      ],
+      [
+        ".intro"
+      ],
+      [
+        ".cta-button"
+      ]
+    ],
+    "filtered": [
+      [
+        ".chat-card"
+      ],
+      [
+        ".cursor"
+      ],
+      [
+        ".add-button",
+        ".send-button"
+      ],
+      [
+        ".cta-button"
+      ]
+    ],
+    "loose": [
+      [
+        ".chat-card"
+      ],
+      [
+        ".cursor"
+      ],
+      [
+        ".add-button",
+        ".send-button"
+      ],
+      [
+        ".cta-button"
+      ]
+    ],
+    "changingText": [
+      {
+        "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)",
+        "label": ".typed-text",
+        "seen": [
+          "",
+          "คุยกับ Ch",
+          "คุยกับ Charlie AI",
+          "คุยกับ Charlie AI",
+          "วิเคราะห์พอร์ตหุ"
+        ]
+      }
+    ],
+    "firstFrameEmpty": [
+      "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)"
+    ]
+  }
+}

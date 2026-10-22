@@ -1,0 +1,529 @@
+{
+  "sheets": [
+    {
+      "href": "https://site-assets.fontawesome.com/releases/v6.5.1/css/all.css",
+      "read": false,
+      "why": "remote"
+    },
+    {
+      "href": "https://site-assets.fontawesome.com/releases/v6.5.1/css/sharp-solid.css",
+      "read": false,
+      "why": "remote"
+    },
+    {
+      "href": "styles.css",
+      "read": true,
+      "rules": 42
+    }
+  ],
+  "scripts": [
+    {
+      "src": "https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js",
+      "local": false
+    },
+    {
+      "src": "app.js",
+      "local": true
+    }
+  ],
+  "tokens": 36,
+  "counts": {
+    "elements": 22,
+    "naiveGroups": 22,
+    "candidates": 5,
+    "families": 4,
+    "parts": 1
+  },
+  "naive": {
+    ".container": 1,
+    ".chat-card": 1,
+    ".header": 1,
+    ".ai-icon": 1,
+    "img": 1,
+    ".body": 1,
+    ".input-area": 1,
+    ".typed-text": 1,
+    ".cursor": 1,
+    ".action": 1,
+    ".action-left": 1,
+    ".add-button": 1,
+    ".fa-sharp.fa-solid.fa-plus": 1,
+    ".action-right": 1,
+    ".send-button": 1,
+    ".fa-sharp.fa-solid.fa-arrow-up": 1,
+    ".info-section": 1,
+    ".title": 1,
+    ".intro": 1,
+    ".cta-section": 1,
+    ".cta-button": 1,
+    ".fa-sharp.fa-solid.fa-chevron-right": 1
+  },
+  "families": [
+    {
+      "family": "chat-card",
+      "sites": [
+        "banner-app.html:18:9"
+      ],
+      "slots": [
+        "add-button",
+        "send-button"
+      ],
+      "parts": [
+        "cursor"
+      ],
+      "states": [],
+      "icons": [
+        {
+          "src": "assets/ai-icon.svg",
+          "alt": "AI",
+          "at": "banner-app.html:22:21"
+        },
+        {
+          "set": "Font Awesome",
+          "style": "sharp solid",
+          "name": "plus",
+          "at": "banner-app.html:37:25",
+          "size": "16px"
+        },
+        {
+          "set": "Font Awesome",
+          "style": "sharp solid",
+          "name": "arrow-up",
+          "at": "banner-app.html:42:25",
+          "size": "16px"
+        }
+      ],
+      "text": [],
+      "scriptText": {
+        "library": "typed.js",
+        "target": "#typed-output",
+        "strings": [
+          "คุยกับ Charlie AI",
+          "วิเคราะห์พอร์ตหุ้นของฉัน",
+          "เรื่องที่ต้องรู้ในตลาดวันนี้",
+          "หาข้อมูลกองทุน",
+          "ตรวจสุขภาพพอร์ตกองทุน",
+          "เปรียบเทียบกองทุน"
+        ]
+      },
+      "own": {
+        "margin": "8px 0",
+        "padding": "8px 0",
+        "display": "flex",
+        "flex-direction": "column",
+        "align-items": "flex-start",
+        "background-color": "var(--background-white) → #ffffff",
+        "border-color": "var(--border-subtle) → rgba(1, 23, 43, 0.05)",
+        "border-width": "1px",
+        "border-radius": "var(--card-radius) → 16px",
+        "width": "100%",
+        "box-shadow": "0px 30px 60px -40px rgba(0, 0, 0, 0.25)"
+      },
+      "stateRules": {}
+    },
+    {
+      "family": "add-button",
+      "sites": [
+        "banner-app.html:36:21"
+      ],
+      "slots": [],
+      "parts": [],
+      "states": [
+        "hover",
+        "pressed"
+      ],
+      "icons": [
+        {
+          "set": "Font Awesome",
+          "style": "sharp solid",
+          "name": "plus",
+          "at": "banner-app.html:37:25",
+          "size": "16px"
+        }
+      ],
+      "text": [],
+      "own": {
+        "display": "flex",
+        "align-items": "center",
+        "justify-content": "center",
+        "width": "36px",
+        "height": "36px",
+        "background-color": "var(--button-secondary) → rgba(1, 23, 43, 0.1)",
+        "border-width": "0",
+        "border-radius": "50%",
+        "cursor": "pointer",
+        "color": "var(--text-primary) → #01172b",
+        "transition": "background 0.15s ease"
+      },
+      "stateRules": {
+        "hover": {
+          "background-color": "rgba(1, 23, 43, 0.15)"
+        },
+        "pressed": {
+          "transform": "scale(0.95)"
+        }
+      }
+    },
+    {
+      "family": "send-button",
+      "sites": [
+        "banner-app.html:41:21"
+      ],
+      "slots": [],
+      "parts": [],
+      "states": [
+        "hover",
+        "pressed"
+      ],
+      "icons": [
+        {
+          "set": "Font Awesome",
+          "style": "sharp solid",
+          "name": "arrow-up",
+          "at": "banner-app.html:42:25",
+          "size": "16px"
+        }
+      ],
+      "text": [],
+      "own": {
+        "display": "flex",
+        "align-items": "center",
+        "justify-content": "center",
+        "width": "56px",
+        "height": "36px",
+        "background-color": "var(--button-primary) → #01172b",
+        "border-width": "0",
+        "border-radius": "var(--button-pill-radius) → 200px",
+        "cursor": "pointer",
+        "color": "white",
+        "transition": "background 0.15s ease"
+      },
+      "stateRules": {
+        "hover": {
+          "background-color": "#0a2a4a"
+        },
+        "pressed": {
+          "transform": "scale(0.95)"
+        }
+      }
+    },
+    {
+      "family": "cta-button",
+      "sites": [
+        "banner-app.html:57:13"
+      ],
+      "slots": [],
+      "parts": [],
+      "states": [
+        "hover",
+        "pressed"
+      ],
+      "icons": [
+        {
+          "set": "Font Awesome",
+          "style": "sharp solid",
+          "name": "chevron-right",
+          "at": "banner-app.html:59:17",
+          "size": "14px"
+        }
+      ],
+      "text": [
+        "ลองคุย"
+      ],
+      "own": {
+        "padding": "var(--button-rect-vertical-padding) var(--button-rect-horizontal-padding) → 6px 12px",
+        "display": "inline-flex",
+        "align-items": "center",
+        "justify-content": "center",
+        "gap": "var(--button-spacing) → 8px",
+        "min-height": "36px",
+        "max-height": "36px",
+        "background-color": "var(--button-secondary) → rgba(1, 23, 43, 0.1)",
+        "color": "var(--text-primary) → #01172b",
+        "font-family": "var(--body-font-family) → 'Finnomena Trek', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        "font-size": "var(--label-01-size) → 15px",
+        "font-weight": "var(--label-01-weight) → 500",
+        "line-height": "var(--label-01-line-height) → 24px",
+        "letter-spacing": "var(--label-01-letter-spacing) → 0.16px",
+        "border-width": "0",
+        "border-radius": "var(--button-rect-radius) → 8px",
+        "cursor": "pointer",
+        "text-decoration": "none",
+        "transition": "background 0.15s ease"
+      },
+      "stateRules": {
+        "hover": {
+          "background-color": "rgba(1, 23, 43, 0.15)"
+        },
+        "pressed": {
+          "transform": "scale(0.98)"
+        }
+      }
+    }
+  ],
+  "parts": [
+    {
+      "part": "cursor",
+      "of": "chat-card",
+      "at": "banner-app.html:29:71"
+    }
+  ],
+  "merges": [
+    {
+      "families": [
+        "add-button",
+        "send-button"
+      ],
+      "jaccard": 1,
+      "samePaintToken": false,
+      "sameStates": false,
+      "differ": [
+        {
+          "property": "width",
+          "values": [
+            "add-button: 36px",
+            "send-button: 56px"
+          ]
+        },
+        {
+          "property": "background-color",
+          "values": [
+            "add-button: var(--button-secondary)",
+            "send-button: var(--button-primary)"
+          ]
+        },
+        {
+          "property": "border-radius",
+          "values": [
+            "add-button: 50%",
+            "send-button: var(--button-pill-radius)"
+          ]
+        },
+        {
+          "property": "color",
+          "values": [
+            "add-button: var(--text-primary)",
+            "send-button: white"
+          ]
+        }
+      ]
+    },
+    {
+      "families": [
+        "add-button",
+        "cta-button"
+      ],
+      "jaccard": 0.43,
+      "samePaintToken": true,
+      "sameStates": false,
+      "differ": [
+        {
+          "property": "display",
+          "values": [
+            "add-button: flex",
+            "cta-button: inline-flex"
+          ]
+        },
+        {
+          "property": "border-radius",
+          "values": [
+            "add-button: 50%",
+            "cta-button: var(--button-rect-radius)"
+          ]
+        }
+      ]
+    },
+    {
+      "families": [
+        "send-button",
+        "cta-button"
+      ],
+      "jaccard": 0.43,
+      "samePaintToken": false,
+      "sameStates": false,
+      "differ": [
+        {
+          "property": "display",
+          "values": [
+            "send-button: flex",
+            "cta-button: inline-flex"
+          ]
+        },
+        {
+          "property": "background-color",
+          "values": [
+            "send-button: var(--button-primary)",
+            "cta-button: var(--button-secondary)"
+          ]
+        },
+        {
+          "property": "border-radius",
+          "values": [
+            "send-button: var(--button-pill-radius)",
+            "cta-button: var(--button-rect-radius)"
+          ]
+        },
+        {
+          "property": "color",
+          "values": [
+            "send-button: white",
+            "cta-button: var(--text-primary)"
+          ]
+        }
+      ]
+    }
+  ],
+  "tokenAxes": {
+    "icon": [
+      "highlight",
+      "primary"
+    ],
+    "text": [
+      "information",
+      "primary"
+    ],
+    "button": [
+      "primary",
+      "secondary",
+      "spacing",
+      "pill",
+      "rect",
+      "min"
+    ]
+  },
+  "text": [
+    {
+      "class": "typed-text",
+      "at": "banner-app.html:29:21",
+      "text": "",
+      "style": [
+        "body-01"
+      ]
+    },
+    {
+      "class": "title",
+      "at": "banner-app.html:50:13",
+      "text": "คุยกับ Charlie AI",
+      "style": [
+        "title-03"
+      ]
+    },
+    {
+      "class": "intro",
+      "at": "banner-app.html:51:13",
+      "text": "ถามข้อมูลกองทุน, มุมมองการลงทุนล่าสุด, จัดพอร์ตกองทุนประหยัดภาษี, สถานการณ์ตลาดวันนี้, ตรวจสุขภาพพอร์ตหุ้นของคุณ",
+      "style": [
+        "footnote-01"
+      ]
+    }
+  ],
+  "icons": [
+    {
+      "set": "Font Awesome",
+      "style": "sharp solid",
+      "name": "plus",
+      "at": "banner-app.html:37:25",
+      "size": "16px"
+    },
+    {
+      "set": "Font Awesome",
+      "style": "sharp solid",
+      "name": "arrow-up",
+      "at": "banner-app.html:42:25",
+      "size": "16px"
+    },
+    {
+      "set": "Font Awesome",
+      "style": "sharp solid",
+      "name": "chevron-right",
+      "at": "banner-app.html:59:17",
+      "size": "14px"
+    }
+  ],
+  "images": [
+    {
+      "src": "assets/ai-icon.svg",
+      "alt": "AI",
+      "at": "banner-app.html:22:21"
+    }
+  ],
+  "layout": [
+    "container",
+    "header",
+    "ai-icon",
+    "body",
+    "input-area",
+    "action",
+    "action-left",
+    "action-right",
+    "info-section",
+    "cta-section"
+  ],
+  "unusedAssets": [
+    "assets/chevron-right.svg"
+  ],
+  "media": [
+    {
+      "media": "(max-width: 480px)",
+      "selectors": [
+        "body"
+      ],
+      "props": [
+        "padding: 12px"
+      ]
+    },
+    {
+      "media": "(max-width: 320px)",
+      "selectors": [
+        ".header",
+        ".body",
+        ".action"
+      ],
+      "props": [
+        "padding: 6px 12px",
+        "padding: 0 12px"
+      ]
+    },
+    {
+      "media": "(-webkit-min-device-pixel-ratio: 2),\n(min-resolution: 192dpi)",
+      "selectors": [
+        ".chat-card"
+      ],
+      "props": [
+        "border-width: 2px"
+      ]
+    }
+  ],
+  "script": {
+    "toggled": [],
+    "className": [],
+    "inlineStyle": [
+      {
+        "target": ".send-button",
+        "event": "touchstart",
+        "property": "transform",
+        "value": "scale(0.95)"
+      },
+      {
+        "target": ".send-button",
+        "event": "touchend",
+        "property": "transform",
+        "value": "scale(1)"
+      }
+    ],
+    "text": [
+      {
+        "library": "typed.js",
+        "target": "#typed-output",
+        "strings": [
+          "คุยกับ Charlie AI",
+          "วิเคราะห์พอร์ตหุ้นของฉัน",
+          "เรื่องที่ต้องรู้ในตลาดวันนี้",
+          "หาข้อมูลกองทุน",
+          "ตรวจสุขภาพพอร์ตกองทุน",
+          "เปรียบเทียบกองทุน"
+        ]
+      }
+    ]
+  }
+}
