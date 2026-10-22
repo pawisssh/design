@@ -19,3 +19,7 @@ Decided by the owner in [Decide: vibe-to-figma without shadcn, and runtime style
 - **#215 changes.** It was a refusal. It becomes path A's preflight: a React + Tailwind app with no shadcn goes to path A, and any other app gets the plain message. The `shadcn@undefined` pin message still becomes "the lockfile has no shadcn".
 - **ADR 0005 must change.** It says a Contract is never written from a Prototype, and that a family built in an app stays a Component Proposal. Path A's ADR amends it; this ADR does not.
 - **Vibe-to-Figma's SKILL.md Inputs widen** when path A lands. Until then, the shadcn inputs stay its only supported path.
+- Amended 2026-10-22 by [ADR 0019](0019-a-prototype-reaches-component-sets-or-a-handoff-by-its-kind.md) ([#325](https://github.com/pawisssh/design/issues/325)):
+  - **Families come from the Prototype's source, never its rendered DOM** ([#323](https://github.com/pawisssh/design/issues/323)).
+  - **"React + Tailwind only" now describes the Extracted Library, not the Prototype.** A plain HTML Prototype enters the one pipeline through a library transcribed from its CSS rules ([#327](https://github.com/pawisssh/design/issues/327)). A React app styled by CSS or SCSS classes enters through its own components ([#310](https://github.com/pawisssh/design/issues/310)).
+  - **Which kinds of Prototype are supported, per output, is ADR 0019's.**

@@ -24,3 +24,8 @@ Decided with the owner by grilling on 2026-10-21, path A of [#212](https://githu
 - **Preview.** The renderer installs the project's own React version.
 - **What a Handoff names.** A Handoff against such a Design System names Extracted Library components that the Prototype does not import. That is intended: developers adopt the library.
 - **Where it applies.** A Prototype with `components.json` keeps the shadcn path. Anything other than React JSX styled by Tailwind classes, such as plain HTML, a Carbon app, or CSS or SCSS classes, is out of scope and refused plainly.
+- Amended 2026-10-22 by [ADR 0019](0019-a-prototype-reaches-component-sets-or-a-handoff-by-its-kind.md) ([#325](https://github.com/pawisssh/design/issues/325)):
+  - **Static only** holds for families, axes and rules. A reader may build the element tree by server-rendering components in Node. It may build it in a browser only once that tree is the same on every run ([#323](https://github.com/pawisssh/design/issues/323)).
+  - **What feeds a family file.** A family file may also come from the CSS rules its class strings are transcribed from ([#327](https://github.com/pawisssh/design/issues/327)).
+  - **Pins.** The Generic Adapter's Tailwind and the renderer's React fall back to the Adapter's own pins when the Prototype resolves none (#327).
+  - **Where it applies.** Plain HTML styled by CSS classes is no longer refused (#327). A React app styled by CSS or SCSS classes, Carbon or not, waits on [#310](https://github.com/pawisssh/design/issues/310).
