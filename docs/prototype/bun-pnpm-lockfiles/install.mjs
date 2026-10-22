@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // PROTOTYPE (#335), point 2: can the runtime reader install the Prototype's resolved versions?
-//   node docs/prototype/bun-pnpm-lockfiles/install.mjs <app> --top <top> --work <scratch dir> --way own|npm
+//   node docs/prototype/bun-pnpm-lockfiles/install.mjs <app> [--top <stop folder>] --work <scratch dir> --way own|npm
 //        [--bun <bun binary>] [--pnpm <pnpm.cjs>] [--no-overrides]
 //
 // --way own: the Prototype's own package manager, frozen to its lock, scripts off.
@@ -20,12 +20,12 @@ import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { findLock, lockView, pnpmRef } from './lock.mjs';
+import { findLock, lockView, pnpmRef, workspaceTop } from './lock.mjs';
 
 const { values: o, positionals: [appArg] } = parseArgs({ allowPositionals: true, options: {
   top: { type: 'string' }, work: { type: 'string' }, way: { type: 'string' }, bun: { type: 'string' }, pnpm: { type: 'string' },
   'no-overrides': { type: 'boolean' } } });
-const app = resolve(appArg), top = resolve(o.top || appArg), work = resolve(o.work);
+const app = resolve(appArg), top = resolve(o.top || workspaceTop(appArg)), work = resolve(o.work);
 const view = lockView(app, top);
 const found = findLock(app, top);
 const report = { app: basename(app), lock: view.file, kind: view.kind, way: o.way };

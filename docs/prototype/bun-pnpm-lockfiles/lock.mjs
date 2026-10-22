@@ -12,6 +12,7 @@
 //
 // No parser is fetched: bun.lock is JSON with trailing commas, and pnpm-lock.yaml is read by a small YAML subset reader.
 import { existsSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 
 const fail = msg => { throw new Error(msg); };
@@ -20,10 +21,23 @@ const LOCKS = [['package-lock.json', 'npm'], ['bun.lock', 'bun'], ['pnpm-lock.ya
 const UNREAD = [['bun.lockb', 'bun.lockb, bun\'s binary lockfile'], ['yarn.lock', 'yarn.lock']];
 
 /**
- * The lockfile that governs `app`: walk up from `app` to `top` (the Prototype's top folder, never past it).
+ * Where the walk stops, from the folder the owner gives alone: the first folder up from it holding `pnpm-workspace.yaml`
+ * (the workspace root, which pnpm finds the same way) or `.git` (the repository). Neither before the home folder: the
+ * given folder itself, so nothing above it is read.
+ */
+export function workspaceTop(app) {
+  const home = homedir();
+  for (let dir = resolve(app); ; dir = dirname(dir)) {
+    if (existsSync(join(dir, 'pnpm-workspace.yaml')) || existsSync(join(dir, '.git'))) return dir;
+    if (dir === home || dir === dirname(dir)) return resolve(app);
+  }
+}
+
+/**
+ * The lockfile that governs `app`: walk up from `app` to `top` (default `workspaceTop(app)`, never past it).
  * Returns {dir, file, kind, importer} or {missing: [what was seen instead]}.
  */
-export function findLock(app, top) {
+export function findLock(app, top = workspaceTop(app)) {
   const seen = [];
   const stop = resolve(top);
   for (let dir = resolve(app); ; dir = dirname(dir)) {

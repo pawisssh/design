@@ -24,9 +24,13 @@ into scratch, for the "own package manager" way only.
 
 ## Files
 
-- `lock.mjs`: `findLock` and `lockView`. Both are pure.
-  - **The walk:** from the app folder up to the Prototype's top folder. In each folder it takes `package-lock.json`, then
-    `bun.lock`, then `pnpm-lock.yaml`.
+- `lock.mjs`: `workspaceTop`, `findLock` and `lockView`. All three only read.
+  - **The walk:** up from the folder the owner gives. In each folder it takes `package-lock.json`, then `bun.lock`, then
+    `pnpm-lock.yaml`.
+  - **Where the walk stops (`workspaceTop`):**
+    - at the first folder holding `pnpm-workspace.yaml`, which is how pnpm finds its own workspace root, or `.git`;
+    - never past the home folder;
+    - with neither, at the given folder itself.
   - **Seen but never read:** `bun.lockb` and `yarn.lock`. They are named only in the refusal.
   - **What the view is:** npm's `packages` shape, `node_modules/<name>` → {version, integrity, deps…}, so every
     existing reader takes it unchanged.
@@ -45,9 +49,9 @@ into scratch, for the "own package manager" way only.
   - a smoke build of a two-file page of ours with the installed `vite` and `@tailwindcss/vite`.
 
 ```bash
-node docs/prototype/bun-pnpm-lockfiles/read.mjs <app> --top <Prototype top> [--oracle <js-yaml dir>] [--fetch]
+node docs/prototype/bun-pnpm-lockfiles/read.mjs <app> [--oracle <js-yaml dir>] [--fetch]
 node docs/prototype/bun-pnpm-lockfiles/cases.mjs <lovable clone> <replit clone>
-node docs/prototype/bun-pnpm-lockfiles/install.mjs <app> --top <top> --work <scratch dir> --way own|npm [--bun <bin>] [--pnpm <pnpm.cjs>] [--no-overrides]
+node docs/prototype/bun-pnpm-lockfiles/install.mjs <app> --work <scratch dir> --way own|npm [--bun <bin>] [--pnpm <pnpm.cjs>] [--no-overrides]
 ```
 
 ## Point 1: `projectPins` reads both
@@ -75,9 +79,11 @@ The flat view keeps the version nearest the app. Pins and the preview renderer r
   - only `bun.lockb`;
   - only `yarn.lock`;
   - no lockfile;
-  - a top folder that is the app folder, since the walk stops there;
-  - a folder that isn't an importer of the workspace lock.
+  - a folder that isn't an importer of the workspace lock;
+  - the app folder copied out of its workspace;
+  - a lock above the repository's `.git`, which is never read.
 - `package-lock.json` beside `bun.lock` wins.
+- Every row passes only the folder. The stop is derived.
 
 ## Point 2: installing the resolved versions
 
@@ -114,14 +120,21 @@ The gate keeps "not supported" (ADR 0019).
 
 ## Found on the way (not this ticket's question)
 
-- **A workspace app's tsconfig extends the workspace root.** `artifacts/hopebridge/tsconfig.json` extends
+These gaps don't touch the lock read. Each blocks one output only.
+
+- **Handoff runtime read: a workspace app's tsconfig extends the workspace root.** `artifacts/hopebridge/tsconfig.json` extends
   `../../tsconfig.base.json`.
   - An app-only copy, as `runtime.mjs:54` makes one, lacks that file.
   - Vite's TypeScript transform then fails before any build, as the first smoke build here did.
   - The runtime reader's copy needs the files the `extends` chain names, at the same relative place.
-- **A Tailwind `@plugin` is refused by the Adapter.** The Replit stylesheet has `@plugin "@tailwindcss/typography"`.
+- **Handoff runtime read: workspace links.**
+  - hopebridge links no workspace package. Its sibling `artifacts/api-server` does: it links `lib/api-zod` and `lib/db`.
+  - npm in an app-only copy can't install a `link:`, so the npm way refuses one, naming it.
+  - Copying the linked packages, which are importers of the same lock, would lift that.
+- **Component Sets only: a Tailwind `@plugin` is refused by the Adapter.** The Replit stylesheet has `@plugin "@tailwindcss/typography"`.
   `tailwind.mjs`'s `loadModule` throws, because the Adapter runs no package code.
-  - So the Replit sample still stops at the Tailwind compile, after its lock is read.
+  - So the Replit sample still stops at the Adapter's Tailwind compile, after its lock is read.
+  - The Handoff is not affected, because the app's own `vite build` loads the plugin through `@tailwindcss/vite`.
   - No gate row or ticket covers this.
 
 ## Assumptions
@@ -132,3 +145,7 @@ The gate keeps "not supported" (ADR 0019).
   run on this Mac, but not the app's own config.
 - With overrides, npm chose only the current platform's binaries itself. Every other version came from the lock.
 - The lock view is pnpm v9 and bun.lock v1. Older formats are refused by version.
+- A name with two versions in the app's closure gets no override (date-fns and react-is here). Drift was 0 anyway. Nested
+  `overrides` would pin those names too.
+- Neither sample has `patchedDependencies`. npm would install a patched package unpatched, so a lock with patches should be
+  refused, naming them.
