@@ -54,6 +54,10 @@ _Avoid_: Base Component (that is the first approved final variant), building blo
 A child component that a Component Family's code takes any number of, with content the feature chooses, such as a Select's SelectItem options. The Contract names its component and props; a Usage lists them.
 _Avoid_: Item (that is a Sub-component tier), option, slot
 
+**Nested instance**:
+An instance of another Component Family inside a family's anatomy, such as the Buttons in a chat card. The holding family's Contract chooses its variant and property values per variant, and styles it without changing the held family's Contract.
+_Avoid_: Nested component, Repeated child (the feature chooses those), Sub-component (that is private to one family), slot
+
 **Component Set**:
 The Figma node that groups a Component Family's variants. Used only for the Figma artifact.
 _Avoid_: Variant group
@@ -127,7 +131,7 @@ One element of a feature's input, as the Handoff records it: a Contract with a t
 _Avoid_: Instance (that is the Figma node), component reference, match
 
 **Container**:
-A Code Library component whose subtree holds Usages of other Code Library components, such as a Card around a form. With a Contract, it is a Usage that the others nest in through `in`; one whose children are all its own parts is a leaf.
+A Code Library component whose subtree holds Usages of other Code Library components, such as a Card around a form. With a Contract, it is a Usage that the others nest in through `in`; one whose subtree holds only its own anatomy, Nested instances included, is a leaf, since its Contract fixes those and the feature does not choose them.
 _Avoid_: Wrapper (that is the reading of a container with no Contract), parent
 
 **Standard state**:
