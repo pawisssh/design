@@ -79,7 +79,7 @@ What it found:
   - no classes toggled at all.
 - **Text:** `title` → `title-03` and `intro` → `footnote-01`, from their `var()` names. `typed-text` is text written by the script.
 - **Media rules:** both breakpoints, and the DPR-2 `border-width: 2px`.
-- **Cost:** 2–100 ms, no network, parse5 only, 7 KB of output, and identical on a rerun.
+- **Cost:** 2–100 ms, no network, parse5 only, 7 KB of output, and byte-identical on every rerun.
 
 **Rendered way** (`rendered.mjs`). It groups by computed style and structure. Class names are shown as labels only and are never used to group.
 
@@ -94,22 +94,39 @@ What it found:
 - **States:** hover and pressed values, by hovering and pressing each pointer element. That takes 2 s, with a 250 ms wait for the 0.15 s transition.
 - **Icons:**
   - The Pro CDN (`site-assets.fontawesome.com`) answers **403** to both stylesheets, so all three `<i>` are 0×0 and the buttons are blank.
-  - Redirected to the Free CDN, the icons render as Free *classic* solid glyphs, not Sharp. The reader sees them as private-use code points (`"\f062"`), not names.
-- **Typed text:** a moving target. Five samples over 5 s saw `""`, partial strings and 2 of the 6 strings. Sample 2 read `คุยกับ C` in one invocation and `คุยกับ Ch` in the next.
+  - Redirected to the Free CDN, the icons render as Free *classic* solid glyphs, not Sharp. Free 6.5.1's CSS names `.fa-sharp` only in its base display rule and has no Sharp font, so `.fa-solid`'s "Font Awesome 6 Free" wins. Either way the reader sees private-use code points (`"\f062"`), not names.
+- **Typed text:** a moving target. Five samples over 5 s saw `""`, one complete string and the start of a second, so four of the six strings never appeared. Sample 2 differs between runs, `คุยกับ C` in one and `คุยกับ Ch` in the next, so a rerun of the rendered way is not byte-identical.
 - **Fonts:** no `@font-face`. The text renders in Finnomena Trek only because it is installed on this Mac.
 - **What it never sees:** the touch handler, and the DPR-2 border unless a second context runs at DPR 2.
 - **Cost:**
   - 8.5–12 s;
   - a Chrome and playwright-core;
   - third-party network: unpkg, and the Font Awesome CDN, which refuses;
-  - 27 KB of output.
+  - 27 KB of output;
+  - reruns differ. Over four invocations of `run.mjs`, one pair of rendered runs differed in 15 paths (the typed text and the network order). The other three differed in network order alone.
 - **Browser CSSOM:** the browser can give each element its matched authored rules, with `var()` and the state selectors kept. That works only for same-origin sheets: the Font Awesome sheets throw `SecurityError`. This is the static read done in the browser, not a computed one.
 
 ## Verdict
 
-**Families and axes come from the markup and CSS rules.** The static way, grouped by authored class, is the source. Values and screenshots stay with To-handoff's runtime reader, as ADR 0015 has them. On this Prototype the rendered way found no family, axis or state that the static way missed, and it missed names, token-named axes, icons, five of six strings and slots. Without a candidate rule it gives the 21 or 9 groups that #249's "29 groups" warned of. With one, it finds the same 5 candidates as the static way, but nameless.
+**Families and axes come from the markup and CSS rules.** The static way, grouped by authored class, is the source. Values and screenshots stay with To-handoff's runtime reader, as ADR 0015 has them. On this Prototype the rendered way found no family, axis or state that the static way missed, and it missed names, token-named axes, icons, four of the six strings and slots. Without a candidate rule it gives the 21 or 9 groups that #249's "29 groups" warned of. With one, it finds the same 5 candidates as the static way, but nameless.
 
 Every family here appears once, so "group the repeated elements" finds nothing. A plain HTML author's class name is their component name, and the class's rules are its definition.
+
+**Against the answer key:**
+- **Static.** It gives `chat-card`, with the slots `add-button` and `send-button` and the part `cursor`. It gives the three buttons with merge proposals. One batch of agent judgement turns that into the key's Button, either one family or Icon Button + Button, and Chat input card. It names every icon and the AI image, and it gives all six strings as copy.
+- **Rendered.** It gives 4 groups with no names, and `cursor` is a group of its own. There are no icons and one frame of text.
+
+**What this page never tested in the static way:**
+- modifier classes, such as `.button--primary`;
+- classes a script toggles;
+- repeated elements;
+- markup a script builds.
+
+Here every axis came from token names and pseudo-class rules.
+
+**The deciding signal is the authored classes and rules, not where they are read.** The browser's CSSOM gives the same selectors, `var()` names and state rules for same-origin sheets. A browser-based reader that reads the CSSOM and the live DOM's `class` attributes would find the same families, at the browser's cost. It also throws `SecurityError` on cross-origin sheets. What this prototype rejects is grouping by computed style and structure.
+
+**Assumption (scope):** this holds for plain HTML styled by authored CSS classes, in a `<style>` block or a linked local stylesheet. #319 has Claude's default as one page with inline CSS, from Claude's docs, with no sample. A page styled by Tailwind's CDN script, or by `style=""` attributes alone, has no authored class to group by, and it is untested here.
 
 **Assumption (anchor):** the Contract anchors to an Extracted Library, as in ADR 0016. The library holds one generated component per family, generated from the family's CSS rules and nothing else, and the Family map identifies each site by its place in the markup. A Contract never anchors to `styles.css` selectors: that needs a new `code` shape, and one edit to the one stylesheet would void every approval, which ADR 0016 rejected. The library is generated, so its form can change by regenerating.
 

@@ -33,7 +33,10 @@ const { timing: _t2, ...r2Body } = norm(r2);
 const rDiff = diff(r1Body, r2Body);
 
 writeFileSync(out + 'static.json', JSON.stringify(s1, null, 2) + '\n');
-writeFileSync(out + 'rendered.json', JSON.stringify(norm(r1), null, 2) + '\n');
+// The committed JSON keeps each CSSOM match's selector, not the rule's text: the stylesheet is the owner's.
+const r1Out = norm(r1);
+r1Out.cssom.matched = Object.fromEntries(Object.entries(r1Out.cssom.matched).map(([k, v]) => [k, v.map(({ text, ...m }) => m)]));
+writeFileSync(out + 'rendered.json', JSON.stringify(r1Out, null, 2) + '\n');
 const icons = r => r.elements.filter(e => e.tag === 'i').map(e => `${e.label} ${e.rect.w}×${e.rect.h}${e.before ? ` ${e.before.content} in ${e.before.fontFamily}` : ''}`);
 const kb = x => (JSON.stringify(x).length / 1024).toFixed(1) + ' KB';
 
@@ -73,7 +76,7 @@ Page: \`${page}\`, read ${new Date().toISOString().slice(0, 10)}. Browser: ${r1.
 | classes toggled by script | ${s1.script.toggled.length || 'none'} | n/a |
 | fonts | declared: ${s1.families.find(f => f.own['font-family'])?.own['font-family'] ?? 'n/a'} | @font-face fonts: ${r1.fonts.length ? r1.fonts.map(f => `${f.family} ${f.status}`).join(', ') : 'none'}; the text renders in whatever font this machine has installed under that name (Finnomena Trek is installed on the owner's Mac, so the metrics differ elsewhere) |
 | media rules | ${s1.media.map(m => `${m.media.replace(/\n/g, ' ')} → ${m.selectors.join(', ')}`).join('; ')} | at DPR 2: ${r1.dprDiff.map(d => `${d.label} border ${d.dpr1} → ${d.dpr2}`).join('; ')} |
-| browser CSSOM | n/a | ${r1.cssom.sheets.map(s => `${s.href.replace(/^https?:\/\/[^/]+\//, '')} ${s.blocked ? 'blocked (' + s.blocked + ')' : s.rules + ' rules'}`).join('; ')}; \`.send-button\` matched: ${r1.cssom.matched['.send-button'].map(m => m.selector).join(', ')} |
+| browser CSSOM | n/a | ${r1.cssom.sheets.map(s => `${s.href.replace(/^https?:\/\/[^/]+\//, '')} ${s.blocked ? 'blocked (' + s.blocked + ')' : s.rules + ' rules'}`).join('; ')}; \`.send-button\` matched: ${r1.cssom.matched['.send-button'].map(m => m.selector).join(', ')}; its rule keeps \`${(r1.cssom.matched['.send-button'][0].text.match(/background: [^;]+/) || [''])[0]}\` and \`${(r1.cssom.matched['.send-button'][0].text.match(/border-radius: [^;]+/) || [''])[0]}\` |
 `;
 writeFileSync(out + 'report.md', report);
 console.log(report);

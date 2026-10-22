@@ -2,11 +2,11 @@
   "browser": "system Chrome (/Applications/Google Chrome.app/Contents/MacOS/Google Chrome)",
   "width": 390,
   "timing": {
-    "load": 795,
-    "textSamples": 5007,
-    "read": 40,
-    "states": 2239,
-    "total": 10670
+    "load": 635,
+    "textSamples": 5003,
+    "read": 29,
+    "states": 1922,
+    "total": 8522
   },
   "network": [
     {
@@ -60,7 +60,7 @@
     {
       "at": 600,
       "texts": {
-        "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)": "คุยกับ Ch",
+        "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)": "คุยกับ C",
         "body > div:nth-child(1) > div:nth-child(2) > h2:nth-child(1)": "คุยกับ Charlie AI",
         "body > div:nth-child(1) > div:nth-child(2) > p:nth-child(2)": "ถามข้อมูลกองทุน, มุมมองการลงทุนล่าสุด, จัดพอร์ตกองทุนประหยัดภาษี, สถานการณ์ตลาดวันนี้,\n                ตรวจสุขภาพพอร์ตหุ้นของคุณ",
         "body > div:nth-child(1) > div:nth-child(3) > a:nth-child(1)": "ลองคุย"
@@ -87,7 +87,7 @@
     {
       "at": 5000,
       "texts": {
-        "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)": "วิเคราะห์พอร์ตหุ",
+        "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)": "วิเคราะห์พอร์ตห",
         "body > div:nth-child(1) > div:nth-child(2) > h2:nth-child(1)": "คุยกับ Charlie AI",
         "body > div:nth-child(1) > div:nth-child(2) > p:nth-child(2)": "ถามข้อมูลกองทุน, มุมมองการลงทุนล่าสุด, จัดพอร์ตกองทุนประหยัดภาษี, สถานการณ์ตลาดวันนี้,\n                ตรวจสุขภาพพอร์ตหุ้นของคุณ",
         "body > div:nth-child(1) > div:nth-child(3) > a:nth-child(1)": "ลองคุย"
@@ -413,7 +413,7 @@
       },
       "before": null,
       "img": null,
-      "text": "วิเคราะห์พอร์ตหุ"
+      "text": "วิเคราะห์พอร์ตห"
     },
     {
       "path": "body > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(2)",
@@ -446,7 +446,7 @@
         "line-height": "normal",
         "letter-spacing": "normal",
         "cursor": "auto",
-        "opacity": "0"
+        "opacity": "1"
       },
       "before": null,
       "img": null,
@@ -1027,224 +1027,194 @@
         {
           "selector": ".container",
           "state": null,
-          "media": null,
-          "text": "width: 100%; max-width: 400px; min-width: 320px; padding: 0px 16px; display: flex; flex-direction: column;"
+          "media": null
         }
       ],
       ".chat-card": [
         {
           "selector": ".chat-card",
           "state": null,
-          "media": null,
-          "text": "display: flex; flex-direction: column; align-items: flex-start; background: var(--background-white); border: 1px solid var(--border-subtle); border-radius: var(--card-radius); padding: 8px 0px; width: 100%; margin: 8px 0px; box-shadow: rgba(0, 0, 0, 0.25) 0px 30px 60px -40px;"
+          "media": null
         }
       ],
       ".header": [
         {
           "selector": ".header",
           "state": null,
-          "media": null,
-          "text": "display: flex; align-items: flex-start; padding: 8px 16px; width: 100%;"
+          "media": null
         }
       ],
       ".ai-icon": [
         {
           "selector": ".ai-icon",
           "state": null,
-          "media": null,
-          "text": "width: 24px; height: 24px; flex-shrink: 0;"
+          "media": null
         }
       ],
       "img": [
         {
           "selector": ".ai-icon img",
           "state": null,
-          "media": null,
-          "text": "width: 100%; height: 100%; display: block;"
+          "media": null
         }
       ],
       ".body": [
         {
           "selector": ".body",
           "state": null,
-          "media": null,
-          "text": "display: flex; flex-wrap: wrap; align-items: flex-start; padding: 8px 16px; width: 100%;"
+          "media": null
         }
       ],
       ".input-area": [
         {
           "selector": ".input-area",
           "state": null,
-          "media": null,
-          "text": "flex: 1 1 0%; display: flex; align-items: center; min-width: 0px; min-height: 24px; overflow: hidden;"
+          "media": null
         }
       ],
       ".typed-text": [
         {
           "selector": ".typed-text",
           "state": null,
-          "media": null,
-          "text": "font-family: var(--body-font-family); font-size: var(--body-01-size); font-weight: var(--body-01-weight); line-height: var(--body-01-line-height); letter-spacing: var(--body-01-letter-spacing); color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+          "media": null
         }
       ],
       ".cursor": [
         {
           "selector": ".cursor",
           "state": null,
-          "media": null,
-          "text": "display: inline-block; width: 10px; height: 20px; background: var(--icon-highlight); flex-shrink: 0; animation: 1s step-end 0s infinite normal none running blink; vertical-align: middle; margin-left: 1px;"
+          "media": null
         }
       ],
       ".action": [
         {
           "selector": ".action",
           "state": null,
-          "media": null,
-          "text": "display: flex; align-items: center; justify-content: space-between; padding: 0px 16px; width: 100%; height: 52px;"
+          "media": null
         }
       ],
       ".action-left": [
         {
           "selector": ".action-left",
           "state": null,
-          "media": null,
-          "text": "display: flex; align-items: center; width: 128px;"
+          "media": null
         },
         {
           "selector": ".action-left",
           "state": null,
-          "media": null,
-          "text": "justify-content: flex-start;"
+          "media": null
         }
       ],
       ".add-button": [
         {
           "selector": ".add-button",
           "state": null,
-          "media": null,
-          "text": "display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: var(--button-secondary); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: 50%; cursor: pointer; color: var(--text-primary); transition: background 0.15s;"
+          "media": null
         },
         {
           "selector": ".add-button:hover",
           "state": ":hover",
-          "media": null,
-          "text": "background: rgba(1, 23, 43, 0.15);"
+          "media": null
         },
         {
           "selector": ".add-button:active",
           "state": ":active",
-          "media": null,
-          "text": "transform: scale(0.95);"
+          "media": null
         }
       ],
       ".fa-sharp.fa-solid.fa-plus": [
         {
           "selector": ".add-button i",
           "state": null,
-          "media": null,
-          "text": "font-size: 16px; line-height: 1;"
+          "media": null
         }
       ],
       ".action-right": [
         {
           "selector": ".action-right",
           "state": null,
-          "media": null,
-          "text": "display: flex; align-items: center; width: 128px;"
+          "media": null
         },
         {
           "selector": ".action-right",
           "state": null,
-          "media": null,
-          "text": "justify-content: flex-end;"
+          "media": null
         }
       ],
       ".send-button": [
         {
           "selector": ".send-button",
           "state": null,
-          "media": null,
-          "text": "display: flex; align-items: center; justify-content: center; width: 56px; height: 36px; background: var(--button-primary); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: var(--button-pill-radius); cursor: pointer; color: white; transition: background 0.15s;"
+          "media": null
         },
         {
           "selector": ".send-button:hover",
           "state": ":hover",
-          "media": null,
-          "text": "background: rgb(10, 42, 74);"
+          "media": null
         },
         {
           "selector": ".send-button:active",
           "state": ":active",
-          "media": null,
-          "text": "transform: scale(0.95);"
+          "media": null
         }
       ],
       ".fa-sharp.fa-solid.fa-arrow-up": [
         {
           "selector": ".send-button i",
           "state": null,
-          "media": null,
-          "text": "font-size: 16px; line-height: 1;"
+          "media": null
         }
       ],
       ".info-section": [
         {
           "selector": ".info-section",
           "state": null,
-          "media": null,
-          "text": "display: flex; flex-direction: column; gap: 4px; align-items: flex-start; justify-content: center; padding: 8px 0px; color: var(--text-primary);"
+          "media": null
         }
       ],
       ".title": [
         {
           "selector": ".title",
           "state": null,
-          "media": null,
-          "text": "font-family: var(--body-font-family); font-size: var(--title-03-size); font-weight: var(--title-03-weight); line-height: var(--title-03-line-height); letter-spacing: var(--title-03-letter-spacing); width: 100%;"
+          "media": null
         }
       ],
       ".intro": [
         {
           "selector": ".intro",
           "state": null,
-          "media": null,
-          "text": "font-family: var(--body-font-family); font-size: var(--footnote-01-size); font-weight: var(--footnote-01-weight); line-height: var(--footnote-01-line-height); letter-spacing: var(--footnote-01-letter-spacing); width: 100%;"
+          "media": null
         }
       ],
       ".cta-section": [
         {
           "selector": ".cta-section",
           "state": null,
-          "media": null,
-          "text": "display: flex; align-items: center; padding: 8px 0px;"
+          "media": null
         }
       ],
       ".cta-button": [
         {
           "selector": ".cta-button",
           "state": null,
-          "media": null,
-          "text": "display: inline-flex; align-items: center; justify-content: center; gap: var(--button-spacing); padding: var(--button-rect-vertical-padding) var(--button-rect-horizontal-padding); min-height: 36px; max-height: 36px; background: var(--button-secondary); color: var(--text-primary); font-family: var(--body-font-family); font-size: var(--label-01-size); font-weight: var(--label-01-weight); line-height: var(--label-01-line-height); letter-spacing: var(--label-01-letter-spacing); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: var(--button-rect-radius); cursor: pointer; text-decoration: none; transition: background 0.15s;"
+          "media": null
         },
         {
           "selector": ".cta-button:hover",
           "state": ":hover",
-          "media": null,
-          "text": "background: rgba(1, 23, 43, 0.15);"
+          "media": null
         },
         {
           "selector": ".cta-button:active",
           "state": ":active",
-          "media": null,
-          "text": "transform: scale(0.98);"
+          "media": null
         }
       ],
       ".fa-sharp.fa-solid.fa-chevron-right": [
         {
           "selector": ".cta-button i",
           "state": null,
-          "media": null,
-          "text": "font-size: 14px; color: var(--icon-primary);"
+          "media": null
         }
       ]
     }
@@ -1343,10 +1313,10 @@
         "label": ".typed-text",
         "seen": [
           "",
-          "คุยกับ Ch",
+          "คุยกับ C",
           "คุยกับ Charlie AI",
           "คุยกับ Charlie AI",
-          "วิเคราะห์พอร์ตหุ"
+          "วิเคราะห์พอร์ตห"
         ]
       }
     ],

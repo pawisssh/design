@@ -6,12 +6,12 @@ Page: `.scratch/plain-html-families/health-check-main/banner-app.html`, read 202
 
 | | static | rendered |
 |---|---|---|
-| wall time, run 1 / run 2 | 100 ms / 7 ms | 12205 ms / 11838 ms |
-| of which | parse only | load 795 ms, text samples 5007 ms, read 40 ms, hover and press 2239 ms |
+| wall time, run 1 / run 2 | 21 ms / 2 ms | 8858 ms / 8519 ms |
+| of which | parse only | load 635 ms, text samples 5003 ms, read 29 ms, hover and press 1922 ms |
 | network | none | unpkg.com 200, site-assets.fontawesome.com 403, site-assets.fontawesome.com net::ERR_ABORTED, site-assets.fontawesome.com 403, site-assets.fontawesome.com net::ERR_ABORTED |
 | packages | parse5 | parse5, playwright-core, a Chrome |
 | output | 7.4 KB | 27.0 KB |
-| rerun diff | identical | identical |
+| rerun diff | identical | 4 paths: network.5, network.6, network.7, network.8 |
 
 ## Groups
 
@@ -29,9 +29,9 @@ Page: `.scratch/plain-html-families/health-check-main/banner-app.html`, read 202
 | icons | plus (sharp solid), arrow-up (sharp solid), chevron-right (sharp solid) | .fa-sharp.fa-solid.fa-plus 0×0; .fa-sharp.fa-solid.fa-arrow-up 0×0; .fa-sharp.fa-solid.fa-chevron-right 0×0 |
 | icons, Free CDN experiment | n/a | .fa-sharp.fa-solid.fa-plus 14×16 "+" in "Font Awesome 6 Free"; .fa-sharp.fa-solid.fa-arrow-up 12×16 "" in "Font Awesome 6 Free"; .fa-sharp.fa-solid.fa-chevron-right 8.9×14 "" in "Font Awesome 6 Free" |
 | image icon | assets/ai-icon.svg; unused: assets/chevron-right.svg | assets/ai-icon.svg 24×24 |
-| script text | #typed-output: 6 strings | one element changes over 5 samples: "" → "คุยกับ Ch" → "คุยกับ Charlie AI" → "คุยกับ Charlie AI" → "วิเคราะห์พอร์ตหุ" |
+| script text | #typed-output: 6 strings | one element changes over 5 samples: "" → "คุยกับ C" → "คุยกับ Charlie AI" → "คุยกับ Charlie AI" → "วิเคราะห์พอร์ตห" |
 | inline style from script | .send-button touchstart: transform scale(0.95); .send-button touchend: transform scale(1) | not seen (no touch events) |
 | classes toggled by script | none | n/a |
 | fonts | declared: var(--body-font-family) → 'Finnomena Trek', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif | @font-face fonts: none; the text renders in whatever font this machine has installed under that name (Finnomena Trek is installed on the owner's Mac, so the metrics differ elsewhere) |
 | media rules | (max-width: 480px) → body; (max-width: 320px) → .header, .body, .action; (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) → .chat-card | at DPR 2: .chat-card border 1px → 2px |
-| browser CSSOM | n/a | releases/v6.5.1/css/all.css blocked (SecurityError); releases/v6.5.1/css/sharp-solid.css blocked (SecurityError); styles.css 36 rules; `.send-button` matched: .send-button, .send-button:hover, .send-button:active |
+| browser CSSOM | n/a | releases/v6.5.1/css/all.css blocked (SecurityError); releases/v6.5.1/css/sharp-solid.css blocked (SecurityError); styles.css 36 rules; `.send-button` matched: .send-button, .send-button:hover, .send-button:active; its rule keeps `background: var(--button-primary)` and `border-radius: var(--button-pill-radius)` |
