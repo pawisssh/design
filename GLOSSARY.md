@@ -199,7 +199,7 @@ The skill that builds a Design Library in Figma from Contracts, and from the Com
 _Avoid_: code-to-canvas
 
 **To-handoff**:
-The skill that turns one feature, given as prototype code, a Figma URL, an artifact URL or a description, into a Handoff for developers written against a Design System's Contracts and Component Proposals.
+The skill that turns one feature, given as a Prototype, a Figma URL or a description, into a Handoff for developers written against a Design System's Contracts and Component Proposals.
 _Avoid_: design-handoff, handoff doc skill, spec generator
 
 **Vibe-to-Figma**:
