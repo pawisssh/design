@@ -1,6 +1,6 @@
 ---
 name: vibe-to-figma
-description: One command from a React + Tailwind Prototype (a v0 app with shadcn, or any app with Tailwind in its JSX) to its own Design System folder and, after the owner approves, Component Sets in Figma. Use when the owner wants a Prototype's Component Families laid out as Figma Component Sets, or runs /vibe-to-figma.
+description: One command from a React + Tailwind Prototype (a v0 app with shadcn, or a React app with Tailwind 4 utilities in its JSX) to its own Design System folder and, after the owner approves, Component Sets in Figma. Use when the owner wants a Prototype's Component Families laid out as Figma Component Sets, or runs /vibe-to-figma.
 ---
 
 # Vibe-to-Figma
@@ -23,7 +23,7 @@ Today it has the Design System folder ([#176](https://github.com/pawisssh/design
 
 ## Inputs
 
-- **A Prototype (shadcn path):** React + shadcn + Tailwind 4, as v0 writes it: Next.js App Router or Vite + react-router, `components.json`, its global CSS, `package-lock.json` and the Code Library under `aliases.ui`. The Generic Adapter's pins apply: the lockfile must resolve its `shadcn`, `tailwindcss` and `tw-animate-css` versions. Lovable, Replit, Figma Make and Base44 write the same kind, but each one's default fails one of these gates today. ADR 0019 links the ticket for each gate.
+- **A Prototype (shadcn path):** React + shadcn + Tailwind 4, v0's default kind: Next.js App Router or Vite + react-router, `components.json`, its global CSS, `package-lock.json` and the Code Library under `aliases.ui`. The Generic Adapter's pins apply: the lockfile must resolve its `shadcn`, `tailwindcss` and `tw-animate-css` versions. Lovable, Replit, Figma Make and Base44 write the same kind, but each one's default fails one of these checks today. [ADR 0019](../../docs/adr/0019-a-prototype-reaches-component-sets-or-a-handoff-by-its-kind.md) links a ticket for each.
 - **Tools:** `node skills/adapter-generic/scripts/sources.mjs` (the Adapter's tools) and `node skills/to-handoff/scripts/deps.mjs` (the React reader's TypeScript).
 
 ## 1. The Design System folder

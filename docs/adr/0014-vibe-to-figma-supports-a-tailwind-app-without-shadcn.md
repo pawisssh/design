@@ -21,5 +21,5 @@ Decided by the owner in [Decide: vibe-to-figma without shadcn, and runtime style
 - **Vibe-to-Figma's SKILL.md Inputs widen** when path A lands. Until then, the shadcn inputs stay its only supported path.
 - Amended 2026-10-22 by [ADR 0019](0019-a-prototype-reaches-component-sets-or-a-handoff-by-its-kind.md) ([#325](https://github.com/pawisssh/design/issues/325)):
   - **Families come from the Prototype's source, never its rendered DOM** ([#323](https://github.com/pawisssh/design/issues/323)).
-  - **"React + Tailwind only" now describes the Extracted Library, not the Prototype.** A plain HTML Prototype enters the one pipeline through a library transcribed from its CSS rules ([#327](https://github.com/pawisssh/design/issues/327)). A React app styled by CSS or SCSS classes enters through its own components ([#310](https://github.com/pawisssh/design/issues/310)).
+  - **"React + Tailwind only" now describes the Extracted Library, not the Prototype.** A plain HTML Prototype enters the one pipeline through a library transcribed from its CSS rules ([#327](https://github.com/pawisssh/design/issues/327)). A React app styled by CSS or SCSS classes is charted in map [#310](https://github.com/pawisssh/design/issues/310), whose own ADR settles where its Contracts anchor.
   - **Which kinds of Prototype are supported, per output, is ADR 0019's.**

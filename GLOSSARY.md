@@ -1,6 +1,6 @@
 # Design System Skills
 
-Agent skills that take a Prototype, code someone made quickly with an AI tool, to Component Sets in Figma or to a Handoff for developers. Both go through a Design System: one described once from a Code Library the developers already use, or one made from the Prototype itself.
+Agent skills that take a Prototype, such as an app made with an AI tool, to Component Sets in Figma or to a Handoff for developers. Both go through a Design System: one described once from a Code Library the developers already use, or one made from the Prototype itself.
 
 ## Libraries
 
@@ -115,7 +115,7 @@ Feature code made quickly to show what a feature should do, such as a v0 or Lova
 _Avoid_: Mockup, vibe code, POC, prototype Contract (that is a Contract approved only for a trial build)
 
 **Prototype kind**:
-A Prototype's framework plus the way it is styled, such as React + Tailwind or plain HTML + CSS classes. Each kind is read its own way, and is supported or not on its own for Component Sets and for a Handoff.
+A Prototype's framework plus the way it is styled, such as React + Tailwind or plain HTML + CSS classes.
 _Avoid_: Stack, type, flavour
 
 **Owner**:
