@@ -141,10 +141,11 @@ with every request off 127.0.0.1 blocked (only the app's Supabase host was asked
 with no page error and the same 106 tagged elements.
 
 **One screen moved after load, for a reason of the app's, not TanStack's.** `/app/catalog` server-renders the
-catalog, but once hydrated, `app.tsx`'s role guard (`canAccessRoute`) sends the demo user, whose role comes from
-Supabase, to `/app/dashboard` with a toast. Any Prototype with a client-side guard does this; `runtime.mjs` checks a
-state's `expect` sites, so a screen whose default state names its own sites would report it missing rather than
-shoot the dashboard twice.
+catalog, but once hydrated, `app.tsx`'s role guard (`canAccessRoute`) sends a visitor outside the app's in-memory
+demo mode, whose role is a stub `requestor` (`RoleContext`), to `/app/dashboard` with a toast. Any Prototype with a client-side guard does this. `runtime.mjs` would not notice: a default state has no `expect`
+sites (`generate.mjs` lists only sites shown in a non-default state), so the catalog's default shot would be the
+dashboard. And `runtime.mjs` blocks no request to another host, so a real run would call the app's live Supabase
+project, and what each screen shows would depend on its answer.
 
 So, for the runtime reader, a TanStack Start Prototype needs:
 1. its own package manager's frozen install (bun here; #335);
