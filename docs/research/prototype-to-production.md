@@ -384,7 +384,7 @@ None of these is library-bound. They describe what the code does, not which Code
 | [google/osv-scanner](https://github.com/google/osv-scanner) | Dependencies (1.7): a vulnerability scanner using osv.dev data. **Unverified** (description only). | Apache-2.0 | 2026-10-21 | 11,223 | Yes |
 | [supabase/splinter](https://github.com/supabase/splinter) | Data layer (1.2): SQL lints for Supabase projects, among them RLS disabled on public tables, RLS on with no policy, a policy that is always true, and sensitive columns exposed. | none detected (the README has a licence badge) | 2026-09-29 | 283 | Yes |
 
-**3f. Adjacent workflows, not specific to a Prototype.** Every repo here with a last commit given is maintained by the rule above.
+**3f. Adjacent workflows, not specific to a Prototype.** spec-kit, OpenSpec, Kiro, anthropics/skills and vercel-labs/agent-skills are maintained by the rule above: each has a default-branch commit after 2026-07-24 and between 60 and about 2,250 commits. The original bolt.new and the two repos under "Not this problem" are not.
 - **[github/spec-kit](https://github.com/github/spec-kit)** (MIT, last commit 2026-10-21, 142,287 stars). For existing code, its guide says it does not infer descriptions of existing behaviour: each new document describes one change (`SPECKIT-EXISTING`). [Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) (MIT, 2026-10-20, 72,650 stars) says it is built for existing codebases too.
 - **[kirodotdev/Kiro](https://github.com/kirodotdev/Kiro)** (none, 2026-08-27, 4,384 stars) is only Kiro's public issue tracker. The product's source is not there.
 - **[anthropics/skills](https://github.com/anthropics/skills)** (licence per skill; 2026-10-09; 182,720 stars):
@@ -449,7 +449,7 @@ This fits GLOSSARY. A Handoff describes one feature against a Design System. Pro
    - An HTML artifact whose source Claude Code has saved locally (`CC-ARTIFACTS`) would be an `html-file` Prototype.
    - A React artifact made into a Vite project by `claude-artifact-runner create` would be a React + Tailwind + shadcn Prototype, ADR 0019's first kind, read as `react-vite`. The React reader would not find its screens, though:
      - The runner's `src/main.tsx` builds its router with a conditional, `useHash ? createHashRouter(mkRoutes) : createBrowserRouter(mkRoutes)`, over routes mapped from the generated module `virtual:generated-pages-react`.
-     - The reader takes routes from `RouterProvider` only through a direct call whose first argument is an array literal (`react.mjs` L432–436).
+     - The reader takes routes from `RouterProvider` only through a direct call whose first argument is an array literal (`react.mjs` L433–437).
      - **Reasoning, not sourced** (read from the code, not run): the reader would get one empty `index` screen. Reading the runner's projects needs a reader change.
    - A Claude Design standalone HTML download would also be an `html-file`.
    - **unverified:**
