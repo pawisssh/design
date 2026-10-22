@@ -9,14 +9,14 @@ description: One command from a React + Tailwind Prototype (a v0 app with shadcn
 /vibe-to-figma <project> <figma-file-url> [--all] [--name <name>]
 ```
 
-Runs the existing skills end to end on a Prototype (spec [#175](https://github.com/pawisssh/design/issues/175)). It adds no Adapter and no builder: the [Generic Adapter](../adapter-generic/SKILL.md) reads the project, [To-preview](../to-preview/SKILL.md) and [Contract](../contract/SKILL.md) approval narrow and approve it, and [To-design](../to-design/SKILL.md) builds it. [To-handoff](../to-handoff/SKILL.md) reads the same folder afterwards.
+Runs the existing skills end to end on a Prototype (spec [#175](https://github.com/pawisssh/design/issues/175)). It adds no Adapter and no builder: the [Generic Adapter](../adapter-generic/SKILL.md) reads the project, [To-preview](../to-preview/SKILL.md) and [Contract](../contract/SKILL.md) approval narrow and approve it, and [To-design](../to-design/SKILL.md) builds it. [To-handoff](../to-handoff/SKILL.md) reads the same folder afterwards. It is one-way: pulling Figma edits back into code is phase 2 of #175, a separate skill, Figma-to-Vibe ([ADR 0017](../../docs/adr/0017-vibe-to-figma-stays-one-way.md)).
 
 ## Which path
 
 `folder.mjs` chooses its path before it fetches a tool or reads a component (`choosePath(project)`, [`scripts/path.mjs`](scripts/path.mjs); [#252](https://github.com/pawisssh/design/issues/252), spec [#249](https://github.com/pawisssh/design/issues/249), [ADR 0016](../../docs/adr/0016-a-prototype-with-no-code-library-gets-an-extracted-library.md)). Three outcomes:
 
 - **`components.json`:** the shadcn path below, unchanged.
-- **No `components.json`, a React project that lists `tailwindcss` in package.json and carries Tailwind utilities in its source className strings:** path A: the folder step extracts a library from the JSX ([#257](https://github.com/pawisssh/design/issues/257)). Read [references/path-a.md](references/path-a.md) before its first run, and whenever the owner corrects a grouping. A Prototype with nothing to extract stops with a plain "path A found no Component Family" message (exit 1).
+- **No `components.json`, a React project that lists `tailwindcss` in package.json and carries Tailwind utilities in its source className strings:** path A: the folder step extracts a library from the JSX ([#257](https://github.com/pawisssh/design/issues/257)). On path A, read [references/path-a.md](references/path-a.md) before any run: its requests and answers take their own form, and the owner corrects its grouping there. A Prototype with nothing to extract stops with a plain "path A found no Component Family" message (exit 1).
 - **Anything else:** refused with one message (exit 1, no stack trace) naming what was found and what the skill needs: plain HTML; a Carbon app (use the Carbon Adapter); a React project styled by SCSS or CSS classes; a React project with no `tailwindcss` or no Tailwind utilities in className; no React at all. `--all` gets the same message.
 
 ## Inputs
@@ -38,7 +38,7 @@ It writes `design-systems/<name>/`: `<name>.foundations.json` and `contracts/<fa
 - **Foundations.** One Foundations document over every readable family, with each family's Synthesized tokens. Its closure lists each Contract at `design-systems/<name>/contracts/`. A rerun that changes nothing leaves it unwritten.
 - **Drafted values.** Labels, descriptions, the Figma grid and default text are drafted by the agent, as in the Adapter's component step. While any is open, the CLI writes every family's requests to one file (default `.scratch/vibe-to-figma/<name>.requests.json`), writes those families no Contract, and exits 2. Draft each one, then run again with `--drafts <file>` holding `{"drafts": {"<family>": {"<key>": <value>}}}`. The Adapter's own form, `{"family", "drafts"}`, is read too, one file per `--drafts`.
 - **Reruns.** When `design-systems/<name>/` already exists, its Contracts are the prior: a rerun redrafts only the families whose code changed, keeps the owner's narrowing, and sets aside a family the screens no longer use. Read [references/reruns.md](references/reruns.md) for what a rerun writes, reviews and builds.
-- **Path A** asks for its grouping once and writes the Extracted Library beside the Contracts: [references/path-a.md](references/path-a.md).
+- **On path A** the requests file and the answers take path A's form, `{"groups": …}`, not the `{"drafts": …}` above ([references/path-a.md](references/path-a.md)).
 
 Done when the CLI prints `OK`.
 
@@ -60,14 +60,14 @@ It writes one self-contained page, by default `.scratch/vibe-to-figma/<name>/rev
 
 An Artifact starts private: never share it. Its URL is the one the publish returns; in a later chat, find it with the Artifact tool's `action: "list"`, titled `<name> review`. After a rerun, publish the new page to that URL (`url`), so the saved ticks stay with it. On the Artifact:
 
-- **Ticks persist** in the Artifact's db, one document `review/ticks`, and a reload restores them. **Only the owner's ticks save**: anyone else can tick, but nothing they tick is saved, and the page says so. [references/review-page.md](references/review-page.md) holds how and when a tick saves, the page without the Artifact, and each tab.
+- **Ticks persist** in the Artifact's db, one document `review/ticks`, and a reload restores them. **Only the owner's ticks save**: anyone else can tick, but nothing they tick is saved, and the page says so. When the owner asks how the page behaves, or a tick does not save, read [references/review-page.md](references/review-page.md): when a tick saves, the page without the Artifact, the Foundations and Contract tabs, and the export.
 - **No export button**, since an Artifact cannot download a file.
 
 **Only the drafts are on the page** ([#180](https://github.com/pawisssh/design/issues/180)). An approved Contract keeps its approval and is not reviewed again; the Foundations tab names them. After a rerun the page holds the families whose code changed.
 
 **The Foundations tab is always there, and it alone can make a page.** The folder's Foundations approval, `design-systems/<name>/<name>.foundations-approval.json`, names the Foundations document the owner's last approve covered (see [3. Approve](#3-approve)). With no draft and a Foundations document that approval does not cover, the page is the Foundations tab alone, and it says the document is not the one the last approve covered. Publish it and ask the owner to approve it as any other page. This happens when the document changed with no Contract, for example after an Adapter rule change, or when the folder was approved before the record existed. A change to the project's CSS is not such a case: every Contract pins the global CSS, so the change drafts every Contract again. With no draft and the document approved, `review.mjs` writes no page and prints `nothing to review`: tell the owner nothing changed, and go on to the build.
 
-**The owner corrects a Drafted value in chat** ("rename xs to Tiny"): edit the Contract, recording the entry as `{by: "owner", was}` ([ADR 0010](../../docs/adr/0010-drafted-values-carry-over-by-evidence-fingerprint.md)), and build the page again. On path A, a Families tab comes first, and the owner corrects a grouping the same way ([references/path-a.md](references/path-a.md#the-families-tab)).
+**The owner corrects a Drafted value in chat** ("rename xs to Tiny"): edit the Contract, recording the entry as `{by: "owner", was}` ([ADR 0010](../../docs/adr/0010-drafted-values-carry-over-by-evidence-fingerprint.md)), and build the page again. On path A, a Families tab comes first. The owner corrects a grouping in chat too, but you record it in the Family map and rerun `folder.mjs` ([references/path-a.md](references/path-a.md#the-families-tab)).
 
 ## 3. Approve
 
@@ -117,8 +117,8 @@ Repeat until `next` prints `OK`. It lists each Component Set it built, with its 
 - **`--namespace <prefix>`.** Use it when the file already has collections or a Templates page with the same names under another ledger (the smoke draft's Carbon `Theme`, `Layout` and `Templates`). The build then stops with an `unowned` Conflict and changes nothing. A prefix renames this build's collections and Templates page, for example `v0-app Theme`, and the run goes on from the Conflict. The first call without a Conflict fixes the namespace in the build record: give the same prefix on every later run against that file.
 - **A failed Coverage check** stops the run (exit 1) and names the problems. Once the cause is fixed, `--rebuild <family>` builds that set's batches again inside the set, with the same set and variant ids, and then reads its coverage again.
 - Drafts (`approve except`) and families the folder skipped are not built.
-- **On a rerun**, `next` sends only what changed, and its `OK` can list `HELD <family>:<variant>` (a variant edited in Figma whose code changed since) and `orphaned <family>` sets: read [references/reruns.md](references/reruns.md#the-build) before you tell the owner. Show the owner each Held variant and give `--take-code` or `--keep-figma` only on the owner's own word in chat. A `--rebuild` writes over Held variants too, so ask the owner first.
+- **On a rerun**, `next` sends only what changed, and its `OK` can list `HELD <family>:<variant>` (a variant edited in Figma whose code changed since, or one that cannot be read back) and `orphaned <family>` sets: read [references/reruns.md](references/reruns.md#the-build) before you tell the owner. Show the owner each Held variant and give `--take-code` or `--keep-figma` only on the owner's own word in chat. A `--rebuild` writes over Held variants too, so ask the owner first.
 
 ## Changing this skill
 
-Tests: `node --test skills/vibe-to-figma/test/*.test.mjs`. [references/tests.md](references/tests.md) says what each suite runs on and covers, and when it skips.
+Tests: `node --test skills/vibe-to-figma/test/*.test.mjs`. [references/tests.md](references/tests.md) says what each suite runs on and covers, and when it skips. Read it before adding a test: a test approves only under `.scratch/`, never a committed file.
