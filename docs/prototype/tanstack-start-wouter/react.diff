@@ -1,0 +1,241 @@
+diff --git a/skills/to-handoff/scripts/react.mjs b/docs/prototype/tanstack-start-wouter/react.mjs
+index c5dfc5a..b68aace 100644
+--- a/skills/to-handoff/scripts/react.mjs
++++ b/docs/prototype/tanstack-start-wouter/react.mjs
+@@ -1,3 +1,6 @@
++// PROTOTYPE (#336), throwaway: a fork of skills/to-handoff/scripts/react.mjs at ea4491c with two front ends added,
++// TanStack Start file routes (no index.html) and wouter's <Switch>/<Route>. `react.diff` beside it is the change.
++//
+ // The static reader for a React Prototype (#62, #84, #114): a Next.js App Router or Vite + react-router project
+ // folder, parsed with TypeScript 6 into reader.mjs's element tree, one tree per screen (page route).
+ //
+@@ -17,18 +20,18 @@
+ // with `asChild` takes its single child's attributes and children and keeps its own `at` (#84's asChild lift).
+ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+ import { join, posix } from 'node:path';
+-import { parseCss } from './css.mjs';
+-import { loadTypescript } from './deps.mjs';
+-import { lineOf, lineStarts, readHtml, walk } from './reader.mjs';
++import { parseCss } from '../../../skills/to-handoff/scripts/css.mjs';
++import { loadTypescript } from '../../../skills/to-handoff/scripts/deps.mjs';
++import { lineOf, lineStarts, readHtml, walk } from '../../../skills/to-handoff/scripts/reader.mjs';
+ 
+ const EXTS = ['.tsx', '.ts', '.jsx', '.js'];
+ // Props that read as boolean attributes when bound to an expression.
+ const BOOLEAN_PROPS = new Set(['disabled', 'checked', 'hidden', 'readOnly', 'required', 'selected', 'open', 'multiple', 'autoFocus', 'invalid']);
+ const ATTR_NAMES = { className: 'class', htmlFor: 'for' };
+ // Package components that render one host element.
+-const HOSTS = { 'next/link': { default: 'a' }, 'next/image': { default: 'img' }, 'react-router': { Link: 'a', NavLink: 'a' }, 'react-router-dom': { Link: 'a', NavLink: 'a' } };
+-const ROUTERS = new Set(['react-router', 'react-router-dom']);
+-const ROUTER_PARTS = new Set(['Routes', 'Route', 'Outlet', 'RouterProvider']);
++const HOSTS = { 'next/link': { default: 'a' }, 'next/image': { default: 'img' }, 'react-router': { Link: 'a', NavLink: 'a' }, 'react-router-dom': { Link: 'a', NavLink: 'a' }, wouter: { Link: 'a' }, '@tanstack/react-router': { Link: 'a' } };
++const ROUTERS = new Set(['react-router', 'react-router-dom', 'wouter', '@tanstack/react-router']);
++const ROUTER_PARTS = new Set(['Routes', 'Route', 'Outlet', 'RouterProvider', 'Switch']);
+ 
+ /** 'react-next' or 'react-vite' for a React project folder (by its package.json), else null. */
+ export function reactKind(root) {
+@@ -101,7 +104,8 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
+       if (ts.isImportDeclaration(st)) {
+         const spec = st.moduleSpecifier.text;
+         const clause = st.importClause;
+-        if (/\.css$/.test(spec)) { css(resolveFile(rel, spec)); continue; }
++        // TanStack Start links its stylesheet from the root route's head: `import appCss from '../styles.css?url'`.
++        if (/\.css(\?[^/]*)?$/.test(spec)) { css(resolveFile(rel, spec.replace(/\?[^/]*$/, ''))); continue; }
+         if (/^(next\/font\/|geist\/font\/)/.test(spec) && clause) {
+           const names = [clause.name, ...(clause.namedBindings && ts.isNamedImports(clause.namedBindings) ? clause.namedBindings.elements.map(e => e.name) : [])].filter(Boolean);
+           for (const n of names) fonts.push({ module: spec, name: n.text, offset: f.base + n.getStart(sf) });
+@@ -151,7 +155,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
+     }
+     const host = HOSTS[imp.module] && HOSTS[imp.module][exp];
+     if (host) return { host, link: true };
+-    if (ROUTERS.has(imp.module) && ROUTER_PARTS.has(exp)) return { router: exp };
++    if (ROUTERS.has(imp.module) && ROUTER_PARTS.has(exp)) return { router: exp, module: imp.module };
+     if (packages.includes(imp.module)) return { leaf: { module: imp.module, export: exp, kind: 'ds' } };
+     return { transparent: true };
+   };
+@@ -421,7 +425,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
+     return returnsOf(c.s, c.fn).flatMap(r => nodes(r.expr, { ...inner, cond: [...ctx.cond, ...r.cond] }));
+   };
+ 
+-  // ---------- routes (Vite: react-router) ----------
++  // ---------- routes (Vite: react-router, wouter; TanStack Start's file routes) ----------
+ 
+   // Discovery (no ctx.chain) records the route tree; a screen render follows its chain of matched routes.
+   const routeSets = [];
+@@ -429,7 +433,8 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
+     if (part === 'Route') return [];
+     if (part === 'Outlet') return ctx.chain && ctx.chain[ctx.level + 1] ? renderRoute(ctx, ctx.level + 1) : [];
+     if (!ctx.chain) {
+-      if (part === 'Routes') routeSets.push(jsxRoutes(ctx.s, kids, '/', []));
++      // wouter's <Switch> holds its <Route>s as react-router's <Routes> does.
++      if (part === 'Routes' || part === 'Switch') routeSets.push(jsxRoutes(ctx.s, kids, '/', []));
+       if (part === 'RouterProvider') {
+         const r = props.find(p => p.name === 'router');
+         const decl = r && r.value.expr && ctx.s.locals.get(r.value.expr);
+@@ -440,16 +445,32 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
+     }
+     return renderRoute(ctx, 0);
+   };
++  // A route renders its element (react-router), its component (wouter's component={X}, a TanStack route's
++  // `component`) or its children (wouter's <Route path>…</Route>); with none, the next level (TanStack's default Outlet).
+   const renderRoute = (ctx, level) => {
+     const r = ctx.chain[level];
+-    return r.element ? nodes(r.element, { ...ctx, s: r.s, level, props: null, children: null }) : (ctx.chain[level + 1] ? renderRoute(ctx, level + 1) : []);
++    const at = { ...ctx, s: r.s, level, props: null, children: null };
++    if (r.component) return renderRef(r.s, r.component, at);
++    if (r.kids) return children(r.kids, at);
++    return r.element ? nodes(r.element, at) : (ctx.chain[level + 1] ? renderRoute(ctx, level + 1) : []);
++  };
++  // A component given by reference (an identifier, imported or local, or an inline function), with a {children} slot.
++  const renderRef = (s, expr, ctx, slot = null) => {
++    const e = unwrap(expr);
++    if (ts.isArrowFunction(e) || ts.isFunctionExpression(e)) {
++      const inner = { ...ctx, s, props: propsIn(e, {}), children: slot };
++      return returnsOf(s, e).flatMap(r => nodes(r.expr, { ...inner, cond: [...ctx.cond, ...r.cond] }));
++    }
++    if (!ts.isIdentifier(e)) return [];
++    const what = classify(s, e);
++    return what.app ? renderComponent(what.app, {}, slot, ctx) || [] : [];
+   };
+   const joinPath = (prefix, path) => (path === undefined ? prefix : path.startsWith('/') ? path : posix.join(prefix, path));
+   const leafRoutes = (s, defs, prefix, parents) => {
+     const out = [];
+     for (const d of defs) {
+       const path = joinPath(prefix, d.path);
+-      const r = { path, element: d.element, s, offset: d.offset };
++      const r = { path, element: d.element, component: d.component, kids: d.kids, s, offset: d.offset };
+       const chain = [...parents, r];
+       if (d.children.length) out.push(...leafRoutes(s, d.children, path, chain));
+       else if (d.path === '*') ignored.push(`route ${path} (catch-all)`);
+@@ -464,7 +485,16 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
+       const props = propsOf(opening, { s, cond: [] });
+       const path = props.find(p => p.name === 'path');
+       const el = props.find(p => p.name === 'element');
+-      return { path: path && typeof path.value === 'string' ? path.value : undefined, element: el && el.value.jsx, offset: s.base + opening.getStart(s.sf), children: defs(ts.isJsxElement(k) ? k.children : []) };
++      const offset = s.base + opening.getStart(s.sf);
++      const kids = ts.isJsxElement(k) ? k.children : [];
++      if (classify(s, opening.tagName).module === 'wouter') {
++        // wouter: component={X} or children render the route; a <Route> with no path in a <Switch> is its catch-all.
++        // Its children are content, never nested routes (wouter nests through `nest`, not read here).
++        const comp = opening.attributes.properties.find(a => ts.isJsxAttribute(a) && a.name.getText(s.sf) === 'component');
++        const component = comp && comp.initializer && ts.isJsxExpression(comp.initializer) ? comp.initializer.expression : null;
++        return { path: path && typeof path.value === 'string' ? path.value : '*', component, kids: component ? null : kids, offset, children: [] };
++      }
++      return { path: path && typeof path.value === 'string' ? path.value : undefined, element: el && el.value.jsx, offset, children: defs(kids) };
+     });
+     return leafRoutes(s, defs(kids), prefix, parents);
+   };
+@@ -511,7 +541,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
+       const doc = shell(false);
+       const mount = mountIn(doc);
+       const leaf = chain[chain.length - 1];
+-      mount.children = leaf.element || chain.length > 1 ? nodes(render.arguments[0], { ...base, parent: mount, chain, level: 0 }) : nodes(render.arguments[0], { ...base, parent: mount });
++      mount.children = leaf.element || leaf.component || leaf.kids || chain.length > 1 ? nodes(render.arguments[0], { ...base, parent: mount, chain, level: 0 }) : nodes(render.arguments[0], { ...base, parent: mount });
+       return { id: screenIdOf(leaf.path), name: leaf.path, route: leaf.path, offset: leaf.offset, root: doc.root, mount };
+     });
+     return { title: firstShell.title, screens };
+@@ -590,12 +620,102 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
+     return { title: metadataTitle(rootLayout), screens };
+   };
+ 
+-  const read = kind === 'react-vite' ? readVite() : readNext();
++  // ---------- TanStack Start: file routes under src/routes/, the document from __root.tsx ----------
++
++  // A route file's `export const Route = createFileRoute('<id>')({...})`, or the root's createRootRoute({...}) /
++  // createRootRouteWithContext<T>()({...}): {id, opts} with opts the options object, else null.
++  const routeDecl = s => {
++    for (const st of s.sf.statements) {
++      if (!ts.isVariableStatement(st)) continue;
++      for (const d of st.declarationList.declarations) {
++        const call = d.initializer && unwrap(d.initializer);
++        if (!call || !ts.isCallExpression(call)) continue;
++        const opts = call.arguments[0] && unwrap(call.arguments[0]);
++        if (!opts || !ts.isObjectLiteralExpression(opts)) continue;
++        const callee = unwrap(call.expression);
++        const name = ts.isCallExpression(callee) ? callee.expression.getText(s.sf) : callee.getText(s.sf);
++        if (name === 'createRootRoute' || name === 'createRootRouteWithContext') return { id: '__root__', opts };
++        if ((name === 'createFileRoute' || name === 'createLazyFileRoute') && ts.isCallExpression(callee) && callee.arguments[0] && ts.isStringLiteralLike(callee.arguments[0])) return { id: callee.arguments[0].text, opts, lazy: name === 'createLazyFileRoute' };
++      }
++    }
++    return null;
++  };
++  const option = (s, opts, name) => { const p = opts.properties.find(x => ts.isPropertyAssignment(x) && x.name.getText(s.sf) === name); return p ? p.initializer : null; };
++  // The first `title: '…'` in the root's head(): the document title.
++  const headTitle = (s, opts) => {
++    let found = null;
++    const visit = n => { if (found) return; if (ts.isPropertyAssignment(n) && n.name.getText(s.sf) === 'title' && ts.isStringLiteralLike(n.initializer)) found = n.initializer.text; else ts.forEachChild(n, visit); };
++    const head = option(s, opts, 'head');
++    if (head) visit(head);
++    return found;
++  };
++  // A component that renders only a router <Navigate>: a redirect, not a screen.
++  const redirects = (s, expr) => {
++    const e = unwrap(expr);
++    const what = ts.isIdentifier(e) ? classify(s, e) : null;
++    const c = what && what.app ? componentOf(what.app) : null;
++    const rets = c ? returnsOf(c.s, c.fn) : [];
++    return rets.length === 1 && [unwrap(rets[0].expr)].some(r => (ts.isJsxSelfClosingElement(r) || ts.isJsxElement(r))
++      && /^Navigate$/.test((ts.isJsxElement(r) ? r.openingElement : r).tagName.getText(c.s.sf)));
++  };
++  const readTanStack = () => {
++    const dir = 'src/routes';
++    const files = [];
++    const visit = d => {
++      for (const ent of readdirSync(join(root, d), { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
++        const rel = posix.join(d, ent.name);
++        if (ent.name.startsWith('-')) { ignored.push(`${rel} (excluded by its "-" prefix)`); continue; }
++        if (ent.isDirectory()) visit(rel);
++        else if (EXTS.some(e => ent.name.endsWith(e))) files.push(rel);
++      }
++    };
++    visit(dir);
++    const routes = [];
++    for (const file of files) {
++      const s = source(file);
++      const decl = routeDecl(s);
++      if (!decl) { ignored.push(`${file} (no Route export)`); continue; }
++      if (decl.lazy) { ignored.push(`${file} (lazy route component, not joined to its route: prototype)`); continue; }
++      for (const o of ['pendingComponent', 'errorComponent', 'notFoundComponent']) if (option(s, decl.opts, o)) ignored.push(`${file} ${o} (not read: prototype)`);
++      routes.push({ ...decl, file, s, component: option(s, decl.opts, 'component'), shell: option(s, decl.opts, 'shellComponent'), offset: s.base + decl.opts.getStart(s.sf) });
++    }
++    const top = routes.find(r => r.id === '__root__');
++    if (!top) throw new Error(`${dir}/ has no __root route`);
++    // The parent is the route whose id is the longest prefix of this one; an index id ends in "/".
++    const base = id => id.replace(/\/$/, '');
++    const parentOf = r => routes.filter(p => p !== r && p !== top && !p.id.endsWith('/') && (base(r.id).startsWith(p.id + '/') || (r.id.endsWith('/') && base(r.id) === p.id)))
++      .sort((a, b) => b.id.length - a.id.length)[0] || top;
++    for (const r of routes) if (r !== top) r.parent = parentOf(r);
++    // A URL path from an id: pathless `_layout` segments and `(group)` segments drop out, `$param` reads as `:param`.
++    const pathOf = id => '/' + base(id).split('/').filter(seg => seg && !seg.startsWith('_') && !/^\(.*\)$/.test(seg)).map(seg => seg.replace(/^\$/, ':')).join('/');
++    const leaves = routes.filter(r => r !== top && !routes.some(c => c.parent === r));
++    const screens = [];
++    for (const leaf of leaves) {
++      if (leaf.component && redirects(leaf.s, leaf.component)) { ignored.push(`${leaf.file} (redirect)`); continue; }
++      const chain = [];
++      for (let r = leaf; r; r = r.parent) chain.unshift(r);
++      const route = pathOf(leaf.id);
++      let mount = null;
++      const ctx = { s: top.s, parent: null, cond: [], repeat: null, stack: [], props: null, children: null, chain, level: 0 };
++      // The root's shellComponent is the document (<html>); its {children} take the root component and the chain below it.
++      const out = top.shell ? renderRef(top.s, top.shell, ctx, at => { mount = at.parent; return renderRoute({ ...ctx, parent: at.parent, cond: at.cond, repeat: at.repeat }, 0); }) : renderRoute(ctx, 0);
++      const rootEl = out.find(n => n.type === 'element' && n.tag === 'html');
++      if (!rootEl) throw new Error(`${top.file} renders no <html>`);
++      screens.push({ id: screenIdOf(route), name: route, route, offset: leaf.offset, root: rootEl, mount: mount || findEl(rootEl, e => e.tag === 'body') });
++    }
++    return { title: headTitle(top.s, top.opts), screens, router: 'tanstack-start' };
++  };
++  const isTanStackStart = () => {
++    const pkg = packageOf(root);
++    return Boolean({ ...pkg.dependencies, ...pkg.devDependencies }['@tanstack/react-start']) && Boolean(special('src/routes', '__root'));
++  };
++
++  const read = kind === 'react-vite' ? (isTanStackStart() ? readTanStack() : readVite()) : readNext();
+   rules.forEach((r, i) => { r.order = i; });
+   return {
+     kind, title: read.title || packageOf(root).name || posix.basename(root), files: space.files.map(f => f.rel).sort(), at: space.at, rules,
+     standIns: standInsOf(ts, [...sources.values()]), fonts, screens: read.screens, uiDir, ignored: [...new Set(ignored)].sort(),
+-    tailwind: usesTailwind(root),
++    tailwind: usesTailwind(root), router: read.router || null,
+   };
+ }
+ 

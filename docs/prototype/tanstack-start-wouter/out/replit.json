@@ -1,0 +1,157 @@
+{
+  "sample": "replit",
+  "kind": "react-vite",
+  "router": null,
+  "title": "Inamigos Foundation",
+  "ms": 35,
+  "files": 33,
+  "rules": 8,
+  "tailwind": true,
+  "uiDir": "src/components/ui/",
+  "screens": [
+    "/",
+    "/about",
+    "/projects",
+    "/projects/:slug",
+    "/volunteer",
+    "/donate",
+    "/events",
+    "/blog",
+    "/blog/:slug",
+    "/gallery",
+    "/contact"
+  ],
+  "screensKey": [
+    "/",
+    "/about",
+    "/projects",
+    "/projects/:slug",
+    "/volunteer",
+    "/donate",
+    "/events",
+    "/blog",
+    "/blog/:slug",
+    "/gallery",
+    "/contact"
+  ],
+  "screensMissing": [],
+  "screensExtra": [],
+  "ignored": [
+    "route /* (catch-all)"
+  ],
+  "perScreen": {
+    "/": [
+      "accordion"
+    ],
+    "/about": [
+      "Breadcrumbs"
+    ],
+    "/projects": [
+      "Breadcrumbs"
+    ],
+    "/projects/:slug": [
+      "Breadcrumbs"
+    ],
+    "/volunteer": [
+      "Breadcrumbs",
+      "form"
+    ],
+    "/donate": [
+      "Breadcrumbs",
+      "form"
+    ],
+    "/events": [
+      "Breadcrumbs"
+    ],
+    "/blog": [
+      "Breadcrumbs"
+    ],
+    "/blog/:slug": [
+      "Breadcrumbs"
+    ],
+    "/gallery": [
+      "Breadcrumbs"
+    ],
+    "/contact": [
+      "Breadcrumbs",
+      "form"
+    ]
+  },
+  "used": [
+    "Breadcrumbs",
+    "accordion",
+    "form"
+  ],
+  "all": 56,
+  "familiesKey": [
+    "Breadcrumbs",
+    "accordion",
+    "form",
+    "input",
+    "textarea"
+  ],
+  "familiesKeyIsUpperBound": false,
+  "familiesMissing": [
+    "input",
+    "textarea"
+  ],
+  "familiesExtra": [],
+  "missed": [
+    {
+      "family": "card",
+      "importers": [
+        {
+          "file": "src/pages/not-found.tsx",
+          "typeOnly": false,
+          "read": false
+        }
+      ]
+    },
+    {
+      "family": "input",
+      "importers": [
+        {
+          "file": "src/pages/Contact.tsx",
+          "typeOnly": false,
+          "read": true
+        },
+        {
+          "file": "src/pages/Donate.tsx",
+          "typeOnly": false,
+          "read": true
+        },
+        {
+          "file": "src/pages/Volunteer.tsx",
+          "typeOnly": false,
+          "read": true
+        }
+      ]
+    },
+    {
+      "family": "textarea",
+      "importers": [
+        {
+          "file": "src/pages/Contact.tsx",
+          "typeOnly": false,
+          "read": true
+        },
+        {
+          "file": "src/pages/Volunteer.tsx",
+          "typeOnly": false,
+          "read": true
+        }
+      ]
+    },
+    {
+      "family": "toast",
+      "importers": [
+        {
+          "file": "src/hooks/use-toast.ts",
+          "typeOnly": true,
+          "read": false
+        }
+      ]
+    }
+  ],
+  "crossCheck": null
+}
