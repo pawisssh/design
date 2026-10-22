@@ -192,9 +192,10 @@ export async function GET() { await new Promise(r => setTimeout(r, 300)); return
   assert.ok(doc.files.includes('lib/items.ts'));
 });
 
-test('generate: a stub whose data id another Stand-in already has keeps its entry and question under its own id (#352)', { skip: noTs }, async () => {
-  const dir = fetching(["'/api/items'", "'/api/items/'", "'/api/foo-bar'", "'/api/foo/bar'"], { items: GET, 'foo-bar': GET, 'foo/bar': GET },
-    { 'app/data.ts': "export const mockItems = [{ id: 1, name: 'Lamp' }];\n" });
+test('generate: every Stand-in keeps its own data id and question: a stub gains -api, a second mock of one name -2 (#352)', { skip: noTs }, async () => {
+  const dir = fetching(["'/api/items'", "'/api/items/'", "'/api/foo-bar'", "'/api/foo/bar'"], {
+    items: "import { mockItems } from '../../../lib/items';\nexport async function GET() { return Response.json(mockItems); }\n", 'foo-bar': GET, 'foo/bar': GET,
+  }, { 'app/data.ts': "export const mockItems = [{ id: 1, name: 'Lamp' }];\n", 'lib/items.ts': "export const mockItems = [{ id: 2, name: 'Desk' }];\n" });
   writeFileSync(join(dir, 'app/page.tsx'), `import { mockItems } from './data';\n${readFileSync(join(dir, 'app/page.tsx'), 'utf8').replace("'use client';\n", '')}`);
   const decisions = {
     'recognise:button': { contract: 'button', tuple: { kind: 'primary' }, via: 'element' }, feature: { goal: 'Load the items.' },
@@ -204,6 +205,7 @@ test('generate: a stub whose data id another Stand-in already has keeps its entr
   assert.deepEqual(requests, []);
   assert.deepEqual(handoff.data.map(x => [x.id, x.source, x.question]), [
     ['items', 'mock', 'q-data-items'],
+    ['items-2', 'mock', 'q-data-items-2'],
     ['items-api', 'simulated', 'q-data-items-api'],
     ['foo-bar', 'simulated', 'q-data-foo-bar'],
     ['foo-bar-api', 'simulated', 'q-data-foo-bar-api'],

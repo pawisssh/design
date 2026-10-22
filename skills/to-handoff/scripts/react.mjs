@@ -623,8 +623,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
 function standInsOf(ts, sources, routes) {
   const mocks = [], simulated = [], stubs = [];
   // Next tries a static segment before a dynamic one, and a dynamic one before a catch-all (#352).
-  const kind = p => (/^\[\[\.\.\./.test(p) ? '3' : /^\[\.\.\./.test(p) ? '2' : /^\[/.test(p) ? '1' : '0');
-  const ranked = routes.map(r => ({ ...r, parts: r.route.split('/').filter(Boolean) })).map(r => ({ ...r, rank: r.parts.map(kind).join('') }))
+  const ranked = routes.map(r => ({ ...r, parts: r.route.split('/').filter(Boolean) })).map(r => ({ ...r, rank: r.parts.map(segmentRank).join('') }))
     .sort((a, b) => (a.rank < b.rank ? -1 : a.rank > b.rank ? 1 : 0));
   for (const s of sources) {
     const setters = {};
@@ -724,12 +723,15 @@ function fetchedPath(ts, arg) {
 // `[[...x]]` any; a hole (null) takes only a dynamic segment, never a static one.
 function routeMatches(parts, segs) {
   if (!parts.length) return !segs.length;
-  const [p, ...rest] = parts;
-  if (/^\[\[\.\.\./.test(p)) return true;
-  if (/^\[\.\.\./.test(p)) return segs.length > 0;
+  const [p, ...rest] = parts, rank = segmentRank(p);
+  if (rank === '3') return true;
+  if (rank === '2') return segs.length > 0;
   if (!segs.length) return false;
-  return (/^\[/.test(p) ? segs[0] !== '' : segs[0] === p) && routeMatches(rest, segs.slice(1));
+  return (rank === '1' ? segs[0] !== '' : segs[0] === p) && routeMatches(rest, segs.slice(1));
 }
+
+// A route folder segment's rank (#352): '0' static, '1' `[x]`, '2' `[...x]`, '3' `[[...x]]`.
+const segmentRank = p => (/^\[\[\.\.\./.test(p) ? '3' : /^\[\.\.\./.test(p) ? '2' : /^\[/.test(p) ? '1' : '0');
 
 // What a stub route pretends to do (#341), never how: the longest literal setTimeout it waits on, and the error
 // statuses (`{status: 500}`) it can answer, in its `method` handler when it exports one, else the whole file.

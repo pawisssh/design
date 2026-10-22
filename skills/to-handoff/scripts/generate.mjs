@@ -853,14 +853,15 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       text: `@media ${m} changes ${sel.join(', ')}${seen ? `. ${seen}` : '; the static reader has no viewport'}. Which Design System breakpoint is it, and what should change there?`,
     });
   }
-  const data = [];
+  // Every data id is its own (#352): a page mock and a route mock of one name are two entries, two questions.
+  const data = [], dataIds = new Set();
   for (const m of sim.mocks) {
-    const id = kebab(m.name.replace(/^mock/, ''));
-    data.push({ id, source: 'mock', note: `\`${m.name}\` is mock data standing in for the ${id.replace(/-/g, ' ')}`, at: at(m.offset),
-      question: question({ id: `q-data-${id}`, kind: 'stand-in', to: 'developer', text: `Where do the ${id.replace(/-/g, ' ')} come from? \`${m.name}\` stands in for them.` }) });
+    const what = kebab(m.name.replace(/^mock/, '')), id = uniqueId(dataIds, what);
+    data.push({ id, source: 'mock', note: `\`${m.name}\` is mock data standing in for the ${what.replace(/-/g, ' ')}`, at: at(m.offset),
+      question: question({ id: `q-data-${id}`, kind: 'stand-in', to: 'developer', text: `Where do the ${what.replace(/-/g, ' ')} come from? \`${m.name}\` stands in for them.` }) });
   }
   for (const f of sim.simulated) {
-    const id = kebab(f.name);
+    const id = uniqueId(dataIds, kebab(f.name));
     data.push({ id, source: 'simulated', note: `\`${f.name}()\` simulates its work with a ${f.delay}ms setTimeout`, at: at(f.offset),
       question: question({ id: `q-data-${id}`, kind: 'stand-in', to: 'developer', text: `What does \`${f.name}()\` call, and how does it fail? The Prototype simulates it with a timer.` }) });
   }
@@ -871,8 +872,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     if (stubRoutes.has(f.route)) continue;
     stubRoutes.add(f.route);
     const base = kebab(f.route.replace(/^\/api\//, '')) || 'api';
-    let id = base;
-    for (let n = 1; data.some(x => x.id === id); n++) id = n === 1 ? `${base}-api` : `${base}-api-${n}`;
+    const id = uniqueId(dataIds, dataIds.has(base) ? `${base}-api` : base);
     // A failure the reader can't see (a throw, a status in a variable) is still possible: no status means no claim.
     const pretends = [f.delay ? `answers after ${f.delay}ms` : 'answers at once', ...(f.failures.length ? [`can fail with ${f.failures.join(' or ')}`] : [])].join(' and ');
     data.push({ id, source: 'simulated', note: `\`${f.method} ${f.route}\` is a stub API the Prototype serves itself (${f.file}): it ${pretends}`, at: at(f.offset),
