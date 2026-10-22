@@ -1,0 +1,30 @@
+1si24ci401-spec/play_points2026 db2f1afeeb6a root=. ui=src/app/components/ui(48) users=1 cj=no lock=pnpm-lock.yaml, peerReact=1 depReact=0 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+Abhisheksingh17cyber/clean-ui-internity 1b3fe9ecb836 root=. ui=src/app/components/ui(48) users=0 cj=no lock=package-lock.json, peerReact=0 depReact=1 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+Alegrand048/SaludAvisa 08e6bf5db9fc root=. ui=src/app/components/ui(8) users=10 cj=no lock=package-lock.json, peerReact=1 depReact=0 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+Andreicr1/Hedge_Control_Alcast_Frontend 74dd292d97a4 root=. ui=src/app/components/ui(53) users=0 cj=no lock=package-lock.json, peerReact=1 depReact=0 "tailwindcss": "4.1.12"  "vite": "6.3.5" muiUse=0
+BDTBRG/Younger-blog 6d085064b245 root=. ui=src/app/components/ui(48) users=0 cj=no lock=pnpm-lock.yaml, peerReact=0 depReact=1 "tailwindcss": "4.1.12"  "vite": "6.3.5" muiUse=0
+Beca-lab/VinskaKarta 86b1c423e0e2 root=. ui=src/app/components/ui(48) users=6 cj=no lock=package-lock.json, peerReact=1 depReact=0 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+BilalAbd2008/Comprehensive-ERP-System-Design 317ab8748113 root=. ui=none(0) users=0 cj=no lock=package-lock.json, peerReact=0 depReact=1 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+Bochok24/YLC 43a635c3d9b7 root=. ui=none(0) users=0 cj=no lock=package-lock.json, peerReact=0 depReact=0    muiUse=0
+CORE-BRIM-TECH/cloud-scope-inventory a869eda66812 root=. ui=src/app/components/ui(48) users=0 cj=no lock=package-lock.json, peerReact=1 depReact=0 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+CodingSardine/Pu 66017442394a root=. ui=none(0) users=0 cj=no lock=package-lock.json, peerReact=1 depReact=1 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+Crypto-Dashboard-Kursovay/crypto-dashboard-frontend 492cdeca8700 root=. ui=none(0) users=0 cj=no lock=pnpm-lock.yaml, peerReact=1 depReact=0 "tailwindcss": "4.1.12"  "vite": "6.3.5" muiUse=31
+JuanCamiloTorres15/PROYECTO-2.0 9fbe9df5a4a7 root=. ui=src/app/components/ui(48) users=0 cj=no lock=none peerReact=1 depReact=1 "tailwindcss":"4.1.12" "tw-animate-css":"1.3.8" "vite":"6.3.5" muiUse=0
+KOver410/wearwhere_fe_react 92a3d9c909d4 root=. ui=src/app/components/ui(48) users=58 cj=no lock=package-lock.json, peerReact=0 depReact=1 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+Karl-Sue/aws-personal-page bc4876fa28bd root=. ui=src/app/components/ui(10) users=10 cj=no lock=package-lock.json, peerReact=1 depReact=0 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "^6.4.1" muiUse=0
+Max-Ambrogio/Ambrogio.com 3a56db3b0fde root=. ui=none(0) users=0 cj=no lock=package-lock.json, peerReact=0 depReact=0 "tailwindcss": "^3.4.14"  "vite": "6.3.5" muiUse=0
+NguyenAnhTu20924/EducationHust 11c1b56dfa90 root=. ui=src/app/components/ui(13) users=21 cj=no lock=package-lock.json, peerReact=1 depReact=0 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+Nizar-GH/agrimarket 3361b7943247 NO-PKG
+RalphJosehDsouza/Unemplyment_maxxing 112461dfef44 root=. ui=none(0) users=0 cj=no lock=package-lock.json, peerReact=0 depReact=0   "vite": "6.3.5" muiUse=0
+Subu2006/Krishi-Mitra-AI 092cd89814ad root=/FIGMA-MAKE ui=src/app/components/ui(48) users=46 cj=no lock=package-lock.json, peerReact=1 depReact=0 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+Syntropys/web_frontend b625b4eeb853 root=. ui=none(0) users=0 cj=no lock=package-lock.json,pnpm-lock.yaml, peerReact=1 depReact=1 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+TecReaGroup/birthday_calendar b437ad48c474 root=. ui=src/app/components/ui(48) users=0 cj=no lock=package-lock.json, peerReact=0 depReact=1 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+Tsepo-Mohlomi/CyberPaladinsStudyApp bb6c69b4af9e root=. ui=src/app/components/ui(48) users=0 cj=no lock=none peerReact=1 depReact=0 "tailwindcss": "4.1.12"  "vite": "6.3.5" muiUse=0
+VincentCYS/vincentcys.github.io a1d0382032e0 root=. ui=src/app/components/ui(48) users=0 cj=no lock=package-lock.json, peerReact=1 depReact=0 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+Weedanta/Capstone af9f67cc110f root=. ui=src/app/components/ui(48) users=0 cj=no lock=package-lock.json, peerReact=0 depReact=1 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+anujrwt08/portfolio-resume-2.0 60af17265994 root=. ui=src/app/components/ui(48) users=7 cj=no lock=package-lock.json, peerReact=0 depReact=1 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "^6.4.1" muiUse=0
+barrulus/emacs-keybinds fc3f0ac67f80 root=. ui=none(0) users=0 cj=no lock=package-lock.json, peerReact=1 depReact=0 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+bytedoger/awesome-OpenPrice 387d6b2b5a7a root=. ui=none(0) users=0 cj=no lock=pnpm-lock.yaml, peerReact=0 depReact=1 "tailwindcss": "^3.4.19" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0
+cloudflips32/TrueAid ea0bfa09425b root=. ui=src/app/components/ui(9) users=9 cj=no lock=package-lock.json,pnpm-lock.yaml, peerReact=1 depReact=0 "tailwindcss": "4.1.12"  "vite": "^6.4.2" muiUse=0
+codedbyjt/vl-portfolio d05417e419ae root=. ui=none(0) users=0 cj=no lock=package-lock.json, peerReact=0 depReact=1 "tailwindcss": "4.1.12"  "vite": "^6.4.3" muiUse=0
+csamulde542948-pixel/SMSAPIWebsiteInterface 29e1c3b10d72 root=. ui=src/app/components/ui(3) users=2 cj=yes lock=package-lock.json,pnpm-lock.yaml, peerReact=0 depReact=1 "tailwindcss": "4.1.12" "tw-animate-css": "1.3.8" "vite": "6.3.5" muiUse=0

@@ -1,0 +1,43 @@
+{"bundle":"lost-found","root":".","react":"optional-peer","lock":"package-lock.json","workspace":false,"ui":"src/app/components/ui","uiUsers":11,"mui":0,"router":"data","tsx":true,"kind":"React + Tailwind + shadcn"}
+{"bundle":"portfolio","root":".","react":"dep","lock":"package-lock.json","workspace":false,"ui":"src/app/components/ui","uiUsers":0,"mui":0,"router":"jsx","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"smart-parking","root":".","react":"optional-peer","lock":"none","workspace":true,"ui":"src/app/components/ui","uiUsers":0,"mui":0,"router":"none","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"1si24ci401-spec_play_points2026","root":".","react":"optional-peer","lock":"pnpm-lock.yaml","workspace":true,"ui":"src/app/components/ui","uiUsers":1,"mui":0,"router":"data","tsx":true,"kind":"React + Tailwind + shadcn"}
+{"bundle":"Abhisheksingh17cyber_clean-ui-internity","root":".","react":"dep","lock":"package-lock.json","workspace":false,"ui":"src/app/components/ui","uiUsers":0,"mui":0,"router":"none","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"Alegrand048_SaludAvisa","root":".","react":"optional-peer","lock":"package-lock.json","workspace":false,"ui":"src/app/components/ui","uiUsers":10,"mui":0,"router":"data","tsx":true,"kind":"React + Tailwind + shadcn"}
+{"bundle":"Andreicr1_Hedge_Control_Alcast_Frontend","root":".","react":"optional-peer","lock":"package-lock.json","workspace":false,"ui":"src/app/components/ui","uiUsers":7,"mui":0,"router":"jsx","tsx":true,"kind":"React + Tailwind + shadcn"}
+{"bundle":"BDTBRG_Younger-blog","root":".","react":"dep","lock":"pnpm-lock.yaml","workspace":false,"ui":"src/app/components/ui","uiUsers":0,"mui":0,"router":"data","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"Beca-lab_VinskaKarta","root":".","react":"optional-peer","lock":"package-lock.json","workspace":false,"ui":"src/app/components/ui","uiUsers":6,"mui":0,"router":"none","tsx":true,"kind":"React + Tailwind + shadcn"}
+{"bundle":"BilalAbd2008_Comprehensive-ERP-System-Design","root":".","react":"dep","lock":"package-lock.json","workspace":true,"ui":"none","uiUsers":0,"mui":0,"router":"data","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"Bochok24_YLC","root":".","react":"none","lock":"package-lock.json","workspace":false,"ui":"none","uiUsers":0,"mui":0,"router":"none","tsx":false,"kind":"plain HTML (+Tailwind build)"}
+{"bundle":"CORE-BRIM-TECH_cloud-scope-inventory","root":".","react":"optional-peer","lock":"package-lock.json","workspace":false,"ui":"src/app/components/ui","uiUsers":0,"mui":0,"router":"none","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"CodingSardine_Pu","root":".","react":"dep","lock":"package-lock.json","workspace":false,"ui":"none","uiUsers":0,"mui":0,"router":"none","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"Crypto-Dashboard-Kursovay_crypto-dashboard-frontend","root":".","react":"optional-peer","lock":"pnpm-lock.yaml","workspace":true,"ui":"none","uiUsers":0,"mui":31,"router":"data","tsx":true,"kind":"React + CSS-in-JS (MUI)"}
+{"bundle":"JuanCamiloTorres15_PROYECTO-2.0","root":".","react":"dep","lock":"none","workspace":false,"ui":"src/app/components/ui","uiUsers":0,"mui":0,"router":"data","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"KOver410_wearwhere_fe_react","root":".","react":"dep","lock":"package-lock.json","workspace":false,"ui":"src/app/components/ui","uiUsers":58,"mui":0,"router":"jsx","tsx":true,"kind":"React + Tailwind + shadcn"}
+{"bundle":"Karl-Sue_aws-personal-page","root":".","react":"optional-peer","lock":"package-lock.json","workspace":false,"ui":"src/app/components/ui","uiUsers":10,"mui":0,"router":"jsx","tsx":true,"kind":"React + Tailwind + shadcn"}
+{"bundle":"Max-Ambrogio_Ambrogio.com","root":".","react":"none","lock":"package-lock.json","workspace":true,"ui":"none","uiUsers":0,"mui":0,"router":"none","tsx":false,"kind":"plain HTML (+Tailwind build)"}
+{"bundle":"NguyenAnhTu20924_EducationHust","root":".","react":"optional-peer","lock":"package-lock.json","workspace":true,"ui":"src/app/components/ui","uiUsers":21,"mui":0,"router":"data","tsx":true,"kind":"React + Tailwind + shadcn"}
+{"bundle":"Nizar-GH_agrimarket","root":"frontend","react":"dep","lock":"package-lock.json","workspace":false,"ui":"none","uiUsers":0,"mui":0,"router":"jsx","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"RalphJosehDsouza_Unemplyment_maxxing","root":"frontend","react":"optional-peer","lock":"package-lock.json","workspace":false,"ui":"src/app/components/ui","uiUsers":0,"mui":0,"router":"jsx","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"Subu2006_Krishi-Mitra-AI","root":"FIGMA-MAKE","react":"optional-peer","lock":"package-lock.json","workspace":true,"ui":"src/app/components/ui","uiUsers":44,"mui":0,"router":"none","tsx":true,"kind":"React + Tailwind + shadcn"}
+{"bundle":"Syntropys_web_frontend","root":".","react":"dep","lock":"package-lock.json+pnpm-lock.yaml","workspace":true,"ui":"none","uiUsers":0,"mui":0,"router":"data","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"TecReaGroup_birthday_calendar","root":".","react":"dep","lock":"package-lock.json","workspace":false,"ui":"src/app/components/ui","uiUsers":0,"mui":0,"router":"none","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"Tsepo-Mohlomi_CyberPaladinsStudyApp","root":".","kind":"invalid package.json"}
+{"bundle":"VincentCYS_vincentcys.github.io","root":".","react":"optional-peer","lock":"package-lock.json","workspace":false,"ui":"src/app/components/ui","uiUsers":0,"mui":0,"router":"none","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"Weedanta_Capstone","root":".","react":"dep","lock":"package-lock.json","workspace":false,"ui":"src/app/components/ui","uiUsers":0,"mui":0,"router":"data","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"anujrwt08_portfolio-resume-2.0","root":".","react":"dep","lock":"package-lock.json","workspace":false,"ui":"src/app/components/ui","uiUsers":7,"mui":0,"router":"none","tsx":true,"kind":"React + Tailwind + shadcn"}
+{"bundle":"barrulus_emacs-keybinds","root":".","react":"optional-peer","lock":"package-lock.json","workspace":false,"ui":"none","uiUsers":0,"mui":0,"router":"none","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"bytedoger_awesome-OpenPrice","root":".","react":"dep","lock":"pnpm-lock.yaml","workspace":true,"ui":"none","uiUsers":0,"mui":0,"router":"none","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"cloudflips32_TrueAid","root":".","react":"optional-peer","lock":"package-lock.json+pnpm-lock.yaml","workspace":true,"ui":"src/app/components/ui","uiUsers":9,"mui":0,"router":"data","tsx":true,"kind":"React + Tailwind + shadcn"}
+{"bundle":"codedbyjt_vl-portfolio","root":".","react":"dep","lock":"package-lock.json","workspace":false,"ui":"none","uiUsers":0,"mui":0,"router":"jsx","tsx":true,"kind":"React + Tailwind, no Code Library"}
+{"bundle":"csamulde542948-pixel_SMSAPIWebsiteInterface","root":".","react":"dep","lock":"package-lock.json+pnpm-lock.yaml","workspace":true,"ui":"src/app/components/ui","uiUsers":2,"mui":0,"router":"none","tsx":true,"kind":"React + Tailwind + shadcn"}
+
+bundles 33
+kind  React + Tailwind + shadcn: 12, React + Tailwind, no Code Library: 17, plain HTML (+Tailwind build): 2, React + CSS-in-JS (MUI): 1, invalid package.json: 1
+react optional-peer: 15, dep: 15, none: 2, undefined: 1
+lock  package-lock.json: 23, none: 2, pnpm-lock.yaml: 4, package-lock.json+pnpm-lock.yaml: 3, undefined: 1
+ui    src/app/components/ui: 22, none: 10, undefined: 1
+router data: 11, jsx: 7, none: 14, undefined: 1
+workspace false: 21, true: 11, undefined: 1
+shadcn-kind routers: data,data,data,jsx,none,jsx,jsx,data,none,none,data,none
+ui present but unused: 10
