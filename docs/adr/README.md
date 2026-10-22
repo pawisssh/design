@@ -18,3 +18,4 @@ Re-open a decision when its trigger happens.
 | [0015 The runtime reader reads computed paint, spacing and radius](0015-the-runtime-reader-reads-computed-paint-spacing-and-radius.md) | A runtime run's tie requests or Off-system values are too many for the owner to review at Sign-off |
 | [0016 A Prototype with no Code Library gets an Extracted Library](0016-a-prototype-with-no-code-library-gets-an-extracted-library.md) | A Prototype styled by CSS or SCSS classes, or plain HTML, has to become a Design System |
 | [0017 Vibe-to-Figma stays one-way](0017-vibe-to-figma-stays-one-way.md) | The owner wants a Figma edit to reach the code without running Figma-to-Vibe |
+| [0018 A screen may have Extra states](0018-a-screen-may-have-extra-states.md) | Extra states multiply on one screen, or a Code Library ships a state pattern the five Standard states should absorb |
