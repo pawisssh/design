@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": 8,
+  "revision": 12,
   "status": "approved",
-  "approval": { "by": "owner", "at": "2026-10-17T21:21:22.701Z", "revision": 8, "contentHash": "sha256:128d4f43f71005b6b70dd8cf714f1b679ee8ba80aa1ba2333d7e6b092e6ff65f" },
+  "approval": { "by": "owner", "at": "2026-10-22T23:31:19.249Z", "revision": 12, "contentHash": "sha256:078d896032aaaa05f1d3aa1753dd03c3eaac2dc9da3d5340f3d5b9cdf072c4d2" },
   "feature": {
     "key": "request-access",
     "name": "Request access",
@@ -13,6 +13,7 @@
     "kind": "react-next",
     "prototype": {
       "files": {
+        "app/api/request-access/route.ts": "sha256:09495a7dc61f62615d1aba40431acd7c044d8ba089c2bd8dd54914a31a6cff4c",
         "app/globals.css": "sha256:15fd52bd462719c6469cb5978ece7a907e9558ac22050005abe8b865524e05e1",
         "app/layout.tsx": "sha256:27471c24f05b096454dc3c3cc5ee4bc992eee8e5aedb6dc8e0b53c62148780f8",
         "app/page.tsx": "sha256:dee906d9e5007717ffca7f94e1e7f29122c29e7b569e1502d4e84c1a4d23c2a8",
@@ -27,7 +28,7 @@
         "components/ui/sonner.tsx": "sha256:2dd975ad2170ba2570b00e58713dcbda90f26a7fffdaceb1ef7255f450c2d2a6",
         "components/ui/textarea.tsx": "sha256:82601c91ffc6c727d924162c78d7cb853114bcced4e2eb922a68ca12d4239c0f"
       },
-      "snapshotId": "sha256:4b294d0b16ab600455b84072c830fc529b05afe04d6bd1d06e8f03d91d82a2ae"
+      "snapshotId": "sha256:b817f7e067204abc73dddaf830a922c49afa7d24d36e14d33a74ec72e0848ee2"
     },
     "designSystem": "shadcn",
     "contracts": {
@@ -38,6 +39,10 @@
       "button": {
         "snapshotId": "sha256:dd2a12ada2f95ba0193b0d483a36282e01a713a95ac0cc4329e6a9ea5f9439ae",
         "contentHash": "sha256:a53a7bf44fa83e9dd46733ca1c927e55d62eb54a3267e962bd44e9ce51e5ad96"
+      },
+      "card": {
+        "snapshotId": "sha256:caab2c63c6b24a6a664d471916bb30854545180451155ea24fc81af19d3cd296",
+        "contentHash": "sha256:19e0531923e146c3dc2b0b8d418f80156201ef758089f33ccc17e1edd55813bb"
       },
       "input": {
         "snapshotId": "sha256:2ccace5bd63cb30a132c3481b0a1285a287905946f7608f0497720c3fca29c41",
@@ -59,7 +64,7 @@
     "proposals": {},
     "foundations": {
       "documentHash": "sha256:9de3c77c8cc37d156f74c72aead593a9bd882ee914ae867100cec74d0cf40ee1",
-      "usedHash": "sha256:c1466dabf24f9b5b3b6a3fe8e9a9e58753e378415c19c338074c546161ab007c"
+      "usedHash": "sha256:63205972e3fb3ff989a91fb6083b529e135939ad0a89f83902bc5d56824a2898"
     },
     "modes": {
       "light": "light"
@@ -68,14 +73,7 @@
       {
         "level": "info",
         "text": "Single-mode Prototype: its page surface (#ffffff) map best to Light (Light ΔE 0, Dark ΔE 0.8552). The other Theme modes render unverified."
-      },
-      {
-        "level": "info",
-        "text": "Region `flex`: `Card` (@/components/ui/card, app/page.tsx:18:7) holds other Code Library usages, so it is read as a wrapper: its parts' styles and text stay in the region, and the usages inside it are their own."
       }
-    ],
-    "ignored": [
-      "app/api/request-access/route.ts (API route)"
     ]
   },
   "screens": [
@@ -101,32 +99,13 @@
           "usages": []
         },
         {
-          "id": "flex",
+          "id": "main",
           "landmark": "main",
           "at": "app/page.tsx:17:5",
           "styles": [],
           "text": [
             {
-              "copy": "card-title",
-              "at": "app/page.tsx:22:24",
-              "style": {
-                "raw": {
-                  "fontSize": 16,
-                  "lineHeight": 22,
-                  "fontWeight": 500,
-                  "letterSpacing": 0
-                }
-              }
-            },
-            {
-              "copy": "card-description",
-              "at": "app/page.tsx:25:13",
-              "style": {
-                "textStyle": "text-sm-normal"
-              }
-            },
-            {
-              "copy": "font-medium",
+              "copy": "thanks-your-request",
               "at": "app/request-access-form.tsx:47:36",
               "states": [
                 "success"
@@ -136,7 +115,7 @@
               }
             },
             {
-              "copy": "span",
+              "copy": "already-a-member",
               "at": "app/page.tsx:32:17",
               "style": {
                 "textStyle": "text-xs-normal"
@@ -144,6 +123,30 @@
             }
           ],
           "usages": [
+            {
+              "id": "card",
+              "contract": "card",
+              "tuple": {
+                "card-footer": "card-footer"
+              },
+              "properties": {
+                "title": "copy:card-title",
+                "description": "copy:card-description"
+              },
+              "match": {
+                "by": "import"
+              },
+              "offAxis": [
+                {
+                  "property": "CardFooter.className",
+                  "raw": "\"justify-between text-xs text-muted-foreground\"",
+                  "reason": "CardFooter className is no card axis or property",
+                  "question": "q-prop-card"
+                }
+              ],
+              "question": "q-prop-card",
+              "at": "app/page.tsx:18:7"
+            },
             {
               "id": "button",
               "contract": "button",
@@ -156,6 +159,7 @@
               "match": {
                 "by": "import"
               },
+              "in": "card",
               "states": [
                 "success"
               ],
@@ -174,6 +178,7 @@
               "match": {
                 "by": "import"
               },
+              "in": "card",
               "states": [
                 "error"
               ],
@@ -189,6 +194,7 @@
               "match": {
                 "by": "import"
               },
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -212,6 +218,7 @@
                 }
               ],
               "question": "q-prop-name",
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -229,6 +236,7 @@
               "match": {
                 "by": "import"
               },
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -252,6 +260,7 @@
                 }
               ],
               "question": "q-prop-email",
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -269,6 +278,7 @@
               "match": {
                 "by": "import"
               },
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -286,6 +296,7 @@
               "match": {
                 "by": "import"
               },
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -303,6 +314,7 @@
               "match": {
                 "by": "import"
               },
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -326,6 +338,7 @@
                 }
               ],
               "question": "q-prop-reason",
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -343,6 +356,7 @@
               "match": {
                 "by": "import"
               },
+              "in": "card",
               "states": [
                 "default",
                 "loading",
@@ -363,6 +377,7 @@
               "match": {
                 "by": "import"
               },
+              "in": "card",
               "at": "app/page.tsx:33:11"
             }
           ]
@@ -388,7 +403,7 @@
       ],
       "states": {
         "default": {
-          "content": "every state condition is false; conditional content shown: .grid",
+          "content": "every state condition is false; conditional content shown: form",
           "screenshots": {
             "sm": "screens/index.default.sm.png",
             "md": "screens/index.default.md.png",
@@ -398,8 +413,8 @@
           }
         },
         "loading": {
-          "content": "`pending` or `status === \"loading\"` is true; conditional content shown: .grid",
-          "trigger": "pending or status === \"loading\"",
+          "content": "`pending` or `status === \"loading\"` is true; conditional content shown: form",
+          "trigger": "onSubmit() sets status === \"loading\" before POST /api/request-access answers (stub API)",
           "usageStates": {
             "button-2": {
               "state": "disabled",
@@ -421,8 +436,8 @@
           "question": "q-state-empty"
         },
         "error": {
-          "content": "`status === \"error\"` is true; conditional content shown: .grid, alert",
-          "trigger": "status === \"error\"",
+          "content": "`status === \"error\"` is true; conditional content shown: form, alert",
+          "trigger": "onSubmit() sets status === \"error\" when POST /api/request-access fails (stub API)",
           "screenshots": {
             "sm": "screens/index.error.sm.png",
             "md": "screens/index.error.md.png",
@@ -432,8 +447,8 @@
           }
         },
         "success": {
-          "content": "`status === \"success\"` is true; conditional content shown: .flex",
-          "trigger": "status === \"success\"",
+          "content": "`status === \"success\"` is true; conditional content shown: div",
+          "trigger": "onSubmit() sets status === \"success\" when POST /api/request-access answers (stub API)",
           "screenshots": {
             "sm": "screens/index.success.sm.png",
             "md": "screens/index.success.md.png",
@@ -446,6 +461,14 @@
     }
   ],
   "copy": {
+    "card-title": {
+      "text": "Request workspace access",
+      "at": "app/page.tsx:22:24"
+    },
+    "card-description": {
+      "text": "Tell us who you are and an admin will approve you within a day.",
+      "at": "app/page.tsx:25:13"
+    },
     "button-label": {
       "text": "Send another request",
       "at": "app/request-access-form.tsx:49:11"
@@ -490,19 +513,11 @@
       "text": "Sign in",
       "at": "app/page.tsx:34:34"
     },
-    "card-title": {
-      "text": "Request workspace access",
-      "at": "app/page.tsx:22:24"
-    },
-    "card-description": {
-      "text": "Tell us who you are and an admin will approve you within a day.",
-      "at": "app/page.tsx:25:13"
-    },
-    "font-medium": {
+    "thanks-your-request": {
       "text": "Thanks! Your request is in.",
       "at": "app/request-access-form.tsx:47:36"
     },
-    "span": {
+    "already-a-member": {
       "text": "Already a member?",
       "at": "app/page.tsx:32:17"
     }
@@ -547,6 +562,14 @@
     }
   ],
   "openQuestions": [
+    {
+      "id": "q-prop-card",
+      "kind": "prop",
+      "to": "owner",
+      "text": "`CardFooter` at app/page.tsx:31:9 sets className=\"justify-between text-xs text-muted-foreground\", which is no card axis or property. Which value is it, or does the Contract need it?",
+      "answer": "Code-only: justify-between text-xs text-muted-foreground lays out and colours the footer's own text, which the region already records as text-xs-normal; the Card Contract needs no axis or property for it.",
+      "by": "owner"
+    },
     {
       "id": "q-prop-name",
       "kind": "prop",
@@ -594,16 +617,53 @@
       "text": "The Prototype loads Geist from next/font/google (app/layout.tsx:2:10), Geist_Mono from next/font/google (app/layout.tsx:2:17); the Text Styles use Geist. Use Geist?",
       "answer": "Geist and Geist Mono, as the Prototype loads them.",
       "by": "owner"
+    },
+    {
+      "id": "q-data-request-access",
+      "kind": "stand-in",
+      "to": "developer",
+      "text": "What does `POST /api/request-access` do in the real backend: what does it take and return, and how does it fail? The Prototype serves a stub for it.",
+      "answer": null
     }
   ],
-  "flow": [],
-  "data": [],
+  "flow": [
+    {
+      "from": "default",
+      "trigger": "onSubmit() calls POST /api/request-access",
+      "to": "loading",
+      "source": "simulated"
+    },
+    {
+      "from": "loading",
+      "trigger": "POST /api/request-access fails",
+      "to": "error",
+      "source": "simulated"
+    },
+    {
+      "from": "loading",
+      "trigger": "POST /api/request-access answers ok",
+      "to": "success",
+      "source": "simulated"
+    }
+  ],
+  "data": [
+    {
+      "id": "request-access",
+      "source": "simulated",
+      "note": "`POST /api/request-access` is a stub API the Prototype serves itself (app/api/request-access/route.ts): it answers after 800ms and can fail with 500",
+      "at": "app/request-access-form.tsx:31:23",
+      "question": "q-data-request-access"
+    }
+  ],
   "ownerDecisions": {
     "question:q-font": {
       "answer": "Geist and Geist Mono, as the Prototype loads them."
     },
     "question:q-no-contract-toaster": {
       "answer": "Toaster stays raw: engineering calls sonner's toast(); it is not a Figma component."
+    },
+    "question:q-prop-card": {
+      "answer": "Code-only: justify-between text-xs text-muted-foreground lays out and colours the footer's own text, which the region already records as text-xs-normal; the Card Contract needs no axis or property for it."
     },
     "question:q-prop-email": {
       "answer": "Code-only: required is form validation and changes nothing the Input shows, so the Input Contract needs no axis or property for it."

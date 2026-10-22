@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "revision": 12,
-  "status": "pending",
-  "approval": null,
+  "status": "approved",
+  "approval": { "by": "owner", "at": "2026-10-22T23:31:19.249Z", "revision": 12, "contentHash": "sha256:078d896032aaaa05f1d3aa1753dd03c3eaac2dc9da3d5340f3d5b9cdf072c4d2" },
   "feature": {
     "key": "request-access",
     "name": "Request access",
