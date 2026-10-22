@@ -1,0 +1,1597 @@
+{
+  "schemaVersion": 1,
+  "revision": 2,
+  "status": "pending",
+  "approval": null,
+  "feature": {
+    "key": "fnm-portfolio-health-check-service-dev",
+    "name": "fnm-portfolio-health-check-service-dev",
+    "owner": "Kane (to confirm)",
+    "goal": "Portfolio Health Check management for relationship managers: a Miller-column workspace that drills from a customer dashboard into portfolio summaries, versions and holdings, generates a password-protected PDF health-check report and books customer appointments.",
+    "scope": [
+      "Dashboard with customer search and filters",
+      "Customer drilldown, portfolio summary, versions and version detail columns",
+      "Portfolio management: asset list, allocation check, report generation with PDF password",
+      "Set-password modal",
+      "Appointment modal",
+      "Add-asset modal"
+    ],
+    "nonGoals": [
+      "Authentication",
+      "Real portfolio data or pricing APIs (mock data stands in)",
+      "Report rendering itself"
+    ]
+  },
+  "source": {
+    "input": "prototype",
+    "kind": "react-vite",
+    "prototype": {
+      "files": {
+        "index.html": "sha256:20d46d446c62d5fd00a92f8be1675483a580a7e0bbdc8a012eae94ff6323b5e7",
+        "src/App.jsx": "sha256:d4228d350fc7992a881b3088fcce053fcdc98f2668858818f44ace645d370d0a",
+        "src/components/Dashboard/Dashboard.jsx": "sha256:f2107df77026ab2f1189c78abd5654475e71596c835e15ecaa13a777b356f616",
+        "src/components/Modals/AppointmentModal.jsx": "sha256:6d68a002baed9076771627f682d6bf1a5761b625a5c3dc8937a797551803202d",
+        "src/components/Modals/SetPasswordModal.jsx": "sha256:2e8475e3fc523ee0f3c1295ed4916f19b3987f23c8d3cc180b62292972aaad1a",
+        "src/components/PortfolioManagement/PortfolioManagement.jsx": "sha256:e0ac8237b66d099d11590a6319288de9f4d8b06ddb40d5d0c53f6c91bad020f6",
+        "src/components/PortfolioSummary/PortfolioSummary.jsx": "sha256:82f72df90ae4b3bc1d6b4b426cde16726bd896bff70da26e7e8fe90e086866ba",
+        "src/components/PortfolioVersion/PortfolioVersion.jsx": "sha256:dd6467d941990aa82196166da9b3e847ba096481da6ce232eaea0b0fb8e7d7a8",
+        "src/components/PortfolioVersionDetail/PortfolioVersionDetail.jsx": "sha256:23680b177aa218d36f2f30d65eab78228fc924b5df8680205c3cbc930f73f79b",
+        "src/data/mockData.js": "sha256:292baf5614cb46e4cba272a0cb582b0cda0ba92066c25c3e9176111fe0fb3426",
+        "src/main.jsx": "sha256:f8ef68b65f8d31c03f05da0d813076c7e38e511cce642e2f21d4f05ef3ea6207"
+      },
+      "snapshotId": "sha256:3baf998c522cc787c632b296d9bfc22109c5ce5ea525d05e984c926f0a679ac1"
+    },
+    "designSystem": "carbon",
+    "contracts": {
+      "button": {
+        "snapshotId": "sha256:4c82c3cc7f2af6fa24fba39bb5e159c415b5691800130268c9d8903901164152",
+        "contentHash": "sha256:4a9e9f38d7a42ccfd0ea029241862365784bfe49b7f087e48ceee8ee07711bf5"
+      },
+      "text-input": {
+        "snapshotId": "sha256:1a5e61e829858c59e445d7febf9c44c5d920bae55ddd39de50851196f1502c4c",
+        "contentHash": "sha256:ffc567ffda43ccc993b609efd9111bb3d652edadddf331cf0bd9f77b67e8e151"
+      }
+    },
+    "proposals": {},
+    "foundations": {
+      "documentHash": "sha256:9f99c2066cc22e492d01bfc15814cdbd9ea347e47f4a6eb752d17b909315fb45",
+      "usedHash": "sha256:8348c90c709ee2967ae13ed2fdcf31b90ec1f28bbaf05ce217531772c6b624ac"
+    },
+    "modes": {
+      "light": "g10"
+    },
+    "notes": [
+      {
+        "level": "info",
+        "text": "`<Theme theme=\"g10\">` (src/App.jsx:739:5) sets the Prototype's mode to Gray 10; the page surfaces are not compared. The other Theme modes render unverified."
+      },
+      {
+        "level": "info",
+        "text": "Region `theme`: `Theme` (@carbon/react, src/App.jsx:739:5) holds other Code Library usages, so it is read as a wrapper: its parts' styles and text stay in the region, and the usages inside it are their own."
+      },
+      {
+        "level": "info",
+        "text": "Region `theme`: `Modal` (@carbon/react, src/App.jsx:817:7) holds other Code Library usages, so it is read as a wrapper: its parts' styles and text stay in the region, and the usages inside it are their own."
+      },
+      {
+        "level": "info",
+        "text": "Region `theme`: `Modal` (@carbon/react, src/components/Modals/SetPasswordModal.jsx:26:5) holds other Code Library usages, so it is read as a wrapper: its parts' styles and text stay in the region, and the usages inside it are their own."
+      },
+      {
+        "level": "info",
+        "text": "Region `theme`: `Modal` (@carbon/react, src/components/Modals/AppointmentModal.jsx:50:5) holds other Code Library usages, so it is read as a wrapper: its parts' styles and text stay in the region, and the usages inside it are their own."
+      }
+    ]
+  },
+  "screens": [
+    {
+      "id": "index",
+      "name": "/",
+      "at": "src/main.jsx:7:3",
+      "breakpoints": [
+        "sm",
+        "md",
+        "lg",
+        "xlg",
+        "max"
+      ],
+      "regions": [
+        {
+          "id": "shell",
+          "landmark": null,
+          "shell": true,
+          "at": "index.html:2:1",
+          "styles": [],
+          "text": [],
+          "usages": []
+        },
+        {
+          "id": "theme",
+          "landmark": null,
+          "at": "src/App.jsx:739:5",
+          "styles": [],
+          "text": [
+            {
+              "copy": "phc-column-title",
+              "at": "src/App.jsx:161:47",
+              "style": {
+                "raw": {
+                  "fontSize": 17,
+                  "lineHeight": 24,
+                  "fontWeight": 500,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "phc-kpi-tile-value",
+              "at": "src/components/Dashboard/Dashboard.jsx:74:51",
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "heading-05-font-size",
+                    "candidates": [
+                      "fluid-heading-05-font-size",
+                      "fluid-heading-06-font-size",
+                      "fluid-quotation-02-font-size",
+                      "heading-05-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 32,
+                  "lineHeight": 32,
+                  "fontWeight": 600,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "phc-kpi-tile-label",
+              "at": "src/components/Dashboard/Dashboard.jsx:76:53",
+              "style": {
+                "raw": {
+                  "fontSize": 11.2,
+                  "lineHeight": 11.2,
+                  "fontWeight": 500,
+                  "letterSpacing": 0.64
+                }
+              }
+            },
+            {
+              "copy": "span",
+              "at": "src/components/Dashboard/Dashboard.jsx:92:22",
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-02-font-size",
+                    "candidates": [
+                      "body-02-font-size",
+                      "body-compact-02-font-size",
+                      "expressive-heading-02-font-size",
+                      "heading-02-font-size",
+                      "heading-compact-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 16,
+                  "lineHeight": 16,
+                  "fontWeight": 600,
+                  "letterSpacing": -0.16
+                }
+              }
+            },
+            {
+              "copy": "span-2",
+              "at": "src/components/Dashboard/Dashboard.jsx:94:24",
+              "style": {
+                "raw": {
+                  "fontSize": 15.2,
+                  "lineHeight": 15.2,
+                  "fontWeight": 600,
+                  "letterSpacing": -0.16
+                }
+              }
+            },
+            {
+              "copy": "h3",
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:115:12",
+              "states": [],
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-02-font-size",
+                    "candidates": [
+                      "body-02-font-size",
+                      "body-compact-02-font-size",
+                      "expressive-heading-02-font-size",
+                      "heading-02-font-size",
+                      "heading-compact-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 16,
+                  "lineHeight": null,
+                  "fontWeight": 700,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "span-3",
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:118:11",
+              "states": [],
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-02-font-size",
+                    "candidates": [
+                      "body-02-font-size",
+                      "body-compact-02-font-size",
+                      "expressive-heading-02-font-size",
+                      "heading-02-font-size",
+                      "heading-compact-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 16,
+                  "lineHeight": null,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "h4",
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:125:57",
+              "states": [],
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-02-font-size",
+                    "candidates": [
+                      "body-02-font-size",
+                      "body-compact-02-font-size",
+                      "expressive-heading-02-font-size",
+                      "heading-02-font-size",
+                      "heading-compact-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 16,
+                  "lineHeight": null,
+                  "fontWeight": 700,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "div",
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:132:19",
+              "states": [],
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-02-font-size",
+                    "candidates": [
+                      "body-02-font-size",
+                      "body-compact-02-font-size",
+                      "expressive-heading-02-font-size",
+                      "heading-02-font-size",
+                      "heading-compact-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 16,
+                  "lineHeight": null,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "span-4",
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:178:29",
+              "states": [],
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-02-font-size",
+                    "candidates": [
+                      "body-02-font-size",
+                      "body-compact-02-font-size",
+                      "expressive-heading-02-font-size",
+                      "heading-02-font-size",
+                      "heading-compact-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 16,
+                  "lineHeight": null,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "span-5",
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:179:30",
+              "states": [],
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-02-font-size",
+                    "candidates": [
+                      "body-02-font-size",
+                      "body-compact-02-font-size",
+                      "expressive-heading-02-font-size",
+                      "heading-02-font-size",
+                      "heading-compact-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 16,
+                  "lineHeight": null,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "h4-2",
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:203:39",
+              "states": [],
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-02-font-size",
+                    "candidates": [
+                      "body-02-font-size",
+                      "body-compact-02-font-size",
+                      "expressive-heading-02-font-size",
+                      "heading-02-font-size",
+                      "heading-compact-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 16,
+                  "lineHeight": null,
+                  "fontWeight": 700,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "div-2",
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:209:75",
+              "states": [],
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-02-font-size",
+                    "candidates": [
+                      "body-02-font-size",
+                      "body-compact-02-font-size",
+                      "expressive-heading-02-font-size",
+                      "heading-02-font-size",
+                      "heading-compact-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 16,
+                  "lineHeight": null,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "div-3",
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:211:22",
+              "states": [],
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-02-font-size",
+                    "candidates": [
+                      "body-02-font-size",
+                      "body-compact-02-font-size",
+                      "expressive-heading-02-font-size",
+                      "heading-02-font-size",
+                      "heading-compact-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 16,
+                  "lineHeight": null,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "h4-3",
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:221:50",
+              "states": [],
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-02-font-size",
+                    "candidates": [
+                      "body-02-font-size",
+                      "body-compact-02-font-size",
+                      "expressive-heading-02-font-size",
+                      "heading-02-font-size",
+                      "heading-compact-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 16,
+                  "lineHeight": null,
+                  "fontWeight": 700,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "h4-4",
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:263:48",
+              "states": [],
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-02-font-size",
+                    "candidates": [
+                      "body-02-font-size",
+                      "body-compact-02-font-size",
+                      "expressive-heading-02-font-size",
+                      "heading-02-font-size",
+                      "heading-compact-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 16,
+                  "lineHeight": null,
+                  "fontWeight": 700,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "phc-modal-label",
+              "at": "src/components/Modals/SetPasswordModal.jsx:42:40",
+              "style": {
+                "textStyle": "body-01",
+                "match": "near",
+                "delta": 1.16,
+                "candidates": [
+                  "body-01",
+                  "code-02"
+                ],
+                "by": "agent"
+              }
+            },
+            {
+              "copy": "strong",
+              "at": "src/components/Modals/SetPasswordModal.jsx:42:59",
+              "style": {
+                "textStyle": "heading-01",
+                "match": "near",
+                "delta": 1.16,
+                "candidates": [
+                  "expressive-heading-01",
+                  "heading-01"
+                ],
+                "by": "agent"
+              }
+            },
+            {
+              "copy": "phc-modal-section-title",
+              "at": "src/components/Modals/SetPasswordModal.jsx:46:51",
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "helper-text-01-font-size",
+                    "candidates": [
+                      "caption-01-font-size",
+                      "code-01-font-size",
+                      "helper-text-01-font-size",
+                      "label-01-font-size",
+                      "legal-01-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 12,
+                  "lineHeight": 18,
+                  "fontWeight": 700,
+                  "letterSpacing": 0.6
+                }
+              }
+            },
+            {
+              "copy": "phc-modal-section-desc",
+              "at": "src/components/Modals/SetPasswordModal.jsx:47:49",
+              "style": {
+                "raw": {
+                  "fontSize": 13,
+                  "lineHeight": 18.2,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "phc-modal-section-title-2",
+              "at": "src/components/Modals/SetPasswordModal.jsx:66:13",
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "helper-text-01-font-size",
+                    "candidates": [
+                      "caption-01-font-size",
+                      "code-01-font-size",
+                      "helper-text-01-font-size",
+                      "label-01-font-size",
+                      "legal-01-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 12,
+                  "lineHeight": 18,
+                  "fontWeight": 700,
+                  "letterSpacing": 0.6
+                }
+              }
+            },
+            {
+              "copy": "phc-pwd-optional",
+              "at": "src/components/Modals/SetPasswordModal.jsx:66:68",
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "helper-text-01-font-size",
+                    "candidates": [
+                      "caption-01-font-size",
+                      "code-01-font-size",
+                      "helper-text-01-font-size",
+                      "label-01-font-size",
+                      "legal-01-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 12,
+                  "lineHeight": 18,
+                  "fontWeight": 400,
+                  "letterSpacing": 0.6
+                }
+              }
+            },
+            {
+              "copy": "phc-modal-label-2",
+              "at": "src/components/Modals/AppointmentModal.jsx:63:42",
+              "style": {
+                "textStyle": "body-01",
+                "match": "near",
+                "delta": 1.16,
+                "candidates": [
+                  "body-01",
+                  "code-02"
+                ],
+                "by": "agent"
+              }
+            },
+            {
+              "copy": "strong-2",
+              "at": "src/components/Modals/AppointmentModal.jsx:63:61",
+              "style": {
+                "textStyle": "heading-01",
+                "match": "near",
+                "delta": 1.16,
+                "candidates": [
+                  "expressive-heading-01",
+                  "heading-01"
+                ],
+                "by": "agent"
+              }
+            },
+            {
+              "copy": "phc-modal-label-3",
+              "at": "src/components/Modals/AppointmentModal.jsx:64:42",
+              "style": {
+                "textStyle": "body-01",
+                "match": "near",
+                "delta": 1.16,
+                "candidates": [
+                  "body-01",
+                  "code-02"
+                ],
+                "by": "agent"
+              }
+            },
+            {
+              "copy": "strong-3",
+              "at": "src/components/Modals/AppointmentModal.jsx:64:58",
+              "style": {
+                "textStyle": "heading-01",
+                "match": "near",
+                "delta": 1.16,
+                "candidates": [
+                  "expressive-heading-01",
+                  "heading-01"
+                ],
+                "by": "agent"
+              }
+            },
+            {
+              "copy": "phc-modal-section-title-3",
+              "at": "src/components/Modals/AppointmentModal.jsx:68:51",
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "helper-text-01-font-size",
+                    "candidates": [
+                      "caption-01-font-size",
+                      "code-01-font-size",
+                      "helper-text-01-font-size",
+                      "label-01-font-size",
+                      "legal-01-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 12,
+                  "lineHeight": 18,
+                  "fontWeight": 700,
+                  "letterSpacing": 0.6
+                }
+              }
+            },
+            {
+              "copy": "phc-modal-section-desc-2",
+              "at": "src/components/Modals/AppointmentModal.jsx:69:49",
+              "style": {
+                "raw": {
+                  "fontSize": 13,
+                  "lineHeight": 18.2,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            },
+            {
+              "copy": "span-6",
+              "at": "src/components/Modals/AppointmentModal.jsx:101:17",
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "helper-text-01-font-size",
+                    "candidates": [
+                      "caption-01-font-size",
+                      "code-01-font-size",
+                      "helper-text-01-font-size",
+                      "label-01-font-size",
+                      "legal-01-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 12,
+                  "lineHeight": 16.8,
+                  "fontWeight": 500,
+                  "letterSpacing": 0.16
+                }
+              }
+            },
+            {
+              "copy": "phc-toast",
+              "at": "src/App.jsx:855:14",
+              "states": [],
+              "style": {
+                "partial": {
+                  "fontSize": {
+                    "token": "body-compact-02-font-size",
+                    "candidates": [
+                      "body-02-font-size",
+                      "body-compact-02-font-size",
+                      "expressive-heading-02-font-size",
+                      "heading-02-font-size",
+                      "heading-compact-02-font-size"
+                    ],
+                    "by": "agent"
+                  }
+                },
+                "raw": {
+                  "fontSize": 16,
+                  "lineHeight": null,
+                  "fontWeight": 400,
+                  "letterSpacing": 0
+                }
+              }
+            }
+          ],
+          "usages": [
+            {
+              "id": "phc-sidebar",
+              "raw": {
+                "element": "SideNav[expanded][isFixedNav]"
+              },
+              "reason": "Carbon ships SideNav, but the Carbon Design System here has no side-nav Contract yet.",
+              "properties": {
+                "text": "copy:phc-sidebar-text"
+              },
+              "question": "q-no-contract-phc-sidebar",
+              "at": "src/App.jsx:741:9"
+            },
+            {
+              "id": "phc-back-btn",
+              "contract": "button",
+              "tuple": {
+                "kind": "ghost",
+                "size": "sm"
+              },
+              "match": {
+                "by": "import"
+              },
+              "offAxis": [
+                {
+                  "property": "hasIconOnly",
+                  "raw": "\"\"",
+                  "reason": "hasIconOnly is no button axis or property",
+                  "question": "q-prop-phc-back-btn"
+                },
+                {
+                  "property": "iconDescription",
+                  "raw": "\"Back\"",
+                  "reason": "iconDescription is no button axis or property",
+                  "question": "q-prop-phc-back-btn"
+                }
+              ],
+              "question": "q-prop-phc-back-btn",
+              "states": [],
+              "at": "src/App.jsx:149:13"
+            },
+            {
+              "id": "phc-ellipsis-menu",
+              "raw": {
+                "element": "OverflowMenu[flipped][hasIconOnly][size=md]"
+              },
+              "reason": "Carbon ships OverflowMenu, but the Carbon Design System here has no overflow-menu Contract yet.",
+              "question": "q-no-contract-phc-ellipsis-menu",
+              "at": "src/App.jsx:164:11"
+            },
+            {
+              "id": "tag",
+              "raw": {
+                "element": "Tag[size=sm]"
+              },
+              "reason": "Carbon ships Tag, but the Carbon Design System here has no tag Contract yet.",
+              "properties": {
+                "text": "copy:tag-text"
+              },
+              "question": "q-no-contract-tag",
+              "states": [],
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:138:23"
+            },
+            {
+              "id": "button",
+              "contract": "button",
+              "tuple": {
+                "kind": "ghost",
+                "size": "sm"
+              },
+              "match": {
+                "by": "import"
+              },
+              "offAxis": [
+                {
+                  "property": "danger",
+                  "raw": "\"\"",
+                  "reason": "danger is no button axis or property",
+                  "question": "q-prop-button"
+                },
+                {
+                  "property": "hasIconOnly",
+                  "raw": "\"\"",
+                  "reason": "hasIconOnly is no button axis or property",
+                  "question": "q-prop-button"
+                }
+              ],
+              "question": "q-prop-button",
+              "states": [],
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:141:23"
+            },
+            {
+              "id": "text-input",
+              "contract": "text-input",
+              "tuple": {
+                "size": "sm"
+              },
+              "properties": {
+                "label": "copy:text-input-label"
+              },
+              "match": {
+                "by": "import"
+              },
+              "states": [],
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:151:21"
+            },
+            {
+              "id": "number-input",
+              "raw": {
+                "element": "NumberInput[size=sm]"
+              },
+              "reason": "Carbon ships NumberInput, but the Carbon Design System here has no number-input Contract yet.",
+              "question": "q-no-contract-number-input",
+              "states": [],
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:161:23"
+            },
+            {
+              "id": "number-input-2",
+              "raw": {
+                "element": "NumberInput[size=sm]"
+              },
+              "reason": "Carbon ships NumberInput, but the Carbon Design System here has no number-input Contract yet.",
+              "question": "q-no-contract-number-input-2",
+              "states": [],
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:168:23"
+            },
+            {
+              "id": "button-2",
+              "contract": "button",
+              "tuple": {
+                "kind": "ghost",
+                "size": "sm"
+              },
+              "properties": {
+                "label": "copy:button-2-label"
+              },
+              "match": {
+                "by": "import"
+              },
+              "states": [],
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:186:17"
+            },
+            {
+              "id": "tag-2",
+              "raw": {
+                "element": "Tag[size=sm]"
+              },
+              "reason": "Carbon ships Tag, but the Carbon Design System here has no tag Contract yet.",
+              "properties": {
+                "text": "copy:tag-2-text"
+              },
+              "question": "q-no-contract-tag-2",
+              "states": [],
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:214:17"
+            },
+            {
+              "id": "progress-bar",
+              "raw": {
+                "element": "ProgressBar[label=Total Value][size=sm]"
+              },
+              "reason": "Carbon ships ProgressBar, but the Carbon Design System here has no progress-bar Contract yet.",
+              "question": "q-no-contract-progress-bar",
+              "states": [],
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:222:11"
+            },
+            {
+              "id": "button-3",
+              "contract": "button",
+              "tuple": {
+                "size": "sm"
+              },
+              "properties": {
+                "label": "copy:button-3-label"
+              },
+              "match": {
+                "by": "import"
+              },
+              "offAxis": [
+                {
+                  "property": "fluid",
+                  "raw": "\"\"",
+                  "reason": "fluid is no button axis or property",
+                  "question": "q-prop-button-3"
+                }
+              ],
+              "question": "q-prop-button-3",
+              "states": [],
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:231:13"
+            },
+            {
+              "id": "progress-bar-2",
+              "raw": {
+                "element": "ProgressBar[label=Generating...][size=sm]"
+              },
+              "reason": "Carbon ships ProgressBar, but the Carbon Design System here has no progress-bar Contract yet.",
+              "question": "q-no-contract-progress-bar-2",
+              "states": [],
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:244:15"
+            },
+            {
+              "id": "actionable-notification",
+              "raw": {
+                "element": "ActionableNotification[actionButtonLabel=PDF][inline][kind=success][size=sm]"
+              },
+              "reason": "Carbon ships ActionableNotification, but the Carbon Design System here has no actionable-notification Contract yet.",
+              "question": "q-no-contract-actionable-notification",
+              "states": [],
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:250:15"
+            },
+            {
+              "id": "pdf-password",
+              "contract": "text-input",
+              "tuple": {
+                "size": "sm"
+              },
+              "properties": {
+                "label": "copy:pdf-password-label",
+                "id": "pdf-password"
+              },
+              "match": {
+                "by": "import"
+              },
+              "states": [],
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:264:11"
+            },
+            {
+              "id": "button-4",
+              "contract": "button",
+              "tuple": {
+                "kind": "ghost",
+                "size": "sm"
+              },
+              "properties": {
+                "label": "copy:button-4-label"
+              },
+              "match": {
+                "by": "import"
+              },
+              "states": [],
+              "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:272:11"
+            },
+            {
+              "id": "phc-add-column-btn",
+              "raw": {
+                "element": "button.phc-add-column-btn"
+              },
+              "reason": "A custom round icon-only <button> with its own phc- styles; it adds a Miller column. A Carbon icon-only Button could replace it, which is the owner’s call.",
+              "at": "src/App.jsx:805:13"
+            },
+            {
+              "id": "new-asset-name",
+              "contract": "text-input",
+              "tuple": {},
+              "properties": {
+                "label": "copy:new-asset-name-label",
+                "placeholder": "copy:new-asset-name-placeholder",
+                "id": "new-asset-name"
+              },
+              "match": {
+                "by": "import"
+              },
+              "at": "src/App.jsx:828:11"
+            },
+            {
+              "id": "new-asset-p1",
+              "raw": {
+                "element": "NumberInput[labelText=Quantity]"
+              },
+              "reason": "Carbon ships NumberInput, but the Carbon Design System here has no number-input Contract yet.",
+              "question": "q-no-contract-new-asset-p1",
+              "at": "src/App.jsx:830:13"
+            },
+            {
+              "id": "new-asset-p2",
+              "raw": {
+                "element": "NumberInput[labelText=Price]"
+              },
+              "reason": "Carbon ships NumberInput, but the Carbon Design System here has no number-input Contract yet.",
+              "question": "q-no-contract-new-asset-p2",
+              "at": "src/App.jsx:831:13"
+            },
+            {
+              "id": "current-password",
+              "raw": {
+                "element": "PasswordInput[hidePasswordLabel=Hide password][labelText=Customer Password][readOnly][showPasswordLabel=Show password][size=md]"
+              },
+              "reason": "Carbon ships PasswordInput, but the Carbon Design System here has no password-input Contract yet.",
+              "question": "q-no-contract-current-password",
+              "at": "src/components/Modals/SetPasswordModal.jsx:49:13"
+            },
+            {
+              "id": "new-password",
+              "raw": {
+                "element": "PasswordInput[labelText=New Password][size=md]"
+              },
+              "reason": "Carbon ships PasswordInput, but the Carbon Design System here has no password-input Contract yet.",
+              "question": "q-no-contract-new-password",
+              "at": "src/components/Modals/SetPasswordModal.jsx:69:13"
+            },
+            {
+              "id": "confirm-password",
+              "raw": {
+                "element": "PasswordInput[invalidText=Passwords must match.][labelText=Confirm Password][size=md]"
+              },
+              "reason": "Carbon ships PasswordInput, but the Carbon Design System here has no password-input Contract yet.",
+              "question": "q-no-contract-confirm-password",
+              "at": "src/components/Modals/SetPasswordModal.jsx:76:13"
+            },
+            {
+              "id": "date-picker",
+              "raw": {
+                "element": "DatePicker[datePickerType=single]"
+              },
+              "reason": "Carbon ships DatePicker, but the Carbon Design System here has no date-picker Contract yet.",
+              "question": "q-no-contract-date-picker",
+              "at": "src/components/Modals/AppointmentModal.jsx:72:13"
+            }
+          ]
+        }
+      ],
+      "states": {
+        "default": {
+          "content": "every state condition is false; conditional content shown: .phc-dashboard-container",
+          "usageStates": {
+            "pdf-password": {
+              "state": "disabled"
+            }
+          },
+          "screenshots": {
+            "sm": "screens/index.default.sm.png",
+            "md": "screens/index.default.md.png",
+            "lg": "screens/index.default.lg.png",
+            "xlg": "screens/index.default.xlg.png",
+            "max": "screens/index.default.max.png"
+          }
+        },
+        "loading": {
+          "content": "`reportStatus === 'GENERATING'` is true; conditional content shown: .phc-dashboard-container",
+          "trigger": "reportStatus === 'GENERATING'",
+          "usageStates": {
+            "button-3": {
+              "state": "disabled"
+            },
+            "pdf-password": {
+              "state": "disabled"
+            }
+          },
+          "screenshots": {
+            "sm": {
+              "missing": true,
+              "reason": "loading (reportStatus GENERATING) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+            },
+            "md": {
+              "missing": true,
+              "reason": "loading (reportStatus GENERATING) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+            },
+            "lg": {
+              "missing": true,
+              "reason": "loading (reportStatus GENERATING) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+            },
+            "xlg": {
+              "missing": true,
+              "reason": "loading (reportStatus GENERATING) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+            },
+            "max": {
+              "missing": true,
+              "reason": "loading (reportStatus GENERATING) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+            }
+          }
+        },
+        "empty": {
+          "content": "`assets.length === 0` is true; conditional content shown: .phc-dashboard-container",
+          "trigger": "assets.length === 0",
+          "usageStates": {
+            "pdf-password": {
+              "state": "disabled"
+            }
+          },
+          "screenshots": {
+            "sm": {
+              "missing": true,
+              "reason": "empty (assets.length === 0) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+            },
+            "md": {
+              "missing": true,
+              "reason": "empty (assets.length === 0) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+            },
+            "lg": {
+              "missing": true,
+              "reason": "empty (assets.length === 0) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+            },
+            "xlg": {
+              "missing": true,
+              "reason": "empty (assets.length === 0) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+            },
+            "max": {
+              "missing": true,
+              "reason": "empty (assets.length === 0) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+            }
+          }
+        },
+        "error": {
+          "missing": true,
+          "question": "q-state-error"
+        },
+        "success": {
+          "content": "`reportStatus === 'READY'` is true; conditional content shown: .phc-dashboard-container",
+          "trigger": "reportStatus === 'READY'",
+          "usageStates": {
+            "pdf-password": {
+              "state": "disabled"
+            }
+          },
+          "screenshots": {
+            "sm": {
+              "missing": true,
+              "reason": "success (reportStatus READY) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+            },
+            "md": {
+              "missing": true,
+              "reason": "success (reportStatus READY) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+            },
+            "lg": {
+              "missing": true,
+              "reason": "success (reportStatus READY) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+            },
+            "xlg": {
+              "missing": true,
+              "reason": "success (reportStatus READY) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+            },
+            "max": {
+              "missing": true,
+              "reason": "success (reportStatus READY) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "copy": {
+    "phc-sidebar-text": {
+      "text": "Finnomena. Home Search Analytics Insights Notifications Menu",
+      "at": "src/App.jsx:741:9"
+    },
+    "tag-text": {
+      "text": "{type}",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:139:26"
+    },
+    "text-input-label": {
+      "text": "Asset Name",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:151:21"
+    },
+    "button-2-label": {
+      "text": "Add Asset",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:192:19"
+    },
+    "tag-2-text": {
+      "text": "{status}",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:214:46"
+    },
+    "button-3-label": {
+      "text": "Generate Full Report",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:238:15"
+    },
+    "pdf-password-label": {
+      "text": "PDF Password",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:264:11"
+    },
+    "button-4-label": {
+      "text": "Override",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:278:14"
+    },
+    "new-asset-name-label": {
+      "text": "Asset Name",
+      "at": "src/App.jsx:828:11"
+    },
+    "new-asset-name-placeholder": {
+      "text": "e.g. Apple Inc.",
+      "at": "src/App.jsx:828:11"
+    },
+    "phc-column-title": {
+      "text": "{getTitle()}",
+      "at": "src/App.jsx:161:47"
+    },
+    "phc-kpi-tile-value": {
+      "text": "{value}",
+      "at": "src/components/Dashboard/Dashboard.jsx:74:51"
+    },
+    "phc-kpi-tile-label": {
+      "text": "{label}",
+      "at": "src/components/Dashboard/Dashboard.jsx:76:53"
+    },
+    "span": {
+      "text": "{label}",
+      "at": "src/components/Dashboard/Dashboard.jsx:92:22"
+    },
+    "span-2": {
+      "text": "{count}",
+      "at": "src/components/Dashboard/Dashboard.jsx:94:24"
+    },
+    "h3": {
+      "text": "{customer?.name || customer?.cells?.find(c => c.info.header === 'customer_id')?.value || 'Unknown Customer'}",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:115:12"
+    },
+    "span-3": {
+      "text": "ID: {customer?.customer_id || customer?.cells?.find(c => c.info.header === 'customer_id')?.value || 'N/A'}",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:118:11"
+    },
+    "h4": {
+      "text": "Asset Management",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:125:57"
+    },
+    "div": {
+      "text": "No assets added yet",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:132:19"
+    },
+    "span-4": {
+      "text": "Value: ${value.toLocaleString()}",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:178:29"
+    },
+    "span-5": {
+      "text": "{calculateAllocation(asset.value)}%",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:179:30"
+    },
+    "h4-2": {
+      "text": "Portfolio History",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:203:39"
+    },
+    "div-2": {
+      "text": "{id} - {date}",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:209:75"
+    },
+    "div-3": {
+      "text": "{assetCount} assets • ${totalValue.toLocaleString()}",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:211:22"
+    },
+    "h4-3": {
+      "text": "Report Status",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:221:50"
+    },
+    "h4-4": {
+      "text": "Security",
+      "at": "src/components/PortfolioManagement/PortfolioManagement.jsx:263:48"
+    },
+    "phc-modal-label": {
+      "text": "Customer:",
+      "at": "src/components/Modals/SetPasswordModal.jsx:42:40"
+    },
+    "strong": {
+      "text": "{customerName || 'Unknown'}",
+      "at": "src/components/Modals/SetPasswordModal.jsx:42:59"
+    },
+    "phc-modal-section-title": {
+      "text": "Current Password",
+      "at": "src/components/Modals/SetPasswordModal.jsx:46:51"
+    },
+    "phc-modal-section-desc": {
+      "text": "Defaulted to customer's registered phone number.",
+      "at": "src/components/Modals/SetPasswordModal.jsx:47:49"
+    },
+    "phc-modal-section-title-2": {
+      "text": "Create New Password",
+      "at": "src/components/Modals/SetPasswordModal.jsx:66:13"
+    },
+    "phc-pwd-optional": {
+      "text": "(Optional)",
+      "at": "src/components/Modals/SetPasswordModal.jsx:66:68"
+    },
+    "phc-modal-label-2": {
+      "text": "Customer:",
+      "at": "src/components/Modals/AppointmentModal.jsx:63:42"
+    },
+    "strong-2": {
+      "text": "{customerName || 'Unknown'}",
+      "at": "src/components/Modals/AppointmentModal.jsx:63:61"
+    },
+    "phc-modal-label-3": {
+      "text": "Asset:",
+      "at": "src/components/Modals/AppointmentModal.jsx:64:42"
+    },
+    "strong-3": {
+      "text": "{assetType || 'Asset'}",
+      "at": "src/components/Modals/AppointmentModal.jsx:64:58"
+    },
+    "phc-modal-section-title-3": {
+      "text": "SELECT APPOINTMENT DATE",
+      "at": "src/components/Modals/AppointmentModal.jsx:68:51"
+    },
+    "phc-modal-section-desc-2": {
+      "text": "Please select a future date for the portfolio review session.",
+      "at": "src/components/Modals/AppointmentModal.jsx:69:49"
+    },
+    "span-6": {
+      "text": "Appointments cannot be scheduled for past dates.",
+      "at": "src/components/Modals/AppointmentModal.jsx:101:17"
+    },
+    "phc-toast": {
+      "text": "{toast}",
+      "at": "src/App.jsx:855:14"
+    }
+  },
+  "values": [],
+  "acceptance": [
+    {
+      "id": "ac-default",
+      "screen": "index",
+      "state": "default",
+      "given": "an RM opens the app",
+      "when": "the first screen shows",
+      "then": "the side nav shows Home active and the dashboard column lists customers from the mock data",
+      "by": "agent"
+    },
+    {
+      "id": "ac-empty",
+      "screen": "index",
+      "state": "empty",
+      "given": "a portfolio in Portfolio Management has no assets",
+      "when": "the RM removes the last asset",
+      "then": "the asset list shows its empty message and report generation stays unavailable",
+      "by": "agent"
+    }
+  ],
+  "openQuestions": [
+    {
+      "id": "q-no-contract-phc-sidebar",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`SideNav[expanded][isFixedNav]` is a side-nav with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-prop-phc-back-btn",
+      "kind": "prop",
+      "to": "owner",
+      "text": "`Button` at src/App.jsx:149:13 sets hasIconOnly=\"\", which is no button axis or property; iconDescription=\"Back\", which is no button axis or property. Which value is it, or does the Contract need it?",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-phc-ellipsis-menu",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`OverflowMenu[flipped][hasIconOnly][size=md]` is an overflow-menu with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-tag",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`Tag[size=sm]` is a tag with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-prop-button",
+      "kind": "prop",
+      "to": "owner",
+      "text": "`Button` at src/components/PortfolioManagement/PortfolioManagement.jsx:141:23 sets danger=\"\", which is no button axis or property; hasIconOnly=\"\", which is no button axis or property. Which value is it, or does the Contract need it?",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-number-input",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`NumberInput[size=sm]` is a number-input with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-number-input-2",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`NumberInput[size=sm]` is a number-input with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-tag-2",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`Tag[size=sm]` is a tag with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-progress-bar",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`ProgressBar[label=Total Value][size=sm]` is a progress-bar with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-prop-button-3",
+      "kind": "prop",
+      "to": "owner",
+      "text": "`Button` at src/components/PortfolioManagement/PortfolioManagement.jsx:231:13 sets fluid=\"\", which is no button axis or property. Which value is it, or does the Contract need it?",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-progress-bar-2",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`ProgressBar[label=Generating...][size=sm]` is a progress-bar with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-actionable-notification",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`ActionableNotification[actionButtonLabel=PDF][inline][kind=success][size=sm]` is an actionable-notification with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-new-asset-p1",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`NumberInput[labelText=Quantity]` is a number-input with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-new-asset-p2",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`NumberInput[labelText=Price]` is a number-input with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-current-password",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`PasswordInput[hidePasswordLabel=Hide password][labelText=Customer Password][readOnly][showPasswordLabel=Show password][size=md]` is a password-input with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-new-password",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`PasswordInput[labelText=New Password][size=md]` is a password-input with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-confirm-password",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`PasswordInput[invalidText=Passwords must match.][labelText=Confirm Password][size=md]` is a password-input with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-no-contract-date-picker",
+      "kind": "no-contract",
+      "to": "owner",
+      "text": "`DatePicker[datePickerType=single]` is a date-picker with no Contract in carbon yet. Write the Contract with skills/adapter-carbon/SKILL.md against the pinned Carbon source, then run node skills/contract/scripts/check.mjs, then re-run To-handoff.",
+      "answer": null
+    },
+    {
+      "id": "q-state-error",
+      "kind": "missing-state",
+      "to": "owner",
+      "text": "The Prototype has no error state: no condition reads like error. What should the screen show?",
+      "answer": null
+    },
+    {
+      "id": "q-data-tasks",
+      "kind": "stand-in",
+      "to": "developer",
+      "text": "Where do the tasks come from? `tasks` stands in for them.",
+      "answer": null
+    },
+    {
+      "id": "q-data-health-checks",
+      "kind": "stand-in",
+      "to": "developer",
+      "text": "Where do the health checks come from? `mockHealthChecks` stands in for them.",
+      "answer": null
+    },
+    {
+      "id": "q-data-customers",
+      "kind": "stand-in",
+      "to": "developer",
+      "text": "Where do the customers come from? `mockCustomers` stands in for them.",
+      "answer": null
+    },
+    {
+      "id": "q-data-portfolio-summaries",
+      "kind": "stand-in",
+      "to": "developer",
+      "text": "Where do the portfolio summaries come from? `mockPortfolioSummaries` stands in for them.",
+      "answer": null
+    },
+    {
+      "id": "q-data-handle-save-version",
+      "kind": "stand-in",
+      "to": "developer",
+      "text": "What does `handleSaveVersion()` call, and how does it fail? The Prototype simulates it with a timer.",
+      "answer": null
+    },
+    {
+      "id": "q-data-app",
+      "kind": "stand-in",
+      "to": "developer",
+      "text": "What does `App()` call, and how does it fail? The Prototype simulates it with a timer.",
+      "answer": null
+    }
+  ],
+  "flow": [],
+  "data": [
+    {
+      "id": "tasks",
+      "source": "mock",
+      "note": "`tasks` is mock data standing in for the tasks",
+      "at": "src/data/mockData.js:20:14",
+      "question": "q-data-tasks"
+    },
+    {
+      "id": "health-checks",
+      "source": "mock",
+      "note": "`mockHealthChecks` is mock data standing in for the health checks",
+      "at": "src/data/mockData.js:46:14",
+      "question": "q-data-health-checks"
+    },
+    {
+      "id": "tasks",
+      "source": "mock",
+      "note": "`mockTasks` is mock data standing in for the tasks",
+      "at": "src/data/mockData.js:62:14",
+      "question": "q-data-tasks"
+    },
+    {
+      "id": "customers",
+      "source": "mock",
+      "note": "`mockCustomers` is mock data standing in for the customers",
+      "at": "src/data/mockData.js:70:14",
+      "question": "q-data-customers"
+    },
+    {
+      "id": "portfolio-summaries",
+      "source": "mock",
+      "note": "`mockPortfolioSummaries` is mock data standing in for the portfolio summaries",
+      "at": "src/data/mockData.js:101:14",
+      "question": "q-data-portfolio-summaries"
+    },
+    {
+      "id": "handle-save-version",
+      "source": "simulated",
+      "note": "`handleSaveVersion()` simulates its work with a 8000ms setTimeout",
+      "at": "src/App.jsx:526:9",
+      "question": "q-data-handle-save-version"
+    },
+    {
+      "id": "app",
+      "source": "simulated",
+      "note": "`App()` simulates its work with a 10000ms setTimeout",
+      "at": "src/App.jsx:375:1",
+      "question": "q-data-app"
+    }
+  ],
+  "ownerDecisions": {}
+}

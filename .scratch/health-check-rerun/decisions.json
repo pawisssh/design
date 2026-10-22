@@ -1,0 +1,124 @@
+{
+  "condition:activeTab === 'home'": true,
+  "condition:`phc-column-container ${columns.length === 1 ? 'phc-column-container--single' : ''}`": true,
+  "condition:canGoBack": false,
+  "condition:isDashboard": true,
+  "condition:type === 'portfolio'": false,
+  "condition:isAllocationValid": true,
+  "condition:isTotalValueValid": true,
+  "condition:reportStatus === 'GENERATING'": false,
+  "condition:reportStatus === 'READY'": false,
+  "condition:isManualPassword": false,
+  "condition:isSingle": true,
+  "condition:isAssetModalOpen": false,
+  "condition:isOpen": false,
+  "condition:canSave": true,
+  "condition:validationError": false,
+  "condition:selectedDate": false,
+  "condition:toast": false,
+  "feature": {
+    "owner": "Kane (to confirm)",
+    "goal": "Portfolio Health Check management for relationship managers: a Miller-column workspace that drills from a customer dashboard into portfolio summaries, versions and holdings, generates a password-protected PDF health-check report and books customer appointments.",
+    "scope": [
+      "Dashboard with customer search and filters",
+      "Customer drilldown, portfolio summary, versions and version detail columns",
+      "Portfolio management: asset list, allocation check, report generation with PDF password",
+      "Set-password modal",
+      "Appointment modal",
+      "Add-asset modal"
+    ],
+    "nonGoals": [
+      "Authentication",
+      "Real portfolio data or pricing APIs (mock data stands in)",
+      "Report rendering itself"
+    ]
+  },
+  "acceptance": [
+    {
+      "id": "ac-default",
+      "screen": "index",
+      "state": "default",
+      "given": "an RM opens the app",
+      "when": "the first screen shows",
+      "then": "the side nav shows Home active and the dashboard column lists customers from the mock data"
+    },
+    {
+      "id": "ac-empty",
+      "screen": "index",
+      "state": "empty",
+      "given": "a portfolio in Portfolio Management has no assets",
+      "when": "the RM removes the last asset",
+      "then": "the asset list shows its empty message and report generation stays unavailable"
+    }
+  ],
+  "reach:index:empty": {
+    "unreachable": "empty (assets.length === 0) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+  },
+  "recognise:SideNav[expanded][isFixedNav]": {
+    "noContract": "side-nav",
+    "reason": "Carbon ships SideNav, but the Carbon Design System here has no side-nav Contract yet."
+  },
+  "recognise:OverflowMenu[flipped][hasIconOnly][size=md]": {
+    "noContract": "overflow-menu",
+    "reason": "Carbon ships OverflowMenu, but the Carbon Design System here has no overflow-menu Contract yet."
+  },
+  "recognise:Tag[size=sm]": {
+    "noContract": "tag",
+    "reason": "Carbon ships Tag, but the Carbon Design System here has no tag Contract yet."
+  },
+  "recognise:NumberInput[size=sm]": {
+    "noContract": "number-input",
+    "reason": "Carbon ships NumberInput, but the Carbon Design System here has no number-input Contract yet."
+  },
+  "recognise:ProgressBar[label=Total Value][size=sm]": {
+    "noContract": "progress-bar",
+    "reason": "Carbon ships ProgressBar, but the Carbon Design System here has no progress-bar Contract yet."
+  },
+  "recognise:ProgressBar[label=Generating...][size=sm]": {
+    "noContract": "progress-bar",
+    "reason": "Carbon ships ProgressBar, but the Carbon Design System here has no progress-bar Contract yet."
+  },
+  "recognise:ActionableNotification[actionButtonLabel=PDF][inline][kind=success][size=sm]": {
+    "noContract": "actionable-notification",
+    "reason": "Carbon ships ActionableNotification, but the Carbon Design System here has no actionable-notification Contract yet."
+  },
+  "recognise:NumberInput[labelText=Quantity]": {
+    "noContract": "number-input",
+    "reason": "Carbon ships NumberInput, but the Carbon Design System here has no number-input Contract yet."
+  },
+  "recognise:NumberInput[labelText=Price]": {
+    "noContract": "number-input",
+    "reason": "Carbon ships NumberInput, but the Carbon Design System here has no number-input Contract yet."
+  },
+  "recognise:PasswordInput[hidePasswordLabel=Hide password][labelText=Customer Password][readOnly][showPasswordLabel=Show password][size=md]": {
+    "noContract": "password-input",
+    "reason": "Carbon ships PasswordInput, but the Carbon Design System here has no password-input Contract yet."
+  },
+  "recognise:PasswordInput[labelText=New Password][size=md]": {
+    "noContract": "password-input",
+    "reason": "Carbon ships PasswordInput, but the Carbon Design System here has no password-input Contract yet."
+  },
+  "recognise:PasswordInput[invalidText=Passwords must match.][labelText=Confirm Password][size=md]": {
+    "noContract": "password-input",
+    "reason": "Carbon ships PasswordInput, but the Carbon Design System here has no password-input Contract yet."
+  },
+  "recognise:DatePicker[datePickerType=single]": {
+    "noContract": "date-picker",
+    "reason": "Carbon ships DatePicker, but the Carbon Design System here has no date-picker Contract yet."
+  },
+  "recognise:button.phc-add-column-btn": {
+    "raw": true,
+    "reason": "A custom round icon-only <button> with its own phc- styles; it adds a Miller column. A Carbon icon-only Button could replace it, which is the owner’s call."
+  },
+  "token:font-size:16px": "body-compact-02-font-size",
+  "reach:index:loading": {
+    "unreachable": "loading (reportStatus GENERATING) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+  },
+  "reach:index:success": {
+    "unreachable": "success (reportStatus READY) lives in Portfolio Management, which only opens through onSelectCustomer; Dashboard.jsx takes that prop but never calls it, so no click in the Prototype reaches it"
+  },
+  "token:font-size:32px": "heading-05-font-size",
+  "textStyle:14/21/400/0": "body-01",
+  "textStyle:14/21/600/0": "heading-01",
+  "token:font-size:12px": "helper-text-01-font-size"
+}
