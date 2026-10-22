@@ -1,15 +1,21 @@
 # What must a Prototype's owner prepare so developers can build it for production, and who already helps?
 
-Research for the question an owner asked: having built a Prototype with a prototyping tool (a Claude artifact, for example), what should go to developers so they can build it production-grade, which tools help, and has anyone built this on GitHub? Related: map [#318](https://github.com/pawisssh/design/issues/318), and [#319](https://github.com/pawisssh/design/issues/319), which asks for each tool's default stack and icon set. Finding 2 here covers only each tool's path out (download, git, handoff) and what its docs say about production readiness, not the stack and icon defaults #319 asks for. Vocabulary follows `GLOSSARY.md` (Prototype, Handoff, Stand-in, Rendering, Off-system value, Drift, Sign-off, Contract, To-handoff).
+Research for the question an owner asked: having built a Prototype with a prototyping tool (a Claude artifact, for example), what should go to developers so they can build it production-grade, which tools help, and has anyone built this on GitHub? Related: map [#318](https://github.com/pawisssh/design/issues/318). Each tool's default Prototype kind is [#319](https://github.com/pawisssh/design/issues/319)'s research, recorded in [ADR 0019](../adr/0019-a-prototype-reaches-component-sets-or-a-handoff-by-its-kind.md)'s table. Finding 2 here covers only each tool's way out (download, git, handoff) and what its docs say about production readiness. Vocabulary follows `GLOSSARY.md` (Prototype, Prototype kind, Handoff, Stand-in, Rendering, Off-system value, Drift, Sign-off, Contract, From-Prototype, To-handoff).
 
-The design-side content of a Handoff (screens, states, copy, accessibility annotations, responsive behaviour, motion) is covered in [design-handoff-contents.md](design-handoff-contents.md) and not restated here. This note covers the gap from a Prototype's *code* to a production build.
+Two notes cover the ground around this one, and this note does not restate them:
 
-Researched 2026-10-22. The repo side is read at commit `1594a3f`:
+- [design-handoff-contents.md](design-handoff-contents.md), "the earlier note" below: the design-side content of a Handoff (screens, states, copy, accessibility annotations, responsive behaviour, motion).
+- [dev-ready-package.md](dev-ready-package.md): the package a developer needs around a feature (PRD, stories, flows, diagrams, API description, NFR targets, analytics), and which parts To-handoff could derive, must ask the owner for, or leaves to the developer. It was researched the same day, in parallel with this note.
+
+This note covers what neither does: the build from a Prototype's *code* (what production work replaces in it), each prototyping tool's way out, and prior work on GitHub.
+
+Researched 2026-10-22. The repo side is read at commit `1594a3f`, and rechecked at `ea4491c`, which adds ADR 0019, `dev-ready-package.md` and the glossary's From-Prototype, Prototype kind, Owner, Standard state and Extra state. `skills/to-handoff/` is unchanged between the two.
 
 - `GLOSSARY.md`;
 - the schema: `skills/to-handoff/handoff.schema.json`;
 - the skill: `skills/to-handoff/SKILL.md`;
-- what the React reader sets aside: `skills/to-handoff/scripts/react.mjs`.
+- what the React reader sets aside: `skills/to-handoff/scripts/react.mjs`;
+- at the recheck: ADR 0019 and `docs/research/dev-ready-package.md`.
 
 Notation:
 - **unverified** marks a claim whose primary source I could not open;
@@ -45,15 +51,15 @@ Notation:
    Single Part 1 items are filled by widely used general tools: axe-core, Lighthouse CI, gitleaks, OSV-Scanner, and Supabase's splinter.
 
 4. **A Handoff has no key for any of the ten production areas, which fits its definition: it describes a feature, not its build.**
-   - The nearest seam is `source.ignored`. The React reader lists there the API routes, middleware, catch-all routes, and private and parallel-route folders it sets aside (`react.mjs`). That is where a Prototype's server-side Stand-ins live, and where `NEXT-PROD` puts authorization checks.
-   - The owner-side decisions in Finding 1 have no key at all: who may do what, which data is real, performance targets, which environments. Candidates are in "Against this repo".
+   - The nearest seam is `source.ignored`. The React reader lists there the API routes, middleware, catch-all routes, and private and parallel-route folders it sets aside (`react.mjs`). That is where a Prototype's server-side Stand-ins live; dev-ready-package's Finding 4 found request-access's stub route lost there. `NEXT-PROD` says authorization checks belong inside every server action, not in middleware alone.
+   - The owner-side decisions in Finding 1 have no key at all. dev-ready-package already proposes asking the owner for NFR targets (accessibility, security, performance) and tracked events (its Group 2). Finding 1 adds three it does not list: who may do what, which data is real, and which environments exist. Candidates are in "Against this repo".
 
-5. **GLOSSARY's artifact-URL input has no reader.** GLOSSARY says To-handoff takes "an artifact URL". The schema's `source.kind` allows only `html-file`, `react-next` and `react-vite`. Two existing kinds could serve as bridges (candidates, "Against this repo"):
+5. **A Claude artifact reaches To-handoff as a file, not as a URL.** ADR 0019 records plain HTML + CSS classes as Claude's default Prototype kind, with a Handoff supported through the one-HTML-file reader. GLOSSARY still says To-handoff takes "an artifact URL", but the schema's `source.kind` allows only `html-file`, `react-next` and `react-vite`, and no reader takes a URL. The missing step is from the URL to a file (candidates, "Against this repo"):
    - an HTML artifact whose source Claude Code has saved locally, read as `html-file`;
    - a React artifact turned into a Vite project by `claude-artifact-runner`, read as `react-vite`.
 
 6. **Among the keys generate never writes, only `data[].shape` has an outside source that could fill it. `a11y` has outside checks, but nothing that fills it.**
-   - For `data[].shape`, code-to-PRD writes request and response requirements for endpoints that exist only as mock data, and v0's PRD page drafts API descriptions and database schemas.
+   - For `data[].shape`, code-to-PRD writes request and response requirements for endpoints that exist only as mock data, and v0's PRD page drafts API descriptions and database schemas. dev-ready-package proposes that generate write the key from the mock data's fields (its Group 1); these two are outside precedents for that proposal.
    - For `a11y`, axe-core can check the key's content but cannot author a focus order or labels. Its README says it finds about 57% of WCAG issues automatically ([axe-core](https://github.com/dequelabs/axe-core)), and the W3C says human evaluation is required (`WAI-EVAL`).
    - Nothing found fills `interactions`, `tokensToAdd` or `regions[].responsive`, or any of To-handoff's four out-of-scope items.
    - Two of those four (compiling Tailwind or cva classes, and icons as the icon property) bear on the stacks that v0 and the artifact runner use: Tailwind with shadcn/ui, and lucide icons in the runner.
@@ -173,7 +179,7 @@ The split mirrors `openQuestions[].to`, which already addresses each question to
   - custom error and not-found pages, a global error boundary, and loading UI with Suspense (`NEXT-PROD`);
   - handling of exceptional conditions, a category OWASP added in 2025 (`OWASP-TOP10`);
   - error messages that do not leak internals (`REPLIT-SECCHK`).
-- The owner decides what each state shows and says. That is design-side Handoff content (`screens[].states`), and the existing note covers it. Anthropic's Claude Design tutorial tells owners to ask for the empty, error and loading states first (`CLAUDE-DESIGN-ACADEMY`).
+- The owner decides what each state shows and says. That is design-side Handoff content (`screens[].states`: the Standard states, and Extra states once ADR 0018 is built), and the earlier note covers it. Anthropic's Claude Design tutorial tells owners to ask for the empty, error and loading states first (`CLAUDE-DESIGN-ACADEMY`).
 - The developer builds: where boundaries go, retries and timeouts, and error logging.
 
 **1.4 Tests.**
@@ -185,12 +191,12 @@ The split mirrors `openQuestions[].to`, which already addresses each question to
 - Production needs:
   - No tool alone can decide conformance, and knowledgeable human evaluation is required (`WAI-EVAL`). WAI points to its evaluation methodology (WCAG-EM) and its Easy Checks.
   - `eslint-plugin-jsx-a11y` catches problems while coding (`NEXT-PROD`).
-- The owner decides: the conformance target, plus focus order, labels and landmarks. These are design-side, and the existing note covers them under `a11y`.
+- The owner decides: the conformance target (dev-ready-package, Finding 7), plus focus order, labels and landmarks (design-side, under `a11y` in the earlier note).
 - The developer builds: automated checks plus a manual audit.
 
 **1.6 Performance budget.**
 - Production needs:
-  - The "good" Core Web Vitals thresholds: LCP at most 2.5 s, INP at most 200 ms and CLS at most 0.1. They are measured at the 75th percentile, with mobile and desktop counted separately (`WEBDEV-CWV`).
+  - A target, such as the Core Web Vitals thresholds that dev-ready-package's Finding 7 sets out (`WEBDEV-CWV`).
   - Lighthouse plus field data, `useReportWebVitals` and a bundle analyzer (`NEXT-PROD`).
   - Speed Insights, image, script and font optimization, and function region (`VERCEL-PROD`).
 - The owner decides: targets, priority devices and expected traffic.
@@ -212,7 +218,7 @@ The split mirrors `openQuestions[].to`, which already addresses each question to
   - Validate Server Action input, rate limiting, and a Content Security Policy (`NEXT-PROD`).
   - Headers, deployment protection, a WAF and rate limiting (`VERCEL-PROD`).
   - Replit's checklist for AI-built apps groups the same items for the front end, the back end and day-to-day habits (`REPLIT-SECCHK`).
-- The owner decides: what data the feature accepts, and from whom.
+- The owner decides: what data the feature accepts, and from whom. The security target, an ASVS level chosen by risk, is in dev-ready-package's Finding 7.
 - The developer builds: validation, headers, and the review.
 - Tool scans:
   - v0 analyses `NEXT_PUBLIC_` use and warns about risky exposure (`V0-SEC`).
@@ -225,7 +231,7 @@ The split mirrors `openQuestions[].to`, which already addresses each question to
   - Vercel's checklist adds an incident response plan, tracing and log drains (`VERCEL-PROD`).
 - The owner decides:
   - what counts as failure for the feature, and who is alerted;
-  - which analytics events matter. The existing note marks analytics events **missing** from the Handoff.
+  - which analytics events matter. dev-ready-package's Finding 8 covers the tracking plan; the Handoff has no key for it.
 - The developer builds: the instrumentation.
 
 **1.10 Deployment and environments.**
@@ -282,7 +288,7 @@ Other first-party tools whose docs aim at developer handoff or production:
 - **Figma Dev Mode and Code Connect.**
   - Code Connect links design components to code components, through a UI or a CLI, on Professional plans and above. It feeds the MCP server (`FIG-CC`).
   - The MCP server can gather code resources from Make files to help move from prototype to production (`FIG-MCP`).
-  - The design side is in the existing note.
+  - The design side is in the earlier note.
 - **Builder.io (now "Builder Code").** It connects to a GitHub, GitLab, Azure DevOps or Bitbucket repo and learns the component library. Every change arrives as a pull request. It calls its output production-ready (`BUILDER`).
 - **Anima.** It takes a Figma file, a prompt or a URL, and downloads React, HTML or Tailwind code or syncs it into an existing codebase. "Production-ready" is claimed but not defined (`ANIMA`).
 - **Locofy.** A Figma plugin that generates React, Next.js, HTML/CSS, Gatsby, Vue and Angular for the web, and Flutter, React Native, Swift and Compose for mobile. Its pages describe a development-ready workflow and make no production claim (`LOCOFY`).
@@ -407,14 +413,14 @@ A rollup of Findings 1 to 3 and of "Against this repo" below, one row per produc
 | Area | The owner decides | What the tools ship (Finding 2) | GitHub help (Finding 3) | Handoff key today | Gap |
 | --- | --- | --- | --- | --- | --- |
 | Auth and secrets | Who may do what; sign-in methods; outside services | v0's `NEXT_PUBLIC_` warning; Bolt's audit covers sign-in, keys and secrets; Lovable and Replit scans | gitleaks; raroque/vibe-security-skill; pm-ai-shipping's permissions and variables documents | none; `source.ignored` lists middleware and API routes | The owner's roles against actions have no key |
-| Data layer | Which data is real; its shape; what is sensitive | Bolt's audit covers data access; Lovable's and Bolt's databases move to Supabase | supabase/splinter; code-to-PRD (mock data versus real calls) | `data[]` (`source`, `note`, `question`); `stand-in` questions | `data[].shape` is never written |
-| Error, empty, loading | What each state shows (design side) | none in the pages read | none specific found | `screens[].states`; Next.js `loading` and `error` files read as conditions | Covered by the existing note |
+| Data layer | Which data is real; its shape; what is sensitive | Bolt's audit covers data access; Lovable's and Bolt's databases move to Supabase | supabase/splinter; code-to-PRD (mock data versus real calls) | `data[]` (`source`, `note`, `question`); `stand-in` questions | `data[].shape` is never written (dev-ready-package proposes drafting it) |
+| Error, empty, loading | What each state shows (design side) | none in the pages read | none specific found | `screens[].states`; Next.js `loading` and `error` files read as conditions | Covered by the earlier note |
 | Tests | Acceptance criteria | none in the pages read | pm-ai-shipping's `derive-tests`; anthropics/skills `webapp-testing` | `acceptance[]` | Test level and coverage |
 | Accessibility | Target; focus order, labels, landmarks (design side) | none in the pages read | axe-core; vercel-labs/agent-skills `web-design-guidelines` | `regions[].landmark`; `a11y` never written | `a11y` is never written; no audit result |
-| Performance | Targets, devices, traffic | none in the pages read | lighthouse-ci; pm-ai-shipping's static performance audit | none | Owner targets have no key |
+| Performance | Targets, devices, traffic | none in the pages read | lighthouse-ci; pm-ai-shipping's static performance audit | none | Owner targets have no key (dev-ready-package proposes asking for them) |
 | Dependencies, licences | Licences of fonts and assets | Lovable's quick scan includes a dependency audit | osv-scanner (**unverified**); checks for packages that do not exist (AI-SLOP-Detector, aiqualitylab checklist) | none | No key |
-| Security | What input is accepted, from whom | Lovable, Bolt and Replit scans; v0's warning | Repos in 3b; pm-ai-shipping's static security audit | none | No key |
-| Observability | What counts as failure; analytics events | none in the pages read | none specific found | none; analytics events **missing** | Alerting and analytics events |
+| Security | What input is accepted, from whom | Lovable, Bolt and Replit scans; v0's warning | Repos in 3b; pm-ai-shipping's static security audit | none | No key (dev-ready-package proposes asking for an ASVS level) |
+| Observability | What counts as failure; analytics events | none in the pages read | none specific found | none; no analytics key | Alerting; analytics events (dev-ready-package, Finding 8) |
 | Deploy, environments | Which environments; preview access; domains | v0 deploys to Vercel with variables per environment; Bolt hosting; Replit publishing | lovable-eject (`vercel.json`, health endpoint); vercel-labs/agent-skills `deploy-to-vercel` | none | Environments have no key |
 
 ## Against this repo
@@ -431,14 +437,14 @@ A rollup of Findings 1 to 3 and of "Against this repo" below, one row per produc
 | Performance | none | |
 | Dependencies, licences | none | |
 | Security | none | |
-| Observability | none | Analytics events are **missing** (existing note). |
+| Observability | none | No analytics key (earlier note; dev-ready-package, Finding 8). |
 | Deploy, environments | none | |
 
 This fits GLOSSARY. A Handoff describes one feature against a Design System. Production work is the developer's build of it. The owner-side column of Finding 1 is the part with no home.
 
 **2. Candidates (not decisions).**
 
-1. **Read Claude artifacts through kinds that already exist.** GLOSSARY lists "an artifact URL" as To-handoff input, but `source.kind` (schema L39) allows only `html-file`, `react-next` and `react-vite`.
+1. **Read Claude artifacts through kinds that already exist.** GLOSSARY lists "an artifact URL" as To-handoff input, but `source.kind` (schema L39) allows only `html-file`, `react-next` and `react-vite`. ADR 0019 already supports Claude's default kind, plain HTML + CSS classes, through the HTML-file reader. What is missing is the step from the URL to the file.
    - An HTML artifact whose source Claude Code has saved locally (`CC-ARTIFACTS`) would be an `html-file` Prototype.
    - A React artifact made into a Vite project by `claude-artifact-runner create` would be a `react-vite` Prototype. With no router, it would have one screen, `index` (`SKILL.md`).
    - A Claude Design standalone HTML download would also be an `html-file`.
@@ -446,12 +452,14 @@ This fits GLOSSARY. A Handoff describes one feature against a Design System. Pro
      - that a chat artifact URL can be read into Claude Code;
      - that the runner works on artifacts made after 2026-09-16;
      - what Claude Design's handoff bundle contains.
-2. **Turn each ignored server file into a Stand-in question.**
-   - `source.ignored` already names the files a Prototype ran on the server (`react.mjs` L455, L539, L546, L550–551). `NEXT-PROD` places authorization checks there and in each action.
-   - A developer-addressed `openQuestions` entry of kind `stand-in` per ignored API route or middleware ("what does this pretend to do?") would follow GLOSSARY's Stand-in rule: record what it pretends to do, never how. It needs no new schema key.
-3. **Owner-side production decisions as open questions.**
-   - Some Finding 1 decisions could be questions addressed to the owner: who may do each action, which data is real, performance targets, which environments.
-   - `openQuestions.kind` is a closed enum (schema L72), so this needs either a new kind or reuse of an existing one. Either is an ADR-sized choice.
+2. **Turn ignored middleware into a Stand-in question too.**
+   - dev-ready-package already proposes reading a `fetch` to the Prototype's own stub API route as a `data[]` Stand-in (its Group 1). Middleware has no `fetch` to follow, so that proposal does not reach it.
+   - `source.ignored` names the middleware as well (`react.mjs` L539). **Reasoning, not sourced:** a Prototype's middleware is where a sign-in Stand-in would sit. `NEXT-PROD` says authorization must not live in middleware alone.
+   - A developer-addressed `openQuestions` entry of kind `stand-in` per ignored middleware ("what does this pretend to do?") would follow GLOSSARY's Stand-in rule: record what it pretends to do, never how. It needs no new schema key.
+3. **Three owner asks beside dev-ready-package's.**
+   - dev-ready-package's Group 2 proposes asking the owner for metrics, NFR targets and tracked events, as `feature` fields or new decision keys.
+   - Finding 1 adds three owner decisions that list does not have: who may do each action, which data is real (and which is sensitive), and which environments exist and who sees previews.
+   - Asked as open questions instead, they would meet a closed enum: `openQuestions.kind` (schema L72) needs a new kind or reuse of an existing one. Either is an ADR-sized choice.
 4. **Point to a shipping packet instead of growing the schema.**
    - pm-ai-shipping's core documents (architecture, flows, permissions, variables, test-coverage map) cover the Part 1 items a Handoff has no place for: auth and authorization, secrets and environment variables, and test coverage. They describe a whole app, reverse-engineered from code that will be built.
    - A Handoff Rendering could link to such a packet, if a team keeps one. It would not copy the packet in, because a Rendering never adds content (GLOSSARY).
@@ -460,8 +468,8 @@ This fits GLOSSARY. A Handoff describes one feature against a Design System. Pro
 
 | Key | Outside source found | What it gives | Limit |
 | --- | --- | --- | --- |
-| `data[].shape` | code-to-PRD (alirezarezvani/claude-skills); v0's PRD design page (`V0-DOCS`) | Request and response requirements for endpoints that exist only as mock data; API descriptions and database schemas | Both describe a whole codebase or product, not one feature's UI. v0's runs only inside v0. The existing note marked this key "reasoning, not sourced". |
-| `a11y` | axe-core; `vercel-labs/agent-skills` `web-design-guidelines` | Checks: violations, plus incomplete results for manual review | They check content but cannot author a focus order, landmarks or labels. Human evaluation is still required (`WAI-EVAL`). |
+| `data[].shape` | code-to-PRD (alirezarezvani/claude-skills); v0's PRD design page (`V0-DOCS`) | Request and response requirements for endpoints that exist only as mock data; API descriptions and database schemas | Both describe a whole codebase or product, not one feature's UI. v0's runs only inside v0. The earlier note marked this key "reasoning, not sourced"; dev-ready-package proposes drafting it from mock data. |
+| `a11y` | axe-core; `vercel-labs/agent-skills` `web-design-guidelines` | Checks: violations, plus incomplete results for manual review | They check content but cannot author a focus order, landmarks or labels. Human evaluation is still required (`WAI-EVAL`). The earlier note and dev-ready-package propose a draft focus order from DOM order. |
 | `interactions` | nothing found | | |
 | `tokensToAdd` | nothing found | | Figma Make kits and Code Connect bring an existing design system in (`FIG-MAKE-KITS`, `FIG-CC`). Neither proposes new tokens. |
 | `regions[].responsive` | nothing found | | |
@@ -473,6 +481,5 @@ This fits GLOSSARY. A Handoff describes one feature against a Design System. Pro
 
 **5. Gaps nobody fills, in these sources and searches.**
 - A library-bound Handoff produced from a Prototype.
-- An owner-facing record, per feature, of performance targets, environments and alerting.
-- Analytics events, which are also missing from the Handoff.
+- An owner-facing record, per feature, of environments and alerting. Performance targets and analytics events have proposals in dev-ready-package's Group 2, but no tool or repo found records them per feature.
 - Any reader of a claude.ai artifact URL as input.
