@@ -1,0 +1,9 @@
+- package-lock.json: same pins as projectPins: yes, {"typescript":"6.0.3 y2TvuxSZPDyQ","tailwindcss":"4.3.3 gOhV3P7ufE62","shadcn":"4.22.0 QKR3XUnatWlg","tw-animate-css":"1.4.0 7bziOlRqH0hJ"}
+- bun.lock (Lovable): bun.lock (bun) -> {"typescript":"6.0.3 y2TvuxSZPDyQ","tailwindcss":"4.2.2 KWBIxs1Xb6No","tw-animate-css":"1.4.0 7bziOlRqH0hJ"}
+- bun.lockb only: refused: no lockfile the reader takes: only bun.lockb, bun's binary lockfile at bun.lockb
+- yarn.lock only: refused: no lockfile the reader takes: only yarn.lock at yarn.lock
+- no lockfile: refused: this Prototype has no lockfile
+- package-lock.json beside bun.lock: package-lock.json wins: refused: the project resolves tailwindcss@3.4.17, but the Adapter compiles Tailwind 4 only
+- pnpm workspace root, from the app folder: ../../pnpm-lock.yaml (pnpm) -> {"typescript":"6.0.3 y2TvuxSZPDyQ","tailwindcss":"4.3.2 WtctNNSH8A9j","tw-animate-css":"1.4.0 7bziOlRqH0hJ"}
+- pnpm: top is the app folder (the walk stops there): refused: this Prototype has no lockfile
+- pnpm: a folder that is not an importer: refused: pnpm-lock.yaml at the workspace root lists no importer "artifacts": the folder given is not one of its apps

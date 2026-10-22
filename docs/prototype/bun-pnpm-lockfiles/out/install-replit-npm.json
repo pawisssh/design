@@ -1,0 +1,131 @@
+{
+  "app": "hopebridge",
+  "lock": "../../pnpm-lock.yaml",
+  "kind": "pnpm",
+  "way": "npm",
+  "overrides": 167,
+  "resolve": {
+    "ok": true,
+    "seconds": 18,
+    "tail": [
+      "up to date in 18s"
+    ]
+  },
+  "againstPnpmLock": {
+    "npmTree": 300,
+    "inPnpmLock": 231,
+    "notInPnpmLock": 69,
+    "integrityDiffers": [],
+    "notInPnpmLockList": [
+      "@esbuild/aix-ppc64@0.27.3 (optional)",
+      "@esbuild/android-arm64@0.27.3 (optional)",
+      "@esbuild/android-arm@0.27.3 (optional)",
+      "@esbuild/android-x64@0.27.3 (optional)",
+      "@esbuild/darwin-arm64@0.27.3 (optional)",
+      "@esbuild/darwin-x64@0.27.3 (optional)",
+      "@esbuild/freebsd-arm64@0.27.3 (optional)",
+      "@esbuild/freebsd-x64@0.27.3 (optional)",
+      "@esbuild/linux-arm64@0.27.3 (optional)",
+      "@esbuild/linux-arm@0.27.3 (optional)",
+      "@esbuild/linux-ia32@0.27.3 (optional)",
+      "@esbuild/linux-loong64@0.27.3 (optional)",
+      "@esbuild/linux-mips64el@0.27.3 (optional)",
+      "@esbuild/linux-ppc64@0.27.3 (optional)",
+      "@esbuild/linux-riscv64@0.27.3 (optional)",
+      "@esbuild/linux-s390x@0.27.3 (optional)",
+      "@esbuild/netbsd-arm64@0.27.3 (optional)",
+      "@esbuild/netbsd-x64@0.27.3 (optional)",
+      "@esbuild/openbsd-arm64@0.27.3 (optional)",
+      "@esbuild/openbsd-x64@0.27.3 (optional)",
+      "@esbuild/openharmony-arm64@0.27.3 (optional)",
+      "@esbuild/sunos-x64@0.27.3 (optional)",
+      "@esbuild/win32-arm64@0.27.3 (optional)",
+      "@esbuild/win32-ia32@0.27.3 (optional)",
+      "@esbuild/win32-x64@0.27.3 (optional)",
+      "@rollup/rollup-android-arm-eabi@4.62.2 (optional)",
+      "@rollup/rollup-android-arm64@4.62.2 (optional)",
+      "@rollup/rollup-darwin-arm64@4.62.2 (optional)",
+      "@rollup/rollup-darwin-x64@4.62.2 (optional)",
+      "@rollup/rollup-freebsd-arm64@4.62.2 (optional)",
+      "@rollup/rollup-freebsd-x64@4.62.2 (optional)",
+      "@rollup/rollup-linux-arm-gnueabihf@4.62.2 (optional)",
+      "@rollup/rollup-linux-arm-musleabihf@4.62.2 (optional)",
+      "@rollup/rollup-linux-arm64-gnu@4.62.2 (optional)",
+      "@rollup/rollup-linux-arm64-musl@4.62.2 (optional)",
+      "@rollup/rollup-linux-loong64-gnu@4.62.2 (optional)",
+      "@rollup/rollup-linux-loong64-musl@4.62.2 (optional)",
+      "@rollup/rollup-linux-ppc64-gnu@4.62.2 (optional)",
+      "@rollup/rollup-linux-ppc64-musl@4.62.2 (optional)",
+      "@rollup/rollup-linux-riscv64-gnu@4.62.2 (optional)",
+      "@rollup/rollup-linux-riscv64-musl@4.62.2 (optional)",
+      "@rollup/rollup-linux-s390x-gnu@4.62.2 (optional)",
+      "@rollup/rollup-linux-x64-musl@4.62.2 (optional)",
+      "@rollup/rollup-openbsd-x64@4.62.2 (optional)",
+      "@rollup/rollup-openharmony-arm64@4.62.2 (optional)",
+      "@rollup/rollup-win32-arm64-msvc@4.62.2 (optional)",
+      "@rollup/rollup-win32-ia32-msvc@4.62.2 (optional)",
+      "@rollup/rollup-win32-x64-gnu@4.62.2 (optional)",
+      "@rollup/rollup-win32-x64-msvc@4.62.2 (optional)",
+      "@tailwindcss/oxide-android-arm64@4.3.2 (optional)",
+      "@tailwindcss/oxide-darwin-arm64@4.3.2 (optional)",
+      "@tailwindcss/oxide-darwin-x64@4.3.2 (optional)",
+      "@tailwindcss/oxide-freebsd-x64@4.3.2 (optional)",
+      "@tailwindcss/oxide-linux-arm-gnueabihf@4.3.2 (optional)",
+      "@tailwindcss/oxide-linux-arm64-gnu@4.3.2 (optional)",
+      "@tailwindcss/oxide-linux-arm64-musl@4.3.2 (optional)",
+      "@tailwindcss/oxide-linux-x64-musl@4.3.2 (optional)",
+      "@tailwindcss/oxide-win32-arm64-msvc@4.3.2 (optional)",
+      "@tailwindcss/oxide-win32-x64-msvc@4.3.2 (optional)",
+      "lightningcss-android-arm64@1.32.0 (optional)",
+      "lightningcss-darwin-arm64@1.32.0 (optional)",
+      "lightningcss-darwin-x64@1.32.0 (optional)",
+      "lightningcss-freebsd-x64@1.32.0 (optional)",
+      "lightningcss-linux-arm-gnueabihf@1.32.0 (optional)",
+      "lightningcss-linux-arm64-gnu@1.32.0 (optional)",
+      "lightningcss-linux-arm64-musl@1.32.0 (optional)",
+      "lightningcss-linux-x64-musl@1.32.0 (optional)",
+      "lightningcss-win32-arm64-msvc@1.32.0 (optional)",
+      "lightningcss-win32-x64-msvc@1.32.0 (optional)"
+    ]
+  },
+  "install": {
+    "ok": true,
+    "seconds": 7,
+    "tail": [
+      "added 230 packages in 7s"
+    ]
+  },
+  "tree": {
+    "directDeps": {
+      "count": 63,
+      "wrong": []
+    },
+    "bySet": {
+      "installed": 230,
+      "notInLock": 4,
+      "notInLockList": [
+        "@esbuild/darwin-arm64@0.27.3",
+        "@rollup/rollup-darwin-arm64@4.62.2",
+        "@tailwindcss/oxide-darwin-arm64@4.3.2",
+        "lightningcss-darwin-arm64@1.32.0"
+      ]
+    }
+  },
+  "native": {
+    "@esbuild/darwin-arm64": "0.27.3 (for esbuild@0.27.3)",
+    "@rollup/rollup-darwin-arm64": "4.62.2 (for rollup@4.62.2)",
+    "lightningcss-darwin-arm64": "1.32.0 (for lightningcss@1.32.0)",
+    "@tailwindcss/oxide-darwin-arm64": "4.3.2 (for @tailwindcss/oxide@4.3.2)"
+  },
+  "tsconfigExtends": [
+    "../../tsconfig.base.json: MISSING from the copy"
+  ],
+  "smokeBuild": {
+    "ok": true,
+    "seconds": 1,
+    "tail": [
+      ""
+    ],
+    "css": "compiled .p-4"
+  }
+}

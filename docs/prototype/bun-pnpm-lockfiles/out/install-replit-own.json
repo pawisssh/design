@@ -1,0 +1,53 @@
+{
+  "app": "hopebridge",
+  "lock": "../../pnpm-lock.yaml",
+  "kind": "pnpm",
+  "way": "own",
+  "install": {
+    "ok": true,
+    "seconds": 6,
+    "tail": [
+      "Progress: resolved 231, reused 0, downloaded 230, added 230",
+      "Progress: resolved 231, reused 0, downloaded 231, added 231, done",
+      "Done in 5.6s using pnpm v10.34.6"
+    ]
+  },
+  "lockfilesAfter": {
+    "pnpm-lock.yaml": "unchanged"
+  },
+  "tree": {
+    "directDeps": {
+      "count": 63,
+      "wrong": []
+    },
+    "bySet": {
+      "installed": 231,
+      "notInLock": 0,
+      "notInLockList": []
+    }
+  },
+  "native": {
+    "@esbuild/darwin-arm64": "MISSING (for esbuild@0.27.3)",
+    "@rollup/rollup-darwin-arm64": "MISSING (for rollup@4.62.2)",
+    "lightningcss-darwin-arm64": "MISSING (for lightningcss@1.32.0)",
+    "@tailwindcss/oxide-darwin-arm64": "MISSING (for @tailwindcss/oxide@4.3.2)"
+  },
+  "tsconfigExtends": [
+    "../../tsconfig.base.json: in the copy"
+  ],
+  "smokeBuild": {
+    "ok": false,
+    "seconds": 0,
+    "exit": 1,
+    "tail": [
+      "    code: 'MODULE_NOT_FOUND',",
+      "    requireStack: [",
+      "      '<work>/replit-own/copy/node_modules/.pnpm/rollup@4.62.2/node_modules/rollup/dist/native.js'",
+      "    ]",
+      "  }",
+      "}",
+      "",
+      "Node.js v26.7.0"
+    ]
+  }
+}
