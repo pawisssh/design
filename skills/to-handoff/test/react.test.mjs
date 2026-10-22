@@ -139,6 +139,81 @@ export default function Page() {
   assert.deepEqual({ name: stub.name, sets: stub.sets, before: stub.before, after: stub.after }, { name: null, sets: ['saving'], before: ['saving'], after: [] });
 });
 
+// A Next app whose page fetches `urls`, against API routes `routes` ({path: source}), with `files` beside them.
+const fetching = (urls, routes, files = {}) => project({
+  'package.json': JSON.stringify({ name: 'dynamic', dependencies: { next: '15.5.28', react: '19.1.10' } }),
+  'app/layout.tsx': 'export default function Layout({ children }) { return <html><body>{children}</body></html>; }\n',
+  'app/page.tsx': `'use client';
+export default function Page({ id, kind, p }) {
+  async function load() {
+${urls.map(u => `    await fetch(${u});`).join('\n')}
+  }
+  return <button onClick={load}>Load</button>;
+}
+`,
+  ...Object.fromEntries(Object.entries(routes).map(([path, text]) => [`app/api/${path}/route.ts`, text])),
+  ...files,
+});
+const GET = 'export async function GET() { return Response.json({ ok: true }); }\n';
+
+test('Next: a dynamic route is fetched by a concrete path or a template hole per dynamic segment; a slash or query still matches (#352)', { skip: noTs }, () => {
+  const doc = readReact(fetching([
+    "'/api/items/3'", '`/api/items/${id}`', "'/api/items/'", '`/api/items?page=${p}`', "'/api/files/a/b'", '`/api/files/${kind}/${id}`',
+  ], { 'items/[id]': GET, items: GET, 'files/[...slug]': GET }), { packages: PACKAGES });
+  assert.deepEqual(doc.standIns.stubs.map(f => [f.route, f.file]), [
+    ['/api/items/[id]', 'app/api/items/[id]/route.ts'],
+    ['/api/items/[id]', 'app/api/items/[id]/route.ts'],
+    ['/api/items', 'app/api/items/route.ts'],
+    ['/api/items', 'app/api/items/route.ts'],
+    ['/api/files/[...slug]', 'app/api/files/[...slug]/route.ts'],
+    ['/api/files/[...slug]', 'app/api/files/[...slug]/route.ts'],
+  ]);
+  assert.deepEqual(doc.ignored, []);
+});
+
+test('Next: a static route wins over a dynamic one; a hole never matches a static segment, part of one, or the origin (#352)', { skip: noTs }, () => {
+  const doc = readReact(fetching([
+    "'/api/items/new'", '`/api/${kind}`', '`/api/item-${id}`', '`${kind}/api/items/new`',
+  ], { 'items/[id]': GET, 'items/new': GET, items: GET }), { packages: PACKAGES });
+  assert.deepEqual(doc.standIns.stubs.map(f => f.route), ['/api/items/new']);
+  assert.deepEqual(doc.ignored, ['app/api/items/[id]/route.ts (API route)', 'app/api/items/route.ts (API route)']);
+});
+
+test('Next: mocks in a module only a fetched route imports are Stand-ins; the route\'s own timer is its latency, not simulated work (#352)', { skip: noTs }, () => {
+  const doc = readReact(fetching(["'/api/items'"], {
+    items: `import { mockItems } from '../../../lib/items';
+const mockLatency = [300];
+export async function GET() { await new Promise(r => setTimeout(r, 300)); return Response.json(mockItems); }
+`,
+  }, { 'lib/items.ts': "export const mockItems = [{ id: 1, name: 'Lamp' }];\n" }), { packages: PACKAGES });
+  assert.deepEqual(doc.standIns.mocks.map(m => [m.name, doc.at(m.offset)]), [['mockLatency', 'app/api/items/route.ts:2:7'], ['mockItems', 'lib/items.ts:1:14']]);
+  assert.deepEqual(doc.standIns.simulated, []);
+  assert.deepEqual(doc.standIns.stubs.map(f => [f.route, f.delay]), [['/api/items', 300]]);
+  assert.ok(doc.files.includes('lib/items.ts'));
+});
+
+test('generate: every Stand-in keeps its own data id and question: a stub gains -api, a second mock of one name -2 (#352)', { skip: noTs }, async () => {
+  const dir = fetching(["'/api/items'", "'/api/items/'", "'/api/foo-bar'", "'/api/foo/bar'"], {
+    items: "import { mockItems } from '../../../lib/items';\nexport async function GET() { return Response.json(mockItems); }\n", 'foo-bar': GET, 'foo/bar': GET,
+  }, { 'app/data.ts': "export const mockItems = [{ id: 1, name: 'Lamp' }];\n", 'lib/items.ts': "export const mockItems = [{ id: 2, name: 'Desk' }];\n" });
+  writeFileSync(join(dir, 'app/page.tsx'), `import { mockItems } from './data';\n${readFileSync(join(dir, 'app/page.tsx'), 'utf8').replace("'use client';\n", '')}`);
+  const decisions = {
+    'recognise:button': { contract: 'button', tuple: { kind: 'primary' }, via: 'element' }, feature: { goal: 'Load the items.' },
+    acceptance: [{ id: 'load', screen: 'index', state: 'default', given: 'the page', when: 'Load is pressed', then: 'the items load' }],
+  };
+  const { requests, handoff } = await generate({ prototype: dir, designSystem: designSystem(), decisions });
+  assert.deepEqual(requests, []);
+  assert.deepEqual(handoff.data.map(x => [x.id, x.source, x.question]), [
+    ['items', 'mock', 'q-data-items'],
+    ['items-2', 'mock', 'q-data-items-2'],
+    ['items-api', 'simulated', 'q-data-items-api'],
+    ['foo-bar', 'simulated', 'q-data-foo-bar'],
+    ['foo-bar-api', 'simulated', 'q-data-foo-bar-api'],
+  ]);
+  assert.match(handoff.openQuestions.find(q => q.id === 'q-data-items-api').text, /`GET \/api\/items`/);
+  assert.match(handoff.openQuestions.find(q => q.id === 'q-data-foo-bar-api').text, /`GET \/api\/foo\/bar`/);
+});
+
 test('Next: one screen per app/**/page.tsx inside its layouts; loading.tsx is a framework state; a fetched API route is a Stand-in', { skip: noTs }, () => {
   const doc = readReact(NEXT, { packages: PACKAGES });
   assert.equal(doc.kind, 'react-next');
