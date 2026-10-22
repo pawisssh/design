@@ -1,24 +1,24 @@
 # What does a developer need, beyond a PRD, to start building a feature?
 
-Research for what a PM or designer should prepare before a developer starts on a feature, and for which parts of it this repo could produce. It looks at the whole package. The UI layer is covered in depth by [What must a Handoff for one Prototype's feature carry](design-handoff-contents.md), and this note only summarises and updates it (Finding 11). Related: map [#318](https://github.com/pawisssh/design/issues/318) (any vibe-coded Prototype reaches Component Sets or a Handoff) and [#334](https://github.com/pawisssh/design/issues/334) (the one entry from a Prototype). Vocabulary follows `GLOSSARY.md` (Handoff, Rendering, Prototype, Stand-in, Contract, Container, Component Family, Usage, Sign-off, Drift, Standard state, Extra state).
+Research for what a PM or designer should prepare before a developer starts on a feature, and for which parts of it this repo could produce. It looks at the whole package. The UI layer is covered in depth by [What must a Handoff for one Prototype's feature carry](design-handoff-contents.md), and this note only summarises and updates it (Finding 11). Related: map [#318](https://github.com/pawisssh/design/issues/318) (any vibe-coded Prototype reaches Component Sets or a Handoff) and [#334](https://github.com/pawisssh/design/issues/334) (the one entry from a Prototype). Vocabulary follows `GLOSSARY.md` (Handoff, Rendering, Prototype, Prototype kind, Owner, From-Prototype, To-handoff, Stand-in, Contract, Container, Component Family, Usage, Sign-off, Drift, Standard state, Extra state).
 
-Researched 2026-10-22. Every source below was read on that date. The repo side is read at commit `614e5ff`:
+Researched 2026-10-22. Every source below was read on that date. The repo side was read at commit `614e5ff` and rechecked at `e211f04`, which adds ADR 0019 and touches only the glossary, the ADRs and Vibe-to-Figma's `SKILL.md`:
 
 - the schema: `skills/to-handoff/handoff.schema.json`, unchanged since `c650fc6`, the commit the earlier note read (`git diff c650fc6..HEAD` on it is empty);
 - what generate writes: `skills/to-handoff/scripts/generate.mjs`;
 - what validate accepts: `skills/to-handoff/scripts/validate.mjs`;
-- `skills/to-handoff/SKILL.md`, `GLOSSARY.md` and `docs/adr/` up to ADR 0018;
+- `skills/to-handoff/SKILL.md`, `GLOSSARY.md` and `docs/adr/` up to ADR 0019;
 - the two recorded Handoffs, `design-systems/carbon/handoffs/invite-teammates` and `design-systems/shadcn/handoffs/request-access`, and their Prototypes, `skills/to-handoff/test/fixtures/invite-teammates/index.html` and `skills/to-handoff/test/fixtures/v0-app`.
 
 Labels, as in the earlier note: **Practitioner consensus only** marks a claim that no primary source read for this note makes; it comes from common practice. **Reasoning, not sourced** marks this note's own inference. **First-party for X only** marks a vendor's or company's own document, which is authoritative for its own product or method and nothing wider.
 
-**Terms used in this note.** **Dev-ready package** (this note's proposal, not a glossary term): everything a developer needs in hand to start building one feature: the product intent, the stories and their acceptance criteria, the flows and diagrams, the data and API questions, the non-functional targets, the analytics plan, the decisions already made, and the UI.
+**Terms used in this note.** **Dev-ready package** (this note's proposal, not a glossary term; if the repo adopts it, it goes to `GLOSSARY.md` through `/domain-modeling`): everything a developer needs in hand to start building one feature: the product intent, the stories and their acceptance criteria, the flows and diagrams, the data and API questions, the non-functional targets, the analytics plan, the decisions already made, and the UI.
 
 Where the repo's Handoff sits inside it:
 
 - **The Handoff is one part of the package, not the package.** GLOSSARY defines a Handoff as the library-bound description of one feature (one user goal, across its screens and states) written against a Design System's Contracts and Component Proposals, and lists _handoff doc_, _spec_, _feature spec_ and _brief_ under _Avoid_. So the industry's "handoff document", which usually means the whole package, is not the repo's Handoff.
 - **What the Handoff covers today:** the UI layer in full (screens, Standard states, Usages, tokens, Off-system values, copy), plus a thin slice of the rest: the goal, scope and non-goals (`feature`), the flow between states (`flow[]`), the Stand-ins (`data[]`), acceptance criteria (`acceptance[]`) and open questions (`openQuestions[]`).
-- **What it does not cover:** metrics, NFR targets, analytics, the API, the architecture and the data model. The last section, [What this repo could do about it](#what-this-repo-could-do-about-it), sorts each of these by who can supply it.
+- **What it does not cover:** metrics, non-functional requirement (NFR) targets, analytics, the API, the architecture and the data model. The last section, [What this repo could do about it](#what-this-repo-could-do-about-it), sorts each of these by who can supply it.
 - **A Rendering is a layout of the Handoff, not the package either.** It never adds or drops a Handoff's content (GLOSSARY, Rendering).
 
 Words this note keeps apart, because the sources and the glossary use them differently:
@@ -45,13 +45,13 @@ Words this note keeps apart, because the sources and the glossary use them diffe
 
 5. **The API description and the architecture are the developer's.** OpenAPI 3.2.1 describes an HTTP API so that people and tools can understand it without the source (`OAS`). AsyncAPI 3.1.0 does the same for message-driven APIs (`ASYNC`). GLOSSARY says the Handoff records what a Stand-in pretends to do, never how. So the Handoff's part is the questions (`q-data-…`, addressed to the developer) and, where the UI depends on it, a draft of the data shape. `data[].shape` exists for that but is never written.
 
-6. **Non-functional requirements need a target from the owner and an implementation from the developer.** The targets are a WCAG conformance level (`WCAG`; AA is GOV.UK's bar, `GOVUK-WCAG`), an ASVS level chosen by risk, where most applications should aim for L2 (`ASVS-USE`), and a performance budget such as Google's Core Web Vitals (`CWV`, **first-party for Google's metrics only**). Privacy is data protection by design from the planning stage, with a DPIA where the risk is high (`ICO-DPBD`). ISO/IEC 25010:2023 gives the checklist of nine quality characteristics (`ISO-25010`). The Handoff has no key for any of these targets.
+6. **Non-functional requirements need a target from the owner and an implementation from the developer.** The targets are a WCAG conformance level (`WCAG`; AA is GOV.UK's bar, `GOVUK-WCAG`), an ASVS level chosen by risk, where most applications should aim for L2 (`ASVS-USE`), and a performance budget such as Google's Core Web Vitals (`CWV`, **first-party for Google's metrics only**). Privacy is data protection by design from the planning stage, with a data protection impact assessment (DPIA) where the risk is high (`ICO-DPBD`). ISO/IEC 25010:2023 gives the checklist of nine quality characteristics (`ISO-25010`). The Handoff has no key for any of these targets.
 
 7. **Analytics has no primary standard.** Segment, Amplitude and Mixpanel each describe a tracking plan: events and their properties, tied to business goals, starting small. Each is **first-party for its own product only** (`SEGMENT`, `AMPLITUDE`, `MIXPANEL`). The Handoff has no key for analytics. This finding from the earlier note still stands.
 
 8. **The Definition of Ready is not in the Scrum Guide.** The 2020 guide defines only the Definition of Done. It says an item that the team can finish within one Sprint is ready for selection, usually after refinement (`SCRUM`). A DoR checklist is **Practitioner consensus only**. INVEST's Testable, a story the team understands well enough to write a test for (`INVEST`), is a usual item on it (**Practitioner consensus only**).
 
-9. **Decision records are for decisions that are architecturally significant**: those that affect structure, quality attributes, dependencies, interfaces or construction techniques (`NYGARD`, `ADR-ORG`). The repo's own ADRs follow that convention, but they have no Status field. For a feature, the Handoff's `ownerDecisions` and answered `openQuestions[]` already act as a small decision log.
+9. **Decision records are for decisions that are architecturally significant**: those that affect structure, quality attributes, dependencies, interfaces or construction techniques (`NYGARD`, `ADR-ORG`). The repo's own ADRs follow that convention; only three of the nineteen (0003, 0006, 0008) have a Status section. For a feature, the Handoff's `ownerDecisions` and answered `openQuestions[]` already act as a small decision log.
 
 10. **The earlier UI note is out of date in two places.** ADR 0018 (2026-10-21) decided Extra states and a per-field `errors[]` on a Usage. Neither is built at `614e5ff`: the schema is unchanged, `validate.mjs` still accepts only `STANDARD_STATES`, and [#328](https://github.com/pawisssh/design/issues/328) is open. Its other findings still hold.
 
@@ -197,7 +197,7 @@ Sources that could not be reached, and what was used instead:
 - `flow[]` holds `{from, trigger, to, source}`, where `source` is `mock`, `simulated` or `missing`. With more than one screen, states read `<screen>/<state>`.
 - What it holds depends on the Prototype.
   - invite-teammates has three entries: `sendInvites()` from default to loading, an 800 ms timer from loading to success, and a `missing` edge for the failure.
-  - request-access has `flow: []`, and `data: []` too, although its Prototype (`skills/to-handoff/test/fixtures/v0-app`) submits and fails. Its form `fetch`es `POST /api/request-access` and moves to loading, then to error or success. The route is itself a Stand-in: its file says so in a comment, it waits 800 ms, and it fails when the email contains `fail`. generate lists the route in `source.ignored` and does not read a `fetch` as a Stand-in, so neither the transitions nor the stub API reach the Handoff. GLOSSARY counts a stub API as a Stand-in, so this is a reading gap, not a design choice.
+  - request-access has `flow: []`, and `data: []` too, although its Prototype (`skills/to-handoff/test/fixtures/v0-app`) submits and fails. Its form `fetch`es `POST /api/request-access` and moves to loading, then to error or success. The route is itself a Stand-in: its file says so in a comment, it waits 800 ms, and it fails when the email contains `fail`. The React reader (`react.mjs`) lists the route in `source.ignored`, and nothing reads a `fetch` as a Stand-in, so neither the transitions nor the stub API reach the Handoff. GLOSSARY counts a stub API as a Stand-in, so this is a reading gap, not a design choice.
 - `SKILL.md` puts overlay flow transitions out of scope for React Prototypes.
 
 ### 5. Diagrams
@@ -205,7 +205,7 @@ Sources that could not be reached, and what was used instead:
 **State machine.**
 
 - **What it is for:** event-driven behaviour, modelled as states joined by transitions that events trigger (`UML-XMI`, the StateMachine element's comment).
-- **Worth it:** **Reasoning, not sourced:** when a screen has more than the default, loading, error and success path, such as retries, offline or partial data.
+- **Worth it:** **Reasoning, not sourced:** when a screen has more than its Standard states and the edges between them, such as retries, offline or partial data.
 - **Mermaid** supports composite states, choice, fork and join, notes and concurrency (`MERMAID-STATE`). Its syntax follows PlantUML's and does not claim UML conformance (`MERMAID-STATE`).
 
 **Sequence (UML interaction).**
@@ -223,11 +223,11 @@ Sources that could not be reached, and what was used instead:
 **C4 context and container.**
 
 - **System context:** one software system with its users and the systems it connects to. Its audience is everybody, technical or not, and C4 recommends it for all teams (`C4-CTX`).
-- **Container:** the applications and data stores inside one system, for technical people. C4 recommends it for all teams too (`C4-CON`).
-- **The other levels are optional.** C4 says those two are enough for most teams, and that teams need not draw all four levels, only those that add value (`C4-DIAG`). That covers the component and code levels. For the supporting diagrams (landscape, dynamic, deployment), the page gives no recommendation either way.
+- **C4 container:** the applications and data stores inside one system, for technical people. C4 recommends it for all teams too (`C4-CON`).
+- **The other levels are optional.** C4 says those two are enough for most teams, and that teams need not draw all four levels, only those that add value (`C4-DIAG`). That covers the C4 component and code levels. For the supporting diagrams (landscape, dynamic, deployment), the page gives no recommendation either way.
 - **Worth it:** **Reasoning, not sourced:** for a feature that adds a new system, C4 container, external dependency or data store. A feature inside an existing app changes none of them.
 
-**ERD and data model.**
+**ERD (entity-relationship diagram) and data model.**
 
 - **What it is for:** entities, their attributes and the relationships between them. Chen's 1976 paper introduced the model and its diagram (`ERD-CHEN`, bibliographic record only). This note found no standard for ER notation.
 - **Mermaid** draws crow's foot cardinality and attributes with types and PK, FK or UK keys (`MERMAID-ER`).
@@ -258,7 +258,7 @@ Sources that could not be reached, and what was used instead:
 - GLOSSARY says a Stand-in records what it pretends to do, never how.
 - `data[]` records each Stand-in's `source` and `note`, with a developer question. invite-teammates asks where the invites come from, and what `sendInvites()` calls and how it fails.
 - `data[].shape` exists but is never written.
-- `source.ignored` lists the Prototype's API routes and middleware (`SKILL.md`). That tells the developer what exists, not what the API should be. request-access shows the cost: its stub route `app/api/request-access/route.ts` is only a line in `source.ignored`, and nothing records that it pretends to accept the form and sometimes fail (Finding 4).
+- `source.ignored` lists the Prototype's API routes and middleware (`SKILL.md`). That tells the developer what exists, not what the API should be, and a stub route such as request-access's is lost there (Finding 4).
 - **Reasoning, not sourced:** the fields the UI reads are the designer's content. invite-teammates' `mockInvites` holds `{email, role}`, with role values Editor and Viewer, and the list renders them. The endpoint, the auth, the pagination and the error codes are the developer's.
 
 ### 7. Non-functional requirements
@@ -271,7 +271,7 @@ Sources that could not be reached, and what was used instead:
 - **Accessibility.**
   - **The levels.** Each level requires all success criteria up to and including it: A, then AA, then AAA (`WCAG` §5.2.1).
   - **Full pages and complete processes.** Conformance applies to full pages, including every responsive variant. Every page in a process, such as a checkout, must conform (`WCAG` §5.2.2–5.2.3).
-  - **AAA site-wide is too much.** WCAG warns: "It is not recommended that Level AAA conformance be required as a general policy for entire sites." (`WCAG` §5.2.1, note 2)
+  - **AAA site-wide is too much.** WCAG warns that "it is not recommended that Level AAA conformance be required as a general policy for entire sites", because some content cannot meet every AAA criterion (`WCAG` §5.2.1, note 2).
   - **AA is a common bar.** GOV.UK services must meet WCAG 2.2 AA (`GOVUK-WCAG`).
 - **Security.**
   - **What ASVS is.** ASVS 5.0.0 is a list of requirements for secure development and a basis for testing. It can also be named in a contract (`ASVS`).
@@ -283,7 +283,7 @@ Sources that could not be reached, and what was used instead:
 - **Privacy.**
   - Data protection by design and by default is required under UK GDPR Article 25, from the planning stage on.
   - A DPIA is required where processing is likely to be high risk, and good practice otherwise (`ICO-DPBD`).
-- **Performance.** Core Web Vitals give a ready target: LCP at most 2.5 s, INP at most 200 ms and CLS at most 0.1, at the 75th percentile of page loads, split by mobile and desktop (`CWV`, **first-party for Google's metrics only**).
+- **Performance.** Core Web Vitals give a ready target: Largest Contentful Paint (LCP) at most 2.5 s, Interaction to Next Paint (INP) at most 200 ms and Cumulative Layout Shift (CLS) at most 0.1, at the 75th percentile of page loads, split by mobile and desktop (`CWV`, **first-party for Google's metrics only**).
 
 **Worth it vs overkill.**
 
@@ -358,8 +358,8 @@ Sources that could not be reached, and what was used instead:
   - the title is the decision as a sentence;
   - one paragraph holds the context and the decision, followed by who decided it and when;
   - they have Considered Options and Consequences sections;
-  - the README's revisit list gives each one a trigger;
-  - there is no Status field;
+  - the README's revisit list gives a trigger to 12 of the 19;
+  - only 0003, 0006 and 0008 have a Status section;
   - numbers come from `node scripts/adr.mjs next`.
 - **For one feature,** `ownerDecisions` (by stable key) and the answered `openQuestions[]` already record the owner's decisions, and a re-run carries them over.
 
@@ -378,7 +378,7 @@ Its gaps:
 - **Keys that exist but are never written:** `a11y`, `interactions`, `tokensToAdd`, `regions[].responsive`, `data[].shape`.
 - **Content with no key at all:** content limits, i18n and RTL, headings, status announcements, motion, assets, analytics.
 
-What changed between `c650fc6` and `614e5ff`:
+What changed between `c650fc6` and `614e5ff` (still so at `e211f04`):
 
 - **States beyond the five: was "missing", now decided but not built.**
   - ADR 0018 (owner, 2026-10-21) lets a screen have Extra states.
@@ -399,7 +399,7 @@ What changed between `c650fc6` and `614e5ff`:
 | User stories | Split into valuable pieces | Actor, want, why; INVEST | `GOVUK-STORY`, `INVEST` | Several stories or iterations / one small change | None (goal only) |
 | Acceptance criteria | Say when it is done | Given/When/Then of 3–5 steps, or done-when outcomes | `GHERKIN`, `GOVUK-STORY` | Always; executable `.feature` files only with a runner | `acceptance[]`, Standard states only until ADR 0018 is built |
 | User flow | Path through screens and branches | Entry, steps, branches, exits | None; **Practitioner consensus only** | More than one screen or branch / one form | `flow[]`, when the Prototype simulates work in its own code; a `fetch` to a stub route is not read |
-| State diagram | Event-driven behaviour of a screen | States, transitions, triggers | `UML-XMI`; `MERMAID-STATE` | Retries, offline, partial data / the four basic states | Derivable from `screens[].states` + `flow[]`; not drawn |
+| State diagram | Event-driven behaviour of a screen | States, transitions, triggers | `UML-XMI`; `MERMAID-STATE` | Retries, offline, partial data / only the Standard states | Derivable from `screens[].states` + `flow[]`; not drawn |
 | Sequence diagram | Messages between participants | Lifelines, messages, alternatives | `UML-XMI` | Crosses systems or timing matters / one call | Derivable in draft from simulated `data[]`; not drawn |
 | Activity / flowchart / BPMN | Process across steps or people | Activities, decisions, lanes | `UML-XMI`, `BPMN` | Process across people or teams / a single screen | None |
 | C4 context and container | Where the feature sits in the system | Users, systems, C4 containers | `C4`, `C4-CTX`, `C4-CON` | New system, C4 container or dependency / inside one app | None (developer's) |
@@ -409,14 +409,14 @@ What changed between `c650fc6` and `614e5ff`:
 | NFR: security | Security target | ASVS level by risk | `ASVS`, `ASVS-USE` | New data, endpoint or auth / no new surface | None |
 | NFR: privacy | Data protection by design | DPIA need, data minimisation | `ICO-DPBD` | Personal data handled / none | None |
 | NFR: performance and quality | Measurable quality targets | Budgets (such as Core Web Vitals); 25010 as a checklist | `ISO-25010`; `CWV` first-party for Google | Heavy page or new load / inherits product's | None |
-| Analytics | Measure the metrics | Events, properties, types, where and why | None. `SEGMENT`, `AMPLITUDE`, `MIXPANEL` first-party for their own products | PRD has a measurable metric / nothing is measured | **missing** |
+| Analytics | Measure the metrics | Events, properties, types, where and why | None. `SEGMENT`, `AMPLITUDE`, `MIXPANEL` first-party for their own products | PRD has a measurable metric / nothing is measured | No key |
 | Definition of Ready | Team's start checklist | INVEST, criteria, designs, dependencies, answered questions | None (`SCRUM` has only the DoD, and items ready for selection); **Practitioner consensus only** | Team agrees one / not as a rigid gate | `review` shows what blocks Sign-off |
 | Decision records | Keep the why of hard-to-reverse choices | Context, decision, status, consequences | `NYGARD`, `ADR-ORG`, `ADR-TPL` | Architecturally significant / product choices | `ownerDecisions`, answered `openQuestions[]` |
 | UI: screens, states, components, tokens | What to build, against the Design System | See the [earlier note](design-handoff-contents.md) | See the [earlier note](design-handoff-contents.md) | Always | The Handoff's core; Extra states decided, not built |
 
 ## What this repo could do about it
 
-The project goal (owner, 2026-10-22) is to take a vibe-coded Prototype to either Figma Component Sets or a developer Handoff. Work is judged by which vibe-coded projects reach either output. So the question for each artifact is whether To-handoff can get it from the Prototype, must ask the owner, or should leave it to the developer. Everything below is a proposal. No skill, schema or glossary is changed by this note.
+The project goal (owner, 2026-10-22, recorded in ADR 0019) is to take a vibe-coded Prototype to either Figma Component Sets or a developer Handoff. Work is judged by which vibe-coded projects reach either output. Every run starts at From-Prototype (`/from-prototype`), which names the Prototype kind and runs To-handoff when the owner asks for a Handoff. ADR 0019 supports a Handoff wherever To-handoff's reader takes the framework (one HTML file, a Next.js App Router app, or a Vite app), so Group 1 assumes those readers. The question for each artifact is whether To-handoff can get it from the Prototype, must ask the owner, or should leave it to the developer. Everything below is a proposal. No skill, schema or glossary is changed by this note.
 
 **Group 1: To-handoff could derive it from a Prototype.** These are drafts. The owner confirms them at Sign-off like any agent decision.
 
@@ -430,6 +430,7 @@ The project goal (owner, 2026-10-22) is to take a vibe-coded Prototype to either
 | Gherkin form of the acceptance criteria | `acceptance[]` in Given/When/Then, agent-drafted, owner-replaceable | A `.feature` file generated from `acceptance[]`, grouped by screen, with a Rule per state. It is not a Rendering, because it carries only one key. |
 | Accessibility content | `a11y.focusOrder`, `a11y.landmarks`, `a11y.labels`, never written; `regions[].landmark` written | Writing a draft focus order from DOM order, as the earlier note proposed (§2). |
 | Inventory hints for the developer | `source.ignored` (API routes, middleware); `data[]` questions addressed to the developer | Nothing. This is already there. |
+| The UI layer: screens, states, Usages, tokens, copy | The Handoff's core (Finding 11; the [earlier note](design-handoff-contents.md)) | Extra states and a field's `errors[]`, decided in ADR 0018 and not built ([#328](https://github.com/pawisssh/design/issues/328)); the earlier note's never-written keys |
 | Candidate analytics events | `flow[]` triggers and the Usages that start them | **Reasoning, not sourced:** a list of candidate interaction points. Which ones to track is the owner's (Group 2), so only the candidates are derivable. |
 
 **Group 2: only the owner or PM can supply it.** No Prototype shows these. To-handoff can only ask for them, through the `feature` decision or new decision keys.
@@ -445,6 +446,7 @@ The project goal (owner, 2026-10-22) is to take a vibe-coded Prototype to either
 | Extra states the Prototype does not show | Decided (ADR 0018: the owner's word, as a missing state with a question), not built | Nothing beyond ADR 0018. |
 | Owner's acceptance criteria and answers | Yes: `acceptance:<id>`, `question:<id>` owner decisions | Nothing. |
 | Sign-off | Yes: `approve` on the owner's word | Nothing. |
+| A process across people or teams (activity diagram or BPMN) | No | Nothing in the Handoff. A Prototype shows one user's path, so a wider process is the owner's to supply beside it; the user flow inside it is Group 1's. |
 | Definition of Ready | No; it is the team's (owner with developers) | **Reasoning, not sourced:** `review` could print the package parts that are present and absent beside what blocks Sign-off, without owning the checklist. |
 
 **Group 3: the developer owns it.** GLOSSARY says the Handoff records what a Stand-in pretends to do, never how. ADR 0007 keeps To-handoff out of the developer's project. So these stay outside the Handoff, and the Handoff's part is the question that hands them over.
