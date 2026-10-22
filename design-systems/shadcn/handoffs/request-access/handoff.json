@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 11,
+  "revision": 12,
   "status": "pending",
   "approval": null,
   "feature": {
@@ -567,7 +567,8 @@
       "kind": "prop",
       "to": "owner",
       "text": "`CardFooter` at app/page.tsx:31:9 sets className=\"justify-between text-xs text-muted-foreground\", which is no card axis or property. Which value is it, or does the Contract need it?",
-      "answer": null
+      "answer": "Code-only: justify-between text-xs text-muted-foreground lays out and colours the footer's own text, which the region already records as text-xs-normal; the Card Contract needs no axis or property for it.",
+      "by": "owner"
     },
     {
       "id": "q-prop-name",
@@ -660,6 +661,9 @@
     },
     "question:q-no-contract-toaster": {
       "answer": "Toaster stays raw: engineering calls sonner's toast(); it is not a Figma component."
+    },
+    "question:q-prop-card": {
+      "answer": "Code-only: justify-between text-xs text-muted-foreground lays out and colours the footer's own text, which the region already records as text-xs-normal; the Card Contract needs no axis or property for it."
     },
     "question:q-prop-email": {
       "answer": "Code-only: required is form validation and changes nothing the Input shows, so the Input Contract needs no axis or property for it."
