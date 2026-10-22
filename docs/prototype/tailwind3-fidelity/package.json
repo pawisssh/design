@@ -1,0 +1,2 @@
+{ "name": "tailwind3-fidelity", "private": true,
+  "dependencies": { "playwright-core": "1.55.0", "postcss": "8.4.47", "tailwindcss": "3.4.17", "tailwindcss-animate": "1.0.7" } }
