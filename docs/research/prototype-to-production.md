@@ -1,6 +1,6 @@
 # What must a Prototype's owner prepare so developers can build it for production, and who already helps?
 
-Research for the question an owner asked: having built a Prototype with a prototyping tool (a Claude artifact, for example), what should go to developers so they can build it production-grade, which tools help, and has anyone built this on GitHub? Related: map [#318](https://github.com/pawisssh/design/issues/318). Each tool's default Prototype kind is [#319](https://github.com/pawisssh/design/issues/319)'s research, recorded in [ADR 0019](../adr/0019-a-prototype-reaches-component-sets-or-a-handoff-by-its-kind.md)'s table. Finding 2 here covers only each tool's way out (download, git, handoff) and what its docs say about production readiness. Vocabulary follows `GLOSSARY.md` (Prototype, Prototype kind, Handoff, Stand-in, Rendering, Off-system value, Drift, Sign-off, Contract, From-Prototype, To-handoff).
+Research for the question an owner asked: having built a Prototype with a prototyping tool (a Claude artifact, for example), what should go to developers so they can build it production-grade, which tools help, and has anyone built this on GitHub? Related: map [#318](https://github.com/pawisssh/design/issues/318). Each tool's default Prototype kind is [#319](https://github.com/pawisssh/design/issues/319)'s research, recorded in [ADR 0019](../adr/0019-a-prototype-reaches-component-sets-or-a-handoff-by-its-kind.md)'s table. Finding 2 here covers only each tool's way out (download, git, handoff) and what its docs say about production readiness. Vocabulary follows `GLOSSARY.md` (Prototype, Prototype kind, Handoff, Stand-in, Rendering, Off-system value, Drift, Sign-off, Contract, Design System, Code Library, Standard state, Extra state, To-handoff).
 
 Two notes cover the ground around this one, and this note does not restate them:
 
@@ -20,6 +20,7 @@ Researched 2026-10-22. The repo side is read at commit `1594a3f`, and rechecked 
 Notation:
 - **unverified** marks a claim whose primary source I could not open;
 - **unverified** (description only) marks a repo whose README I did not read (the claim rests on its one-line GitHub description);
+- **Reasoning, not sourced** marks this note's own inference;
 - a claim that something is absent means it is absent from the sources and searches listed here, not that it does not exist.
 
 ## Answer
@@ -48,21 +49,21 @@ Notation:
    - production-readiness and security agent skills. One has over 1,000 stars (`raroque/vibe-security-skill`). Most have under 50 stars and a handful of commits;
    - runners and migration CLIs, such as `claude-artifact-runner` (581 stars, last commit 2025-11-21) and `lovable-eject`.
 
-   Single Part 1 items are filled by widely used general tools: axe-core, Lighthouse CI, gitleaks, OSV-Scanner, and Supabase's splinter.
+   Single production areas are filled by widely used general tools: axe-core, Lighthouse CI, gitleaks, OSV-Scanner, and Supabase's splinter.
 
 4. **A Handoff has no key for any of the ten production areas, which fits its definition: it describes a feature, not its build.**
    - The nearest seam is `source.ignored`. The React reader lists there the API routes, middleware, catch-all routes, and private and parallel-route folders it sets aside (`react.mjs`). That is where a Prototype's server-side Stand-ins live; dev-ready-package's Finding 4 found request-access's stub route lost there. `NEXT-PROD` says authorization checks belong inside every server action, not in middleware alone.
-   - The owner-side decisions in Finding 1 have no key at all. dev-ready-package already proposes asking the owner for NFR targets (accessibility, security, performance) and tracked events (its Group 2). Finding 1 adds three it does not list: who may do what, which data is real, and which environments exist. Candidates are in "Against this repo".
+   - The owner-side decisions in Finding 1 have no key at all. dev-ready-package already proposes asking the owner for NFR targets (accessibility, security, performance) and tracked events (its Group 2). Finding 1 adds two it does not list: who may do what, and which environments exist. Which data is real is partly held already, by `data[].source` (`mock`, `simulated` or `real`). Candidates are in "Against this repo".
 
 5. **A Claude artifact reaches To-handoff as a file, not as a URL.** ADR 0019 records plain HTML + CSS classes as Claude's default Prototype kind, with a Handoff supported through the one-HTML-file reader. GLOSSARY still says To-handoff takes "an artifact URL", but the schema's `source.kind` allows only `html-file`, `react-next` and `react-vite`, and no reader takes a URL. The missing step is from the URL to a file (candidates, "Against this repo"):
    - an HTML artifact whose source Claude Code has saved locally, read as `html-file`;
-   - a React artifact turned into a Vite project by `claude-artifact-runner`, read as `react-vite`.
+   - a React artifact turned into a Vite project by `claude-artifact-runner`, read as `react-vite`, but only after a reader change: the React reader does not find the runner's routes.
 
 6. **Among the keys generate never writes, only `data[].shape` has an outside source that could fill it. `a11y` has outside checks, but nothing that fills it.**
    - For `data[].shape`, code-to-PRD writes request and response requirements for endpoints that exist only as mock data, and v0's PRD page drafts API descriptions and database schemas. dev-ready-package proposes that generate write the key from the mock data's fields (its Group 1); these two are outside precedents for that proposal.
    - For `a11y`, axe-core can check the key's content but cannot author a focus order or labels. Its README says it finds about 57% of WCAG issues automatically ([axe-core](https://github.com/dequelabs/axe-core)), and the W3C says human evaluation is required (`WAI-EVAL`).
    - Nothing found fills `interactions`, `tokensToAdd` or `regions[].responsive`, or any of To-handoff's four out-of-scope items.
-   - Two of those four (compiling Tailwind or cva classes, and icons as the icon property) bear on the stacks that v0 and the artifact runner use: Tailwind with shadcn/ui, and lucide icons in the runner.
+   - Two of those four (compiling Tailwind or cva classes, and icons as the icon property) bear on the Prototype kind that v0 and the artifact runner produce: React + Tailwind with shadcn/ui, and lucide icons in the runner.
 
 ## Sources
 
@@ -246,7 +247,7 @@ The split mirrors `openQuestions[].to`, which already addresses each question to
 
 Summary of Finding 1:
 
-| Item | The owner decides | The developer builds | Sources |
+| Production area | The owner decides | The developer builds | Sources |
 | --- | --- | --- | --- |
 | Auth and secrets | Who may do what; sign-in methods; outside services | Auth, secret storage, rotation | `NEXT-PROD`, `NEXT-ENV`, `VITE-ENV`, `SUPA-KEYS`, `OWASP-SECRETS`, `OWASP-TOP10` |
 | Data layer | Which data is real; its shape; what is sensitive | Schema, API, migrations, backups | `SUPA-PROD`, `NEXT-PROD` |
@@ -268,8 +269,8 @@ Summary of Finding 1:
 | v0 | Private GitHub repo as the source of truth, branch roles, previews per branch. Publish opens and merges a PR and respects branch protection (`V0-GH`). Per-file download (`V0-DOCS`), and a zip of a version through API v1 (`V0-DOCS`). | Next.js, React, TypeScript, Tailwind CSS and shadcn/ui (`V0-FAQ`). | Output may be incomplete or contain bugs (`V0-FAQ`). Deploys go to Vercel only, with environment variables per environment (`V0-DEPLOY`). Warns on `NEXT_PUBLIC_` exposure (`V0-SEC`). |
 | Lovable | Two-way sync on one branch with GitHub (also GitLab and Bitbucket); repos are private by default; download on paid plans; an existing repo cannot be connected (`LOVABLE-GH`). | TanStack Start for apps created from 2026-05-13; React + Vite static builds before that. Built-in backend based on Supabase (`LOVABLE-OWN`). | Leaving makes the team responsible for environments, CI/CD, infrastructure, databases, auth, secrets and audits (`LOVABLE-OWN`). Connectors are not carried out (`LOVABLE-EXT`). Scans do not replace a review (`LOVABLE-SEC`). |
 | Bolt | GitHub sync on every change, and import of an existing repo (`BOLT-GIT`). Zip download. "Open in StackBlitz" goes away once a project moves to Bolt's new storage format (`BOLT-PROJ`). | JavaScript only: a Node.js backend and any browser framework, plus Expo for mobile (`BOLT-TECH`). Bolt Cloud database or Supabase (`BOLT-DB`). Built-in hosting (`BOLT-INDEX`). | A project security audit on paid plans covers data access, sign-in, input, keys and secrets kept out of code and browsers, and CORS (`BOLT-SEC`). |
-| Replit Agent | Git-backed; Agent checkpoints are commits; GitHub sync (`REPLIT-VC`). Zip download (`REPLIT-HELP`), which a workspace admin can ban (`REPLIT-ENT`). | Not stated in the pages read. One docs example names React, Node.js and PostgreSQL, as an example only. | Publishing runs security checks, with an optional deep scan and an option to block critical findings (`REPLIT-PUBLISH`). The scans use Semgrep and HoundDog.ai (`REPLIT-SCANS`). |
-| Figma Make | Zip download for Full or Dev seats (`FIG-MAKE-CODE`). One-way push to GitHub's default branch; edits made in GitHub are overwritten (`FIG-MAKE-GH`). | Framework not named in the pages read. Make kits bring a team's production design system package in, for any web framework. An earlier version of the page said React only (`FIG-MAKE-KITS`). | Taking a Make file to production with the production design system goes through the Figma MCP server (`FIG-MAKE-KITS`, `FIG-MCP`). |
+| Replit Agent | Git-backed; Agent checkpoints are commits; GitHub sync (`REPLIT-VC`). Zip download (`REPLIT-HELP`), which a workspace admin can ban (`REPLIT-ENT`). | Not stated in the pages read. ADR 0019, from #319's research, records React + Tailwind + shadcn as its default Prototype kind. | Publishing runs security checks, with an optional deep scan and an option to block critical findings (`REPLIT-PUBLISH`). The scans use Semgrep and HoundDog.ai (`REPLIT-SCANS`). |
+| Figma Make | Zip download for Full or Dev seats (`FIG-MAKE-CODE`). One-way push to GitHub's default branch; edits made in GitHub are overwritten (`FIG-MAKE-GH`). | Framework not named in the pages read. ADR 0019 records React + Tailwind + shadcn, written without a `components.json` (#338). Make kits bring a team's production design system package in, for any web framework. An earlier version of the page said React only (`FIG-MAKE-KITS`). | Taking a Make file to production with the production design system goes through the Figma MCP server (`FIG-MAKE-KITS`, `FIG-MCP`). |
 | GitHub Spark | Retired: no new apps from 2026-08-04; copy out to a repository by 2026-08-31 (`GH-SPARK`). | n/a | The platform's AI calls stopped with GitHub Models' retirement (`GH-SPARK`). |
 
 Notes on the Claude rows:
@@ -373,17 +374,17 @@ None of these is library-bound. They describe what the code does, not which Code
 | [imyezhiyong/prd-prototype-handoff](https://github.com/imyezhiyong/prd-prototype-handoff) | A Codex skill. A Modao prototype is the source of truth, and the skill generates a `handoff.md` with stable IDs for fields, actions, states and acceptance criteria. | none | 2026-06-25 | 0 | 12 | No |
 | [belschak/claude-design-handoff](https://github.com/belschak/claude-design-handoff) | Freezes facts in a document before a Claude Design pass, then checks that they survived. It deals with documents, not code. | MIT | 2026-07-21 | 2 | 11 | No |
 
-**3e. General tools that fill single Part 1 items.** All are maintained by the rule above, except gitleaks: its last default-branch commit is just outside the window, though the repo saw pushes until 2026-09-30.
+**3e. General tools that fill single production areas.**
 
-| Repo | Fills | Licence | Last commit | Stars |
-| --- | --- | --- | --- | --- |
-| [dequelabs/axe-core](https://github.com/dequelabs/axe-core) | Accessibility (1.5). The README says it finds about 57% of WCAG issues automatically, and marks uncertain results as incomplete for manual review. | MPL-2.0 | 2026-10-20 | 7,679 |
-| [GoogleChrome/lighthouse-ci](https://github.com/GoogleChrome/lighthouse-ci) | Performance budget (1.6): runs and asserts Lighthouse on every commit. | Apache-2.0 | 2026-10-19 | 7,118 |
-| [gitleaks/gitleaks](https://github.com/gitleaks/gitleaks) | Secrets (1.1): finds secrets in git repos and files, including as a pre-commit hook. | MIT | 2026-07-22 | 30,195 |
-| [google/osv-scanner](https://github.com/google/osv-scanner) | Dependencies (1.7): a vulnerability scanner using osv.dev data. **Unverified** (description only). | Apache-2.0 | 2026-10-21 | 11,223 |
-| [supabase/splinter](https://github.com/supabase/splinter) | Data layer (1.2): SQL lints for Supabase projects, among them RLS disabled on public tables, RLS on with no policy, a policy that is always true, and sensitive columns exposed. | none detected (the README has a licence badge) | 2026-09-29 | 283 |
+| Repo | Fills | Licence | Last commit | Stars | Maintained? |
+| --- | --- | --- | --- | --- | --- |
+| [dequelabs/axe-core](https://github.com/dequelabs/axe-core) | Accessibility (1.5). The README says it finds about 57% of WCAG issues automatically, and marks uncertain results as incomplete for manual review. | MPL-2.0 | 2026-10-20 | 7,679 | Yes |
+| [GoogleChrome/lighthouse-ci](https://github.com/GoogleChrome/lighthouse-ci) | Performance budget (1.6): runs and asserts Lighthouse on every commit. | Apache-2.0 | 2026-10-19 | 7,118 | Yes |
+| [gitleaks/gitleaks](https://github.com/gitleaks/gitleaks) | Secrets (1.1): finds secrets in git repos and files, including as a pre-commit hook. | MIT | 2026-07-22 | 30,195 | No: its last default-branch commit is just outside the window, though the repo saw pushes until 2026-09-30 |
+| [google/osv-scanner](https://github.com/google/osv-scanner) | Dependencies (1.7): a vulnerability scanner using osv.dev data. **Unverified** (description only). | Apache-2.0 | 2026-10-21 | 11,223 | Yes |
+| [supabase/splinter](https://github.com/supabase/splinter) | Data layer (1.2): SQL lints for Supabase projects, among them RLS disabled on public tables, RLS on with no policy, a policy that is always true, and sensitive columns exposed. | none detected (the README has a licence badge) | 2026-09-29 | 283 | Yes |
 
-**3f. Adjacent workflows, not specific to a Prototype.**
+**3f. Adjacent workflows, not specific to a Prototype.** Every repo here with a last commit given is maintained by the rule above.
 - **[github/spec-kit](https://github.com/github/spec-kit)** (MIT, last commit 2026-10-21, 142,287 stars). For existing code, its guide says it does not infer descriptions of existing behaviour: each new document describes one change (`SPECKIT-EXISTING`). [Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) (MIT, 2026-10-20, 72,650 stars) says it is built for existing codebases too.
 - **[kirodotdev/Kiro](https://github.com/kirodotdev/Kiro)** (none, 2026-08-27, 4,384 stars) is only Kiro's public issue tracker. The product's source is not there.
 - **[anthropics/skills](https://github.com/anthropics/skills)** (licence per skill; 2026-10-09; 182,720 stars):
@@ -398,8 +399,8 @@ None of these is library-bound. They describe what the code does, not which Code
   - [stackblitz-labs/bolt.diy](https://github.com/stackblitz-labs/bolt.diy) (MIT, 2026-10-14, 19,975). The original [stackblitz/bolt.new](https://github.com/stackblitz/bolt.new) has had no commit since 2024-12-17;
   - [Nutlope/llamacoder](https://github.com/Nutlope/llamacoder) (MIT, 2026-10-15, 7,136), which generates artifact-style apps.
 - **Not this problem:**
-  - [TexasBedouin/vibe-check](https://github.com/TexasBedouin/vibe-check) (623 stars) works from an idea to a plan, before any code exists;
-  - [ToolMonsters/handoff-skill](https://github.com/ToolMonsters/handoff-skill) (43 stars) hands one chat session over to another model. Only the name matches.
+  - [TexasBedouin/vibe-check](https://github.com/TexasBedouin/vibe-check) (MIT, 2026-07-17, 624 stars; not maintained by the rule above) works from an idea to a plan, before any code exists;
+  - [ToolMonsters/handoff-skill](https://github.com/ToolMonsters/handoff-skill) (MIT, 2026-07-23, 43 stars; not maintained by the rule above) hands one chat session over to another model. Only the name matches.
 
 **What the search shows.**
 - The popular repos are collections, in which a code-to-PRD or shipping-docs skill is one entry, or general tools for one concern.
@@ -408,26 +409,26 @@ None of these is library-bound. They describe what the code does, not which Code
 
 ## Summary table
 
-A rollup of Findings 1 to 3 and of "Against this repo" below, one row per production area. It adds no claims beyond those sections.
+A rollup of Findings 1 to 3 and of "Against this repo" below, one row per production area. It adds no claims beyond those sections. What the owner decides per area is in Finding 1's table.
 
-| Area | The owner decides | What the tools ship (Finding 2) | GitHub help (Finding 3) | Handoff key today | Gap |
-| --- | --- | --- | --- | --- | --- |
-| Auth and secrets | Who may do what; sign-in methods; outside services | v0's `NEXT_PUBLIC_` warning; Bolt's audit covers sign-in, keys and secrets; Lovable and Replit scans | gitleaks; raroque/vibe-security-skill; pm-ai-shipping's permissions and variables documents | none; `source.ignored` lists middleware and API routes | The owner's roles against actions have no key |
-| Data layer | Which data is real; its shape; what is sensitive | Bolt's audit covers data access; Lovable's and Bolt's databases move to Supabase | supabase/splinter; code-to-PRD (mock data versus real calls) | `data[]` (`source`, `note`, `question`); `stand-in` questions | `data[].shape` is never written (dev-ready-package proposes drafting it) |
-| Error, empty, loading | What each state shows (design side) | none in the pages read | none specific found | `screens[].states`; Next.js `loading` and `error` files read as conditions | Covered by the earlier note |
-| Tests | Acceptance criteria | none in the pages read | pm-ai-shipping's `derive-tests`; anthropics/skills `webapp-testing` | `acceptance[]` | Test level and coverage |
-| Accessibility | Target; focus order, labels, landmarks (design side) | none in the pages read | axe-core; vercel-labs/agent-skills `web-design-guidelines` | `regions[].landmark`; `a11y` never written | `a11y` is never written; no audit result |
-| Performance | Targets, devices, traffic | none in the pages read | lighthouse-ci; pm-ai-shipping's static performance audit | none | Owner targets have no key (dev-ready-package proposes asking for them) |
-| Dependencies, licences | Licences of fonts and assets | Lovable's quick scan includes a dependency audit | osv-scanner (**unverified**); checks for packages that do not exist (AI-SLOP-Detector, aiqualitylab checklist) | none | No key |
-| Security | What input is accepted, from whom | Lovable, Bolt and Replit scans; v0's warning | Repos in 3b; pm-ai-shipping's static security audit | none | No key (dev-ready-package proposes asking for an ASVS level) |
-| Observability | What counts as failure; analytics events | none in the pages read | none specific found | none; no analytics key | Alerting; analytics events (dev-ready-package, Finding 8) |
-| Deploy, environments | Which environments; preview access; domains | v0 deploys to Vercel with variables per environment; Bolt hosting; Replit publishing | lovable-eject (`vercel.json`, health endpoint); vercel-labs/agent-skills `deploy-to-vercel` | none | Environments have no key |
+| Production area | What the tools ship (Finding 2) | GitHub help (Finding 3) | Handoff key today | Gap |
+| --- | --- | --- | --- | --- |
+| Auth and secrets | v0's `NEXT_PUBLIC_` warning; Bolt's audit covers sign-in, keys and secrets; Lovable and Replit scans | gitleaks; raroque/vibe-security-skill; pm-ai-shipping's permissions and variables documents | none; `source.ignored` lists middleware and API routes | The owner's roles against actions have no key |
+| Data layer | Bolt's audit covers data access; Lovable's and Bolt's databases move to Supabase | supabase/splinter; code-to-PRD (mock data versus real calls) | `data[]` (`source`, `note`, `question`); `stand-in` questions | `data[].shape` is never written (dev-ready-package proposes drafting it) |
+| Error, empty, loading | none in the pages read | none specific found | `screens[].states`; Next.js `loading` and `error` files read as conditions | Covered by the earlier note |
+| Tests | none in the pages read | pm-ai-shipping's `derive-tests`; anthropics/skills `webapp-testing` | `acceptance[]` | Test level and coverage |
+| Accessibility | none in the pages read | axe-core; vercel-labs/agent-skills `web-design-guidelines` | `regions[].landmark`; `a11y` never written | `a11y` is never written; no audit result |
+| Performance | none in the pages read | lighthouse-ci; pm-ai-shipping's static performance audit | none | Owner targets have no key (dev-ready-package proposes asking for them) |
+| Dependencies, licences | Lovable's quick scan includes a dependency audit | osv-scanner (**unverified**); checks for packages that do not exist (AI-SLOP-Detector, aiqualitylab checklist) | none | No key |
+| Security | Lovable, Bolt and Replit scans; v0's warning | Repos in 3b; pm-ai-shipping's static security audit | none | No key (dev-ready-package proposes asking for an ASVS level) |
+| Observability | none in the pages read | none specific found | none; no analytics key | Alerting; analytics events (dev-ready-package, Finding 8) |
+| Deploy, environments | v0 deploys to Vercel with variables per environment; Bolt hosting; Replit publishing | lovable-eject (`vercel.json`, health endpoint); vercel-labs/agent-skills `deploy-to-vercel` | none | Environments have no key |
 
 ## Against this repo
 
-**1. Where each Part 1 item sits in a Handoff today.**
+**1. Where each production area sits in a Handoff today.**
 
-| Part 1 item | Handoff key today | Note |
+| Production area | Handoff key today | Note |
 | --- | --- | --- |
 | Auth and secrets | none | `source.ignored` lists middleware and API routes (`react.mjs` L539, L546). |
 | Data layer | `data[]` (`source`, `note`, `question`); `openQuestions` kind `stand-in` | `data[].shape` is in the schema (L82) but never written. |
@@ -446,7 +447,10 @@ This fits GLOSSARY. A Handoff describes one feature against a Design System. Pro
 
 1. **Read Claude artifacts through kinds that already exist.** GLOSSARY lists "an artifact URL" as To-handoff input, but `source.kind` (schema L39) allows only `html-file`, `react-next` and `react-vite`. ADR 0019 already supports Claude's default kind, plain HTML + CSS classes, through the HTML-file reader. What is missing is the step from the URL to the file.
    - An HTML artifact whose source Claude Code has saved locally (`CC-ARTIFACTS`) would be an `html-file` Prototype.
-   - A React artifact made into a Vite project by `claude-artifact-runner create` would be a `react-vite` Prototype. With no router, it would have one screen, `index` (`SKILL.md`).
+   - A React artifact made into a Vite project by `claude-artifact-runner create` would be a React + Tailwind + shadcn Prototype, ADR 0019's first kind, read as `react-vite`. The React reader would not find its screens, though:
+     - The runner's `src/main.tsx` builds its router with a conditional, `useHash ? createHashRouter(mkRoutes) : createBrowserRouter(mkRoutes)`, over routes mapped from the generated module `virtual:generated-pages-react`.
+     - The reader takes routes from `RouterProvider` only through a direct call whose first argument is an array literal (`react.mjs` L432–436).
+     - **Reasoning, not sourced** (read from the code, not run): the reader would get one empty `index` screen. Reading the runner's projects needs a reader change.
    - A Claude Design standalone HTML download would also be an `html-file`.
    - **unverified:**
      - that a chat artifact URL can be read into Claude Code;
@@ -456,12 +460,13 @@ This fits GLOSSARY. A Handoff describes one feature against a Design System. Pro
    - dev-ready-package already proposes reading a `fetch` to the Prototype's own stub API route as a `data[]` Stand-in (its Group 1). Middleware has no `fetch` to follow, so that proposal does not reach it.
    - `source.ignored` names the middleware as well (`react.mjs` L539). **Reasoning, not sourced:** a Prototype's middleware is where a sign-in Stand-in would sit. `NEXT-PROD` says authorization must not live in middleware alone.
    - A developer-addressed `openQuestions` entry of kind `stand-in` per ignored middleware ("what does this pretend to do?") would follow GLOSSARY's Stand-in rule: record what it pretends to do, never how. It needs no new schema key.
-3. **Three owner asks beside dev-ready-package's.**
+3. **Two owner asks beside dev-ready-package's.**
    - dev-ready-package's Group 2 proposes asking the owner for metrics, NFR targets and tracked events, as `feature` fields or new decision keys.
-   - Finding 1 adds three owner decisions that list does not have: who may do each action, which data is real (and which is sensitive), and which environments exist and who sees previews.
+   - Finding 1 adds two owner decisions that list does not have: who may do each action, and which environments exist and who sees previews.
+   - Two more are partly covered. Which data is real is held by `data[].source` (`mock`, `simulated` or `real`; schema L82). What is sensitive overlaps Group 2's DPIA ask.
    - Asked as open questions instead, they would meet a closed enum: `openQuestions.kind` (schema L72) needs a new kind or reuse of an existing one. Either is an ADR-sized choice.
-4. **Point to a shipping packet instead of growing the schema.**
-   - pm-ai-shipping's core documents (architecture, flows, permissions, variables, test-coverage map) cover the Part 1 items a Handoff has no place for: auth and authorization, secrets and environment variables, and test coverage. They describe a whole app, reverse-engineered from code that will be built.
+4. **Point to a shipping packet instead of growing the schema.** ("Shipping packet" is this note's phrase, not a glossary term.)
+   - pm-ai-shipping's core documents (architecture, flows, permissions, variables, test-coverage map) cover the production areas a Handoff has no place for: auth and authorization, secrets and environment variables, and test coverage. They describe a whole app, reverse-engineered from code that will be built.
    - A Handoff Rendering could link to such a packet, if a team keeps one. It would not copy the packet in, because a Rendering never adds content (GLOSSARY).
 
 **3. The never-written keys.**
@@ -476,7 +481,7 @@ This fits GLOSSARY. A Handoff describes one feature against a Design System. Pro
 
 **4. The out-of-scope list.** No tool or repo found does any of To-handoff's four out-of-scope items for React Prototypes: compiling Tailwind or cva classes, icons as the icon property, layout regions recorded once across screens, and overlay flow transitions.
 - v0 builds with Tailwind and shadcn/ui (`V0-FAQ`), so the first item applies to every v0 Prototype.
-- claude-artifact-runner's projects are Tailwind and shadcn/ui with lucide icons, so the first two items apply to an artifact read through it.
+- claude-artifact-runner's projects are Tailwind and shadcn/ui with lucide icons, so the first two items would apply to an artifact read through it, once a reader takes its routes (candidate 1).
 - v0's docs read here name no icon library.
 
 **5. Gaps nobody fills, in these sources and searches.**
