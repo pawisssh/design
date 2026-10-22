@@ -1,0 +1,6331 @@
+{
+ "sheets": [
+  {
+   "sheet": "src/App.scss",
+   "bytes": 954813
+  },
+  {
+   "sheet": "src/components/PortfolioSummary/PortfolioSummary.scss",
+   "bytes": 4357
+  },
+  {
+   "sheet": "src/components/PortfolioVersion/PortfolioVersion.scss",
+   "bytes": 7590
+  },
+  {
+   "sheet": "src/components/PortfolioVersionDetail/PortfolioVersionDetail.scss",
+   "bytes": 10451
+  },
+  {
+   "sheet": "src/components/Modals/Modals.scss",
+   "bytes": 3024
+  }
+ ],
+ "rules": 9831,
+ "markupBytes": 5290,
+ "axes": [
+  {
+   "at": "src/App.jsx:44",
+   "condition": "(isReady || isActive)",
+   "whenTrue": "phc-icon--black",
+   "whenFalse": "phc-icon--gray"
+  },
+  {
+   "at": "src/App.jsx:70",
+   "condition": "isOverdue",
+   "whenTrue": "phc-icon--red",
+   "whenFalse": "phc-icon--gray"
+  }
+ ],
+ "declaredOn": {
+  "--cds-background": [
+   ".cds--white",
+   ".cds--g10",
+   ".cds--g90",
+   ".cds--g100"
+  ],
+  "--cds-background-active": [
+   ".cds--white",
+   ".cds--g10",
+   ".cds--g90",
+   ".cds--g100"
+  ],
+  "--cds-background-brand": [
+   ".cds--white",
+   ".cds--g10",
+   ".cds--g90",
+   ".cds--g100"
+  ],
+  "--cds-background-hover": [
+   ".cds--white",
+   ".cds--g10",
+   ".cds--g90",
+   ".cds--g100"
+  ],
+  "--cds-background-inverse": [
+   ".cds--white",
+   ".cds--g10",
+   ".cds--g90",
+   ".cds--g100"
+  ],
+  "--cds-background-inverse-hover": [
+   ".cds--white",
+   ".cds--g10",
+   ".cds--g90",
+   ".cds--g100"
+  ],
+  "--cds-background-selected": [
+   ".cds--white",
+   ".cds--g10",
+   ".cds--g90",
+   ".cds--g100"
+  ],
+  "--cds-background-selected-hover": [
+   ".cds--white",
+   ".cds--g10",
+   ".cds--g90",
+   ".cds--g100"
+  ],
+  "--phc-bg-primary": [
+   ":root"
+  ],
+  "--phc-bg-secondary": [
+   ":root"
+  ],
+  "--phc-text-primary": [
+   ":root"
+  ],
+  "--phc-text-secondary": [
+   ":root"
+  ],
+  "--phc-accent-blue": [
+   ":root"
+  ],
+  "--phc-border-subtle": [
+   ":root"
+  ],
+  "--phc-sidebar-bg": [
+   ":root"
+  ],
+  "--phc-danger": [
+   ":root"
+  ],
+  "--phc-sidebar-width": [
+   ":root"
+  ],
+  "--phc-content-max": [
+   ":root"
+  ]
+ },
+ "rootVars": [
+  "--fa-style-family-brands",
+  "--fa-font-brands",
+  "--fa-style-family-classic",
+  "--fa-font-regular",
+  "--fa-font-solid",
+  "--cds-grid-gutter",
+  "--cds-grid-columns",
+  "--cds-grid-margin",
+  "--cds-layer",
+  "--cds-layer-active",
+  "--cds-layer-background",
+  "--cds-layer-hover",
+  "--cds-layer-selected",
+  "--cds-layer-selected-hover",
+  "--cds-layer-accent",
+  "--cds-layer-accent-hover",
+  "--cds-layer-accent-active",
+  "--cds-field",
+  "--cds-field-hover",
+  "--cds-border-subtle",
+  "--cds-border-subtle-selected",
+  "--cds-border-strong",
+  "--cds-border-tile",
+  "--cds-layout-size-height-xs",
+  "--cds-layout-size-height-sm",
+  "--cds-layout-size-height-md",
+  "--cds-layout-size-height-lg",
+  "--cds-layout-size-height-xl",
+  "--cds-layout-size-height-2xl",
+  "--cds-layout-size-height-min",
+  "--cds-layout-size-height-max",
+  "--cds-layout-density-padding-inline-condensed",
+  "--cds-layout-density-padding-inline-normal",
+  "--cds-layout-density-padding-inline-min",
+  "--cds-layout-density-padding-inline-max",
+  "--phc-bg-primary",
+  "--phc-bg-secondary",
+  "--phc-text-primary",
+  "--phc-text-secondary",
+  "--phc-accent-blue",
+  "--phc-border-subtle",
+  "--phc-sidebar-bg",
+  "--phc-danger",
+  "--phc-sidebar-width"
+ ],
+ "g10": {
+  "--cds-ai-aura-end": "rgba(255, 255, 255, 0)",
+  "--cds-ai-aura-hover-background": "#edf5ff",
+  "--cds-ai-aura-hover-end": "rgba(255, 255, 255, 0)",
+  "--cds-ai-aura-hover-start": "rgba(69, 137, 255, 0.32)",
+  "--cds-ai-aura-start": "rgba(69, 137, 255, 0.1)",
+  "--cds-ai-aura-start-sm": "rgba(69, 137, 255, 0.16)",
+  "--cds-ai-border-end": "#78a9ff",
+  "--cds-ai-border-start": "rgba(166, 200, 255, 0.64)",
+  "--cds-ai-border-strong": "#4589ff",
+  "--cds-ai-drop-shadow": "rgba(15, 98, 254, 0.1)",
+  "--cds-ai-inner-shadow": "rgba(69, 137, 255, 0.1)",
+  "--cds-ai-overlay": "rgba(0, 17, 65, 0.5)",
+  "--cds-ai-popover-background": "#ffffff",
+  "--cds-ai-popover-caret-bottom": "#78a9ff",
+  "--cds-ai-popover-caret-bottom-background": "#eaf1ff",
+  "--cds-ai-popover-caret-bottom-background-actions": "#e9effa",
+  "--cds-ai-popover-caret-center": "#a0c3ff",
+  "--cds-ai-popover-shadow-outer-01": "rgba(0, 67, 206, 0.06)",
+  "--cds-ai-popover-shadow-outer-02": "rgba(0, 0, 0, 0.04)",
+  "--cds-ai-skeleton-background": "#d0e2ff",
+  "--cds-ai-skeleton-element-background": "#4589ff",
+  "--cds-background": "#f4f4f4",
+  "--cds-background-active": "rgba(141, 141, 141, 0.5)",
+  "--cds-background-brand": "#0f62fe",
+  "--cds-background-hover": "rgba(141, 141, 141, 0.12)",
+  "--cds-background-inverse": "#393939",
+  "--cds-background-inverse-hover": "#474747",
+  "--cds-background-selected": "rgba(141, 141, 141, 0.2)",
+  "--cds-background-selected-hover": "rgba(141, 141, 141, 0.32)",
+  "--cds-border-disabled": "#c6c6c6",
+  "--cds-border-interactive": "#0f62fe",
+  "--cds-border-inverse": "#161616",
+  "--cds-border-strong-01": "#8d8d8d",
+  "--cds-border-strong-02": "#8d8d8d",
+  "--cds-border-strong-03": "#8d8d8d",
+  "--cds-border-subtle-00": "#c6c6c6",
+  "--cds-border-subtle-01": "#e0e0e0",
+  "--cds-border-subtle-02": "#c6c6c6",
+  "--cds-border-subtle-03": "#e0e0e0",
+  "--cds-border-subtle-selected-01": "#c6c6c6",
+  "--cds-border-subtle-selected-02": "#c6c6c6",
+  "--cds-border-subtle-selected-03": "#c6c6c6",
+  "--cds-border-tile-01": "#a8a8a8",
+  "--cds-border-tile-02": "#c6c6c6",
+  "--cds-border-tile-03": "#a8a8a8",
+  "--cds-chat-avatar-agent": "#393939",
+  "--cds-chat-avatar-bot": "#6f6f6f",
+  "--cds-chat-avatar-user": "#0f62fe",
+  "--cds-chat-bubble-agent": "#ffffff",
+  "--cds-chat-bubble-agent-text": "#161616",
+  "--cds-chat-bubble-border": "#e0e0e0",
+  "--cds-chat-bubble-user": "#e0e0e0",
+  "--cds-chat-bubble-user-text": "#161616",
+  "--cds-chat-button": "#0f62fe",
+  "--cds-chat-button-active": "rgba(141, 141, 141, 0.5)",
+  "--cds-chat-button-hover": "rgba(141, 141, 141, 0.12)",
+  "--cds-chat-button-selected": "rgba(141, 141, 141, 0.2)",
+  "--cds-chat-button-text-hover": "#0043ce",
+  "--cds-chat-button-text-selected": "#525252",
+  "--cds-chat-header-background": "#ffffff",
+  "--cds-chat-header-text": "#161616",
+  "--cds-chat-prompt-background": "#ffffff",
+  "--cds-chat-prompt-border-end": "rgba(244, 244, 244, 0)",
+  "--cds-chat-prompt-border-start": "#f4f4f4",
+  "--cds-chat-prompt-text": "#161616",
+  "--cds-chat-shell-background": "#ffffff",
+  "--cds-color-scheme": "light",
+  "--cds-field-01": "#ffffff",
+  "--cds-field-02": "#f4f4f4",
+  "--cds-field-03": "#ffffff",
+  "--cds-field-hover-01": "#e8e8e8",
+  "--cds-field-hover-02": "#e8e8e8",
+  "--cds-field-hover-03": "#e8e8e8",
+  "--cds-focus": "#0f62fe",
+  "--cds-focus-inset": "#ffffff",
+  "--cds-focus-inverse": "#ffffff",
+  "--cds-highlight": "#d0e2ff",
+  "--cds-icon-disabled": "rgba(22, 22, 22, 0.25)",
+  "--cds-icon-interactive": "#0f62fe",
+  "--cds-icon-inverse": "#ffffff",
+  "--cds-icon-on-color": "#ffffff",
+  "--cds-icon-on-color-disabled": "#8d8d8d",
+  "--cds-icon-primary": "#161616",
+  "--cds-icon-secondary": "#525252",
+  "--cds-interactive": "#0f62fe",
+  "--cds-layer-01": "#ffffff",
+  "--cds-layer-02": "#f4f4f4",
+  "--cds-layer-03": "#ffffff",
+  "--cds-layer-accent-01": "#e0e0e0",
+  "--cds-layer-accent-02": "#e0e0e0",
+  "--cds-layer-accent-03": "#e0e0e0",
+  "--cds-layer-accent-active-01": "#a8a8a8",
+  "--cds-layer-accent-active-02": "#a8a8a8",
+  "--cds-layer-accent-active-03": "#a8a8a8",
+  "--cds-layer-accent-hover-01": "#d1d1d1",
+  "--cds-layer-accent-hover-02": "#d1d1d1",
+  "--cds-layer-accent-hover-03": "#d1d1d1",
+  "--cds-layer-active-01": "#c6c6c6",
+  "--cds-layer-active-02": "#c6c6c6",
+  "--cds-layer-active-03": "#c6c6c6",
+  "--cds-layer-background-01": "#f4f4f4",
+  "--cds-layer-background-02": "#ffffff",
+  "--cds-layer-background-03": "#f4f4f4",
+  "--cds-layer-hover-01": "#e8e8e8",
+  "--cds-layer-hover-02": "#e8e8e8",
+  "--cds-layer-hover-03": "#e8e8e8",
+  "--cds-layer-selected-01": "#e0e0e0",
+  "--cds-layer-selected-02": "#e0e0e0",
+  "--cds-layer-selected-03": "#e0e0e0",
+  "--cds-layer-selected-disabled": "#8d8d8d",
+  "--cds-layer-selected-hover-01": "#d1d1d1",
+  "--cds-layer-selected-hover-02": "#d1d1d1",
+  "--cds-layer-selected-hover-03": "#d1d1d1",
+  "--cds-layer-selected-inverse": "#161616",
+  "--cds-link-inverse": "#78a9ff",
+  "--cds-link-inverse-active": "#f4f4f4",
+  "--cds-link-inverse-hover": "#a6c8ff",
+  "--cds-link-inverse-visited": "#be95ff",
+  "--cds-link-primary": "#0f62fe",
+  "--cds-link-primary-hover": "#0043ce",
+  "--cds-link-secondary": "#0043ce",
+  "--cds-link-visited": "#8a3ffc",
+  "--cds-overlay": "rgba(0, 0, 0, 0.6)",
+  "--cds-shadow": "rgba(0, 0, 0, 0.3)",
+  "--cds-skeleton-background": "#e8e8e8",
+  "--cds-skeleton-element": "#c6c6c6",
+  "--cds-support-caution-major": "#ff832b",
+  "--cds-support-caution-minor": "#f1c21b",
+  "--cds-support-caution-undefined": "#8a3ffc",
+  "--cds-support-error": "#da1e28",
+  "--cds-support-error-inverse": "#fa4d56",
+  "--cds-support-info": "#0043ce",
+  "--cds-support-info-inverse": "#4589ff",
+  "--cds-support-success": "#24a148",
+  "--cds-support-success-inverse": "#42be65",
+  "--cds-support-warning": "#f1c21b",
+  "--cds-support-warning-inverse": "#f1c21b",
+  "--cds-syntax-angle-bracket": "#697077",
+  "--cds-syntax-annotation": "#007d79",
+  "--cds-syntax-arithmetic-operator": "#343a3f",
+  "--cds-syntax-atom": "#161616",
+  "--cds-syntax-attribute": "#00539a",
+  "--cds-syntax-attribute-name": "#00539a",
+  "--cds-syntax-attribute-value": "#161616",
+  "--cds-syntax-bitwise-operator": "#343a3f",
+  "--cds-syntax-block-comment": "#198038",
+  "--cds-syntax-bool": "#161616",
+  "--cds-syntax-brace": "#343a3f",
+  "--cds-syntax-bracket": "#343a3f",
+  "--cds-syntax-character": "#161616",
+  "--cds-syntax-class-name": "#007d79",
+  "--cds-syntax-color": "#161616",
+  "--cds-syntax-comment": "#198038",
+  "--cds-syntax-compare-operator": "#343a3f",
+  "--cds-syntax-constant": "#0f62fe",
+  "--cds-syntax-content": "#161616",
+  "--cds-syntax-content-separator": "#343a3f",
+  "--cds-syntax-control-keyword": "#6929c4",
+  "--cds-syntax-control-operator": "#6929c4",
+  "--cds-syntax-definition": "#00539a",
+  "--cds-syntax-definition-keyword": "#00539a",
+  "--cds-syntax-definition-operator": "#00539a",
+  "--cds-syntax-deref-operator": "#343a3f",
+  "--cds-syntax-doc-comment": "#198038",
+  "--cds-syntax-doc-string": "#161616",
+  "--cds-syntax-document-meta": "#198038",
+  "--cds-syntax-emphasis": "#161616",
+  "--cds-syntax-escape": "#343a3f",
+  "--cds-syntax-float": "#198038",
+  "--cds-syntax-function": "#8e6a00",
+  "--cds-syntax-heading": "#00539a",
+  "--cds-syntax-heading-1": "#00539a",
+  "--cds-syntax-heading-2": "#00539a",
+  "--cds-syntax-heading-3": "#00539a",
+  "--cds-syntax-heading-4": "#00539a",
+  "--cds-syntax-heading-5": "#00539a",
+  "--cds-syntax-heading-6": "#00539a",
+  "--cds-syntax-integer": "#198038",
+  "--cds-syntax-invalid": "#da1e28",
+  "--cds-syntax-keyword": "#0f62fe",
+  "--cds-syntax-label-name": "#0f62fe",
+  "--cds-syntax-line-comment": "#198038",
+  "--cds-syntax-link": "#0f62fe",
+  "--cds-syntax-list": "#161616",
+  "--cds-syntax-literal": "#161616",
+  "--cds-syntax-local": "#0f62fe",
+  "--cds-syntax-logic-operator": "#343a3f",
+  "--cds-syntax-macro-name": "#161616",
+  "--cds-syntax-meta": "#198038",
+  "--cds-syntax-modifier": "#0f62fe",
+  "--cds-syntax-module-keyword": "#6929c4",
+  "--cds-syntax-monospace": "#161616",
+  "--cds-syntax-name": "#0f62fe",
+  "--cds-syntax-namespace": "#007d79",
+  "--cds-syntax-null": "#161616",
+  "--cds-syntax-number": "#198038",
+  "--cds-syntax-operator": "#343a3f",
+  "--cds-syntax-operator-keyword": "#0f62fe",
+  "--cds-syntax-paren": "#343a3f",
+  "--cds-syntax-processing-instruction": "#161616",
+  "--cds-syntax-property-name": "#00539a",
+  "--cds-syntax-punctuation": "#343a3f",
+  "--cds-syntax-quote": "#198038",
+  "--cds-syntax-regexp": "#6929c4",
+  "--cds-syntax-self": "#007d79",
+  "--cds-syntax-separator": "#343a3f",
+  "--cds-syntax-special": "#0f62fe",
+  "--cds-syntax-special-string": "#8a3ffc",
+  "--cds-syntax-square-bracket": "#343a3f",
+  "--cds-syntax-standard": "#0f62fe",
+  "--cds-syntax-strikethrough": "#161616",
+  "--cds-syntax-string": "#161616",
+  "--cds-syntax-strong": "#161616",
+  "--cds-syntax-tag": "#007d79",
+  "--cds-syntax-tag-name": "#007d79",
+  "--cds-syntax-type": "#007d79",
+  "--cds-syntax-type-name": "#007d79",
+  "--cds-syntax-type-operator": "#007d79",
+  "--cds-syntax-unit": "#198038",
+  "--cds-syntax-update-operator": "#343a3f",
+  "--cds-syntax-url": "#343a3f",
+  "--cds-syntax-variable": "#0f62fe",
+  "--cds-syntax-variable-name": "#0f62fe",
+  "--cds-text-disabled": "rgba(22, 22, 22, 0.25)",
+  "--cds-text-error": "#da1e28",
+  "--cds-text-helper": "#6f6f6f",
+  "--cds-text-inverse": "#ffffff",
+  "--cds-text-on-color": "#ffffff",
+  "--cds-text-on-color-disabled": "#8d8d8d",
+  "--cds-text-placeholder": "rgba(22, 22, 22, 0.4)",
+  "--cds-text-primary": "#161616",
+  "--cds-text-secondary": "#525252",
+  "--cds-toggle-off": "#8d8d8d",
+  "--cds-layer": "var(--cds-layer-01, #ffffff)",
+  "--cds-layer-active": "var(--cds-layer-active-01, #c6c6c6)",
+  "--cds-layer-background": "var(--cds-layer-background-01, #f4f4f4)",
+  "--cds-layer-hover": "var(--cds-layer-hover-01, #e8e8e8)",
+  "--cds-layer-selected": "var(--cds-layer-selected-01, #e0e0e0)",
+  "--cds-layer-selected-hover": "var(--cds-layer-selected-hover-01, #d1d1d1)",
+  "--cds-layer-accent": "var(--cds-layer-accent-01, #e0e0e0)",
+  "--cds-layer-accent-hover": "var(--cds-layer-accent-hover-01, #d1d1d1)",
+  "--cds-layer-accent-active": "var(--cds-layer-accent-active-01, #a8a8a8)",
+  "--cds-field": "var(--cds-field-01, #ffffff)",
+  "--cds-field-hover": "var(--cds-field-hover-01, #e8e8e8)",
+  "--cds-border-subtle": "var(--cds-border-subtle-00, #c6c6c6)",
+  "--cds-border-subtle-selected": "var(--cds-border-subtle-selected-01, #c6c6c6)",
+  "--cds-border-strong": "var(--cds-border-strong-01, #8d8d8d)",
+  "--cds-border-tile": "var(--cds-border-tile-01, #a8a8a8)",
+  "--cds-button-separator": "#e0e0e0",
+  "--cds-button-primary": "#0f62fe",
+  "--cds-button-secondary": "#393939",
+  "--cds-button-tertiary": "#0f62fe",
+  "--cds-button-danger-primary": "#da1e28",
+  "--cds-button-danger-secondary": "#da1e28",
+  "--cds-button-danger-active": "#750e13",
+  "--cds-button-primary-active": "#002d9c",
+  "--cds-button-secondary-active": "#6f6f6f",
+  "--cds-button-tertiary-active": "#002d9c",
+  "--cds-button-danger-hover": "#b81921",
+  "--cds-button-primary-hover": "#0050e6",
+  "--cds-button-secondary-hover": "#474747",
+  "--cds-button-tertiary-hover": "#0050e6",
+  "--cds-button-disabled": "#c6c6c6",
+  "--cds-notification-background-error": "#fff1f1",
+  "--cds-notification-background-success": "#defbe6",
+  "--cds-notification-background-info": "#edf5ff",
+  "--cds-notification-background-warning": "#fcf4d6",
+  "--cds-notification-action-hover": "#ffffff",
+  "--cds-notification-action-tertiary-inverse": "#ffffff",
+  "--cds-notification-action-tertiary-inverse-active": "#c6c6c6",
+  "--cds-notification-action-tertiary-inverse-hover": "#f4f4f4",
+  "--cds-notification-action-tertiary-inverse-text": "#161616",
+  "--cds-notification-action-tertiary-inverse-text-on-color-disabled": "rgba(255, 255, 255, 0.25)",
+  "--cds-tag-background-red": "#ffd7d9",
+  "--cds-tag-color-red": "#a2191f",
+  "--cds-tag-hover-red": "#ffc2c5",
+  "--cds-tag-background-magenta": "#ffd6e8",
+  "--cds-tag-color-magenta": "#9f1853",
+  "--cds-tag-hover-magenta": "#ffbdda",
+  "--cds-tag-background-purple": "#e8daff",
+  "--cds-tag-color-purple": "#6929c4",
+  "--cds-tag-hover-purple": "#dcc7ff",
+  "--cds-tag-background-blue": "#d0e2ff",
+  "--cds-tag-color-blue": "#0043ce",
+  "--cds-tag-hover-blue": "#b8d3ff",
+  "--cds-tag-background-cyan": "#bae6ff",
+  "--cds-tag-color-cyan": "#00539a",
+  "--cds-tag-hover-cyan": "#99daff",
+  "--cds-tag-background-teal": "#9ef0f0",
+  "--cds-tag-color-teal": "#005d5d",
+  "--cds-tag-hover-teal": "#57e5e5",
+  "--cds-tag-background-green": "#a7f0ba",
+  "--cds-tag-color-green": "#0e6027",
+  "--cds-tag-hover-green": "#74e792",
+  "--cds-tag-background-gray": "#e0e0e0",
+  "--cds-tag-color-gray": "#161616",
+  "--cds-tag-hover-gray": "#d1d1d1",
+  "--cds-tag-border-red": "#ff8389",
+  "--cds-tag-border-blue": "#78a9ff",
+  "--cds-tag-border-cyan": "#33b1ff",
+  "--cds-tag-border-teal": "#08bdba",
+  "--cds-tag-border-green": "#42be65",
+  "--cds-tag-border-magenta": "#ff7eb6",
+  "--cds-tag-border-purple": "#be95ff",
+  "--cds-tag-border-gray": "#a8a8a8",
+  "--cds-tag-border-cool-gray": "#a2a9b0",
+  "--cds-tag-border-warm-gray": "#ada8a8",
+  "--cds-tag-background-cool-gray": "#dde1e6",
+  "--cds-tag-color-cool-gray": "#121619",
+  "--cds-tag-hover-cool-gray": "#cdd3da",
+  "--cds-tag-background-warm-gray": "#e5e0df",
+  "--cds-tag-color-warm-gray": "#171414",
+  "--cds-tag-hover-warm-gray": "#d8d0cf",
+  "--cds-status-red": "#da1e28",
+  "--cds-status-orange": "#ff832b",
+  "--cds-status-orange-outline": "#ba4e00",
+  "--cds-status-yellow": "#f1c21b",
+  "--cds-status-yellow-outline": "#8e6a00",
+  "--cds-status-green": "#24a148",
+  "--cds-status-blue": "#0043ce",
+  "--cds-status-purple": "#8a3ffc",
+  "--cds-status-gray": "#6f6f6f",
+  "--cds-content-switcher-background": "#e0e0e0",
+  "--cds-content-switcher-background-hover": "#d1d1d1",
+  "--cds-content-switcher-selected": "#ffffff"
+ },
+ "selectorRisk": {
+  "rules": 5,
+  "applied": 2,
+  "keptApart": 3,
+  "examples": [
+   ".cds--popover-container:not(.cds--popover--auto-align)",
+   ".cds--layout--size-sm :where(.cds--popover-content)",
+   ".cds--popover--top:not(.cds--popover--caret):not(.cds--popover--auto-align):not(.cds--popover--tab-tip) > .cds--popover > .cds--popover-content",
+   ".cds--popover--top:not(.cds--popover--auto-align) > .cds--popover > .cds--popover-content",
+   ".cds--layout--size-sm :where(.cds--tag)"
+  ]
+ },
+ "states": [
+  {
+   "state": "None",
+   "elements": [
+    {
+     "path": "",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "border-bottom-color": {
+       "authored": "#f4f4f4",
+       "resolved": "#f4f4f4",
+       "kind": "raw-colour",
+       "source": "src/App.scss:994",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "border-bottom-width": {
+       "authored": "1px",
+       "resolved": "1px",
+       "kind": "raw-length",
+       "source": "src/App.scss:994",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "border-bottom-style": {
+       "authored": "solid",
+       "resolved": "solid",
+       "kind": "keyword",
+       "source": "src/App.scss:994",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:990",
+       "selector": ".phc-drilldown-item",
+       "inherited": false,
+       "important": true
+      }
+     },
+     "hover": {
+      "background-color": {
+       "authored": "#f9f9f9",
+       "resolved": "#f9f9f9",
+       "kind": "raw-colour",
+       "source": "src/App.scss:999",
+       "selector": ".phc-drilldown-item:hover",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-content"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "row-gap": {
+       "authored": "0.25rem",
+       "resolved": "4px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1005",
+       "selector": ".phc-drilldown-item-content",
+       "inherited": false
+      },
+      "column-gap": {
+       "authored": "0.25rem",
+       "resolved": "4px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1005",
+       "selector": ".phc-drilldown-item-content",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:1003",
+       "selector": ".phc-drilldown-item-content",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0>0",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-name"
+     ],
+     "text": "Robert Brown",
+     "props": {
+      "color": {
+       "authored": "#000000",
+       "resolved": "#000000",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1011",
+       "selector": ".phc-drilldown-item-name",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1009",
+       "selector": ".phc-drilldown-item-name",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "600",
+       "resolved": "600",
+       "kind": "raw-length",
+       "source": "src/App.scss:1010",
+       "selector": ".phc-drilldown-item-name",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0>1",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-meta"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "row-gap": {
+       "authored": "0.5rem",
+       "resolved": "8px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1017",
+       "selector": ".phc-drilldown-item-meta",
+       "inherited": false
+      },
+      "column-gap": {
+       "authored": "0.5rem",
+       "resolved": "8px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1017",
+       "selector": ".phc-drilldown-item-meta",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:1015",
+       "selector": ".phc-drilldown-item-meta",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0>1>0",
+     "tag": "span",
+     "classes": [
+      "phc-drilldown-item-tag"
+     ],
+     "text": "Mutual Fund",
+     "props": {
+      "color": {
+       "authored": "#888888",
+       "resolved": "#888888",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1022",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "background-color": {
+       "authored": "#f0f0f0",
+       "resolved": "#f0f0f0",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1023",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "0.125rem",
+       "resolved": "2px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "0.375rem",
+       "resolved": "6px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "0.125rem",
+       "resolved": "2px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "0.375rem",
+       "resolved": "6px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "border-top-left-radius": {
+       "authored": "2px",
+       "resolved": "2px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1025",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "0.75rem",
+       "resolved": "12px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1021",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "inline",
+       "resolved": "block",
+       "kind": "keyword",
+       "source": "UA default",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-icons"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "padding-right": {
+       "authored": "8px",
+       "resolved": "8px",
+       "kind": "raw-length",
+       "source": "src/App.scss:962",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      },
+      "row-gap": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1031",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      },
+      "column-gap": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1031",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:1029",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-memo-wrapper"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      }
+     }
+    },
+    {
+     "path": "1>0>0",
+     "tag": "span",
+     "classes": [
+      "cds--overflow-menu__wrapper"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0",
+     "tag": "span",
+     "classes": [
+      "cds--popover-container",
+      "cds--popover--caret",
+      "cds--popover--high-contrast",
+      "cds--popover--top",
+      "cds--tooltip",
+      "cds--icon-tooltip"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "inline-block",
+       "resolved": "inline-block",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:135",
+       "selector": ".cds--popover-container",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>0",
+     "tag": "div",
+     "classes": [
+      "cds--tooltip-trigger__wrapper"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>0>0",
+     "tag": "button",
+     "classes": [
+      "phc-drilldown-overflow-memo",
+      "cds--overflow-menu",
+      "cds--overflow-menu--sm",
+      "cds--btn",
+      "cds--btn--sm",
+      "cds--layout--size-sm",
+      "cds--btn--ghost",
+      "cds--btn--icon-only"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-link-primary, #0f62fe)",
+       "resolved": "#0f62fe",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/button/_mixins.scss:124",
+       "selector": ".cds--btn--ghost",
+       "inherited": false
+      },
+      "background-color": {
+       "authored": "transparent",
+       "resolved": "transparent",
+       "kind": "keyword",
+       "source": "src/App.scss:968",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "border-bottom-color": {
+       "authored": "currentcolor",
+       "resolved": "currentcolor",
+       "kind": "keyword",
+       "source": "src/App.scss:969",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "border-bottom-width": {
+       "authored": "medium",
+       "resolved": "0px",
+       "kind": "keyword",
+       "source": "src/App.scss:969",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "border-bottom-style": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "src/App.scss:969",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "margin-top": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "margin-right": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "margin-bottom": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "margin-left": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "border-top-left-radius": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/button/_mixins.scss:51",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "width": {
+       "authored": "24px",
+       "resolved": "24px",
+       "kind": "raw-length",
+       "source": "src/App.scss:971",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "height": {
+       "authored": "24px",
+       "resolved": "24px",
+       "kind": "raw-length",
+       "source": "src/App.scss:972",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "min-height": {
+       "authored": "24px",
+       "resolved": "24px",
+       "kind": "raw-length",
+       "source": "src/App.scss:973",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:17",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "var(--cds-body-compact-01-line-height, 1.28572)",
+       "resolved": "1.28572",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "var(--cds-body-compact-01-font-weight, 400)",
+       "resolved": "400",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "letter-spacing": {
+       "authored": "var(--cds-body-compact-01-letter-spacing, 0.16px)",
+       "resolved": "0.16px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:974",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      }
+     },
+     "hover": {
+      "color": {
+       "authored": "var(--cds-link-primary-hover, #0043ce)",
+       "resolved": "#0043ce",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/button/_button.scss:216",
+       "selector": ".cds--btn--ghost:hover",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>0>0>0",
+     "tag": "i",
+     "classes": [
+      "fa-regular",
+      "fa-file-lines",
+      "phc-icon--gray",
+      "cds--overflow-menu__icon"
+     ],
+     "props": {
+      "color": {
+       "authored": "#8d8d8d",
+       "resolved": "#8d8d8d",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1040",
+       "selector": ".phc-icon--gray",
+       "inherited": false
+      },
+      "width": {
+       "authored": "20px",
+       "resolved": "20px",
+       "kind": "raw-length",
+       "source": "src/App.scss:36",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "height": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:102",
+       "selector": ".cds--overflow-menu__icon",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'Font Awesome 6 Free'",
+       "resolved": "'Font Awesome 6 Free'",
+       "kind": "keyword",
+       "source": "fontawesome-free/css/all.css:39",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-size": {
+       "authored": "18px",
+       "resolved": "18px",
+       "kind": "raw-length",
+       "source": "src/App.scss:35",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "src/App.scss:30",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "fontawesome-free/css/all.css:7861",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "letter-spacing": {
+       "authored": "var(--cds-body-compact-01-letter-spacing, 0.16px)",
+       "resolved": "0.16px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": true
+      },
+      "display": {
+       "authored": "var(--fa-display, inline-block)",
+       "resolved": "block",
+       "kind": "fa-var",
+       "source": "fontawesome-free/css/all.css:19",
+       "selector": ".fa-regular",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>1",
+     "tag": "span",
+     "classes": [
+      "cds--popover"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "inline",
+       "resolved": "block",
+       "kind": "keyword",
+       "source": "UA default",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>1>0",
+     "tag": "span",
+     "classes": [
+      "cds--popover-content",
+      "cds--tooltip-content"
+     ],
+     "text": "Options",
+     "props": {
+      "color": {
+       "authored": "var(--cds-popover-text-color, var(--cds-text-primary, #161616))",
+       "resolved": "#ffffff",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:199",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "background-color": {
+       "authored": "var(--cds-popover-background-color, var(--cds-layer))",
+       "resolved": "#393939",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:198",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-bottom-color": {
+       "authored": "currentcolor",
+       "resolved": "currentcolor",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:14",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-bottom-width": {
+       "authored": "0",
+       "resolved": "0px",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:14",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-bottom-style": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:14",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "var(--cds-tooltip-padding-block, 1rem)",
+       "resolved": "2px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "var(--cds-tooltip-padding-inline, 1rem)",
+       "resolved": "16px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "var(--cds-tooltip-padding-block, 1rem)",
+       "resolved": "2px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "var(--cds-tooltip-padding-inline, 1rem)",
+       "resolved": "16px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "margin-top": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "margin-right": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "margin-bottom": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "margin-left": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-top-left-radius": {
+       "authored": "var(--cds-popover-border-radius, 2px)",
+       "resolved": "2px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:197",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "width": {
+       "authored": "max-content",
+       "resolved": "max-content",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:200",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "var(--cds-body-compact-01-font-size, 0.875rem)",
+       "resolved": "14px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "var(--cds-body-compact-01-line-height, 1.28572)",
+       "resolved": "1.28572",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "var(--cds-body-compact-01-font-weight, 400)",
+       "resolved": "400",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "letter-spacing": {
+       "authored": "var(--cds-body-compact-01-letter-spacing, 0.16px)",
+       "resolved": "0.16px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "display": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:196",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>1>1",
+     "tag": "span",
+     "classes": [
+      "cds--popover-caret"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "width": {
+       "authored": "var(--cds-popover-caret-width, 0.75rem)",
+       "resolved": "8px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:732",
+       "selector": ".cds--popover--top > .cds--popover > .cds--popover-caret",
+       "inherited": false
+      },
+      "height": {
+       "authored": "var(--cds-popover-caret-height, 0.375rem)",
+       "resolved": "4px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:731",
+       "selector": ".cds--popover--top > .cds--popover > .cds--popover-caret",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:238",
+       "selector": ".cds--popover-caret",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>1",
+     "tag": "i",
+     "classes": [
+      "fa-regular",
+      "fa-clock",
+      "phc-icon--gray"
+     ],
+     "props": {
+      "color": {
+       "authored": "#8d8d8d",
+       "resolved": "#8d8d8d",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1040",
+       "selector": ".phc-icon--gray",
+       "inherited": false
+      },
+      "width": {
+       "authored": "20px",
+       "resolved": "20px",
+       "kind": "raw-length",
+       "source": "src/App.scss:36",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'Font Awesome 6 Free'",
+       "resolved": "'Font Awesome 6 Free'",
+       "kind": "keyword",
+       "source": "fontawesome-free/css/all.css:39",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-size": {
+       "authored": "18px",
+       "resolved": "18px",
+       "kind": "raw-length",
+       "source": "src/App.scss:35",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "src/App.scss:30",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "fontawesome-free/css/all.css:7861",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "display": {
+       "authored": "var(--fa-display, inline-block)",
+       "resolved": "block",
+       "kind": "fa-var",
+       "source": "fontawesome-free/css/all.css:19",
+       "selector": ".fa-regular",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>2",
+     "tag": "i",
+     "classes": [
+      "fa-regular",
+      "fa-comment-dots",
+      "phc-icon--gray"
+     ],
+     "props": {
+      "color": {
+       "authored": "#8d8d8d",
+       "resolved": "#8d8d8d",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1040",
+       "selector": ".phc-icon--gray",
+       "inherited": false
+      },
+      "width": {
+       "authored": "20px",
+       "resolved": "20px",
+       "kind": "raw-length",
+       "source": "src/App.scss:36",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'Font Awesome 6 Free'",
+       "resolved": "'Font Awesome 6 Free'",
+       "kind": "keyword",
+       "source": "fontawesome-free/css/all.css:39",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-size": {
+       "authored": "18px",
+       "resolved": "18px",
+       "kind": "raw-length",
+       "source": "src/App.scss:35",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "src/App.scss:30",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "fontawesome-free/css/all.css:7861",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "display": {
+       "authored": "var(--fa-display, inline-block)",
+       "resolved": "block",
+       "kind": "fa-var",
+       "source": "fontawesome-free/css/all.css:19",
+       "selector": ".fa-regular",
+       "inherited": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "state": "In Progress",
+   "elements": [
+    {
+     "path": "",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "border-bottom-color": {
+       "authored": "#f4f4f4",
+       "resolved": "#f4f4f4",
+       "kind": "raw-colour",
+       "source": "src/App.scss:994",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "border-bottom-width": {
+       "authored": "1px",
+       "resolved": "1px",
+       "kind": "raw-length",
+       "source": "src/App.scss:994",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "border-bottom-style": {
+       "authored": "solid",
+       "resolved": "solid",
+       "kind": "keyword",
+       "source": "src/App.scss:994",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:990",
+       "selector": ".phc-drilldown-item",
+       "inherited": false,
+       "important": true
+      }
+     },
+     "hover": {
+      "background-color": {
+       "authored": "#f9f9f9",
+       "resolved": "#f9f9f9",
+       "kind": "raw-colour",
+       "source": "src/App.scss:999",
+       "selector": ".phc-drilldown-item:hover",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-content"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "row-gap": {
+       "authored": "0.25rem",
+       "resolved": "4px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1005",
+       "selector": ".phc-drilldown-item-content",
+       "inherited": false
+      },
+      "column-gap": {
+       "authored": "0.25rem",
+       "resolved": "4px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1005",
+       "selector": ".phc-drilldown-item-content",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:1003",
+       "selector": ".phc-drilldown-item-content",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0>0",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-name"
+     ],
+     "text": "Robert Brown",
+     "props": {
+      "color": {
+       "authored": "#000000",
+       "resolved": "#000000",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1011",
+       "selector": ".phc-drilldown-item-name",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1009",
+       "selector": ".phc-drilldown-item-name",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "600",
+       "resolved": "600",
+       "kind": "raw-length",
+       "source": "src/App.scss:1010",
+       "selector": ".phc-drilldown-item-name",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0>1",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-meta"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "row-gap": {
+       "authored": "0.5rem",
+       "resolved": "8px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1017",
+       "selector": ".phc-drilldown-item-meta",
+       "inherited": false
+      },
+      "column-gap": {
+       "authored": "0.5rem",
+       "resolved": "8px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1017",
+       "selector": ".phc-drilldown-item-meta",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:1015",
+       "selector": ".phc-drilldown-item-meta",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0>1>0",
+     "tag": "span",
+     "classes": [
+      "phc-drilldown-item-tag"
+     ],
+     "text": "Mutual Fund",
+     "props": {
+      "color": {
+       "authored": "#888888",
+       "resolved": "#888888",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1022",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "background-color": {
+       "authored": "#f0f0f0",
+       "resolved": "#f0f0f0",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1023",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "0.125rem",
+       "resolved": "2px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "0.375rem",
+       "resolved": "6px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "0.125rem",
+       "resolved": "2px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "0.375rem",
+       "resolved": "6px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "border-top-left-radius": {
+       "authored": "2px",
+       "resolved": "2px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1025",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "0.75rem",
+       "resolved": "12px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1021",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "inline",
+       "resolved": "block",
+       "kind": "keyword",
+       "source": "UA default",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-icons"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "padding-right": {
+       "authored": "8px",
+       "resolved": "8px",
+       "kind": "raw-length",
+       "source": "src/App.scss:962",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      },
+      "row-gap": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1031",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      },
+      "column-gap": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1031",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:1029",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-memo-wrapper"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      }
+     }
+    },
+    {
+     "path": "1>0>0",
+     "tag": "span",
+     "classes": [
+      "cds--overflow-menu__wrapper"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0",
+     "tag": "span",
+     "classes": [
+      "cds--popover-container",
+      "cds--popover--caret",
+      "cds--popover--high-contrast",
+      "cds--popover--top",
+      "cds--tooltip",
+      "cds--icon-tooltip"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "inline-block",
+       "resolved": "inline-block",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:135",
+       "selector": ".cds--popover-container",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>0",
+     "tag": "div",
+     "classes": [
+      "cds--tooltip-trigger__wrapper"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>0>0",
+     "tag": "button",
+     "classes": [
+      "phc-drilldown-overflow-memo",
+      "cds--overflow-menu",
+      "cds--overflow-menu--sm",
+      "cds--btn",
+      "cds--btn--sm",
+      "cds--layout--size-sm",
+      "cds--btn--ghost",
+      "cds--btn--icon-only"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-link-primary, #0f62fe)",
+       "resolved": "#0f62fe",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/button/_mixins.scss:124",
+       "selector": ".cds--btn--ghost",
+       "inherited": false
+      },
+      "background-color": {
+       "authored": "transparent",
+       "resolved": "transparent",
+       "kind": "keyword",
+       "source": "src/App.scss:968",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "border-bottom-color": {
+       "authored": "currentcolor",
+       "resolved": "currentcolor",
+       "kind": "keyword",
+       "source": "src/App.scss:969",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "border-bottom-width": {
+       "authored": "medium",
+       "resolved": "0px",
+       "kind": "keyword",
+       "source": "src/App.scss:969",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "border-bottom-style": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "src/App.scss:969",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "margin-top": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "margin-right": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "margin-bottom": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "margin-left": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "border-top-left-radius": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/button/_mixins.scss:51",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "width": {
+       "authored": "24px",
+       "resolved": "24px",
+       "kind": "raw-length",
+       "source": "src/App.scss:971",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "height": {
+       "authored": "24px",
+       "resolved": "24px",
+       "kind": "raw-length",
+       "source": "src/App.scss:972",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "min-height": {
+       "authored": "24px",
+       "resolved": "24px",
+       "kind": "raw-length",
+       "source": "src/App.scss:973",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:17",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "var(--cds-body-compact-01-line-height, 1.28572)",
+       "resolved": "1.28572",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "var(--cds-body-compact-01-font-weight, 400)",
+       "resolved": "400",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "letter-spacing": {
+       "authored": "var(--cds-body-compact-01-letter-spacing, 0.16px)",
+       "resolved": "0.16px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:974",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      }
+     },
+     "hover": {
+      "color": {
+       "authored": "var(--cds-link-primary-hover, #0043ce)",
+       "resolved": "#0043ce",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/button/_button.scss:216",
+       "selector": ".cds--btn--ghost:hover",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>0>0>0",
+     "tag": "i",
+     "classes": [
+      "fa-regular",
+      "fa-file-lines",
+      "phc-icon--black",
+      "cds--overflow-menu__icon"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--phc-text-primary)",
+       "resolved": "#01172B",
+       "kind": "phc-var",
+       "source": "src/App.scss:1044",
+       "selector": ".phc-icon--black",
+       "inherited": false
+      },
+      "width": {
+       "authored": "20px",
+       "resolved": "20px",
+       "kind": "raw-length",
+       "source": "src/App.scss:36",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "height": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:102",
+       "selector": ".cds--overflow-menu__icon",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'Font Awesome 6 Free'",
+       "resolved": "'Font Awesome 6 Free'",
+       "kind": "keyword",
+       "source": "fontawesome-free/css/all.css:39",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-size": {
+       "authored": "18px",
+       "resolved": "18px",
+       "kind": "raw-length",
+       "source": "src/App.scss:35",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "src/App.scss:30",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "fontawesome-free/css/all.css:7861",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "letter-spacing": {
+       "authored": "var(--cds-body-compact-01-letter-spacing, 0.16px)",
+       "resolved": "0.16px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": true
+      },
+      "display": {
+       "authored": "var(--fa-display, inline-block)",
+       "resolved": "block",
+       "kind": "fa-var",
+       "source": "fontawesome-free/css/all.css:19",
+       "selector": ".fa-regular",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>1",
+     "tag": "span",
+     "classes": [
+      "cds--popover"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "inline",
+       "resolved": "block",
+       "kind": "keyword",
+       "source": "UA default",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>1>0",
+     "tag": "span",
+     "classes": [
+      "cds--popover-content",
+      "cds--tooltip-content"
+     ],
+     "text": "Options",
+     "props": {
+      "color": {
+       "authored": "var(--cds-popover-text-color, var(--cds-text-primary, #161616))",
+       "resolved": "#ffffff",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:199",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "background-color": {
+       "authored": "var(--cds-popover-background-color, var(--cds-layer))",
+       "resolved": "#393939",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:198",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-bottom-color": {
+       "authored": "currentcolor",
+       "resolved": "currentcolor",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:14",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-bottom-width": {
+       "authored": "0",
+       "resolved": "0px",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:14",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-bottom-style": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:14",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "var(--cds-tooltip-padding-block, 1rem)",
+       "resolved": "2px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "var(--cds-tooltip-padding-inline, 1rem)",
+       "resolved": "16px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "var(--cds-tooltip-padding-block, 1rem)",
+       "resolved": "2px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "var(--cds-tooltip-padding-inline, 1rem)",
+       "resolved": "16px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "margin-top": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "margin-right": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "margin-bottom": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "margin-left": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-top-left-radius": {
+       "authored": "var(--cds-popover-border-radius, 2px)",
+       "resolved": "2px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:197",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "width": {
+       "authored": "max-content",
+       "resolved": "max-content",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:200",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "var(--cds-body-compact-01-font-size, 0.875rem)",
+       "resolved": "14px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "var(--cds-body-compact-01-line-height, 1.28572)",
+       "resolved": "1.28572",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "var(--cds-body-compact-01-font-weight, 400)",
+       "resolved": "400",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "letter-spacing": {
+       "authored": "var(--cds-body-compact-01-letter-spacing, 0.16px)",
+       "resolved": "0.16px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "display": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:196",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>1>1",
+     "tag": "span",
+     "classes": [
+      "cds--popover-caret"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "width": {
+       "authored": "var(--cds-popover-caret-width, 0.75rem)",
+       "resolved": "8px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:732",
+       "selector": ".cds--popover--top > .cds--popover > .cds--popover-caret",
+       "inherited": false
+      },
+      "height": {
+       "authored": "var(--cds-popover-caret-height, 0.375rem)",
+       "resolved": "4px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:731",
+       "selector": ".cds--popover--top > .cds--popover > .cds--popover-caret",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:238",
+       "selector": ".cds--popover-caret",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>1",
+     "tag": "i",
+     "classes": [
+      "fa-regular",
+      "fa-clock",
+      "phc-icon--gray"
+     ],
+     "props": {
+      "color": {
+       "authored": "#8d8d8d",
+       "resolved": "#8d8d8d",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1040",
+       "selector": ".phc-icon--gray",
+       "inherited": false
+      },
+      "width": {
+       "authored": "20px",
+       "resolved": "20px",
+       "kind": "raw-length",
+       "source": "src/App.scss:36",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'Font Awesome 6 Free'",
+       "resolved": "'Font Awesome 6 Free'",
+       "kind": "keyword",
+       "source": "fontawesome-free/css/all.css:39",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-size": {
+       "authored": "18px",
+       "resolved": "18px",
+       "kind": "raw-length",
+       "source": "src/App.scss:35",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "src/App.scss:30",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "fontawesome-free/css/all.css:7861",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "display": {
+       "authored": "var(--fa-display, inline-block)",
+       "resolved": "block",
+       "kind": "fa-var",
+       "source": "fontawesome-free/css/all.css:19",
+       "selector": ".fa-regular",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>2",
+     "tag": "i",
+     "classes": [
+      "fa-regular",
+      "fa-comment-dots",
+      "phc-icon--gray"
+     ],
+     "props": {
+      "color": {
+       "authored": "#8d8d8d",
+       "resolved": "#8d8d8d",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1040",
+       "selector": ".phc-icon--gray",
+       "inherited": false
+      },
+      "width": {
+       "authored": "20px",
+       "resolved": "20px",
+       "kind": "raw-length",
+       "source": "src/App.scss:36",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'Font Awesome 6 Free'",
+       "resolved": "'Font Awesome 6 Free'",
+       "kind": "keyword",
+       "source": "fontawesome-free/css/all.css:39",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-size": {
+       "authored": "18px",
+       "resolved": "18px",
+       "kind": "raw-length",
+       "source": "src/App.scss:35",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "src/App.scss:30",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "fontawesome-free/css/all.css:7861",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "display": {
+       "authored": "var(--fa-display, inline-block)",
+       "resolved": "block",
+       "kind": "fa-var",
+       "source": "fontawesome-free/css/all.css:19",
+       "selector": ".fa-regular",
+       "inherited": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "state": "Ready to Report",
+   "elements": [
+    {
+     "path": "",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "border-bottom-color": {
+       "authored": "#f4f4f4",
+       "resolved": "#f4f4f4",
+       "kind": "raw-colour",
+       "source": "src/App.scss:994",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "border-bottom-width": {
+       "authored": "1px",
+       "resolved": "1px",
+       "kind": "raw-length",
+       "source": "src/App.scss:994",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "border-bottom-style": {
+       "authored": "solid",
+       "resolved": "solid",
+       "kind": "keyword",
+       "source": "src/App.scss:994",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:990",
+       "selector": ".phc-drilldown-item",
+       "inherited": false,
+       "important": true
+      }
+     },
+     "hover": {
+      "background-color": {
+       "authored": "#f9f9f9",
+       "resolved": "#f9f9f9",
+       "kind": "raw-colour",
+       "source": "src/App.scss:999",
+       "selector": ".phc-drilldown-item:hover",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-content"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "row-gap": {
+       "authored": "0.25rem",
+       "resolved": "4px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1005",
+       "selector": ".phc-drilldown-item-content",
+       "inherited": false
+      },
+      "column-gap": {
+       "authored": "0.25rem",
+       "resolved": "4px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1005",
+       "selector": ".phc-drilldown-item-content",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:1003",
+       "selector": ".phc-drilldown-item-content",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0>0",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-name"
+     ],
+     "text": "Robert Brown",
+     "props": {
+      "color": {
+       "authored": "#000000",
+       "resolved": "#000000",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1011",
+       "selector": ".phc-drilldown-item-name",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1009",
+       "selector": ".phc-drilldown-item-name",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "600",
+       "resolved": "600",
+       "kind": "raw-length",
+       "source": "src/App.scss:1010",
+       "selector": ".phc-drilldown-item-name",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0>1",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-meta"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "row-gap": {
+       "authored": "0.5rem",
+       "resolved": "8px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1017",
+       "selector": ".phc-drilldown-item-meta",
+       "inherited": false
+      },
+      "column-gap": {
+       "authored": "0.5rem",
+       "resolved": "8px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1017",
+       "selector": ".phc-drilldown-item-meta",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:1015",
+       "selector": ".phc-drilldown-item-meta",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0>1>0",
+     "tag": "span",
+     "classes": [
+      "phc-drilldown-item-tag"
+     ],
+     "text": "Mutual Fund",
+     "props": {
+      "color": {
+       "authored": "#888888",
+       "resolved": "#888888",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1022",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "background-color": {
+       "authored": "#f0f0f0",
+       "resolved": "#f0f0f0",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1023",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "0.125rem",
+       "resolved": "2px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "0.375rem",
+       "resolved": "6px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "0.125rem",
+       "resolved": "2px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "0.375rem",
+       "resolved": "6px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "border-top-left-radius": {
+       "authored": "2px",
+       "resolved": "2px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1025",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "0.75rem",
+       "resolved": "12px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1021",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "inline",
+       "resolved": "block",
+       "kind": "keyword",
+       "source": "UA default",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-icons"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "padding-right": {
+       "authored": "8px",
+       "resolved": "8px",
+       "kind": "raw-length",
+       "source": "src/App.scss:962",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      },
+      "row-gap": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1031",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      },
+      "column-gap": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1031",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:1029",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-memo-wrapper"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      }
+     }
+    },
+    {
+     "path": "1>0>0",
+     "tag": "span",
+     "classes": [
+      "cds--overflow-menu__wrapper"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0",
+     "tag": "span",
+     "classes": [
+      "cds--popover-container",
+      "cds--popover--caret",
+      "cds--popover--high-contrast",
+      "cds--popover--top",
+      "cds--tooltip",
+      "cds--icon-tooltip"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "inline-block",
+       "resolved": "inline-block",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:135",
+       "selector": ".cds--popover-container",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>0",
+     "tag": "div",
+     "classes": [
+      "cds--tooltip-trigger__wrapper"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>0>0",
+     "tag": "button",
+     "classes": [
+      "phc-drilldown-overflow-memo",
+      "cds--overflow-menu",
+      "cds--overflow-menu--sm",
+      "cds--btn",
+      "cds--btn--sm",
+      "cds--layout--size-sm",
+      "cds--btn--ghost",
+      "cds--btn--icon-only"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-link-primary, #0f62fe)",
+       "resolved": "#0f62fe",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/button/_mixins.scss:124",
+       "selector": ".cds--btn--ghost",
+       "inherited": false
+      },
+      "background-color": {
+       "authored": "transparent",
+       "resolved": "transparent",
+       "kind": "keyword",
+       "source": "src/App.scss:968",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "border-bottom-color": {
+       "authored": "currentcolor",
+       "resolved": "currentcolor",
+       "kind": "keyword",
+       "source": "src/App.scss:969",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "border-bottom-width": {
+       "authored": "medium",
+       "resolved": "0px",
+       "kind": "keyword",
+       "source": "src/App.scss:969",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "border-bottom-style": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "src/App.scss:969",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "margin-top": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "margin-right": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "margin-bottom": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "margin-left": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "border-top-left-radius": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/button/_mixins.scss:51",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "width": {
+       "authored": "24px",
+       "resolved": "24px",
+       "kind": "raw-length",
+       "source": "src/App.scss:971",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "height": {
+       "authored": "24px",
+       "resolved": "24px",
+       "kind": "raw-length",
+       "source": "src/App.scss:972",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "min-height": {
+       "authored": "24px",
+       "resolved": "24px",
+       "kind": "raw-length",
+       "source": "src/App.scss:973",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:17",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "var(--cds-body-compact-01-line-height, 1.28572)",
+       "resolved": "1.28572",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "var(--cds-body-compact-01-font-weight, 400)",
+       "resolved": "400",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "letter-spacing": {
+       "authored": "var(--cds-body-compact-01-letter-spacing, 0.16px)",
+       "resolved": "0.16px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:974",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      }
+     },
+     "hover": {
+      "color": {
+       "authored": "var(--cds-link-primary-hover, #0043ce)",
+       "resolved": "#0043ce",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/button/_button.scss:216",
+       "selector": ".cds--btn--ghost:hover",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>0>0>0",
+     "tag": "i",
+     "classes": [
+      "fa-regular",
+      "fa-file-lines",
+      "phc-icon--black",
+      "cds--overflow-menu__icon"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--phc-text-primary)",
+       "resolved": "#01172B",
+       "kind": "phc-var",
+       "source": "src/App.scss:1044",
+       "selector": ".phc-icon--black",
+       "inherited": false
+      },
+      "width": {
+       "authored": "20px",
+       "resolved": "20px",
+       "kind": "raw-length",
+       "source": "src/App.scss:36",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "height": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:102",
+       "selector": ".cds--overflow-menu__icon",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'Font Awesome 6 Free'",
+       "resolved": "'Font Awesome 6 Free'",
+       "kind": "keyword",
+       "source": "fontawesome-free/css/all.css:39",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-size": {
+       "authored": "18px",
+       "resolved": "18px",
+       "kind": "raw-length",
+       "source": "src/App.scss:35",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "src/App.scss:30",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "fontawesome-free/css/all.css:7861",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "letter-spacing": {
+       "authored": "var(--cds-body-compact-01-letter-spacing, 0.16px)",
+       "resolved": "0.16px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": true
+      },
+      "display": {
+       "authored": "var(--fa-display, inline-block)",
+       "resolved": "block",
+       "kind": "fa-var",
+       "source": "fontawesome-free/css/all.css:19",
+       "selector": ".fa-regular",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>1",
+     "tag": "span",
+     "classes": [
+      "cds--popover"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "inline",
+       "resolved": "block",
+       "kind": "keyword",
+       "source": "UA default",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>1>0",
+     "tag": "span",
+     "classes": [
+      "cds--popover-content",
+      "cds--tooltip-content"
+     ],
+     "text": "Options",
+     "props": {
+      "color": {
+       "authored": "var(--cds-popover-text-color, var(--cds-text-primary, #161616))",
+       "resolved": "#ffffff",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:199",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "background-color": {
+       "authored": "var(--cds-popover-background-color, var(--cds-layer))",
+       "resolved": "#393939",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:198",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-bottom-color": {
+       "authored": "currentcolor",
+       "resolved": "currentcolor",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:14",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-bottom-width": {
+       "authored": "0",
+       "resolved": "0px",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:14",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-bottom-style": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:14",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "var(--cds-tooltip-padding-block, 1rem)",
+       "resolved": "2px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "var(--cds-tooltip-padding-inline, 1rem)",
+       "resolved": "16px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "var(--cds-tooltip-padding-block, 1rem)",
+       "resolved": "2px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "var(--cds-tooltip-padding-inline, 1rem)",
+       "resolved": "16px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "margin-top": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "margin-right": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "margin-bottom": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "margin-left": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-top-left-radius": {
+       "authored": "var(--cds-popover-border-radius, 2px)",
+       "resolved": "2px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:197",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "width": {
+       "authored": "max-content",
+       "resolved": "max-content",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:200",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "var(--cds-body-compact-01-font-size, 0.875rem)",
+       "resolved": "14px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "var(--cds-body-compact-01-line-height, 1.28572)",
+       "resolved": "1.28572",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "var(--cds-body-compact-01-font-weight, 400)",
+       "resolved": "400",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "letter-spacing": {
+       "authored": "var(--cds-body-compact-01-letter-spacing, 0.16px)",
+       "resolved": "0.16px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "display": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:196",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>1>1",
+     "tag": "span",
+     "classes": [
+      "cds--popover-caret"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "width": {
+       "authored": "var(--cds-popover-caret-width, 0.75rem)",
+       "resolved": "8px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:732",
+       "selector": ".cds--popover--top > .cds--popover > .cds--popover-caret",
+       "inherited": false
+      },
+      "height": {
+       "authored": "var(--cds-popover-caret-height, 0.375rem)",
+       "resolved": "4px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:731",
+       "selector": ".cds--popover--top > .cds--popover > .cds--popover-caret",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:238",
+       "selector": ".cds--popover-caret",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>1",
+     "tag": "i",
+     "classes": [
+      "fa-regular",
+      "fa-clock",
+      "phc-icon--gray"
+     ],
+     "props": {
+      "color": {
+       "authored": "#8d8d8d",
+       "resolved": "#8d8d8d",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1040",
+       "selector": ".phc-icon--gray",
+       "inherited": false
+      },
+      "width": {
+       "authored": "20px",
+       "resolved": "20px",
+       "kind": "raw-length",
+       "source": "src/App.scss:36",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'Font Awesome 6 Free'",
+       "resolved": "'Font Awesome 6 Free'",
+       "kind": "keyword",
+       "source": "fontawesome-free/css/all.css:39",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-size": {
+       "authored": "18px",
+       "resolved": "18px",
+       "kind": "raw-length",
+       "source": "src/App.scss:35",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "src/App.scss:30",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "fontawesome-free/css/all.css:7861",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "display": {
+       "authored": "var(--fa-display, inline-block)",
+       "resolved": "block",
+       "kind": "fa-var",
+       "source": "fontawesome-free/css/all.css:19",
+       "selector": ".fa-regular",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>2",
+     "tag": "i",
+     "classes": [
+      "fa-regular",
+      "fa-comment-dots",
+      "phc-icon--gray"
+     ],
+     "props": {
+      "color": {
+       "authored": "#8d8d8d",
+       "resolved": "#8d8d8d",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1040",
+       "selector": ".phc-icon--gray",
+       "inherited": false
+      },
+      "width": {
+       "authored": "20px",
+       "resolved": "20px",
+       "kind": "raw-length",
+       "source": "src/App.scss:36",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'Font Awesome 6 Free'",
+       "resolved": "'Font Awesome 6 Free'",
+       "kind": "keyword",
+       "source": "fontawesome-free/css/all.css:39",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-size": {
+       "authored": "18px",
+       "resolved": "18px",
+       "kind": "raw-length",
+       "source": "src/App.scss:35",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "src/App.scss:30",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "fontawesome-free/css/all.css:7861",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "display": {
+       "authored": "var(--fa-display, inline-block)",
+       "resolved": "block",
+       "kind": "fa-var",
+       "source": "fontawesome-free/css/all.css:19",
+       "selector": ".fa-regular",
+       "inherited": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "state": "Overdue",
+   "elements": [
+    {
+     "path": "",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "border-bottom-color": {
+       "authored": "#f4f4f4",
+       "resolved": "#f4f4f4",
+       "kind": "raw-colour",
+       "source": "src/App.scss:994",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "border-bottom-width": {
+       "authored": "1px",
+       "resolved": "1px",
+       "kind": "raw-length",
+       "source": "src/App.scss:994",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "border-bottom-style": {
+       "authored": "solid",
+       "resolved": "solid",
+       "kind": "keyword",
+       "source": "src/App.scss:994",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:993",
+       "selector": ".phc-drilldown-item",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:990",
+       "selector": ".phc-drilldown-item",
+       "inherited": false,
+       "important": true
+      }
+     },
+     "hover": {
+      "background-color": {
+       "authored": "#f9f9f9",
+       "resolved": "#f9f9f9",
+       "kind": "raw-colour",
+       "source": "src/App.scss:999",
+       "selector": ".phc-drilldown-item:hover",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-content"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "row-gap": {
+       "authored": "0.25rem",
+       "resolved": "4px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1005",
+       "selector": ".phc-drilldown-item-content",
+       "inherited": false
+      },
+      "column-gap": {
+       "authored": "0.25rem",
+       "resolved": "4px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1005",
+       "selector": ".phc-drilldown-item-content",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:1003",
+       "selector": ".phc-drilldown-item-content",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0>0",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-name"
+     ],
+     "text": "Robert Brown",
+     "props": {
+      "color": {
+       "authored": "#000000",
+       "resolved": "#000000",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1011",
+       "selector": ".phc-drilldown-item-name",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1009",
+       "selector": ".phc-drilldown-item-name",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "600",
+       "resolved": "600",
+       "kind": "raw-length",
+       "source": "src/App.scss:1010",
+       "selector": ".phc-drilldown-item-name",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0>1",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-meta"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "row-gap": {
+       "authored": "0.5rem",
+       "resolved": "8px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1017",
+       "selector": ".phc-drilldown-item-meta",
+       "inherited": false
+      },
+      "column-gap": {
+       "authored": "0.5rem",
+       "resolved": "8px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1017",
+       "selector": ".phc-drilldown-item-meta",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:1015",
+       "selector": ".phc-drilldown-item-meta",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "0>1>0",
+     "tag": "span",
+     "classes": [
+      "phc-drilldown-item-tag"
+     ],
+     "text": "Mutual Fund",
+     "props": {
+      "color": {
+       "authored": "#888888",
+       "resolved": "#888888",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1022",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "background-color": {
+       "authored": "#f0f0f0",
+       "resolved": "#f0f0f0",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1023",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "0.125rem",
+       "resolved": "2px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "0.375rem",
+       "resolved": "6px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "0.125rem",
+       "resolved": "2px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "0.375rem",
+       "resolved": "6px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1024",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "border-top-left-radius": {
+       "authored": "2px",
+       "resolved": "2px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1025",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "0.75rem",
+       "resolved": "12px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1021",
+       "selector": ".phc-drilldown-item-tag",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "inline",
+       "resolved": "block",
+       "kind": "keyword",
+       "source": "UA default",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-item-icons"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "padding-right": {
+       "authored": "8px",
+       "resolved": "8px",
+       "kind": "raw-length",
+       "source": "src/App.scss:962",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      },
+      "row-gap": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1031",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      },
+      "column-gap": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "src/App.scss:1031",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:1029",
+       "selector": ".phc-drilldown-item-icons",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0",
+     "tag": "div",
+     "classes": [
+      "phc-drilldown-memo-wrapper"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/_reset.scss:141",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      }
+     }
+    },
+    {
+     "path": "1>0>0",
+     "tag": "span",
+     "classes": [
+      "cds--overflow-menu__wrapper"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0",
+     "tag": "span",
+     "classes": [
+      "cds--popover-container",
+      "cds--popover--caret",
+      "cds--popover--high-contrast",
+      "cds--popover--top",
+      "cds--tooltip",
+      "cds--icon-tooltip"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "inline-block",
+       "resolved": "inline-block",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:135",
+       "selector": ".cds--popover-container",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>0",
+     "tag": "div",
+     "classes": [
+      "cds--tooltip-trigger__wrapper"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>0>0",
+     "tag": "button",
+     "classes": [
+      "phc-drilldown-overflow-memo",
+      "cds--overflow-menu",
+      "cds--overflow-menu--sm",
+      "cds--btn",
+      "cds--btn--sm",
+      "cds--layout--size-sm",
+      "cds--btn--ghost",
+      "cds--btn--icon-only"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-link-primary, #0f62fe)",
+       "resolved": "#0f62fe",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/button/_mixins.scss:124",
+       "selector": ".cds--btn--ghost",
+       "inherited": false
+      },
+      "background-color": {
+       "authored": "transparent",
+       "resolved": "transparent",
+       "kind": "keyword",
+       "source": "src/App.scss:968",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "border-bottom-color": {
+       "authored": "currentcolor",
+       "resolved": "currentcolor",
+       "kind": "keyword",
+       "source": "src/App.scss:969",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "border-bottom-width": {
+       "authored": "medium",
+       "resolved": "0px",
+       "kind": "keyword",
+       "source": "src/App.scss:969",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "border-bottom-style": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "src/App.scss:969",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "src/App.scss:970",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "margin-top": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "margin-right": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "margin-bottom": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "margin-left": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "border-top-left-radius": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/button/_mixins.scss:51",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "width": {
+       "authored": "24px",
+       "resolved": "24px",
+       "kind": "raw-length",
+       "source": "src/App.scss:971",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "height": {
+       "authored": "24px",
+       "resolved": "24px",
+       "kind": "raw-length",
+       "source": "src/App.scss:972",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "min-height": {
+       "authored": "24px",
+       "resolved": "24px",
+       "kind": "raw-length",
+       "source": "src/App.scss:973",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:17",
+       "selector": ".cds--overflow-menu",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "var(--cds-body-compact-01-line-height, 1.28572)",
+       "resolved": "1.28572",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "var(--cds-body-compact-01-font-weight, 400)",
+       "resolved": "400",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "letter-spacing": {
+       "authored": "var(--cds-body-compact-01-letter-spacing, 0.16px)",
+       "resolved": "0.16px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": false
+      },
+      "display": {
+       "authored": "flex",
+       "resolved": "flex",
+       "kind": "keyword",
+       "source": "src/App.scss:974",
+       "selector": ".phc-drilldown-memo-wrapper .phc-drilldown-overflow-memo",
+       "inherited": false
+      }
+     },
+     "hover": {
+      "color": {
+       "authored": "var(--cds-link-primary-hover, #0043ce)",
+       "resolved": "#0043ce",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/button/_button.scss:216",
+       "selector": ".cds--btn--ghost:hover",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>0>0>0",
+     "tag": "i",
+     "classes": [
+      "fa-regular",
+      "fa-file-lines",
+      "phc-icon--black",
+      "cds--overflow-menu__icon"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--phc-text-primary)",
+       "resolved": "#01172B",
+       "kind": "phc-var",
+       "source": "src/App.scss:1044",
+       "selector": ".phc-icon--black",
+       "inherited": false
+      },
+      "width": {
+       "authored": "20px",
+       "resolved": "20px",
+       "kind": "raw-length",
+       "source": "src/App.scss:36",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "height": {
+       "authored": "1rem",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:102",
+       "selector": ".cds--overflow-menu__icon",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'Font Awesome 6 Free'",
+       "resolved": "'Font Awesome 6 Free'",
+       "kind": "keyword",
+       "source": "fontawesome-free/css/all.css:39",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-size": {
+       "authored": "18px",
+       "resolved": "18px",
+       "kind": "raw-length",
+       "source": "src/App.scss:35",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "src/App.scss:30",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "fontawesome-free/css/all.css:7861",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "letter-spacing": {
+       "authored": "var(--cds-body-compact-01-letter-spacing, 0.16px)",
+       "resolved": "0.16px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--btn",
+       "inherited": true
+      },
+      "display": {
+       "authored": "var(--fa-display, inline-block)",
+       "resolved": "block",
+       "kind": "fa-var",
+       "source": "fontawesome-free/css/all.css:19",
+       "selector": ".fa-regular",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>1",
+     "tag": "span",
+     "classes": [
+      "cds--popover"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "inline",
+       "resolved": "block",
+       "kind": "keyword",
+       "source": "UA default",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>1>0",
+     "tag": "span",
+     "classes": [
+      "cds--popover-content",
+      "cds--tooltip-content"
+     ],
+     "text": "Options",
+     "props": {
+      "color": {
+       "authored": "var(--cds-popover-text-color, var(--cds-text-primary, #161616))",
+       "resolved": "#ffffff",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:199",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "background-color": {
+       "authored": "var(--cds-popover-background-color, var(--cds-layer))",
+       "resolved": "#393939",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:198",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-bottom-color": {
+       "authored": "currentcolor",
+       "resolved": "currentcolor",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:14",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-bottom-width": {
+       "authored": "0",
+       "resolved": "0px",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:14",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-bottom-style": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:14",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "padding-top": {
+       "authored": "var(--cds-tooltip-padding-block, 1rem)",
+       "resolved": "2px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "padding-right": {
+       "authored": "var(--cds-tooltip-padding-inline, 1rem)",
+       "resolved": "16px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "padding-bottom": {
+       "authored": "var(--cds-tooltip-padding-block, 1rem)",
+       "resolved": "2px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "padding-left": {
+       "authored": "var(--cds-tooltip-padding-inline, 1rem)",
+       "resolved": "16px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/tooltip/_tooltip.scss:37",
+       "selector": ".cds--tooltip-content",
+       "inherited": false
+      },
+      "margin-top": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "margin-right": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "margin-bottom": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "margin-left": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/utilities/_component-reset.scss:15",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "border-top-left-radius": {
+       "authored": "var(--cds-popover-border-radius, 2px)",
+       "resolved": "2px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:197",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "width": {
+       "authored": "max-content",
+       "resolved": "max-content",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:200",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "var(--cds-body-compact-01-font-size, 0.875rem)",
+       "resolved": "14px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "var(--cds-body-compact-01-line-height, 1.28572)",
+       "resolved": "1.28572",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "var(--cds-body-compact-01-font-weight, 400)",
+       "resolved": "400",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "letter-spacing": {
+       "authored": "var(--cds-body-compact-01-letter-spacing, 0.16px)",
+       "resolved": "0.16px",
+       "kind": "cds-token",
+       "source": "@carbon/type/scss/_styles.scss:867",
+       "selector": ".cds--icon-tooltip .cds--tooltip-content",
+       "inherited": false
+      },
+      "display": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:196",
+       "selector": ".cds--popover-content",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>0>0>0>1>1",
+     "tag": "span",
+     "classes": [
+      "cds--popover-caret"
+     ],
+     "props": {
+      "color": {
+       "authored": "var(--cds-text-primary, #161616)",
+       "resolved": "#161616",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/_reset.scss:138",
+       "selector": "body",
+       "inherited": true
+      },
+      "width": {
+       "authored": "var(--cds-popover-caret-width, 0.75rem)",
+       "resolved": "8px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:732",
+       "selector": ".cds--popover--top > .cds--popover > .cds--popover-caret",
+       "inherited": false
+      },
+      "height": {
+       "authored": "var(--cds-popover-caret-height, 0.375rem)",
+       "resolved": "4px",
+       "kind": "cds-token",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:731",
+       "selector": ".cds--popover--top > .cds--popover > .cds--popover-caret",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "resolved": "'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, '.SFNSText-Regular', sans-serif",
+       "kind": "keyword",
+       "source": "@carbon/type/scss/_reset.scss:29",
+       "selector": "body",
+       "inherited": true
+      },
+      "font-size": {
+       "authored": "100%",
+       "resolved": "16px",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_reset.scss:23",
+       "selector": "html",
+       "inherited": true
+      },
+      "line-height": {
+       "authored": "0",
+       "resolved": "0",
+       "kind": "raw-length",
+       "source": "@carbon/styles/scss/components/overflow-menu/_overflow-menu.scss:108",
+       "selector": ".cds--overflow-menu__wrapper",
+       "inherited": true
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "@carbon/type/scss/_font-family.scss:104",
+       "selector": "body",
+       "inherited": true
+      },
+      "display": {
+       "authored": "none",
+       "resolved": "none",
+       "kind": "keyword",
+       "source": "@carbon/styles/scss/components/popover/_popover.scss:238",
+       "selector": ".cds--popover-caret",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>1",
+     "tag": "i",
+     "classes": [
+      "fa-regular",
+      "fa-clock",
+      "phc-icon--red"
+     ],
+     "props": {
+      "color": {
+       "authored": "#da1e28",
+       "resolved": "#da1e28",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1036",
+       "selector": ".phc-icon--red",
+       "inherited": false
+      },
+      "width": {
+       "authored": "20px",
+       "resolved": "20px",
+       "kind": "raw-length",
+       "source": "src/App.scss:36",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'Font Awesome 6 Free'",
+       "resolved": "'Font Awesome 6 Free'",
+       "kind": "keyword",
+       "source": "fontawesome-free/css/all.css:39",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-size": {
+       "authored": "18px",
+       "resolved": "18px",
+       "kind": "raw-length",
+       "source": "src/App.scss:35",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "src/App.scss:30",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "fontawesome-free/css/all.css:7861",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "display": {
+       "authored": "var(--fa-display, inline-block)",
+       "resolved": "block",
+       "kind": "fa-var",
+       "source": "fontawesome-free/css/all.css:19",
+       "selector": ".fa-regular",
+       "inherited": false
+      }
+     }
+    },
+    {
+     "path": "1>2",
+     "tag": "i",
+     "classes": [
+      "fa-regular",
+      "fa-comment-dots",
+      "phc-icon--gray"
+     ],
+     "props": {
+      "color": {
+       "authored": "#8d8d8d",
+       "resolved": "#8d8d8d",
+       "kind": "raw-colour",
+       "source": "src/App.scss:1040",
+       "selector": ".phc-icon--gray",
+       "inherited": false
+      },
+      "width": {
+       "authored": "20px",
+       "resolved": "20px",
+       "kind": "raw-length",
+       "source": "src/App.scss:36",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "font-family": {
+       "authored": "'Font Awesome 6 Free'",
+       "resolved": "'Font Awesome 6 Free'",
+       "kind": "keyword",
+       "source": "fontawesome-free/css/all.css:39",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-size": {
+       "authored": "18px",
+       "resolved": "18px",
+       "kind": "raw-length",
+       "source": "src/App.scss:35",
+       "selector": ".phc-drilldown-item-icons i",
+       "inherited": false
+      },
+      "line-height": {
+       "authored": "1",
+       "resolved": "1",
+       "kind": "raw-length",
+       "source": "src/App.scss:30",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "font-weight": {
+       "authored": "400",
+       "resolved": "400",
+       "kind": "raw-length",
+       "source": "fontawesome-free/css/all.css:7861",
+       "selector": ".fa-regular",
+       "inherited": false
+      },
+      "display": {
+       "authored": "var(--fa-display, inline-block)",
+       "resolved": "block",
+       "kind": "fa-var",
+       "source": "fontawesome-free/css/all.css:19",
+       "selector": ".fa-regular",
+       "inherited": false
+      }
+     }
+    }
+   ]
+  }
+ ]
+}
