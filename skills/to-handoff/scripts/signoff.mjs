@@ -4,7 +4,7 @@
 // Sign-off is the owner's. approve runs only after the owner types "approve" in chat, with the hashes the
 // review showed, and writes `approval: {by: "owner", …}`. `{test: true}` writes TEST_APPROVER instead, only
 // under <repo>/.scratch/; validateHandoff rejects that approver anywhere else. Drift is never stored.
-import { copyFileSync, existsSync, readdirSync, readFileSync } from 'node:fs';
+import { copyFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { contentHash as contractHash, proposalContentHash } from '../../contract/scripts/contract.mjs';
 import { writeJson } from '../../contract/scripts/io.mjs';
@@ -201,6 +201,28 @@ function proposalFile(dir, key) {
   const pdir = join(dir, 'proposals');
   const name = readdirSync(pdir).filter(f => f.endsWith('.proposal.json')).find(f => readJson(join(pdir, f)).family.key === key);
   return join(pdir, name);
+}
+
+/**
+ * answerQuestion({handoffPath, decisionsPath, id, answer}): the owner's answer to the open owner question `id`, added
+ * to decisions.json as `question:<id>` {by: "owner", answer}. Only on the owner's words in chat. The entry is spliced
+ * in before the file's closing brace, so every byte already there stays (retro, 2026-10-24: a JSON round trip turned
+ * an escaped \u2026 into the character). Throws on an id that is no open owner question, or a key the file already has.
+ */
+export function answerQuestion({ handoffPath, decisionsPath, id, answer }) {
+  const q = readJson(handoffPath).openQuestions.find(x => x.id === id);
+  if (!q) throw new Error(`${id} is no question in ${handoffPath}`);
+  if (q.to !== 'owner') throw new Error(`${id} is to the ${q.to}, not the owner`);
+  if (q.answer) throw new Error(`${id} is already answered in ${handoffPath}; change its answer in ${decisionsPath} by hand`);
+  const text = readFileSync(decisionsPath, 'utf8');
+  const decisions = JSON.parse(text);
+  if (!decisions || typeof decisions !== 'object' || Array.isArray(decisions)) throw new Error(`${decisionsPath} is no JSON object`);
+  const key = `question:${id}`;
+  if (key in decisions) throw new Error(`${key} is already in ${decisionsPath}; change it there by hand`);
+  const end = text.lastIndexOf('}');
+  const body = text.slice(0, end).trimEnd();
+  const entry = `  ${JSON.stringify(key)}: {\n    "by": "owner",\n    "answer": ${JSON.stringify(answer)}\n  }\n`;
+  writeFileSync(decisionsPath, `${body}${body.endsWith('{') ? '' : ','}\n${entry}${text.slice(end)}`);
 }
 
 /**

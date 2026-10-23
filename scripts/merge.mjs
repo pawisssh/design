@@ -1,23 +1,24 @@
 #!/usr/bin/env node
 // Squash-merges a pull request and deletes its branch once its `test` run passed and its merge tree is checked.
 //
-//   node scripts/merge.mjs <pr> [--head <sha>]   merge if `test` passed on the head, and if main moved since, the
-//                                                 tests of both sides pass on the merge tree
+//   node scripts/merge.mjs <pr> [--head <sha> [--wait]]   merge if `test` passed on the head, and if main moved
+//                                                          since, the tests of both sides pass on the merge tree
 //     --head <sha>   the head you reviewed: refuse if the branch has moved past it
+//     --wait         with --head: wait for a missing or running `test` run to finish, then merge or refuse
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
  * Whether the latest `test` check run on the head passed, from `gh api .../commits/<sha>/check-runs`'s check_runs.
- * -> {ok, why} or {ok, suite}, the run's check suite id
+ * -> {ok, why} or {ok, suite}, the run's check suite id; `pending` when no run has finished yet, which --wait waits on
  */
 export function testVerdict(runs, sha) {
   const [latest] = runs.filter(r => r.name === 'test').sort((a, b) => b.started_at.localeCompare(a.started_at));
-  if (!latest) return { ok: false, why: `no \`test\` run on ${sha}` };
-  if (latest.status !== 'completed') return { ok: false, why: `\`test\` is ${latest.status} on ${sha}` };
+  if (!latest) return { ok: false, pending: true, why: `no \`test\` run on ${sha}` };
+  if (latest.status !== 'completed') return { ok: false, pending: true, why: `\`test\` is ${latest.status} on ${sha}` };
   if (latest.conclusion !== 'success') return { ok: false, why: `\`test\` ended ${latest.conclusion} on ${sha}` };
   return { ok: true, suite: latest.check_suite.id };
 }
@@ -137,11 +138,25 @@ function mainMoved(pr, suite, tree) {
 // pawisssh/design is a private repository on GitHub Free, where branch protection is not available (GitHub docs,
 // "About protected branches"), so no required check holds main: this script makes the one a required `test` status
 // would, the self-hosted runner's run from #275.
-function merge(number, { head }) {
-  const pr = JSON.parse(exec('gh', ['pr', 'view', number, '--json', 'number,title,state,isDraft,headRefName,headRefOid,baseRefName']));
-  if (pr.state !== 'OPEN' || pr.isDraft) throw new Error(`#${pr.number} is ${pr.isDraft ? 'a draft' : pr.state.toLowerCase()}`);
-  if (head && !pr.headRefOid.startsWith(head)) throw new Error(`#${pr.number}'s head is ${pr.headRefOid}, not the reviewed ${head}`);
-  const verdict = testVerdict(api(`commits/${pr.headRefOid}/check-runs`).check_runs, pr.headRefOid);
+function merge(number, { head, wait }) {
+  const view = () => {
+    const pr = JSON.parse(exec('gh', ['pr', 'view', number, '--json', 'number,title,state,isDraft,headRefName,headRefOid,baseRefName']));
+    if (pr.state !== 'OPEN' || pr.isDraft) throw new Error(`#${pr.number} is ${pr.isDraft ? 'a draft' : pr.state.toLowerCase()}`);
+    if (head && !pr.headRefOid.startsWith(head)) throw new Error(`#${pr.number}'s head is ${pr.headRefOid}, not the reviewed ${head}`);
+    return pr;
+  };
+  let pr, verdict;
+  const read = () => { pr = view(); verdict = testVerdict(api(`commits/${pr.headRefOid}/check-runs`).check_runs, pr.headRefOid); };
+  read();
+  // --wait (retro, 2026-10-24): "merge once `test` passes" in one command, with no CI polling in the session. It
+  // re-reads the head each time, so a push while waiting refuses, and gives up after the workflow's timeout-minutes
+  // counted from now: a run still queued behind another job on the one runner can outlast it, so run it again then.
+  const minutes = Number(readFileSync(fileURLToPath(new URL('../.github/workflows/test.yml', import.meta.url)), 'utf8').match(/timeout-minutes: (\d+)/)[1]);
+  for (const until = Date.now() + minutes * 60_000; wait && verdict.pending && Date.now() < until; read()) {
+    console.log(`waiting: ${verdict.why}`);
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 30_000);
+  }
+  if (wait && verdict.pending) throw new Error(`gave up after ${minutes} minutes: ${verdict.why}`);
   if (!verdict.ok) throw new Error(verdict.why);
   const tree = mergeTree(pr);
   mainMoved(pr, verdict.suite, tree);
@@ -161,13 +176,14 @@ function merge(number, { head }) {
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   const [number, ...flags] = process.argv.slice(2);
-  const opts = { head: null };
+  const opts = { head: null, wait: false };
   for (let i = 0; i < flags.length; i++) {
-    if (flags[i] === '--head' && /^[0-9a-f]{7,40}$/.test(flags[i + 1] || '')) opts.head = flags[++i];
+    if (flags[i] === '--wait') opts.wait = true;
+    else if (flags[i] === '--head' && /^[0-9a-f]{7,40}$/.test(flags[i + 1] || '')) opts.head = flags[++i];
     else opts.bad = true;
   }
-  if (!/^\d+$/.test(number || '') || opts.bad) {
-    console.error('usage: node scripts/merge.mjs <pr> [--head <sha>]');
+  if (!/^\d+$/.test(number || '') || opts.bad || (opts.wait && !opts.head)) {
+    console.error('usage: node scripts/merge.mjs <pr> [--head <sha> [--wait]]');
     process.exit(2);
   }
   try {

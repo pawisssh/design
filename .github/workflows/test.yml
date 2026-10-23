@@ -57,3 +57,8 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
         run: node .github/duplicates.mjs "origin/$BASE_REF"
+      # Each recorded Handoff that is pending, or has no signed.json byte copy, as a notice and in the job summary,
+      # with what blocks its Sign-off. A report only: a regenerated Handoff lands pending for the owner to sign.
+      - if: '!cancelled()'
+        continue-on-error: true
+        run: node .github/signoffs.mjs
