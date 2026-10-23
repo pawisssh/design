@@ -4,6 +4,7 @@
 //   node skills/to-handoff/scripts/handoff.mjs validate <handoff.json> --ds <design-systems/ds>
 //   node skills/to-handoff/scripts/handoff.mjs render <handoff.json> --ds <design-systems/ds>
 //   node skills/to-handoff/scripts/handoff.mjs review <handoff.json> --ds <design-systems/ds>
+//   node skills/to-handoff/scripts/handoff.mjs answer <handoff.json> --decisions <decisions.json> --question <id> --answer "<text>"
 //   node skills/to-handoff/scripts/handoff.mjs approve <handoff.json> --ds <design-systems/ds> --content-hash <h> [--proposal <key>=<hash> …]
 //   node skills/to-handoff/scripts/handoff.mjs check <handoff.json> --ds <design-systems/ds> --prototype <index.html | app folder>
 //
@@ -11,7 +12,8 @@
 // metrics, unless --static; when the runtime cannot run, the Handoff is static-only and says why.
 // generate exits 2 and prints {requests} when any decision is unanswered; it writes nothing then. A generated
 // Handoff is always pending. approve is the owner's sign-off: run it only after the owner types "approve" in
-// chat, with the hashes review printed (#116). It exits 1 with its reasons when it refuses; check exits 1 on Drift.
+// chat, with the hashes review printed (#116). answer writes the owner's answer to an owner question into
+// decisions.json, likewise only on the owner's words; generate then carries it. It exits 1 with its reasons when it refuses; check exits 1 on Drift.
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
@@ -19,7 +21,7 @@ import { readFileSync } from 'node:fs';
 export { generate } from './generate.mjs';
 export { handoffContentHash, snapshotIdOf } from './hash.mjs';
 export { TEST_APPROVER, loadDesignSystem } from './system.mjs';
-export { approve, check, diffJson, driftOf, review } from './signoff.mjs';
+export { answerQuestion, approve, check, diffJson, driftOf, review } from './signoff.mjs';
 export { validateHandoff } from './validate.mjs';
 export { render, renderHtml } from './render-html.mjs';
 
@@ -27,7 +29,7 @@ import { generate } from './generate.mjs';
 import { loadDesignSystem } from './system.mjs';
 import { validateHandoff } from './validate.mjs';
 import { render } from './render-html.mjs';
-import { approve, check, review } from './signoff.mjs';
+import { answerQuestion, approve, check, review } from './signoff.mjs';
 
 // generate's requests counted by kind for stderr (#219), most first, a tie in the order asked:
 // `69 requests: 44 condition, 23 recognise, 1 feature, 1 acceptance`.
@@ -43,10 +45,19 @@ async function main(argv) {
   const { positionals, values } = parseArgs({ args: argv, allowPositionals: true, options: {
     ds: { type: 'string' }, decisions: { type: 'string' }, static: { type: 'boolean' },
     'content-hash': { type: 'string' }, proposal: { type: 'string', multiple: true }, prototype: { type: 'string' },
+    question: { type: 'string' }, answer: { type: 'string' },
   } });
   const [command, input] = positionals;
+  if (command === 'answer' && input && values.decisions && values.question && values.answer) {
+    try {
+      answerQuestion({ handoffPath: input, decisionsPath: values.decisions, id: values.question, answer: values.answer });
+      console.log(`answered question:${values.question} in ${values.decisions}; re-run generate with it`);
+      return 0;
+    } catch (e) { console.error(e.message); return 1; }
+  }
   if (!command || !input || !values.ds) {
     console.error('usage: handoff.mjs generate <index.html | app folder> --ds <dir> --decisions <file> [--static] | validate|render|review <handoff.json> --ds <dir>'
+      + ' | answer <handoff.json> --decisions <file> --question <id> --answer <text>'
       + ' | approve <handoff.json> --ds <dir> --content-hash <h> [--proposal <key>=<hash> …] | check <handoff.json> --ds <dir> --prototype <index.html | app folder>');
     return 1;
   }
