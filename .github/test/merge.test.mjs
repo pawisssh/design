@@ -1,8 +1,10 @@
 // The merge script's checks (scripts/merge.mjs): the latest `test` run on the head must have passed, and the test
 // files a moved main makes it run on the merge tree.
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { areas, mergeTreeTests, runVerdict, testVerdict } from '../../scripts/merge.mjs';
+import { areas, mergeTreeTests, PINNED, runVerdict, TEST_FILE, testVerdict } from '../../scripts/merge.mjs';
 
 const run = (status, conclusion, started_at, name = 'test') => ({ name, status, conclusion, started_at, check_suite: { id: 7 } });
 
@@ -58,4 +60,19 @@ test('a run passes only with exit 0 and nothing skipped', () => {
   assert.match(runVerdict(0, 'ℹ tests 3\nℹ pass 1\nℹ skipped 2\n').why, /^2 test\(s\) skipped/);
   assert.match(runVerdict(1, '  ✖ signs the Handoff (3ms)\nℹ fail 1\nℹ skipped 0\n').why, /failed on the merge tree.*\n  ✖ signs the Handoff/s);
   assert.deepEqual(runVerdict(0, ''), { ok: false, why: 'the test run printed no summary' });
+});
+
+const repoFile = path => readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
+
+test('the merge tree\'s test files are npm test\'s: every glob in package.json, and every file they match', () => {
+  const globs = JSON.parse(repoFile('package.json')).scripts.test.split(' ').filter(w => w.endsWith('.test.mjs'));
+  const matches = f => globs.some(g => new RegExp(`^${g.replaceAll('.', '\\.').replaceAll('*', '[^/]+')}$`).test(f));
+  for (const g of globs) assert.ok(TEST_FILE.test(g.replaceAll('*', 'x')), g);
+  const tracked = execFileSync('git', ['ls-files', '*.test.mjs'], { encoding: 'utf8', cwd: new URL('../..', import.meta.url) }).split('\n').filter(Boolean);
+  for (const f of tracked) assert.equal(TEST_FILE.test(f), matches(f), f);
+});
+
+test('the pinned tools cloned into the merge tree are the ones CI keeps in .scratch', () => {
+  const kept = [...repoFile('.github/workflows/test.yml').matchAll(/! -name (\S+)/g)].map(m => m[1]);
+  assert.deepEqual(PINNED, kept);
 });
