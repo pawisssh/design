@@ -1,8 +1,8 @@
-// The merge script's checks (scripts/merge.mjs): the latest `test` run on the head must have passed, and the test
-// files a moved main makes it run on the merge tree.
+// The merge script's checks (scripts/merge.mjs): the latest `test` run on the head must have passed, the test files a
+// moved main makes it run on the merge tree, and the test files and pinned tools it reads from package.json and test.yml.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { areas, mergeTreeTests, runVerdict, testVerdict } from '../../scripts/merge.mjs';
+import { areas, isTestFile, mergeTreeTests, PINNED, runVerdict, testVerdict } from '../../scripts/merge.mjs';
 
 const run = (status, conclusion, started_at, name = 'test') => ({ name, status, conclusion, started_at, check_suite: { id: 7 } });
 
@@ -58,4 +58,13 @@ test('a run passes only with exit 0 and nothing skipped', () => {
   assert.match(runVerdict(0, 'ℹ tests 3\nℹ pass 1\nℹ skipped 2\n').why, /^2 test\(s\) skipped/);
   assert.match(runVerdict(1, '  ✖ signs the Handoff (3ms)\nℹ fail 1\nℹ skipped 0\n').why, /failed on the merge tree.*\n  ✖ signs the Handoff/s);
   assert.deepEqual(runVerdict(0, ''), { ok: false, why: 'the test run printed no summary' });
+});
+
+test('the test files are npm test\'s globs: a skill\'s test or tests folder and .github/test, not a fixture under them', () => {
+  for (const f of ['skills/to-handoff/test/a.test.mjs', 'skills/to-design/tests/a.test.mjs', '.github/test/a.test.mjs']) assert.ok(isTestFile(f), f);
+  for (const f of ['skills/to-handoff/test/fixtures/a.test.mjs', 'skills/to-handoff/test/helpers.mjs', 'scripts/a.test.mjs']) assert.ok(!isTestFile(f), f);
+});
+
+test('the pinned tools are the .scratch folders CI keeps', () => {
+  assert.deepEqual(PINNED, ['adapter-carbon', 'adapter-generic', 'to-handoff']);
 });

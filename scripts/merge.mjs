@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 // Squash-merges a pull request and deletes its branch once its `test` run passed and its merge tree is checked.
 //
-//   node scripts/merge.mjs <pr> [--head <sha> [--wait]]   merge if `test` passed on the head, and if main moved
-//                                                          since, the tests of both sides pass on the merge tree
+//   node scripts/merge.mjs <pr> [--head <sha> [--wait]] [--dry-run]   merge if `test` passed on the head, and if main
+//                                                                      moved since, the tests of both sides pass on
+//                                                                      the merge tree
 //     --head <sha>   the head you reviewed: refuse if the branch has moved past it
 //     --wait         with --head: wait for a missing or running `test` run to finish, then merge or refuse
+//     --dry-run      every check, the merge-tree tests included, and no merge
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -29,8 +31,12 @@ export const areas = paths => [...new Set(paths.map(p => {
   return a === 'skills' && b ? `skills/${b}` : a;
 }))].sort();
 
-// npm test's globs (package.json)
-const TEST_FILE = /^(skills\/[^/]+\/tests?|\.github\/test)\/[^/]+\.test\.mjs$/;
+const repoFile = path => readFileSync(fileURLToPath(new URL(`../${path}`, import.meta.url)), 'utf8');
+
+// npm test's globs (package.json), read rather than copied (#376); they use only `*`, one folder name or file name each
+const TEST_GLOBS = JSON.parse(repoFile('package.json')).scripts.test.split(' ').filter(w => w.endsWith('.test.mjs'))
+  .map(g => new RegExp(`^${g.replaceAll('.', '\\.').replaceAll('*', '[^/]+')}$`));
+export const isTestFile = path => TEST_GLOBS.some(g => g.test(path));
 // The folder whose tests an area's change can break: a skill's own, `.github/test` for the CI scripts, all of them
 // ('') for package.json. Data and docs (design-systems/, docs/) have none of their own: the skills' tests that read
 // them are run with the other side's (#373: #372's re-signed Handoff, read by the to-handoff tests #371 changed).
@@ -46,7 +52,7 @@ const suiteOf = area => {
  */
 export function mergeTreeTests(theirs, ours, files, readers = {}) {
   const suites = areas([...theirs, ...ours]).flatMap(a => [a, ...(readers[a] || [])]).map(suiteOf).filter(s => s !== null);
-  return files.filter(f => TEST_FILE.test(f) && suites.some(s => f.startsWith(s))).sort();
+  return files.filter(f => isTestFile(f) && suites.some(s => f.startsWith(s))).sort();
 }
 
 /** Whether a `node --test --test-reporter=spec` run passed with nothing skipped, from its exit status and stdout. */
@@ -78,8 +84,9 @@ function mergeTree(pr) {
   }
 }
 
-// The pinned tools CI keeps in .scratch (.github/workflows/test.yml): without them, the tests that need them skip.
-const PINNED = ['adapter-carbon', 'adapter-generic', 'to-handoff'];
+// The pinned tools CI keeps in .scratch, read from its clean step's `! -name`s (.github/workflows/test.yml, #376):
+// without them, the tests that need them skip.
+export const PINNED = [...repoFile('.github/workflows/test.yml').matchAll(/! -name (\S+)/g)].map(m => m[1]);
 
 // Runs `files` in a scratch worktree of the merge tree, with this checkout's pinned tools cloned in (macOS cp(1): `-c`
 // copies with clonefile(2), so 1.5 GB on APFS costs nothing); a failure or a skip refuses the merge.
@@ -124,7 +131,7 @@ function readersOf(tree, touched) {
 function mainMoved(pr, suite, tree) {
   const since = api(`check-suites/${suite}`).created_at;
   const commits = git('rev-list', `--since=${since}`, `origin/${pr.baseRefName}`).split('\n').filter(Boolean);
-  if (!commits.length) return;
+  if (!commits.length) return console.log(`origin/${pr.baseRefName} has not moved since #${pr.number}'s \`test\` run: no merge-tree tests`);
   const theirs = commits.flatMap(c => git('diff-tree', '--no-commit-id', '--name-only', '-r', c).split('\n'));
   const ours = git('diff', '--name-only', `origin/${pr.baseRefName}...${pr.headRefOid}`).split('\n');
   console.log(`origin/${pr.baseRefName} moved since #${pr.number}'s \`test\` run (${since}): ${commits.length} commit(s)`);
@@ -138,7 +145,7 @@ function mainMoved(pr, suite, tree) {
 // pawisssh/design is a private repository on GitHub Free, where branch protection is not available (GitHub docs,
 // "About protected branches"), so no required check holds main: this script makes the one a required `test` status
 // would, the self-hosted runner's run from #275.
-function merge(number, { head, wait }) {
+function merge(number, { head, wait, dryRun }) {
   const view = () => {
     const pr = JSON.parse(exec('gh', ['pr', 'view', number, '--json', 'number,title,state,isDraft,headRefName,headRefOid,baseRefName']));
     if (pr.state !== 'OPEN' || pr.isDraft) throw new Error(`#${pr.number} is ${pr.isDraft ? 'a draft' : pr.state.toLowerCase()}`);
@@ -151,7 +158,7 @@ function merge(number, { head, wait }) {
   // --wait (retro, 2026-10-24): "merge once `test` passes" in one command, with no CI polling in the session. It
   // re-reads the head each time, so a push while waiting refuses, and gives up after the workflow's timeout-minutes
   // counted from now: a run still queued behind another job on the one runner can outlast it, so run it again then.
-  const minutes = Number(readFileSync(fileURLToPath(new URL('../.github/workflows/test.yml', import.meta.url)), 'utf8').match(/timeout-minutes: (\d+)/)[1]);
+  const minutes = Number(repoFile('.github/workflows/test.yml').match(/timeout-minutes: (\d+)/)[1]);
   for (const until = Date.now() + minutes * 60_000; wait && verdict.pending && Date.now() < until; read()) {
     console.log(`waiting: ${verdict.why}`);
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 30_000);
@@ -160,6 +167,10 @@ function merge(number, { head, wait }) {
   if (!verdict.ok) throw new Error(verdict.why);
   const tree = mergeTree(pr);
   mainMoved(pr, verdict.suite, tree);
+  if (dryRun) {
+    console.log(`dry run: #${pr.number} would merge as tree ${tree}`);
+    return;
+  }
   // `sha` is the head the merge must match (REST "Merge a pull request"; `gh pr merge --match-head-commit`): a push
   // after these checks fails the merge rather than landing untested
   const merged = api(`pulls/${pr.number}/merge`, '--method', 'PUT', '-f', 'merge_method=squash',
@@ -176,14 +187,15 @@ function merge(number, { head, wait }) {
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   const [number, ...flags] = process.argv.slice(2);
-  const opts = { head: null, wait: false };
+  const opts = { head: null, wait: false, dryRun: false };
   for (let i = 0; i < flags.length; i++) {
     if (flags[i] === '--wait') opts.wait = true;
+    else if (flags[i] === '--dry-run') opts.dryRun = true;
     else if (flags[i] === '--head' && /^[0-9a-f]{7,40}$/.test(flags[i + 1] || '')) opts.head = flags[++i];
     else opts.bad = true;
   }
   if (!/^\d+$/.test(number || '') || opts.bad || (opts.wait && !opts.head)) {
-    console.error('usage: node scripts/merge.mjs <pr> [--head <sha> [--wait]]');
+    console.error('usage: node scripts/merge.mjs <pr> [--head <sha> [--wait]] [--dry-run]');
     process.exit(2);
   }
   try {
