@@ -31,8 +31,12 @@ export const areas = paths => [...new Set(paths.map(p => {
   return a === 'skills' && b ? `skills/${b}` : a;
 }))].sort();
 
-// npm test's globs (package.json; merge.test.mjs keeps the two in step)
-export const TEST_FILE = /^(skills\/[^/]+\/tests?|\.github\/test)\/[^/]+\.test\.mjs$/;
+const repoFile = path => readFileSync(fileURLToPath(new URL(`../${path}`, import.meta.url)), 'utf8');
+
+// npm test's globs (package.json), read rather than copied (#376); they use only `*`, one folder name or file name each
+const TEST_GLOBS = JSON.parse(repoFile('package.json')).scripts.test.split(' ').filter(w => w.endsWith('.test.mjs'))
+  .map(g => new RegExp(`^${g.replaceAll('.', '\\.').replaceAll('*', '[^/]+')}$`));
+export const isTestFile = path => TEST_GLOBS.some(g => g.test(path));
 // The folder whose tests an area's change can break: a skill's own, `.github/test` for the CI scripts, all of them
 // ('') for package.json. Data and docs (design-systems/, docs/) have none of their own: the skills' tests that read
 // them are run with the other side's (#373: #372's re-signed Handoff, read by the to-handoff tests #371 changed).
@@ -48,7 +52,7 @@ const suiteOf = area => {
  */
 export function mergeTreeTests(theirs, ours, files, readers = {}) {
   const suites = areas([...theirs, ...ours]).flatMap(a => [a, ...(readers[a] || [])]).map(suiteOf).filter(s => s !== null);
-  return files.filter(f => TEST_FILE.test(f) && suites.some(s => f.startsWith(s))).sort();
+  return files.filter(f => isTestFile(f) && suites.some(s => f.startsWith(s))).sort();
 }
 
 /** Whether a `node --test --test-reporter=spec` run passed with nothing skipped, from its exit status and stdout. */
@@ -80,9 +84,9 @@ function mergeTree(pr) {
   }
 }
 
-// The pinned tools CI keeps in .scratch (.github/workflows/test.yml; merge.test.mjs keeps the two in step): without them,
-// the tests that need them skip.
-export const PINNED = ['adapter-carbon', 'adapter-generic', 'to-handoff'];
+// The pinned tools CI keeps in .scratch, read from its clean step's `! -name`s (.github/workflows/test.yml, #376):
+// without them, the tests that need them skip.
+export const PINNED = [...repoFile('.github/workflows/test.yml').matchAll(/! -name (\S+)/g)].map(m => m[1]);
 
 // Runs `files` in a scratch worktree of the merge tree, with this checkout's pinned tools cloned in (macOS cp(1): `-c`
 // copies with clonefile(2), so 1.5 GB on APFS costs nothing); a failure or a skip refuses the merge.
@@ -127,7 +131,7 @@ function readersOf(tree, touched) {
 function mainMoved(pr, suite, tree) {
   const since = api(`check-suites/${suite}`).created_at;
   const commits = git('rev-list', `--since=${since}`, `origin/${pr.baseRefName}`).split('\n').filter(Boolean);
-  if (!commits.length) return;
+  if (!commits.length) return console.log(`origin/${pr.baseRefName} has not moved since #${pr.number}'s \`test\` run: no merge-tree tests`);
   const theirs = commits.flatMap(c => git('diff-tree', '--no-commit-id', '--name-only', '-r', c).split('\n'));
   const ours = git('diff', '--name-only', `origin/${pr.baseRefName}...${pr.headRefOid}`).split('\n');
   console.log(`origin/${pr.baseRefName} moved since #${pr.number}'s \`test\` run (${since}): ${commits.length} commit(s)`);
@@ -154,7 +158,7 @@ function merge(number, { head, wait, dryRun }) {
   // --wait (retro, 2026-10-24): "merge once `test` passes" in one command, with no CI polling in the session. It
   // re-reads the head each time, so a push while waiting refuses, and gives up after the workflow's timeout-minutes
   // counted from now: a run still queued behind another job on the one runner can outlast it, so run it again then.
-  const minutes = Number(readFileSync(fileURLToPath(new URL('../.github/workflows/test.yml', import.meta.url)), 'utf8').match(/timeout-minutes: (\d+)/)[1]);
+  const minutes = Number(repoFile('.github/workflows/test.yml').match(/timeout-minutes: (\d+)/)[1]);
   for (const until = Date.now() + minutes * 60_000; wait && verdict.pending && Date.now() < until; read()) {
     console.log(`waiting: ${verdict.why}`);
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 30_000);
@@ -163,7 +167,10 @@ function merge(number, { head, wait, dryRun }) {
   if (!verdict.ok) throw new Error(verdict.why);
   const tree = mergeTree(pr);
   mainMoved(pr, verdict.suite, tree);
-  if (dryRun) return console.log(`dry run: #${pr.number} would merge as tree ${tree}`);
+  if (dryRun) {
+    console.log(`dry run: #${pr.number} would merge as tree ${tree}`);
+    return;
+  }
   // `sha` is the head the merge must match (REST "Merge a pull request"; `gh pr merge --match-head-commit`): a push
   // after these checks fails the merge rather than landing untested
   const merged = api(`pulls/${pr.number}/merge`, '--method', 'PUT', '-f', 'merge_method=squash',

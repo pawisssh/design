@@ -1,10 +1,8 @@
-// The merge script's checks (scripts/merge.mjs): the latest `test` run on the head must have passed, and the test
-// files a moved main makes it run on the merge tree.
+// The merge script's checks (scripts/merge.mjs): the latest `test` run on the head must have passed, the test files a
+// moved main makes it run on the merge tree, and the test files and pinned tools it reads from package.json and test.yml.
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { areas, mergeTreeTests, PINNED, runVerdict, TEST_FILE, testVerdict } from '../../scripts/merge.mjs';
+import { areas, isTestFile, mergeTreeTests, PINNED, runVerdict, testVerdict } from '../../scripts/merge.mjs';
 
 const run = (status, conclusion, started_at, name = 'test') => ({ name, status, conclusion, started_at, check_suite: { id: 7 } });
 
@@ -62,17 +60,11 @@ test('a run passes only with exit 0 and nothing skipped', () => {
   assert.deepEqual(runVerdict(0, ''), { ok: false, why: 'the test run printed no summary' });
 });
 
-const repoFile = path => readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
-
-test('the merge tree\'s test files are npm test\'s: every glob in package.json, and every file they match', () => {
-  const globs = JSON.parse(repoFile('package.json')).scripts.test.split(' ').filter(w => w.endsWith('.test.mjs'));
-  const matches = f => globs.some(g => new RegExp(`^${g.replaceAll('.', '\\.').replaceAll('*', '[^/]+')}$`).test(f));
-  for (const g of globs) assert.ok(TEST_FILE.test(g.replaceAll('*', 'x')), g);
-  const tracked = execFileSync('git', ['ls-files', '*.test.mjs'], { encoding: 'utf8', cwd: new URL('../..', import.meta.url) }).split('\n').filter(Boolean);
-  for (const f of tracked) assert.equal(TEST_FILE.test(f), matches(f), f);
+test('the test files are npm test\'s globs: a skill\'s test or tests folder and .github/test, not a fixture under them', () => {
+  for (const f of ['skills/to-handoff/test/a.test.mjs', 'skills/to-design/tests/a.test.mjs', '.github/test/a.test.mjs']) assert.ok(isTestFile(f), f);
+  for (const f of ['skills/to-handoff/test/fixtures/a.test.mjs', 'skills/to-handoff/test/helpers.mjs', 'scripts/a.test.mjs']) assert.ok(!isTestFile(f), f);
 });
 
-test('the pinned tools cloned into the merge tree are the ones CI keeps in .scratch', () => {
-  const kept = [...repoFile('.github/workflows/test.yml').matchAll(/! -name (\S+)/g)].map(m => m[1]);
-  assert.deepEqual(PINNED, kept);
+test('the pinned tools are the .scratch folders CI keeps', () => {
+  assert.deepEqual(PINNED, ['adapter-carbon', 'adapter-generic', 'to-handoff']);
 });
