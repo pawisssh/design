@@ -12,8 +12,7 @@
 // metrics, unless --static; when the runtime cannot run, the Handoff is static-only and says why.
 // generate exits 2 and prints {requests} when any decision is unanswered; it writes nothing then. A generated
 // Handoff is always pending. approve is the owner's sign-off: run it only after the owner types "approve" in
-// chat, with the hashes review printed (#116). answer writes the owner's answer to an owner question into
-// decisions.json, likewise only on the owner's words; generate then carries it. It exits 1 with its reasons when it refuses; check exits 1 on Drift.
+// chat, with the hashes review printed (#116). It exits 1 with its reasons when it refuses; check exits 1 on Drift.
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
@@ -48,14 +47,7 @@ async function main(argv) {
     question: { type: 'string' }, answer: { type: 'string' },
   } });
   const [command, input] = positionals;
-  if (command === 'answer' && input && values.decisions && values.question && values.answer) {
-    try {
-      answerQuestion({ handoffPath: input, decisionsPath: values.decisions, id: values.question, answer: values.answer });
-      console.log(`answered question:${values.question} in ${values.decisions}; re-run generate with it`);
-      return 0;
-    } catch (e) { console.error(e.message); return 1; }
-  }
-  if (!command || !input || !values.ds) {
+  if (!command || !input || (!values.ds && command !== 'answer')) {
     console.error('usage: handoff.mjs generate <index.html | app folder> --ds <dir> --decisions <file> [--static] | validate|render|review <handoff.json> --ds <dir>'
       + ' | answer <handoff.json> --decisions <file> --question <id> --answer <text>'
       + ' | approve <handoff.json> --ds <dir> --content-hash <h> [--proposal <key>=<hash> …] | check <handoff.json> --ds <dir> --prototype <index.html | app folder>');
@@ -86,6 +78,16 @@ async function main(argv) {
     const r = await review({ handoffPath: input, designSystem: values.ds });
     process.stdout.write(r.text);
     return 0;
+  }
+  // answer (retro, 2026-10-24) writes the owner's answer to an owner question into decisions.json, only on the
+  // owner's words in chat, as approve; the next generate carries it. It needs no Design System.
+  if (command === 'answer') {
+    if (!values.decisions || !values.question || !values.answer) { console.error('answer needs --decisions <file> --question <id> --answer <text>'); return 1; }
+    try {
+      answerQuestion({ handoffPath: input, decisionsPath: values.decisions, id: values.question, answer: values.answer });
+      console.log(`answered question:${values.question} in ${values.decisions}; re-run generate with it`);
+      return 0;
+    } catch (e) { console.error(e.message); return 1; }
   }
   if (command === 'approve') {
     if (!values['content-hash']) { console.error('approve needs --content-hash <h>, as review printed it'); return 1; }

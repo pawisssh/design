@@ -15,10 +15,10 @@ const HANDOFF = { openQuestions: [
   { id: 'q-font', kind: 'font', to: 'owner', text: 'Use Geist?', answer: 'Geist', by: 'owner' },
   { id: 'q-data-x', kind: 'stand-in', to: 'developer', text: 'What does it do?', answer: null },
 ] };
-// As the recorded files are: two-space indent, an escaped … the answer must leave as it is.
-const DECISIONS = '{\n  "acceptance": [\n    {\n      "then": "Sending\\u2026"\n    }\n  ],\n  "question:q-font": {\n    "by": "owner",\n    "answer": "Geist"\n  }\n}\n';
+// As the recorded files are: two-space indent, an escaped \u2026 the answer must leave as it is.
+const DECISIONS_TEXT = '{\n  "acceptance": [\n    {\n      "then": "Sending\\u2026"\n    }\n  ],\n  "question:q-font": {\n    "by": "owner",\n    "answer": "Geist"\n  }\n}\n';
 
-function folder(decisions = DECISIONS) {
+function folder(decisions = DECISIONS_TEXT) {
   const dir = mkdtempSync(join(tmpdir(), 'answer-'));
   writeFileSync(join(dir, 'handoff.json'), JSON.stringify(HANDOFF));
   writeFileSync(join(dir, 'decisions.json'), decisions);
@@ -28,7 +28,7 @@ function folder(decisions = DECISIONS) {
 test('answer adds the owner entry at the end, leaving every other byte as it was', () => {
   const paths = folder();
   answerQuestion({ ...paths, id: 'q-prop-card', answer: 'Code-only: the footer’s layout.' });
-  assert.equal(readFileSync(paths.decisionsPath, 'utf8'), DECISIONS.replace(/\n}\n$/,
+  assert.equal(readFileSync(paths.decisionsPath, 'utf8'), DECISIONS_TEXT.replace(/\n}\n$/,
     ',\n  "question:q-prop-card": {\n    "by": "owner",\n    "answer": "Code-only: the footer’s layout."\n  }\n}\n'));
 });
 
@@ -42,8 +42,11 @@ test('answer refuses a question that is no open owner question, or one decisions
   const paths = folder();
   assert.throws(() => answerQuestion({ ...paths, id: 'q-typo', answer: 'x' }), /q-typo is no question in .*handoff\.json/);
   assert.throws(() => answerQuestion({ ...paths, id: 'q-data-x', answer: 'x' }), /q-data-x is to the developer, not the owner/);
-  assert.throws(() => answerQuestion({ ...paths, id: 'q-font', answer: 'x' }), /question:q-font is already in .*decisions\.json/);
-  assert.equal(readFileSync(paths.decisionsPath, 'utf8'), DECISIONS);
+  assert.throws(() => answerQuestion({ ...paths, id: 'q-font', answer: 'x' }), /q-font is already answered in .*handoff\.json/);
+  assert.equal(readFileSync(paths.decisionsPath, 'utf8'), DECISIONS_TEXT);
+  const unanswered = folder('{\n  "question:q-prop-card": {\n    "by": "owner",\n    "to": "developer"\n  }\n}\n');
+  assert.throws(() => answerQuestion({ ...unanswered, id: 'q-prop-card', answer: 'x' }), /question:q-prop-card is already in .*decisions\.json/);
+  assert.throws(() => answerQuestion({ ...folder('[]\n'), id: 'q-prop-card', answer: 'x' }), /decisions\.json is no JSON object/);
 });
 
 test('the CLI answers with --decisions, --question and --answer', () => {

@@ -6,6 +6,7 @@
 //     --main-moved-checked    merge although main moved, once the two sides are checked apart
 //     --wait                  with --head: wait for a missing or running `test` run to finish, then merge or refuse
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -70,16 +71,18 @@ function merge(number, { checked, head, wait }) {
     if (head && !pr.headRefOid.startsWith(head)) throw new Error(`#${pr.number}'s head is ${pr.headRefOid}, not the reviewed ${head}`);
     return pr;
   };
-  let pr = view();
-  let verdict = testVerdict(api(`commits/${pr.headRefOid}/check-runs`).check_runs, pr.headRefOid);
-  // --wait (retro, 2026-10-24): "merge once `test` passes" in one command, with no CI polling in the session. It gives
-  // up at the workflow's own timeout-minutes, 45, and re-reads the head each time, so a push while waiting refuses.
-  for (const until = Date.now() + 45 * 60_000; wait && verdict.pending && Date.now() < until;) {
+  let pr, verdict;
+  const read = () => { pr = view(); verdict = testVerdict(api(`commits/${pr.headRefOid}/check-runs`).check_runs, pr.headRefOid); };
+  read();
+  // --wait (retro, 2026-10-24): "merge once `test` passes" in one command, with no CI polling in the session. It
+  // re-reads the head each time, so a push while waiting refuses, and gives up after the workflow's timeout-minutes
+  // counted from now: a run still queued behind another job on the one runner can outlast it, so run it again then.
+  const minutes = Number(readFileSync(fileURLToPath(new URL('../.github/workflows/test.yml', import.meta.url)), 'utf8').match(/timeout-minutes: (\d+)/)[1]);
+  for (const until = Date.now() + minutes * 60_000; wait && verdict.pending && Date.now() < until; read()) {
     console.log(`waiting: ${verdict.why}`);
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 30_000);
-    pr = view();
-    verdict = testVerdict(api(`commits/${pr.headRefOid}/check-runs`).check_runs, pr.headRefOid);
   }
+  if (wait && verdict.pending) throw new Error(`gave up after ${minutes} minutes: ${verdict.why}`);
   if (!verdict.ok) throw new Error(verdict.why);
   const tree = mergeTree(pr);
   mainMoved(pr, verdict.suite, checked);

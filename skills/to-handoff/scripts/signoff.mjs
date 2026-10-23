@@ -207,15 +207,18 @@ function proposalFile(dir, key) {
  * answerQuestion({handoffPath, decisionsPath, id, answer}): the owner's answer to the open owner question `id`, added
  * to decisions.json as `question:<id>` {by: "owner", answer}. Only on the owner's words in chat. The entry is spliced
  * in before the file's closing brace, so every byte already there stays (retro, 2026-10-24: a JSON round trip turned
- * an escaped \u2026 into the character). Throws on an id that is no owner question, or a key the file already has.
+ * an escaped \u2026 into the character). Throws on an id that is no open owner question, or a key the file already has.
  */
 export function answerQuestion({ handoffPath, decisionsPath, id, answer }) {
   const q = readJson(handoffPath).openQuestions.find(x => x.id === id);
   if (!q) throw new Error(`${id} is no question in ${handoffPath}`);
   if (q.to !== 'owner') throw new Error(`${id} is to the ${q.to}, not the owner`);
+  if (q.answer) throw new Error(`${id} is already answered in ${handoffPath}; change its answer in ${decisionsPath} by hand`);
   const text = readFileSync(decisionsPath, 'utf8');
+  const decisions = JSON.parse(text);
+  if (!decisions || typeof decisions !== 'object' || Array.isArray(decisions)) throw new Error(`${decisionsPath} is no JSON object`);
   const key = `question:${id}`;
-  if (key in JSON.parse(text)) throw new Error(`${key} is already in ${decisionsPath}; change it there by hand`);
+  if (key in decisions) throw new Error(`${key} is already in ${decisionsPath}; change it there by hand`);
   const end = text.lastIndexOf('}');
   const body = text.slice(0, end).trimEnd();
   const entry = `  ${JSON.stringify(key)}: {\n    "by": "owner",\n    "answer": ${JSON.stringify(answer)}\n  }\n`;

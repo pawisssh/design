@@ -47,7 +47,7 @@ With an empty `{}` it exits 2 and prints `{requests: [{key, kind, question, cand
 | `question:<id>` | `{"by": "owner", "answer": "<text>"}`, or `{"by": "owner", "to": "developer"}` to re-address it. |
 | `acceptance:<id>` | `{"by": "owner", "answer": {state, given, when, then}}`. It replaces the agent's criterion with that id, or adds one. |
 
-Write a `question:<id>` answer with `node skills/to-handoff/scripts/handoff.mjs answer <handoff.json> --decisions <decisions.json> --question <id> --answer "<the owner's words>"`, then re-run generate. It refuses an id that is no owner question in the Handoff, or a key the file already has, and leaves every other byte of the file as it was.
+Write a `question:<id>` answer with `node skills/to-handoff/scripts/handoff.mjs answer <handoff.json> --decisions <decisions.json> --question <id> --answer "<the owner's words>"`, then re-run generate. It refuses an id that is no open owner question in the Handoff, or a key the file already has, and leaves the entries already there as they were.
 
 The Handoff records the owner's decisions in `ownerDecisions` by stable key. A re-run carries them over from the stored `handoff.json`, so the agent's `decisions.json` never needs to repeat them. They are kept while their key still exists. A key that is gone, or a carried answer that no longer fits its candidates, is dropped and printed (`dropped owner decision …`). Agent decisions are re-decided every run. Never write `by: "owner"` for anything the owner did not say.
 
