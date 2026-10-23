@@ -20,22 +20,26 @@ test('an undefined prefix, an unused prefix, a broken link and a broken anchor a
     '- `C4-CTX` = https://c4model.com/diagrams/system-context',
     '- `GH` = https://github.com/x/y',
     '- `UML` = https://www.omg.org/spec/UML',
+    '- `OMG` = https://www.omg.org/OMG',
     '', '## Findings', '',
     'Context first (`C4-CTX`), then `C4-CON`. — GH `src/a.ts`. `LICENSE` and `VECTOR` are not prefixes.',
-    '[ok](other.md#part-two), [self](#findings), [web](https://example.com/x#y),',
-    '[gone](missing.md), [lost](other.md#part-three), [here](#nowhere).',
-    '', '```', '`FENCED-OUT` in a fence is code, [not](a/link.md)', '```', '',
+    '[ok](other.md#Part-Two), [self](#findings), [web](https://example.com/x#y), [angle](<other.md>),',
+    '[gone](missing.md), [lost](other.md#part-three), [here](#nowhere), [titled](gone.md "A title").',
+    '', '```', '`FENCED-OUT` in a fence is code, [not](a/link.md)', '```',
+    '~~~', '`TILDE-OUT` too', '~~~', '',
   ].join('\n'));
   assert.deepEqual(problems(root, ['docs/research/a.md']), [
     { what: 'undefined prefix', file: 'docs/research/a.md', ref: 'C4-CON' },
     { what: 'unused prefix', file: 'docs/research/a.md', ref: 'UML' },
+    { what: 'unused prefix', file: 'docs/research/a.md', ref: 'OMG' },
     { what: 'broken link', file: 'docs/research/a.md', ref: 'missing.md' },
     { what: 'broken anchor', file: 'docs/research/a.md', ref: 'other.md#part-three' },
     { what: 'broken anchor', file: 'docs/research/a.md', ref: '#nowhere' },
+    { what: 'broken link', file: 'docs/research/a.md', ref: 'gone.md' },
   ]);
 });
 
-test('a heading anchor drops punctuation and code ticks, and a repeat gets a number', () => {
-  const text = '## 1.2 Source location (`sourceFile`)\n### Licence\n### Licence\n```\n# not a heading\n```\n';
-  assert.deepEqual([...anchors(text)], ['12-source-location-sourcefile', 'licence', 'licence-1']);
+test('a heading anchor drops punctuation, code ticks and link targets, and a repeat gets a number', () => {
+  const text = '## 1.2 Source location (`sourceFile`)\n### Licence\n### Licence\n## See [ADR](x.md) here\n```\n# not a heading\n```\n';
+  assert.deepEqual([...anchors(text)], ['12-source-location-sourcefile', 'licence', 'licence-1', 'see-adr-here']);
 });
