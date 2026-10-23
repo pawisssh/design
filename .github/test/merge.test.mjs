@@ -13,9 +13,15 @@ test('the latest `test` run decides, a re-run included', () => {
     { ok: false, why: '`test` ended failure on abc' });
 });
 
+test('--wait waits on a missing or running `test` run, never on a finished one', () => {
+  assert.equal(testVerdict([], 'abc').pending, true);
+  assert.equal(testVerdict([run('queued', null, '2026-10-22T10:00:00Z')], 'abc').pending, true);
+  assert.equal(testVerdict([run('completed', 'failure', '2026-10-22T10:00:00Z')], 'abc').pending, undefined);
+});
+
 test('no `test` run, or one still running, is no pass', () => {
-  assert.deepEqual(testVerdict([run('completed', 'success', '2026-10-22T10:00:00Z', 'lint')], 'abc'), { ok: false, why: 'no `test` run on abc' });
-  assert.deepEqual(testVerdict([run('in_progress', null, '2026-10-22T10:00:00Z')], 'abc'), { ok: false, why: '`test` is in_progress on abc' });
+  assert.deepEqual(testVerdict([run('completed', 'success', '2026-10-22T10:00:00Z', 'lint')], 'abc'), { ok: false, pending: true, why: 'no `test` run on abc' });
+  assert.deepEqual(testVerdict([run('in_progress', null, '2026-10-22T10:00:00Z')], 'abc'), { ok: false, pending: true, why: '`test` is in_progress on abc' });
 });
 
 test('areas name each skill apart and every other path by its first folder', () => {
