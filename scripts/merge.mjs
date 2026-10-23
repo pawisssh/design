@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 // Squash-merges a pull request and deletes its branch once its `test` run passed and its merge tree is checked.
 //
-//   node scripts/merge.mjs <pr> [--head <sha> [--wait]]   merge if `test` passed on the head and main hasn't moved since
-//     --head <sha>            the head you reviewed: refuse if the branch has moved past it
-//     --main-moved-checked    merge although main moved, once the two sides are checked apart
-//     --wait                  with --head: wait for a missing or running `test` run to finish, then merge or refuse
-import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+//   node scripts/merge.mjs <pr> [--head <sha> [--wait]]   merge if `test` passed on the head, and if main moved
+//                                                          since, the tests of both sides pass on the merge tree
+//     --head <sha>   the head you reviewed: refuse if the branch has moved past it
+//     --wait         with --head: wait for a missing or running `test` run to finish, then merge or refuse
+import { execFileSync, spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
@@ -28,6 +29,41 @@ export const areas = paths => [...new Set(paths.map(p => {
   return a === 'skills' && b ? `skills/${b}` : a;
 }))].sort();
 
+// npm test's globs (package.json)
+const TEST_FILE = /^(skills\/[^/]+\/tests?|\.github\/test)\/[^/]+\.test\.mjs$/;
+// The folder whose tests an area's change can break: a skill's own, `.github/test` for the CI scripts, all of them
+// ('') for package.json. Data and docs (design-systems/, docs/) have none of their own: the skills' tests that read
+// them are run with the other side's (#373: #372's re-signed Handoff, read by the to-handoff tests #371 changed).
+const suiteOf = area => {
+  if (area.startsWith('skills/')) return `${area}/`;
+  if (area === 'scripts' || area === '.github') return '.github/test/';
+  return area === 'package.json' ? '' : null;
+};
+
+/**
+ * The test files, of a tree's `files`, a moved main runs on the merge tree: those of every area either side touches,
+ * and of every skill that `readers` says reads a touched skill's files (vibe-to-figma's tests read to-handoff's fixtures).
+ */
+export function mergeTreeTests(theirs, ours, files, readers = {}) {
+  const suites = areas([...theirs, ...ours]).flatMap(a => [a, ...(readers[a] || [])]).map(suiteOf).filter(s => s !== null);
+  return files.filter(f => TEST_FILE.test(f) && suites.some(s => f.startsWith(s))).sort();
+}
+
+/** Whether a `node --test --test-reporter=spec` run passed with nothing skipped, from its exit status and stdout. */
+export function runVerdict(status, stdout) {
+  const lines = stdout.split('\n');
+  if (status !== 0) {
+    const failed = lines.filter(l => /^\s*✖/.test(l)).slice(0, 20).join('\n');
+    return { ok: false, why: `the tests failed on the merge tree: merge main into the branch and wait for a fresh \`test\` run\n${failed}` };
+  }
+  const skipped = lines.find(l => l.startsWith('ℹ skipped '));
+  if (!skipped) return { ok: false, why: 'the test run printed no summary' };
+  if (skipped !== 'ℹ skipped 0') {
+    return { ok: false, why: `${skipped.split(' ')[2]} test(s) skipped on the merge tree: run the setup scripts in CLAUDE.md here first` };
+  }
+  return { ok: true };
+}
+
 const exec = (cmd, args) => execFileSync(cmd, args, { encoding: 'utf8' }).trim();
 const api = (path, ...args) => JSON.parse(exec('gh', ['api', ...args, `repos/{owner}/{repo}/${path}`]));
 const git = (...args) => exec('git', args);
@@ -42,11 +78,50 @@ function mergeTree(pr) {
   }
 }
 
+// The pinned tools CI keeps in .scratch (.github/workflows/test.yml): without them, the tests that need them skip.
+const PINNED = ['adapter-carbon', 'adapter-generic', 'to-handoff'];
+
+// Runs `files` in a scratch worktree of the merge tree, with this checkout's pinned tools cloned in (macOS cp(1): `-c`
+// copies with clonefile(2), so 1.5 GB on APFS costs nothing); a failure or a skip refuses the merge.
+function runOnTree(pr, tree, files) {
+  const commit = git('commit-tree', tree, '-p', `origin/${pr.baseRefName}`, '-m', `#${pr.number}'s merge tree`);
+  const dir = mkdtempSync(join(tmpdir(), `merge-${pr.number}-`));
+  try {
+    git('worktree', 'add', '--quiet', '--detach', dir, commit);
+    const root = git('rev-parse', '--show-toplevel');
+    mkdirSync(join(dir, '.scratch'), { recursive: true });
+    for (const d of PINNED) {
+      if (existsSync(join(root, '.scratch', d))) execFileSync('cp', ['-Rc', join(root, '.scratch', d), join(dir, '.scratch', d)]);
+    }
+    console.log(`  running ${files.length} test file(s) on the merge tree`);
+    // the concurrency of npm test, whose default of 4 keeps the shadcn runtime test from timing out (#247)
+    const { NODE_OPTIONS, ...env } = process.env;
+    const run = spawnSync(process.execPath, [`--test-concurrency=${env.TEST_CONCURRENCY || 4}`, '--test', '--test-reporter=spec', ...files],
+      { cwd: dir, env, encoding: 'utf8', maxBuffer: 1 << 28 });
+    console.log(run.stdout.split('\n').filter(l => /^ℹ (tests|pass|fail|skipped) /.test(l)).map(l => `  ${l}`).join('\n'));
+    const verdict = runVerdict(run.status, run.stdout);
+    if (!verdict.ok) throw new Error(verdict.why);
+  } finally {
+    // a worktree that failed to be added has nothing to remove; rmSync takes the folder either way
+    try { git('worktree', 'remove', '--force', dir); } catch {}
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+// For each touched skill, the other skills whose code or tests name a path in it (`../to-handoff/`), on the merge tree.
+function readersOf(tree, touched) {
+  return Object.fromEntries(touched.filter(a => a.startsWith('skills/')).map(a => {
+    let hits = '';
+    try { hits = git('grep', '-l', '-F', `/${a.slice(7)}/`, tree, '--', ':(glob)skills/**/*.mjs'); } catch {} // exit 1: no match
+    return [a, areas(hits.split('\n').filter(Boolean).map(h => h.slice(tree.length + 1))).filter(r => r !== a)];
+  }));
+}
+
 // A pull_request run checks out refs/pull/<n>/merge, the merge with main as main stood when the run was triggered
 // (GitHub docs, "Events that trigger workflows": pull_request), so as of its check suite's creation. A commit on
-// main since then is in no tested tree: unless the two sides touch different skills and neither imports the other's
-// files, main is merged into the branch and the PR waits for a fresh run.
-function mainMoved(pr, suite, checked) {
+// main since then is in no tested tree, so the tests of both sides run on the merge tree: a file one side changes can
+// be read by the other's tests with no import between them.
+function mainMoved(pr, suite, tree) {
   const since = api(`check-suites/${suite}`).created_at;
   const commits = git('rev-list', `--since=${since}`, `origin/${pr.baseRefName}`).split('\n').filter(Boolean);
   if (!commits.length) return;
@@ -55,16 +130,15 @@ function mainMoved(pr, suite, checked) {
   console.log(`origin/${pr.baseRefName} moved since #${pr.number}'s \`test\` run (${since}): ${commits.length} commit(s)`);
   console.log(`  they touch: ${areas(theirs).join(', ')}`);
   console.log(`  #${pr.number} touches: ${areas(ours).join(', ')}`);
-  if (!checked) {
-    throw new Error('check that the two sides touch different skills and neither imports the other\'s files, then run '
-      + 'again with --main-moved-checked; otherwise merge main into the branch and wait for a fresh `test` run');
-  }
+  const files = mergeTreeTests(theirs, ours, git('ls-tree', '-r', '--name-only', tree).split('\n'), readersOf(tree, areas([...theirs, ...ours])));
+  if (files.length) runOnTree(pr, tree, files);
+  else console.log('  neither side has tests of its own');
 }
 
 // pawisssh/design is a private repository on GitHub Free, where branch protection is not available (GitHub docs,
 // "About protected branches"), so no required check holds main: this script makes the one a required `test` status
 // would, the self-hosted runner's run from #275.
-function merge(number, { checked, head, wait }) {
+function merge(number, { head, wait }) {
   const view = () => {
     const pr = JSON.parse(exec('gh', ['pr', 'view', number, '--json', 'number,title,state,isDraft,headRefName,headRefOid,baseRefName']));
     if (pr.state !== 'OPEN' || pr.isDraft) throw new Error(`#${pr.number} is ${pr.isDraft ? 'a draft' : pr.state.toLowerCase()}`);
@@ -85,7 +159,7 @@ function merge(number, { checked, head, wait }) {
   if (wait && verdict.pending) throw new Error(`gave up after ${minutes} minutes: ${verdict.why}`);
   if (!verdict.ok) throw new Error(verdict.why);
   const tree = mergeTree(pr);
-  mainMoved(pr, verdict.suite, checked);
+  mainMoved(pr, verdict.suite, tree);
   // `sha` is the head the merge must match (REST "Merge a pull request"; `gh pr merge --match-head-commit`): a push
   // after these checks fails the merge rather than landing untested
   const merged = api(`pulls/${pr.number}/merge`, '--method', 'PUT', '-f', 'merge_method=squash',
@@ -102,15 +176,14 @@ function merge(number, { checked, head, wait }) {
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   const [number, ...flags] = process.argv.slice(2);
-  const opts = { checked: false, head: null, wait: false };
+  const opts = { head: null, wait: false };
   for (let i = 0; i < flags.length; i++) {
-    if (flags[i] === '--main-moved-checked') opts.checked = true;
-    else if (flags[i] === '--wait') opts.wait = true;
+    if (flags[i] === '--wait') opts.wait = true;
     else if (flags[i] === '--head' && /^[0-9a-f]{7,40}$/.test(flags[i + 1] || '')) opts.head = flags[++i];
     else opts.bad = true;
   }
   if (!/^\d+$/.test(number || '') || opts.bad || (opts.wait && !opts.head)) {
-    console.error('usage: node scripts/merge.mjs <pr> [--head <sha> [--wait]] [--main-moved-checked]');
+    console.error('usage: node scripts/merge.mjs <pr> [--head <sha> [--wait]]');
     process.exit(2);
   }
   try {
