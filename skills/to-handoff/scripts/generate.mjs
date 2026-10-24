@@ -10,20 +10,21 @@
 // win over the agent's answers while their key still exists, and are dropped and listed once it is gone.
 // Agent decisions are re-decided every run.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, isAbsolute, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { convert, deltaE } from '../../contract/scripts/color.mjs';
 import { contentHash as contractHash, proposalContentHash, resolve } from '../../contract/scripts/contract.mjs';
 import { computed, splitWords } from './css.mjs';
 import { fileHash, handoffContentHash, prototypeFiles, snapshotIdOf, usedHash } from './hash.mjs';
 import { COLOR_ROLES, collectionOf, colorText, followCustom, matchDeclaration, matchText, roleOf, sameHex, valueIn } from './match.mjs';
-import { REPO_ROOT, loadDesignSystem, stateAxisOf } from './system.mjs';
+import { loadDesignSystem, stateAxisOf } from './system.mjs';
 import { hasRuntime } from './deps.mjs';
 import { readHtml, walk } from './reader.mjs';
 import { readReact } from './react.mjs';
 import { STEP_KINDS, run } from './runtime.mjs';
 import {
-  CONTENT_PROPS, STANDARD_STATES, atomIn, candidateOf, evaluate, isPlaceholderText, librarySignature, ownDeclarations, parseCondition, standIns, stateOfAtom,
+  STANDARD_STATES, atomIn, evaluate, isPlaceholderText, ownDeclarations, parseCondition, standIns, stateOfAtom,
 } from './recognise.mjs';
+import { procedureFor, recogniseUsages } from './usages.mjs';
 
 const PROTOTYPE_MODE = 'light';
 const LANDMARKS = { header: 'banner', nav: 'navigation', main: 'main', aside: 'complementary', footer: 'contentinfo' };
@@ -240,94 +241,14 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   const question = q => { if (!questions.some(x => x.id === q.id)) questions.push(q); return q.id; };
   if (wrapperQuestion) question(wrapperQuestion);
   const usedContracts = new Set(), usedProposals = new Set();
-  const families = [...Object.keys(system.contracts).map(k => `contract:${k}`), ...Object.keys(system.proposals).map(k => `proposal:${k}`)];
   const values = [];
   const fonts = [];
   const sim = doc.standIns;
   const flow = [];
-
-  const checkRecognise = answer => {
-    if (!answer || typeof answer !== 'object') return 'an answer is {contract, tuple, via} | {proposal, tuple, via} | {raw: true, reason} | {noContract, reason}';
-    if (answer.contract) {
-      const c = system.contracts[answer.contract];
-      if (!c) return `no Contract "${answer.contract}" in ${system.key}`;
-      return tupleProblem(c, answer.tuple, `\`${answer.contract}\``) || viaProblem(answer.via);
-    }
-    if (answer.proposal) {
-      const p = system.proposals[answer.proposal];
-      if (!p) return `no Proposal "${answer.proposal}" in ${system.key}`;
-      return tupleProblem(p, answer.tuple, `\`${answer.proposal}\``) || viaProblem(answer.via);
-    }
-    if (answer.draft) {
-      if (!answer.reason) return 'a draft answer needs a reason, the raw usage\'s reason if the draft fails';
-      return answer.tuple && typeof answer.tuple === 'object' ? viaProblem(answer.via) : `\`${answer.draft}\` needs a tuple`;
-    }
-    if (answer.raw === true || answer.noContract) return answer.reason ? null : 'a raw usage needs a reason';
-    return 'an answer names a contract, a proposal, a draft, raw or noContract';
-  };
-
-  // ---- a family the Code Library ships with no Contract (#90, #115): the Adapter writes it mid-run ----
-  // The agent follows the Adapter's procedure for the whole family and answers with the file it wrote. A draft
-  // that passes the Adapter's check is used in this run and written into contracts/ once nothing is open; one
-  // that fails, can't be read or can't be written falls back to a raw usage plus an open question.
-  const drafts = new Map();
-  // An Adapter's procedure may name the family as `<family>`.
-  const procedureFor = family => adapter.contractProcedure.replaceAll('<family>', family);
-  const draftOf = family => {
-    if (drafts.has(family)) return drafts.get(family);
-    const answer = d.ask(`contract:${family}`, {
-      kind: 'contract-draft', candidates: [],
-      question: `\`${family}\` has no Contract in ${system.key}. ${procedureFor(family)}. Write the whole family at status draft with its Drafted values, then answer {path} with the file, or {unwritable: reason}.`,
-    }, a => (a && (typeof a.path === 'string' && a.path || typeof a.unwritable === 'string' && a.unwritable) ? null : 'a draft answer is {path} or {unwritable: reason}'));
-    let result = null;
-    if (answer && answer.unwritable) result = { failed: answer.unwritable };
-    else if (answer) {
-      const path = isAbsolute(answer.path) ? answer.path : join(REPO_ROOT, answer.path);
-      let text, contract;
-      try { text = readFileSync(path, 'utf8'); contract = JSON.parse(text); } catch (e) { result = { failed: `its draft at ${answer.path} could not be read (${e.message})` }; }
-      if (!result) {
-        const problems = draftProblems(contract, family);
-        const existing = system.contracts[family];
-        if (problems.length) result = { failed: `its draft at ${answer.path} fails the Adapter's check: ${problems.join('; ')}` };
-        else if (existing && contractHash(existing) !== contractHash(contract)) throw new Error(`decision "contract:${family}": ${system.key} has another \`${family}\` Contract; a mid-run draft never replaces one`);
-        // A re-run after the write finds the same Contract in contracts/ and keeps it, approved or not.
-        else result = existing ? { contract: existing } : { contract, text, write: true };
-      }
-    }
-    drafts.set(family, result);
-    if (result && result.contract) {
-      system.contracts[family] = result.contract;
-      if (result.contract.selection.status === 'draft') notes.push({
-        level: 'info',
-        text: `\`${family}\` is a Contract the Adapter wrote mid-run at status draft (${Object.keys(result.contract.drafted || {}).length} Drafted values); its check passed. `
-          + 'The owner approves it through To-design\'s base loop; this Handoff\'s sign-off does not.',
-      });
-    }
-    return result;
-  };
-  const draftProblems = (c, family) => {
-    if (!c || typeof c !== 'object' || !c.family || !c.selection) return ['it is not a Contract'];
-    const out = [];
-    if (c.family.key !== family) out.push(`its family is \`${c.family.key}\`, not \`${family}\``);
-    if (c.selection.status !== 'draft' || c.selection.approval !== null) out.push('a Contract written mid-run stays status draft with approval null');
-    return [...out, ...adapter.checkContract(c, foundations)];
-  };
-  // A draft answer as the recognise answer it stands for: a Contract usage on a pass, a raw one on a failure.
-  const resolveDraftAnswer = (answer, key) => {
-    if (!answer || !answer.draft) return answer;
-    const r = draftOf(answer.draft);
-    if (!r) return undefined;
-    if (r.failed) return { noContract: answer.draft, reason: answer.reason, failed: r.failed };
-    const problem = tupleProblem(r.contract, answer.tuple, `\`${answer.draft}\``);
-    if (problem) throw new Error(`decision "${key}": ${problem}`);
-    return { contract: answer.draft, tuple: answer.tuple, via: answer.via };
-  };
-
-  // The Contract a Design System package import names (#62): its module and export are the Contract's code.
-  const contractOfImport = c => Object.keys(system.contracts).sort().find(k => {
-    const code = system.contracts[k].code || {};
-    return code.package === c.module && code.component === c.export;
-  });
+  // Mid-run drafts (#90, #115) by family, carried from screen to screen: usages.mjs resolves them; generate notes
+  // each one that passed and writes it into contracts/ once nothing is open. A drafted Contract is read from here.
+  let drafts = new Map();
+  const contractOf = k => system.contracts[k] || drafts.get(k).contract;
 
   // Each screen's states first, so one runtime run (one build) serves every screen; then each screen's pass.
   const allPresent = new Set();
@@ -394,82 +315,34 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const screenId = screen.id;
     const live = el => rt.elements[at(el.offset)];
 
-    // ---- recognition: usage candidates, then each one's decision ----
-    const consumed = new Set();
-    const usageOf = new Map();
     const usageStates = Object.fromEntries(present.map(s => [s, {}]));
 
-    const recognised = [];
-    // A container: a Code Library component holding components that are not its parts (a Card around a form, a
-    // Carbon Theme around its Buttons, #226). It is walked with its own parts, so the usages inside it are their
-    // own. With a Contract it is that Contract by import, and each usage inside names it in `in` (#194); without
-    // one it is a wrapper whose look stays in the region, and a note names it (#125).
-    const containers = new Map();
-    const parts = new Set();
-    const holdsOtherComponent = el => { let found = false; walk(el, x => { if (x !== el && x.component && !isPart(el, x)) found = true; }); return found; };
-    const visit = (el, through = [], within = null) => {
-      if (el.type !== 'element' || consumed.has(el)) return;
-      const isPartOfOuter = el.component && through.some(outer => isPart(outer, el));
-      if (el.component && (isPartOfOuter || holdsOtherComponent(el))) {
-        let inner = within;
-        if (!isPartOfOuter) {
-          const contract = el.component.kind === 'ds' && contractOfImport(el.component);
-          if (contract) {
-            const def = system.contracts[contract];
-            const own = partsOf(el);
-            const known = new Set((def.properties || []).map(p => p.type === 'TEXT' && p.code && p.code.child).filter(Boolean));
-            const record = { el, cand: { kind: 'element', sig: el.tag, container: own }, answer: { contract, tuple: slotTuple(def, own) }, key: null, byImport: true, within };
-            recognised.push(record);
-            usageOf.set(el, record);
-            for (const x of own) parts.add(x);
-            // The Card's own copy leaves the region; the rest of its subtree stays the region's or the usages' inside it.
-            for (const x of own) if (known.has(x.component.export)) walk(x, y => consumed.add(y));
-            inner = el;
-          } else containers.set(el, el.component);
-        }
-        for (const c of el.children) visit(c, [...through, el], inner);
-        return;
-      }
-      const contract = el.component && el.component.kind === 'ds' && contractOfImport(el.component);
-      // A Design System import is its Contract by import (#62): the tuple is its props through each axis value's code.
-      if (contract) {
-        const { tuple, unmapped, stray } = importTuple(system.contracts[contract], el);
-        recognised.push({ el, cand: { kind: 'element', sig: el.tag }, answer: { contract, tuple }, key: null, byImport: true, unmapped, stray, within });
-      } else {
-        // Another library component is decided by its signature, once per signature; a plain element by its own.
-        const cand = el.component ? { kind: 'element', sig: librarySignature(el), library: true } : candidateOf(el, rules);
-        if (!cand) { for (const c of el.children) visit(c, through, within); return; }
-        const key = `recognise:${cand.sig}`;
-        const answer = resolveDraftAnswer(d.ask(key, {
-          kind: 'recognise', question: `What is \`${cand.sig}\` ("${elementText(el, atomsIn('default')).slice(0, 40)}")?`, candidates: families,
-          evidence: { at: [at(el.offset)], ...(live(el) ? { rendered: `${live(el).rect.width}x${live(el).rect.height}px` } : {}) },
-        }, checkRecognise), key);
-        recognised.push({ el, cand, answer, key, within });
-      }
-      const { answer } = recognised[recognised.length - 1];
-      usageOf.set(el, recognised[recognised.length - 1]);
-      walk(el, x => { if (x !== el) consumed.add(x); });
-      if (answer && answer.contract) {
-        // A label element names the control (<label for>): its text is the Contract's label property.
-        const id = typeof el.attrs.id === 'string' ? el.attrs.id : null;
-        if (id) walk(screen.root, x => { if (x.tag === 'label' && x.attrs.for === id) consumed.add(x); });
-      }
-    };
-    visit(screen.root);
+    // ---- recognition (usages.mjs): one record per Usage, and what each element is to its region ----
+    const describe = el => ({ text: elementText(el, atomsIn('default')), at: at(el.offset), ...(live(el) ? { rendered: `${live(el).rect.width}x${live(el).rect.height}px` } : {}) });
+    const { recognised, claimOf, drafts: now } = recogniseUsages({ root: screen.root, system, rules, decider: d, describe, drafts });
+    for (const [family, r] of now) {
+      if (drafts.has(family) || !r || !r.contract || r.contract.selection.status !== 'draft') continue;
+      notes.push({
+        level: 'info',
+        text: `\`${family}\` is a Contract the Adapter wrote mid-run at status draft (${Object.keys(r.contract.drafted || {}).length} Drafted values); its check passed. `
+          + 'The owner approves it through To-design\'s base loop; this Handoff\'s sign-off does not.',
+      });
+    }
+    drafts = now;
 
     const labelFor = id => { let found = null; walk(screen.root, x => { if (!found && x.tag === 'label' && x.attrs.for === id) found = x; }); return found; };
     const usages = new Map();
-    for (const { el, cand, answer, key, byImport, unmapped = [], stray = [], within } of recognised) {
+    for (const { el, cand, answer, key, byImport, unmapped = [], stray = [], within, parts } of recognised) {
       const id = uniqueId(usageIds, kebab(nameOf(el) || el.tag));
       const u = { id };
       const states = shownIn(el);
       if (!answer) { usages.set(el, u); continue; }
       if (answer.contract || answer.proposal) {
-        const def = answer.contract ? system.contracts[answer.contract] : system.proposals[answer.proposal];
+        const def = answer.contract ? contractOf(answer.contract) : system.proposals[answer.proposal];
         if (answer.contract) { u.contract = answer.contract; usedContracts.add(answer.contract); }
         else { u.proposal = answer.proposal; usedProposals.add(answer.proposal); }
         u.tuple = { ...answer.tuple };
-        Object.assign(u, contentOf(def, el, cand, id, answer));
+        Object.assign(u, contentOf(def, el, cand, id, parts));
         u.match = byImport ? { by: 'import' }
           : d.mark({ by: undefined, via: answer.via || (cand.library ? 'library' : 'element'), ...(answer.candidates ? { candidates: answer.candidates } : {}) }, key);
         if (answer.contract) {
@@ -488,7 +361,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
           });
         }
         // A className on a container's part is styling its Contract does not carry: off-axis, with a question (#194).
-        const styled = (cand.container || []).filter(x => typeof x.attrs.class === 'string');
+        const styled = (parts || []).filter(x => typeof x.attrs.class === 'string');
         if (styled.length) {
           const qid = `q-prop-${id}`, why = `is no ${answer.contract} axis or property`;
           u.offAxis = [...(u.offAxis || []), ...styled.map(x => ({ property: `${x.component.export}.className`, raw: propText(x.attrs.class), reason: `${x.component.export} className ${why}`, question: qid }))];
@@ -505,7 +378,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
         if (answer.noContract) {
           u.question = question({
             id: `q-no-contract-${id}`, kind: 'no-contract', to: 'owner',
-            text: `\`${cand.sig}\` is ${/^[aeiou]/i.test(answer.noContract) ? 'an' : 'a'} ${answer.noContract} with no Contract in ${system.key} yet${answer.failed ? `, and the Adapter could not write one mid-run: ${answer.failed}` : ''}. ${procedureFor(answer.noContract)}, then re-run To-handoff.`,
+            text: `\`${cand.sig}\` is ${/^[aeiou]/i.test(answer.noContract) ? 'an' : 'a'} ${answer.noContract} with no Contract in ${system.key} yet${answer.failed ? `, and the Adapter could not write one mid-run: ${answer.failed}` : ''}. ${procedureFor(adapter, answer.noContract)}, then re-run To-handoff.`,
           });
         }
       }
@@ -515,7 +388,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       usages.set(el, u);
     }
 
-    function contentOf(def, el, cand, id, answer) {
+    function contentOf(def, el, cand, id, parts) {
       const out = {};
       const props = {};
       const code = def.code || {};
@@ -543,7 +416,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
           // The text of a child component the usage writes (<AlertTitle>), or one of its props (SelectValue's placeholder), at any depth (#166).
           // A container reads only its own parts: a nested usage's text never moves up to it (#194).
           let kid = null;
-          if (cand.container) kid = cand.container.find(x => x.component.export === c.child) || null;
+          if (parts) kid = parts.find(x => x.component.export === c.child) || null;
           else walk(el, x => { if (!kid && x !== el && x.type === 'element' && (x.tag === c.child || (x.component && x.component.export === c.child))) kid = x; });
           if (kid && c.childProp && typeof kid.attrs[c.childProp] === 'string') props[p.key] = addCopy(`${id}-${kebab(p.key)}`, kid.attrs[c.childProp], kid.offset);
           else if (kid && !c.childProp && textNodes(kid).length) props[p.key] = addCopy(`${id}-${kebab(p.key)}`, elementText(kid, atomsIn('default')), textNodes(kid)[0].offset);
@@ -637,11 +510,12 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       r.usages = [];
       const elements = [];
       if (shell) elements.push(...g.els);
-      else for (const root of g.els) walk(root, el => { if (!consumed.has(el)) elements.push(el); });
+      else for (const root of g.els) walk(root, el => { if (claimOf(el).claim !== 'consumed') elements.push(el); });
       for (const el of elements) {
-        if (containers.has(el)) notes.push({ level: 'info', text: `Region \`${r.id}\`: \`${el.tag}\` (${containers.get(el).module}, ${at(el.offset)}) holds other Code Library usages, so it is read as a wrapper: its parts' styles and text stay in the region, and the usages inside it are their own.` });
-        const u = usages.get(el);
-        if (u) {
+        const { claim } = claimOf(el);
+        if (claim === 'wrapper') notes.push({ level: 'info', text: `Region \`${r.id}\`: \`${el.tag}\` (${el.component.module}, ${at(el.offset)}) holds other Code Library usages, so it is read as a wrapper: its parts' styles and text stay in the region, and the usages inside it are their own.` });
+        if (claim === 'usage') {
+          const u = usages.get(el);
           r.usages.push(u);
           // A raw usage has no Contract to carry its look: its own styles stay in the region, matched like any other.
           if (u.raw) walk(el, x => { for (const decl of ownDeclarations(rules, x)) addStyle(r, decl); });
@@ -649,14 +523,14 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
         }
         if (insideUsage(el)) continue;
         // A container usage's parts are its Contract's look; their className is off-axis.
-        if (!parts.has(el)) for (const decl of ownDeclarations(rules, el)) addStyle(r, decl);
+        if (claim !== 'part') for (const decl of ownDeclarations(rules, el)) addStyle(r, decl);
         if (!shell) for (const t of textNodes(el)) addText(r, el, t);
       }
       return r;
     }
 
     // Inside a usage that consumes its subtree: a container usage leaves its subtree to the region and the usages inside it.
-    function insideUsage(el) { for (let p = el.parent; p; p = p.parent) if (usages.has(p) && !usageOf.get(p).cand.container) return true; return false; }
+    function insideUsage(el) { const c = claimOf(el); return c.claim === 'consumed' && c.by === 'usage'; }
 
     function addText(r, el, t) {
       const text = textOf(t.parts, atomsIn('default'));
@@ -941,7 +815,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   // ---- source pins ----
   const files = prototypeFiles(prototype, doc.files);
   const contracts = {};
-  for (const k of [...usedContracts].sort()) contracts[k] = { snapshotId: system.contracts[k].source.snapshotId, contentHash: contractHash(system.contracts[k]) };
+  for (const k of [...usedContracts].sort()) contracts[k] = { snapshotId: contractOf(k).source.snapshotId, contentHash: contractHash(contractOf(k)) };
   const proposals = {};
   for (const k of [...usedProposals].sort()) proposals[k] = proposalContentHash(system.proposals[k]);
 
@@ -993,65 +867,6 @@ function readPrototype(prototype, { depsDir, packages }) {
     kind: 'html-file', title, files: [rel], at: doc.at, rules: doc.rules, standIns: standIns(doc.scripts), fonts: [], ignored: [],
     screens: [{ id: kebab(title), name: title, route: '/', offset: mount.offset, root: doc.root, mount }],
   };
-}
-
-/**
- * A Design System import's tuple (#62): per axis but State, the value whose `code` its props carry, most
- * keys winning (`size="lg" isExpressive` is lg-expressive). An axis prop that maps to no value is `unmapped`; a
- * styling prop no axis or property names is `stray`.
- */
-function importTuple(def, el) {
-  const tuple = {}, unmapped = [];
-  const stateAxis = stateAxisOf(def);
-  const given = k => (el.attrs[k] === '' ? true : el.attrs[k]);
-  for (const axis of def.axes) {
-    if (axis === stateAxis) continue;
-    const fits = axis.values.filter(v => v.code && Object.keys(v.code).length && Object.entries(v.code).every(([k, x]) => given(k) === x));
-    const pick = fits.sort((a, b) => Object.keys(b.code).length - Object.keys(a.code).length)[0];
-    if (pick) { tuple[axis.key] = pick.key; continue; }
-    for (const k of new Set(axis.values.flatMap(v => Object.keys(v.code || {})))) if (el.attrs[k] !== undefined && !unmapped.includes(k)) unmapped.push(k);
-  }
-  // Any other prop that styles: not an axis value's, not a property's, not content or behaviour.
-  const known = new Set([...def.axes.flatMap(a => a.values.flatMap(v => Object.keys((v && v.code) || {}))), ...(def.properties || []).map(p => p.code && p.code.prop).filter(Boolean)]);
-  const stray = Object.keys(el.attrs).filter(k => !known.has(k) && !CONTENT_PROPS.test(k) && !/^(children|key|ref|style|on[A-Z]\w*)$/.test(k)).sort();
-  return { tuple, unmapped, stray };
-}
-
-/**
- * Whether component `x` is a part of the container `outer` (a CardFooter in a Card) rather than a component of its
- * own (a Button in a Card). A local ui file is one module per family, so its module is the family. A package's
- * module holds every component (all of @carbon/react), so there a part is named after its container (ModalBody in Modal) (#226).
- */
-function isPart(outer, x) {
-  const a = outer.component, b = x.component;
-  return a.module === b.module && (a.kind !== 'ds' || b.export.startsWith(a.export));
-}
-
-/** A container's own parts: the components `isPart` accepts, reached without entering a component that is not one. */
-function partsOf(el) {
-  const out = [];
-  const visit = x => {
-    if (x.type !== 'element') return;
-    if (x !== el && x.component) { if (!isPart(el, x)) return; out.push(x); }
-    x.children.forEach(visit);
-  };
-  visit(el);
-  return out;
-}
-
-/**
- * A container's tuple (#194): each Slot axis from whether its part is rendered, filled or empty. A Slot axis's
- * part is the export named by the Contract's component and the slot's anatomy node (Card + Footer: CardFooter).
- */
-function slotTuple(def, own) {
-  const tuple = {};
-  for (const axis of def.axes) {
-    if (!axis.slot) continue;
-    const filled = own.some(x => x.component.export === `${def.code.component}${axis.slot}`);
-    const value = axis.values.find(v => v.filled === filled);
-    if (value) tuple[axis.key] = value.key;
-  }
-  return tuple;
 }
 
 // A prop's source text: a string as JSON, one hole as {expr}, holes among text as the template literal they read from.
@@ -1174,17 +989,6 @@ function store(handoff, dir) {
 
 // ---------- helpers ----------
 
-function tupleProblem(def, tuple, name) {
-  if (!tuple || typeof tuple !== 'object') return `${name} needs a tuple`;
-  for (const [k, v] of Object.entries(tuple)) {
-    const axis = def.axes.find(a => a.key === k);
-    if (!axis) return `tuple axis ${k} is not an axis of ${name}`;
-    if (axis === stateAxisOf(def)) return `tuple axis ${k} is the State axis; a State comes from the Prototype's conditions`;
-    if (!axis.values.some(x => x.key === v)) return `tuple ${k} "${v}" is not a ${axis.label} value of ${name} (${axis.values.map(x => x.key).join(', ')})`;
-  }
-  return null;
-}
-const viaProblem = via => (via === undefined || via === 'library' || via === 'element' ? null : `via "${via}" is not library or element`);
 function landmarkOf(el) {
   if (typeof el.attrs.role === 'string' && LANDMARK_ROLES.has(el.attrs.role)) return el.attrs.role;
   return LANDMARKS[el.tag] || null;

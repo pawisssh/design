@@ -1,7 +1,7 @@
-// Recogniser rules (#62) for the static reader's tree: which elements are usage candidates and their stable
-// signatures, state-shaped conditions -> the standard states, and Stand-ins found by name and shape. Nothing
-// here guesses: a candidate's family and a plain condition's default value are decision requests.
-import { selectorMatches, matchedRules } from './css.mjs';
+// Recogniser rules (#62) for the static reader's tree: state-shaped conditions -> the standard states, an element's
+// own declarations, and Stand-ins found by name and shape. Nothing here guesses: a plain condition's default value is
+// a decision request. Usage candidates and their signatures are usages.mjs's.
+import { matchedRules } from './css.mjs';
 
 export const STANDARD_STATES = ['default', 'loading', 'empty', 'error', 'success'];
 
@@ -82,45 +82,6 @@ export const atomIn = (state, defaults) => atom => {
   const s = stateOfAtom(atom);
   return s ? s === state : Boolean(defaults[atom]);
 };
-
-// ---------- usage candidates ----------
-
-const SEMANTIC = new Set(['button', 'input', 'select', 'textarea']);
-const ROLES = new Set(['status', 'alert', 'alertdialog', 'dialog', 'tab', 'tablist', 'switch', 'checkbox', 'radio', 'menu', 'menuitem', 'progressbar', 'tooltip', 'navigation', 'search']);
-
-/** The stable signature of an element: tag, sorted classes (a template literal's static ones, #216), then [type] and [role]. */
-export function signature(el) {
-  const classes = [...el.classes, ...(el.staticClasses || [])].sort().map(c => `.${c}`).join('');
-  const type = el.tag === 'input' && typeof el.attrs.type === 'string' ? `[type=${el.attrs.type}]` : '';
-  const role = typeof el.attrs.role === 'string' ? `[role=${el.attrs.role}]` : '';
-  return `${el.tag}${classes}${type}${role}`;
-}
-
-// Props that carry content or behaviour, not a variant: left out of a library component's signature.
-export const CONTENT_PROPS = /^(class|id|href|src|alt|title|name|value|placeholder|for|type|role|target|rel|tabIndex|aria-.*|data-.*)$/;
-
-/** A library component's signature (#62 tier 2): its name, then its sorted literal variant props, `Button[size=sm]`. */
-export function librarySignature(el) {
-  const props = Object.keys(el.attrs).filter(k => typeof el.attrs[k] === 'string' && !CONTENT_PROPS.test(k)).sort();
-  return `${el.tag}${props.map(k => (el.attrs[k] === '' ? `[${k}]` : `[${k}=${el.attrs[k]}]`)).join('')}`;
-}
-
-/**
- * Whether `el` is a usage candidate: {kind: "element"} for a semantic element or ARIA role, {kind: "group"} for an
- * element whose repeated same-tag children a descendant rule styles (`.avatars span`), else null.
- */
-export function candidateOf(el, rules) {
-  if (SEMANTIC.has(el.tag) && !(el.tag === 'input' && el.attrs.type === 'hidden')) return { kind: 'element', sig: signature(el) };
-  if (el.tag === 'a' && 'href' in el.attrs) return { kind: 'element', sig: signature(el) };
-  if (typeof el.attrs.role === 'string' && ROLES.has(el.attrs.role)) return { kind: 'element', sig: signature(el) };
-  const kids = el.children.filter(c => c.type === 'element');
-  if (kids.length >= 2 && kids.every(k => k.tag === kids[0].tag) && !kids[0].repeat) {
-    const styled = rules.some(r => !r.media && r.parsed.parts.length > 1 && r.parsed.parts[r.parsed.parts.length - 1].compound.tag === kids[0].tag
-      && selectorMatches(r.parsed, kids[0]) && r.parsed.parts.slice(0, -1).some(p => p.compound.classes.some(c => el.classes.includes(c)) || (p.compound.id && p.compound.id === el.attrs.id)));
-    if (styled) return { kind: 'group', sig: `${signature(el)}>${kids[0].tag}` };
-  }
-  return null;
-}
 
 /** The element's own declarations from rules that match it (not inherited), in cascade order. */
 export function ownDeclarations(rules, el) {
