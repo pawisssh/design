@@ -22,8 +22,9 @@ import { readHtml, walk } from './reader.mjs';
 import { readReact } from './react.mjs';
 import { STEP_KINDS, run } from './runtime.mjs';
 import {
-  CONTENT_PROPS, STANDARD_STATES, atomIn, candidateOf, evaluate, isPlaceholderText, librarySignature, ownDeclarations, parseCondition, standIns, stateOfAtom,
+  STANDARD_STATES, atomIn, evaluate, isPlaceholderText, ownDeclarations, parseCondition, standIns, stateOfAtom,
 } from './recognise.mjs';
+import { candidateOf, importTuple, isPart, librarySignature, partsOf, slotTuple, tupleProblem, viaProblem } from './usages.mjs';
 
 const PROTOTYPE_MODE = 'light';
 const LANDMARKS = { header: 'banner', nav: 'navigation', main: 'main', aside: 'complementary', footer: 'contentinfo' };
@@ -995,65 +996,6 @@ function readPrototype(prototype, { depsDir, packages }) {
   };
 }
 
-/**
- * A Design System import's tuple (#62): per axis but State, the value whose `code` its props carry, most
- * keys winning (`size="lg" isExpressive` is lg-expressive). An axis prop that maps to no value is `unmapped`; a
- * styling prop no axis or property names is `stray`.
- */
-function importTuple(def, el) {
-  const tuple = {}, unmapped = [];
-  const stateAxis = stateAxisOf(def);
-  const given = k => (el.attrs[k] === '' ? true : el.attrs[k]);
-  for (const axis of def.axes) {
-    if (axis === stateAxis) continue;
-    const fits = axis.values.filter(v => v.code && Object.keys(v.code).length && Object.entries(v.code).every(([k, x]) => given(k) === x));
-    const pick = fits.sort((a, b) => Object.keys(b.code).length - Object.keys(a.code).length)[0];
-    if (pick) { tuple[axis.key] = pick.key; continue; }
-    for (const k of new Set(axis.values.flatMap(v => Object.keys(v.code || {})))) if (el.attrs[k] !== undefined && !unmapped.includes(k)) unmapped.push(k);
-  }
-  // Any other prop that styles: not an axis value's, not a property's, not content or behaviour.
-  const known = new Set([...def.axes.flatMap(a => a.values.flatMap(v => Object.keys((v && v.code) || {}))), ...(def.properties || []).map(p => p.code && p.code.prop).filter(Boolean)]);
-  const stray = Object.keys(el.attrs).filter(k => !known.has(k) && !CONTENT_PROPS.test(k) && !/^(children|key|ref|style|on[A-Z]\w*)$/.test(k)).sort();
-  return { tuple, unmapped, stray };
-}
-
-/**
- * Whether component `x` is a part of the container `outer` (a CardFooter in a Card) rather than a component of its
- * own (a Button in a Card). A local ui file is one module per family, so its module is the family. A package's
- * module holds every component (all of @carbon/react), so there a part is named after its container (ModalBody in Modal) (#226).
- */
-function isPart(outer, x) {
-  const a = outer.component, b = x.component;
-  return a.module === b.module && (a.kind !== 'ds' || b.export.startsWith(a.export));
-}
-
-/** A container's own parts: the components `isPart` accepts, reached without entering a component that is not one. */
-function partsOf(el) {
-  const out = [];
-  const visit = x => {
-    if (x.type !== 'element') return;
-    if (x !== el && x.component) { if (!isPart(el, x)) return; out.push(x); }
-    x.children.forEach(visit);
-  };
-  visit(el);
-  return out;
-}
-
-/**
- * A container's tuple (#194): each Slot axis from whether its part is rendered, filled or empty. A Slot axis's
- * part is the export named by the Contract's component and the slot's anatomy node (Card + Footer: CardFooter).
- */
-function slotTuple(def, own) {
-  const tuple = {};
-  for (const axis of def.axes) {
-    if (!axis.slot) continue;
-    const filled = own.some(x => x.component.export === `${def.code.component}${axis.slot}`);
-    const value = axis.values.find(v => v.filled === filled);
-    if (value) tuple[axis.key] = value.key;
-  }
-  return tuple;
-}
-
 // A prop's source text: a string as JSON, one hole as {expr}, holes among text as the template literal they read from.
 const propText = v => {
   if (typeof v === 'string') return JSON.stringify(v);
@@ -1174,17 +1116,6 @@ function store(handoff, dir) {
 
 // ---------- helpers ----------
 
-function tupleProblem(def, tuple, name) {
-  if (!tuple || typeof tuple !== 'object') return `${name} needs a tuple`;
-  for (const [k, v] of Object.entries(tuple)) {
-    const axis = def.axes.find(a => a.key === k);
-    if (!axis) return `tuple axis ${k} is not an axis of ${name}`;
-    if (axis === stateAxisOf(def)) return `tuple axis ${k} is the State axis; a State comes from the Prototype's conditions`;
-    if (!axis.values.some(x => x.key === v)) return `tuple ${k} "${v}" is not a ${axis.label} value of ${name} (${axis.values.map(x => x.key).join(', ')})`;
-  }
-  return null;
-}
-const viaProblem = via => (via === undefined || via === 'library' || via === 'element' ? null : `via "${via}" is not library or element`);
 function landmarkOf(el) {
   if (typeof el.attrs.role === 'string' && LANDMARK_ROLES.has(el.attrs.role)) return el.attrs.role;
   return LANDMARKS[el.tag] || null;
