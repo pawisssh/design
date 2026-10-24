@@ -20,3 +20,4 @@ Re-open a decision when its trigger happens.
 | [0017 Vibe-to-Figma stays one-way](0017-vibe-to-figma-stays-one-way.md) | The owner wants a Figma edit to reach the code without running Figma-to-Vibe |
 | [0018 A screen may have Extra states](0018-a-screen-may-have-extra-states.md) | Extra states multiply on one screen, or a Code Library ships a state pattern the five Standard states should absorb |
 | [0019 A Prototype reaches Component Sets or a Handoff by its kind](0019-a-prototype-reaches-component-sets-or-a-handoff-by-its-kind.md) | A vibe-coding tool defaults to a kind of Prototype this decision does not support, or a supported kind's gap has no ticket |
+| [0020 Usage recognition's part rules stay in To-handoff](0020-usage-recognitions-part-rules-stay-in-to-handoff.md) | A Code Library's parts follow neither rule (Chakra's `Card.Body`), or Vibe-to-Figma's path C (#317) needs the import-to-Contract rule |
