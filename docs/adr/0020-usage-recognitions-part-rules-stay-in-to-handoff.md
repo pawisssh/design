@@ -1,21 +1,20 @@
 # Usage recognition's part rules and its import-to-Contract rule stay in To-handoff, not in the Adapter
 
-To-handoff decides two things about a Code Library component it reads:
-- **Part rules:** whether the component is part of a Container (a CardFooter in a Card, ModalBody in Modal) or a Usage of its own (a Button in a Card);
-- **Import-to-Contract rule:** which Contract the component's import names.
+To-handoff decides two things about a Code Library component it reads, and no Adapter has a say in either:
+- **Part of a Container, or a Usage of its own?** A CardFooter in a Card is a part; a Button in a Card is its own Usage. This is `isPart`, `partsOf` and `slotTuple` in `skills/to-handoff/scripts/generate.mjs`.
+- **Which Contract its import names.** This is `contractOfImport`. It also covers a prop that picks a different Contract, such as `<Button hasIconOnly>` as Icon Button ([#347](https://github.com/pawisssh/design/issues/347)).
 
-Both rules stay inside To-handoff's Usage recognition, and no Adapter has a say in them. The part rules depend on how the Code Library ships, not on which Adapter reads it:
-- In a package that puts every component in one module (`@carbon/react`), a part is named after its Container.
-- In a local `ui/` folder with one family per file, anything from the Container's module is a part.
+The part rule depends on how the Code Library ships, and To-handoff's React reader already records that as a component's kind: `ds` for a package, `ui` for a local `ui/` folder.
+- A package holds every component in one module (`@carbon/react`). There, a part is named after its Container (ModalBody in Modal).
+- A local `ui/` folder holds one family per file. There, anything from the Container's module is a part.
 
-A Container's Slot axis part is named Container plus slot (Card + Footer, Modal + Footer) in both. If the Adapters owned these rules, the Carbon and Generic Adapters would each carry the same two branches. The owner chose this on 2026-10-24, in the architecture review that deepened Usage recognition out of `generate()`. The same review decided that a prop that picks a different Contract (`<Button hasIconOnly>` is Icon Button, #347) is part of the import-to-Contract rule, so it stays in To-handoff until a second skill needs it.
+In both cases, a part that fills a Container's slot is named Container plus slot (Card + Footer is CardFooter). The owner chose this on 2026-10-24, in the architecture review that deepened Usage recognition out of `generate()` ([#379](https://github.com/pawisssh/design/issues/379)).
 
 ## Considered Options
 
-- **The Adapter answers whether a component is a part of a Container**: rejected. Both Adapters would implement the same rule twice, so the variation sits in how a library ships, not in the Adapter. The architecture review that proposed it read #226 (a Carbon fix that changed only `generate.mjs`) as a sign the seam was misplaced. That fix changed the package branch of a rule both Adapters share.
-- **The Contract carries the discriminating prop (`code.when`), read by To-handoff and Vibe-to-Figma's path C (#317)**: deferred. #317 is the only other skill that needs the rule, and it is not built yet.
+- **The Adapter answers whether a component is a part**: rejected. Both the Carbon Adapter and the Generic Adapter would carry the same two branches. The review that proposed this pointed to [#226](https://github.com/pawisssh/design/issues/226), a Carbon fix that changed To-handoff and no Adapter, as a sign the seam was misplaced. That fix added the rule's package branch, and that branch depends on how the library ships.
+- **The Contract names the prop that picks it, and both To-handoff and Vibe-to-Figma's path C ([#317](https://github.com/pawisssh/design/issues/317)) read it there**: deferred. #317 is the only other skill that needs the rule, and it is not built yet.
 
 ## Consequences
 
-- A Code Library whose parts follow neither rule, such as Chakra's namespaced `Card.Body`, reopens this decision: the part rule then becomes the Adapter's.
-- Once #317 needs the import-to-Contract rule, it moves into `contract/` as Contract data, so both skills read one rule.
+- A Code Library whose parts follow neither rule, such as Chakra's namespaced `Card.Body`, reopens the part rule for the Adapter.
