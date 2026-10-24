@@ -15,7 +15,7 @@ const SEMANTIC = new Set(['button', 'input', 'select', 'textarea']);
 const ROLES = new Set(['status', 'alert', 'alertdialog', 'dialog', 'tab', 'tablist', 'switch', 'checkbox', 'radio', 'menu', 'menuitem', 'progressbar', 'tooltip', 'navigation', 'search']);
 
 /** The stable signature of an element: tag, sorted classes (a template literal's static ones, #216), then [type] and [role]. */
-export function signature(el) {
+function signature(el) {
   const classes = [...el.classes, ...(el.staticClasses || [])].sort().map(c => `.${c}`).join('');
   const type = el.tag === 'input' && typeof el.attrs.type === 'string' ? `[type=${el.attrs.type}]` : '';
   const role = typeof el.attrs.role === 'string' ? `[role=${el.attrs.role}]` : '';
@@ -23,10 +23,10 @@ export function signature(el) {
 }
 
 // Props that carry content or behaviour, not a variant: left out of a library component's signature.
-export const CONTENT_PROPS = /^(class|id|href|src|alt|title|name|value|placeholder|for|type|role|target|rel|tabIndex|aria-.*|data-.*)$/;
+const CONTENT_PROPS = /^(class|id|href|src|alt|title|name|value|placeholder|for|type|role|target|rel|tabIndex|aria-.*|data-.*)$/;
 
 /** A library component's signature (#62 tier 2): its name, then its sorted literal variant props, `Button[size=sm]`. */
-export function librarySignature(el) {
+function librarySignature(el) {
   const props = Object.keys(el.attrs).filter(k => typeof el.attrs[k] === 'string' && !CONTENT_PROPS.test(k)).sort();
   return `${el.tag}${props.map(k => (el.attrs[k] === '' ? `[${k}]` : `[${k}=${el.attrs[k]}]`)).join('')}`;
 }
@@ -35,7 +35,7 @@ export function librarySignature(el) {
  * Whether `el` is a usage candidate: {kind: "element"} for a semantic element or ARIA role, {kind: "group"} for an
  * element whose repeated same-tag children a descendant rule styles (`.avatars span`), else null.
  */
-export function candidateOf(el, rules) {
+function candidateOf(el, rules) {
   if (SEMANTIC.has(el.tag) && !(el.tag === 'input' && el.attrs.type === 'hidden')) return { kind: 'element', sig: signature(el) };
   if (el.tag === 'a' && 'href' in el.attrs) return { kind: 'element', sig: signature(el) };
   if (typeof el.attrs.role === 'string' && ROLES.has(el.attrs.role)) return { kind: 'element', sig: signature(el) };
@@ -233,7 +233,7 @@ export const procedureFor = (adapter, family) => adapter.contractProcedure.repla
  * keys winning (`size="lg" isExpressive` is lg-expressive). An axis prop that maps to no value is `unmapped`; a
  * styling prop no axis or property names is `stray`.
  */
-export function importTuple(def, el) {
+function importTuple(def, el) {
   const tuple = {}, unmapped = [];
   const stateAxis = stateAxisOf(def);
   const given = k => (el.attrs[k] === '' ? true : el.attrs[k]);
@@ -255,13 +255,13 @@ export function importTuple(def, el) {
  * own (a Button in a Card). A local ui file is one module per family, so its module is the family. A package's
  * module holds every component (all of @carbon/react), so there a part is named after its container (ModalBody in Modal) (#226).
  */
-export function isPart(outer, x) {
+function isPart(outer, x) {
   const a = outer.component, b = x.component;
   return a.module === b.module && (a.kind !== 'ds' || b.export.startsWith(a.export));
 }
 
 /** A container's own parts: the components `isPart` accepts, reached without entering a component that is not one. */
-export function partsOf(el) {
+function partsOf(el) {
   const out = [];
   const visit = x => {
     if (x.type !== 'element') return;
@@ -276,7 +276,7 @@ export function partsOf(el) {
  * A container's tuple (#194): each Slot axis from whether its part is rendered, filled or empty. A Slot axis's
  * part is the export named by the Contract's component and the slot's anatomy node (Card + Footer: CardFooter).
  */
-export function slotTuple(def, own) {
+function slotTuple(def, own) {
   const tuple = {};
   for (const axis of def.axes) {
     if (!axis.slot) continue;
@@ -289,7 +289,7 @@ export function slotTuple(def, own) {
 
 // ---------- answer checks ----------
 
-export function tupleProblem(def, tuple, name) {
+function tupleProblem(def, tuple, name) {
   if (!tuple || typeof tuple !== 'object') return `${name} needs a tuple`;
   for (const [k, v] of Object.entries(tuple)) {
     const axis = def.axes.find(a => a.key === k);
@@ -299,4 +299,4 @@ export function tupleProblem(def, tuple, name) {
   }
   return null;
 }
-export const viaProblem = via => (via === undefined || via === 'library' || via === 'element' ? null : `via "${via}" is not library or element`);
+const viaProblem = via => (via === undefined || via === 'library' || via === 'element' ? null : `via "${via}" is not library or element`);
