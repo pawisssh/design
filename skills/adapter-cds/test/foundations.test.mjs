@@ -261,6 +261,6 @@ test('generation fails on an unknown token, a rule 6 scope violation, or a Contr
 
 test('the step uses the shared closure() and validate(), never a copy', () => {
   const text = readFileSync(new URL('../scripts/foundations.mjs', import.meta.url), 'utf8');
-  assert.match(text, /import \{ closure, validate \} from '\.\.\/\.\.\/contract\/scripts\/contract\.mjs';/);
+  assert.match(text, /import \{ closure, closureContracts, validate \} from '\.\.\/\.\.\/contract\/scripts\/contract\.mjs';/);
   assert.doesNotMatch(text, /function (closure|validate|forEachUse)\b/);
 });

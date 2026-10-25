@@ -19,7 +19,7 @@
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { closure, validate } from '../../contract/scripts/contract.mjs';
+import { closure, closureContracts, validate } from '../../contract/scripts/contract.mjs';
 import { CARBON, DEFAULT_DIR, REPO_ROOT, fetchSources, hasSources, readSources, sha256, snapshotId } from './sources.mjs';
 
 const MODES = [['white', 'White'], ['g10', 'Gray 10'], ['g90', 'Gray 90'], ['g100', 'Gray 100']]; // fixed; DTCG may add keys such as "fallback"
@@ -489,8 +489,7 @@ export function generate({ sources, contracts }) {
       snapshotId: snapshotId(fileHashes),
     },
     closure: {
-      contracts: contracts.map(({ path, contract }) => ({ family: contract.family.key, path, snapshotId: contract.source.snapshotId }))
-        .sort((a, b) => byKey(a.family, b.family)),
+      contracts: closureContracts(contracts),
       tokens,
     },
     collections: [

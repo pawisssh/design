@@ -25,7 +25,7 @@ import * as nodeModule from 'node:module';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { closure, validate } from '../../contract/scripts/contract.mjs';
+import { closure, closureContracts, validate } from '../../contract/scripts/contract.mjs';
 import {
   CDS, CONTRACTS_DIR, DEFAULT_DIR, FOUNDATIONS_DIR, FOUNDATIONS_PINNED, REPO_ROOT, fetchFoundationsPackages, fetchSources,
   hasFoundationsPackages, hasSources, readSources, sha256, snapshotId,
@@ -485,8 +485,7 @@ export async function generate({ sources, contracts = [], families = [], modules
       snapshotId: snapshotId(fileHashes),
     },
     closure: {
-      contracts: contracts.map(({ path, contract }) => ({ family: contract.family.key, path, snapshotId: contract.source.snapshotId }))
-        .sort((a, b) => byKey(a.family, b.family)),
+      contracts: closureContracts(contracts),
       tokens,
     },
     collections: [
