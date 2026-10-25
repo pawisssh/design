@@ -21,6 +21,18 @@ test('the Button Contract expands to 245 variants', () => {
   assert.equal(contract.expand(button()).length, 245);
 });
 
+test('codeProps fills missing axes from their defaults and merges each value\'s code; contentProps maps the properties', () => {
+  const c = button();
+  assert.deepEqual(contract.codeProps(c, { kind: 'secondary' }), { tuple: { kind: 'secondary', size: 'lg', state: 'enabled' }, props: { kind: 'secondary', size: 'lg' } });
+  assert.throws(() => contract.codeProps(c, { kind: 'success' }), /unknown kind value success/);
+  const icon = v => `<${v}>`;
+  // The specimen turns the non-default BOOLEAN on, so the default icon shows.
+  assert.deepEqual((({ props, children }) => ({ props, children }))(contract.contentProps(c, undefined, icon)), { props: { renderIcon: '<icon:default>' }, children: 'Button' });
+  // A usage takes its own values; the gate off hides the swap, and whenFalse: "omit" drops the BOOLEAN's prop.
+  assert.deepEqual(contract.contentProps(c, { label: 'Save', swapIcon: 'icon:save' }, icon).props, {});
+  assert.deepEqual(contract.contentProps(c, { label: 'Save', icon: true, swapIcon: 'icon:save' }, icon).props, { renderIcon: '<icon:save>' });
+});
+
 test('the Base Component is Primary/Large/Enabled and is selected', () => {
   const c = button();
   const base = contract.baseTuple(c);
