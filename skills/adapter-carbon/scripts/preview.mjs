@@ -22,6 +22,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { codeProps, contentProps } from '../../contract/scripts/contract.mjs';
 // Computed here, not imported from sources.mjs: sources.mjs imports this module for its fetch step.
 const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 
@@ -70,38 +71,19 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
     if (!Icon) throw new Error(`@carbon/icons-react has no icon ${iconExport(key)}`);
     return Icon;
   };
-  // Content props for one render. The specimen (no `properties`) shows TEXT defaults and the Contract's default
-  // icon (non-default BOOLEANs on, as in the base-loop review specimen), so the icon slot is reviewed too.
-  // A usage takes each property from `properties` by key, else its Contract default: a BOOLEAN that gates a
-  // swap (`visibleWhen`) hides it when false, and `whenFalse: "omit"` drops the prop. A Repeated child
-  // (`code.items`, #93) renders once: each `itemProp` takes its property's value, and a child prop no property
-  // shows repeats that text (SelectItem's value).
+  // Content props for one render (contract.mjs's contentProps). A Repeated child (`code.items`, #93) renders once:
+  // each `itemProp` takes its property's value, and a child prop no property shows repeats that text (SelectItem's
+  // value).
   const repeated = contract.code.items;
   const Child = repeated && library[repeated.component];
   if (repeated && !Child) throw new Error(`${contract.code.package} has no export ${repeated.component}`);
   const contentFor = (properties, tuple) => {
     const specimen = properties === undefined;
-    const value = p => (specimen ? (p.type === 'BOOLEAN' ? !p.default : p.default) : p.key in properties ? properties[p.key] : p.default);
-    const props = {};
-    const childProps = {};
-    let children;
-    const swapProps = contract.properties.filter(p => p.type === 'INSTANCE_SWAP' && p.code && p.code.prop).map(p => p.code.prop);
-    for (const p of contract.properties) {
-      const code = p.code || {};
-      if (p.type === 'TEXT' && code.itemProp) childProps[code.itemProp] = value(p);
-      if (!code.prop) continue;
-      const v = value(p);
-      if (p.type === 'TEXT') {
-        if (code.prop === 'children') children = v;
-        else props[code.prop] = v;
-      } else if (p.type === 'INSTANCE_SWAP' && code.valueFrom === 'icon') {
-        const gate = code.visibleWhen && contract.properties.find(x => x.key === code.visibleWhen);
-        if ((specimen || !gate || value(gate)) && v) props[code.prop] = iconFor(v);
-      } else if (p.type === 'BOOLEAN' && swapProps.indexOf(code.prop) < 0) {
-        if (v || code.whenFalse !== 'omit') props[code.prop] = v;
-      }
-    }
+    const { props, children: text, value } = contentProps(contract, properties, iconFor);
+    let children = text;
     if (repeated) {
+      const childProps = Object.fromEntries(contract.properties.filter(p => p.type === 'TEXT' && p.code && p.code.itemProp)
+        .map(p => [p.code.itemProp, value(p)]));
       const text = Object.values(childProps)[0];
       children = React.createElement(Child, Object.fromEntries(repeated.props.map(k => [k, k in childProps ? childProps[k] : text])));
     }
@@ -115,14 +97,9 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
     stylesheet: readFileSync(join(dir, 'node_modules/@carbon/styles/css/styles.css'), 'utf8'),
     modeClass: mode => `cds--${mode}`,
     render(tuple, properties) {
-      const full = {};
-      for (const axis of contract.axes) full[axis.key] = tuple[axis.key] === undefined ? axis.default : tuple[axis.key];
+      const { tuple: full, props: axisProps } = codeProps(contract, tuple);
       const { props, children } = contentFor(properties, full);
-      for (const axis of contract.axes) {
-        const value = axis.values.find(v => v.key === full[axis.key]);
-        if (!value) throw new Error(`unknown ${axis.key} value ${full[axis.key]}`);
-        Object.assign(props, value.code || {});
-      }
+      Object.assign(props, axisProps);
       return renderToStaticMarkup(React.createElement(Component, props, children));
     },
   };

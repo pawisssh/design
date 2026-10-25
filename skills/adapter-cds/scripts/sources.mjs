@@ -9,6 +9,7 @@
 // - Packages: the npm tarballs of cds-web, cds-common and cds-icons, each checked against its registry sha512
 //   `integrity`. Only the members the `extract` patterns name are extracted with `tar`; nothing from a package is run
 //   here (no npm install, no lifecycle scripts). The Foundations step evaluates named compiled modules (ADR 0021).
+// The command also installs the preview renderer's packages (preview.mjs) into .scratch/adapter-cds/preview.
 // Downloads are untrusted data and live in gitignored scratch.
 import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -243,10 +244,13 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     if (positionals.length < 2) fail(new Error('usage: sources.mjs snapshot <repo path>... [--dir <dir>]'));
     snapshotSources(positionals.slice(1), values.dir).then(r => console.log(JSON.stringify(r, null, 2)), fail);
   } else {
-    fetchSources(values.dir).then(d => {
+    fetchSources(values.dir).then(async d => {
       readSources(d);
       console.log(`CDS Foundations packages OK in ${fetchFoundationsPackages()}`);
       console.log(`CDS Web ${CDS.packages['@coinbase/cds-web'].version} (commit ${CDS.commit.slice(0, 7)}, ${CDS.tag || 'untagged'}) sources OK in ${d}`);
+      // The preview renderer's pinned packages (#386), so one fetch step readies every test.
+      const { PREVIEW_DIR, fetchPreviewPackages } = await import('./preview.mjs');
+      console.log(`CDS preview packages OK in ${fetchPreviewPackages(PREVIEW_DIR)}`);
     }).catch(fail);
   }
 }
