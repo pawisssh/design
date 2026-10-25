@@ -66,5 +66,5 @@ test('the test files are npm test\'s globs: a skill\'s test or tests folder and 
 });
 
 test('the pinned tools are the .scratch folders CI keeps', () => {
-  assert.deepEqual(PINNED, ['adapter-carbon', 'adapter-generic', 'to-handoff']);
+  assert.deepEqual(PINNED, ['adapter-carbon', 'adapter-cds', 'adapter-generic', 'to-handoff']);
 });
