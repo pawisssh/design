@@ -97,9 +97,9 @@ function intactManifest(out, pkg) {
 /**
  * Download every pinned source into `dir`, verifying each sha256 and integrity; a file or package already present
  * and intact is not downloaded again. `pin` and `contracts` (the folder of Contracts whose files are fetched too) are
- * for tests.
+ * for tests: a test's pin reads no committed Contract, since those are at the Adapter's commit, not the test's.
  */
-export async function fetchSources(dir = DEFAULT_DIR, { pin = CDS, contracts = CONTRACTS_DIR } = {}) {
+export async function fetchSources(dir = DEFAULT_DIR, { pin = CDS, contracts = pin === CDS ? CONTRACTS_DIR : null } = {}) {
   for (const [path, hash] of pinnedFiles(pin, contracts)) {
     const out = join(dir, 'cds', path);
     if (existsSync(out) && sha256(readFileSync(out)) === hash) continue;
@@ -145,7 +145,7 @@ export async function fetchSources(dir = DEFAULT_DIR, { pin = CDS, contracts = C
  */
 function pinnedFiles(pin, contracts) {
   const pins = new Map(Object.entries(pin.files));
-  if (!existsSync(contracts)) return [...pins];
+  if (!contracts || !existsSync(contracts)) return [...pins];
   for (const f of readdirSync(contracts).filter(n => n.endsWith('.component.json'))) {
     const { source } = JSON.parse(readFileSync(join(contracts, f), 'utf8'));
     if (source.commit !== pin.commit) throw new Error(`${f}: pinned to ${source.commit}, not the Adapter's ${pin.commit}`);
