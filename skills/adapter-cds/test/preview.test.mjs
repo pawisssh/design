@@ -54,7 +54,7 @@ test('each Mode renders the specimen under ThemeProvider with its activeColorSch
 });
 
 test("the stylesheet is CDS's CSS in @layer cds order, then the icon font, with Inter and CoinbaseIcons inlined", { skip }, async () => {
-  const { stylesheet } = await previewRenderer(button);
+  const { stylesheet, render } = await previewRenderer(button);
   const order = ['styles/global.css', 'styles/defaultFont.css', 'styles/responsive/base.css', 'styles/responsive/phone.css',
     'styles/responsive/tablet.css', 'styles/responsive/desktop.css', 'system/Interactable.css', 'buttons/Button.css']
     .map(p => `/* @coinbase/cds-web/esm/${p} */`).concat('/* @coinbase/cds-icons/esm/fonts/web/icon-font.css */');
@@ -62,7 +62,8 @@ test("the stylesheet is CDS's CSS in @layer cds order, then the icon font, with 
   assert.ok(at.every(i => i >= 0), `every file is in the stylesheet: ${order.filter((_, i) => at[i] < 0)}`);
   assert.deepEqual([...at].sort((a, b) => a - b), at, 'in order');
   assert.ok(!stylesheet.includes('buttons/IconButton.css'), 'only the CSS the bundled component imports');
-  assert.match(stylesheet, /\.cds-Button|baseCss-b99zquh/);
+  const base = openTag(render({})).match(/\bcds-Button (baseCss-[\w-]+)/)[1];
+  assert.ok(stylesheet.includes(`@layer cds{.${base}{`), `Button.css styles the rendered ${base}`);
   assert.match(stylesheet, /@font-face \{\s*font-family: 'Inter';[^}]*src: url\(data:font\/woff2;base64,/);
   assert.match(stylesheet, /font-family: 'CoinbaseIcons';[^}]*src: url\(data:font\/woff2;base64,/);
   assert.ok(!/url\(['"]?\.\//.test(stylesheet), 'no relative url() left');
@@ -75,6 +76,9 @@ test('refuses to render when the installed packages differ from the Contract pin
   const icons = JSON.parse(JSON.stringify(button));
   icons.source.packages['@coinbase/cds-icons'] = '5.27.0';
   await assert.rejects(previewRenderer(icons), /@coinbase\/cds-icons 5\.26\.0 is installed but the Contract pins 5\.27\.0/);
+  const extra = JSON.parse(JSON.stringify(button));
+  extra.source.packages['@coinbase/cds-mobile'] = '9.29.0';
+  await assert.rejects(previewRenderer(extra), /@coinbase\/cds-mobile is not a preview package, but the Contract pins it at 9\.29\.0/);
 });
 
 test('refuses a code.import outside code.package, and an icon CDS does not have', { skip }, async () => {

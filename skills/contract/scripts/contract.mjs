@@ -25,6 +25,52 @@ export function baseTuple(contract) {
   return Object.fromEntries(contract.axes.map(a => [a.key, a.default]));
 }
 
+/**
+ * A tuple's code props for a preview renderer: `{tuple, props}`, the tuple with each missing axis at its default and
+ * the props its axis values' `code` set, in axis order. Throws on an unknown value.
+ */
+export function codeProps(contract, tuple) {
+  const full = {};
+  const props = {};
+  for (const axis of contract.axes) {
+    full[axis.key] = tuple[axis.key] === undefined ? axis.default : tuple[axis.key];
+    const value = axis.values.find(v => v.key === full[axis.key]);
+    if (!value) throw new Error(`unknown ${axis.key} value ${full[axis.key]}`);
+    Object.assign(props, value.code || {});
+  }
+  return { tuple: full, props };
+}
+
+/**
+ * The content props a preview renderer gives the component: `{props, children, value}`, from each property's `code`.
+ * The specimen (`properties` undefined) shows TEXT defaults and the default icon (non-default BOOLEANs on), so the icon
+ * slot is reviewed too. A usage takes each property from `properties` by key, else its Contract default: a BOOLEAN that
+ * gates a swap (`visibleWhen`) hides it when false, and `whenFalse: "omit"` drops the prop. `icon(value)` gives the
+ * prop for an INSTANCE_SWAP with `valueFrom: "icon"` (`icon:default`, `icon:save`). `value(property)` is the value used.
+ */
+export function contentProps(contract, properties, icon) {
+  const specimen = properties === undefined;
+  const value = p => (specimen ? (p.type === 'BOOLEAN' ? !p.default : p.default) : p.key in properties ? properties[p.key] : p.default);
+  const props = {};
+  let children;
+  const swapProps = contract.properties.filter(p => p.type === 'INSTANCE_SWAP' && p.code && p.code.prop).map(p => p.code.prop);
+  for (const p of contract.properties) {
+    const code = p.code || {};
+    if (!code.prop) continue;
+    const v = value(p);
+    if (p.type === 'TEXT') {
+      if (code.prop === 'children') children = v;
+      else props[code.prop] = v;
+    } else if (p.type === 'INSTANCE_SWAP' && code.valueFrom === 'icon') {
+      const gate = code.visibleWhen && contract.properties.find(x => x.key === code.visibleWhen);
+      if ((specimen || !gate || value(gate)) && v) props[code.prop] = icon(v);
+    } else if (p.type === 'BOOLEAN' && swapProps.indexOf(code.prop) < 0) {
+      if (v || code.whenFalse !== 'omit') props[code.prop] = v;
+    }
+  }
+  return { props, children, value };
+}
+
 const SECTIONS = ['layout', 'paint'];
 // A copy of plain JSON data, as a JSON round trip gives it but without the text in between (resolve copies per tuple):
 // an undefined, function or symbol drops out of an object and is null in an array, as is a number that is not finite;

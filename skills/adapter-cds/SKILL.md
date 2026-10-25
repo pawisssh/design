@@ -51,7 +51,8 @@ It downloads each repository path at the pinned commit into `.scratch/adapter-cd
 - Stylesheet: Inter, then the CSS the bundled component imports, in import order: `styles/global.css`, `styles/defaultFont.css`, `styles/responsive/` base, phone, tablet and desktop, then each component's CSS. Every file opens with `@layer cds`, and each is prefixed with a comment naming its path. Then the CoinbaseIcons font. Inter comes from the pinned `@fontsource-variable/inter`, and both fonts are inlined as data URIs.
 - Icons: an `INSTANCE_SWAP` with `valueFrom: "icon"` passes the icon's name (`add`). The renderer throws when `@coinbase/cds-icons` has no glyph for it.
 - Packages: [`preview/package.json`](preview/package.json) and its lockfile pin them. `node skills/adapter-cds/scripts/sources.mjs` (or `node skills/adapter-cds/scripts/preview.mjs`) installs them into gitignored `.scratch/adapter-cds/preview/` with `npm ci --ignore-scripts`. The lockfile's CDS integrities are the ones `CDS.packages` pins.
-- It refuses to render when an installed package differs from the Contract's `source.packages`.
+- It refuses to render when a package the Contract's `source.packages` pins is not installed at that version. It also refuses a Contract with `code.required`, whose placeholders only the Carbon renderer writes.
+- The props come from the shared `codeProps` and `contentProps` in [`contract.mjs`](../contract/SKILL.md#contract-module), as in the Carbon renderer.
 - Fixtures: until the Button Contract lands (#387), the tests render [`test/fixtures/button.component.json`](test/fixtures/button.component.json) with a stand-in Foundations document, [`test/fixtures/cds.foundations.json`](test/fixtures/cds.foundations.json).
 - Tests: `node --test skills/adapter-cds/test/preview.test.mjs`. They skip, saying so, until the packages are fetched.
 

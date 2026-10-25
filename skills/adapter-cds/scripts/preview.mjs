@@ -27,6 +27,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { codeProps, contentProps } from '../../contract/scripts/contract.mjs';
 // Computed here, not imported from sources.mjs: sources.mjs imports this module for its fetch step.
 const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 
@@ -144,12 +145,16 @@ async function bundle(dir, specifier, component) {
 export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
   if (!hasPreviewPackages(dir))
     throw new Error(`CDS preview packages missing in ${dir}; run: node skills/adapter-cds/scripts/preview.mjs`);
-  const pinned = JSON.parse(readFileSync(join(PINNED_DIR, 'package.json'), 'utf8')).dependencies;
-  for (const name of Object.keys(pinned)) {
-    const want = contract.source.packages[name];
-    const got = JSON.parse(readFileSync(join(dir, 'node_modules', name, 'package.json'), 'utf8')).version;
-    if (want && want !== got) throw new Error(`${name} ${got} is installed but the Contract pins ${want}`);
+  // Every package the Contract pins must be installed at that version.
+  for (const [name, want] of Object.entries(contract.source.packages)) {
+    const file = join(dir, 'node_modules', name, 'package.json');
+    if (!existsSync(file)) throw new Error(`${name} is not a preview package, but the Contract pins it at ${want}`);
+    const got = JSON.parse(readFileSync(file, 'utf8')).version;
+    if (want !== got) throw new Error(`${name} ${got} is installed but the Contract pins ${want}`);
   }
+  // contentProps has no `code.required` placeholders (the Carbon renderer's); no CDS Contract needs them yet.
+  if (contract.code.required && contract.code.required.length)
+    throw new Error(`the CDS preview renderer does not render code.required props (${contract.code.required.join(', ')})`);
   const specifier = importSpecifier(contract);
   const { lib, css } = await bundle(dir, specifier, contract.code.component);
   const { React, renderToStaticMarkup, ThemeContext, ThemeProvider, MediaQueryProvider, createThemeCssVars, defaultTheme, glyphMap, Component } = lib;
@@ -161,36 +166,6 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
     if (!glyphMap[`${key}-16-inactive`] && !glyphMap[`${key}-24-inactive`]) throw new Error(`@coinbase/cds-icons has no icon ${key}`);
     return key;
   };
-  // Content props for one render, as in the Carbon renderer. The specimen (no `properties`) shows TEXT defaults and
-  // the Contract's default icon (non-default BOOLEANs on), so the icon slot is reviewed too. A usage takes each
-  // property from `properties` by key, else its Contract default: a BOOLEAN that gates a swap (`visibleWhen`) hides
-  // it when false, and `whenFalse: "omit"` drops the prop.
-  const contentFor = (properties, tuple) => {
-    const specimen = properties === undefined;
-    const value = p => (specimen ? (p.type === 'BOOLEAN' ? !p.default : p.default) : p.key in properties ? properties[p.key] : p.default);
-    const props = {};
-    let children;
-    const swapProps = contract.properties.filter(p => p.type === 'INSTANCE_SWAP' && p.code && p.code.prop).map(p => p.code.prop);
-    for (const p of contract.properties) {
-      const code = p.code || {};
-      if (!code.prop) continue;
-      const v = value(p);
-      if (p.type === 'TEXT') {
-        if (code.prop === 'children') children = v;
-        else props[code.prop] = v;
-      } else if (p.type === 'INSTANCE_SWAP' && code.valueFrom === 'icon') {
-        const gate = code.visibleWhen && contract.properties.find(x => x.key === code.visibleWhen);
-        if ((specimen || !gate || value(gate)) && v) props[code.prop] = iconFor(v);
-      } else if (p.type === 'BOOLEAN' && swapProps.indexOf(code.prop) < 0) {
-        if (v || code.whenFalse !== 'omit') props[code.prop] = v;
-      }
-    }
-    for (const prop of (contract.code && contract.code.required) || [])
-      if (!(prop in props) && !(prop === 'children' && children !== undefined))
-        props[prop] = !specimen && prop in properties ? properties[prop] : `${contract.family.key}-${contract.axes.map(a => tuple[a.key]).join('-')}`;
-    return { props, children };
-  };
-
   const h = React.createElement;
   // Each scheme's theme as ThemeProvider builds it (read back from ThemeContext), and the theme variables it would
   // write inline, as one rule. A specimen's ThemeProvider sits in a ThemeContext holding that same theme, so
@@ -207,14 +182,10 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
     stylesheet: [interCss(dir), cdsCss(dir, css), themeCss, MODE_CSS].join('\n'),
     modeClass,
     render(tuple, properties) {
-      const full = {};
-      for (const axis of contract.axes) full[axis.key] = tuple[axis.key] === undefined ? axis.default : tuple[axis.key];
-      const { props, children } = contentFor(properties, full);
-      for (const axis of contract.axes) {
-        const value = axis.values.find(v => v.key === full[axis.key]);
-        if (!value) throw new Error(`unknown ${axis.key} value ${full[axis.key]}`);
-        Object.assign(props, value.code || {});
-      }
+      // Content props from the properties (contract.mjs's contentProps), then each axis value's code props over them.
+      const axis = codeProps(contract, tuple).props;
+      const { props, children } = contentProps(contract, properties, iconFor);
+      Object.assign(props, axis);
       const schemes = SCHEMES.map(scheme => h(ThemeContext.Provider, { key: scheme, value: themes[scheme] },
         h(ThemeProvider, { theme: defaultTheme, activeColorScheme: scheme, className: 'cds-preview-scheme' },
           h(MediaQueryProvider, null, h(Component, props, children)))));
