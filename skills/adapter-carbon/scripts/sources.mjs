@@ -140,7 +140,7 @@ export async function snapshotSources(paths, dir = DEFAULT_DIR) {
   return { tag: CARBON.tag, commit: CARBON.commit, files, snapshotId: snapshotId(files) };
 }
 
-async function download(url) {
+export async function download(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`GET ${url}: HTTP ${res.status}`);
   return Buffer.from(await res.arrayBuffer());
