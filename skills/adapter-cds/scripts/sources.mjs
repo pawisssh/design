@@ -3,6 +3,7 @@
 //   node skills/adapter-cds/scripts/sources.mjs [--dir <dir>]   fetch into .scratch/adapter-cds/sources
 //   node skills/adapter-cds/scripts/sources.mjs snapshot <repo path>... [--dir <dir>]
 //       fetch a Contract's source files at the pinned commit and print its `source.files` and `snapshotId`
+// The fetch also installs the Foundations step's one outside package, d3-color, into .scratch/adapter-cds/foundations.
 //
 // - Evidence files: raw files from the coinbase/cds repository at the pinned commit, each checked against its sha256,
 //   plus every file the committed CDS Contracts pin.
@@ -11,7 +12,7 @@
 //   here (no npm install, no lifecycle scripts). The Foundations step evaluates named compiled modules (ADR 0021).
 // Downloads are untrusted data and live in gitignored scratch.
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -22,6 +23,9 @@ export { sha256, snapshotId };
 export const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 export const DEFAULT_DIR = join(REPO_ROOT, '.scratch/adapter-cds/sources');
 export const CONTRACTS_DIR = join(REPO_ROOT, 'design-systems/cds/contracts');
+// d3-color, which getBlendedColor imports: installed from foundations/package-lock.json (#385).
+export const FOUNDATIONS_DIR = join(REPO_ROOT, '.scratch/adapter-cds/foundations');
+const FOUNDATIONS_PINNED = fileURLToPath(new URL('../foundations/', import.meta.url));
 
 export const CDS = {
   repository: 'https://github.com/coinbase/cds',
@@ -30,8 +34,9 @@ export const CDS = {
   tag: '',
   commit: '135dc3c64218299bd26f0ce2ccdad628551d63d5',
   note: '@coinbase/cds-web 9.29.0 has no git tag; the commit is the master commit that bumped packages/web/package.json to 9.29.0.',
-  // Evidence the Foundations step and the Contracts cite: the license, each package's version at the commit, and the
-  // TypeScript sources of the theme, its CSS variables and the interactive-state blend.
+  // Evidence the Foundations step and the Contracts cite: the license, each package's version at the commit, the
+  // TypeScript sources of the theme, its CSS variables and the interactive-state blend, how ThemeProvider builds a
+  // colour scheme's theme, and where Button's foregroundMuted variant is deprecated.
   files: {
     LICENSE: '9825303622d8727cd2baa6ca8a92b4db9c417b41c06058083f47561e7b003e5a',
     'packages/common/package.json': 'ca723136b987b232f562549d7984ba56c794c730a261926723f53bce15a2d818',
@@ -40,10 +45,14 @@ export const CDS = {
     'packages/common/src/color/getLuminance.ts': '6cc4f3e2fda2efc3ee14cec0fe519751f1c9239f33ba328d8a1603e28c736e4b',
     'packages/common/src/tokens/button.ts': 'cfb9065030d1719e078ab634ea049eb03212a375c6009ac5b7425e8dae63f4b3',
     'packages/common/src/tokens/interactable.ts': '590f7e7a4d688cf4171256b4149b296baa66c591fd1cf587ac84027cdd2ecaf8',
+    'packages/common/src/types/ButtonBaseProps.ts': 'f9c843f9f3eb9a8da6b03db85f7f0ec6958de8d1e2c7acf3035f8d4448a02473',
     'packages/icons/package.json': 'f63134b50859dace69cded070957b41aa55f5bd44dbc1781388e39b46d4accc2',
     'packages/web/package.json': 'ca0ecd076b55efe0aee663a5b0ac2cf296119192d4f86cfdf1181f19efb84650',
     'packages/web/src/core/createThemeCssVars.ts': '0c840566943e6fad2fcac3ac9167cc31414acf6247639c7656b1cf5b987127a6',
     'packages/web/src/core/theme.ts': 'b407e32ae791c279fc17591ec94bfd6e429d0da1a78c729cf695cc288697f97c',
+    'packages/web/src/system/Interactable.tsx': 'c5088de3daa71967bfd4e957b6f8c35e823dec614a6f90aefebbd305aaf0558f',
+    'packages/web/src/system/ThemeProvider.tsx': 'b6b016c03d923fa9a4fe744d2d3a4706d51efefc892eaa306755042524682e24',
+    'packages/web/src/system/interactableCSSProperties.ts': 'ef8e01fb2d390d0c1678a89295fc2acc570b4719fb7a97012ac1cf40e13876a0',
     'packages/web/src/themes/defaultTheme.ts': '9dd9058ca1634d722906482b021444175f4ea858371590f04ab20b8a17924e2d',
   },
   // `extract`: tarball member patterns (memberPattern). Each must match at least one member. The compiled .js members
@@ -207,6 +216,22 @@ export function readSources(dir = DEFAULT_DIR, pin = CDS) {
   return { commit: pin.commit, files, hashes, packages };
 }
 
+const lockOf = dir => (existsSync(join(dir, 'package-lock.json')) ? readFileSync(join(dir, 'package-lock.json'), 'utf8') : null);
+
+/** True when the Foundations step's packages are installed in `dir` from the committed lockfile. */
+export function hasFoundationsPackages(dir = FOUNDATIONS_DIR) {
+  return lockOf(dir) === lockOf(FOUNDATIONS_PINNED) && existsSync(join(dir, 'node_modules/d3-color/package.json'));
+}
+
+/** Install the Foundations step's packages into `dir` with `npm ci --ignore-scripts`. Skips when already installed. */
+export function fetchFoundationsPackages(dir = FOUNDATIONS_DIR) {
+  installAtomically(dir, hasFoundationsPackages, tmp => {
+    for (const f of ['package.json', 'package-lock.json']) copyFileSync(join(FOUNDATIONS_PINNED, f), join(tmp, f));
+    execFileSync('npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: tmp, stdio: 'inherit' });
+  }, ['node_modules', 'package.json', 'package-lock.json']);
+  return dir;
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const { values, positionals } = parseArgs({ allowPositionals: true, options: { dir: { type: 'string', default: DEFAULT_DIR } } });
   const fail = e => { console.error(`FAIL: ${e.message}`); process.exit(1); };
@@ -216,6 +241,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   } else {
     fetchSources(values.dir).then(d => {
       readSources(d);
+      console.log(`CDS Foundations packages OK in ${fetchFoundationsPackages()}`);
       console.log(`CDS Web ${CDS.packages['@coinbase/cds-web'].version} (commit ${CDS.commit.slice(0, 7)}, ${CDS.tag || 'untagged'}) sources OK in ${d}`);
     }, fail);
   }

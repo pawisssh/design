@@ -1,0 +1,8 @@
+{
+  "name": "adapter-cds-foundations",
+  "private": true,
+  "description": "Pinned packages the CDS Foundations step needs beside the fetched tarballs: d3-color, which cds-common's getBlendedColor imports. Installed into .scratch/adapter-cds/foundations by scripts/foundations.mjs with npm ci --ignore-scripts; never installed here.",
+  "dependencies": {
+    "d3-color": "3.1.0"
+  }
+}
