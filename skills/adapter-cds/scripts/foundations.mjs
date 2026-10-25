@@ -530,7 +530,7 @@ export async function generate({ sources, contracts = [], families = [], modules
 const d3Version = () => JSON.parse(readFileSync(join(FOUNDATIONS_PINNED, 'package.json'), 'utf8')).dependencies['d3-color'];
 
 /** The Contracts in `dir`: [{path, contract}], `path` relative to the repo root. */
-function readContracts(dir = CONTRACTS_DIR) {
+export function readContracts(dir = CONTRACTS_DIR) {
   if (!existsSync(dir)) return [];
   return readdirSync(dir).filter(f => f.endsWith('.component.json')).sort(byKey).map(f => {
     const file = join(dir, f);

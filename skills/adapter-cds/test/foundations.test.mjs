@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { generate, loadModules } from '../scripts/foundations.mjs';
+import { generate, loadModules, readContracts } from '../scripts/foundations.mjs';
 import { CDS, REPO_ROOT, hasFoundationsPackages, hasSources, readSources } from '../scripts/sources.mjs';
 import { closure } from '../../contract/scripts/contract.mjs';
 
@@ -65,8 +65,8 @@ test('two CLI runs write byte-identical documents, equal to the committed one', 
   assert.equal(out[0], read(COMMITTED));
 });
 
-test('the committed document is exactly what generate({families: [button]}) returns', { skip }, async () => {
-  assert.equal((await run()).text, read(COMMITTED));
+test('the committed document is exactly what generate returns for --family button and the committed Contracts', { skip }, async () => {
+  assert.equal((await run({ contracts: readContracts() })).text, read(COMMITTED));
 });
 
 test('collections: hidden Primitives, Theme in Light and Dark without a selector, Layout and Type', { skip }, () => {
