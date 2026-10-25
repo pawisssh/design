@@ -1,0 +1,15 @@
+{
+  "name": "adapter-cds-preview",
+  "private": true,
+  "description": "Pinned packages for the CDS preview renderer. Installed into .scratch/adapter-cds/preview by scripts/preview.mjs with npm ci --ignore-scripts; never installed here.",
+  "dependencies": {
+    "@coinbase/cds-common": "9.29.0",
+    "@coinbase/cds-icons": "5.26.0",
+    "@coinbase/cds-web": "9.29.0",
+    "@fontsource-variable/inter": "5.3.0",
+    "esbuild": "0.28.2",
+    "framer-motion": "10.18.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}
