@@ -152,6 +152,12 @@ export function closure(contract) {
   return [...tokens].sort();
 }
 
+/** A Foundations document's `closure.contracts`: each Contract's family, path and snapshotId, by family. */
+export function closureContracts(contracts) {
+  return contracts.map(({ path, contract }) => ({ family: contract.family.key, path, snapshotId: contract.source.snapshotId }))
+    .sort((a, b) => (a.family < b.family ? -1 : a.family > b.family ? 1 : 0));
+}
+
 // Calls fn({tuple, section, node, field, key, path, ref}) for every value reference ({token} or {raw})
 // that a selected variant resolves to, including those nested in effects. Skips `was`. `path` names
 // the rule that set the field ("paint[1].Button.fill"); `key` is set for a nested reference ("color").
