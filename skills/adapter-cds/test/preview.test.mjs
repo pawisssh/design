@@ -1,13 +1,13 @@
 // CDS preview renderer (#386): real @coinbase/cds-web markup per Contract tuple, once per Theme Mode, and CDS's CSS
-// in its @layer cds order. Until the Button Contract lands (#387) the tests render a fixture Contract. Skips until
-// the packages are fetched (node skills/adapter-cds/scripts/sources.mjs fetches them with the sources).
+// in its @layer cds order, for the committed Button Contract (#387). Skips until the packages are fetched
+// (node skills/adapter-cds/scripts/sources.mjs fetches them with the sources).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { hasPreviewPackages, previewRenderer } from '../scripts/preview.mjs';
 
-const fixture = name => JSON.parse(readFileSync(new URL(`fixtures/${name}`, import.meta.url)));
-const button = fixture('button.component.json');
+const committed = path => JSON.parse(readFileSync(new URL(`../../../design-systems/cds/${path}`, import.meta.url)));
+const button = committed('contracts/button.component.json');
 const skip = hasPreviewPackages() ? false : 'CDS preview packages missing: run node skills/adapter-cds/scripts/sources.mjs';
 
 // One specimen holds a subtree per Mode; `scheme` picks one, and `button` its <button> open tag.
@@ -33,6 +33,7 @@ test('each axis value maps through its Contract code props; forced States render
   assert.notEqual(tag({ size: 's' }), tag({ size: 'l' }), 'size changes the padding and radius classes');
   assert.equal(render({ state: 'hover' }), render({}));
   assert.equal(render({ state: 'active' }), render({}));
+  assert.equal(render({ state: 'focus' }), render({}));
   assert.throws(() => render({ variant: 'foregroundMuted' }), /unknown variant value foregroundMuted/);
 });
 
@@ -99,17 +100,17 @@ test('a usage renders its own label and icon; missing properties take their Cont
   assert.match(render({}, { label: 'Save', startIcon: true }), /data-icon-name="add"/);
 });
 
-test('To-preview builds a catalog page for the fixture Contract, one specimen per tuple', { skip }, async () => {
+test('To-preview builds a catalog page for the Button Contract, one specimen per tuple', { skip }, async () => {
   const { buildCatalog } = await import('../../to-preview/scripts/catalog.mjs');
   const { expand } = await import('../../contract/scripts/contract.mjs');
   const renderer = await previewRenderer(button);
-  const html = buildCatalog({ contract: button, foundations: fixture('cds.foundations.json'), renderer });
+  const html = buildCatalog({ contract: button, foundations: committed('cds.foundations.json'), renderer });
   const data = JSON.parse(html.match(/<script type="application\/json" id="catalog">([\s\S]*?)<\/script>/)[1]);
   assert.equal(Object.keys(data.specimens).length, expand(button).length);
   assert.equal(data.sourceLabel, '@coinbase/cds-web 9.29.0');
   assert.deepEqual(data.toggles, [{ key: 'theme', label: 'Theme', modes: [
     { key: 'light', label: 'Light', className: 'cds-preview-light' }, { key: 'dark', label: 'Dark', className: 'cds-preview-dark' }] }]);
-  assert.deepEqual(data.forces.map(f => f.pseudo), [':hover', ':active']);
+  assert.deepEqual(data.forces.map(f => f.pseudo), [':hover', ':active', ':focus-visible']);
   assert.ok(html.includes('/* @coinbase/cds-web/esm/buttons/Button.css */'));
 });
 

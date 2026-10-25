@@ -1,6 +1,6 @@
 ---
 name: adapter-cds
-description: CDS Web Adapter, from the Coinbase Design System's web library (`@coinbase/cds-web`) at a pinned commit to its pinned sources and Foundations document. Use when fetching the CDS sources, snapshotting a CDS Contract's source files, regenerating the CDS Foundations document, rendering CDS specimens for To-preview, or moving the CDS pin.
+description: CDS Web Adapter, from the Coinbase Design System's web library (`@coinbase/cds-web`) at a pinned commit to its pinned sources, draft Contracts and Foundations document. Use when fetching the CDS sources, writing or checking a CDS Contract and its Drafted-value fingerprints, snapshotting a CDS Contract's source files, regenerating the CDS Foundations document, rendering CDS specimens for To-preview, or moving the CDS pin.
 ---
 
 # CDS Adapter
@@ -41,7 +41,62 @@ node skills/adapter-cds/scripts/sources.mjs snapshot <repo path> <repo path> ...
 
 It downloads each repository path at the pinned commit into `.scratch/adapter-cds/sources/cds/<path>` and prints `{tag, commit, files, snapshotId}`. Copy `files` and `snapshotId` into the Contract's `source`; `snapshotId` is the Adapter guide's manifest hash, so its shell recipe recomputes it from those files. If you read another file later, re-run `snapshot` with the full list.
 
-## 3. Foundations step
+## 3. From CDS source to a draft Contract
+
+Write `design-systems/cds/contracts/<family>.component.json` by hand, following the [Adapter guide](../contract/references/adapter-guide.md) and the [Contract schema](../contract/references/contract-schema.md). No generator exists. The [Button Contract](../../design-systems/cds/contracts/button.component.json) is the worked example. For CDS:
+
+1. **Pick the files** at the pin. For a family `<Family>` they are usually:
+   - the component: `packages/web/src/<group>/<Family>.tsx` (props, defaults, and its Linaria `css` literals). Button is under `buttons/`.
+   - its token map, `packages/common/src/tokens/<family>.ts` (`variants`, `transparentVariants`), and the variant type in `packages/common/src/types/` (`ButtonBaseProps.ts`, with its `@deprecated` values).
+   - the shared behaviour it renders through: `packages/web/src/system/Interactable.tsx` (state colours, child opacity, the focus ring), `Pressable.tsx` (loading, press scale), and `packages/common/src/tokens/interactable.ts` (the opacities).
+   - the docs examples, `apps/docs/docs/components/<group>/<Family>/_webExamples.mdx` (labels, icons), CDS's Code Connect file `packages/web/src/<group>/__figma__/<Family>.figma.ts`, and `packages/web/package.json` for the export path.
+
+   Snapshot them (section 2) and copy `files` and `snapshotId` into `source`. Fill the rest from the Button Contract: `codeLibrary: "CDS Web"`, `adapter: "cds"`, the repository, the empty `tag`, the commit, and the three `packages` versions. The Foundations step refuses a Contract pinned to another commit or version.
+2. **Values from the styles, not the types.** The compiled CSS under `npm/@coinbase/cds-web@9.29.0/package/esm/` is what a value is checked against. A Linaria literal compiles to one hashed class (`startNodeCss-s2x7iw5`). Layout props (`paddingX={4}`, `borderRadius={900}`) compile to atomic classes in `styles/responsive/base.css` (`._4-_sm7rau { padding-inline: var(--space-4) }`).
+3. **Variants.** Take the variant union from the types and keep the values the token map styles. A `@deprecated` value goes in `dropped` with its evidence, and Foundations gives its tokens scopes `[]` (Button: `foregroundMuted`). A boolean that swaps the token map is its own axis (Button's `transparent` is the `fill` axis, `solid` / `transparent`), and so is one that changes the drawing (`loading`).
+4. **Sizes.** Take them from the family's size table (Button's `buttonSizes`: `paddingX`, `paddingY`, `borderRadius`, `iconSize`, `font` per size), with the default from the `default<Family>Size` constant. A deprecated alias (`compact`, size `s`) goes in `dropped`. Props that only place the component in its parent (`block`, `flush`) are not axes: give them a note.
+5. **State from Interactable.** Interactable styles `:hover`, `:active` / `[aria-pressed='true']`, `:disabled` / `[aria-disabled='true']` and `:focus-visible`, so a family that renders through it gets all five canonical states. Hover, Active and Focus have `code: null` and their selector in `css`, and Disabled has `code: {disabled: true}`. Pressable makes a loading component disabled, so loading with Hover, Active or Focus can't happen in use. Keep those tuples, with a note, and let the owner omit them in To-preview.
+6. **Cascade → ordered rules.** The stylesheet order is global, the responsive files, then `Interactable.css`, `Pressable.css` and each component's CSS. At equal specificity the later file wins: Pressable's `[data-loading='true']` beats Interactable's `:disabled`, and `transparentWhileInactiveCss` keeps a transparent component's background `transparent` while disabled. Write the base rule, then one rule per variant and per size, then the states, then loading last, so the later rule wins as the CSS does.
+7. **Values.**
+   - Bind a variant's colours to the component tokens (`button-<variant>[-transparent]-<background|color>`). Bind a state's colours to the Synthesized tokens (`button-<variant>[-transparent]-<hover|pressed|disabled>-background`).
+   - Bind sizes to the Layout tokens the size table names: `paddingX` 4 is `space-4`, `borderRadius` 900 is `borderRadius-900`, `iconSize` m is `iconSize-m`. `font` is the text style (`headline`).
+   - The opacities Interactable sets on the children (`> *`) go on each child layer as `{raw, level: "info"}`, naming `opacityHovered` (0.88) or `opacityPressed` (0.82). The disabled opacity goes on the root, as `accessibleOpacityDisabled` (0.5).
+   - A `visibility: hidden` child that keeps its width is `opacity` raw 0. `color="currentColor"` on an Icon is `{sameAs: "Label.fill"}`.
+   - Button passes `borderWidth` 0: bind `borderWidth-0` and leave `stroke` `none`.
+8. **Focus ring.** Interactable draws a 2px solid outline in `bgPrimary`, offset 2px. Model it on Focus as `stroke: {token: "bgPrimary"}`, `strokeWeight` raw 2 (`warning`, a constant) and `strokeAlign: "outside"`, with a note that the offset gap is lost. A drop shadow can't bind `bgPrimary`, which has no `EFFECT_COLOR` scope.
+9. **Icons.** A family that takes icon names (`startIcon="add"`) gets an icon-slot FRAME per position holding a glyph INSTANCE of `icon:default`. Each slot has a BOOLEAN bound to its `visible` and an INSTANCE_SWAP bound to the glyph's `mainComponent`, `valueFrom: "icon"`. Set `icons.source` to `@coinbase/cds-icons` `5.26.0`, `esm/svgs/{key}-16-inactive.svg`, fallback `esm/svgs/{key}-24-inactive.svg`. Pick `default` and `preferred` from the docs examples. Every key must exist in the fetched `esm/svgs`, and the preview renderer checks it against the icon font's glyph map. Parts CDS draws with `position: absolute` (Button's loading ProgressCircle) can't be built: give them a `verify` note.
+10. **Code Connect.** Each axis value and property carries its React props in `code`, from `<Family>.tsx`. The top-level `code` is `import { <Family> } from '@coinbase/cds-web/<group>';` (the exports map's subpath). Where CDS's own `<Family>.figma.ts` disagrees (Button's maps five variants and emits `start` / `end` nodes), follow the component and record a note.
+11. **Selection.** Set `selection` to `{status: "draft", omit: [], expectedCount: <the expansion count>, approval: null}`.
+12. **Drafted values.** Record in [`drafted`](../contract/references/contract-schema.md#drafted-values) every value you chose by judgement: an axis or value label CDS has no word for (`Fill`, `Solid`), a layer name, the label default, an icon default, the grid, the description. A value read from source is never one, nor is a raw with its reason. Each entry is `{by: "agent", evidence: ["<file>:L<n> what it shows"], fingerprint}`, keyed per [ADR 0010](../../docs/adr/0010-drafted-values-carry-over-by-evidence-fingerprint.md).
+
+    **Node map.** Write the family's node map to `skills/adapter-cds/nodes/<family>.nodes.json`. Each anatomy layer name maps to what its element carries, space-separated, identifying entry first: the static class CDS gives it (`cds-Button`, `cds-Icon`) and the names of the `css` literals of `<Family>.tsx` on it (`"Button": "cds-Button baseCss unsetNoWrapCss iconCss blockCss flushCss"`, `"Start icon": "startNodeCss"`). A layer drawn inside another element takes that element's literals (Button's Label: `"middleNodeCss hiddenCss spinnerContainerCss"`).
+
+    **Fingerprint.** It is `sha256:` of the canonical JSON of the facts its key kind is drafted from. Compute them with [`scripts/fingerprints.mjs`](scripts/fingerprints.mjs), the one definition the tests also use; don't hash by hand. `test/fingerprints.test.mjs` works one example per key kind.
+    - `parts` is the sorted names of every `const <name> = css\`…\`` literal in `<Family>.tsx`, the family name without spaces.
+    - A node's facts are `{node, element, rules}`. `node` is its first entry, `cds-` dropped (`Button`, `Icon`, `startNodeCss`). `element` is its entries as written. `rules` is each of its entries that is a literal, written `<name> { <body> }` with comments stripped, whitespace collapsed to one space and `${…}` kept, sorted. An entry that is neither a `cds-` class nor a literal fails.
+    - The key kinds: an axis or axis value label is `{kind: "axis", axis, values}`; an anatomy node `{kind: "node", ...the node's facts, parts}`; a property field `{kind: "property", prop, ...its first bind's node facts, parts}`; a layout field `{kind: "layout", ...the node's facts}` (the rule's match is not a fact); a family-wide value (`family.*`, `icons.*`, `figma.*`, `code.*`) `{kind: "family", axes, defaults, parts}`.
+
+    Only the family's own TSX is hashed. A change in Interactable, Pressable or a token map moves no fingerprint: those feed values read from source, which the check and the render comparison catch. Write the entries with a placeholder fingerprint, then fill them in from the script's output. The script reads the files the Contract pins from the sources dir, checking each sha256, and `--check` prints `OK <n> fingerprints` or exits 1 naming each entry that differs:
+
+    ```
+    node skills/adapter-cds/scripts/fingerprints.mjs design-systems/cds/contracts/<family>.component.json --nodes skills/adapter-cds/nodes/<family>.nodes.json [--check]
+    ```
+13. **Notes.** Record every disagreement you resolved and every behaviour you could not draw (the press scale, an absolute overlay, the focus offset), with `at` and `level`.
+
+Then check the draft, regenerate the Foundations document, and compare:
+
+```
+node skills/contract/scripts/check.mjs design-systems/cds/contracts/<family>.component.json
+node skills/adapter-cds/scripts/foundations.mjs
+node skills/contract/scripts/check.mjs design-systems/cds/contracts/<family>.component.json --table
+node skills/to-preview/scripts/catalog.mjs design-systems/cds/contracts/<family>.component.json
+```
+
+`check.mjs` prints the variant count, Base Component and token closure, then `OK`; Button has 480 variants. `--table` prints the resolved paint per grid row. Compare it with CDS's own render: open the catalog page, which forces each State, and read each specimen's computed background, colour, opacity, outline, padding and radius in both schemes.
+
+**Mid-run, for To-handoff.** When a Prototype uses a family CDS ships but the Design System has no Contract for, To-handoff asks decision `contract:<family>`. Write the whole family by steps 1–13 to a file outside `contracts/`, at `status: "draft"` with `approval: null`. Run `check.mjs` and the fingerprint `--check` on it, then answer `{path}`. Answer `{unwritable: "<reason>"}` when a source can't be read or the family can't be written. To-handoff checks the draft against the Contract rules and the CDS pin, and copies a passing one into `contracts/` byte for byte, never over an existing Contract. A failing one leaves the usage raw with a question. Approve the draft later through To-design's base loop. Regenerate the Foundations document then, with `--family <family>` if CDS has a token map for it. Until it does, `closure` and `usedBy` miss the family.
+
+## 4. Foundations step
 
 Regenerate the Foundations document after a new or edited Contract, a new family, or a new pin:
 
@@ -79,7 +134,7 @@ Tests: `node --test skills/adapter-cds/test/*.test.mjs`. The Foundations tests s
 
 ## Preview renderer
 
-[`scripts/preview.mjs`](scripts/preview.mjs) is the renderer `to-preview` finds by convention; the interface is in [to-preview's page reference](../to-preview/references/interactive-template.md). It bundles the Contract's `code.import` with esbuild, `.css` imports stubbed, and renders each tuple with the real `@coinbase/cds-web` component through `react-dom/server`. Each axis value's Contract `code` props are merged in. A value whose `code` is null (Hover, Active) renders like the default, and To-preview forces its pseudo-class.
+[`scripts/preview.mjs`](scripts/preview.mjs) is the renderer `to-preview` finds by convention; the interface is in [to-preview's page reference](../to-preview/references/interactive-template.md). It bundles the Contract's `code.import` with esbuild, `.css` imports stubbed, and renders each tuple with the real `@coinbase/cds-web` component through `react-dom/server`. Each axis value's Contract `code` props are merged in. A value whose `code` is null (Hover, Active, Focus) renders like the default, and To-preview forces its pseudo-class.
 
 - Import: Button is `import { Button } from '@coinbase/cds-web/buttons';`. The package's exports map has `./buttons` → `esm/buttons/index.js`, which re-exports `./Button`. `code.import` must import from `code.package` or one of its subpaths.
 - Providers: each specimen is wrapped in `ThemeProvider` (`defaultTheme`, `activeColorScheme` from the Mode) and `MediaQueryProvider`. `PortalProvider` is not needed: Button renders without it, Loading (`ProgressCircle`) included, and nothing under `buttons/`, `system/` or `ProgressCircle` uses a portal.
@@ -89,8 +144,7 @@ Tests: `node --test skills/adapter-cds/test/*.test.mjs`. The Foundations tests s
 - Packages: [`preview/package.json`](preview/package.json) and its lockfile pin them. `node skills/adapter-cds/scripts/sources.mjs` (or `node skills/adapter-cds/scripts/preview.mjs`) installs them into gitignored `.scratch/adapter-cds/preview/` with `npm ci --ignore-scripts`. The lockfile's CDS integrities are the ones `CDS.packages` pins.
 - It refuses to render when a package the Contract's `source.packages` pins is not installed at that version. It also refuses a Contract with `code.required`, whose placeholders only the Carbon renderer writes.
 - The props come from the shared `codeProps` and `contentProps` in [`contract.mjs`](../contract/SKILL.md#contract-module), as in the Carbon renderer.
-- Fixtures: until the Button Contract lands (#387), the tests render [`test/fixtures/button.component.json`](test/fixtures/button.component.json) with a stand-in Foundations document, [`test/fixtures/cds.foundations.json`](test/fixtures/cds.foundations.json).
-- Tests: `node --test skills/adapter-cds/test/preview.test.mjs`. They skip, saying so, until the packages are fetched.
+- Tests: `node --test skills/adapter-cds/test/preview.test.mjs`, on the committed Button Contract and Foundations document. They skip, saying so, until the packages are fetched.
 
 ## Moving the pin
 
@@ -99,4 +153,4 @@ Tests: `node --test skills/adapter-cds/test/*.test.mjs`. The Foundations tests s
 3. Update `CDS` in `sources.mjs`: the commit, the `note`, every file's sha256 (`curl -s https://raw.githubusercontent.com/coinbase/cds/<commit>/<path> | shasum -a 256`), and the versions and integrities. Check the `LICENSE` is still Apache-2.0, then update [`design-systems/cds/NOTICE`](../../design-systems/cds/NOTICE) and the versions in section 1.
 4. Update the three CDS versions in [`preview/package.json`](preview/package.json) and regenerate the lockfile with `npm install --package-lock-only --ignore-scripts` in that folder.
 5. Run the fetch and the tests. An extract pattern that matches nothing fails the fetch, naming it, and a compiled module whose relative import was not extracted fails the tests.
-6. Re-run `snapshot` for every Contract, update their `source`, regenerate the Foundations document, and run each Contract through To-design's base loop again: a new `snapshotId` voids every approval.
+6. Re-run `snapshot` for every Contract, update their `source`, and run the fingerprint `--check` on each: recheck every entry whose fingerprint moved, then write the new one. Regenerate the Foundations document, and run each Contract through To-design's base loop again: a new `snapshotId` voids every approval.
