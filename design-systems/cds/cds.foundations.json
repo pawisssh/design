@@ -5797,7 +5797,7 @@
       "collection": "theme",
       "name": "Button/button-foregroundMuted-disabled-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgSecondary, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgSecondary, 0.75)",
       "scopes": [],
       "codeSyntax": {},
       "values": {
@@ -5835,7 +5835,7 @@
       "collection": "theme",
       "name": "Button/button-foregroundMuted-disabled-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgLine, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgLine, 0.75)",
       "scopes": [],
       "codeSyntax": {},
       "values": {
@@ -5875,7 +5875,7 @@
       "collection": "theme",
       "name": "Button/button-foregroundMuted-hover-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgSecondary, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgSecondary, 0.88)",
       "scopes": [],
       "codeSyntax": {},
       "values": {
@@ -5911,7 +5911,7 @@
       "collection": "theme",
       "name": "Button/button-foregroundMuted-hover-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgLine, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgLine, 0.88)",
       "scopes": [],
       "codeSyntax": {},
       "values": {
@@ -5949,7 +5949,7 @@
       "collection": "theme",
       "name": "Button/button-foregroundMuted-pressed-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgSecondary, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgSecondary, 0.82)",
       "scopes": [],
       "codeSyntax": {},
       "values": {
@@ -5985,7 +5985,7 @@
       "collection": "theme",
       "name": "Button/button-foregroundMuted-pressed-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgLine, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgLine, 0.82)",
       "scopes": [],
       "codeSyntax": {},
       "values": {
@@ -6023,7 +6023,7 @@
       "collection": "theme",
       "name": "Button/button-foregroundMuted-transparent-disabled-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.75)",
       "scopes": [],
       "codeSyntax": {},
       "values": {
@@ -6061,7 +6061,7 @@
       "collection": "theme",
       "name": "Button/button-foregroundMuted-transparent-disabled-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.75)",
       "scopes": [],
       "codeSyntax": {},
       "values": {
@@ -6101,7 +6101,7 @@
       "collection": "theme",
       "name": "Button/button-foregroundMuted-transparent-hover-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.88)",
       "scopes": [],
       "codeSyntax": {},
       "values": {
@@ -6137,7 +6137,7 @@
       "collection": "theme",
       "name": "Button/button-foregroundMuted-transparent-hover-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.88)",
       "scopes": [],
       "codeSyntax": {},
       "values": {
@@ -6175,7 +6175,7 @@
       "collection": "theme",
       "name": "Button/button-foregroundMuted-transparent-pressed-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.82)",
       "scopes": [],
       "codeSyntax": {},
       "values": {
@@ -6211,7 +6211,7 @@
       "collection": "theme",
       "name": "Button/button-foregroundMuted-transparent-pressed-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.82)",
       "scopes": [],
       "codeSyntax": {},
       "values": {
@@ -6249,7 +6249,7 @@
       "collection": "theme",
       "name": "Button/button-inverse-disabled-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgInverse, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgInverse, 0.75)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -6289,7 +6289,7 @@
       "collection": "theme",
       "name": "Button/button-inverse-disabled-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgInverse, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgInverse, 0.75)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -6329,7 +6329,7 @@
       "collection": "theme",
       "name": "Button/button-inverse-hover-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgInverse, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgInverse, 0.88)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -6367,7 +6367,7 @@
       "collection": "theme",
       "name": "Button/button-inverse-hover-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgInverse, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgInverse, 0.88)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -6405,7 +6405,7 @@
       "collection": "theme",
       "name": "Button/button-inverse-pressed-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgInverse, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgInverse, 0.82)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -6443,7 +6443,7 @@
       "collection": "theme",
       "name": "Button/button-inverse-pressed-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgInverse, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgInverse, 0.82)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -6481,7 +6481,7 @@
       "collection": "theme",
       "name": "Button/button-inverse-transparent-disabled-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.75)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -6521,7 +6521,7 @@
       "collection": "theme",
       "name": "Button/button-inverse-transparent-disabled-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.75)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -6563,7 +6563,7 @@
       "collection": "theme",
       "name": "Button/button-inverse-transparent-hover-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.88)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -6601,7 +6601,7 @@
       "collection": "theme",
       "name": "Button/button-inverse-transparent-hover-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.88)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -6641,7 +6641,7 @@
       "collection": "theme",
       "name": "Button/button-inverse-transparent-pressed-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.82)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -6679,7 +6679,7 @@
       "collection": "theme",
       "name": "Button/button-inverse-transparent-pressed-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.82)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -6719,7 +6719,7 @@
       "collection": "theme",
       "name": "Button/button-negative-disabled-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgNegative, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgNegative, 0.75)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -6759,7 +6759,7 @@
       "collection": "theme",
       "name": "Button/button-negative-disabled-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgNegative, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgNegative, 0.75)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -6799,7 +6799,7 @@
       "collection": "theme",
       "name": "Button/button-negative-hover-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgNegative, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgNegative, 0.88)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -6837,7 +6837,7 @@
       "collection": "theme",
       "name": "Button/button-negative-hover-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgNegative, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgNegative, 0.88)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -6875,7 +6875,7 @@
       "collection": "theme",
       "name": "Button/button-negative-pressed-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgNegative, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgNegative, 0.82)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -6913,7 +6913,7 @@
       "collection": "theme",
       "name": "Button/button-negative-pressed-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgNegative, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgNegative, 0.82)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -6951,7 +6951,7 @@
       "collection": "theme",
       "name": "Button/button-negative-transparent-disabled-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.75)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -6991,7 +6991,7 @@
       "collection": "theme",
       "name": "Button/button-negative-transparent-disabled-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.75)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -7033,7 +7033,7 @@
       "collection": "theme",
       "name": "Button/button-negative-transparent-hover-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.88)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -7071,7 +7071,7 @@
       "collection": "theme",
       "name": "Button/button-negative-transparent-hover-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.88)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -7111,7 +7111,7 @@
       "collection": "theme",
       "name": "Button/button-negative-transparent-pressed-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.82)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -7149,7 +7149,7 @@
       "collection": "theme",
       "name": "Button/button-negative-transparent-pressed-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.82)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -7189,7 +7189,7 @@
       "collection": "theme",
       "name": "Button/button-positive-disabled-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgPositive, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgPositive, 0.75)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -7229,7 +7229,7 @@
       "collection": "theme",
       "name": "Button/button-positive-disabled-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgPositive, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgPositive, 0.75)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -7269,7 +7269,7 @@
       "collection": "theme",
       "name": "Button/button-positive-hover-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgPositive, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgPositive, 0.88)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -7307,7 +7307,7 @@
       "collection": "theme",
       "name": "Button/button-positive-hover-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgPositive, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgPositive, 0.88)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -7345,7 +7345,7 @@
       "collection": "theme",
       "name": "Button/button-positive-pressed-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgPositive, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgPositive, 0.82)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -7383,7 +7383,7 @@
       "collection": "theme",
       "name": "Button/button-positive-pressed-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgPositive, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgPositive, 0.82)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -7421,7 +7421,7 @@
       "collection": "theme",
       "name": "Button/button-positive-transparent-disabled-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.75)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -7461,7 +7461,7 @@
       "collection": "theme",
       "name": "Button/button-positive-transparent-disabled-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.75)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -7503,7 +7503,7 @@
       "collection": "theme",
       "name": "Button/button-positive-transparent-hover-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.88)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -7541,7 +7541,7 @@
       "collection": "theme",
       "name": "Button/button-positive-transparent-hover-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.88)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -7581,7 +7581,7 @@
       "collection": "theme",
       "name": "Button/button-positive-transparent-pressed-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.82)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -7619,7 +7619,7 @@
       "collection": "theme",
       "name": "Button/button-positive-transparent-pressed-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.82)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -7659,7 +7659,7 @@
       "collection": "theme",
       "name": "Button/button-primary-disabled-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgPrimary, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgPrimary, 0.75)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -7699,7 +7699,7 @@
       "collection": "theme",
       "name": "Button/button-primary-disabled-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgPrimary, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgPrimary, 0.75)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -7739,7 +7739,7 @@
       "collection": "theme",
       "name": "Button/button-primary-hover-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgPrimary, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgPrimary, 0.88)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -7777,7 +7777,7 @@
       "collection": "theme",
       "name": "Button/button-primary-hover-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgPrimary, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgPrimary, 0.88)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -7815,7 +7815,7 @@
       "collection": "theme",
       "name": "Button/button-primary-pressed-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgPrimary, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgPrimary, 0.82)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -7853,7 +7853,7 @@
       "collection": "theme",
       "name": "Button/button-primary-pressed-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgPrimary, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgPrimary, 0.82)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -7891,7 +7891,7 @@
       "collection": "theme",
       "name": "Button/button-primary-transparent-disabled-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.75)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -7931,7 +7931,7 @@
       "collection": "theme",
       "name": "Button/button-primary-transparent-disabled-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.75)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -7973,7 +7973,7 @@
       "collection": "theme",
       "name": "Button/button-primary-transparent-hover-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.88)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -8011,7 +8011,7 @@
       "collection": "theme",
       "name": "Button/button-primary-transparent-hover-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.88)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -8051,7 +8051,7 @@
       "collection": "theme",
       "name": "Button/button-primary-transparent-pressed-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.82)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -8089,7 +8089,7 @@
       "collection": "theme",
       "name": "Button/button-primary-transparent-pressed-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.82)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -8129,7 +8129,7 @@
       "collection": "theme",
       "name": "Button/button-secondary-disabled-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgSecondary, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgSecondary, 0.75)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -8169,7 +8169,7 @@
       "collection": "theme",
       "name": "Button/button-secondary-disabled-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgSecondary, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgSecondary, 0.75)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -8209,7 +8209,7 @@
       "collection": "theme",
       "name": "Button/button-secondary-hover-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgSecondary, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgSecondary, 0.88)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -8247,7 +8247,7 @@
       "collection": "theme",
       "name": "Button/button-secondary-hover-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgSecondary, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgSecondary, 0.88)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -8285,7 +8285,7 @@
       "collection": "theme",
       "name": "Button/button-secondary-pressed-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgSecondary, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgSecondary, 0.82)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -8323,7 +8323,7 @@
       "collection": "theme",
       "name": "Button/button-secondary-pressed-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgSecondary, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgSecondary, 0.82)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -8361,7 +8361,7 @@
       "collection": "theme",
       "name": "Button/button-secondary-transparent-disabled-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.75)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -8401,7 +8401,7 @@
       "collection": "theme",
       "name": "Button/button-secondary-transparent-disabled-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.75)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -8443,7 +8443,7 @@
       "collection": "theme",
       "name": "Button/button-secondary-transparent-hover-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.88)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -8481,7 +8481,7 @@
       "collection": "theme",
       "name": "Button/button-secondary-transparent-hover-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.88)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -8521,7 +8521,7 @@
       "collection": "theme",
       "name": "Button/button-secondary-transparent-pressed-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.82)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -8559,7 +8559,7 @@
       "collection": "theme",
       "name": "Button/button-secondary-transparent-pressed-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.82)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -8599,7 +8599,7 @@
       "collection": "theme",
       "name": "Button/button-tertiary-disabled-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgTertiary, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgTertiary, 0.75)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -8639,7 +8639,7 @@
       "collection": "theme",
       "name": "Button/button-tertiary-disabled-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgTertiary, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgTertiary, 0.75)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -8679,7 +8679,7 @@
       "collection": "theme",
       "name": "Button/button-tertiary-hover-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgTertiary, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgTertiary, 0.88)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -8717,7 +8717,7 @@
       "collection": "theme",
       "name": "Button/button-tertiary-hover-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgTertiary, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgTertiary, 0.88)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -8755,7 +8755,7 @@
       "collection": "theme",
       "name": "Button/button-tertiary-pressed-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgTertiary, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgTertiary, 0.82)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -8793,7 +8793,7 @@
       "collection": "theme",
       "name": "Button/button-tertiary-pressed-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bgTertiary, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bgTertiary, 0.82)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -8831,7 +8831,7 @@
       "collection": "theme",
       "name": "Button/button-tertiary-transparent-disabled-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.75)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -8871,7 +8871,7 @@
       "collection": "theme",
       "name": "Button/button-tertiary-transparent-disabled-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityDisabled 0.75)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.75)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -8913,7 +8913,7 @@
       "collection": "theme",
       "name": "Button/button-tertiary-transparent-hover-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.88)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -8951,7 +8951,7 @@
       "collection": "theme",
       "name": "Button/button-tertiary-transparent-hover-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityHovered 0.88)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.88)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -8991,7 +8991,7 @@
       "collection": "theme",
       "name": "Button/button-tertiary-transparent-pressed-background",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(bg, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(bg, 0.82)",
       "scopes": [
         "FRAME_FILL"
       ],
@@ -9029,7 +9029,7 @@
       "collection": "theme",
       "name": "Button/button-tertiary-transparent-pressed-border",
       "type": "COLOR",
-      "source": "synthesized: packages/web/src/system/Interactable.tsx getBlendedColor(transparent, opacityPressed 0.82)",
+      "source": "synthesized: packages/common/src/tokens/interactable.ts blend(transparent, 0.82)",
       "scopes": [
         "STROKE_COLOR"
       ],
@@ -11125,8 +11125,8 @@
       }
     },
     "blend": {
-      "against": "@coinbase/cds-common@9.29.0 getBlendedColor",
-      "matched": 168
+      "by": "@coinbase/cds-common@9.29.0 getBlendedColor",
+      "computed": 168
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
@@ -11203,7 +11203,7 @@
     {
       "level": "info",
       "at": "collections.theme.modes",
-      "message": "Light and Dark have no selector: ThemeProvider sets the custom properties inline on its element for its activeColorScheme, and no class switches them. The preview renderer's modeClass(key) wraps a specimen for the Mode."
+      "message": "Light and Dark have no selector: ThemeProvider sets the custom properties inline on its element for its activeColorScheme, and no class switches them. A preview shows a Mode by its key."
     },
     {
       "level": "info",

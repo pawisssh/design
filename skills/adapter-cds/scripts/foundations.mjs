@@ -27,7 +27,7 @@ import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { closure, validate } from '../../contract/scripts/contract.mjs';
 import {
-  CDS, CONTRACTS_DIR, DEFAULT_DIR, FOUNDATIONS_DIR, REPO_ROOT, fetchFoundationsPackages, fetchSources,
+  CDS, CONTRACTS_DIR, DEFAULT_DIR, FOUNDATIONS_DIR, FOUNDATIONS_PINNED, REPO_ROOT, fetchFoundationsPackages, fetchSources,
   hasFoundationsPackages, hasSources, readSources, sha256, snapshotId,
 } from './sources.mjs';
 
@@ -42,24 +42,27 @@ const FILE = {
   theme: 'packages/web/src/themes/defaultTheme.ts',
   provider: 'packages/web/src/system/ThemeProvider.tsx',
   interactable: 'packages/web/src/system/Interactable.tsx',
+  interactableTokens: 'packages/common/src/tokens/interactable.ts',
   interProps: 'packages/web/src/system/interactableCSSProperties.ts',
-  buttonProps: 'packages/common/src/types/ButtonBaseProps.ts',
 };
-// The compiled modules evaluated, as `<package>/<member>`.
+// The compiled modules evaluated, as `<package>/<member>` and the export taken (none: the whole module).
 const MODULES = {
-  defaultTheme: [WEB, 'package/esm/themes/defaultTheme.js'],
-  createThemeCssVars: [WEB, 'package/esm/core/createThemeCssVars.js'],
-  getBlendedColor: [COMMON, 'package/esm/color/getBlendedColor.js'],
+  defaultTheme: [WEB, 'package/esm/themes/defaultTheme.js', 'defaultTheme'],
+  createThemeCssVars: [WEB, 'package/esm/core/createThemeCssVars.js', 'createThemeCssVars'],
+  getBlendedColor: [COMMON, 'package/esm/color/getBlendedColor.js', 'getBlendedColor'],
   button: [COMMON, 'package/esm/tokens/button.js'],
   interactable: [COMMON, 'package/esm/tokens/interactable.js'],
 };
 const DEFAULT_FONT_CSS = 'package/esm/styles/defaultFont.css';
 
-// Component token maps, by Component Family: the cds-common module and its source. A family's tokens are emitted
-// only when the family is asked for (--family) or has a Contract.
-const COMPONENTS = { button: { module: 'button', source: 'packages/common/src/tokens/button.ts' } };
+// Component token maps, by Component Family: the cds-common module, its source, and the props type whose
+// `@deprecated` variants get scopes []. A family's tokens are emitted only when the family is asked for (--family) or
+// has a Contract.
+const COMPONENTS = { button: { module: 'button', source: 'packages/common/src/tokens/button.ts', props: 'packages/common/src/types/ButtonBaseProps.ts' } };
 // A component token's role in the map -> its name suffix and scopes.
 const ROLE = { color: ['color', ['SHAPE_FILL', 'TEXT_FILL']], background: ['background', ['FRAME_FILL']], borderColor: ['border', ['STROKE_COLOR']] };
+// The roles Interactable blends per state: it leaves the text colour as it is.
+const BLENDED = ['background', 'borderColor'];
 // Interactable's states, as Interactable.tsx names them -> the Synthesized name's state.
 const STATES = [['Hovered', 'hover'], ['Pressed', 'pressed'], ['Disabled', 'disabled']];
 // Theme colours: Figma group by name prefix, longest first.
@@ -72,12 +75,12 @@ const LAYOUT_GROUP = {
   iconSize: ['Icon size', ['WIDTH_HEIGHT']],
   controlSize: ['Control size', ['WIDTH_HEIGHT']],
 };
-// Type groups -> the Text Style field, Figma group and scope.
+// Type groups, which are also the Text Style fields -> Figma group, scope and type.
 const TYPE_GROUP = {
-  fontFamily: ['fontFamily', 'Font family', 'FONT_FAMILY', 'STRING'],
-  fontSize: ['fontSize', 'Font size', 'FONT_SIZE', 'FLOAT'],
-  fontWeight: ['fontWeight', 'Font weight', 'FONT_WEIGHT', 'FLOAT'],
-  lineHeight: ['lineHeight', 'Line height', 'LINE_HEIGHT', 'FLOAT'],
+  fontFamily: ['Font family', 'FONT_FAMILY', 'STRING'],
+  fontSize: ['Font size', 'FONT_SIZE', 'FLOAT'],
+  fontWeight: ['Font weight', 'FONT_WEIGHT', 'FLOAT'],
+  lineHeight: ['Line height', 'LINE_HEIGHT', 'FLOAT'],
 };
 const FONT_STYLE = { 400: 'Regular', 600: 'Semi Bold' }; // Inter's Figma style per weight
 // What createThemeCssVars emits that the document leaves out, by custom-property prefix, and why (a note each).
@@ -148,13 +151,12 @@ export async function loadModules(sources, depsDir = FOUNDATIONS_DIR) {
   hook();
   roots.set(npm, pathToFileURL(join(depsDir, 'node_modules/d3-color/src/index.js')).href);
   const out = { hashes: {} };
-  for (const [name, [pkg, member]] of Object.entries(MODULES)) {
+  for (const [name, [pkg, member, exported]] of Object.entries(MODULES)) {
     const file = join(sources.packages[pkg].dir, member);
     if (!existsSync(file)) fail(`${pkg}: ${member} is not extracted; run: node skills/adapter-cds/scripts/sources.mjs`);
     out.hashes[`${pkg}/${member.replace(/^package\//, '')}`] = `sha256:${sha256(readFileSync(file))}`;
     const mod = await import(pathToFileURL(file).href);
-    out[name] = name === 'defaultTheme' ? mod.defaultTheme : name === 'createThemeCssVars' ? mod.createThemeCssVars
-      : name === 'getBlendedColor' ? mod.getBlendedColor : mod;
+    out[name] = exported ? mod[exported] : mod;
     if (!out[name]) fail(`${pkg}/${member} has no ${name} export`);
   }
   return out;
@@ -189,7 +191,7 @@ function readTemplate(template) {
 /**
  * Interactable.tsx: for each state, the blend `getInteractableStyles` sets: its opacity (the cds-common constant it
  * defaults to) and whether it skips contrast optimisation. interactableCSSProperties.ts: the custom property each
- * sets. Returns [{state, figmaState, opacity, constant, skip, property: {background, border}}].
+ * sets. Returns [{state, figmaState, opacity, skip, property: {background, border}}].
  */
 function interactableBlends(files, interactable) {
   const text = files[FILE.interactable];
@@ -213,7 +215,7 @@ function interactableBlends(files, interactable) {
       if (!props[name]) fail(`${FILE.interProps}: no ${name}`);
       property[role] = props[name];
     }
-    return { state, figmaState, opacity: interactable[def[1]], constant: def[1], skip, property };
+    return { state, figmaState, opacity: interactable[def[1]], skip, property };
   });
 }
 
@@ -253,9 +255,9 @@ export async function generate({ sources, contracts = [], families = [], modules
       if (CDS.packages[name] && version !== CDS.packages[name].version)
         fail(`Contract ${path} pins ${name}@${version} but the step reads ${name}@${CDS.packages[name].version}`);
   }
-  const m = modules || await loadModules(sources);
+  const mods = modules || await loadModules(sources);
   const files = sources.files;
-  const theme = m.defaultTheme;
+  const theme = mods.defaultTheme;
 
   // 1. the token union, from the shared module's closure; the families to emit
   const usedBy = {};
@@ -272,7 +274,7 @@ export async function generate({ sources, contracts = [], families = [], modules
   const notes = [];
   const cssOf = {}; // custom property -> the flat name it was checked for
   const checks = { css: 0, blend: 0 };
-  const emitted = Object.fromEntries(SCHEMES.map(([s]) => [s, m.createThemeCssVars(themeFor(theme, s))]));
+  const emitted = Object.fromEntries(SCHEMES.map(([s]) => [s, mods.createThemeCssVars(themeFor(theme, s))]));
   // Every Mode's createThemeCssVars output must hold `prop` with a value equal to `want` (by `same`).
   const check = (token, prop, want, same) => {
     for (const [s] of SCHEMES) {
@@ -337,10 +339,10 @@ export async function generate({ sources, contracts = [], families = [], modules
   // 4. Each family's component tokens, aliasing the Theme colour its token map names, then its Synthesized tokens
   const synthesized = {};
   if (emitFamilies.length) {
-    const blends = interactableBlends(files, m.interactable);
+    const blends = interactableBlends(files, mods.interactable);
     for (const family of emitFamilies) {
-      const map = m[COMPONENTS[family].module];
-      const deprecated = new Map([...files[FILE.buttonProps].matchAll(/@deprecated ([^.\n]*\.)[^\n]*\n\s*\*\/\s*\n\s*\|\s*'(\w+)'/g)].map(d => [d[2], d[1]]));
+      const map = mods[COMPONENTS[family].module];
+      const deprecated = new Map([...files[COMPONENTS[family].props].matchAll(/@deprecated ([^.\n]*\.)[^\n]*\n\s*\*\/\s*\n\s*\|\s*'(\w+)'/g)].map(d => [d[2], d[1]]));
       for (const [mapKey, suffix] of [['variants', ''], ['transparentVariants', '-transparent']]) {
         if (!map[mapKey]) fail(`${COMPONENTS[family].source}: no ${mapKey}`);
         for (const variant of Object.keys(map[mapKey]).sort(byKey)) {
@@ -357,13 +359,13 @@ export async function generate({ sources, contracts = [], families = [], modules
               usedBy: users(name), family };
           }
           for (const b of blends) {
-            for (const [role, part] of [['background', 'background'], ['borderColor', 'border']]) {
+            for (const [role, [part]] of BLENDED.map(r => [r, ROLE[r]])) {
               const name = `${base}-${b.figmaState}-${part}`;
               const target = roles[role];
               const values = {};
               for (const [s] of SCHEMES) {
                 const args = { overlayColor: theme[`${s}Color`][target], blendOpacity: b.opacity, colorScheme: s, ...(b.skip ? { skipContrastOptimization: true } : {}) };
-                const out = m.getBlendedColor(args);
+                const out = mods.getBlendedColor(args);
                 const c = parseColor(out);
                 if (!c) fail(`${name}/${s}: cannot read getBlendedColor's output ${JSON.stringify(out)}`);
                 values[s] = rawForm(c, {
@@ -374,14 +376,14 @@ export async function generate({ sources, contracts = [], families = [], modules
                 checks.blend++;
               }
               synthesized[name] = { collection: 'theme', name: `${cap(family)}/${name}`, type: 'COLOR',
-                source: `synthesized: ${FILE.interactable} getBlendedColor(${target}, ${b.constant} ${b.opacity})`,
+                source: `synthesized: ${FILE.interactableTokens} blend(${target}, ${b.opacity})`,
                 scopes: scopesFor(part === 'background' ? ['FRAME_FILL'] : ['STROKE_COLOR']), codeSyntax: {}, values, usedBy: users(name), family };
             }
           }
         }
       }
       for (const [variant, says] of deprecated)
-        notes.push({ level: 'info', at: `variables.${family}-${variant}-*`, message: `${variant} is @deprecated in ${FILE.buttonProps} ("${says}"); its tokens, plain and transparent, have scopes [], which keep them out of Figma's pickers.` });
+        notes.push({ level: 'info', at: `variables.${family}-${variant}-*`, message: `${variant} is @deprecated in ${COMPONENTS[family].props} ("${says}"); its tokens, plain and transparent, have scopes [], which keep them out of Figma's pickers.` });
       const props = blends.flatMap(b => [b.property.background, b.property.border]).join(', ');
       notes.push(
         { level: 'info', at: `variables.${family}-*.codeSyntax`, message: `CDS emits no custom property for a ${cap(family)} token: ${cap(family)} paints var(--color-<token>), the Theme colour each one aliases, so codeSyntax is empty and a reference by that custom property matches the Theme colour.` },
@@ -399,6 +401,7 @@ export async function generate({ sources, contracts = [], families = [], modules
     const values = theme[group] || fail(`defaultTheme has no ${group}`);
     for (const key of Object.keys(values).sort((a, b) => Number(a) - Number(b) || byKey(a, b))) {
       const name = `${group}-${key.replace(/\./g, '_')}`;
+      if (variables[name]) fail(`${name} has the name of another CDS token (${variables[name].source})`);
       const px = num(values[key], name);
       check(name, `--${name}`, `${px}px`, got => got === `${px}px`);
       variables[name] = { collection: 'layout', name: `${figGroup}/${name}`, type: 'FLOAT', source: `${FILE.theme}#${group}.${key}`,
@@ -416,9 +419,10 @@ export async function generate({ sources, contracts = [], families = [], modules
   }
   for (const key of [...textKeys].sort(byKey)) {
     const binds = {};
-    const v = {};
-    for (const [group, [field, figGroup, scope, type]] of Object.entries(TYPE_GROUP)) {
+    const style = {};
+    for (const [group, [figGroup, scope, type]] of Object.entries(TYPE_GROUP)) {
       const name = `${group}-${key}`;
+      if (variables[name]) fail(`${name} has the name of another CDS token (${variables[name].source})`);
       const raw = theme[group][key];
       let value, from;
       if (group === 'fontFamily') {
@@ -431,12 +435,12 @@ export async function generate({ sources, contracts = [], families = [], modules
       check(name, `--${name}`, raw, got => got === raw);
       variables[name] = { collection: 'type', name: `${figGroup}/${name}`, type, source: `${FILE.theme}#${group}.${key}`, scopes: [scope],
         codeSyntax: { WEB: `var(--${name})` }, values: { default: { value, ...(from ? { from } : {}) } }, usedBy: users(key) };
-      binds[field] = name;
-      v[field] = value;
+      binds[group] = name;
+      style[group] = value;
     }
-    if (!FONT_STYLE[v.fontWeight]) fail(`${key}: no ${font} style for weight ${v.fontWeight}`);
+    if (!FONT_STYLE[style.fontWeight]) fail(`${key}: no ${font} style for weight ${style.fontWeight}`);
     textStyles[key] = { name: `${cap(key.replace(/\d+$/, ''))}/${key}`, source: `${FILE.theme}#fontSize.${key}`, fontFamily: font,
-      fontStyle: FONT_STYLE[v.fontWeight], fontSize: v.fontSize, lineHeight: { unit: 'PIXELS', value: v.lineHeight }, fontWeight: v.fontWeight,
+      fontStyle: FONT_STYLE[style.fontWeight], fontSize: style.fontSize, lineHeight: { unit: 'PIXELS', value: style.lineHeight }, fontWeight: style.fontWeight,
       letterSpacing: { unit: 'PIXELS', value: 0 }, binds, usedBy: users(key) };
   }
 
@@ -496,13 +500,13 @@ export async function generate({ sources, contracts = [], families = [], modules
     textStyles: Object.fromEntries(Object.entries(textStyles).sort(([a], [b]) => byKey(a, b))),
     checks: {
       css: { against: `${WEB}@${CDS.packages[WEB].version} createThemeCssVars(defaultTheme), as ThemeProvider builds it for each Mode`,
-        modules: m.hashes, matched: checks.css, missing: [], differs: [],
+        modules: mods.hashes, matched: checks.css, missing: [], differs: [],
         excluded: Object.fromEntries(Object.keys(excluded).sort(byKey).map(k => [k, excluded[k].size])) },
-      blend: { against: `${COMMON}@${CDS.packages[COMMON].version} getBlendedColor`, matched: checks.blend },
+      blend: { by: `${COMMON}@${CDS.packages[COMMON].version} getBlendedColor`, computed: checks.blend },
       scopes: { by: 'skills/contract/scripts/contract.mjs validate, rule 6', contracts: contracts.length, errors: 0 },
     },
     notes: [...notes,
-      { level: 'info', at: 'collections.theme.modes', message: 'Light and Dark have no selector: ThemeProvider sets the custom properties inline on its element for its activeColorScheme, and no class switches them. The preview renderer\'s modeClass(key) wraps a specimen for the Mode.' },
+      { level: 'info', at: 'collections.theme.modes', message: 'Light and Dark have no selector: ThemeProvider sets the custom properties inline on its element for its activeColorScheme, and no class switches them. A preview shows a Mode by its key.' },
       { level: 'info', at: 'textStyles', message: `Text Styles are named by CDS's text keys and use ${font}, the first family of --defaultFont-sans. CDS sets no letter spacing, so it is 0.` },
       { level: 'verify', at: 'textStyles', message: `fontStyle is the Figma style each weight is named by (${Object.values(FONT_STYLE).join(', ')}); not yet checked against the ${font} styles Figma offers.` },
     ],
@@ -519,15 +523,15 @@ export async function generate({ sources, contracts = [], families = [], modules
   for (const v of Object.values(variables)) counts[v.collection] = (counts[v.collection] || 0) + 1;
   const summary = [
     `families ${emitFamilies.join(', ') || 'none'}; closure ${tokens.length} tokens from ${contracts.length} Contract(s); variables ${COLLECTIONS.map(c => `${c} ${counts[c] || 0}`).join(', ')} (${Object.keys(synthesized).length} Synthesized); text styles ${Object.keys(textStyles).length}`,
-    `createThemeCssVars matched ${checks.css}; getBlendedColor matched ${checks.blend}; every Contract passes rule 6`,
+    `createThemeCssVars matched ${checks.css}; getBlendedColor computed ${checks.blend}; every Contract passes rule 6`,
   ];
   return { doc, text, documentHash: `sha256:${sha256(text)}`, summary };
 }
 
-const d3Version = () => JSON.parse(readFileSync(fileURLToPath(new URL('../foundations/package.json', import.meta.url)), 'utf8')).dependencies['d3-color'];
+const d3Version = () => JSON.parse(readFileSync(join(FOUNDATIONS_PINNED, 'package.json'), 'utf8')).dependencies['d3-color'];
 
 /** The Contracts in `dir`: [{path, contract}], `path` relative to the repo root. */
-export function readContracts(dir = CONTRACTS_DIR) {
+function readContracts(dir = CONTRACTS_DIR) {
   if (!existsSync(dir)) return [];
   return readdirSync(dir).filter(f => f.endsWith('.component.json')).sort(byKey).map(f => {
     const file = join(dir, f);

@@ -3,7 +3,6 @@
 //   node skills/adapter-cds/scripts/sources.mjs [--dir <dir>]   fetch into .scratch/adapter-cds/sources
 //   node skills/adapter-cds/scripts/sources.mjs snapshot <repo path>... [--dir <dir>]
 //       fetch a Contract's source files at the pinned commit and print its `source.files` and `snapshotId`
-// The fetch also installs the Foundations step's one outside package, d3-color, into .scratch/adapter-cds/foundations.
 //
 // - Evidence files: raw files from the coinbase/cds repository at the pinned commit, each checked against its sha256,
 //   plus every file the committed CDS Contracts pin.
@@ -25,7 +24,7 @@ export const DEFAULT_DIR = join(REPO_ROOT, '.scratch/adapter-cds/sources');
 export const CONTRACTS_DIR = join(REPO_ROOT, 'design-systems/cds/contracts');
 // d3-color, which getBlendedColor imports: installed from foundations/package-lock.json (#385).
 export const FOUNDATIONS_DIR = join(REPO_ROOT, '.scratch/adapter-cds/foundations');
-const FOUNDATIONS_PINNED = fileURLToPath(new URL('../foundations/', import.meta.url));
+export const FOUNDATIONS_PINNED = fileURLToPath(new URL('../foundations/', import.meta.url));
 
 export const CDS = {
   repository: 'https://github.com/coinbase/cds',
@@ -44,6 +43,7 @@ export const CDS = {
     'packages/common/src/color/getBlendedColor.ts': '5528f09cde9b3af494aa30a7897d8e115e4864c75f91b45d22170493f73ecf61',
     'packages/common/src/color/getLuminance.ts': '6cc4f3e2fda2efc3ee14cec0fe519751f1c9239f33ba328d8a1603e28c736e4b',
     'packages/common/src/tokens/button.ts': 'cfb9065030d1719e078ab634ea049eb03212a375c6009ac5b7425e8dae63f4b3',
+    'packages/common/src/tokens/interactable.ts': '590f7e7a4d688cf4171256b4149b296baa66c591fd1cf587ac84027cdd2ecaf8',
     'packages/common/src/tokens/interactable.ts': '590f7e7a4d688cf4171256b4149b296baa66c591fd1cf587ac84027cdd2ecaf8',
     'packages/common/src/types/ButtonBaseProps.ts': 'f9c843f9f3eb9a8da6b03db85f7f0ec6958de8d1e2c7acf3035f8d4448a02473',
     'packages/icons/package.json': 'f63134b50859dace69cded070957b41aa55f5bd44dbc1781388e39b46d4accc2',
@@ -223,7 +223,11 @@ export function hasFoundationsPackages(dir = FOUNDATIONS_DIR) {
   return lockOf(dir) === lockOf(FOUNDATIONS_PINNED) && existsSync(join(dir, 'node_modules/d3-color/package.json'));
 }
 
-/** Install the Foundations step's packages into `dir` with `npm ci --ignore-scripts`. Skips when already installed. */
+/**
+ * Install the Foundations step's packages into `dir` with `npm ci --ignore-scripts`. Skips when already installed.
+ * (#385) The one package is d3-color, which getBlendedColor imports and no CDS tarball holds. npm ci checks it
+ * against the committed lockfile's integrity, and no lifecycle script runs.
+ */
 export function fetchFoundationsPackages(dir = FOUNDATIONS_DIR) {
   installAtomically(dir, hasFoundationsPackages, tmp => {
     for (const f of ['package.json', 'package-lock.json']) copyFileSync(join(FOUNDATIONS_PINNED, f), join(tmp, f));
@@ -243,6 +247,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
       readSources(d);
       console.log(`CDS Foundations packages OK in ${fetchFoundationsPackages()}`);
       console.log(`CDS Web ${CDS.packages['@coinbase/cds-web'].version} (commit ${CDS.commit.slice(0, 7)}, ${CDS.tag || 'untagged'}) sources OK in ${d}`);
-    }, fail);
+    }).catch(fail);
   }
 }

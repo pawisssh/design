@@ -9,11 +9,10 @@ import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { generate, loadModules } from '../scripts/foundations.mjs';
-import { CDS, hasFoundationsPackages, hasSources, readSources } from '../scripts/sources.mjs';
+import { CDS, REPO_ROOT, hasFoundationsPackages, hasSources, readSources } from '../scripts/sources.mjs';
 import { closure } from '../../contract/scripts/contract.mjs';
 
-const root = new URL('../../../', import.meta.url);
-const read = rel => readFileSync(new URL(rel, root), 'utf8');
+const read = rel => readFileSync(join(REPO_ROOT, rel), 'utf8');
 const COMMITTED = 'design-systems/cds/cds.foundations.json';
 const CLI = new URL('../scripts/foundations.mjs', import.meta.url).pathname;
 const PATH = 'design-systems/cds/contracts/button.component.json';
@@ -25,6 +24,8 @@ const run = (opts = {}) => generate({ sources, modules, families: ['button'], ..
 const docOnce = skip ? null : (await run()).doc;
 
 const SCHEMES = ['light', 'dark'];
+// The theme ThemeProvider.tsx passes for a scheme, written here again on purpose: the check below is independent of
+// the step's own copy.
 const themeFor = (t, s) => ({ ...t, activeColorScheme: s, spectrum: t[`${s}Spectrum`], color: t[`${s}Color`], illustrationColor: { ...t[`${s}IllustrationColor`] } });
 const emitted = skip ? null : Object.fromEntries(SCHEMES.map(s => [s, modules.createThemeCssVars(themeFor(modules.defaultTheme, s))]));
 // A colour CDS writes, as [r, g, b, a]: "r,g,b", rgb(), rgba(), #hex or transparent.
@@ -182,7 +183,7 @@ test('every Synthesized token equals getBlendedColor\'s output for its token and
   const synth = Object.entries(docOnce.variables).filter(([, x]) => x.source.startsWith('synthesized: '));
   // 7 variants, plain and transparent, x hover, pressed, disabled x background, border
   assert.equal(synth.length, 7 * 2 * 3 * 2);
-  assert.equal(docOnce.checks.blend.matched, synth.length * 2);
+  assert.equal(docOnce.checks.blend.computed, synth.length * 2);
   const opacity = { hover: 0.88, pressed: 0.82, disabled: 0.75 };
   for (const [name, x] of synth) {
     const [, variant, transparent, state, part] = /^button-(\w+?)(-transparent)?-(hover|pressed|disabled)-(background|border)$/.exec(name);
@@ -190,6 +191,7 @@ test('every Synthesized token equals getBlendedColor\'s output for its token and
     const token = map[part === 'border' ? 'borderColor' : 'background'];
     assert.equal(x.family, 'button');
     assert.equal(x.name, `Button/${name}`);
+    assert.equal(x.source, `synthesized: packages/common/src/tokens/interactable.ts blend(${token}, ${opacity[state]})`);
     assert.deepEqual(x.codeSyntax, {});
     for (const s of SCHEMES) {
       const value = x.values[s];
