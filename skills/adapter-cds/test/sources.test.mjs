@@ -48,7 +48,8 @@ test('the named members are there: stylesheets, themes, the CSS-variable and ble
   assert.ok(svgs.includes('package/esm/svgs/add-16-inactive.svg') && svgs.includes('package/esm/svgs/add-24-inactive.svg'));
 });
 
-// The compiled modules import each other without extensions ('./blendColors'), as a bundler resolves them.
+// The compiled modules import each other without extensions ('./blendColors'), as a bundler resolves them. An import
+// is `from '<spec>'`, a side-effect `import '<spec>'`, or a dynamic `import('<spec>')`.
 test('every relative import of an extracted module is extracted too; d3-color is the only package one', { skip }, () => {
   const bare = new Set();
   let relative = 0;
@@ -56,7 +57,7 @@ test('every relative import of an extracted module is extracted too; d3-color is
     const members = new Set(pkg(name).members);
     for (const m of pkg(name).members.filter(p => p.endsWith('.js'))) {
       const text = readFileSync(join(pkg(name).dir, m), 'utf8');
-      for (const [, spec] of text.matchAll(/^\s*(?:import|export)\b[^'"]*?from\s+['"]([^'"]+)['"]/gm)) {
+      for (const [, spec] of text.matchAll(/(?:\bfrom\s+|^\s*import\s+|\bimport\s*\(\s*)['"]([^'"]+)['"]/gm)) {
         if (!spec.startsWith('.')) { bare.add(spec); continue; }
         relative++;
         const base = posix.join(dirname(m), spec);

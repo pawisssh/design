@@ -1,5 +1,5 @@
-// The CDS fetch and its `snapshot` subcommand (#384), offline: a stub download serves small files and a tarball
-// built here, so every check runs without the network. Run: node --test skills/adapter-cds/test/*.test.mjs
+// The CDS fetch and its `snapshot` subcommand (#384), offline: a stub `fetch` serves small files and a tarball built
+// here, so every check runs without the network. Run: node --test skills/adapter-cds/test/*.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -44,25 +44,27 @@ const PIN = {
   },
 };
 
-// Serves FILES and TGZ by URL, counting requests.
+// No committed CDS Contract is read: the tests' pin is not the Adapter's.
+const NONE = join(tmpdir(), 'cds-no-contracts');
+
+// Serves FILES and TGZ by URL as the global `fetch`, and returns the URLs it is asked for.
 function stub(overrides = {}) {
   const served = { ...FILES, ...overrides };
   const calls = [];
-  const download = async url => {
+  globalThis.fetch = async url => {
     calls.push(url);
-    if (url === 'https://registry.npmjs.org/@x/kit/-/kit-1.0.0.tgz') return served.tgz || TGZ;
+    if (url === 'https://registry.npmjs.org/@x/kit/-/kit-1.0.0.tgz') return new Response(served.tgz || TGZ);
     const path = url.replace('https://raw.githubusercontent.com/coinbase/cds/c0ffee/', '');
-    if (!(path in served)) throw new Error(`GET ${url}: HTTP 404`);
-    return Buffer.from(served[path]);
+    return path in served ? new Response(served[path]) : new Response(null, { status: 404 });
   };
-  return { download, calls };
+  return calls;
 }
 
 test('the fetch extracts only the members the patterns name, and a re-run downloads nothing', async () => {
   const dir = scratch('fetch');
   const first = stub();
-  await fetchSources(dir, { pin: PIN, ...first });
-  assert.equal(first.calls.length, 3);
+  await fetchSources(dir, { pin: PIN, contracts: NONE });
+  assert.equal(first.length, 3);
   assert.ok(hasSources(dir, PIN));
   const s = readSources(dir, PIN);
   assert.deepEqual(s.packages['@x/kit'].members,
@@ -71,19 +73,21 @@ test('the fetch extracts only the members the patterns name, and a re-run downlo
   assert.ok(!existsSync(join(packageDir(dir, '@x/kit', PIN), 'package/esm/index.js')), 'a member no pattern names is left in the tarball');
 
   const again = stub();
-  await fetchSources(dir, { pin: PIN, ...again });
-  assert.deepEqual(again.calls, [], 'a re-run with everything intact is a no-op');
+  await fetchSources(dir, { pin: PIN, contracts: NONE });
+  assert.deepEqual(again, [], 'a re-run with everything intact is a no-op');
 });
 
 test('nothing from a package runs: its install scripts leave no file behind', async () => {
   const dir = scratch('scripts');
-  await fetchSources(dir, { pin: PIN, ...stub() });
+  stub();
+  await fetchSources(dir, { pin: PIN, contracts: NONE });
   for (const at of [dir, join(dir, 'npm'), join(dir, '..')]) assert.ok(!existsSync(join(at, 'RAN')), at);
 });
 
 test('a file whose sha256 is not the pin fails the fetch, naming the file, and is not written', async () => {
   const dir = scratch('hash');
-  await assert.rejects(fetchSources(dir, { pin: PIN, ...stub({ 'packages/web/package.json': '{"version":"1.0.1"}\n' }) }),
+  stub({ 'packages/web/package.json': '{"version":"1.0.1"}\n' });
+  await assert.rejects(fetchSources(dir, { pin: PIN, contracts: NONE }),
     /packages\/web\/package\.json: sha256 [0-9a-f]{64} does not match the pin/);
   assert.ok(!existsSync(join(dir, 'cds/packages/web/package.json')));
 });
@@ -91,30 +95,49 @@ test('a file whose sha256 is not the pin fails the fetch, naming the file, and i
 test('a tarball whose integrity is not the pin fails the fetch, naming the package, and is not extracted', async () => {
   const dir = scratch('integrity');
   const other = Buffer.concat([TGZ, Buffer.from([0])]);
-  await assert.rejects(fetchSources(dir, { pin: PIN, ...stub({ tgz: other }) }), /@x\/kit@1\.0\.0: integrity sha512-\S+ does not match the pin/);
+  stub({ tgz: other });
+  await assert.rejects(fetchSources(dir, { pin: PIN, contracts: NONE }), /@x\/kit@1\.0\.0: integrity sha512-\S+ does not match/);
   assert.ok(!hasSources(dir, PIN));
 });
 
 test('an extract pattern that matches no member fails the fetch, naming the pattern', async () => {
   const pin = { ...PIN, packages: { '@x/kit': { ...PIN.packages['@x/kit'], extract: ['package/package.json', 'package/esm/svgs/*.svg'] } } };
-  await assert.rejects(fetchSources(scratch('pattern'), { pin, ...stub() }), /@x\/kit@1\.0\.0: no tarball member matches the extract pattern package\/esm\/svgs\/\*\.svg/);
+  stub();
+  await assert.rejects(fetchSources(scratch('pattern'), { pin, contracts: NONE }), /@x\/kit@1\.0\.0: no tarball member matches the extract pattern package\/esm\/svgs\/\*\.svg/);
 });
 
 test('a member changed after extraction fails readSources, naming the package, and the next fetch extracts again', async () => {
   const dir = scratch('tamper');
-  await fetchSources(dir, { pin: PIN, ...stub() });
+  stub();
+  await fetchSources(dir, { pin: PIN, contracts: NONE });
   writeFileSync(join(packageDir(dir, '@x/kit', PIN), 'package/esm/themes/defaultTheme.js'), 'export const defaultTheme = {changed: 1};');
   assert.throws(() => readSources(dir, PIN), /@x\/kit@1\.0\.0: extracted from another pin, or a member changed since/);
   const again = stub();
-  await fetchSources(dir, { pin: PIN, ...again });
-  assert.deepEqual(again.calls, ['https://registry.npmjs.org/@x/kit/-/kit-1.0.0.tgz']);
+  await fetchSources(dir, { pin: PIN, contracts: NONE });
+  assert.deepEqual(again, ['https://registry.npmjs.org/@x/kit/-/kit-1.0.0.tgz']);
   assert.doesNotThrow(() => readSources(dir, PIN));
+});
+
+test('a Contract\'s pinned files are fetched and checked too, and a Contract at another commit fails, naming it', async () => {
+  const contracts = scratch('contracts');
+  const button = 'packages/web/src/buttons/Button.tsx';
+  const source = { commit: 'c0ffee', files: { [button]: `sha256:${sha256('export const Button = 1;\n')}` } };
+  writeFileSync(join(contracts, 'button.component.json'), JSON.stringify({ source }));
+  const dir = scratch('contract-files');
+  stub({ [button]: 'export const Button = 1;\n' });
+  await fetchSources(dir, { pin: PIN, contracts });
+  assert.equal(readFileSync(join(dir, 'cds', button), 'utf8'), 'export const Button = 1;\n');
+  stub({ [button]: 'export const Button = 2;\n' });
+  await assert.rejects(fetchSources(scratch('contract-hash'), { pin: PIN, contracts }), /Button\.tsx: sha256 [0-9a-f]{64} does not match the pin/);
+  writeFileSync(join(contracts, 'button.component.json'), JSON.stringify({ source: { ...source, commit: 'beef' } }));
+  await assert.rejects(fetchSources(dir, { pin: PIN, contracts }), /button\.component\.json: pinned to beef, not the Adapter's c0ffee/);
 });
 
 test('snapshot prints {files, snapshotId} that the Adapter guide\'s shell recipe recomputes from the fetched files', async () => {
   const dir = scratch('snapshot');
   const paths = ['packages/web/package.json', 'LICENSE', 'packages/web/package.json'];
-  const got = await snapshotSources(paths, dir, { pin: PIN, ...stub() });
+  stub();
+  const got = await snapshotSources(paths, dir, { pin: PIN });
   assert.deepEqual(Object.keys(got.files), ['LICENSE', 'packages/web/package.json']);
   assert.equal(got.files.LICENSE, `sha256:${PIN.files.LICENSE}`);
   assert.equal(got.commit, 'c0ffee');
@@ -123,5 +146,5 @@ test('snapshot prints {files, snapshotId} that the Adapter guide\'s shell recipe
   const shell = spawnSync('sh', ['-c', recipe, 'sh', ...Object.keys(got.files)], { cwd: join(dir, 'cds'), encoding: 'utf8' });
   assert.equal(shell.status, 0, shell.stderr);
   assert.equal(got.snapshotId, `sha256:${shell.stdout.split(' ')[0]}`);
-  await assert.rejects(snapshotSources(['../LICENSE'], dir, { pin: PIN, ...stub() }), /\.\.\/LICENSE: give a path inside the repository/);
+  await assert.rejects(snapshotSources(['../LICENSE'], dir, { pin: PIN }), /\.\.\/LICENSE: give a path inside the repository/);
 });

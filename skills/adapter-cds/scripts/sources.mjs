@@ -10,13 +10,13 @@
 //   `integrity`. Only the members the `extract` patterns name are extracted with `tar`; nothing from a package is run
 //   here (no npm install, no lifecycle scripts). The Foundations step evaluates named compiled modules (ADR 0021).
 // Downloads are untrusted data and live in gitignored scratch.
-import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { sha256, snapshotId } from '../../adapter-carbon/scripts/sources.mjs';
+import { download, sha256, snapshotId } from '../../adapter-carbon/scripts/sources.mjs';
+import { downloadVerified, installAtomically } from '../../adapter-generic/scripts/sources.mjs';
 
 export { sha256, snapshotId };
 export const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -46,8 +46,8 @@ export const CDS = {
     'packages/web/src/core/theme.ts': 'b407e32ae791c279fc17591ec94bfd6e429d0da1a78c729cf695cc288697f97c',
     'packages/web/src/themes/defaultTheme.ts': '9dd9058ca1634d722906482b021444175f4ea858371590f04ab20b8a17924e2d',
   },
-  // `extract`: tarball member patterns, where `*` matches within one path segment and `**/` any number of folders.
-  // Each must match at least one member. The compiled .js members are closed under their relative imports.
+  // `extract`: tarball member patterns (memberPattern). Each must match at least one member. The compiled .js members
+  // are closed under their relative imports.
   packages: {
     '@coinbase/cds-web': {
       version: '9.29.0',
@@ -80,85 +80,74 @@ export const packageDir = (dir, name, pin = CDS) => join(dir, 'npm', `${name}@${
 // Written last into a package's folder: the pin it was extracted from and the sha256 of each member.
 const MANIFEST = '.extracted.json';
 
-const glob = pattern => new RegExp(`^${pattern.split('**/').map(p => p.split('*').map(s => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('[^/]*')).join('(?:[^/]+/)*')}$`);
-
-async function httpDownload(url) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`GET ${url}: HTTP ${res.status}`);
-  return Buffer.from(await res.arrayBuffer());
-}
+// A tarball member pattern as a RegExp: `*` matches within one path segment, and `**/` any number of folders.
+const memberPattern = pattern => new RegExp(`^${pattern.split('**/').map(p => p.split('*').map(s => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('[^/]*')).join('(?:[^/]+/)*')}$`);
 
 const rawUrl = (pin, path) => `https://raw.githubusercontent.com/coinbase/cds/${pin.commit}/${path}`;
 
-/** The package's extraction manifest {integrity, extract, members: {path: hex}}, or null when it is not `pin`'s or a member moved. */
-function intactManifest(dir, name, pin) {
-  const out = packageDir(dir, name, pin);
-  const want = pin.packages[name];
-  if (!existsSync(join(out, MANIFEST))) return null;
-  const m = JSON.parse(readFileSync(join(out, MANIFEST), 'utf8'));
-  if (m.integrity !== want.integrity || JSON.stringify(m.extract) !== JSON.stringify(want.extract)) return null;
-  const moved = Object.entries(m.members).some(([p, h]) => !existsSync(join(out, p)) || sha256(readFileSync(join(out, p))) !== h);
-  return moved ? null : m;
+/** The extraction manifest {integrity, extract, members: {path: hex}} in `out`, or null when it is not `pkg`'s or a member changed. */
+function intactManifest(out, pkg) {
+  let m;
+  try { m = JSON.parse(readFileSync(join(out, MANIFEST), 'utf8')); } catch { return null; }
+  if (m.integrity !== pkg.integrity || JSON.stringify(m.extract) !== JSON.stringify(pkg.extract)) return null;
+  const changed = Object.entries(m.members).some(([p, h]) => !existsSync(join(out, p)) || sha256(readFileSync(join(out, p))) !== h);
+  return changed ? null : m;
 }
 
 /**
  * Download every pinned source into `dir`, verifying each sha256 and integrity; a file or package already present
- * and intact is not downloaded again. `pin` and `download` are for tests.
+ * and intact is not downloaded again. `pin` and `contracts` (the folder of Contracts whose files are fetched too) are
+ * for tests.
  */
-export async function fetchSources(dir = DEFAULT_DIR, { pin = CDS, download = httpDownload } = {}) {
-  for (const [path, want] of pinnedFiles(pin)) {
+export async function fetchSources(dir = DEFAULT_DIR, { pin = CDS, contracts = CONTRACTS_DIR } = {}) {
+  for (const [path, hash] of pinnedFiles(pin, contracts)) {
     const out = join(dir, 'cds', path);
-    if (existsSync(out) && sha256(readFileSync(out)) === want) continue;
+    if (existsSync(out) && sha256(readFileSync(out)) === hash) continue;
     const bytes = await download(rawUrl(pin, path));
     const got = sha256(bytes);
-    if (got !== want) throw new Error(`${path}: sha256 ${got} does not match the pin ${want}`);
+    if (got !== hash) throw new Error(`${path}: sha256 ${got} does not match the pin ${hash}`);
     mkdirSync(dirname(out), { recursive: true });
     writeFileSync(out, bytes);
   }
-  for (const [name, want] of Object.entries(pin.packages)) {
-    if (intactManifest(dir, name, pin)) continue;
-    const id = `${name}@${want.version}`;
-    const bytes = await download(`https://registry.npmjs.org/${name}/-/${name.split('/')[1]}-${want.version}.tgz`);
-    const got = 'sha512-' + createHash('sha512').update(bytes).digest('base64');
-    if (got !== want.integrity) throw new Error(`${id}: integrity ${got} does not match the pin ${want.integrity}`);
-    // Extract the matching members into a fresh empty folder, then move it into place, so a half-extracted package
-    // never looks intact. tar lists and extracts only; no member is run.
+  for (const [name, pkg] of Object.entries(pin.packages)) {
     const out = packageDir(dir, name, pin);
-    mkdirSync(dirname(out), { recursive: true });
-    const tmp = mkdtempSync(join(dirname(out), '.extract-'));
-    const tgz = join(tmp, '.package.tgz');
-    writeFileSync(tgz, bytes);
-    const listed = execFileSync('tar', ['-tzf', tgz], { encoding: 'utf8', maxBuffer: 1 << 26 }).split('\n').filter(m => m && !m.endsWith('/'));
-    const members = [];
-    for (const pattern of want.extract) {
-      const re = glob(pattern);
-      const hits = listed.filter(m => re.test(m));
-      if (!hits.length) throw new Error(`${id}: no tarball member matches the extract pattern ${pattern}`);
-      members.push(...hits);
-    }
-    const unique = [...new Set(members)].sort();
-    const list = join(tmp, '.members');
-    writeFileSync(list, unique.join('\n') + '\n');
-    execFileSync('tar', ['-xzf', tgz, '-C', tmp, '-T', list]);
-    rmSync(tgz);
-    rmSync(list);
-    const hashes = Object.fromEntries(unique.map(m => [m, sha256(readFileSync(join(tmp, m)))]));
-    writeFileSync(join(tmp, MANIFEST), JSON.stringify({ integrity: want.integrity, extract: want.extract, members: hashes }, null, 2) + '\n');
-    rmSync(out, { recursive: true, force: true });
-    renameSync(tmp, out);
+    if (intactManifest(out, pkg)) continue;
+    const bytes = await downloadVerified(name, pkg.version, pkg.integrity);
+    // tar lists and extracts the members the patterns match, and nothing else; no member is run. The manifest moves
+    // into place last, so a half-extracted package never looks intact.
+    installAtomically(out, d => intactManifest(d, pkg), tmp => {
+      const tgz = join(tmp, '.package.tgz');
+      writeFileSync(tgz, bytes);
+      const listed = execFileSync('tar', ['-tzf', tgz], { encoding: 'utf8', maxBuffer: 1 << 26 }).split('\n').filter(m => m && !m.endsWith('/'));
+      const members = new Set();
+      for (const pattern of pkg.extract) {
+        const re = memberPattern(pattern);
+        const hits = listed.filter(m => re.test(m));
+        if (!hits.length) throw new Error(`${name}@${pkg.version}: no tarball member matches the extract pattern ${pattern}`);
+        hits.forEach(m => members.add(m));
+      }
+      const sorted = [...members].sort();
+      // bsdtar reads -T from a file only, not stdin.
+      writeFileSync(join(tmp, '.members'), sorted.join('\n') + '\n');
+      execFileSync('tar', ['-xzf', tgz, '-C', tmp, '-T', join(tmp, '.members')]);
+      rmSync(tgz);
+      rmSync(join(tmp, '.members'));
+      const hashes = Object.fromEntries(sorted.map(m => [m, sha256(readFileSync(join(tmp, m)))]));
+      writeFileSync(join(tmp, MANIFEST), JSON.stringify({ integrity: pkg.integrity, extract: pkg.extract, members: hashes }, null, 2) + '\n');
+    }, ['package', MANIFEST]);
   }
   return dir;
 }
 
 /**
  * [path, hex sha256] of every raw file to fetch: the evidence files, plus every source file the committed CDS
- * Contracts pin (none until the Button Contract, #388). Every Contract must be at the pinned commit.
+ * Contracts pin (none until the Button Contract, #387). Every Contract must be at the pinned commit.
  */
-function pinnedFiles(pin) {
+function pinnedFiles(pin, contracts) {
   const pins = new Map(Object.entries(pin.files));
-  if (pin !== CDS || !existsSync(CONTRACTS_DIR)) return [...pins];
-  for (const f of readdirSync(CONTRACTS_DIR).filter(n => n.endsWith('.component.json'))) {
-    const { source } = JSON.parse(readFileSync(join(CONTRACTS_DIR, f), 'utf8'));
+  if (!existsSync(contracts)) return [...pins];
+  for (const f of readdirSync(contracts).filter(n => n.endsWith('.component.json'))) {
+    const { source } = JSON.parse(readFileSync(join(contracts, f), 'utf8'));
     if (source.commit !== pin.commit) throw new Error(`${f}: pinned to ${source.commit}, not the Adapter's ${pin.commit}`);
     for (const [path, hash] of Object.entries(source.files)) {
       const want = hash.replace(/^sha256:/, '');
@@ -173,7 +162,7 @@ function pinnedFiles(pin) {
  * Fetch repository paths at the pinned commit into `dir`/cds, as they are (these are what the Contract pins, so
  * there is nothing to check them against yet). Returns {tag, commit, files, snapshotId}.
  */
-export async function snapshotSources(paths, dir = DEFAULT_DIR, { pin = CDS, download = httpDownload } = {}) {
+export async function snapshotSources(paths, dir = DEFAULT_DIR, { pin = CDS } = {}) {
   const files = {};
   for (const path of [...new Set(paths)].sort()) {
     if (path.startsWith('/') || path.split('/').includes('..')) throw new Error(`${path}: give a path inside the repository`);
@@ -211,7 +200,7 @@ export function readSources(dir = DEFAULT_DIR, pin = CDS) {
   }
   const packages = {};
   for (const name of Object.keys(pin.packages)) {
-    const m = intactManifest(dir, name, pin);
+    const m = intactManifest(packageDir(dir, name, pin), pin.packages[name]);
     if (!m) throw new Error(`${name}@${pin.packages[name].version}: extracted from another pin, or a member changed since; run: node skills/adapter-cds/scripts/sources.mjs`);
     packages[name] = { dir: packageDir(dir, name, pin), members: Object.keys(m.members) };
   }
@@ -227,7 +216,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   } else {
     fetchSources(values.dir).then(d => {
       readSources(d);
-      console.log(`CDS Web ${CDS.packages['@coinbase/cds-web'].version} (commit ${CDS.commit.slice(0, 7)}, untagged) sources OK in ${d}`);
+      console.log(`CDS Web ${CDS.packages['@coinbase/cds-web'].version} (commit ${CDS.commit.slice(0, 7)}, ${CDS.tag || 'untagged'}) sources OK in ${d}`);
     }, fail);
   }
 }
