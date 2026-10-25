@@ -898,6 +898,35 @@ export function draftedValue(contract, key) {
   return { found: true, value: cur };
 }
 
+/**
+ * The fingerprint of each `drafted` key (ADR 0010): `sha256:` of the canonical facts its key kind is drafted from.
+ * The Adapter reads its Code Library and passes `nodeFacts(layer)` (the layer's {node, element, rules, ...}; it throws on
+ * a layer it can't map) and `parts`, the family's part names; the key kinds are the same for every Adapter (#144, #387).
+ * `keys` defaults to the agent entries of `drafted`. Returns {facts: {key: facts}, fingerprints: {key: "sha256:…"}}.
+ * Throws on a key with no fingerprint kind.
+ */
+export function draftedFingerprints(contract, { nodeFacts, parts, keys }) {
+  const axes = contract.axes || [];
+  const values = a => a.values.map(v => v.key);
+  const factsOf = key => {
+    const [root, ...rest] = key.split('.');
+    const axis = root === 'axes' && axes.find(a => a.key === rest[0]);
+    if (axis) return { kind: 'axis', axis: axis.key, values: values(axis) };
+    if (['family', 'icons', 'figma', 'code'].includes(root))
+      return { kind: 'family', axes: Object.fromEntries(axes.map(a => [a.key, values(a)])), defaults: Object.fromEntries(axes.map(a => [a.key, a.default])), parts };
+    if (root === 'anatomy') return { kind: 'node', ...nodeFacts(rest.join('.')), parts };
+    // A layout rule's match is not a fact: `layout{"size":"sm"}.Box.height` hashes like `layout.Box.height`.
+    const layout = /^layout(\{.*\})?\.([^.]+)\.[^.]+$/.exec(key);
+    if (layout) return { kind: 'layout', ...nodeFacts(layout[2]) };
+    const p = root === 'properties' && (contract.properties || []).find(q => q.key === rest[0]);
+    if (p && p.code && p.code.prop && p.binds && p.binds.length) return { kind: 'property', prop: p.code.prop, ...nodeFacts(p.binds[0].node), parts };
+    throw new Error(`no fingerprint kind for "${key}"`);
+  };
+  const list = keys || Object.entries(contract.drafted || {}).filter(([, e]) => e.by === 'agent').map(([k]) => k);
+  const facts = Object.fromEntries(list.map(k => [k, factsOf(k)]));
+  return { facts, fingerprints: Object.fromEntries(list.map(k => [k, `sha256:${sha256(canonical(facts[k]))}`])) };
+}
+
 function checkDrafted(c, err) {
   if (c.drafted === undefined) return;
   if (!isObj(c.drafted)) return err(9, 'drafted', '`drafted` must be an object keyed by value path');

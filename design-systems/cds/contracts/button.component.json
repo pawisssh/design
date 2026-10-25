@@ -1664,7 +1664,7 @@
       "by": "agent",
       "evidence": [
         "Button.tsx:L135 loading?: boolean",
-        "Button.tsx:L327-L340 the ProgressCircle loading renders"
+        "Button.tsx:L327-L337 the ProgressCircle loading renders"
       ],
       "fingerprint": "sha256:4ff3484a05d22c0da53467cf4cc35021c38346dbfba15c47ac2c5ca167c558d2"
     },
@@ -1689,6 +1689,34 @@
         "Button.tsx:L313-L324 span.startNodeCss around the start Icon"
       ],
       "fingerprint": "sha256:41fe24b58a7a1424793c3b2d9214fcce266dc2734fe429cb18dd96cb9a4dfaca"
+    },
+    "anatomy.Start glyph": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L317-L322 the Icon named by startIcon, color currentColor"
+      ],
+      "fingerprint": "sha256:ce4e84435e0272ab25ab7f03d8512a3006fca3d79ab09f739e94bd84b0babb39"
+    },
+    "anatomy.End glyph": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L358 the Icon named by endIcon, color currentColor"
+      ],
+      "fingerprint": "sha256:ce4e84435e0272ab25ab7f03d8512a3006fca3d79ab09f739e94bd84b0babb39"
+    },
+    "properties.swapStartIcon.label": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L160 startIcon?: IconName, the icon name the swap sets"
+      ],
+      "fingerprint": "sha256:2c0d8d97bcf7f2ed30466076f387f56fe54a4833dc1e62e4a86ca94b093df91d"
+    },
+    "properties.swapEndIcon.label": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L166 endIcon?: IconName, the icon name the swap sets"
+      ],
+      "fingerprint": "sha256:4dfa95c43efcc2c0db1f9f2b094ef8cc32887cf3f8e2bfc6c2d533c39ae6c486"
     },
     "anatomy.Label": {
       "by": "agent",
@@ -1735,7 +1763,7 @@
         "_webExamples.mdx:L206 endIcon=\"externalLink\"",
         "_webExamples.mdx:L218 startIcon=\"add\"",
         "_webExamples.mdx:L221 startIcon=\"download\"",
-        "_webExamples.mdx:L231 startIcon=\"wallet\" with endIcon=\"forwardArrow\""
+        "_webExamples.mdx:L232 startIcon=\"wallet\" with endIcon=\"forwardArrow\""
       ],
       "fingerprint": "sha256:f59e1df1d5a0c21aaa6d130c1926c2e2e272715e7d28d1ec0c9dc13a15bbcf72"
     },
