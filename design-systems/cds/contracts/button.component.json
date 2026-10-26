@@ -219,10 +219,10 @@
   ],
   "excluded": [],
   "selection": {
-    "status": "draft",
+    "status": "approved",
     "omit": [],
     "expectedCount": 480,
-    "approval": null
+    "approval": { "by": "owner", "at": "2026-10-26T13:48:32.434Z", "snapshotId": "sha256:b5982a0b4c5d73acb7383a814a22a02a08a3ef64cb32592099bd8b74dd37eddb", "contentHash": "sha256:0ed7f52d9b671c6d7cf0a5f15f883580a8c0fbaa18c14aa1c099105991dcb606" }
   },
   "anatomy": {
     "name": "Button",
@@ -1737,7 +1737,7 @@
       "evidence": [
         "Button.tsx:L155-L156 children: React.ReactNode, no default",
         "Button.figma.ts:L10 Code Connect falls back to the label \"Button\"",
-        "_webExamples.mdx:L203-L232 the examples' labels are one or two words"
+        "_webExamples.mdx:L204-L233 the examples' labels are one or two words: \"See more\", \"Open link\", \"Add item\", \"Download\", \"Connect wallet\""
       ],
       "fingerprint": "sha256:a526903e8f771d031bfda497f266f9db1d1b1dd26a14e3c39b8133b5e1538372"
     },

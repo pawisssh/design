@@ -181,3 +181,21 @@ test('the CLI --check passes a draft whose fingerprints agree, and names each en
   assert.match(bad.stderr, /anatomy\.Box/);
   assert.doesNotMatch(bad.stderr, /anatomy\.Field\b/);
 });
+
+test('the CLI --write leaves an approved Contract whose fingerprints agree untouched, and notes its citations', { skip }, () => {
+  const script = new URL('../scripts/fingerprints.mjs', import.meta.url).pathname;
+  const text = readFileSync(LIVE, 'utf8');
+  const c = load(LIVE);
+  assert.equal(c.selection.status, 'approved');
+  c.drafted['anatomy.Box'].evidence = ['_text-input.scss:L1 the .cds--text-input box'];
+  const path = join(mkdtempSync(join(tmpdir(), 'fingerprints-')), 'text-input.component.json');
+  writeFileSync(path, text);
+  const write = spawnSync(process.execPath, [script, path, '--nodes', NODES, '--write'], { encoding: 'utf8' });
+  assert.equal(write.status, 0, write.stderr);
+  assert.match(write.stdout, /^OK wrote 0 of \d+ fingerprints$/m);
+  assert.equal(readFileSync(path, 'utf8'), text);
+  writeFileSync(path, JSON.stringify(c));
+  const check = spawnSync(process.execPath, [script, path, '--nodes', NODES, '--check'], { encoding: 'utf8' });
+  assert.equal(check.status, 0, check.stderr);
+  assert.match(check.stdout, /^OK \d+ fingerprints\nnote: anatomy\.Box: "_text-input\.scss:L1 the \.cds--text-input box": the cited lines show none of cds--text-input, box\n$/);
+});

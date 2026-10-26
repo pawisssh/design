@@ -30,7 +30,7 @@ export const areas = paths => [...new Set(paths.map(p => {
   return a === 'skills' && b ? `skills/${b}` : a;
 }))].sort();
 
-const repoFile = path => readFileSync(fileURLToPath(new URL(`../${path}`, import.meta.url)), 'utf8');
+export const repoFile = path => readFileSync(fileURLToPath(new URL(`../${path}`, import.meta.url)), 'utf8');
 
 // npm test's globs (package.json), read rather than copied (#376); they use only `*`, one folder name or file name each
 const TEST_GLOBS = JSON.parse(repoFile('package.json')).scripts.test.split(' ').filter(w => w.endsWith('.test.mjs'))

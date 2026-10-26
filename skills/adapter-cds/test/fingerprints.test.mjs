@@ -8,6 +8,8 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { asDraft } from '../../contract/scripts/contract.mjs';
+import { writeJson } from '../../contract/scripts/io.mjs';
 import { fingerprints, hasContractSources, readContractSources } from '../scripts/fingerprints.mjs';
 
 const digest = facts => `sha256:${createHash('sha256').update(JSON.stringify(facts)).digest('hex')}`;
@@ -127,4 +129,39 @@ test('the CLI --check passes the Button drafts, and fails naming only the entry 
   assert.equal(bad.status, 1);
   assert.match(bad.stderr, /^layout\.Button\.alignMain: recorded sha256:f{64}, computed sha256:/);
   assert.equal(bad.stderr.trim().split('\n').length, 1, bad.stderr);
+});
+
+test('the CLI --write records the computed fingerprints and names each entry it moved', { skip }, () => {
+  // A draft copy in the committed layout: --write writes a draft, so an approved Contract's text would not come back.
+  const path = join(mkdtempSync(join(tmpdir(), 'cds-fingerprints-')), 'button.component.json');
+  writeJson(path, asDraft(button), { from: BUTTON });
+  const text = readFileSync(path, 'utf8');
+  const zero = `sha256:${'0'.repeat(64)}`;
+  writeFileSync(path, text.replace(/("fingerprint": )"sha256:[0-9a-f]{64}"/g, `$1"${zero}"`));
+  const run = spawnSync(process.execPath, [SCRIPT, path, '--nodes', NODES, '--write'], { encoding: 'utf8' });
+  assert.equal(run.status, 0, run.stderr);
+  const n = Object.keys(button.drafted).length;
+  assert.match(run.stdout, new RegExp(`^layout\\.Button\\.alignMain: ${zero} -> sha256:[0-9a-f]{64}, re-draft it$`, 'm'));
+  assert.match(run.stdout, new RegExp(`^OK wrote ${n} of ${n} fingerprints$`, 'm'));
+  assert.equal(readFileSync(path, 'utf8'), text, 'the formatting is kept');
+  const again = spawnSync(process.execPath, [SCRIPT, path, '--nodes', NODES, '--write'], { encoding: 'utf8' });
+  assert.equal(again.stdout, `OK wrote 0 of ${n} fingerprints\n`);
+  const fresh = structuredClone(button);
+  delete fresh.drafted['icons.default'].fingerprint;
+  writeFileSync(path, JSON.stringify(fresh));
+  const first = spawnSync(process.execPath, [SCRIPT, path, '--nodes', NODES, '--write'], { encoding: 'utf8' });
+  assert.equal(first.stdout, `OK wrote 1 of ${n} fingerprints\n`, 'an entry with no fingerprint yet is recorded, not re-drafted');
+  assert.equal(JSON.parse(readFileSync(path, 'utf8')).drafted['icons.default'].fingerprint, button.drafted['icons.default'].fingerprint);
+});
+
+test('the CLI fails a draft whose evidence cites lines that do not show its claim (#387\'s L231)', { skip }, () => {
+  // A draft: an approved Contract's citations are only notes.
+  const bad = asDraft(button);
+  const ev = bad.drafted['icons.preferred'].evidence;
+  ev[ev.length - 1] = '_webExamples.mdx:L231 startIcon="wallet" with endIcon="forwardArrow"';
+  const path = join(mkdtempSync(join(tmpdir(), 'cds-fingerprints-')), 'button.component.json');
+  writeFileSync(path, JSON.stringify(bad));
+  const run = cli(path);
+  assert.equal(run.status, 1);
+  assert.equal(run.stderr, `icons.preferred: "${ev[ev.length - 1]}": the cited lines show none of startIcon, wallet, endIcon, forwardArrow\n`);
 });
