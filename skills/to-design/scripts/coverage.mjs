@@ -74,8 +74,8 @@ export function mergeCoverage(pages) {
     for (const [parts, refs, ...rest] of p.rows) rows.push([parts.map(x => D(p.dict[x])), D(p.dict[refs]), ...rest]);
   }
   const { batch, offCentre, ...first } = pages[0];
-  const off = pages.every(p => Array.isArray(p.offCentre)) ? { offCentre: pages.flatMap(p => p.offCentre) } : {};
-  return { ...first, summary: { ...first.summary, variants: rows.length }, dict, rows, ...off };
+  const centring = pages.every(p => Array.isArray(p.offCentre)) ? { offCentre: pages.flatMap(p => p.offCentre) } : {};
+  return { ...first, summary: { ...first.summary, variants: rows.length }, dict, rows, ...centring };
 }
 
 /**

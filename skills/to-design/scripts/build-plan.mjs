@@ -260,10 +260,10 @@ function fragmentsOf(contract, tuples, doc) {
   const frags = new Map();
   const wirings = new Map();
   const props = defaultProps(contract);
-  const trees = new Set();
+  let tree; // one layer tree for the set: validate refuses an ELLIPSE that is an arc in some variants only
   const refs = tuples.map(t => {
     const exp = expectedVariant(contract, t, props, doc);
-    trees.add(JSON.stringify(exp.tree));
+    tree = tree || exp.tree;
     const ids = [];
     for (const sec of ['layout', 'paint'])
       for (const [node, fields] of Object.entries(exp[sec])) {
@@ -275,8 +275,7 @@ function fragmentsOf(contract, tuples, doc) {
     if (!wirings.has(w)) wirings.set(w, wirings.size);
     return { p: wirings.get(w), frags: ids };
   });
-  if (trees.size > 1) throw new Error('an ELLIPSE is an arc in some variants and a full circle in others: a Component Set\'s variants share one layer tree, so give it one kind in every variant');
-  return { frags: [...frags.keys()].map(k => JSON.parse(k)), wirings: [...wirings.keys()].map(k => JSON.parse(k)), refs, tree: JSON.parse([...trees][0]) };
+  return { frags: [...frags.keys()].map(k => JSON.parse(k)), wirings: [...wirings.keys()].map(k => JSON.parse(k)), refs, tree };
 }
 
 /** The tuples a sets plan's entries stand for, in entry order: [{index, tuple}]. */

@@ -529,7 +529,24 @@ test('a spinner set packages and fits; coverage finds an absolute node off its c
   // an ELLIPSE drawn as an arc in some variants and a full circle in others has no one layer tree for the set
   const mixed = spinnerContract(layout => { layout.Arc.arc = { start: 0, sweep: 360 }; });
   mixed.layout.push({ match: { size: 'sm' }, set: { Arc: { arc: { start: 0, sweep: 270 } } } });
-  assert.throws(() => setsPlan(approve(asDraft(mixed), AT, { prototype: true }), DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, prototype: true, batch: 0 }), /an arc in some variants and a full circle in others/);
+  assert.throws(() => setsPlan(approve(asDraft(mixed), AT, { prototype: true }), DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, prototype: true, batch: 0 }), /the ELLIPSE Arc is an arc in some selected variants and a full circle in others/);
+});
+
+test('a set whose absolute node is an ELLIPSE itself packages, fits and covers clean', async () => {
+  const env = await setup({ withBase: false });
+  const draft = withSpinner(BUTTON, (layout, paint) => {
+    paint.Track.stroke = { token: 'focus' };
+    Object.assign(layout.Track, { position: 'absolute', constraints: { horizontal: 'center', vertical: 'center' } });
+  });
+  // the Track leaves the Spinner for the root, which has Auto Layout
+  draft.anatomy.children.push(draft.anatomy.children.find(c => c.name === 'Spinner').children.shift());
+  const ring = approve(draft, AT, { prototype: true });
+  const runs = await buildAll(env, ring, { prototype: true });
+  for (const { out } of runs) assert.ok(out.chars <= 50000, `${out.chars} chars`);
+  assert.equal(runs[0].plan.tree.children.find(c => c.name === 'Track').type, 'ELLIPSE');
+  const cover = (await sets(env, { mode: 'coverage', prototype: true }, { contract: ring })).result;
+  assert.deepEqual(checkCoverage(ring, cover).problems, []);
+  assert.deepEqual(cover.offCentre, []);
 });
 
 test('a first loose batch lost before its ledger is found again by a reconcile, and the retry creates nothing', async () => {

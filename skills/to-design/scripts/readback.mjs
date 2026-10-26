@@ -209,6 +209,7 @@ export function same(a, b) {
     return Array.isArray(x) && Array.isArray(y) && x.length === y.length && x.every((e, i) => same(e, y[i]));
   if (isObj(x) && isObj(y)) {
     const keys = [...new Set([...Object.keys(x), ...Object.keys(y)])];
+    // a nested list or object (an arc's path `d`, #442) compares the same way, numbers within 1e-3
     const nested = v => v !== null && typeof v === 'object';
     return keys.every(k => (nested(x[k]) || nested(y[k]) ? same(x[k], y[k]) : x[k] === y[k] || near(x[k], y[k])));
   }

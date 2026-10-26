@@ -661,6 +661,20 @@ test('rejects a bad arc or strokeCap, either one off an ELLIPSE, and a geometry 
   rejects(spinner((L, P) => { P.Arc.strokeCap = 'round'; }), 3, '"Arc": `strokeCap` is a layout field, not a paint field');
 });
 
+test('rejects a field the builder draws, set by any rule (rule 3)', () => {
+  for (const [field, value] of [['path', { d: ['M', 0, 0] }], ['dashPattern', [4, 4]], ['x', 0], ['y', 0], ['offCentre', 0], ['clipsContent', true]])
+    rejects(spinner(L => { L.Spinner[field] = value; }), 3, `"Spinner": \`${field}\` is drawn by the builder from the Contract, never set`);
+});
+
+test('rejects an arc whose width and height differ, and an ELLIPSE that is an arc in some variants only (rule 5)', () => {
+  rejects(spinner(L => { L.Arc.height = { raw: 20, level: 'info', reason: 'test' }; }), 5, 'the arc Arc needs the same width and height', '245 selected variants');
+  // a full circle may be an oval
+  assert.deepEqual(contract.validate(spinner(L => { L.Track.height = { raw: 20, level: 'info', reason: 'test' }; }), foundations), { ok: true, errors: [] });
+  const mixed = spinner();
+  mixed.layout.push({ match: { size: 'sm' }, set: { Arc: { arc: { start: 0, sweep: 360 } } } });
+  rejects(mixed, 5, 'the ELLIPSE Arc is an arc in some selected variants and a full circle in others');
+});
+
 test('rejects an ELLIPSE as the root or with children (rule 3)', () => {
   const root = spinner();
   root.anatomy.type = 'ELLIPSE';

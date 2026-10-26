@@ -236,7 +236,7 @@ test('a spinner builds: the arc is a VECTOR read back rebased at (1, 1), 22×22,
   assert.deepEqual(Object.keys(plan.base.layout.Arc).sort(), ['dashPattern', 'path', 'strokeAlign', 'strokeCap', 'strokeWeight']);
   assert.deepEqual(plan.base.layout.Track, { width: { raw: 24 }, height: { raw: 24 }, strokeWeight: { raw: 2 }, strokeAlign: 'inside', dashPattern: [], x: 0, y: 0 });
   assert.equal(plan.base.layout.Spinner.offCentre, 0);
-  assert.equal(plan.base.layout.Button.clipsContent, false);
+  assert.equal(plan.base.layout[SPINNER.anatomy.name].clipsContent, false);
   plan.base.layout.Arc.path.d.slice(0, PROBED_ARC.length).forEach((v, i) =>
     assert.ok(v === PROBED_ARC[i] || Math.abs(v - PROBED_ARC[i]) < 1e-6, `token ${i}: ${v}, probed ${PROBED_ARC[i]}`));
   const { result, readback } = await base(env, SPINNER);
@@ -282,7 +282,7 @@ test('a drawn field the readback disagrees on is a difference: a path off by mor
   assert.deepEqual(await read(0.6), [['Spinner', 'offCentre', 'drawn']]);
   spinner.x = (comp.width - spinner.width) / 2;
   comp.clipsContent = true;
-  assert.deepEqual(await read(0), [['Button', 'clipsContent', 'drawn']]);
+  assert.deepEqual(await read(0), [[SPINNER.anatomy.name, 'clipsContent', 'drawn']]);
   // a rebuild restores both
   spinner.x += 3;
   await base(env, SPINNER);
