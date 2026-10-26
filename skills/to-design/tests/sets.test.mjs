@@ -512,6 +512,13 @@ test('a spinner set packages and fits; coverage finds an absolute node off its c
   assert.deepEqual(checkCoverage(spinner, await cover()).problems, []);
   const sample = await sets(env, { mode: 'sample', sample: [0, 120, TOTAL - 1], prototype: true }, { contract: spinner });
   assert.deepEqual(checkSample(spinner, sample.result, env.ledger, DOC).problems, []);
+  // the VECTOR's stroke is bound like any other layer's, so the theme read resolves it per mode
+  env.mock.log.length = 0;
+  const read = (await sets(env, { mode: 'theme', sample: [0, 120], prototype: true }, { contract: spinner })).result;
+  const theme = checkTheme(spinner, read, DOC);
+  assert.deepEqual(theme.problems, []);
+  assert.ok(Object.values(read.theme).every(colours => colours['Arc.stroke']), JSON.stringify(read.theme));
+  assert.deepEqual(writes(env.mock), [], 'the theme read writes nothing');
   const variant = (await setNode(env)).children[3];
   variant.findOne(x => x.name === 'Spinner').x += 0.6;
   const off = await cover();
