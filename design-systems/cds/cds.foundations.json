@@ -40,10 +40,11 @@
       {
         "family": "button",
         "path": "design-systems/cds/contracts/button.component.json",
-        "snapshotId": "sha256:b5982a0b4c5d73acb7383a814a22a02a08a3ef64cb32592099bd8b74dd37eddb"
+        "snapshotId": "sha256:c50a72ac673639dbc18069b83cdbf7e6df76c979098a768075de2fc3703d3697"
       }
     ],
     "tokens": [
+      "bgLine",
       "bgPrimary",
       "borderRadius-700",
       "borderRadius-900",
@@ -4318,7 +4319,9 @@
           "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "bgLineHeavy": {
       "collection": "theme",
@@ -4907,7 +4910,8 @@
       "source": "packages/common/src/tokens/button.ts#variants.inverse.color",
       "scopes": [
         "SHAPE_FILL",
-        "TEXT_FILL"
+        "TEXT_FILL",
+        "STROKE_COLOR"
       ],
       "codeSyntax": {},
       "values": {
@@ -4976,7 +4980,8 @@
       "source": "packages/common/src/tokens/button.ts#transparentVariants.inverse.color",
       "scopes": [
         "SHAPE_FILL",
-        "TEXT_FILL"
+        "TEXT_FILL",
+        "STROKE_COLOR"
       ],
       "codeSyntax": {},
       "values": {
@@ -5047,7 +5052,8 @@
       "source": "packages/common/src/tokens/button.ts#variants.negative.color",
       "scopes": [
         "SHAPE_FILL",
-        "TEXT_FILL"
+        "TEXT_FILL",
+        "STROKE_COLOR"
       ],
       "codeSyntax": {},
       "values": {
@@ -5116,7 +5122,8 @@
       "source": "packages/common/src/tokens/button.ts#transparentVariants.negative.color",
       "scopes": [
         "SHAPE_FILL",
-        "TEXT_FILL"
+        "TEXT_FILL",
+        "STROKE_COLOR"
       ],
       "codeSyntax": {},
       "values": {
@@ -5187,7 +5194,8 @@
       "source": "packages/common/src/tokens/button.ts#variants.positive.color",
       "scopes": [
         "SHAPE_FILL",
-        "TEXT_FILL"
+        "TEXT_FILL",
+        "STROKE_COLOR"
       ],
       "codeSyntax": {},
       "values": {
@@ -5256,7 +5264,8 @@
       "source": "packages/common/src/tokens/button.ts#transparentVariants.positive.color",
       "scopes": [
         "SHAPE_FILL",
-        "TEXT_FILL"
+        "TEXT_FILL",
+        "STROKE_COLOR"
       ],
       "codeSyntax": {},
       "values": {
@@ -5327,7 +5336,8 @@
       "source": "packages/common/src/tokens/button.ts#variants.primary.color",
       "scopes": [
         "SHAPE_FILL",
-        "TEXT_FILL"
+        "TEXT_FILL",
+        "STROKE_COLOR"
       ],
       "codeSyntax": {},
       "values": {
@@ -5396,7 +5406,8 @@
       "source": "packages/common/src/tokens/button.ts#transparentVariants.primary.color",
       "scopes": [
         "SHAPE_FILL",
-        "TEXT_FILL"
+        "TEXT_FILL",
+        "STROKE_COLOR"
       ],
       "codeSyntax": {},
       "values": {
@@ -5467,7 +5478,8 @@
       "source": "packages/common/src/tokens/button.ts#variants.secondary.color",
       "scopes": [
         "SHAPE_FILL",
-        "TEXT_FILL"
+        "TEXT_FILL",
+        "STROKE_COLOR"
       ],
       "codeSyntax": {},
       "values": {
@@ -5536,7 +5548,8 @@
       "source": "packages/common/src/tokens/button.ts#transparentVariants.secondary.color",
       "scopes": [
         "SHAPE_FILL",
-        "TEXT_FILL"
+        "TEXT_FILL",
+        "STROKE_COLOR"
       ],
       "codeSyntax": {},
       "values": {
@@ -5607,7 +5620,8 @@
       "source": "packages/common/src/tokens/button.ts#variants.tertiary.color",
       "scopes": [
         "SHAPE_FILL",
-        "TEXT_FILL"
+        "TEXT_FILL",
+        "STROKE_COLOR"
       ],
       "codeSyntax": {},
       "values": {
@@ -5676,7 +5690,8 @@
       "source": "packages/common/src/tokens/button.ts#transparentVariants.tertiary.color",
       "scopes": [
         "SHAPE_FILL",
-        "TEXT_FILL"
+        "TEXT_FILL",
+        "STROKE_COLOR"
       ],
       "codeSyntax": {},
       "values": {

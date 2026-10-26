@@ -8,13 +8,20 @@
 // which returns {checked, mismatches: ['<tuple> <mode> <layer>.<field>: page <value>, Contract <value>']}.
 //
 // A layer's element is found by its node map entry inside its parent's element: a `cds-` entry is that static class,
-// any other a Linaria literal, whose class is `<name>-<hash>`. Compared, as the page computes them:
-//   fill          background-color, or color on a TEXT layer;
+// any other a Linaria literal, whose class is `<name>-<hash>`. A layer whose entry is its parent's is drawn inside the
+// parent's element with no class of its own: a TEXT layer is the element holding the text, an ELLIPSE the parent's
+// n-th <circle>, n counting its ELLIPSE siblings (Button's Label in Middle, Track and Arc in Spinner). A layer the
+// Contract hides (`visible: false`) must have no element, and its children are skipped. Compared, as the page
+// computes them:
+//   fill          background-color, or color on a TEXT layer, or fill on an ELLIPSE;
 //   opacity       opacity, 0 on a TEXT layer whose text is visibility: hidden (loading keeps the label's width);
 //   stroke        outline color and width when strokeAlign is outside (the focus ring), else border width, and the
-//                 border colour when the Contract strokes;
-//   padding*, radius (border-top-left-radius), and a numeric width or height (the element's layout box).
-// Paint on a path inside a layer (`Start glyph/Vector`), effects and text styles are not compared.
+//                 border colour when the Contract strokes; on an ELLIPSE, stroke and stroke-width;
+//   padding*, radius (border-top-left-radius), and a numeric width or height (the element's layout box; an
+//                 ELLIPSE's is 2r + stroke-width, its stroke inside the box);
+//   arc sweep and strokeCap on an ELLIPSE (the visible share of pathLength, and stroke-linecap: butt is "none").
+// Paint on a path inside a layer (`Start glyph/Vector`), effects, text styles and the arc's start (a still frame of
+// CDS's rotation) are not compared.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -31,8 +38,10 @@ export const colorKey = ({ hex, alpha }) => (alpha === 0 ? 'none' : alpha < 1 ? 
 
 /**
  * expectations({contract, nodes, foundations}) -> {collection, modes, layers, expected}: what the probe looks for and what it
- * should find. `layers` is [{name, type, parent, entry}] in anatomy order; `expected` is
- * {<tuple key>: {<mode>: {<layer>: {<field>: value}}}}, a colour as colorKey writes it and a length in px.
+ * should find. `layers` is [{name, type, parent, entry, inside, nth}] in anatomy order, `inside` when the layer is
+ * drawn in its parent's element and `nth` an ELLIPSE's index among its parent's ELLIPSE children; `expected` is
+ * {<tuple key>: {<mode>: {<layer>: {<field>: value} | null}}}, a colour as colorKey writes it, a length in px, and
+ * null for a layer the tuple hides.
  * The modes are those of the Foundations document's one multi-mode collection (CDS's Theme: light, dark).
  */
 export function expectations({ contract, nodes, foundations }) {
@@ -40,10 +49,13 @@ export function expectations({ contract, nodes, foundations }) {
   if (multi.length !== 1) throw new Error(`the page shows one Theme Mode at a time; the Foundations document has ${multi.length} multi-mode collections`);
   const theme = multi[0];
   const layers = [];
-  const walk = (node, parent) => {
+  const walk = (node, parent, nth) => {
     if (nodes[node.name] === undefined) throw new Error(`no node for layer "${node.name}" in the node map`);
-    layers.push({ name: node.name, type: node.type, parent, entry: nodes[node.name].split(' ')[0] });
-    for (const child of node.children || []) walk(child, node.name);
+    const entry = nodes[node.name].split(' ')[0];
+    const inside = parent !== null && entry === layers.find(l => l.name === parent).entry;
+    layers.push({ name: node.name, type: node.type, parent, entry, inside, ...(node.type === 'ELLIPSE' ? { nth } : {}) });
+    const kids = node.children || [];
+    kids.forEach(child => walk(child, node.name, kids.filter(k => k.type === 'ELLIPSE').indexOf(child)));
   };
   walk(contract.anatomy, null);
 
@@ -65,15 +77,17 @@ export function expectations({ contract, nodes, foundations }) {
       const color = v => { const c = value(v); return c === 'none' ? 'none' : typeof c === 'string' ? colorKey(convert(c)) : undefined; };
       const number = v => { const n = value(v); return typeof n === 'number' ? n : undefined; };
       const out = {};
-      for (const { name, type } of layers) {
+      for (const { name, type, parent } of layers) {
         const l = layout[name] || {}, p = paint[name] || {};
+        if (l.visible === false || out[parent] === null) { out[name] = null; continue; }
         const want = {
           fill: color(p.fill), opacity: number(p.opacity),
           paddingLeft: number(l.paddingLeft), paddingRight: number(l.paddingRight),
           paddingTop: number(l.paddingTop), paddingBottom: number(l.paddingBottom),
           radius: number(l.radius), width: number(l.width), height: number(l.height),
         };
-        if (l.strokeAlign === 'outside') Object.assign(want, { outline: color(p.stroke), outlineWidth: number(l.strokeWeight) });
+        if (type === 'ELLIPSE') Object.assign(want, { stroke: color(p.stroke), strokeWidth: number(l.strokeWeight), sweep: l.arc && l.arc.sweep, strokeCap: l.strokeCap });
+        else if (l.strokeAlign === 'outside') Object.assign(want, { outline: color(p.stroke), outlineWidth: number(l.strokeWeight) });
         else Object.assign(want, { borderWidth: number(l.strokeWeight), border: p.stroke === 'none' ? undefined : color(p.stroke) });
         if (type === 'TEXT') { want.color = want.fill; delete want.fill; }
         for (const k of Object.keys(want)) if (want[k] === undefined) delete want[k];
@@ -96,8 +110,17 @@ export function probe(spec, doc, style, color) {
   const matches = (el, entry) => classes(el).some(c => (entry.indexOf('cds-') === 0 ? c === entry : c.indexOf(entry + '-') === 0));
   const inside = (el, test) => Array.prototype.find.call(el.querySelectorAll('*'), test);
   const hasText = el => Array.prototype.some.call(el.childNodes, n => n.nodeType === 3 && n.textContent.trim());
+  const paintOf = v => (!v || v === 'none' ? 'none' : color(v));
   const read = (el, type) => {
     const cs = style(el);
+    if (type === 'ELLIPSE') {
+      const sw = parseFloat(cs.strokeWidth), r = parseFloat(el.getAttribute('r'));
+      const length = el.getAttribute('pathLength') ? parseFloat(el.getAttribute('pathLength')) : 2 * Math.PI * r;
+      const dash = cs.strokeDasharray && cs.strokeDasharray !== 'none' ? Math.min(parseFloat(cs.strokeDasharray), length) : length;
+      return { fill: paintOf(cs.fill), stroke: paintOf(cs.stroke), strokeWidth: sw, opacity: parseFloat(cs.opacity),
+        width: 2 * r + sw, height: 2 * r + sw, sweep: (dash - (parseFloat(cs.strokeDashoffset) || 0)) / length * 360,
+        strokeCap: cs.strokeLinecap === 'butt' ? 'none' : cs.strokeLinecap };
+    }
     const outlined = cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0;
     const text = hasText(el) ? el : inside(el, hasText);
     return {
@@ -130,8 +153,14 @@ export function probe(spec, doc, style, color) {
       const els = {};
       spec.layers.forEach(layer => {
         const parent = layer.parent === null ? scope : els[layer.parent];
-        const el = parent && inside(parent, e => matches(e, layer.entry));
+        const find = () => {
+          if (!layer.inside) return inside(parent, e => matches(e, layer.entry));
+          if (layer.type === 'TEXT') return hasText(parent) ? parent : inside(parent, hasText);
+          if (layer.type === 'ELLIPSE') return parent.querySelectorAll('circle')[layer.nth];
+        };
+        const el = parent && find();
         const want = spec.expected[key][mode][layer.name];
+        if (want === null) { if (el) mismatches.push(key + ' ' + mode + ' ' + layer.name + '.visible: page true, Contract false'); return; }
         if (!el) { if (parent) mismatches.push(key + ' ' + mode + ' ' + layer.name + ': no element ' + layer.entry); return; }
         els[layer.name] = el;
         if (!want) return;

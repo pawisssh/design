@@ -21,13 +21,17 @@
       "packages/common/src/tokens/button.ts": "sha256:cfb9065030d1719e078ab634ea049eb03212a375c6009ac5b7425e8dae63f4b3",
       "packages/common/src/tokens/interactable.ts": "sha256:590f7e7a4d688cf4171256b4149b296baa66c591fd1cf587ac84027cdd2ecaf8",
       "packages/common/src/types/ButtonBaseProps.ts": "sha256:f9c843f9f3eb9a8da6b03db85f7f0ec6958de8d1e2c7acf3035f8d4448a02473",
+      "packages/common/src/utils/circle.ts": "sha256:a713f364393e01741460e0b63124b6671e2827d1f9068c866fa24cd454907557",
+      "packages/common/src/visualizations/getProgressCircleParams.tsx": "sha256:d59721f26381dc54dec3a548a06af5ddd844f7ed9080c70183ebce93ace19dcb",
+      "packages/common/src/visualizations/getProgressSize.ts": "sha256:34acfc04974e6ce0ba575799097d9a865e14bafb80e7e45c1e675d88bbd119bd",
       "packages/web/package.json": "sha256:ca0ecd076b55efe0aee663a5b0ac2cf296119192d4f86cfdf1181f19efb84650",
       "packages/web/src/buttons/Button.tsx": "sha256:5896ffdb7aff0c43947f8005bb18f2172790e3371bb51a3822e2dca7f4d9dd78",
       "packages/web/src/buttons/__figma__/Button.figma.ts": "sha256:3ea7a86058c1d7874cbff46be144306a1ede092315fe21373963f2c2509b91ae",
       "packages/web/src/system/Interactable.tsx": "sha256:c5088de3daa71967bfd4e957b6f8c35e823dec614a6f90aefebbd305aaf0558f",
-      "packages/web/src/system/Pressable.tsx": "sha256:29f9bf7310c59ffe8c047d35afc13c9df2f653cd8ecdc12df28ad126c6197cde"
+      "packages/web/src/system/Pressable.tsx": "sha256:29f9bf7310c59ffe8c047d35afc13c9df2f653cd8ecdc12df28ad126c6197cde",
+      "packages/web/src/visualizations/ProgressCircle.tsx": "sha256:54efc404a8c9ca5bb416c8a1f26fa36f8e364c2749e571d26fee66351ee412db"
     },
-    "snapshotId": "sha256:b5982a0b4c5d73acb7383a814a22a02a08a3ef64cb32592099bd8b74dd37eddb"
+    "snapshotId": "sha256:c50a72ac673639dbc18069b83cdbf7e6df76c979098a768075de2fc3703d3697"
   },
   "axes": [
     {
@@ -219,10 +223,10 @@
   ],
   "excluded": [],
   "selection": {
-    "status": "approved",
+    "status": "draft",
     "omit": [],
     "expectedCount": 480,
-    "approval": { "by": "owner", "at": "2026-10-26T13:48:32.434Z", "snapshotId": "sha256:b5982a0b4c5d73acb7383a814a22a02a08a3ef64cb32592099bd8b74dd37eddb", "contentHash": "sha256:0ed7f52d9b671c6d7cf0a5f15f883580a8c0fbaa18c14aa1c099105991dcb606" }
+    "approval": null
   },
   "anatomy": {
     "name": "Button",
@@ -242,9 +246,29 @@
         ]
       },
       {
-        "name": "Label",
-        "type": "TEXT",
-        "role": "label"
+        "name": "Middle",
+        "type": "FRAME",
+        "children": [
+          {
+            "name": "Label",
+            "type": "TEXT",
+            "role": "label"
+          },
+          {
+            "name": "Spinner",
+            "type": "FRAME",
+            "children": [
+              {
+                "name": "Track",
+                "type": "ELLIPSE"
+              },
+              {
+                "name": "Arc",
+                "type": "ELLIPSE"
+              }
+            ]
+          }
+        ]
       },
       {
         "name": "End icon",
@@ -371,8 +395,75 @@
           "width": "fill",
           "height": "fill"
         },
+        "Middle": {
+          "direction": "row",
+          "width": "hug",
+          "height": "hug"
+        },
         "Label": {
           "textResize": "width-and-height"
+        },
+        "Spinner": {
+          "direction": "none",
+          "position": "absolute",
+          "constraints": {
+            "horizontal": "center",
+            "vertical": "center"
+          },
+          "width": {
+            "raw": 24,
+            "level": "info",
+            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the size Button gives its ProgressCircle at every Button size (L333)"
+          },
+          "height": {
+            "raw": 24,
+            "level": "info",
+            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the size Button gives its ProgressCircle at every Button size (L333)"
+          },
+          "visible": false
+        },
+        "Track": {
+          "width": {
+            "raw": 24,
+            "level": "info",
+            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the size Button gives its ProgressCircle at every Button size (L333)"
+          },
+          "height": {
+            "raw": 24,
+            "level": "info",
+            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the size Button gives its ProgressCircle at every Button size (L333)"
+          },
+          "strokeWeight": {
+            "raw": 2,
+            "level": "info",
+            "reason": "weight=\"thin\" (packages/web/src/buttons/Button.tsx L334) is getProgressSize('thin') = 2 (packages/common/src/visualizations/getProgressSize.ts L9-L10)"
+          },
+          "arc": {
+            "start": 0,
+            "sweep": 360
+          }
+        },
+        "Arc": {
+          "width": {
+            "raw": 24,
+            "level": "info",
+            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the size Button gives its ProgressCircle at every Button size (L333)"
+          },
+          "height": {
+            "raw": 24,
+            "level": "info",
+            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the size Button gives its ProgressCircle at every Button size (L333)"
+          },
+          "strokeWeight": {
+            "raw": 2,
+            "level": "info",
+            "reason": "weight=\"thin\" (packages/web/src/buttons/Button.tsx L334) is getProgressSize('thin') = 2 (packages/common/src/visualizations/getProgressSize.ts L9-L10)"
+          },
+          "arc": {
+            "start": 0,
+            "sweep": 270
+          },
+          "strokeCap": "round"
         },
         "End icon": {
           "direction": "row"
@@ -577,6 +668,16 @@
           "strokeAlign": "outside"
         }
       }
+    },
+    {
+      "match": {
+        "loading": "on"
+      },
+      "set": {
+        "Spinner": {
+          "visible": true
+        }
+      }
     }
   ],
   "paint": [
@@ -597,7 +698,7 @@
           "opacity": {
             "raw": 1,
             "level": "info",
-            "reason": "opaque unless hovered, pressed, disabled or loading"
+            "reason": "opaque unless loading"
           }
         },
         "Start icon": {
@@ -612,6 +713,26 @@
             "raw": 1,
             "level": "info",
             "reason": "opaque unless hovered, pressed, disabled or loading"
+          }
+        },
+        "Middle": {
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opaque unless hovered, pressed or loading; Interactable dims the button's children (packages/web/src/system/Interactable.tsx L52-L54, L61-L63), and Middle is the child that holds the label and the spinner (packages/web/src/buttons/Button.tsx L326-L352)"
+          }
+        },
+        "Track": {
+          "fill": "none",
+          "stroke": {
+            "token": "bgLine"
+          }
+        },
+        "Arc": {
+          "fill": "none",
+          "stroke": {
+            "sameAs": "Label.fill",
+            "why": "Button renders the ProgressCircle with color=\"currentColor\""
           }
         },
         "Start glyph/Vector": {
@@ -999,7 +1120,7 @@
         "state": "hover"
       },
       "set": {
-        "Label": {
+        "Middle": {
           "opacity": {
             "raw": 0.88,
             "level": "info",
@@ -1195,7 +1316,7 @@
         "state": "active"
       },
       "set": {
-        "Label": {
+        "Middle": {
           "opacity": {
             "raw": 0.82,
             "level": "info",
@@ -1515,6 +1636,13 @@
             "reason": "the label span is visibility: hidden while loading (packages/web/src/buttons/Button.tsx L350, hiddenCss L106-L108); opacity 0 keeps its width"
           }
         },
+        "Middle": {
+          "opacity": {
+            "raw": 0.82,
+            "level": "info",
+            "reason": "opacityPressed (packages/common/src/tokens/interactable.ts L2): --inter-press-opacity on the button's children (packages/web/src/system/Interactable.tsx L61-L63, packages/web/src/system/Pressable.tsx L50-L53)"
+          }
+        },
         "Start icon": {
           "opacity": {
             "raw": 0.82,
@@ -1605,9 +1733,14 @@
       "message": "The focus ring is a 2px solid outline in bgPrimary, 2px outside the border box (outline-offset, Interactable.tsx L80-L85). The Contract draws it as a 2px outside stroke with no gap. A spread drop shadow could keep the gap, but bgPrimary has no EFFECT_COLOR scope in the foundations document, so an effect cannot bind it (validation rule 6)."
     },
     {
-      "level": "verify",
-      "at": "paint[loading=on]",
-      "message": "While loading, CDS centres an indeterminate ProgressCircle (24px, Button.tsx L27 and L327-L340) over the hidden label with position: absolute (spinnerContainerCss, L68-L76). The builder has no absolute children, so the loading variants show only the reserved label width and the icons at the pressed opacity. Compare a loading variant with the preview before approval."
+      "level": "info",
+      "at": "paint.Middle.opacity",
+      "message": "Interactable and Pressable set opacity on the Button's direct children (> *: hovered, pressed and loading, Interactable.tsx L52-L54 and L61-L63, Pressable.tsx L48-L54). Those children are the start node, the middle node and the end node (Button.tsx L313-L360), so the opacity is on Middle, not on Label. The Spinner sits in Middle (L326-L337), so it dims with it: 0.82 while loading. The Label's own opacity is 0 while loading, because it is visibility: hidden (L350)."
+    },
+    {
+      "level": "info",
+      "at": "layout.Arc.arc",
+      "message": "The Arc is a still frame of an endless rotation. CDS spins the whole ProgressCircle forever (indeterminateProgressCircleCss, ProgressCircle.tsx L105-L115: 1000ms linear infinite) and starts its arc at 12 o'clock (rotate: -90, L137). The Contract draws that start: 270 degrees clockwise from 12 o'clock (stroke-dashoffset 0.25 of pathLength 1, L152-L153). Figma has no animation, so the Arc doesn't spin."
     },
     {
       "level": "info",
@@ -1721,9 +1854,37 @@
     "anatomy.Label": {
       "by": "agent",
       "evidence": [
-        "Button.tsx:L326-L352 span.middleNodeCss holding the Text and the children"
+        "Button.tsx:L338-L351 the Text holding the children, hiddenCss while loading"
       ],
-      "fingerprint": "sha256:a33491e77819a8c3d26042681406fb9d3aa0562f7a7bc530c0ae0325047f9f72"
+      "fingerprint": "sha256:c7766ef8efc14728635bd184ebe334155737d4cb1bf0745f733541ca92a6da5c"
+    },
+    "anatomy.Middle": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L326-L352 span.middleNodeCss holding the spinner and the Text"
+      ],
+      "fingerprint": "sha256:8ccaad8d413d688718de66641c2b82e762ef2263fa0977e10798c9f327fc5a3e"
+    },
+    "anatomy.Spinner": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L327-L337 span.spinnerContainerCss around the ProgressCircle while loading"
+      ],
+      "fingerprint": "sha256:ce52a7bf3f9281abcb90b4520a8f06da1458fc8f0bcd105adb4e91fec2296c60"
+    },
+    "anatomy.Track": {
+      "by": "agent",
+      "evidence": [
+        "ProgressCircle.tsx:L232-L240 the circle stroked var(--color-bgLine)"
+      ],
+      "fingerprint": "sha256:ce52a7bf3f9281abcb90b4520a8f06da1458fc8f0bcd105adb4e91fec2296c60"
+    },
+    "anatomy.Arc": {
+      "by": "agent",
+      "evidence": [
+        "ProgressCircle.tsx:L149-L160 the motion.circle with strokeLinecap round, the progress arc"
+      ],
+      "fingerprint": "sha256:ce52a7bf3f9281abcb90b4520a8f06da1458fc8f0bcd105adb4e91fec2296c60"
     },
     "anatomy.End icon": {
       "by": "agent",
@@ -1739,7 +1900,7 @@
         "Button.figma.ts:L10 Code Connect falls back to the label \"Button\"",
         "_webExamples.mdx:L204-L233 the examples' labels are one or two words: \"See more\", \"Open link\", \"Add item\", \"Download\", \"Connect wallet\""
       ],
-      "fingerprint": "sha256:a526903e8f771d031bfda497f266f9db1d1b1dd26a14e3c39b8133b5e1538372"
+      "fingerprint": "sha256:43badcd53a564ff4f3ed6b561c140ec04499839c8d25d779379467bd8bc19b04"
     },
     "layout.Button.alignMain": {
       "by": "agent",

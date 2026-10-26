@@ -2,7 +2,11 @@
   "Button": "cds-Button baseCss unsetNoWrapCss iconCss blockCss flushCss",
   "Start icon": "startNodeCss",
   "Start glyph": "cds-Icon",
-  "Label": "middleNodeCss hiddenCss spinnerContainerCss",
+  "Middle": "middleNodeCss",
+  "Label": "middleNodeCss hiddenCss",
+  "Spinner": "spinnerContainerCss",
+  "Track": "spinnerContainerCss",
+  "Arc": "spinnerContainerCss",
   "End icon": "endNodeCss",
   "End glyph": "cds-Icon"
 }

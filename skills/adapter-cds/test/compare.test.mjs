@@ -15,14 +15,29 @@ const contract = load('../../../design-systems/cds/contracts/button.component.js
 const foundations = load('../../../design-systems/cds/cds.foundations.json');
 const nodes = load('../nodes/button.nodes.json');
 
-test('expectations: every tuple in each Theme Mode, the layers in anatomy order with their parent and entry', () => {
+test('expectations: every tuple in each Theme Mode, the layers in anatomy order with their parent and entry, and which are drawn inside it', () => {
   const spec = expectations({ contract, nodes, foundations });
   assert.equal(spec.collection, 'theme');
   assert.deepEqual(spec.modes, ['light', 'dark']);
   assert.equal(Object.keys(spec.expected).length, 480);
-  assert.deepEqual(spec.layers.map(l => [l.name, l.parent, l.entry]), [
-    ['Button', null, 'cds-Button'], ['Start icon', 'Button', 'startNodeCss'], ['Start glyph', 'Start icon', 'cds-Icon'],
-    ['Label', 'Button', 'middleNodeCss'], ['End icon', 'Button', 'endNodeCss'], ['End glyph', 'End icon', 'cds-Icon']]);
+  assert.deepEqual(spec.layers.map(l => [l.name, l.parent, l.entry, l.inside]), [
+    ['Button', null, 'cds-Button', false], ['Start icon', 'Button', 'startNodeCss', false], ['Start glyph', 'Start icon', 'cds-Icon', false],
+    ['Middle', 'Button', 'middleNodeCss', false], ['Label', 'Middle', 'middleNodeCss', true],
+    ['Spinner', 'Middle', 'spinnerContainerCss', false], ['Track', 'Spinner', 'spinnerContainerCss', true], ['Arc', 'Spinner', 'spinnerContainerCss', true],
+    ['End icon', 'Button', 'endNodeCss', false], ['End glyph', 'End icon', 'cds-Icon', false]]);
+  assert.deepEqual(spec.layers.filter(l => l.type === 'ELLIPSE').map(l => [l.name, l.nth]), [['Track', 0], ['Arc', 1]]);
+});
+
+test('expectations: the spinner while loading, an ELLIPSE by its stroke and arc, and a hidden layer null with its children', () => {
+  const { expected } = expectations({ contract, nodes, foundations });
+  const loading = expected['primary|l|solid|on|enabled'].light;
+  assert.deepEqual(loading.Middle, { opacity: 0.82 }, "Interactable's opacity is on the Button's child, Middle");
+  assert.deepEqual(loading.Spinner, { width: 24, height: 24 });
+  assert.deepEqual(loading.Track, { fill: 'none', width: 24, height: 24, stroke: '#5b616e@0.2', strokeWidth: 2, sweep: 360 });
+  assert.deepEqual(loading.Arc, { fill: 'none', width: 24, height: 24, stroke: '#ffffff', strokeWidth: 2, sweep: 270, strokeCap: 'round' });
+  const idle = expected['primary|l|solid|off|hover'].light;
+  assert.deepEqual([idle.Spinner, idle.Track, idle.Arc], [null, null, null]);
+  assert.deepEqual([idle.Middle.opacity, idle.Label.opacity], [0.88, 1]);
 });
 
 test('expectations: colours per Mode, lengths from the layout collection, the stroke by its alignment', () => {
@@ -45,7 +60,7 @@ test('expectations: colours per Mode, lengths from the layout collection, the st
 // ---------- a fake catalog page ----------
 class El {
   constructor(cls, opts = {}, kids = []) {
-    Object.assign(this, { cls, attrs: opts.attrs || {}, own: opts.style || {}, text: opts.text, kids, w: opts.w || 0, h: opts.h || 0 });
+    Object.assign(this, { cls, tag: opts.tag, attrs: opts.attrs || {}, own: opts.style || {}, text: opts.text, kids, w: opts.w || 0, h: opts.h || 0 });
   }
   getAttribute(n) { return n === 'class' ? this.cls : n in this.attrs ? this.attrs[n] : null; }
   setAttribute(n, v) { if (n === 'class') this.cls = v; }
@@ -58,19 +73,26 @@ class El {
     const all = [];
     const walk = e => e.kids.forEach(k => { all.push(k); walk(k); });
     walk(this);
-    return sel === '*' ? all : all.filter(e => e.cls.split(' ').includes(sel.slice(1)));
+    return sel === '*' ? all : sel[0] === '.' ? all.filter(e => e.cls.split(' ').includes(sel.slice(1))) : all.filter(e => e.tag === sel);
   }
 }
 const BASE = { backgroundColor: 'rgba(0, 0, 0, 0)', color: 'rgb(0, 0, 0)', opacity: '1', visibility: 'visible', paddingLeft: '0px',
   paddingRight: '0px', paddingTop: '0px', paddingBottom: '0px', borderTopLeftRadius: '0px', outlineStyle: 'none', outlineWidth: '0px',
   outlineColor: 'rgb(0, 0, 0)', borderTopWidth: '0px', borderTopColor: 'rgb(0, 0, 0)' };
 
+const circle = (attrs, style) => new El('', { tag: 'circle', attrs: { r: '11', ...attrs },
+  style: { fill: 'none', strokeWidth: '2px', strokeLinecap: 'butt', strokeDasharray: 'none', strokeDashoffset: '0px', ...style } });
+
 // One Button in each Mode's subtree. A subtree has a layout box only while the body carries its Mode's class.
-const page = ({ labelHidden = false, padding = '8px' } = {}) => {
+const page = ({ labelHidden = false, padding = '8px', spinner = false, dashoffset = '0.25px' } = {}) => {
   const scheme = mode => new El(`cds-preview-scheme ${mode}`, {}, [
     new El('cds-Button baseCss-a1', { style: { backgroundColor: mode === 'light' ? 'rgb(0, 82, 255)' : 'rgb(87, 139, 250)', paddingLeft: padding, outlineStyle: 'solid', outlineWidth: '2px', outlineColor: 'rgb(0, 82, 255)' } }, [
       new El('startNodeCss-b2', { w: 16, h: 16 }),
-      new El('middleNodeCss-c3', { style: { color: 'rgba(255, 255, 255, 0.5)' } }, [new El('hiddenCss-d4', { text: 'Button', style: { visibility: labelHidden ? 'hidden' : 'visible' } })]),
+      new El('middleNodeCss-c3', {}, [
+        ...(spinner ? [new El('spinnerContainerCss-e5', { w: 24, h: 24 }, [new El('svgCss-f6', { tag: 'svg' }, [
+          circle({}, { stroke: 'rgba(91, 97, 110, 0.2)' }),
+          circle({ pathLength: '1' }, { stroke: 'rgb(255, 255, 255)', strokeLinecap: 'round', strokeDasharray: '1px', strokeDashoffset: dashoffset })])])] : []),
+        new El('baseCss-g7', {}, [new El('hiddenCss-d4', { text: 'Button', style: { color: 'rgba(255, 255, 255, 0.5)', visibility: labelHidden ? 'hidden' : 'visible' } })])]),
     ]),
   ]);
   const root = new El('', {}, [new El('tp-specimen', { attrs: { 'data-key': 'primary|xs' } }, [scheme('light'), scheme('dark')])]);
@@ -84,11 +106,20 @@ const page = ({ labelHidden = false, padding = '8px' } = {}) => {
 const spec = {
   collection: 'theme', modes: ['light', 'dark'],
   layers: [{ name: 'Button', type: 'COMPONENT', parent: null, entry: 'cds-Button' }, { name: 'Start icon', type: 'FRAME', parent: 'Button', entry: 'startNodeCss' },
-    { name: 'Label', type: 'TEXT', parent: 'Button', entry: 'middleNodeCss' }],
+    { name: 'Middle', type: 'FRAME', parent: 'Button', entry: 'middleNodeCss', inside: false },
+    { name: 'Label', type: 'TEXT', parent: 'Middle', entry: 'middleNodeCss', inside: true }],
   expected: { 'primary|xs': {
     light: { Button: { fill: '#0052ff', paddingLeft: 8, outline: '#0052ff', outlineWidth: 2 }, 'Start icon': { width: 16 }, Label: { color: '#ffffff@0.5', opacity: 1 } },
     dark: { Button: { fill: '#578bfa' }, 'Start icon': { height: 16 }, Label: { opacity: 1 } } } },
 };
+// The same page with the spinner layers: Spinner by its entry, Track and Arc the first and second <circle> in it.
+const ring = { fill: 'none', width: 24, height: 24, stroke: '#5b616e@0.2', strokeWidth: 2, sweep: 360 };
+const arc = { fill: 'none', width: 24, height: 24, stroke: '#ffffff', strokeWidth: 2, sweep: 270, strokeCap: 'round' };
+const withSpinner = (want = { Spinner: { width: 24 }, Track: ring, Arc: arc }) => ({ ...spec,
+  layers: [...spec.layers, { name: 'Spinner', type: 'FRAME', parent: 'Middle', entry: 'spinnerContainerCss', inside: false },
+    { name: 'Track', type: 'ELLIPSE', parent: 'Spinner', entry: 'spinnerContainerCss', inside: true, nth: 0 },
+    { name: 'Arc', type: 'ELLIPSE', parent: 'Spinner', entry: 'spinnerContainerCss', inside: true, nth: 1 }],
+  expected: { 'primary|xs': { light: { ...spec.expected['primary|xs'].light, ...want }, dark: { ...spec.expected['primary|xs'].dark, ...want } } } });
 
 test('probe: each layer found by its entry inside its parent, each Mode measured with its class on the body', () => {
   const { doc, style, color } = page();
@@ -107,6 +138,21 @@ test('probe: names the tuple, Mode, layer and field of each value the page compu
     expected: { ...spec.expected, 'secondary|xs': spec.expected['primary|xs'] } };
   assert.deepEqual(probe(missing, ...Object.values(page())).mismatches, [
     'secondary|xs: no specimen on the page', 'primary|xs light End icon: no element endNodeCss', 'primary|xs dark End icon: no element endNodeCss']);
+});
+
+test('probe: Track and Arc are the n-th <circle> in the Spinner, read by stroke, size 2r + stroke width, sweep and cap', () => {
+  assert.deepEqual(probe(withSpinner(), ...Object.values(page({ spinner: true }))), { checked: 2, mismatches: [] });
+  assert.deepEqual(probe(withSpinner(), ...Object.values(page({ spinner: true, dashoffset: '0.5px' }))).mismatches, [
+    'primary|xs light Arc.sweep: page 180, Contract 270', 'primary|xs dark Arc.sweep: page 180, Contract 270']);
+});
+
+test('probe: a layer the Contract hides must have no element, and its children are not looked for', () => {
+  const hidden = withSpinner({ Spinner: null, Track: null, Arc: null });
+  assert.deepEqual(probe(hidden, ...Object.values(page())), { checked: 2, mismatches: [] });
+  assert.deepEqual(probe(hidden, ...Object.values(page({ spinner: true }))).mismatches, [
+    'primary|xs light Spinner.visible: page true, Contract false', 'primary|xs dark Spinner.visible: page true, Contract false']);
+  assert.deepEqual(probe(withSpinner(), ...Object.values(page())).mismatches, [
+    'primary|xs light Spinner: no element spinnerContainerCss', 'primary|xs dark Spinner: no element spinnerContainerCss']);
 });
 
 test('compare.js runs the probe from its own text, on the page\'s document', async () => {

@@ -173,11 +173,21 @@ test('Button\'s component tokens alias the Theme colour its token map names, wit
     source: 'packages/common/src/tokens/button.ts#variants.primary.background', scopes: ['FRAME_FILL'], codeSyntax: {},
     values: { light: { alias: 'bgPrimary', resolved: '#0052ff' }, dark: { alias: 'bgPrimary', resolved: '#578bfa' } }, usedBy: [], family: 'button' });
   assert.equal(v['button-secondary-transparent-border'].values.light.alias, 'transparent');
-  assert.deepEqual(v['button-primary-color'].scopes, ['SHAPE_FILL', 'TEXT_FILL']);
+  assert.deepEqual(v['button-primary-color'].scopes, ['SHAPE_FILL', 'TEXT_FILL'], 'no Contract strokes it');
   // foregroundMuted is deprecated in ButtonBaseProps.ts: out of the pickers
   assert.deepEqual(v['button-foregroundMuted-background'].scopes, []);
   assert.deepEqual(v['button-foregroundMuted-hover-background'].scopes, []);
   for (const name of ['bg', 'fgMuted', 'space-1', 'light-blue60']) assert.equal(v[name].family, undefined, name);
+});
+
+test('a colour token a Contract strokes through sameAs also gets STROKE_COLOR: the Arc strokes sameAs Label.fill', { skip }, () => {
+  const v = JSON.parse(read(COMMITTED)).variables;
+  const stroked = Object.keys(v).filter(n => v[n].family && n.endsWith('-color') && v[n].scopes.includes('STROKE_COLOR'));
+  assert.deepEqual(stroked, Object.keys(v).filter(n => /^button-[a-z]+(-transparent)?-color$/.test(n) && v[n].scopes.length));
+  assert.equal(stroked.length, 12);
+  assert.deepEqual(v['button-primary-color'].scopes, ['SHAPE_FILL', 'TEXT_FILL', 'STROKE_COLOR']);
+  assert.deepEqual(v['button-foregroundMuted-color'].scopes, [], 'a deprecated variant stays out of the pickers');
+  assert.deepEqual(v['button-primary-background'].scopes, ['FRAME_FILL'], 'a token no Contract strokes keeps its scopes');
 });
 
 test('every Synthesized token equals getBlendedColor\'s output for its token and opacity in each Mode', { skip }, () => {
@@ -262,6 +272,6 @@ test('generation fails on an unknown token, a rule 6 scope violation, or a Contr
 
 test('the step uses the shared closure() and validate(), never a copy', () => {
   const text = readFileSync(new URL('../scripts/foundations.mjs', import.meta.url), 'utf8');
-  assert.match(text, /import \{ closure, closureContracts, validate \} from '\.\.\/\.\.\/contract\/scripts\/contract\.mjs';/);
+  assert.match(text, /import \{ closure, closureContracts, expand, resolve, validate \} from '\.\.\/\.\.\/contract\/scripts\/contract\.mjs';/);
   assert.doesNotMatch(text, /function (closure|validate|forEachUse)\b/);
 });
