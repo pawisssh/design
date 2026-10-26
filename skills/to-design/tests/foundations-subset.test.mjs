@@ -13,10 +13,11 @@ import { formatDiff, review } from '../scripts/base-loop.mjs';
 import { recordResult, setGroups } from '../scripts/ledger.mjs';
 import { DEFAULT_GROUPS, reach, selection, subsetDocument } from '../scripts/foundations-subset.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
+import { BUTTON_CLOSURE_DOC } from './chain.mjs';
 // This file's own pack derives the foundations plan first, then packages it with the shared one.
 import { pack as packOnto } from './pack.mjs';
 
-const DOC_TEXT = readFileSync(new URL('../../../design-systems/carbon/carbon.foundations.json', import.meta.url), 'utf8');
+const DOC_TEXT = readFileSync(BUTTON_CLOSURE_DOC, 'utf8');
 const SHADCN_TEXT = readFileSync(new URL('../../../design-systems/shadcn/shadcn.foundations.json', import.meta.url), 'utf8');
 const CORE = new URL('../assets/builder-core.js', import.meta.url).pathname;
 const FILE_KEY = 'MOCKFILEKEY';

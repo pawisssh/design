@@ -18,10 +18,9 @@ const AT = '2026-10-26T00:00:00.000Z';
 
 // Known failures, each with its issue and the error it throws: the subtest asserts that error, so it fails once the
 // fix lands and the entry is due for removal.
-const ISSUE_406 = { issue: '#406', error: /is not in the ledger's foundations/ };
 const ISSUE_407 = { issue: '#407', error: /FILL needs an auto layout parent/ };
 const KNOWN = {
-  'carbon/select.component.json': ISSUE_406, 'carbon/text-input.component.json': ISSUE_406, 'carbon/toast-notification.component.json': ISSUE_406,
+  'carbon/select.component.json': ISSUE_407, 'carbon/text-input.component.json': ISSUE_407,
   'shadcn/alert.component.json': ISSUE_407, 'shadcn/card.component.json': ISSUE_407, 'shadcn/input.component.json': ISSUE_407,
   'shadcn/label.component.json': ISSUE_407, 'shadcn/textarea.component.json': ISSUE_407,
 };

@@ -14,10 +14,11 @@ import { diff, normalizeBaseResult } from '../scripts/base-loop.mjs';
 import { pruneList, recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
 import { pack } from './pack.mjs';
+import { BUTTON_CLOSURE_DOC } from './chain.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const BUTTON = JSON.parse(readFileSync(join(ROOT, 'design-systems/carbon/contracts/button.component.json'), 'utf8'));
-const DOC_TEXT = readFileSync(join(ROOT, 'design-systems/carbon/carbon.foundations.json'), 'utf8');
+const DOC_TEXT = readFileSync(BUTTON_CLOSURE_DOC, 'utf8');
 const DOC = JSON.parse(DOC_TEXT);
 const ICONS_DIR = join(ROOT, 'skills/to-design/tests/fixtures/carbon-icons@11.90.0');
 const CORE = join(ROOT, 'skills/to-design/assets/builder-core.js');

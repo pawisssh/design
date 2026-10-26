@@ -10,11 +10,11 @@ import { appendPerCall, basePlan, documentHash, foundationsPlan, iconsPlan, MAX_
 import { checkCoverage } from '../scripts/coverage.mjs';
 import { recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
-import { CORE, COMPONENTS_CORE, ROOT } from './chain.mjs';
+import { BUTTON_CLOSURE_DOC, CORE, COMPONENTS_CORE, ROOT } from './chain.mjs';
 import { pack } from './pack.mjs';
 
 const BUTTON = JSON.parse(readFileSync(join(ROOT, 'design-systems/carbon/contracts/button.component.json'), 'utf8'));
-const DOC_TEXT = readFileSync(join(ROOT, 'design-systems/carbon/carbon.foundations.json'), 'utf8');
+const DOC_TEXT = readFileSync(BUTTON_CLOSURE_DOC, 'utf8');
 const ICONS_DIR = join(ROOT, 'skills/to-design/tests/fixtures/carbon-icons@11.90.0');
 const SHADCN_DOC = readFileSync(join(ROOT, 'design-systems/shadcn/shadcn.foundations.json'), 'utf8');
 const SHADCN_BUTTON = JSON.parse(readFileSync(join(ROOT, 'design-systems/shadcn/contracts/button.component.json'), 'utf8'));

@@ -24,7 +24,9 @@ const skip = hasSources() ? false : 'Carbon sources missing: run node skills/ada
 const sources = skip ? null : readSources();
 const run = (contracts = [{ path: CONTRACT, contract: button() }]) => generate({ sources, contracts });
 
-test('two CLI runs write byte-identical documents (stable documentHash)', { skip }, () => {
+// The CLI reads every committed Contract, so this is also the freshness check: a Contract committed without
+// regenerating the document fails here (#233).
+test('two CLI runs write byte-identical documents (stable documentHash), equal to the committed one', { skip }, () => {
   const dir = mkdtempSync(join(tmpdir(), 'foundations-'));
   const out = [1, 2].map(i => {
     const file = join(dir, `run${i}.json`);
@@ -33,10 +35,7 @@ test('two CLI runs write byte-identical documents (stable documentHash)', { skip
   });
   assert.equal(sha(out[0]), sha(out[1]));
   assert.equal(out[0], out[1]);
-});
-
-test('the committed foundations document is exactly what this step generates', { skip }, () => {
-  assert.equal(run().text, read(COMMITTED));
+  assert.equal(out[0], read(COMMITTED));
 });
 
 test('every resolved value matches the compiled Carbon CSS, and every Sass fallback exists', { skip }, () => {
@@ -403,5 +402,5 @@ test('generation fails when Contracts pin a package version other than the one t
 test('only rule 6 blocks generation: a Contract error outside it (a stale expectedCount) does not', { skip }, () => {
   const c = button();
   c.selection.expectedCount = 1;
-  assert.equal(run([{ path: CONTRACT, contract: c }]).text, read(COMMITTED));
+  assert.equal(run([{ path: CONTRACT, contract: c }]).text, run().text);
 });
