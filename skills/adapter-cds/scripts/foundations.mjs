@@ -25,7 +25,7 @@ import * as nodeModule from 'node:module';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { closure, closureContracts, validate } from '../../contract/scripts/contract.mjs';
+import { closure, closureContracts, expand, resolve, validate } from '../../contract/scripts/contract.mjs';
 import {
   CDS, CONTRACTS_DIR, DEFAULT_DIR, FOUNDATIONS_DIR, FOUNDATIONS_PINNED, REPO_ROOT, fetchFoundationsPackages, fetchSources,
   hasFoundationsPackages, hasSources, readSources, sha256, snapshotId,
@@ -265,6 +265,18 @@ export async function generate({ sources, contracts = [], families = [], modules
     for (const t of closure(contract)) (usedBy[t] = usedBy[t] || new Set()).add(contract.family.key);
   const tokens = Object.keys(usedBy).sort(byKey);
   const users = t => [...(usedBy[t] || [])].sort(byKey);
+  // The colour tokens a Contract strokes through `sameAs` (Button's Arc: stroke sameAs Label.fill) also get
+  // STROKE_COLOR, so rule 6 passes; a token's other users keep its scopes as they are (#442).
+  const strokedViaSameAs = new Set();
+  for (const { contract } of contracts)
+    for (const tuple of expand(contract)) {
+      const r = resolve(contract, tuple);
+      for (const [node, { stroke }] of Object.entries(r.paint)) {
+        const rule = r.from[`paint.${node}.stroke`];
+        if (stroke && stroke.token && contract.paint[rule].set[node].stroke.sameAs) strokedViaSameAs.add(stroke.token);
+      }
+    }
+  const withStroke = (name, scopes) => (strokedViaSameAs.has(name) && !scopes.includes('STROKE_COLOR') ? [...scopes, 'STROKE_COLOR'] : scopes);
   const emitFamilies = [...new Set([...families, ...contracts.map(c => c.contract.family.key)])].sort(byKey);
   const unknownFamily = emitFamilies.filter(f => !COMPONENTS[f]);
   if (unknownFamily.length) fail(`no CDS component token map for family ${unknownFamily.join(', ')}`);
@@ -330,7 +342,7 @@ export async function generate({ sources, contracts = [], families = [], modules
     }
     check(name, `--color-${name}`, s => values[s].resolved, (got, s) => sameColor(parseColor(got), themeColor[name][s]));
     variables[name] = { collection: 'theme', name: `${group[1]}/${name}`, type: 'COLOR', source: `${FILE.theme}#lightColor.${name}, darkColor.${name}`,
-      scopes: name.startsWith('fg') ? ['SHAPE_FILL', 'TEXT_FILL'] : ['ALL_FILLS', 'STROKE_COLOR'],
+      scopes: withStroke(name, name.startsWith('fg') ? ['SHAPE_FILL', 'TEXT_FILL'] : ['ALL_FILLS', 'STROKE_COLOR']),
       codeSyntax: { WEB: `var(--color-${name})` }, values, usedBy: users(name) };
   }
   notes.push({ level: 'info', at: 'variables.currentColor',
@@ -354,7 +366,7 @@ export async function generate({ sources, contracts = [], families = [], modules
             if (!variables[target] || variables[target].collection !== 'theme') fail(`${base}-${part}: ${target} is not a Theme colour`);
             const name = `${base}-${part}`;
             variables[name] = { collection: 'theme', name: `${cap(family)}/${name}`, type: 'COLOR',
-              source: `${COMPONENTS[family].source}#${mapKey}.${variant}.${role}`, scopes: scopesFor(scopes), codeSyntax: {},
+              source: `${COMPONENTS[family].source}#${mapKey}.${variant}.${role}`, scopes: scopesFor(withStroke(name, scopes)), codeSyntax: {},
               values: Object.fromEntries(SCHEMES.map(([s]) => [s, { alias: target, resolved: variables[target].values[s].resolved }])),
               usedBy: users(name), family };
           }

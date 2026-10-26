@@ -38,6 +38,17 @@ test('each axis value maps through its Contract code props; forced States render
   assert.throws(() => render({ variant: 'foregroundMuted' }), /unknown variant value foregroundMuted/);
 });
 
+test('Loading=On renders the ProgressCircle in the middle node: the bgLine Track, then the Arc, three quarters with round caps', { skip }, async () => {
+  const { render } = await previewRenderer(button);
+  const middle = scheme(render({ loading: 'on' }), 'light').match(/<span class="middleNodeCss-[^"]+">([\s\S]*)<\/span><span class="[^"]*endNodeCss/)[1];
+  assert.match(middle, /^<span class="spinnerContainerCss-[^"]+">[\s\S]*<svg [^>]*class="svgCss-[^"]+ indeterminateProgressCircleCss-[^"]+" height="24" width="24">/);
+  const [track, arc] = middle.match(/<circle [^>]*>/g);
+  assert.match(track, /stroke="var\(--color-bgLine\)" [^>]*r="11" stroke-width="2" fill="none"/);
+  assert.match(arc, /pathLength="1" stroke-dasharray="1" stroke-linecap="round" stroke="var\(--color-currentColor\)" [^>]*r="11" stroke-width="2" fill="none" stroke-dashoffset="0.25"/);
+  assert.match(middle, /<span class="hiddenCss-[^"]+">Button<\/span>/, 'the label keeps its width, hidden');
+  assert.ok(!render({}).includes('spinnerContainerCss'), 'no spinner while not loading');
+});
+
 test('each Mode renders the specimen under ThemeProvider with its activeColorScheme, and its class shows that Mode', { skip }, async () => {
   const { render, stylesheet, modeClass } = await previewRenderer(button);
   const html = render({});
