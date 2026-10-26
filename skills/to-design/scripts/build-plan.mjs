@@ -17,8 +17,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve as resolvePath, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { baseTuple, contentHash, expand, ICON_KEY, icons as iconKeys, iconName, PROTOTYPE_APPROVER, resolve, validate, variantName } from '../../contract/scripts/contract.mjs';
-import { anatomyTree, baseProps, defaultProps, expectedBase, expectedVariant, iconRef as iconRefKey, norm } from './readback.mjs';
+import { baseTuple, contentHash, expand, ICON_KEY, icons as iconKeys, iconName, PROTOTYPE_APPROVER, validate, variantName } from '../../contract/scripts/contract.mjs';
+import { baseProps, defaultProps, expectedBase, expectedVariant, iconRef as iconRefKey, norm } from './readback.mjs';
 import { defaultLedgerPath, emptyLedger, readLedger } from './ledger.mjs';
 import { assertRecorded, CALL_BUDGET, chunks, chunkState, selectedGroups, selection, subsetDocument } from './foundations-subset.mjs';
 
@@ -162,7 +162,7 @@ export function basePlan(contract, docText, ledger, { fileKey, adopt = false, re
   if (!f) throw new Error('the ledger has no foundations: build them first');
   if (f.documentHash !== documentHash(docText)) throw new Error(`the foundations document changed since the last foundations build (${f.documentHash}); rebuild foundations first`);
   // the review specimen while the base stands alone; the property defaults once the family's set holds it
-  const exp = expectedBase(contract, baseProps(contract, !!(ledger.sets && ledger.sets[contract.family.key])));
+  const exp = expectedBase(contract, baseProps(contract, !!(ledger.sets && ledger.sets[contract.family.key])), doc);
   const strip = sec => Object.fromEntries(Object.entries(sec).map(([n, fields]) => [n, Object.fromEntries(Object.entries(fields).map(([k, x]) => [k, norm(x)]))]));
   const base = { name: exp.name, tree: exp.tree, layout: strip(exp.layout), paint: strip(exp.paint), visible: exp.visible, text: exp.text, swap: exp.swap, fonts: [] };
   const variables = {};
@@ -224,7 +224,7 @@ export const PLACE_BUDGET = 45000;
  * A sets call's plan + state JSON, at most (chars): use_figma's 50,000 less the packaged components core and
  * its wrapper (tests/bprime.test.mjs measures them).
  */
-export const SETS_BUDGET = 13200;
+export const SETS_BUDGET = 12100;
 // a reconcile window, at most: its entries carry no fragments
 const RECONCILE_PER_CALL = 500;
 /**
@@ -254,13 +254,16 @@ const stripFields = fields => Object.fromEntries(Object.entries(fields).map(([k,
 
 // The fragments every variant is built from: each (section, node) field group a resolved tuple holds,
 // numbered over the whole expansion so a number means the same fragment in every batch; and each distinct
-// property wiring ({visible, text, swap, refs} at the property defaults). Returns per tuple its references.
-function fragmentsOf(contract, tuples) {
+// property wiring ({visible, text, swap, refs} at the property defaults). Returns per tuple its references, and
+// the layer tree every variant shares (an ELLIPSE is an arc in every variant or in none, #442).
+function fragmentsOf(contract, tuples, doc) {
   const frags = new Map();
   const wirings = new Map();
   const props = defaultProps(contract);
+  const trees = new Set();
   const refs = tuples.map(t => {
-    const exp = expectedVariant(contract, t, props);
+    const exp = expectedVariant(contract, t, props, doc);
+    trees.add(JSON.stringify(exp.tree));
     const ids = [];
     for (const sec of ['layout', 'paint'])
       for (const [node, fields] of Object.entries(exp[sec])) {
@@ -272,7 +275,8 @@ function fragmentsOf(contract, tuples) {
     if (!wirings.has(w)) wirings.set(w, wirings.size);
     return { p: wirings.get(w), frags: ids };
   });
-  return { frags: [...frags.keys()].map(k => JSON.parse(k)), wirings: [...wirings.keys()].map(k => JSON.parse(k)), refs };
+  if (trees.size > 1) throw new Error('an ELLIPSE is an arc in some variants and a full circle in others: a Component Set\'s variants share one layer tree, so give it one kind in every variant');
+  return { frags: [...frags.keys()].map(k => JSON.parse(k)), wirings: [...wirings.keys()].map(k => JSON.parse(k)), refs, tree: JSON.parse([...trees][0]) };
 }
 
 /** The tuples a sets plan's entries stand for, in entry order: [{index, tuple}]. */
@@ -347,7 +351,7 @@ export function setsPlan(contract, docText, ledger, {
   const unplaced = combined && rec.placed === false;
   if (!combined && (next || mode === 'build' || mode === 'combine') && total > MAX_COMBINE)
     throw new Error(`a first build of ${family} combines its ${total} variants in one call, above MAX_COMBINE (${MAX_COMBINE}): the combine measured 46.9 s at 2304 and grows with the square (about ${Math.round(46.9 * (total / 2304) ** 2)} s here), near the ~2 min call ceiling`);
-  const { frags, wirings, refs } = fragmentsOf(contract, tuples);
+  const { frags, wirings, refs, tree } = fragmentsOf(contract, tuples, doc);
   const ax = k => contract.axes.findIndex(a => a.key === k);
   const pos = (t, k) => contract.axes.find(a => a.key === k).values.findIndex(v => v.key === t[k]);
   // a tuple's index in the axis-value product, in Contract order
@@ -424,7 +428,7 @@ export function setsPlan(contract, docText, ledger, {
         grid: { columns: contract.figma.grid.columns.map(ax), rows: contract.figma.grid.rows.map(ax) },
       },
       templates: { page: TEMPLATES.page, fontFamily, header: TEMPLATES.header },
-      tree: anatomyTree(contract.anatomy),
+      tree,
       fonts: [...fonts].sort().map(x => JSON.parse(x)),
       props,
       P,
@@ -556,11 +560,11 @@ export function setsPlan(contract, docText, ledger, {
   });
   if (mode !== 'reconcile')
     entries.forEach((e, n) => {
-      const r = resolve(contract, decoded[n].tuple);
+      // with the fields the builder draws (#442); `visible` is property wiring, not a layout fragment (#93)
+      const r = expectedVariant(contract, decoded[n].tuple, defaultProps(contract), doc);
       const spec = entrySpec(plan, e);
-      // `visible` is property wiring, not a layout fragment (readback's expectedVariant, #93), so it is left out here.
       for (const sec of ['layout', 'paint'])
-        if (JSON.stringify(spec[sec]) !== JSON.stringify(Object.fromEntries(Object.entries(r[sec]).map(([node, { visible, ...fl }]) => [node, stripFields(fl)]))))
+        if (JSON.stringify(spec[sec]) !== JSON.stringify(Object.fromEntries(Object.entries(r[sec]).map(([node, fl]) => [node, stripFields(fl)]))))
           throw new Error(`entry ${e[0]} does not resolve to the Contract's ${sec}`);
     });
   // The family's ledger record, with the variant ids of this call's entries only: a call carries no other ids.

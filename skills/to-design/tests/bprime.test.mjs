@@ -233,7 +233,7 @@ test('per call scales with set size for appends; a larger --per-call needs its w
   const opts = { fileKey: FILE_KEY, at: AT, prototype: true };
   const fresh = setsPlan(c, SHADCN_DOC, shadcnLedger(c, null), { ...opts, batch: 0 }).plan.options;
   assert.equal(fresh.phase, 'loose');
-  assert.ok(fresh.perCall > 35 && fresh.perCall <= PER_CALL, `loose calls are flat in set size, at the char cap: ${fresh.perCall}`);
+  assert.ok(fresh.perCall > 30 && fresh.perCall <= PER_CALL, `loose calls are flat in set size, at the char cap: ${fresh.perCall}`);
   const { plan } = setsPlan(c, SHADCN_DOC, shadcnLedger(c, null), { ...opts, batch: 0 });
   const ids = Array.from({ length: 2304 }, (_, i) => `1:${i + 10}`);
   const rec = variants => ({ page: '1:1', section: '1:2', set: { id: '1:3', key: 'k', name: 'Button' }, props: {}, variants, total: 2304, contentHash: plan.contentHash, placed: true });
@@ -271,5 +271,5 @@ test('every sets package keeps the core and the plan under 50,000 chars: the pla
   const { plan, state } = setsPlan(c, SHADCN_DOC, shadcnLedger(c, null), { fileKey: FILE_KEY, at: AT, prototype: true, batch: 0 });
   const { out } = pack(plan, state, COMPONENTS_CORE);
   const overhead = out.chars - JSON.stringify(plan).length - JSON.stringify(state).length;
-  assert.ok(overhead + SETS_BUDGET <= 50000, `core overhead ${overhead} + plan budget ${SETS_BUDGET} leaves ${50000 - overhead - SETS_BUDGET}: the core grew, so lower SETS_BUDGET in scripts/build-plan.mjs to ${50000 - overhead} or less, then lower the fresh.perCall > 35 floor in the per-call test above to match`);
+  assert.ok(overhead + SETS_BUDGET <= 50000, `core overhead ${overhead} + plan budget ${SETS_BUDGET} leaves ${50000 - overhead - SETS_BUDGET}: the core grew, so lower SETS_BUDGET in scripts/build-plan.mjs to ${50000 - overhead} or less, then lower the fresh.perCall > 30 floor in the per-call test above to match`);
 });

@@ -11,6 +11,7 @@ import { normalizeReadback } from '../scripts/readback.mjs';
 import { basePlan, foundationsPlan, iconsPlan } from '../scripts/build-plan.mjs';
 import { recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
+import { withSpinner } from '../../contract/test/spinner.mjs';
 import { BUTTON_CLOSURE_DOC, CORE, COMPONENTS_CORE, ROOT } from './chain.mjs';
 import { pack } from './pack.mjs';
 
@@ -219,4 +220,71 @@ test('the base plan refuses a foundations document that changed since the founda
   const env = await setup();
   assert.throws(() => basePlan(BUTTON, DOC_TEXT + ' ', env.ledger, { fileKey: FILE_KEY }), /changed since the last foundations build/);
   assert.throws(() => basePlan(BUTTON, DOC_TEXT, { ...env.ledger, icons: null }, { fileKey: FILE_KEY }), /icon add is not in the ledger/);
+});
+
+// ---- geometry (#442): the CDS-style spinner, an absolute FRAME holding a full-circle ELLIPSE and a 270° arc ----
+
+// stroked with a token the Button's foundations build has (the closure document's subset)
+const SPINNER = withSpinner(BUTTON, (layout, paint) => { paint.Track.stroke = { token: 'focus' }; });
+// The 270° arc's path as the probe read it back, from its parent's top left (#442)
+const PROBED_ARC = ['M', 12, 1, 'C', 18.0751317, 1, 23, 5.9248683, 23, 12];
+
+test('a spinner builds: the arc is a VECTOR read back rebased at (1, 1), 22×22, in float32, with no difference or unread', async () => {
+  const env = await setup();
+  const { plan } = basePlan(SPINNER, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT });
+  // an arc plans no size or position: Figma owns its box
+  assert.deepEqual(Object.keys(plan.base.layout.Arc).sort(), ['dashPattern', 'path', 'strokeAlign', 'strokeCap', 'strokeWeight']);
+  assert.deepEqual(plan.base.layout.Track, { width: { raw: 24 }, height: { raw: 24 }, strokeWeight: { raw: 2 }, strokeAlign: 'inside', dashPattern: [], x: 0, y: 0 });
+  assert.equal(plan.base.layout.Spinner.offCentre, 0);
+  assert.equal(plan.base.layout.Button.clipsContent, false);
+  plan.base.layout.Arc.path.d.slice(0, PROBED_ARC.length).forEach((v, i) =>
+    assert.ok(v === PROBED_ARC[i] || Math.abs(v - PROBED_ARC[i]) < 1e-6, `token ${i}: ${v}, probed ${PROBED_ARC[i]}`));
+  const { result, readback } = await base(env, SPINNER);
+  assert.equal(result.summary.conflicts, 0, JSON.stringify(result.conflicts));
+  const comp = await env.mock.figma.getNodeByIdAsync(readback.id);
+  const [spinner, track, arc] = ['Spinner', 'Track', 'Arc'].map(n => comp.findOne(x => x.name === n));
+  assert.deepEqual([arc.type, arc.x, arc.y, arc.width, arc.height], ['VECTOR', 1, 1, 22, 22]);
+  assert.deepEqual(env.mock.log.filter(([op, id]) => id === arc.id && ['resize', 'node.x', 'node.y'].includes(op)), [], 'nothing sizes or places the arc');
+  assert.deepEqual([track.type, track.x, track.y, track.fills], ['ELLIPSE', 0, 0, []]);
+  assert.deepEqual([spinner.layoutPositioning, spinner.x, spinner.constraints], ['ABSOLUTE', (comp.width - 24) / 2, { horizontal: 'CENTER', vertical: 'CENTER' }]);
+  assert.equal(readback.tree.children.find(c => c.name === 'Spinner').children.find(c => c.name === 'Arc').type, 'VECTOR');
+  const d = diff(SPINNER, readback, DOC);
+  assert.deepEqual([d.changes, d.unread], [[], []]);
+  env.mock.log.length = 0;
+  const again = await base(env, SPINNER);
+  assert.deepEqual(writes(env.mock), [], 'a rerun writes nothing, the arc at (1, 1) included');
+  assert.deepEqual(diff(SPINNER, again.readback, DOC).changes, []);
+});
+
+test('a drawn field the readback disagrees on is a difference: a path off by more than 1e-3, an absolute node off centre past 0.5 px, a clipping parent', async () => {
+  const env = await setup();
+  const { readback } = await base(env, SPINNER);
+  const changed = mutate => {
+    const r = structuredClone(readback);
+    mutate(r.layout);
+    return diff(SPINNER, r, DOC).changes.map(c => [c.kind, c.node, c.field, c.reason]);
+  };
+  assert.deepEqual(changed(l => { l.Arc.path.d[4] += 0.0009; }), []);
+  assert.deepEqual(changed(l => { l.Arc.path.d[4] += 0.0011; }), [['unmapped', 'Arc', 'path', 'drawn']]);
+  // the arc's path stands for its `arc`, and `position` is read from layoutPositioning
+  const missing = structuredClone(readback);
+  delete missing.layout.Arc.path;
+  delete missing.layout.Spinner.position;
+  assert.deepEqual(diff(SPINNER, missing, DOC).unread, ['layout.Spinner.position', 'layout.Arc.path']);
+  // the core reads an absolute node's px past Figma's half pixel: exactly 0.5 off reads 0, 0.6 off reads 0.1
+  const comp = await env.mock.figma.getNodeByIdAsync(readback.id);
+  const spinner = comp.findOne(x => x.name === 'Spinner');
+  const read = async off => {
+    spinner.x = (comp.width - spinner.width) / 2 + off;
+    return diff(SPINNER, (await base(env, SPINNER, { readOnly: true })).readback, DOC).changes.map(c => [c.node, c.field, c.reason]);
+  };
+  assert.deepEqual(await read(0.5), []);
+  assert.deepEqual(await read(0.6), [['Spinner', 'offCentre', 'drawn']]);
+  spinner.x = (comp.width - spinner.width) / 2;
+  comp.clipsContent = true;
+  assert.deepEqual(await read(0), [['Button', 'clipsContent', 'drawn']]);
+  // a rebuild restores both
+  spinner.x += 3;
+  await base(env, SPINNER);
+  assert.deepEqual([comp.clipsContent, spinner.x], [false, (comp.width - spinner.width) / 2]);
 });

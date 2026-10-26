@@ -2,6 +2,7 @@
 // Shared by the base-first loop (base-loop.mjs), the build-plan deriver and the coverage check. Rule
 // matching, expansion and the closure live only in the shared Contract module.
 import { baseTuple, resolve, variantName } from '../../contract/scripts/contract.mjs';
+import { valueAt } from './foundations-value.mjs';
 
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isToken = v => isObj(v) && 'token' in v;
@@ -35,20 +36,90 @@ export const iconRef = (contract, ref) => {
   return key === 'default' ? contract.icons && contract.icons.default : key;
 };
 
-/** The anatomy as a readback reports it: name, type and children (an instance's children are not part of it). */
-export function anatomyTree(node) {
-  const out = { name: node.name, type: node.type };
-  if (node.type !== 'INSTANCE' && node.children && node.children.length) out.children = node.children.map(anatomyTree);
+/**
+ * The anatomy as a readback reports it: name, type and children (an instance's children are not part of it).
+ * `types` names the nodes built as another type ({node: type}, an arc's VECTOR).
+ */
+export function anatomyTree(node, types = {}) {
+  const out = { name: node.name, type: types[node.name] || node.type };
+  if (node.type !== 'INSTANCE' && node.children && node.children.length) out.children = node.children.map(c => anatomyTree(c, types));
   return out;
 }
 
 /**
- * What one variant should read back as, for the property values `props`:
- * {tuple, name, tree, layout, paint, visible, text, swap, refs}. `visible` covers every node below the root,
- * `text` the TEXT property's node, `swap` each INSTANCE node's icon key, `refs` the property each bound
- * node field follows ({node: {field: propertyKey}}).
+ * An arc's stroke path (#442), in its parent's coordinates for a w×h box at (0, 0): the centre line of a stroke
+ * `weight` wide, clockwise from `start` degrees (0 at the top) through `sweep`, as cubic pieces of at most 90°.
+ * Returns the path's tokens ['M', x, y, 'C', ...], numbers rounded to 1e-7.
  */
-export function expectedVariant(contract, tuple, props) {
+function arcPath(w, h, weight, { start, sweep }) {
+  const r = w / 2 - weight / 2;
+  const rad = d => (d * Math.PI) / 180;
+  const at = a => [w / 2 + r * Math.sin(a), h / 2 - r * Math.cos(a)];
+  const round = v => Math.round(v * 1e7) / 1e7 + 0;
+  const n = Math.ceil(sweep / 90 - 1e-9);
+  const d = ['M', ...at(rad(start)).map(round)];
+  for (let i = 0; i < n; i++) {
+    const a = rad(start + (sweep * i) / n);
+    const b = rad(start + (sweep * (i + 1)) / n);
+    const k = ((r * 4) / 3) * Math.tan((b - a) / 4);
+    const [p0, p3] = [at(a), at(b)];
+    d.push('C', ...[p0[0] + k * Math.cos(a), p0[1] + k * Math.sin(a), p3[0] - k * Math.cos(b), p3[1] - k * Math.sin(b), ...p3].map(round));
+  }
+  return d;
+}
+
+// The Figma fields the builder writes for a variant's geometry (#442), beside the Contract's, which the readback
+// reports like any other. A full circle is an ELLIPSE with strokeAlign inside, at (0, 0) under a parent without
+// Auto Layout. An arc is a stroked VECTOR with strokeAlign center whose box Figma owns: it carries its path and
+// no size or position. An absolute node sits centred in its parent, which does not clip it. Changes `r` in place;
+// returns {types: the VECTOR nodes, drawn: {node: [field]}}.
+function draw(contract, r, foundations) {
+  const types = {};
+  const drawn = {};
+  const add = (node, fields) => {
+    Object.assign((r.layout[node] = r.layout[node] || {}), fields);
+    (drawn[node] = drawn[node] || []).push(...Object.keys(fields));
+  };
+  const px = (v, at) => {
+    const x = isToken(v) ? foundations && valueAt(foundations, v.token) : isRaw(v) ? v.raw : v;
+    if (typeof x !== 'number') throw new Error(`${at} needs a number to draw the arc: give the foundations document`);
+    return x;
+  };
+  (function walk(n, parent) {
+    const L = r.layout[n.name] || {};
+    if (n.type === 'ELLIPSE') {
+      const { arc, ...rest } = L;
+      if (arc && arc.sweep < 360) {
+        const { width, height, ...kept } = rest;
+        types[n.name] = 'VECTOR';
+        r.layout[n.name] = kept;
+        // Figma draws a stroke 1 px wide when no rule sets one
+        const weight = L.strokeWeight === undefined ? 1 : px(L.strokeWeight, `${n.name}.strokeWeight`);
+        add(n.name, { strokeAlign: 'center', path: { d: arcPath(px(width, `${n.name}.width`), px(height, `${n.name}.height`), weight, arc) }, dashPattern: [] });
+      } else {
+        r.layout[n.name] = rest;
+        const dir = (r.layout[parent.name] || {}).direction;
+        add(n.name, { strokeAlign: 'inside', dashPattern: [], ...(dir === undefined || dir === 'none' ? { x: 0, y: 0 } : {}) });
+      }
+    }
+    if (L.position === 'absolute') {
+      add(n.name, { offCentre: 0 });
+      add(parent.name, { clipsContent: false });
+    }
+    (n.children || []).forEach(c => walk(c, n));
+  })(contract.anatomy, null);
+  return { types, drawn };
+}
+
+/**
+ * What one variant should read back as, for the property values `props`:
+ * {tuple, name, tree, layout, paint, visible, text, swap, refs, drawn}. `visible` covers every node below the root,
+ * `text` the TEXT property's node, `swap` each INSTANCE node's icon key, `refs` the property each bound
+ * node field follows ({node: {field: propertyKey}}). `layout` holds the fields the builder draws (see draw), which
+ * `drawn` lists by node, and `tree` an arc as the VECTOR it is drawn as. `foundations` (the Foundations document)
+ * gives an arc's token sizes their numbers.
+ */
+export function expectedVariant(contract, tuple, props, foundations) {
   const r = resolve(contract, tuple);
   const visible = {};
   const text = {};
@@ -69,12 +140,13 @@ export function expectedVariant(contract, tuple, props) {
       if (p.type === 'TEXT' && b.field === 'characters') text[b.node] = props[p.key];
       if (p.type === 'INSTANCE_SWAP' && b.field === 'mainComponent') swap[b.node] = iconRef(contract, props[p.key]);
     }
-  return { tuple, name: variantName(contract, tuple), tree: anatomyTree(contract.anatomy), layout: r.layout, paint: r.paint, visible, text, swap, refs };
+  const { types, drawn } = draw(contract, r, foundations);
+  return { tuple, name: variantName(contract, tuple), tree: anatomyTree(contract.anatomy, types), layout: r.layout, paint: r.paint, visible, text, swap, refs, drawn };
 }
 
 /** What the Base Component should read back as, for `props` (default: the review specimen; see baseProps). */
-export function expectedBase(contract, props = reviewProps(contract)) {
-  return expectedVariant(contract, baseTuple(contract), props);
+export function expectedBase(contract, props = reviewProps(contract), foundations) {
+  return expectedVariant(contract, baseTuple(contract), props, foundations);
 }
 
 // ---------- readback: Figma ids -> Contract vocabulary ----------
@@ -137,7 +209,8 @@ export function same(a, b) {
     return Array.isArray(x) && Array.isArray(y) && x.length === y.length && x.every((e, i) => same(e, y[i]));
   if (isObj(x) && isObj(y)) {
     const keys = [...new Set([...Object.keys(x), ...Object.keys(y)])];
-    return keys.every(k => (isObj(x[k]) || isObj(y[k]) ? same(x[k], y[k]) : x[k] === y[k] || near(x[k], y[k])));
+    const nested = v => v !== null && typeof v === 'object';
+    return keys.every(k => (nested(x[k]) || nested(y[k]) ? same(x[k], y[k]) : x[k] === y[k] || near(x[k], y[k])));
   }
   return x === y || near(x, y) || (x == null && y == null);
 }

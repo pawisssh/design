@@ -47,7 +47,8 @@ const PAGE_TEMPLATE = {
 /**
  * One coverage readback from the pages of a paged read (`build-plan.mjs sets --mode coverage --batch N`), each a
  * window of the set's children: every page of one read, once, of the same set with the same number of children.
- * The rows join in page order under one dictionary; the set's own fields come from the first page.
+ * The rows join in page order under one dictionary, and so do the off-centre nodes; the set's own fields come from
+ * the first page.
  */
 export function mergeCoverage(pages) {
   if (!pages.length) throw new Error('no coverage pages');
@@ -72,14 +73,16 @@ export function mergeCoverage(pages) {
     const p = byBatch.get(i);
     for (const [parts, refs, ...rest] of p.rows) rows.push([parts.map(x => D(p.dict[x])), D(p.dict[refs]), ...rest]);
   }
-  const { batch, ...first } = pages[0];
-  return { ...first, summary: { ...first.summary, variants: rows.length }, dict, rows };
+  const { batch, offCentre, ...first } = pages[0];
+  const off = pages.every(p => Array.isArray(p.offCentre)) ? { offCentre: pages.flatMap(p => p.offCentre) } : {};
+  return { ...first, summary: { ...first.summary, variants: rows.length }, dict, rows, ...off };
 }
 
 /**
  * Every expanded variant against a `coverage` readback: names (every `Prop=Value` label is a Contract axis and
  * value label), no missing, extra or duplicate variant, every one a component in its grid cell with the
- * default variant top-left, its property wiring, the set's properties, and the set's page, frame and header.
+ * default variant top-left, its property wiring, every absolute node centred in its parent (#442), the set's
+ * properties, and the set's page, frame and header.
  */
 export function checkCoverage(contract, readback, ledger = null) {
   const problems = [];
@@ -115,6 +118,10 @@ export function checkCoverage(contract, readback, ledger = null) {
     if (!eqJ(refs, wantRefs)) bad('wiring', { name, want: wantRefs, got: refs });
   }
   for (const name of want.keys()) if (!seen.has(name)) bad('missing', { name });
+  // the core lists [variant, node, px] for each absolute node more than Figma's half pixel off its parent's centre
+  const absolute = contract.layout.some(r => Object.values(r.set).some(f => f.position === 'absolute'));
+  if (absolute && !Array.isArray(readback.offCentre)) bad('off-centre', { reason: 'unread' });
+  for (const [name, node, px] of readback.offCentre || []) bad('off-centre', { name, node, px });
 
   const s = readback.set || {};
   const def = variantName(contract, baseTuple(contract));
