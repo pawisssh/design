@@ -51,6 +51,21 @@ async function base(env, contract = BUTTON, options = {}) {
 
 const writes = mock => mock.log.filter(([op]) => op !== 'setCurrentPage' && op !== 'loadFont');
 
+// A copy of an approved Contract with mutate applied, re-approved at its new content hash.
+function approvedVariant(contract, mutate) {
+  const copy = structuredClone(contract);
+  mutate(copy);
+  copy.selection.approval = { ...contract.selection.approval, contentHash: contentHash(copy) };
+  return copy;
+}
+
+// A copy of the foundations document where variable `name` also takes `scopes`, with its text for setup().
+function scopedDoc(name, ...scopes) {
+  const doc = structuredClone(DOC);
+  doc.variables[name].scopes.push(...scopes);
+  return { doc, text: JSON.stringify(doc) };
+}
+
 test('the Base Component builds from the Contract and reads back with no differences', async () => {
   const env = await setup();
   const before = { foundations: env.ledger.foundations, icons: env.ledger.icons };
@@ -91,14 +106,13 @@ test('a rerun writes nothing and keeps the component id', async () => {
 // Figma stores a token-bound strokeWeight as the four per-side keys (probed live in #419), as it does a radius.
 test('a token-bound strokeWeight reads back bound, reruns write nothing, and a raw value unbinds all four sides', async () => {
   // Carbon has no border-width token, so a radius token also takes the stroke scope for this test
-  const doc = structuredClone(DOC);
-  doc.variables['border-radius-00'].scopes.push('STROKE_FLOAT');
-  const env = await setup(JSON.stringify(doc));
-  const bound = structuredClone(BUTTON);
-  const button = bound.layout.map(r => r.set.Button).filter(Boolean);
-  assert.ok(button.length, 'the Contract sets Button.strokeWeight');
-  for (const l of button) if ('strokeWeight' in l) l.strokeWeight = { token: 'border-radius-00' };
-  bound.selection.approval = { ...BUTTON.selection.approval, contentHash: contentHash(bound) };
+  const { doc, text } = scopedDoc('border-radius-00', 'STROKE_FLOAT');
+  const env = await setup(text);
+  const bound = approvedVariant(BUTTON, c => {
+    const button = c.layout.map(r => r.set.Button).filter(Boolean);
+    assert.ok(button.length, 'the Contract sets Button.strokeWeight');
+    for (const l of button) if ('strokeWeight' in l) l.strokeWeight = { token: 'border-radius-00' };
+  });
   const first = await base(env, bound);
   assert.deepEqual(diff(bound, first.readback, doc).changes, []);
   assert.deepEqual(first.readback.layout.Button.strokeWeight, { token: 'border-radius-00' });

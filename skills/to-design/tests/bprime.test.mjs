@@ -271,5 +271,5 @@ test('every sets package keeps the core and the plan under 50,000 chars: the pla
   const { plan, state } = setsPlan(c, SHADCN_DOC, shadcnLedger(c, null), { fileKey: FILE_KEY, at: AT, prototype: true, batch: 0 });
   const { out } = pack(plan, state, COMPONENTS_CORE);
   const overhead = out.chars - JSON.stringify(plan).length - JSON.stringify(state).length;
-  assert.ok(overhead + SETS_BUDGET <= 50000, `core overhead ${overhead} + plan budget ${SETS_BUDGET}`);
+  assert.ok(overhead + SETS_BUDGET <= 50000, `core overhead ${overhead} + plan budget ${SETS_BUDGET} leaves ${50000 - overhead - SETS_BUDGET}: the core grew, so lower SETS_BUDGET in scripts/build-plan.mjs to ${50000 - overhead} or less, then loosen the 'loose calls are flat' bound in the per-call test above to match`);
 });
