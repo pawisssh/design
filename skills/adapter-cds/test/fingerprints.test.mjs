@@ -128,3 +128,29 @@ test('the CLI --check passes the Button drafts, and fails naming only the entry 
   assert.match(bad.stderr, /^layout\.Button\.alignMain: recorded sha256:f{64}, computed sha256:/);
   assert.equal(bad.stderr.trim().split('\n').length, 1, bad.stderr);
 });
+
+test('the CLI --write records the computed fingerprints and names each entry it moved', { skip }, () => {
+  const text = readFileSync(BUTTON, 'utf8');
+  const zero = `sha256:${'0'.repeat(64)}`;
+  const path = join(mkdtempSync(join(tmpdir(), 'cds-fingerprints-')), 'button.component.json');
+  writeFileSync(path, text.replace(/("fingerprint": )"sha256:[0-9a-f]{64}"/g, `$1"${zero}"`));
+  const run = spawnSync(process.execPath, [SCRIPT, path, '--nodes', NODES, '--write'], { encoding: 'utf8' });
+  assert.equal(run.status, 0, run.stderr);
+  const n = Object.keys(button.drafted).length;
+  assert.match(run.stdout, new RegExp(`^layout\\.Button\\.alignMain: ${zero} -> sha256:[0-9a-f]{64}, re-draft it$`, 'm'));
+  assert.match(run.stdout, new RegExp(`^OK wrote ${n} of ${n} fingerprints$`, 'm'));
+  assert.equal(readFileSync(path, 'utf8'), text, 'the formatting is kept');
+  const again = spawnSync(process.execPath, [SCRIPT, path, '--nodes', NODES, '--write'], { encoding: 'utf8' });
+  assert.equal(again.stdout, `OK wrote 0 of ${n} fingerprints\n`);
+});
+
+test('the CLI fails a draft whose evidence cites lines that do not show its claim (#387\'s L231)', { skip }, () => {
+  const bad = structuredClone(button);
+  const ev = bad.drafted['icons.preferred'].evidence;
+  ev[ev.length - 1] = '_webExamples.mdx:L231 startIcon="wallet" with endIcon="forwardArrow"';
+  const path = join(mkdtempSync(join(tmpdir(), 'cds-fingerprints-')), 'button.component.json');
+  writeFileSync(path, JSON.stringify(bad));
+  const run = cli(path);
+  assert.equal(run.status, 1);
+  assert.equal(run.stderr, `icons.preferred: "${ev[ev.length - 1]}": the cited lines show none of startIcon, wallet, endIcon, forwardArrow\n`);
+});

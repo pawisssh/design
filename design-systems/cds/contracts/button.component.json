@@ -1737,7 +1737,7 @@
       "evidence": [
         "Button.tsx:L155-L156 children: React.ReactNode, no default",
         "Button.figma.ts:L10 Code Connect falls back to the label \"Button\"",
-        "_webExamples.mdx:L203-L232 the examples' labels are one or two words"
+        "_webExamples.mdx:L204-L233 the examples' labels are one or two words: \"See more\", \"Open link\", \"Add item\", \"Download\", \"Connect wallet\""
       ],
       "fingerprint": "sha256:a526903e8f771d031bfda497f266f9db1d1b1dd26a14e3c39b8133b5e1538372"
     },
