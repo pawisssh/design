@@ -8,6 +8,8 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { asDraft } from '../../contract/scripts/contract.mjs';
+import { writeJson } from '../../contract/scripts/io.mjs';
 import { fingerprints, hasContractSources, readContractSources } from '../scripts/fingerprints.mjs';
 
 const digest = facts => `sha256:${createHash('sha256').update(JSON.stringify(facts)).digest('hex')}`;
@@ -130,9 +132,11 @@ test('the CLI --check passes the Button drafts, and fails naming only the entry 
 });
 
 test('the CLI --write records the computed fingerprints and names each entry it moved', { skip }, () => {
-  const text = readFileSync(BUTTON, 'utf8');
-  const zero = `sha256:${'0'.repeat(64)}`;
+  // A draft copy in the committed layout: --write writes a draft, so an approved Contract's text would not come back.
   const path = join(mkdtempSync(join(tmpdir(), 'cds-fingerprints-')), 'button.component.json');
+  writeJson(path, asDraft(button), { from: BUTTON });
+  const text = readFileSync(path, 'utf8');
+  const zero = `sha256:${'0'.repeat(64)}`;
   writeFileSync(path, text.replace(/("fingerprint": )"sha256:[0-9a-f]{64}"/g, `$1"${zero}"`));
   const run = spawnSync(process.execPath, [SCRIPT, path, '--nodes', NODES, '--write'], { encoding: 'utf8' });
   assert.equal(run.status, 0, run.stderr);
@@ -151,7 +155,8 @@ test('the CLI --write records the computed fingerprints and names each entry it 
 });
 
 test('the CLI fails a draft whose evidence cites lines that do not show its claim (#387\'s L231)', { skip }, () => {
-  const bad = structuredClone(button);
+  // A draft: an approved Contract's citations are only notes.
+  const bad = asDraft(button);
   const ev = bad.drafted['icons.preferred'].evidence;
   ev[ev.length - 1] = '_webExamples.mdx:L231 startIcon="wallet" with endIcon="forwardArrow"';
   const path = join(mkdtempSync(join(tmpdir(), 'cds-fingerprints-')), 'button.component.json');
