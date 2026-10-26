@@ -14,7 +14,7 @@
 //        [--sample i,j] [--prune-list <prune.json>] [--adopt] [--prototype] [--page <name>] [--ledger <path>]
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, resolve as resolvePath, sep } from 'node:path';
+import { dirname, join, resolve as resolvePath, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { baseTuple, contentHash, expand, ICON_KEY, icons as iconKeys, iconName, PROTOTYPE_APPROVER, resolve, validate, variantName } from '../../contract/scripts/contract.mjs';
@@ -587,6 +587,41 @@ export function setsPlan(contract, docText, ledger, {
   return { plan, state };
 }
 
+/**
+ * The ledger with a built family's set (and its Base Component's record) moved from `from`'s contentHash to
+ * `contract`'s, when both derive the same sets plans: every build window and the place plan, `contentHash` aside
+ * (#389). An edit the builder never reads, such as a drafted value's evidence, still moves the hash; this spares the
+ * update-free re-run of every batch it would otherwise take. Refuses a set not recorded as built and placed from
+ * `from` with every variant id, and a pair whose plans differ.
+ */
+export function rehashSets(from, contract, docText, ledger, { fileKey }) {
+  const family = contract.family.key;
+  if (from.family.key !== family) throw new Error(`--from is ${from.family.key}, the Contract ${family}`);
+  const rec = ledger && ledger.sets && ledger.sets[family];
+  const old = contentHash(from);
+  const hash = contentHash(contract);
+  if (!rec || rec.contentHash !== old) throw new Error(`the ${family} set is not recorded as built from --from (ledger ${rec ? rec.contentHash : 'has no record'}, --from ${old})`);
+  if (!rec.set || rec.placed === false || !(rec.variants || [null]).every(Boolean)) throw new Error(`the ${family} set is not placed with every variant id recorded: finish its build first (sets --next)`);
+  const plans = c => {
+    const derive = (mode, batch) => {
+      const { plan } = setsPlan(c, docText, ledger, { fileKey, mode, ...(batch != null ? { batch } : {}), at: rec.builtAt });
+      delete plan.contentHash;
+      return JSON.stringify(plan);
+    };
+    const first = derive('build', 0);
+    const of = JSON.parse(first).options.of;
+    return [first, ...Array.from({ length: of - 1 }, (_, b) => derive('build', b + 1)), derive('place')];
+  };
+  const [a, b] = [plans(from), plans(contract)];
+  const differs = b.findIndex((p, i) => p !== a[i]);
+  if (a.length !== b.length || differs !== -1)
+    throw new Error(`${family}: the ${a.length !== b.length ? 'batch count' : differs === b.length - 1 ? 'place plan' : `build batch ${differs}`} differs between the two Contracts, so the set needs its batches rebuilt (sets --next)`);
+  const out = { ...ledger, sets: { ...ledger.sets, [family]: { ...rec, contentHash: hash } } };
+  const base = ledger.bases && ledger.bases[family];
+  if (base && base.contentHash === old) out.bases = { ...ledger.bases, [family]: { ...base, contentHash: hash } };
+  return out;
+}
+
 const USAGE = [
   'usage: build-plan.mjs foundations --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--prune a,b] [--page <name>] [--chunk N] [--ledger <path>]',
   '       build-plan.mjs icons --contract <component.json> [--contract ...] --icons-dir <package dir> --file-key <key> --out <dir> [--adopt] [--page <name>] [--ledger <path>]',
@@ -594,6 +629,7 @@ const USAGE = [
   '       build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir>',
   '                      [--next | --mode build|combine|place|reconcile|coverage|sample|theme|prune-preview|prune] [--batch N] [--per-call N] [--budget ms (mode place)]',
   '                      [--sample i,j] [--prune-list <prune.json> (mode prune)] [--adopt] [--prototype (a Contract under .scratch only)] [--page <name>] [--ledger <path>]',
+  '       build-plan.mjs rehash --from <component.json the set was built from> --contract <component.json> --doc <foundations.json> --file-key <key> [--ledger <path>]',
 ].join('\n');
 
 function main() {
@@ -606,9 +642,21 @@ function main() {
       mode: { type: 'string', default: 'build' }, batch: { type: 'string' }, 'per-call': { type: 'string' }, sample: { type: 'string', default: '' },
       next: { type: 'boolean', default: false }, budget: { type: 'string' },
       prototype: { type: 'boolean', default: false }, 'prune-list': { type: 'string' }, chunk: { type: 'string', default: '1' },
+      from: { type: 'string' },
     },
   });
   const slice = positionals[0];
+  if (slice === 'rehash') {
+    if (!values.from || !values.contract || values.contract.length !== 1 || !values.doc || !values['file-key']) { console.error(USAGE); process.exit(2); }
+    const path = values.ledger || defaultLedgerPath(values['file-key']);
+    const read = p => JSON.parse(readFileSync(p, 'utf8'));
+    const contract = read(values.contract[0]);
+    const ledger = rehashSets(read(values.from), contract, readFileSync(values.doc, 'utf8'), readLedger(path), { fileKey: values['file-key'] });
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, JSON.stringify(ledger, null, 2) + '\n');
+    console.log(JSON.stringify({ status: 'rehashed', family: contract.family.key, contentHash: ledger.sets[contract.family.key].contentHash, ledger: path }));
+    return;
+  }
   const ok = values['file-key'] && values.out
     && ((slice === 'foundations' && values.doc) || (slice === 'icons' && values.contract && values['icons-dir'])
       || ((slice === 'base' || slice === 'sets') && values.doc && values.contract && values.contract.length === 1));
