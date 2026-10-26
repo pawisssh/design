@@ -24,11 +24,11 @@ const AT = '2026-10-16T00:00:00.000Z';
 const SIMULATED = 'owner (simulated in a test)';
 
 // A file with the foundations and the Button icons built, and its ledger.
-async function setup() {
+async function setup(docText = DOC_TEXT) {
   const mock = mockFigma({ fileKey: FILE_KEY, pages: ['Page 1'] });
   let ledger = null;
   for (const derive of [
-    () => foundationsPlan(DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT }),
+    () => foundationsPlan(docText, ledger, { fileKey: FILE_KEY, at: AT }),
     () => iconsPlan([BUTTON], ICONS_DIR, ledger, { fileKey: FILE_KEY, at: AT }),
   ]) {
     const { plan, state } = derive();
@@ -36,12 +36,12 @@ async function setup() {
     assert.equal(result.summary.conflicts, 0, JSON.stringify(result.conflicts));
     ledger = recordResult(ledger, result);
   }
-  return { mock, ledger };
+  return { mock, ledger, docText };
 }
 
 // One base call: derive, package, run; returns the result, the readback in Contract names and the new ledger.
 async function base(env, contract = BUTTON, options = {}) {
-  const { plan, state } = basePlan(contract, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, ...options });
+  const { plan, state } = basePlan(contract, env.docText, env.ledger, { fileKey: FILE_KEY, at: AT, ...options });
   const { code, out } = pack(plan, state, COMPONENTS_CORE);
   const result = await runPackage(code, env.mock.figma);
   assert.ok(!result.error, JSON.stringify(result));
@@ -86,6 +86,34 @@ test('a rerun writes nothing and keeps the component id', async () => {
   assert.deepEqual(again.result.summary, { created: 0, updated: 0, unchanged: 1, missing: 0, conflicts: 0 });
   assert.deepEqual(writes(env.mock), []);
   assert.equal(again.readback.id, first.readback.id);
+});
+
+// Figma stores a token-bound strokeWeight as the four per-side keys (probed live in #419), as it does a radius.
+test('a token-bound strokeWeight reads back bound, reruns write nothing, and a raw value unbinds all four sides', async () => {
+  // Carbon has no border-width token, so a radius token also takes the stroke scope for this test
+  const doc = structuredClone(DOC);
+  doc.variables['border-radius-00'].scopes.push('STROKE_FLOAT');
+  const env = await setup(JSON.stringify(doc));
+  const bound = structuredClone(BUTTON);
+  const button = bound.layout.map(r => r.set.Button).filter(Boolean);
+  assert.ok(button.length, 'the Contract sets Button.strokeWeight');
+  for (const l of button) if ('strokeWeight' in l) l.strokeWeight = { token: 'border-radius-00' };
+  bound.selection.approval = { ...BUTTON.selection.approval, contentHash: contentHash(bound) };
+  const first = await base(env, bound);
+  assert.deepEqual(diff(bound, first.readback, doc).changes, []);
+  assert.deepEqual(first.readback.layout.Button.strokeWeight, { token: 'border-radius-00' });
+  const comp = await env.mock.figma.getNodeByIdAsync(first.readback.id);
+  assert.deepEqual(Object.keys(comp.boundVariables).filter(k => k.startsWith('stroke')).sort(),
+    ['strokeBottomWeight', 'strokeLeftWeight', 'strokeRightWeight', 'strokeTopWeight']);
+  env.mock.log.length = 0;
+  const again = await base(env, bound);
+  assert.deepEqual(again.result.updated, {});
+  assert.deepEqual(writes(env.mock), []);
+  // back to the raw 1: all four per-side bindings go
+  const raw = await base(env, BUTTON);
+  assert.deepEqual(raw.result.updated, { Button: ['strokeWeight'] });
+  assert.deepEqual(raw.readback.layout.Button.strokeWeight, { raw: 1 });
+  assert.deepEqual(Object.keys((await env.mock.figma.getNodeByIdAsync(raw.readback.id)).boundVariables).filter(k => k.startsWith('stroke')), []);
 });
 
 test('a read-only call writes nothing; an unrecorded component with the target name is a conflict', async () => {

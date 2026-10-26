@@ -17,7 +17,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve as resolvePath, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { baseTuple, contentHash, expand, icons as iconKeys, iconName, PROTOTYPE_APPROVER, resolve, validate, variantName } from '../../contract/scripts/contract.mjs';
+import { baseTuple, contentHash, expand, ICON_KEY, icons as iconKeys, iconName, PROTOTYPE_APPROVER, resolve, validate, variantName } from '../../contract/scripts/contract.mjs';
 import { anatomyTree, baseProps, defaultProps, expectedBase, expectedVariant, iconRef as iconRefKey, norm } from './readback.mjs';
 import { defaultLedgerPath, emptyLedger, readLedger } from './ledger.mjs';
 import { assertRecorded, CALL_BUDGET, chunks, chunkState, selectedGroups, selection, subsetDocument } from './foundations-subset.mjs';
@@ -123,8 +123,7 @@ export function iconsPlan(contracts, iconsDir, ledger, { fileKey, adopt = false,
       throw new Error(`${iconsDir} holds ${pkg.name}@${pkg.version}, the Contracts pin ${source.package}@${source.version}`);
     const keys = [...new Set(withIcons.flatMap(iconKeys))];
     for (const key of keys) {
-      // camelCase keys (CDS) pass with Carbon's kebab-case; separators and dots do not (#403)
-      if (!/^[A-Za-z0-9]+(-{1,2}[A-Za-z0-9]+)*$/.test(key)) throw new Error(`icon key "${key}" is not an icon file name`);
+      if (!ICON_KEY.test(key)) throw new Error(`icon key "${key}" is not an icon file name`);
       const tried = [source.path, source.fallback].filter(Boolean).map(t => t.replace('{key}', key));
       const file = tried.find(f => existsSync(join(iconsDir, f)));
       if (!file) throw new Error(`icon ${key}: none of ${tried.join(', ')} in ${source.package}@${source.version}`);
@@ -225,7 +224,7 @@ export const PLACE_BUDGET = 45000;
  * A sets call's plan + state JSON, at most (chars): use_figma's 50,000 less the packaged components core and
  * its wrapper (tests/bprime.test.mjs measures them).
  */
-export const SETS_BUDGET = 13400;
+export const SETS_BUDGET = 13200;
 // a reconcile window, at most: its entries carry no fragments
 const RECONCILE_PER_CALL = 500;
 /**

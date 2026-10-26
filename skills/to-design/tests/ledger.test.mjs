@@ -31,24 +31,25 @@ function record(cwd, ...extra) {
   return spawnSync('node', [SCRIPT, 'record', 'result.json', ...extra], { cwd, env, encoding: 'utf8' });
 }
 
-test('from a linked worktree the default ledger is refused, naming the main checkout ledger to pass', () => {
+test('from a linked worktree the default ledger is the main checkout ledger', () => {
   const { main, wt } = repo();
-  assert.throws(() => defaultLedgerPath(FILE_KEY, wt), err => err.message.includes(`--ledger ${ledgerPath(FILE_KEY, main)}`));
+  assert.equal(defaultLedgerPath(FILE_KEY, wt), ledgerPath(FILE_KEY, main));
   assert.equal(defaultLedgerPath(FILE_KEY, main), ledgerPath(FILE_KEY, main));
   const outside = realpathSync(mkdtempSync(join(tmpdir(), 'to-design-noregit-')));
   assert.equal(defaultLedgerPath(FILE_KEY, outside), ledgerPath(FILE_KEY, outside), 'outside a repo the folder itself holds the ledger');
 });
 
-test('ledger record in a worktree writes only with --ledger, and never to the worktree .scratch', () => {
+test('ledger record in a worktree writes the main checkout ledger, says so, and never the worktree .scratch', () => {
   const { main, wt } = repo();
-  const refused = record(wt);
-  assert.notEqual(refused.status, 0);
-  assert.match(refused.stderr, /--ledger/);
-  assert.equal(existsSync(ledgerPath(FILE_KEY, wt)), false);
   const shared = ledgerPath(FILE_KEY, main);
-  const ok = record(wt, '--ledger', shared);
-  assert.equal(ok.status, 0, ok.stderr);
+  const run = record(wt);
+  assert.equal(run.status, 0, run.stderr);
+  assert.ok(run.stderr.includes(`using the main checkout's ledger ${shared}`), run.stderr);
+  assert.equal(existsSync(ledgerPath(FILE_KEY, wt)), false);
   assert.equal(JSON.parse(readFileSync(shared, 'utf8')).fileKey, FILE_KEY);
+  const elsewhere = join(wt, 'other.ledger.json');
+  assert.equal(record(wt, '--ledger', elsewhere).status, 0, '--ledger still wins');
+  assert.equal(existsSync(elsewhere), true);
   assert.equal(record(main).status, 0, 'the main checkout keeps its default');
 });
 

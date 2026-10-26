@@ -196,6 +196,9 @@ export function icons(contract) {
   return [i.default].concat(i.preferred || [], fixed).filter((k, n, all) => k && all.indexOf(k) === n);
 }
 
+/** An icon key as a file name: `[A-Za-z0-9]` segments joined by `-` or `--` (Carbon's `arrow--right`, CDS's `forwardArrow`, #403); no `/`, `.` or whitespace. */
+export const ICON_KEY = /^[A-Za-z0-9]+(-{1,2}[A-Za-z0-9]+)*$/;
+
 /** Kit-style Figma name of an icon key: first letter capitalised, `--` and camelCase kept (`arrow--right` -> `Arrow--right`, `forwardArrow` -> `ForwardArrow`). */
 export function iconName(key) {
   return key.charAt(0).toUpperCase() + key.slice(1);
@@ -499,18 +502,20 @@ function checkTokens(c, foundations, err, extra) {
 // Rule 7. `familyKnown(key)` says whether a `family:<key>` instance target is declared.
 function checkInstances(c, err, familyKnown) {
   const anatomy = anatomyIndex(c);
-  const icons = c.icons;
+  const iconsBlock = c.icons;
   for (const n of Object.values(anatomy)) {
     const to = n.instanceOf;
     if (!to) continue;
     const [kind, name] = [to.slice(0, to.indexOf(':')), to.slice(to.indexOf(':') + 1)];
-    const ok = kind === 'icon' ? !!(icons && icons.default)
+    const ok = kind === 'icon' ? !!(iconsBlock && iconsBlock.default)
       : kind === 'family' ? familyKnown(name)
       : kind === 'sub' ? (c.subComponents || []).some(s => s.name === name) : false;
     if (!ok) err(7, `anatomy.${n.name}.instanceOf`, `instance target "${to}" is not declared`);
   }
-  if (icons && Array.isArray(icons.preferred) && !icons.preferred.includes(icons.default))
-    err(7, 'icons.default', `default icon "${icons.default}" is not in icons.preferred`);
+  if (iconsBlock && Array.isArray(iconsBlock.preferred) && !iconsBlock.preferred.includes(iconsBlock.default))
+    err(7, 'icons.default', `default icon "${iconsBlock.default}" is not in icons.preferred`);
+  // the icons slice reads each key as a file name, so check.mjs refuses what it would refuse (#403)
+  for (const key of icons(c)) if (!ICON_KEY.test(key)) err(7, 'icons', `icon key "${key}" is not an icon file name`);
 }
 
 // A fill binds TEXT_FILL on a TEXT node, SHAPE_FILL on a vector inside an instance ("Glyph/Vector"),

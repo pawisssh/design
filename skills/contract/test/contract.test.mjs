@@ -422,6 +422,18 @@ test('a family whose icons are all fixed still declares icons.default (rule 7)',
   formRejects(c, 7, 'instance target "icon:warning--filled" is not declared');
 });
 
+test('every icon key is a file name: camelCase and kebab-case pass, path-unsafe keys fail (rule 7, #403)', () => {
+  const c = button();
+  c.icons.preferred = [...c.icons.preferred, 'forwardArrow', 'arrow--right'];
+  const rule7 = x => contract.validate(x, foundations).errors.filter(e => e.rule === 7).map(e => e.message);
+  assert.deepEqual(rule7(c), []);
+  for (const bad of ['../add', 'a/b', 'forward Arrow', 'add.svg', '-add']) {
+    const b = button();
+    b.icons.preferred = [...b.icons.preferred, bad];
+    assert.deepEqual(rule7(b), [`icon key "${bad}" is not an icon file name`], bad);
+  }
+});
+
 // ---------- the `drafted` side table (#105, ADR 0010) ----------
 // button.drafted.component.json is the committed Button as a draft plus a `drafted` table. Its evidence lines
 // and fingerprints are illustrative: validate checks their shape, not their content.
