@@ -44,15 +44,15 @@ export const contractProcedure = 'Write the <family> Contract with skills/adapte
 
 /**
  * The check a Contract written by `contractProcedure` must pass before To-handoff uses it (#115): the shared Contract
- * rules against the Foundations document, the Design System's commit, and every package of the CDS pin (cds-icons
- * too, which the Foundations document does not read). Returns problem strings; none means it passes.
+ * rules against the Foundations document, and the CDS pin's commit and every package it pins (cds-icons too, which the
+ * Foundations document does not read). Returns problem strings; none means it passes.
  */
 export function checkContract(contract, foundations) {
   const out = validate(contract, foundations).errors.map(e => `[rule ${e.rule}] ${e.at ? `${e.at}: ` : ''}${e.message}`);
   const src = contract.source || {};
   const packages = src.packages || {};
   if (src.adapter !== 'cds') out.push(`source.adapter is ${JSON.stringify(src.adapter)}, not "cds"`);
-  if (src.commit !== (foundations.source || {}).commit) out.push(`source.commit ${src.commit} is not the Design System's CDS pin ${(foundations.source || {}).commit}`);
+  if (src.commit !== CDS.commit) out.push(`source.commit ${src.commit} is not the pinned CDS commit ${CDS.commit}`);
   for (const [name, { version }] of Object.entries(CDS.packages))
     if (packages[name] !== version) out.push(`source.packages ${name} is ${packages[name]}, not the pinned ${version}`);
   return out;

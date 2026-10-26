@@ -145,19 +145,11 @@ Tests: `node --test skills/adapter-cds/test/*.test.mjs`. The Foundations tests s
 
 ## Handoff Adapter
 
-[`scripts/handoff-adapter.mjs`](scripts/handoff-adapter.mjs) is the module [To-handoff](../to-handoff/SKILL.md) finds by convention from the Foundations document's `source.adapter`. It exports:
+[`scripts/handoff-adapter.mjs`](scripts/handoff-adapter.mjs) is the module [To-handoff](../to-handoff/SKILL.md) finds by convention from the Foundations document's `source.adapter`. It exports CDS's role groups for matching Prototype values, the surfaces that map a Prototype to a Theme Mode, `themeWrapper` (`<ThemeProvider activeColorScheme>`), the breakpoints from the pinned responsive CSS, the step for writing a missing Contract, `checkContract` (the `check.mjs` rules plus the CDS pin, `@coinbase/cds-icons` included) and the preview renderer for the Rendering.
 
-- `roleGroups`: background, text, border and outline colour match the Theme collection's semantic colour groups (`Accent`, `Background`, `Elevation`, `Foreground`, `Line`, `Transparent`); each variable's scopes narrow them further. Gap, padding and margin match `Spacing`, and border-radius `Border radius`. Component and Synthesized tokens (`Button/…`) never match a region.
-- `surfaces`: `{page: "bg", layer: "bgAlternate"}`, for a Prototype with no theme wrapper.
-- `themeWrapper`: `<ThemeProvider activeColorScheme>`, with `light` → the Light Mode and `dark` → Dark.
-- `breakpoints`: `phone` 767, `tablet` 768, `desktop` 1280, from the media queries of cds-web 9.29.0's `esm/styles/responsive/` CSS. Tablet and desktop are their query's `min-width`. Phone's query has only `max-width: 767px`, so phone is 767, the widest page CDS lays out as a phone.
-- `contractProcedure`: section 3 against the pinned source, then `check.mjs` and the fingerprint `--check`.
-- `checkContract(contract, foundations)`: the shared Contract rules, the Design System's commit, and every package `CDS.packages` pins, `@coinbase/cds-icons` included. It returns problem strings; none means it passes.
-- `available()` and `renderer(contract)`: the [preview renderer](#preview-renderer), so the Rendering shows the real CDS components.
+To-handoff recognises a Contract usage by import only when the import's module is exactly the Contract's `code.package`. CDS's Button is imported from the `@coinbase/cds-web/buttons` subpath, so a React Prototype's CDS Buttons aren't recognised yet ([#400](https://github.com/pawisssh/design/issues/400)). A single-HTML Prototype's Buttons can be recognised by decision, `via: "element"`.
 
-To-handoff recognises a Contract usage by import only when the import's module is exactly the Contract's `code.package`. CDS's Button is imported from the `@coinbase/cds-web/buttons` subpath, so a React Prototype's CDS Buttons aren't recognised yet ([#400](https://github.com/pawisssh/design/issues/400)). A single-HTML Prototype's `cds-Button` elements are recognised by decision, `via: "element"`.
-
-Tests: `node --test skills/adapter-cds/test/handoff-adapter.test.mjs`. The last one takes [`test/fixtures/send-crypto`](test/fixtures/send-crypto) through To-handoff with its `decisions.json`, in a temp copy of the Design System, to a validated Handoff and a Rendering with the real CDS Button. It skips until the CDS sources and To-handoff's packages (`node skills/to-handoff/scripts/deps.mjs`) are fetched.
+Tests: `node --test skills/adapter-cds/test/handoff-adapter.test.mjs`. The last one takes [`test/fixtures/send-crypto`](test/fixtures/send-crypto) through To-handoff statically with its `decisions.json`, in a temp copy of the Design System, to a validated Handoff and a Rendering with the real CDS Button. It skips until the CDS preview packages and To-handoff's packages (`node skills/to-handoff/scripts/deps.mjs`) are fetched.
 
 ## Moving the pin
 

@@ -6,8 +6,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, join, posix } from 'node:path';
 import { CDS, hasSources, readSources } from '../scripts/sources.mjs';
+import { SOURCES_MISSING } from './helpers.mjs';
 
-const skip = hasSources() ? false : 'CDS sources missing: run node skills/adapter-cds/scripts/sources.mjs';
+const skip = hasSources() ? false : SOURCES_MISSING;
 const sources = skip ? null : readSources();
 const pkg = name => sources.packages[name];
 const manifest = name => JSON.parse(readFileSync(join(pkg(name).dir, 'package/package.json'), 'utf8'));

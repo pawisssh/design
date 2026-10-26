@@ -6,18 +6,17 @@ import assert from 'node:assert/strict';
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { hasDeps } from '../../to-handoff/scripts/deps.mjs';
 import { generate, loadDesignSystem, render, validateHandoff } from '../../to-handoff/scripts/handoff.mjs';
 import * as adapter from '../scripts/handoff-adapter.mjs';
-import { CDS, DEFAULT_DIR, hasSources, packageDir } from '../scripts/sources.mjs';
+import { CDS, CONTRACTS_DIR, DEFAULT_DIR, REPO_ROOT, hasSources, packageDir } from '../scripts/sources.mjs';
+import { PREVIEW_MISSING, SOURCES_MISSING } from './helpers.mjs';
 
-const repo = p => fileURLToPath(new URL(`../../../${p}`, import.meta.url));
-const CDS_DS = repo('design-systems/cds/');
-const FIXTURE = fileURLToPath(new URL('fixtures/send-crypto/', import.meta.url));
-const noSources = !hasSources() && 'CDS sources missing: run node skills/adapter-cds/scripts/sources.mjs';
+const CDS_DS = join(REPO_ROOT, 'design-systems/cds');
+const FIXTURE = join(REPO_ROOT, 'skills/adapter-cds/test/fixtures/send-crypto');
+const noSources = !hasSources() && SOURCES_MISSING;
 const noRun = (!hasDeps() && 'To-handoff packages missing: run node skills/to-handoff/scripts/deps.mjs')
-  || (!adapter.available() && 'CDS preview packages missing: run node skills/adapter-cds/scripts/sources.mjs');
+  || (!adapter.available() && PREVIEW_MISSING);
 const themeOf = foundations => Object.values(foundations.collections).find(c => !c.hidden && c.modes.length > 1);
 
 test('To-handoff loads the CDS Design System with this module as its Adapter', async () => {
@@ -66,7 +65,7 @@ test('checkContract passes the committed Button Contract and fails one pinned to
   const { foundations, contracts } = await loadDesignSystem(CDS_DS);
   assert.deepEqual(adapter.checkContract(contracts.button, foundations), []);
   const moved = edit => { const c = JSON.parse(JSON.stringify(contracts.button)); edit(c.source); return adapter.checkContract(c, foundations); };
-  assert.ok(moved(s => { s.commit = '0'.repeat(40); }).some(p => p === `source.commit ${'0'.repeat(40)} is not the Design System's CDS pin ${CDS.commit}`));
+  assert.ok(moved(s => { s.commit = '0'.repeat(40); }).some(p => p === `source.commit ${'0'.repeat(40)} is not the pinned CDS commit ${CDS.commit}`));
   assert.ok(moved(s => { s.packages['@coinbase/cds-web'] = '9.30.0'; }).some(p => p === 'source.packages @coinbase/cds-web is 9.30.0, not the pinned 9.29.0'));
   // cds-icons is in the CDS pin but not in the Foundations document's packages.
   assert.ok(moved(s => { s.packages['@coinbase/cds-icons'] = '5.27.0'; }).some(p => p === 'source.packages @coinbase/cds-icons is 5.27.0, not the pinned 5.26.0'));
@@ -77,8 +76,8 @@ test('a small CDS Prototype runs through To-handoff to a validated Handoff whose
   const ds = mkdtempSync(join(tmpdir(), 'cds-handoff-'));
   t.after(() => rmSync(ds, { recursive: true, force: true }));
   mkdirSync(join(ds, 'contracts'));
-  copyFileSync(repo('design-systems/cds/cds.foundations.json'), join(ds, 'cds.foundations.json'));
-  copyFileSync(repo('design-systems/cds/contracts/button.component.json'), join(ds, 'contracts/button.component.json'));
+  copyFileSync(join(CDS_DS, 'cds.foundations.json'), join(ds, 'cds.foundations.json'));
+  copyFileSync(join(CONTRACTS_DIR, 'button.component.json'), join(ds, 'contracts/button.component.json'));
   const decisions = JSON.parse(readFileSync(join(FIXTURE, 'decisions.json'), 'utf8'));
   const result = await generate({ prototype: join(FIXTURE, 'index.html'), designSystem: ds, decisions });
   assert.deepEqual(result.requests, []);
