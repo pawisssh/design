@@ -5,20 +5,17 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { approve, asDraft, expand } from '../../contract/scripts/contract.mjs';
 import { appendPerCall, basePlan, documentHash, foundationsPlan, iconsPlan, MAX_COMBINE, PER_CALL, SETS_BUDGET, setsPlan } from '../scripts/build-plan.mjs';
 import { checkCoverage } from '../scripts/coverage.mjs';
 import { recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
+import { CORE, COMPONENTS_CORE, ROOT } from './chain.mjs';
 import { pack } from './pack.mjs';
 
-const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const BUTTON = JSON.parse(readFileSync(join(ROOT, 'design-systems/carbon/contracts/button.component.json'), 'utf8'));
 const DOC_TEXT = readFileSync(join(ROOT, 'design-systems/carbon/carbon.foundations.json'), 'utf8');
 const ICONS_DIR = join(ROOT, 'skills/to-design/tests/fixtures/carbon-icons@11.90.0');
-const CORE = join(ROOT, 'skills/to-design/assets/builder-core.js');
-const COMPONENTS_CORE = join(ROOT, 'skills/to-design/assets/builder-core-components.js');
 const SHADCN_DOC = readFileSync(join(ROOT, 'design-systems/shadcn/shadcn.foundations.json'), 'utf8');
 const SHADCN_BUTTON = JSON.parse(readFileSync(join(ROOT, 'design-systems/shadcn/contracts/button.component.json'), 'utf8'));
 // The Button set as the Adapter drafted it, before the owner's omit patch: 2304 variants, the large set B′ was measured on.

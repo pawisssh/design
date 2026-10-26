@@ -27,6 +27,13 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
   const variables = new Map();
   const styles = new Map();
   const fonts = new Set();
+  // A bound weight picks the family's loaded style of that weight, spelled as the family spells it: Inter's
+  // `Semi Bold`, IBM Plex's `SemiBold`.
+  const weightStyle = (family, value) => {
+    const want = WEIGHTS[Math.round(value / 100) * 100] || 'Regular';
+    const loaded = [...fonts].map(f => f.split('/')).find(([fam, style]) => fam === family && style.replace(/\s/g, '') === want);
+    return loaded ? loaded[1] : want;
+  };
   const w = (op, ...args) => log.push([op, ...args]);
 
   function storeValue(type, value) {
@@ -144,7 +151,7 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
       if (!variable) { delete this._bound[field]; return; }
       const value = resolved(variable);
       if (field === 'fontFamily') this._font = { ...this._font, family: value };
-      else if (field === 'fontWeight') this._font = { ...this._font, style: WEIGHTS[Math.round(value / 100) * 100] || 'Regular' };
+      else if (field === 'fontWeight') this._font = { ...this._font, style: weightStyle(this._font.family, value) };
       else if (field === 'fontSize') this._size = value;
       else if (field === 'lineHeight') this._lh = { unit: 'PIXELS', value };
       else if (field === 'letterSpacing') this._ls = { unit: 'PIXELS', value };

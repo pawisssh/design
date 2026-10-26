@@ -21,7 +21,7 @@ node skills/to-preview/scripts/catalog.mjs design-systems/<ds>/contracts/<family
 
 ## 2. The owner reviews
 
-Open the page (from `file://`, or serve `.scratch/to-preview/` with any static server). What the owner sees:
+Open the page at `http://localhost:8737/<family>/index.html`: `preview_start` with name `to-preview` (in `.claude/launch.json`) serves `.scratch/to-preview/` of the checkout it starts in. The built-in browser can't open `file://`; the owner's own browser can. Stop it with `preview_stop` when done, since the port is shared and a server left running for another worktree would serve that worktree's catalog. What the owner sees:
 
 - **Specimens** are the Contract's axes minus `excluded`. Tuples the Contract already omits are shown unchecked, so they can be re-included.
 - Each specimen is a 200×200 **card** in one grid of up to 6 columns, in Contract axis order: the axis values at top-left (the full variant name on hover), the checkbox at top-right, the specimen centred, and `Source` with the Code Library package and version in the footer. An unchecked card's specimen is dimmed.
