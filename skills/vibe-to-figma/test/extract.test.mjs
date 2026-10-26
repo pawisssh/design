@@ -5,10 +5,8 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { hasTypescript } from '../../to-handoff/scripts/deps.mjs';
 import { extract } from '../scripts/extract.mjs';
-
-const skip = !hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
+import { noReader as skip } from './helpers.mjs';
 
 /** A Prototype of `files` ({path: text}) with the manifest, lockfile and stylesheet path A needs. */
 function proto(files) {

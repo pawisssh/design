@@ -6,11 +6,10 @@ import { cpSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { hasTypescript } from '../../to-handoff/scripts/deps.mjs';
 import { usedFamilies } from '../scripts/used.mjs';
+import { noReader } from './helpers.mjs';
 
 const V0 = fileURLToPath(new URL('../../to-handoff/test/fixtures/v0-app', import.meta.url));
-const noTs = !hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
 
 // The v0 fixture with one Code Library family no screen imports.
 const withUnused = () => {
@@ -20,13 +19,13 @@ const withUnused = () => {
   return dir;
 };
 
-test('the v0 screens use every family in components/ui, the Toaster through the root layout', { skip: noTs }, () => {
+test('the v0 screens use every family in components/ui, the Toaster through the root layout', { skip: noReader }, () => {
   const used = usedFamilies(V0);
   assert.equal(used.uiDir, 'components/ui/');
   assert.deepEqual(used.families, ['alert', 'button', 'card', 'input', 'label', 'select', 'sonner', 'textarea']);
 });
 
-test('a Code Library family no screen renders is left out by default and taken with all', { skip: noTs }, () => {
+test('a Code Library family no screen renders is left out by default and taken with all', { skip: noReader }, () => {
   const dir = withUnused();
   assert.ok(!usedFamilies(dir).families.includes('badge'));
   assert.deepEqual(usedFamilies(dir, { all: true }).families,
