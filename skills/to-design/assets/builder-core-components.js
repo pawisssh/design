@@ -37,8 +37,13 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
   const SIDES = ['Top', 'Bottom', 'Left', 'Right'].map(s => `stroke${s}Weight`);
   const RADII = ['topLeftRadius', 'topRightRadius', 'bottomLeftRadius', 'bottomRightRadius'];
   const EFFECT = { color: 'color', spread: 'spread', blur: 'radius', x: 'offsetX', y: 'offsetY' };
+  // Fields read lowercase and written uppercase, by their Figma name
+  const CASE = { strokeAlign: 'strokeAlign', strokeCap: 'strokeCap', position: 'layoutPositioning' };
+  // An absolute node is placed after its size, in the probed order (#442): positioning, x/y centred, constraints.
+  // The plan's drawn fields (readback.mjs draw) after the Contract's: path, offCentre, x, y, dashPattern, clipsContent.
   const ORDER = ['direction', 'alignMain', 'alignCross', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'gap', 'minWidth', 'maxWidth',
-    'minHeight', 'maxHeight', 'width', 'height', 'radius', 'strokeWeight', 'strokeAlign', 'textStyle', 'textResize', 'fill', 'stroke', 'effects', 'opacity'];
+    'minHeight', 'maxHeight', 'width', 'height', 'position', 'offCentre', 'constraints', 'x', 'y', 'radius', 'strokeWeight', 'strokeAlign', 'strokeCap', 'path',
+    'dashPattern', 'clipsContent', 'textStyle', 'textResize', 'fill', 'stroke', 'effects', 'opacity'];
   const slices = { base: baseSlice, sets: setsSlice };
   if (!slices[plan.slice]) return { error: 'unknown-slice', slice: plan.slice };
   // Instance children that are hidden must still be found and read.
@@ -59,6 +64,9 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     return { r: ((n >> 16) & 255) / 255, g: ((n >> 8) & 255) / 255, b: (n & 255) / 255, a: alpha == null ? 1 : alpha };
   }
   function keyOf(o, v) { return Object.keys(o).find(k => o[k] === v); }
+  function axes(o, m) { return { horizontal: m(o.horizontal), vertical: m(o.vertical) }; }
+  // A path's numbers moved by (x, y): Figma keeps a VECTOR's path in its own box, the plan in its parent's (#444)
+  function shift(d, x, y) { let k = 0; return d.split(' ').map(t => (isNaN(t) ? t : +t + (k++ % 2 ? y : x))); }
   function isTok(v) { return !!v && typeof v === 'object' && 'token' in v; }
   function hex(c) { return '#' + [c.r, c.g, c.b].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join(''); }
   function val(n, prop, raw = prop) { const b = n.boundVariables && n.boundVariables[prop]; return b ? { var: b.id } : { raw: n[raw] == null ? null : n[raw] }; }
@@ -100,13 +108,17 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     if (f === 'strokeWeight') return val(n, SIDES[0], f);
     if (NUM[f]) return val(n, NUM[f]);
     if (f === 'radius') return val(n, 'topLeftRadius');
-    if (f === 'strokeAlign') return String(n.strokeAlign).toLowerCase();
+    if (CASE[f]) return String(n[CASE[f]]).toLowerCase();
+    if (f === 'constraints') return axes(n.constraints, v => keyOf(ALIGN, v));
+    if (f === 'path') return { d: shift(n.vectorPaths.map(p => p.data).join(' '), n.x, n.y) };
+    // px off its parent's centre past the half pixel Figma rounds a CENTER child to (#447)
+    if (f === 'offCentre') return Math.max(0, Math.abs(2 * n.x + n.width - n.parent.width) / 2 - 0.5, Math.abs(2 * n.y + n.height - n.parent.height) / 2 - 0.5);
     if (f === 'textStyle') return n.textStyleId === figma.mixed ? 'mixed' : n.textStyleId ? { style: n.textStyleId } : null;
     if (f === 'textResize') return String(n.textAutoResize).toLowerCase().split('_').join('-');
     if (f === 'fill') return paintOf(n.fills);
     if (f === 'stroke') return paintOf(n.strokes);
     if (f === 'effects') return effectsOf(n.effects);
-    return undefined;
+    return n[f];
   }
   function metric(m) { return m.unit === 'PIXELS' ? m.value : m.unit === 'PERCENT' ? m.value + '%' : m.unit; }
   function treeOf(n) { const o = { name: n.name, type: n.type }; if (n.type !== 'INSTANCE' && n.children && n.children.length) o.children = n.children.map(treeOf); return o; }
@@ -145,7 +157,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
   }
   function checkTree(spec, conflict) {
     (function check(s) {
-      if (s !== spec.tree && ['FRAME', 'TEXT', 'INSTANCE'].indexOf(s.type) === -1) conflict('layer', s.name, 'unsupported-type:' + s.type);
+      if (s !== spec.tree && ['FRAME', 'TEXT', 'INSTANCE', 'ELLIPSE', 'VECTOR'].indexOf(s.type) === -1) conflict('layer', s.name, 'unsupported-type:' + s.type);
       if (s.type === 'INSTANCE' && !spec.swap[s.name]) conflict('layer', s.name, 'no-main-component');
       (s.children || []).forEach(check);
     })(spec.tree);
@@ -195,11 +207,15 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     else if (f === 'alignCross') n.counterAxisAlignItems = ALIGN[want];
     else if (NUM[f]) num(n, NUM[f], want);
     else if (f === 'radius') RADII.forEach(r => num(n, r, want));
-    else if (f === 'strokeAlign') n.strokeAlign = want.toUpperCase();
+    else if (CASE[f]) n[CASE[f]] = want.toUpperCase();
+    else if (f === 'constraints') n.constraints = axes(want, v => ALIGN[v]);
+    else if (f === 'path') n.vectorPaths = [{ windingRule: 'NONE', data: shift(want.d.join(' '), -n.x, -n.y).join(' ') }];
+    else if (f === 'offCentre') { n.x = (n.parent.width - n.width) / 2; n.y = (n.parent.height - n.height) / 2; }
     else if (f === 'textResize') n.textAutoResize = want.toUpperCase().split('-').join('_');
     else if (f === 'fill') n.fills = paints(want);
     else if (f === 'stroke') n.strokes = paints(want);
     else if (f === 'effects') n.effects = want.map(effect);
+    else n[f] = want;
   }
   async function writeFields(spec, name, n, touch, missing) {
     if (!n) { missing.push(name); return; }
@@ -219,10 +235,10 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
   // A layer tree unlike the anatomy is rebuilt inside the same component, so its id stays.
   function ensureTree(spec, comp) {
     const make = (parent, s) => {
-      const n = s.type === 'TEXT' ? figma.createText() : s.type === 'INSTANCE' ? I[spec.swap[s.name]].createInstance() : figma.createFrame();
-      if (s.type === 'FRAME') n.fills = [];
+      const n = s.type === 'INSTANCE' ? I[spec.swap[s.name]].createInstance() : figma['create' + s.type[0] + s.type.slice(1).toLowerCase()]();
       // a new text layer is named "Text" with autoRename on, so a layer named "Text" would take its characters' name
       if (s.type === 'TEXT') n.autoRename = false;
+      else if (s.type !== 'INSTANCE') n.fills = [];
       n.name = s.name;
       parent.appendChild(n);
       if (s.type !== 'INSTANCE') for (const c of s.children || []) make(n, c);
@@ -781,9 +797,13 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
         const oid = Object.values((prev && prev.orphans) || {});
         // a paged read (options.rows: [from, to or null]) reads only its window of the set's children
         const R = opts.rows;
+        // [variant, node, px past the half pixel] for each absolute node off its parent's centre
+        const off = [];
         for (const k of R ? set.children.slice(R[0], R[1] == null ? undefined : R[1]) : set.children) {
           const refs = {};
           for (const x of k.findAll(() => true)) {
+            const o = x.layoutPositioning === 'ABSOLUTE' && readField(x, 'offCentre');
+            if (o > 1e-3) off.push([k.name, x.name, o]);
             const r = x.componentPropertyReferences;
             if (r && Object.keys(r).length) { refs[x.name] = {}; for (const f of Object.keys(r)) refs[x.name][f] = String(r[f]).split('#')[0]; }
           }
@@ -808,7 +828,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
           section: section && { name: section.name, minWidth: section.minWidth, minHeight: section.minHeight, layoutMode: section.layoutMode, children: section.children.map(x => x.name) },
           header: Object.keys(hp).reduce((m, k) => { m[k.split('#')[0]] = hp[k].value; return m; }, {}),
           content: content && { padding: [content.paddingTop, content.paddingRight, content.paddingBottom, content.paddingLeft], gap: content.itemSpacing },
-          props, dict, rows,
+          props, dict, rows, offCentre: off,
         };
       }
       const specs = E.map(specOf);

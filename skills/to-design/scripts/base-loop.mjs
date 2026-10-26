@@ -60,6 +60,7 @@ const UNMAPPED = {
   unruled: ['no rule sets this field for the Base Component', 'Add a rule by hand if wanted.'],
   effects: ['effects change as a whole list, with no in-place form', 'Edit the effects by hand if wanted.'],
   foreign: ['bound to a variable or style the foundations ledger does not know', 'Bind a foundations variable instead.'],
+  drawn: ['the builder derives it from the Contract (an ELLIPSE\'s path and stroke, an absolute node\'s place)', 'A rebuild restores it.'],
 };
 
 /**
@@ -82,7 +83,7 @@ export function normalizeBaseResult(result, ledger) {
  * does not write until the Foundations document has Text Styles (#160). Effects are compared in order.
  */
 export function diff(contract, readback, foundations, props = baseProps(contract, readback.specimen === 'set'), tuple = baseTuple(contract)) {
-  const exp = expectedVariant(contract, tuple, props);
+  const exp = expectedVariant(contract, tuple, props, foundations);
   const changes = [];
   const unread = [];
   const unbuilt = [];
@@ -110,7 +111,7 @@ export function diff(contract, readback, foundations, props = baseProps(contract
           const kept = tv !== undefined && (near(tv, got.raw) || tv === String(got.raw).toLowerCase());
           changes.push({ kind: kept ? 'detached' : 'raw-edit', section, node, field, from: want, to: got });
         } else if (field === 'textStyle' && got == null && isToken(want)) changes.push({ kind: 'detached', section, node, field, from: want, to: got });
-        else unmapped(field === 'effects' ? 'effects' : 'keyword', section, node, field, want, got);
+        else unmapped(field === 'effects' ? 'effects' : (exp.drawn[node] || []).includes(field) ? 'drawn' : 'keyword', section, node, field, want, got);
       }
     // fields the readback reports with a value that no rule sets for the Base Component
     for (const [node, fields] of Object.entries(readback[section] || {}))

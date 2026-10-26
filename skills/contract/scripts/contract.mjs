@@ -307,9 +307,14 @@ export function validate(contract, foundations) {
   const gaps = {}; // problem text -> {at, tuples}, so one problem is reported once with its variant count
   const gap = (at, problem, t) => { (gaps[problem] = gaps[problem] || { at, tuples: [] }).tuples.push(t); };
   const slotAxes = c.axes.filter(a => a.slot !== undefined);
+  const kinds = {}; // ELLIPSE name -> the kinds ('arc', 'circle') it takes across the selected variants
   for (const t of selected) {
     const r = resolve(c, t);
     checkPlacement(c.anatomy, r, gap, t);
+    for (const [name, node] of Object.entries(anatomy)) {
+      const arc = node.type === 'ELLIPSE' && r.layout[name] && r.layout[name].arc;
+      if (isObj(arc)) (kinds[name] = kinds[name] || new Set()).add(arc.sweep < 360 ? 'arc' : 'circle');
+    }
     // A Slot axis's node shows exactly where the tuple fills it (#121).
     for (const a of slotAxes) {
       const { filled } = a.values.find(v => v.key === t[a.key]);
@@ -333,6 +338,9 @@ export function validate(contract, foundations) {
           gap(`properties.${p.key}.binds`, `${b.node}.visible is set by a rule and bound to property ${p.key}`, t);
     }
   }
+  // A Component Set's variants share one layer tree, and an arc is a VECTOR where a full circle is an ELLIPSE (#442).
+  for (const [name, k] of Object.entries(kinds))
+    if (k.size > 1) err(5, `layout ${name}.arc`, `the ELLIPSE ${name} is an arc in some selected variants and a full circle in others: a Component Set's variants share one layer tree`);
   for (const [problem, { at, tuples }] of Object.entries(gaps))
     err(5, at, `${problem} in ${tuples.length} selected variant${tuples.length === 1 ? '' : 's'}, e.g. ${variantName(c, tuples[0])}`);
 
@@ -442,6 +450,8 @@ const GEOMETRY = {
   strokeCap: v => ['round', 'none'].includes(v) || '`strokeCap` is "round" or "none"',
 };
 const ELLIPSE_ONLY = ['arc', 'strokeCap'];
+// Fields the builder derives (an ELLIPSE's path and stroke, an absolute node's place and its parent's clip, #442).
+const DRAWN = ['path', 'dashPattern', 'x', 'y', 'offCentre', 'clipsContent'];
 function checkGeometry(c, anatomy, err) {
   for (const n of Object.values(anatomy)) {
     if (n.type !== 'ELLIPSE') continue;
@@ -459,6 +469,7 @@ function checkGeometry(c, anatomy, err) {
           // an ordinary layout field, which is why it is not in GEOMETRY.
           if (field === 'strokeAlign' && ellipse)
             err(3, at, `"${node}": \`strokeAlign\` is derived on an ELLIPSE (inside for a full circle, center for an arc), never set`);
+          if (DRAWN.includes(field)) err(3, at, `"${node}": \`${field}\` is drawn by the builder from the Contract, never set`);
           if (!GEOMETRY[field]) continue;
           const valid = GEOMETRY[field](value);
           if (section !== 'layout') err(3, at, `"${node}": \`${field}\` is a layout field, not a ${section} field`);
@@ -474,6 +485,7 @@ function checkGeometry(c, anatomy, err) {
 
 // A size that is a token or a value, not `hug`, `fill` or `fixed` (#442).
 const isFixedSize = v => typeof v === 'number' || (isObj(v) && ('token' in v || 'raw' in v));
+const sizeKey = v => isObj(v) ? ('token' in v ? `token ${v.token}` : v.raw) : v;
 
 // Rule 5 for one resolved variant (#442). An absolute node and an ELLIPSE have a fixed `width` and `height`. An
 // absolute node has `constraints` and a parent with Auto Layout; `constraints` without `position` is an error, since
@@ -493,6 +505,9 @@ function checkPlacement(parent, r, gap, t) {
     } else if (fields.constraints !== undefined) gap(`layout ${name}.constraints`, `${name} has constraints but is not absolute`, t);
     if (node.type === 'ELLIPSE' && isObj(fields.arc) && fields.arc.sweep < 360 && (parent.type !== 'FRAME' || !stacks))
       gap(`layout ${name}.arc`, `the arc ${name} needs a FRAME parent without Auto Layout (direction "none"), not ${parent.name}`, t);
+    // the arc's path is a circle's: its box is square
+    if (node.type === 'ELLIPSE' && isObj(fields.arc) && fields.arc.sweep < 360 && sizeKey(fields.width) !== sizeKey(fields.height))
+      gap(`layout ${name}.arc`, `the arc ${name} needs the same width and height`, t);
     checkPlacement(node, r, gap, t);
   }
 }

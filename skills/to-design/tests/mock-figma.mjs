@@ -14,6 +14,7 @@ const LAYOUT_DEFAULTS = {
   paddingTop: 0, paddingRight: 0, paddingBottom: 0, paddingLeft: 0, itemSpacing: 0, minWidth: null, maxWidth: null, minHeight: null, maxHeight: null,
   topLeftRadius: 0, topRightRadius: 0, bottomLeftRadius: 0, bottomRightRadius: 0, strokeWeight: 1, strokeAlign: 'INSIDE', strokes: [], effects: [],
   opacity: 1, visible: true, textAutoResize: 'NONE', dashPattern: [], gridRowGap: 0, gridColumnGap: 0,
+  layoutPositioning: 'AUTO', clipsContent: false, strokeCap: 'NONE',
 };
 const PAINT_LISTS = { strokes: 1, effects: 1, dashPattern: 1 };
 const BINDABLE = new Set(['width', 'height', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'itemSpacing', 'minWidth', 'maxWidth',
@@ -301,6 +302,9 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
           if (v === 'HUG' && this._p.layoutMode === 'NONE' && this.type !== 'TEXT') throw new Error(`mock: HUG needs auto layout on ${this.name}`);
           if (v === 'FILL' && (!this.parent || !this.parent._p || this.parent._p.layoutMode === 'NONE')) throw new Error(`mock: FILL needs an auto layout parent for ${this.name}`);
         }
+        // probed live in #442: absolute positioning throws under a parent without auto layout
+        if (k === 'layoutPositioning' && v === 'ABSOLUTE' && (!this.parent || !this.parent._p || this.parent._p.layoutMode === 'NONE'))
+          throw new Error(`mock: ABSOLUTE needs an auto layout parent for ${this.name}`);
         if (k === 'layoutMode' && !['NONE', 'HORIZONTAL', 'VERTICAL', 'GRID'].includes(v)) throw new Error(`mock: layoutMode ${v}`);
         if (k === 'layoutMode' && v === 'GRID' && this._p.layoutMode !== 'GRID') {
           for (const c of this.children) c._anchor = [-1, -1];
@@ -394,6 +398,23 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
       const drop = n => { nodes.delete(n.id); n.children.forEach(drop); };
       this.children.forEach(drop);
       this._main = main; this._copy();
+    }
+  }
+  // A vector's box follows its path (probed live in #442): setting vectorPaths moves x and y to the path's top left
+  // and sizes the node to it (here the bounds of its points), and stores the path from there, in float32.
+  class Vector extends SceneNode {
+    constructor() { super('VECTOR', 'Vector'); this._p.strokeAlign = 'CENTER'; this._paths = []; }
+    get vectorPaths() { return clone(this._paths); }
+    set vectorPaths(v) {
+      w('node.vectorPaths', this.id, v);
+      const nums = v.flatMap(p => p.data.split(' ').filter(t => !isNaN(t)).map(Number));
+      const xs = nums.filter((_, i) => i % 2 === 0), ys = nums.filter((_, i) => i % 2 === 1);
+      const [x0, y0] = [Math.min(...xs), Math.min(...ys)];
+      this._x += x0; this._y += y0; this.width = Math.max(...xs) - x0; this.height = Math.max(...ys) - y0;
+      this._paths = v.map(p => {
+        let k = 0;
+        return { windingRule: p.windingRule, data: p.data.split(' ').map(t => (isNaN(t) ? t : String(f32(+t - (k++ % 2 ? y0 : x0))))).join(' ') };
+      });
     }
   }
   // A TEXT node starts in Inter Regular; changing its characters or typography needs the font loaded,
@@ -513,7 +534,9 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
     mixed: Symbol('mixed'),
     skipInvisibleInstanceChildren: true,
     createComponent() { const c = new Component('Component', {}); w('createComponent', c.id); figma.currentPage.appendChild(c); return c; },
-    createFrame() { const f = new SceneNode('FRAME', 'Frame'); f._fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }]; w('createFrame', f.id); figma.currentPage.appendChild(f); return f; },
+    createFrame() { const f = new SceneNode('FRAME', 'Frame'); f._fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }]; f._p.clipsContent = true; w('createFrame', f.id); figma.currentPage.appendChild(f); return f; },
+    createEllipse() { const e = new SceneNode('ELLIPSE', 'Ellipse'); e._fills = [{ type: 'SOLID', color: { r: 0.85, g: 0.85, b: 0.85 } }]; w('createEllipse', e.id); figma.currentPage.appendChild(e); return e; },
+    createVector() { const v = new Vector(); w('createVector', v.id); figma.currentPage.appendChild(v); return v; },
     createText() { const t = new Text(); w('createText', t.id); figma.currentPage.appendChild(t); return t; },
     createTextStyle() { const s = new TextStyle(); w('createTextStyle', s.id); styles.set(s.id, s); return s; },
     variables: {
