@@ -453,12 +453,17 @@ function checkGeometry(c, anatomy, err) {
       const at = `${section}[${i}].set`;
       for (const [node, fields] of Object.entries(rule.set || {})) {
         if (!isObj(fields)) continue;
+        const ellipse = anatomy[node] && anatomy[node].type === 'ELLIPSE';
         for (const [field, value] of Object.entries(fields)) {
+          // The builder derives an ELLIPSE's strokeAlign (#442 Out of Scope), so no rule sets it; on other nodes it is
+          // an ordinary layout field, which is why it is not in GEOMETRY.
+          if (field === 'strokeAlign' && ellipse)
+            err(3, at, `"${node}": \`strokeAlign\` is derived on an ELLIPSE (inside for a full circle, center for an arc), never set`);
           if (!GEOMETRY[field]) continue;
           const valid = GEOMETRY[field](value);
           if (section !== 'layout') err(3, at, `"${node}": \`${field}\` is a layout field, not a ${section} field`);
           else if (valid !== true) err(3, at, `"${node}": ${valid}, not ${JSON.stringify(value)}`);
-          if (ELLIPSE_ONLY.includes(field) && !(anatomy[node] && anatomy[node].type === 'ELLIPSE'))
+          if (ELLIPSE_ONLY.includes(field) && !ellipse)
             err(3, at, `"${node}": \`${field}\` is set on ELLIPSE nodes only`);
           if ((field === 'position' || field === 'constraints') && node === c.anatomy.name)
             err(3, at, `"${node}" is the root, which cannot be absolute`);
@@ -467,19 +472,23 @@ function checkGeometry(c, anatomy, err) {
     });
 }
 
-// Rule 5 for one resolved variant (#442). An absolute node has `constraints`, a fixed `width` and `height`, and a
-// parent with Auto Layout; `constraints` without `position` is an error, since Figma takes it on an in-flow child and
-// ignores it. An arc (`sweep` < 360) sits in a FRAME without Auto Layout, at its top left: its Figma box is Figma's.
+// A size that is a token or a value, not `hug`, `fill` or `fixed` (#442).
+const isFixedSize = v => typeof v === 'number' || (isObj(v) && ('token' in v || 'raw' in v));
+
+// Rule 5 for one resolved variant (#442). An absolute node and an ELLIPSE have a fixed `width` and `height`. An
+// absolute node has `constraints` and a parent with Auto Layout; `constraints` without `position` is an error, since
+// Figma takes it on an in-flow child and ignores it. An arc (`sweep` < 360) sits in a FRAME without Auto Layout, at
+// its top left: its Figma box is Figma's.
 function checkPlacement(parent, r, gap, t) {
   const layout = name => r.layout[name] || {};
   const direction = layout(parent.name).direction;
   const flows = direction === 'row' || direction === 'column', stacks = direction === undefined || direction === 'none';
-  const fixed = v => typeof v === 'number' || (isObj(v) && ('token' in v || 'raw' in v));
   for (const node of parent.children || []) {
-    const name = node.name, fields = layout(name);
-    if (fields.position === 'absolute') {
+    const name = node.name, fields = layout(name), absolute = fields.position === 'absolute';
+    if ((absolute || node.type === 'ELLIPSE') && (!isFixedSize(fields.width) || !isFixedSize(fields.height)))
+      gap(`layout ${name}.${absolute ? 'position' : 'width'}`, `${absolute ? 'absolute' : 'the ELLIPSE'} ${name} needs a fixed width and height (a token or a value)`, t);
+    if (absolute) {
       if (!flows) gap(`layout ${name}.position`, `absolute ${name} needs a parent with Auto Layout, but ${parent.name}'s direction is not row or column`, t);
-      if (!fixed(fields.width) || !fixed(fields.height)) gap(`layout ${name}.position`, `absolute ${name} needs a fixed width and height (a token or a value)`, t);
       if (fields.constraints === undefined) gap(`layout ${name}.constraints`, `absolute ${name} needs constraints`, t);
     } else if (fields.constraints !== undefined) gap(`layout ${name}.constraints`, `${name} has constraints but is not absolute`, t);
     if (node.type === 'ELLIPSE' && isObj(fields.arc) && fields.arc.sweep < 360 && (parent.type !== 'FRAME' || !stacks))
