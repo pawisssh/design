@@ -196,7 +196,7 @@ export function icons(contract) {
   return [i.default].concat(i.preferred || [], fixed).filter((k, n, all) => k && all.indexOf(k) === n);
 }
 
-/** Kit-style Figma name of an icon key: first letter capitalised, `--` kept (`arrow--right` -> `Arrow--right`). */
+/** Kit-style Figma name of an icon key: first letter capitalised, `--` and camelCase kept (`arrow--right` -> `Arrow--right`, `forwardArrow` -> `ForwardArrow`). */
 export function iconName(key) {
   return key.charAt(0).toUpperCase() + key.slice(1);
 }
