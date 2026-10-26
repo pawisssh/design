@@ -7,14 +7,11 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } fro
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { hasTools } from '../../adapter-generic/scripts/sources.mjs';
-import { hasTypescript } from '../../to-handoff/scripts/deps.mjs';
 import { buildFolder, readDrafts } from '../scripts/folder.mjs';
+import { skip } from './helpers.mjs';
 
 const V0 = fileURLToPath(new URL('../../to-handoff/test/fixtures/v0-app', import.meta.url));
 const DRAFTS = fileURLToPath(new URL('../../adapter-generic/fixtures/drafts/', import.meta.url));
-const skip = (!hasTools() && 'Generic Adapter tools missing; run: node skills/adapter-generic/scripts/sources.mjs')
-  || (!hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs');
 const READABLE = ['alert', 'button', 'card', 'input', 'label', 'select', 'textarea'];
 // The agent's answers, one Adapter drafts file per family: {family: {key: value}}.
 const drafts = () => Object.fromEntries(READABLE.map(f => [f, JSON.parse(readFileSync(join(DRAFTS, `${f}.json`), 'utf8')).drafts]));
