@@ -39,9 +39,9 @@ const iconsPage = mock => mock.snapshot().pages.find(p => p.name === 'Icons');
 const ledgerAfter = (result, previous = { schemaVersion: 1, fileKey: FILE_KEY, foundations: null, sets: {} }) => recordResult(previous, result);
 
 // A fake @carbon/icons package directory, for the 16-else-32 choice and the SVG clean-up.
-function fakeIcons(files, version = '11.90.0') {
+function fakeIcons(files, version = '11.90.0', name = '@carbon/icons') {
   const dir = realpathSync(mkdtempSync(join(tmpdir(), 'to-design-icons-pkg-')));
-  writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: '@carbon/icons', version }));
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({ name, version }));
   for (const [path, svg] of Object.entries(files)) {
     mkdirSync(join(dir, path, '..'), { recursive: true });
     writeFileSync(join(dir, path), svg);
@@ -91,19 +91,18 @@ test('a fake package: 16 is preferred, 32 is the fallback, a missing icon or ano
 
 test('camelCase icon keys (CDS) resolve to their own files and kit names; path-unsafe keys are still refused (#403)', () => {
   const cds = { ...BUTTON.icons.source, package: '@coinbase/cds-icons', version: '5.26.0', path: 'esm/svgs/{key}-16-inactive.svg', fallback: 'esm/svgs/{key}-24-inactive.svg' };
-  const contract = keys => { const c = withIcons(keys); c.icons.source = cds; return c; };
+  const cdsContract = keys => { const c = withIcons(keys); c.icons.source = cds; return c; };
   const dir = fakeIcons({
     'esm/svgs/forwardArrow-16-inactive.svg': svg(16, '<path d="M1 1 15 1 15 15z"/>'),
     'esm/svgs/externalLink-24-inactive.svg': svg(24, '<path d="M2 2 22 2 22 22z"/>'),
-  }, '5.26.0');
-  writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: '@coinbase/cds-icons', version: '5.26.0' }));
-  const { plan } = derive({ contracts: [contract(['forwardArrow', 'externalLink'])], dir });
+  }, '5.26.0', '@coinbase/cds-icons');
+  const { plan } = derive({ contracts: [cdsContract(['forwardArrow', 'externalLink'])], dir });
   assert.deepEqual(plan.icons.map(i => [i.key, i.name, i.file]), [
     ['forwardArrow', 'ForwardArrow', 'esm/svgs/forwardArrow-16-inactive.svg'],
     ['externalLink', 'ExternalLink', 'esm/svgs/externalLink-24-inactive.svg'],
   ]);
   for (const bad of ['../forwardArrow', 'a/b', 'forward Arrow', 'forwardArrow..x', '-forwardArrow'])
-    assert.throws(() => derive({ contracts: [contract([bad])], dir }), /icon key/, bad);
+    assert.throws(() => derive({ contracts: [cdsContract([bad])], dir }), /icon key/, bad);
 });
 
 test('icons from several Contracts are built once; Contracts that pin different icon packages are refused', () => {
