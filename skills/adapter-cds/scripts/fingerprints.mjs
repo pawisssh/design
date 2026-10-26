@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 // Drafted-value fingerprints of a CDS Contract (#387, ADR 0010, SKILL.md's Contract steps): the facts each drafted
 // value rests on, computed in one place so the agent writing a draft and the tests checking it hash the same thing.
-//   node skills/adapter-cds/scripts/fingerprints.mjs <contract.json> --nodes <nodes.json> [--check] [--dir <dir>]
-// prints {key: fingerprint} for every agent entry of the Contract's `drafted` table. With --check it prints
-// `OK <n> fingerprints`, or names each entry whose recorded fingerprint differs and exits 1. The files are read from
-// the sources dir and checked against the Contract's `source.files` pins (`sources.mjs` fetches them).
+//   node skills/adapter-cds/scripts/fingerprints.mjs <contract.json> --nodes <nodes.json> [--check | --write] [--dir <dir>]
+// runs the shared command line (skills/contract/scripts/fingerprints-cli.mjs). The files are read from the sources
+// dir and checked against the Contract's `source.files` pins (`sources.mjs` fetches them).
 // A family's node map is kept at skills/adapter-cds/nodes/<family>.nodes.json.
-import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { parseArgs } from 'node:util';
 import { draftedFingerprints } from '../../contract/scripts/contract.mjs';
+import { fingerprintsCli } from '../../contract/scripts/fingerprints-cli.mjs';
 import { CDS, DEFAULT_DIR, hasSources, readSources } from './sources.mjs';
 
 /**
@@ -52,24 +50,5 @@ export const hasContractSources = (contract, dir = DEFAULT_DIR) => hasSources(di
 /** {path: text} of the Contract's source files; throws on a missing file or one whose sha256 is not the pin. */
 export const readContractSources = (contract, dir = DEFAULT_DIR) => readSources(dir, contractPin(contract)).files;
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const usage = 'usage: fingerprints.mjs <contract.json> --nodes <nodes.json> [--check] [--dir <dir>]';
-  try {
-    const { values: opt, positionals: [path, ...extra] } = parseArgs({ allowPositionals: true,
-      options: { nodes: { type: 'string' }, check: { type: 'boolean' }, dir: { type: 'string', default: DEFAULT_DIR } } });
-    if (!path || extra.length || !opt.nodes) throw new Error(usage);
-    const read = p => JSON.parse(readFileSync(p, 'utf8'));
-    const contract = read(path);
-    const fp = fingerprints({ contract, nodes: read(opt.nodes), files: readContractSources(contract, opt.dir) }).fingerprints;
-    if (!opt.check) console.log(JSON.stringify(fp, null, 2));
-    else {
-      const stale = Object.entries(fp).filter(([k, v]) => contract.drafted[k].fingerprint !== v);
-      stale.forEach(([k, v]) => console.error(`${k}: recorded ${contract.drafted[k].fingerprint}, computed ${v}`));
-      if (stale.length) process.exitCode = 1;
-      else console.log(`OK ${Object.keys(fp).length} fingerprints`);
-    }
-  } catch (e) {
-    console.error(`FAIL: ${e.message}`);
-    process.exitCode = 1;
-  }
-}
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1])
+  fingerprintsCli({ fingerprints, readContractSources, dir: DEFAULT_DIR });

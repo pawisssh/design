@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 // Drafted-value fingerprints of a Carbon Contract (#144): the one place SKILL.md §2 step 13's facts are computed,
 // so the agent writing a draft and the tests checking it hash the same thing (ADR 0010).
-//   node skills/adapter-carbon/scripts/fingerprints.mjs <contract.json> --nodes <nodes.json> [--check] [--dir <dir>]
-// prints {key: fingerprint} for every agent entry of the Contract's `drafted` table; --check instead exits 1 and
-// names each entry whose fingerprint differs. The source files are read from the sources dir and checked against
-// the Contract's `source.files` pins (`sources.mjs` fetches them).
+//   node skills/adapter-carbon/scripts/fingerprints.mjs <contract.json> --nodes <nodes.json> [--check | --write] [--dir <dir>]
+// runs the shared command line (skills/contract/scripts/fingerprints-cli.mjs). The source files are read from the
+// sources dir and checked against the Contract's `source.files` pins (`sources.mjs` fetches them).
 //
 // The node map names each anatomy layer the drafts key by its element's classes, without `cds--`, its own class
 // first, and an optional :<version> ("text-input__field-wrapper", "text-input-wrapper form-item",
@@ -13,8 +12,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseArgs } from 'node:util';
 import { draftedFingerprints, sha256 } from '../../contract/scripts/contract.mjs';
+import { fingerprintsCli } from '../../contract/scripts/fingerprints-cli.mjs';
 import { DEFAULT_DIR } from './sources.mjs';
 
 const PREFIX = 'cds';
@@ -128,23 +127,8 @@ export function readContractSources(contract, dir = DEFAULT_DIR) {
   return out;
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  try {
-    const { values, positionals } = parseArgs({ allowPositionals: true, options: {
-      nodes: { type: 'string' }, check: { type: 'boolean' }, dir: { type: 'string', default: DEFAULT_DIR } } });
-    if (positionals.length !== 1 || !values.nodes) throw new Error('usage: fingerprints.mjs <contract.json> --nodes <nodes.json> [--check] [--dir <dir>]');
-    const contract = JSON.parse(readFileSync(positionals[0], 'utf8'));
-    const nodes = JSON.parse(readFileSync(values.nodes, 'utf8'));
-    const { fingerprints: fp } = fingerprints({ contract, nodes, files: readContractSources(contract, values.dir) });
-    if (!values.check) console.log(JSON.stringify(fp, null, 2));
-    else {
-      const moved = Object.keys(fp).filter(k => contract.drafted[k].fingerprint !== fp[k]);
-      for (const k of moved) console.error(`${k}: fingerprint ${contract.drafted[k].fingerprint}, the facts give ${fp[k]}`);
-      if (moved.length) process.exitCode = 1;
-      else console.log(`OK ${Object.keys(fp).length} fingerprints`);
-    }
-  } catch (e) {
-    console.error(`FAIL: ${e.message}`);
-    process.exitCode = 1;
-  }
-}
+// Carbon writes its classes as `#{$prefix}--…` in Sass and `${prefix}--…` in TSX; evidence names them as `cds--…`.
+const normalise = text => text.replace(/#\{\$prefix\}|\$\{prefix\}/g, PREFIX);
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1])
+  fingerprintsCli({ fingerprints, readContractSources, normalise, dir: DEFAULT_DIR });

@@ -932,6 +932,50 @@ export function draftedFingerprints(contract, { nodeFacts, parts, keys }) {
   return { facts, fingerprints: Object.fromEntries(list.map(k => [k, `sha256:${sha256(canonical(facts[k]))}`])) };
 }
 
+// Words a claim shares with prose rather than with source code: never an anchor.
+const PROSE = new Set(('the and with for its from each one not but has are was this that into any all per via when ' +
+  'then than there their them they which what who out off two how can may own').split(' '));
+
+/**
+ * The citations in `drafted`'s agent evidence that do not hold (ADR 0010, #387): `files` is {path: text} of the
+ * Contract's source files. An evidence string is `<file>:L<a>[-L<b>] what it shows`; the claim may cite more ranges,
+ * `L<n>` in the same file or `<other file>:L<n>`. Each file must be exactly one path (the path, or its last segments),
+ * and each range must lie in it. When the claim names a word its files hold, the cited lines must hold one of those
+ * words, so a citation a line off shows none. `normalise(text)` rewrites source text before the match (Carbon's
+ * `#{$prefix}` as `cds`). Returns ['<key>: "<evidence>": <why>'], empty when every citation holds.
+ */
+export function draftedEvidence(contract, files, normalise) {
+  const norm = normalise || (t => t);
+  const paths = Object.keys(files);
+  const problem = ev => {
+    const head = /^([^\s:]+):L\d/.exec(ev);
+    if (!head) return 'it cites no <file>:L<n>';
+    const rest = ev.slice(head[1].length + 1);
+    const ref = /(?:([\w./-]+\.\w+):)?L(\d+)(?:-L(\d+))?/g;
+    const cited = [], texts = [];
+    let file = head[1], m;
+    while ((m = ref.exec(rest))) {
+      if (m[1]) file = m[1];
+      const hits = paths.filter(p => p === file || p.endsWith(`/${file}`));
+      if (hits.length !== 1) return `${hits.length ? 'more than one' : 'no'} source file is ${file}`;
+      const lines = files[hits[0]].split('\n'), a = +m[2], b = +(m[3] || m[2]);
+      if (a < 1 || b < a || b > lines.length) return `L${a}-L${b} is not in ${file} (${lines.length} lines)`;
+      cited.push(norm(lines.slice(a - 1, b).join('\n')));
+      texts.push(norm(files[hits[0]]));
+    }
+    const words = (rest.replace(ref, ' ').match(/[\w$][\w$-]*[\w$]/g) || [])
+      .filter((w, i, all) => w.length > 2 && all.indexOf(w) === i && !PROSE.has(w.toLowerCase()));
+    const named = words.filter(w => texts.some(t => t.includes(w)));
+    if (named.length && !named.some(w => cited.some(t => t.includes(w)))) return `the cited lines show none of ${named.join(', ')}`;
+  };
+  const out = [];
+  for (const key of Object.keys(contract.drafted || {})) {
+    const e = contract.drafted[key];
+    if (e.by === 'agent') for (const ev of e.evidence) { const p = problem(ev); if (p) out.push(`${key}: "${ev}": ${p}`); }
+  }
+  return out;
+}
+
 function checkDrafted(c, err) {
   if (c.drafted === undefined) return;
   if (!isObj(c.drafted)) return err(9, 'drafted', '`drafted` must be an object keyed by value path');
