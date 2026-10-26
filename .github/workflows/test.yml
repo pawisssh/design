@@ -53,10 +53,9 @@ jobs:
           NODE_OPTIONS: >-
             --test-reporter=tap --test-reporter-destination=stdout
             --test-reporter=${{ github.workspace }}/.github/slowest-files.mjs --test-reporter-destination=stdout
-      # npm run check, the same command a session runs before opening a pull request. A block of 8+ lines the pull
-      # request adds under skills/ that the repo already has fails the run (duplicates.mjs), and so does an export it
-      # adds under skills/*/scripts/ that no other file imports (exports.mjs), so a module's interface stays what its
-      # callers and tests use. Both run, and it runs even when a test fails, so everything is reported.
+      # npm run check, the command a session runs before opening a pull request: duplicates.mjs (a copied block of 8+
+      # lines under skills/) and exports.mjs (an export nothing imports). The step runs even when a test fails, so
+      # both are reported.
       - if: github.event_name == 'pull_request' && !cancelled()
         env:
           BASE: origin/${{ github.base_ref }}
