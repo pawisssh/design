@@ -33,6 +33,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
   const ALIGN = { start: 'MIN', center: 'CENTER', end: 'MAX', 'space-between': 'SPACE_BETWEEN' };
   const NUM = { paddingTop: 'paddingTop', paddingRight: 'paddingRight', paddingBottom: 'paddingBottom', paddingLeft: 'paddingLeft', gap: 'itemSpacing',
     minWidth: 'minWidth', maxWidth: 'maxWidth', minHeight: 'minHeight', maxHeight: 'maxHeight', strokeWeight: 'strokeWeight', opacity: 'opacity' };
+  const SIDES = ['Top', 'Bottom', 'Left', 'Right'].map(s => `stroke${s}Weight`);
   const RADII = ['topLeftRadius', 'topRightRadius', 'bottomLeftRadius', 'bottomRightRadius'];
   const EFFECT = { color: 'color', spread: 'spread', blur: 'radius', x: 'offsetX', y: 'offsetY' };
   const ORDER = ['direction', 'alignMain', 'alignCross', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'gap', 'minWidth', 'maxWidth',
@@ -59,7 +60,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
   function keyOf(o, v) { return Object.keys(o).find(k => o[k] === v); }
   function isTok(v) { return !!v && typeof v === 'object' && 'token' in v; }
   function hex(c) { return '#' + [c.r, c.g, c.b].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join(''); }
-  function val(n, prop) { const b = n.boundVariables && n.boundVariables[prop]; return b ? { var: b.id } : { raw: n[prop] == null ? null : n[prop] }; }
+  function val(n, prop, raw = prop) { const b = n.boundVariables && n.boundVariables[prop]; return b ? { var: b.id } : { raw: n[raw] == null ? null : n[raw] }; }
   function effVal(e, f, raw) { return e.boundVariables && e.boundVariables[f] ? { var: e.boundVariables[f].id } : { raw }; }
   function paintOf(list) {
     if (list === figma.mixed) return 'mixed';
@@ -95,6 +96,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     }
     if (f === 'alignMain') return keyOf(ALIGN, n.primaryAxisAlignItems);
     if (f === 'alignCross') return keyOf(ALIGN, n.counterAxisAlignItems);
+    if (f === 'strokeWeight') return val(n, SIDES[0], f);
     if (NUM[f]) return val(n, NUM[f]);
     if (f === 'radius') return val(n, 'topLeftRadius');
     if (f === 'strokeAlign') return String(n.strokeAlign).toLowerCase();
@@ -163,7 +165,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
   }
   function num(n, prop, want) {
     if (isTok(want)) { n.setBoundVariable(prop, V[want.token]); return; }
-    if (n.boundVariables && n.boundVariables[prop]) n.setBoundVariable(prop, null);
+    for (const p of prop === 'strokeWeight' ? SIDES : [prop]) if (n.boundVariables && n.boundVariables[p]) n.setBoundVariable(p, null);
     if (prop === 'width' || prop === 'height') n.resize(prop === 'width' ? want.raw : n.width, prop === 'height' ? want.raw : n.height);
     else n[prop] = want.raw;
   }
@@ -257,7 +259,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
         // a variable bound to a field the Contract does not set for this node is reported too
         if (sec === 'layout') {
           for (const p of Object.keys(n.boundVariables || {})) {
-            const f = keyOf(NUM, p) || (RADII.indexOf(p) !== -1 ? 'radius' : p === 'width' || p === 'height' ? p : null);
+            const f = keyOf(NUM, p) || (SIDES.indexOf(p) !== -1 ? 'strokeWeight' : RADII.indexOf(p) !== -1 ? 'radius' : p === 'width' || p === 'height' ? p : null);
             if (f && !(f in o) && !(f in (spec.paint[name] || {}))) o[f] = readField(n, f);
           }
         }

@@ -17,7 +17,9 @@ const LAYOUT_DEFAULTS = {
 };
 const PAINT_LISTS = { strokes: 1, effects: 1, dashPattern: 1 };
 const BINDABLE = new Set(['width', 'height', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'itemSpacing', 'minWidth', 'maxWidth',
-  'minHeight', 'maxHeight', 'topLeftRadius', 'topRightRadius', 'bottomLeftRadius', 'bottomRightRadius', 'strokeWeight', 'opacity']);
+  'minHeight', 'maxHeight', 'topLeftRadius', 'topRightRadius', 'bottomLeftRadius', 'bottomRightRadius', 'strokeWeight', 'strokeTopWeight', 'strokeBottomWeight', 'strokeLeftWeight', 'strokeRightWeight', 'opacity']);
+// Probed live in #419: binding strokeWeight stores the four per-side keys, never `strokeWeight` itself.
+const STROKE_SIDES = ['strokeTopWeight', 'strokeBottomWeight', 'strokeLeftWeight', 'strokeRightWeight'];
 const clone = x => JSON.parse(JSON.stringify(x));
 
 export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) {
@@ -234,8 +236,8 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
       if (!BINDABLE.has(field)) throw new Error(`mock: field ${field} is not bindable`);
       if (variable.resolvedType !== 'FLOAT') throw new Error(`mock: ${field} needs a FLOAT variable`);
       const value = resolved(variable);
-      if (field === 'width' || field === 'height') this[field] = value; else this._p[field] = value;
-      this._bound[field] = { type: 'VARIABLE_ALIAS', id: variable.id };
+      if (field === 'width' || field === 'height') this[field] = value; else this._p[STROKE_SIDES.includes(field) ? 'strokeWeight' : field] = value;
+      for (const k of field === 'strokeWeight' ? STROKE_SIDES : [field]) this._bound[k] = { type: 'VARIABLE_ALIAS', id: variable.id };
     }
     // Inside an instance, a hidden node is skipped while figma.skipInvisibleInstanceChildren is true (the default).
     _kids() { return this.children.filter(c => !(figma.skipInvisibleInstanceChildren && c._inInstance() && !c.visible)); }
@@ -306,6 +308,7 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
         }
         w(`node.${k}`, this.id, v);
         delete this._bound[k];
+        if (k === 'strokeWeight') for (const side of STROKE_SIDES) delete this._bound[side];
         this._p[k] = typeof v === 'number' ? f32(v) : k in PAINT_LISTS ? clone(v) : v;
       },
     });
