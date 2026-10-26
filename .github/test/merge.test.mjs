@@ -2,7 +2,7 @@
 // moved main makes it run on the merge tree, and the test files and pinned tools it reads from package.json and test.yml.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { areas, isTestFile, mergeTreeTests, PINNED, runVerdict, testVerdict } from '../../scripts/merge.mjs';
+import { areas, isTestFile, mergeTreeTests, runVerdict, testVerdict } from '../../scripts/merge.mjs';
 
 const run = (status, conclusion, started_at, name = 'test') => ({ name, status, conclusion, started_at, check_suite: { id: 7 } });
 
@@ -63,8 +63,4 @@ test('a run passes only with exit 0 and nothing skipped', () => {
 test('the test files are npm test\'s globs: a skill\'s test or tests folder and .github/test, not a fixture under them', () => {
   for (const f of ['skills/to-handoff/test/a.test.mjs', 'skills/to-design/tests/a.test.mjs', '.github/test/a.test.mjs']) assert.ok(isTestFile(f), f);
   for (const f of ['skills/to-handoff/test/fixtures/a.test.mjs', 'skills/to-handoff/test/helpers.mjs', 'scripts/a.test.mjs']) assert.ok(!isTestFile(f), f);
-});
-
-test('the pinned tools are the .scratch folders CI keeps', () => {
-  assert.deepEqual(PINNED, ['adapter-carbon', 'adapter-cds', 'adapter-generic', 'to-handoff']);
 });

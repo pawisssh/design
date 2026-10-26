@@ -22,8 +22,9 @@ jobs:
     runs-on: [self-hosted, macOS, ARM64, design]
     timeout-minutes: 45
     steps:
-      # clean: false, then a clean that keeps only the pinned tools the sources.mjs and deps.mjs steps verify and
-      # extract: any other untracked file goes, a test file from another branch or a test's output left in .scratch.
+      # clean: false, then a clean that keeps only the .scratch/<skill> folders scripts/fetch.mjs verifies and extracts
+      # into (fetch.test.mjs checks the list): any other untracked file goes, a test file from another branch or a test's
+      # output left in .scratch.
       # fetch-depth: 0 gives duplicates.mjs the pull request's base to diff against; on this runner's kept clone, a
       # later fetch only adds what is new.
       - uses: actions/checkout@v4
@@ -36,16 +37,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # Without the pinned Carbon sources and preview packages, the adapter-carbon tests that need them skip.
-      - run: node skills/adapter-carbon/scripts/sources.mjs
-      # Without the pinned Tailwind, TypeScript, shadcn stylesheets and preview packages, the adapter-generic
-      # tests that need them skip.
-      - run: node skills/adapter-generic/scripts/sources.mjs
-      # Without the pinned CDS Web commit files and npm members, the adapter-cds tests that read them skip.
-      - run: node skills/adapter-cds/scripts/sources.mjs
-      # Without its packages, the to-handoff tests skip; the runtime tests, and adapter-generic's catalog
-      # measurements, use the Mac's Chrome.
-      - run: node skills/to-handoff/scripts/deps.mjs
+      # Every skill's pinned sources, tools and packages (each skills/*/scripts/sources.mjs and deps.mjs): without them,
+      # the tests that need them skip. The to-handoff runtime tests, and adapter-generic's catalog measurements, use the
+      # Mac's Chrome.
+      - run: node scripts/fetch.mjs
       # npm test runs at its default --test-concurrency=4. TAP goes to the log, and slowest-files.mjs adds the
       # slowest files to the end of the log and to the job summary.
       - run: npm test
