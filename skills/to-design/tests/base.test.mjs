@@ -5,23 +5,20 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { contentHash } from '../../contract/scripts/contract.mjs';
 import { applyEdits, approveReviewed, diff, discardNote, review } from '../scripts/base-loop.mjs';
 import { normalizeReadback } from '../scripts/readback.mjs';
 import { basePlan, foundationsPlan, iconsPlan } from '../scripts/build-plan.mjs';
 import { recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
+import { CORE, COMPONENTS_CORE, ROOT } from './chain.mjs';
 import { pack } from './pack.mjs';
 
-const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const BUTTON = JSON.parse(readFileSync(join(ROOT, 'design-systems/carbon/contracts/button.component.json'), 'utf8'));
 const DOC_TEXT = readFileSync(join(ROOT, 'design-systems/carbon/carbon.foundations.json'), 'utf8');
 const DOC = JSON.parse(DOC_TEXT);
 const ICONS_DIR = join(ROOT, 'skills/to-design/tests/fixtures/carbon-icons@11.90.0');
 // Foundations and icons run on the foundations core; the base slice on the components core.
-const CORE = join(ROOT, 'skills/to-design/assets/builder-core.js');
-const COMPONENTS_CORE = join(ROOT, 'skills/to-design/assets/builder-core-components.js');
 const FILE_KEY = 'MOCKFILEKEY';
 const AT = '2026-10-16T00:00:00.000Z';
 const SIMULATED = 'owner (simulated in a test)';

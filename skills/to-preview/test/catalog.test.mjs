@@ -105,3 +105,12 @@ test('form controls get a catalog whose Hover and Focus are forced through their
   assert.equal(Object.keys(textInput.specimens).length, 36);
   assert.equal(Object.keys(select.specimens).length, 52);
 });
+
+// The chrome should be the template's own, with a Code Library's custom properties (Carbon's --cds-*) styling only its
+// specimens. Known failure (#392): this asserts the Carbon names are still there, so it fails once the fix lands; then
+// assert the list is empty.
+test('the template chrome reads Carbon custom properties (known: #392)', () => {
+  const css = readFileSync(new URL('../assets/catalog-template.html', import.meta.url), 'utf8').match(/<style>([\s\S]*?)<\/style>/)[1];
+  const foreign = new Set([...css.matchAll(/var\(\s*(--[\w-]+)/g)].map(m => m[1]).filter(n => !n.startsWith('--tp-')));
+  assert.notDeepEqual([...foreign], [], '#392 no longer fails here: assert the list is empty');
+});

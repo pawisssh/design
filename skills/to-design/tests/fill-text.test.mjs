@@ -4,21 +4,16 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { diff } from '../scripts/base-loop.mjs';
 import { normalizeReadback } from '../scripts/readback.mjs';
-import { basePlan, foundationsPlan, iconsPlan } from '../scripts/build-plan.mjs';
-import { recordResult } from '../scripts/ledger.mjs';
-import { mockFigma, runPackage } from './mock-figma.mjs';
-import { pack } from './pack.mjs';
+import { basePlan, iconsPlan } from '../scripts/build-plan.mjs';
+import { CORE, COMPONENTS_CORE, ROOT, chain } from './chain.mjs';
+import { mockFigma } from './mock-figma.mjs';
 
-const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const FIXTURES = join(ROOT, 'skills/contract/test/fixtures/form-controls');
 const DOC_TEXT = readFileSync(join(FIXTURES, 'carbon.foundations.json'), 'utf8');
 const DOC = JSON.parse(DOC_TEXT);
 const ICONS_DIR = join(ROOT, 'skills/to-design/tests/fixtures/carbon-icons@11.90.0');
-const CORE = join(ROOT, 'skills/to-design/assets/builder-core.js');
-const COMPONENTS_CORE = join(ROOT, 'skills/to-design/assets/builder-core-components.js');
 const FILE_KEY = 'MOCKFILEKEY';
 const AT = '2026-10-20T00:00:00.000Z';
 
@@ -30,22 +25,12 @@ const FILL_TEXTS = ['Value', 'Helper', 'Invalid text', 'Warn text'];
 
 async function setup() {
   const mock = mockFigma({ fileKey: FILE_KEY, pages: ['Page 1'] });
-  let ledger = null;
-  const call = async ({ plan, state }, core) => {
-    const result = await runPackage(pack(plan, state, core).code, mock.figma);
-    assert.ok(!result.error, JSON.stringify(result.error));
-    assert.equal(result.summary.conflicts, 0, JSON.stringify(result.conflicts));
-    if (result.ledger) ledger = recordResult(ledger, result);
-    return result;
-  };
-  const first = foundationsPlan(DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT });
-  await call(first, CORE);
-  for (let chunk = 2; chunk <= (first.plan.chunk ? first.plan.chunk.of : 1); chunk++)
-    await call(foundationsPlan(DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, chunk }), CORE);
-  await call(iconsPlan([TEXT_INPUT], ICONS_DIR, ledger, { fileKey: FILE_KEY, at: AT }), CORE);
+  const { call, foundations, ledger } = chain(mock.figma);
+  await foundations(DOC_TEXT, { fileKey: FILE_KEY, at: AT });
+  await call(iconsPlan([TEXT_INPUT], ICONS_DIR, ledger(), { fileKey: FILE_KEY, at: AT }), CORE);
   const base = async (options = {}) => {
-    const result = await call(basePlan(TEXT_INPUT, DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, ...options }), COMPONENTS_CORE);
-    return { result, readback: normalizeReadback(result.readback, ledger) };
+    const result = await call(basePlan(TEXT_INPUT, DOC_TEXT, ledger(), { fileKey: FILE_KEY, at: AT, ...options }), COMPONENTS_CORE);
+    return { result, readback: normalizeReadback(result.readback, ledger()) };
   };
   return { mock, base };
 }
