@@ -1,0 +1,6 @@
+{
+  "recognise:button.cancel.cds-Button": { "contract": "button", "tuple": { "variant": "secondary", "size": "l", "fill": "solid", "loading": "off" }, "via": "element" },
+  "recognise:button.cds-Button.send": { "contract": "button", "tuple": { "variant": "primary", "size": "l", "fill": "solid", "loading": "off" }, "via": "element" },
+  "feature": { "owner": "fixture", "goal": "Send USDC to another wallet.", "scope": ["the send screen"], "nonGoals": ["choosing the asset"] },
+  "acceptance": [{ "id": "opens", "screen": "send-crypto", "state": "default", "given": "the send screen", "when": "it opens", "then": "it shows Cancel and Send" }]
+}

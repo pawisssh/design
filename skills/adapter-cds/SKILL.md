@@ -1,6 +1,6 @@
 ---
 name: adapter-cds
-description: CDS Web Adapter, from the Coinbase Design System's web library (`@coinbase/cds-web`) at a pinned commit to its pinned sources, draft Contracts and Foundations document. Use when fetching the CDS sources, writing or checking a CDS Contract and its Drafted-value fingerprints, snapshotting a CDS Contract's source files, regenerating the CDS Foundations document, rendering CDS specimens for To-preview, or moving the CDS pin.
+description: CDS Web Adapter, from the Coinbase Design System's web library (`@coinbase/cds-web`) at a pinned commit to its pinned sources, draft Contracts and Foundations document. Use when fetching the CDS sources, writing or checking a CDS Contract and its Drafted-value fingerprints, snapshotting a CDS Contract's source files, regenerating the CDS Foundations document, rendering CDS specimens for To-preview, taking a CDS Prototype through To-handoff, or moving the CDS pin.
 ---
 
 # CDS Adapter
@@ -91,7 +91,7 @@ node skills/to-preview/scripts/catalog.mjs design-systems/cds/contracts/<family>
 
 `check.mjs` prints the variant count, Base Component and token closure, then `OK`; Button has 480 variants. `--table` prints the resolved paint per grid row. Compare it with CDS's own render: open the catalog page, which forces each State, and read each specimen's computed background, colour, opacity, outline, padding and radius in both schemes.
 
-**Mid-run, for To-handoff.** When a Prototype uses a family CDS ships but the Design System has no Contract for, To-handoff asks decision `contract:<family>`. Write the whole family by steps 1–13 to a file outside `contracts/`, at `status: "draft"` with `approval: null`. Run `check.mjs` and the fingerprint `--check` on it, then answer `{path}`. Answer `{unwritable: "<reason>"}` when a source can't be read or the family can't be written. Checking the draft against the Contract rules and the CDS pin, and copying a passing one into `contracts/`, is To-handoff's side ([#388](https://github.com/pawisssh/design/issues/388)). Approve the draft later through To-design's base loop. `foundations.mjs` knows only Button's token map (`COMPONENTS`): once a draft for another family is in `contracts/`, every regeneration fails with "no CDS component token map for family …" until that family's map is added ([#396](https://github.com/pawisssh/design/issues/396)). Until then, `closure` and `usedBy` miss the family.
+**Mid-run, for To-handoff.** When a Prototype uses a family CDS ships but the Design System has no Contract for, To-handoff asks decision `contract:<family>`. Write the whole family by steps 1–13 to a file outside `contracts/`, at `status: "draft"` with `approval: null`. Run `check.mjs` and the fingerprint `--check` on it, then answer `{path}`. Answer `{unwritable: "<reason>"}` when a source can't be read or the family can't be written. To-handoff runs `checkContract` from [`scripts/handoff-adapter.mjs`](scripts/handoff-adapter.mjs) (the `check.mjs` rules plus the CDS pin) and copies a passing draft into `contracts/` byte for byte, never over an existing Contract. A failing one leaves the usage raw with a question. Approve the draft later through To-design's base loop. `foundations.mjs` knows only Button's token map (`COMPONENTS`): once a draft for another family is in `contracts/`, every regeneration fails with "no CDS component token map for family …" until that family's map is added ([#396](https://github.com/pawisssh/design/issues/396)). Until then, `closure` and `usedBy` miss the family.
 
 ## 4. Foundations step
 
@@ -142,6 +142,22 @@ Tests: `node --test skills/adapter-cds/test/*.test.mjs`. The Foundations tests s
 - It refuses to render when a package the Contract's `source.packages` pins is not installed at that version. It also refuses a Contract with `code.required`, whose placeholders only the Carbon renderer writes.
 - The props come from the shared `codeProps` and `contentProps` in [`contract.mjs`](../contract/SKILL.md#contract-module), as in the Carbon renderer.
 - Tests: `node --test skills/adapter-cds/test/preview.test.mjs`, on the committed Button Contract and Foundations document. They skip, saying so, until the packages are fetched.
+
+## Handoff Adapter
+
+[`scripts/handoff-adapter.mjs`](scripts/handoff-adapter.mjs) is the module [To-handoff](../to-handoff/SKILL.md) finds by convention from the Foundations document's `source.adapter`. It exports:
+
+- `roleGroups`: background, text, border and outline colour match the Theme collection's semantic colour groups (`Accent`, `Background`, `Elevation`, `Foreground`, `Line`, `Transparent`); each variable's scopes narrow them further. Gap, padding and margin match `Spacing`, and border-radius `Border radius`. Component and Synthesized tokens (`Button/…`) never match a region.
+- `surfaces`: `{page: "bg", layer: "bgAlternate"}`, for a Prototype with no theme wrapper.
+- `themeWrapper`: `<ThemeProvider activeColorScheme>`, with `light` → the Light Mode and `dark` → Dark.
+- `breakpoints`: `phone` 767, `tablet` 768, `desktop` 1280, from the media queries of cds-web 9.29.0's `esm/styles/responsive/` CSS. Tablet and desktop are their query's `min-width`. Phone's query has only `max-width: 767px`, so phone is 767, the widest page CDS lays out as a phone.
+- `contractProcedure`: section 3 against the pinned source, then `check.mjs` and the fingerprint `--check`.
+- `checkContract(contract, foundations)`: the shared Contract rules, the Design System's commit, and every package `CDS.packages` pins, `@coinbase/cds-icons` included. It returns problem strings; none means it passes.
+- `available()` and `renderer(contract)`: the [preview renderer](#preview-renderer), so the Rendering shows the real CDS components.
+
+To-handoff recognises a Contract usage by import only when the import's module is exactly the Contract's `code.package`. CDS's Button is imported from the `@coinbase/cds-web/buttons` subpath, so a React Prototype's CDS Buttons aren't recognised yet ([#400](https://github.com/pawisssh/design/issues/400)). A single-HTML Prototype's `cds-Button` elements are recognised by decision, `via: "element"`.
+
+Tests: `node --test skills/adapter-cds/test/handoff-adapter.test.mjs`. The last one takes [`test/fixtures/send-crypto`](test/fixtures/send-crypto) through To-handoff with its `decisions.json`, in a temp copy of the Design System, to a validated Handoff and a Rendering with the real CDS Button. It skips until the CDS sources and To-handoff's packages (`node skills/to-handoff/scripts/deps.mjs`) are fetched.
 
 ## Moving the pin
 

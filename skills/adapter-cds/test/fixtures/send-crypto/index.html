@@ -1,0 +1,32 @@
+<!doctype html>
+<!-- CDS handoff Adapter fixture (#388): a hand-written stand-in for a small single-HTML Prototype built on CDS Web
+     ("Send crypto"). Its colours are CDS's own custom properties and its Buttons carry CDS's stable cds-Button class.
+     Edits move every `at`. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Send crypto</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--color-bg); color: var(--color-fg); }
+  main { max-width: 480px; margin: 0 auto; padding: 32px 16px; }
+  h1 { font-size: 28px; line-height: 36px; font-weight: 400; margin: 0 0 8px; }
+  .lead { color: var(--color-fgMuted); font-size: 16px; line-height: 24px; margin: 0 0 16px; }
+  .card { background: var(--color-bgAlternate); border-radius: 16px; padding: 16px; }
+  .actions { display: flex; gap: 16px; justify-content: flex-end; margin-top: 16px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Send crypto</h1>
+  <p class="lead">Send USDC to another wallet.</p>
+  <section class="card">
+    <div class="actions">
+      <button class="cds-Button cancel" data-variant="secondary" type="button">Cancel</button>
+      <button class="cds-Button send" data-variant="primary" type="submit">Send</button>
+    </div>
+  </section>
+</main>
+</body>
+</html>
