@@ -164,7 +164,7 @@ A token whose *mode value* is raw in Figma (the alpha entries, `button-danger-ho
            "default": "add", "preferred": ["add", "arrow--right", "…"] }
 ```
 
-- Keys are `@carbon/icons` file names. The kit-style Figma name is derived by rule: capitalise the first letter and keep `--` (`arrow--right` → `Arrow--right`).
+- Keys are the icon package's file names (`ICON_KEY`, rule 7): Carbon's kebab-case `arrow--right`, CDS's camelCase `forwardArrow`. The kit-style Figma name is derived by rule: capitalise the first letter and keep the rest (`arrow--right` → `Arrow--right`, `forwardArrow` → `ForwardArrow`).
 - `default` must be in `preferred`. A family whose icons are all fixed `icon:<key>` instances, such as TextInput, still declares `default` and `preferred` (rule 7). The builder builds exactly the union of every Contract's icon list (see [Derived](#derived-not-stored)) as icon atoms (#13); `default` and `preferred` become the INSTANCE_SWAP `preferredValues`.
 - An icon is one flattened Vector with one fill. A two-tone icon whose second colour comes from CSS (Carbon's `warning--alt--filled`, inner mark `$black-100`) loses that colour; the Contract says so in a `verify` note. Shapes that paint nothing (`fill="none"`, `opacity="0"`) are dropped before flattening.
 - The icon fill per Kind × State comes from the `paint` rules on `Glyph/Vector`.
@@ -261,7 +261,7 @@ A Component Proposal records a Component Family the Code Library does not ship (
   - rule 2's defaults (there is no selection);
   - rule 3;
   - rule 6, plus theme tokens only;
-  - rule 7, where `family:<key>` must be declared and name a Contract or a Proposal.
+  - rule 7, including the icon key check, where `family:<key>` must be declared and name a Contract or a Proposal.
 - **Not applied:** rule 4, rule 5 (a description-only input could never meet it) and rule 8's `snapshotId` part.
 - **Added:**
   - `"schema"`: required, optional and forbidden blocks;

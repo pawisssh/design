@@ -31,7 +31,8 @@ export function mainCheckoutOf(dir) {
 
 /**
  * The ledger path for a CLI given no `--ledger`. From a linked worktree it is the main checkout's, which every
- * other session reads: the worktree's own `.scratch` would fork the ledger. It says so on stderr.
+ * other session reads: the worktree's own `.scratch` would fork the ledger. It says so on stderr (it used to refuse
+ * and print the `--ledger` to pass, which cost every worktree run a call, #389).
  */
 export function defaultLedgerPath(fileKey, root = process.env.CLAUDE_PROJECT_DIR || process.cwd(), designSystem = null) {
   const main = mainCheckoutOf(root);

@@ -502,18 +502,19 @@ function checkTokens(c, foundations, err, extra) {
 // Rule 7. `familyKnown(key)` says whether a `family:<key>` instance target is declared.
 function checkInstances(c, err, familyKnown) {
   const anatomy = anatomyIndex(c);
-  const declared = c.icons;
+  const iconsBlock = c.icons;
   for (const n of Object.values(anatomy)) {
     const to = n.instanceOf;
     if (!to) continue;
     const [kind, name] = [to.slice(0, to.indexOf(':')), to.slice(to.indexOf(':') + 1)];
-    const ok = kind === 'icon' ? !!(declared && declared.default)
+    const ok = kind === 'icon' ? !!(iconsBlock && iconsBlock.default)
       : kind === 'family' ? familyKnown(name)
       : kind === 'sub' ? (c.subComponents || []).some(s => s.name === name) : false;
     if (!ok) err(7, `anatomy.${n.name}.instanceOf`, `instance target "${to}" is not declared`);
   }
-  if (declared && Array.isArray(declared.preferred) && !declared.preferred.includes(declared.default))
-    err(7, 'icons.default', `default icon "${declared.default}" is not in icons.preferred`);
+  if (iconsBlock && Array.isArray(iconsBlock.preferred) && !iconsBlock.preferred.includes(iconsBlock.default))
+    err(7, 'icons.default', `default icon "${iconsBlock.default}" is not in icons.preferred`);
+  // the icons slice reads each key as a file name, so check.mjs refuses what it would refuse (#403)
   for (const key of icons(c)) if (!ICON_KEY.test(key)) err(7, 'icons', `icon key "${key}" is not an icon file name`);
 }
 
