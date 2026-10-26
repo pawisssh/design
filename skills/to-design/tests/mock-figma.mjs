@@ -232,7 +232,7 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
     // Binds a FLOAT variable to a node field (or unbinds it with null); the field takes the variable's value.
     setBoundVariable(field, variable) {
       w('node.setBoundVariable', this.id, field, variable && variable.id);
-      if (!variable) { delete this._bound[field]; return; }
+      if (!variable) { for (const k of field === 'strokeWeight' ? STROKE_SIDES : [field]) delete this._bound[k]; return; }
       if (!BINDABLE.has(field)) throw new Error(`mock: field ${field} is not bindable`);
       if (variable.resolvedType !== 'FLOAT') throw new Error(`mock: ${field} needs a FLOAT variable`);
       const value = resolved(variable);

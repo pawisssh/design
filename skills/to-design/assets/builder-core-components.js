@@ -33,6 +33,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
   const ALIGN = { start: 'MIN', center: 'CENTER', end: 'MAX', 'space-between': 'SPACE_BETWEEN' };
   const NUM = { paddingTop: 'paddingTop', paddingRight: 'paddingRight', paddingBottom: 'paddingBottom', paddingLeft: 'paddingLeft', gap: 'itemSpacing',
     minWidth: 'minWidth', maxWidth: 'maxWidth', minHeight: 'minHeight', maxHeight: 'maxHeight', strokeWeight: 'strokeWeight', opacity: 'opacity' };
+  // Figma stores a token-bound strokeWeight as four per-side keys, never boundVariables.strokeWeight; read the top one, unbind all (#419)
   const SIDES = ['Top', 'Bottom', 'Left', 'Right'].map(s => `stroke${s}Weight`);
   const RADII = ['topLeftRadius', 'topRightRadius', 'bottomLeftRadius', 'bottomRightRadius'];
   const EFFECT = { color: 'color', spread: 'spread', blur: 'radius', x: 'offsetX', y: 'offsetY' };
