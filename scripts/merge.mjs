@@ -9,7 +9,6 @@
 //     --dry-run      every check, the merge-tree tests included, and no merge
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -89,10 +88,14 @@ function mergeTree(pr) {
 export const PINNED = [...repoFile('.github/workflows/test.yml').matchAll(/! -name (\S+)/g)].map(m => m[1]);
 
 // Runs `files` in a scratch worktree of the merge tree, with this checkout's pinned tools cloned in (macOS cp(1): `-c`
-// copies with clonefile(2), so 1.5 GB on APFS costs nothing); a failure or a skip refuses the merge.
+// copies with clonefile(2), so 1.5 GB on APFS costs nothing); a failure or a skip refuses the merge. The worktree sits
+// in the main working tree's .scratch, not $TMPDIR: To-design's packager writes packages only inside the main working
+// tree, so a worktree outside it skips Vibe-to-Figma's packaging test (#416).
 function runOnTree(pr, tree, files) {
   const commit = git('commit-tree', tree, '-p', `origin/${pr.baseRefName}`, '-m', `#${pr.number}'s merge tree`);
-  const dir = mkdtempSync(join(tmpdir(), `merge-${pr.number}-`));
+  const parent = join(resolve(git('rev-parse', '--path-format=absolute', '--git-common-dir'), '..'), '.scratch');
+  mkdirSync(parent, { recursive: true });
+  const dir = mkdtempSync(join(parent, `merge-${pr.number}-`));
   try {
     git('worktree', 'add', '--quiet', '--detach', dir, commit);
     const root = git('rev-parse', '--show-toplevel');

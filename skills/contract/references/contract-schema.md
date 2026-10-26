@@ -164,7 +164,7 @@ A token whose *mode value* is raw in Figma (the alpha entries, `button-danger-ho
            "default": "add", "preferred": ["add", "arrow--right", "…"] }
 ```
 
-- Keys are `@carbon/icons` file names. The kit-style Figma name is derived by rule: capitalise the first letter and keep `--` (`arrow--right` → `Arrow--right`).
+- Keys are the icon package's file names (`ICON_KEY`, rule 7): Carbon's kebab-case `arrow--right`, CDS's camelCase `forwardArrow`. The kit-style Figma name is derived by rule: capitalise the first letter and keep the rest (`arrow--right` → `Arrow--right`, `forwardArrow` → `ForwardArrow`).
 - `default` must be in `preferred`. A family whose icons are all fixed `icon:<key>` instances, such as TextInput, still declares `default` and `preferred` (rule 7). The builder builds exactly the union of every Contract's icon list (see [Derived](#derived-not-stored)) as icon atoms (#13); `default` and `preferred` become the INSTANCE_SWAP `preferredValues`.
 - An icon is one flattened Vector with one fill. A two-tone icon whose second colour comes from CSS (Carbon's `warning--alt--filled`, inner mark `$black-100`) loses that colour; the Contract says so in a `verify` note. Shapes that paint nothing (`fill="none"`, `opacity="0"`) are dropped before flattening.
 - The icon fill per Kind × State comes from the `paint` rules on `Glyph/Vector`.
@@ -233,7 +233,7 @@ A TEXT property whose node a variant hides (`visible: false`) is not emitted for
 4. The expansion equals `selection.expectedCount`.
 5. Every selected variant resolves every required field for every anatomy node, every `sameAs` resolves, and every variant gets exactly one bind per property. Required fields are, per anatomy node type: COMPONENT `direction`, `padding*`, `gap`, `fill`, `stroke`; TEXT `textStyle`, `fill`; FRAME `width`, `height`. On top of these, a field that any rule sets for a node is required for that node in every selected variant, so the builder never falls back to a Figma default (for Button this makes every field of the first layout and paint rules required everywhere, plus `minHeight` on every size). No property binds a `visible` that a rule sets (#93). For a Slot axis, the slot node's `visible` equals the tuple's value `filled` (#121).
 6. Every `raw` value has `level` (`info` or `warning`) and `reason`. Every token a selected variant uses exists in the foundations document (`textStyle` in `textStyles`, every other field in `variables`) and is used inside that variable's `scopes`. The scope a field needs: `padding*` and `gap` → `GAP` (Figma has no padding scope, #27); `width`, `height`, `min*`, `max*` → `WIDTH_HEIGHT`; `radius` → `CORNER_RADIUS`; `strokeWeight` → `STROKE_FLOAT`; `stroke` → `STROKE_COLOR`; effect `color` → `EFFECT_COLOR`; `fill` → `TEXT_FILL` on a TEXT node, `SHAPE_FILL` on an `<instance>/<layer>` path, `FRAME_FILL` otherwise (`ALL_FILLS` covers all three). Uses are checked after `sameAs`, so `Glyph/Vector` checks the label colour as `SHAPE_FILL`. `was` is skipped.
-7. Every `instanceOf` target is declared: `icon:*` needs `icons` (whose `default` is in `preferred`), `family:<key>` needs `dependencies.families`, `sub:<name>` needs `subComponents`. That each target is built first is enforced by the builder's build order, not by `validate`.
+7. Every `instanceOf` target is declared: `icon:*` needs `icons` (whose `default` is in `preferred`, and whose every key is a file name: `[A-Za-z0-9]` segments joined by `-` or `--`, `ICON_KEY`), `family:<key>` needs `dependencies.families`, `sub:<name>` needs `subComponents`. That each target is built first is enforced by the builder's build order, not by `validate`.
 8. `status` is `draft` with `approval: null`, or `approved` with an [approval](#approval) by the owner whose `snapshotId` and `contentHash` both match, and no `warning` note (an uncarried owner tweak) is open.
 9. Every [`drafted`](#drafted-values) key names a value in the Contract, and every entry is `{by: "agent", evidence, fingerprint}`, with at least one evidence string and a `sha256:<64 hex>` fingerprint, or `{by: "owner", was}`.
 
@@ -261,7 +261,7 @@ A Component Proposal records a Component Family the Code Library does not ship (
   - rule 2's defaults (there is no selection);
   - rule 3;
   - rule 6, plus theme tokens only;
-  - rule 7, where `family:<key>` must be declared and name a Contract or a Proposal.
+  - rule 7, including the icon key check, where `family:<key>` must be declared and name a Contract or a Proposal.
 - **Not applied:** rule 4, rule 5 (a description-only input could never meet it) and rule 8's `snapshotId` part.
 - **Added:**
   - `"schema"`: required, optional and forbidden blocks;

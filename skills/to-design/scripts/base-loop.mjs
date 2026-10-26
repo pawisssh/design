@@ -494,9 +494,7 @@ function main() {
   if (cmd === 'review') {
     if (!values['file-key']) throw new Error('review needs --file-key');
     // the file's built variables mark the picker's unbuilt tokens (#107); a review needs no ledger otherwise
-    let ledgerPath = values.ledger;
-    try { ledgerPath = ledgerPath || defaultLedgerPath(values['file-key']); } catch (e) { ledgerPath = null; console.error(`base-loop: unbuilt tokens not marked: ${e.message}`); }
-    const f = ledgerPath && (readLedger(ledgerPath) || {}).foundations;
+    const f = (readLedger(values.ledger || defaultLedgerPath(values['file-key'])) || {}).foundations;
     return print(formatReview(contract, readback, review(contract, readback, foundations, f ? { built: f.variables } : {}), { fileKey: values['file-key'], contractPath: a, readbackPath: b }));
   }
   if (cmd === 'approve') {
