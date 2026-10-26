@@ -11,7 +11,8 @@
 // any other a Linaria literal, whose class is `<name>-<hash>`. Compared, as the page computes them:
 //   fill          background-color, or color on a TEXT layer;
 //   opacity       opacity, 0 on a TEXT layer whose text is visibility: hidden (loading keeps the label's width);
-//   stroke        outline color and width when strokeAlign is outside (the focus ring), else border width and colour;
+//   stroke        outline color and width when strokeAlign is outside (the focus ring), else border width, and the
+//                 border colour when the Contract strokes;
 //   padding*, radius (border-top-left-radius), and a numeric width or height (the element's layout box).
 // Paint on a path inside a layer (`Start glyph/Vector`), effects and text styles are not compared.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';

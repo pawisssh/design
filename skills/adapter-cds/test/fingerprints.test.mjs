@@ -142,6 +142,12 @@ test('the CLI --write records the computed fingerprints and names each entry it 
   assert.equal(readFileSync(path, 'utf8'), text, 'the formatting is kept');
   const again = spawnSync(process.execPath, [SCRIPT, path, '--nodes', NODES, '--write'], { encoding: 'utf8' });
   assert.equal(again.stdout, `OK wrote 0 of ${n} fingerprints\n`);
+  const fresh = structuredClone(button);
+  delete fresh.drafted['icons.default'].fingerprint;
+  writeFileSync(path, JSON.stringify(fresh));
+  const first = spawnSync(process.execPath, [SCRIPT, path, '--nodes', NODES, '--write'], { encoding: 'utf8' });
+  assert.equal(first.stdout, `OK wrote 1 of ${n} fingerprints\n`, 'an entry with no fingerprint yet is recorded, not re-drafted');
+  assert.equal(JSON.parse(readFileSync(path, 'utf8')).drafted['icons.default'].fingerprint, button.drafted['icons.default'].fingerprint);
 });
 
 test('the CLI fails a draft whose evidence cites lines that do not show its claim (#387\'s L231)', { skip }, () => {

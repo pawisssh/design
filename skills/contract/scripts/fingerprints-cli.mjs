@@ -4,8 +4,9 @@
 // --check prints `OK <n> fingerprints`, or names on stderr each entry whose fingerprint moved and each citation
 // `draftedEvidence` refuses, and exits 1. An approved Contract's citations print as `note:` lines and pass: its
 // evidence changes at its next re-approval, never by a write that voids the approval.
-// --write records the computed fingerprints, writing the Contract as a draft only when one moved, and prints each
-// moved entry: those are the values to re-draft. Then it checks the citations as --check does.
+// --write records the computed fingerprints, writing the Contract as a draft only when one changed, and prints each
+// entry whose recorded fingerprint moved: those are the values to re-draft (an entry with none yet is only recorded).
+// Then it checks the citations as --check does.
 import { parseArgs } from 'node:util';
 import { asDraft, draftedEvidence } from './contract.mjs';
 import { readJson, writeJson } from './io.mjs';
@@ -24,21 +25,23 @@ export function fingerprintsCli({ fingerprints, readContractSources, normalise, 
     const files = readContractSources(contract, opt.dir);
     const fp = fingerprints({ contract, nodes: readJson(opt.nodes), files }).fingerprints;
     if (!opt.check && !opt.write) return console.log(JSON.stringify(fp, null, 2));
-    const moved = Object.keys(fp).filter(k => contract.drafted[k].fingerprint !== fp[k]);
+    const changed = Object.keys(fp).filter(k => contract.drafted[k].fingerprint !== fp[k]);
+    // Still approved after this run: its citations are notes, never a failure.
     let approved = contract.selection && contract.selection.status === 'approved';
     if (opt.write) {
-      if (moved.length) {
+      if (changed.length) {
         const next = structuredClone(contract);
-        for (const k of moved) next.drafted[k].fingerprint = fp[k];
+        for (const k of changed) next.drafted[k].fingerprint = fp[k];
         writeJson(path, asDraft(next));
         approved = false;
       }
-      moved.forEach(k => console.log(`${k}: ${contract.drafted[k].fingerprint} -> ${fp[k]}, re-draft it`));
-    } else moved.forEach(k => console.error(`${k}: recorded ${contract.drafted[k].fingerprint}, computed ${fp[k]}`));
+      changed.filter(k => contract.drafted[k].fingerprint !== undefined)
+        .forEach(k => console.log(`${k}: ${contract.drafted[k].fingerprint} -> ${fp[k]}, re-draft it`));
+    } else changed.forEach(k => console.error(`${k}: recorded ${contract.drafted[k].fingerprint}, computed ${fp[k]}`));
     const cites = draftedEvidence(contract, files, normalise);
     if (!approved) cites.forEach(c => console.error(c));
-    if ((opt.check && moved.length) || (!approved && cites.length)) process.exitCode = 1;
-    else console.log(opt.write ? `OK wrote ${moved.length} of ${Object.keys(fp).length} fingerprints` : `OK ${Object.keys(fp).length} fingerprints`);
+    if ((opt.check && changed.length) || (!approved && cites.length)) process.exitCode = 1;
+    else console.log(opt.write ? `OK wrote ${changed.length} of ${Object.keys(fp).length} fingerprints` : `OK ${Object.keys(fp).length} fingerprints`);
     if (approved) cites.forEach(c => console.log(`note: ${c}`));
   } catch (e) {
     console.error(`FAIL: ${e.message}`);

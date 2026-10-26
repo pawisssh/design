@@ -942,12 +942,12 @@ const PROSE = new Set(('the and with for its from each one not but has are was t
 export function draftedEvidence(contract, files, normalise) {
   const norm = normalise || (t => t);
   const paths = Object.keys(files);
-  const why = ev => {
+  const problem = ev => {
     const head = /^([^\s:]+):L\d/.exec(ev);
     if (!head) return 'it cites no <file>:L<n>';
     const rest = ev.slice(head[1].length + 1);
     const ref = /(?:([\w./-]+\.\w+):)?L(\d+)(?:-L(\d+))?/g;
-    const cited = [], whole = [];
+    const cited = [], texts = [];
     let file = head[1], m;
     while ((m = ref.exec(rest))) {
       if (m[1]) file = m[1];
@@ -956,17 +956,17 @@ export function draftedEvidence(contract, files, normalise) {
       const lines = files[hits[0]].split('\n'), a = +m[2], b = +(m[3] || m[2]);
       if (a < 1 || b < a || b > lines.length) return `L${a}-L${b} is not in ${file} (${lines.length} lines)`;
       cited.push(norm(lines.slice(a - 1, b).join('\n')));
-      whole.push(norm(files[hits[0]]));
+      texts.push(norm(files[hits[0]]));
     }
     const words = (rest.replace(ref, ' ').match(/[\w$][\w$-]*[\w$]/g) || [])
       .filter((w, i, all) => w.length > 2 && all.indexOf(w) === i && !PROSE.has(w.toLowerCase()));
-    const named = words.filter(w => whole.some(t => t.includes(w)));
+    const named = words.filter(w => texts.some(t => t.includes(w)));
     if (named.length && !named.some(w => cited.some(t => t.includes(w)))) return `the cited lines show none of ${named.join(', ')}`;
   };
   const out = [];
   for (const key of Object.keys(contract.drafted || {})) {
     const e = contract.drafted[key];
-    if (e.by === 'agent') for (const ev of e.evidence) { const w = why(ev); if (w) out.push(`${key}: "${ev}": ${w}`); }
+    if (e.by === 'agent') for (const ev of e.evidence) { const p = problem(ev); if (p) out.push(`${key}: "${ev}": ${p}`); }
   }
   return out;
 }

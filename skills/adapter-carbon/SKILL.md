@@ -77,7 +77,7 @@ Write `design-systems/carbon/contracts/<family>.component.json` by hand, followi
     - a layout field: `{kind: "layout", ...the node's facts}`;
     - a family-wide value (`family.*`, `icons.*`, `figma.*`, `code.*`): `{kind: "family", axes: {<axis>: [value keys]}, defaults: {<axis>: <default>}, parts}`.
 
-    Write the entries with `fingerprint` left out and run the script with `--write`: it records each computed fingerprint and names each entry it moved, the ones to re-draft. The script reads the pinned sources that `scripts/sources.mjs` fetches. `--check` exits 1 naming each entry whose fingerprint differs from the facts and each citation whose lines show none of the source words its claim names or lie outside the file (`draftedEvidence`). An approved Contract's citations print as `note:` lines and pass; fix them at its next re-approval:
+    Write the entries with `fingerprint` left out, run the script with `--write` to record them, then `--check`; the shared command line ([`fingerprints-cli.mjs`](../contract/scripts/fingerprints-cli.mjs)) says what each prints, the citation check included. The script reads the pinned sources that `scripts/sources.mjs` fetches:
 
     ```
     node skills/adapter-carbon/scripts/fingerprints.mjs design-systems/carbon/contracts/<family>.component.json --nodes skills/adapter-carbon/nodes/<family>.nodes.json [--write | --check]
