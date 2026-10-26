@@ -5,10 +5,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { hasPreviewPackages, previewRenderer } from '../scripts/preview.mjs';
+import { PREVIEW_MISSING } from './helpers.mjs';
 
 const committed = path => JSON.parse(readFileSync(new URL(`../../../design-systems/cds/${path}`, import.meta.url)));
 const button = committed('contracts/button.component.json');
-const skip = hasPreviewPackages() ? false : 'CDS preview packages missing: run node skills/adapter-cds/scripts/sources.mjs';
+const skip = hasPreviewPackages() ? false : PREVIEW_MISSING;
 
 // One specimen holds a subtree per Mode; `scheme` picks one, and `button` its <button> open tag.
 const scheme = (html, mode) => html.match(new RegExp(`<div class="cds-default ${mode} cds-preview-scheme"[^>]*>([\\s\\S]*?)</div>(?=<div class="cds-default|</div>$)`))[1];

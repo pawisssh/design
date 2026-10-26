@@ -11,13 +11,14 @@ import { join } from 'node:path';
 import { generate, loadModules, readContracts } from '../scripts/foundations.mjs';
 import { CDS, REPO_ROOT, hasFoundationsPackages, hasSources, readSources } from '../scripts/sources.mjs';
 import { closure } from '../../contract/scripts/contract.mjs';
+import { SOURCES_MISSING } from './helpers.mjs';
 
 const read = rel => readFileSync(join(REPO_ROOT, rel), 'utf8');
 const COMMITTED = 'design-systems/cds/cds.foundations.json';
 const CLI = new URL('../scripts/foundations.mjs', import.meta.url).pathname;
 const PATH = 'design-systems/cds/contracts/button.component.json';
 
-const skip = hasSources() && hasFoundationsPackages() ? false : 'CDS sources missing: run node skills/adapter-cds/scripts/sources.mjs';
+const skip = hasSources() && hasFoundationsPackages() ? false : SOURCES_MISSING;
 const sources = skip ? null : readSources();
 const modules = skip ? null : await loadModules(sources);
 const run = (opts = {}) => generate({ sources, modules, families: ['button'], ...opts });
