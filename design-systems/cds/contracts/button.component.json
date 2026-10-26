@@ -413,12 +413,12 @@
           "width": {
             "raw": 24,
             "level": "info",
-            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the size Button gives its ProgressCircle at every Button size (L333)"
+            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the progressCircleSize default (L205) that Button gives its ProgressCircle at every Button size (L333)"
           },
           "height": {
             "raw": 24,
             "level": "info",
-            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the size Button gives its ProgressCircle at every Button size (L333)"
+            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the progressCircleSize default (L205) that Button gives its ProgressCircle at every Button size (L333)"
           },
           "visible": false
         },
@@ -426,12 +426,12 @@
           "width": {
             "raw": 24,
             "level": "info",
-            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the size Button gives its ProgressCircle at every Button size (L333)"
+            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the progressCircleSize default (L205) that Button gives its ProgressCircle at every Button size (L333)"
           },
           "height": {
             "raw": 24,
             "level": "info",
-            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the size Button gives its ProgressCircle at every Button size (L333)"
+            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the progressCircleSize default (L205) that Button gives its ProgressCircle at every Button size (L333)"
           },
           "strokeWeight": {
             "raw": 2,
@@ -447,12 +447,12 @@
           "width": {
             "raw": 24,
             "level": "info",
-            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the size Button gives its ProgressCircle at every Button size (L333)"
+            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the progressCircleSize default (L205) that Button gives its ProgressCircle at every Button size (L333)"
           },
           "height": {
             "raw": 24,
             "level": "info",
-            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the size Button gives its ProgressCircle at every Button size (L333)"
+            "reason": "defaultProgressCircleSize = 24 (packages/web/src/buttons/Button.tsx L27), the progressCircleSize default (L205) that Button gives its ProgressCircle at every Button size (L333)"
           },
           "strokeWeight": {
             "raw": 2,
@@ -1740,7 +1740,7 @@
     {
       "level": "info",
       "at": "layout.Arc.arc",
-      "message": "The Arc is a still frame of an endless rotation. CDS spins the whole ProgressCircle forever (indeterminateProgressCircleCss, ProgressCircle.tsx L105-L115: 1000ms linear infinite) and starts its arc at 12 o'clock (rotate: -90, L137). The Contract draws that start: 270 degrees clockwise from 12 o'clock (stroke-dashoffset 0.25 of pathLength 1, L152-L153). Figma has no animation, so the Arc doesn't spin."
+      "message": "The Arc is a still frame of an endless rotation. CDS spins the whole ProgressCircle forever (indeterminateProgressCircleCss, ProgressCircle.tsx L105-L115: 1000ms linear infinite) and starts its arc at 12 o'clock (rotate: -90, L137). The Contract draws that start: 270 degrees clockwise from 12 o'clock (an indeterminate progress of 0.75, L175, drawn as stroke-dashoffset 1 - 0.75 = 0.25, L132 and L140, of pathLength 1 and stroke-dasharray 1, L152-L153). Figma has no animation, so the Arc doesn't spin."
     },
     {
       "level": "info",

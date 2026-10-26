@@ -15,12 +15,16 @@ const contract = load('../../../design-systems/cds/contracts/button.component.js
 const foundations = load('../../../design-systems/cds/cds.foundations.json');
 const nodes = load('../nodes/button.nodes.json');
 
+// Button's spinner circles at Loading=On in Light: the bgLine Track and the Arc in the label's colour.
+const ring = { fill: 'none', width: 24, height: 24, stroke: '#5b616e@0.2', strokeWidth: 2, sweep: 360 };
+const arc = { fill: 'none', width: 24, height: 24, stroke: '#ffffff', strokeWidth: 2, sweep: 270, strokeCap: 'round' };
+
 test('expectations: every tuple in each Theme Mode, the layers in anatomy order with their parent and entry, and which are drawn inside it', () => {
   const spec = expectations({ contract, nodes, foundations });
   assert.equal(spec.collection, 'theme');
   assert.deepEqual(spec.modes, ['light', 'dark']);
   assert.equal(Object.keys(spec.expected).length, 480);
-  assert.deepEqual(spec.layers.map(l => [l.name, l.parent, l.entry, l.inside]), [
+  assert.deepEqual(spec.layers.map(l => [l.name, l.parent, l.entry, l.drawnInParent]), [
     ['Button', null, 'cds-Button', false], ['Start icon', 'Button', 'startNodeCss', false], ['Start glyph', 'Start icon', 'cds-Icon', false],
     ['Middle', 'Button', 'middleNodeCss', false], ['Label', 'Middle', 'middleNodeCss', true],
     ['Spinner', 'Middle', 'spinnerContainerCss', false], ['Track', 'Spinner', 'spinnerContainerCss', true], ['Arc', 'Spinner', 'spinnerContainerCss', true],
@@ -33,8 +37,8 @@ test('expectations: the spinner while loading, an ELLIPSE by its stroke and arc,
   const loading = expected['primary|l|solid|on|enabled'].light;
   assert.deepEqual(loading.Middle, { opacity: 0.82 }, "Interactable's opacity is on the Button's child, Middle");
   assert.deepEqual(loading.Spinner, { width: 24, height: 24 });
-  assert.deepEqual(loading.Track, { fill: 'none', width: 24, height: 24, stroke: '#5b616e@0.2', strokeWidth: 2, sweep: 360 });
-  assert.deepEqual(loading.Arc, { fill: 'none', width: 24, height: 24, stroke: '#ffffff', strokeWidth: 2, sweep: 270, strokeCap: 'round' });
+  assert.deepEqual(loading.Track, ring);
+  assert.deepEqual(loading.Arc, arc);
   const idle = expected['primary|l|solid|off|hover'].light;
   assert.deepEqual([idle.Spinner, idle.Track, idle.Arc], [null, null, null]);
   assert.deepEqual([idle.Middle.opacity, idle.Label.opacity], [0.88, 1]);
@@ -106,19 +110,17 @@ const page = ({ labelHidden = false, padding = '8px', spinner = false, dashoffse
 const spec = {
   collection: 'theme', modes: ['light', 'dark'],
   layers: [{ name: 'Button', type: 'COMPONENT', parent: null, entry: 'cds-Button' }, { name: 'Start icon', type: 'FRAME', parent: 'Button', entry: 'startNodeCss' },
-    { name: 'Middle', type: 'FRAME', parent: 'Button', entry: 'middleNodeCss', inside: false },
-    { name: 'Label', type: 'TEXT', parent: 'Middle', entry: 'middleNodeCss', inside: true }],
+    { name: 'Middle', type: 'FRAME', parent: 'Button', entry: 'middleNodeCss', drawnInParent: false },
+    { name: 'Label', type: 'TEXT', parent: 'Middle', entry: 'middleNodeCss', drawnInParent: true }],
   expected: { 'primary|xs': {
     light: { Button: { fill: '#0052ff', paddingLeft: 8, outline: '#0052ff', outlineWidth: 2 }, 'Start icon': { width: 16 }, Label: { color: '#ffffff@0.5', opacity: 1 } },
     dark: { Button: { fill: '#578bfa' }, 'Start icon': { height: 16 }, Label: { opacity: 1 } } } },
 };
 // The same page with the spinner layers: Spinner by its entry, Track and Arc the first and second <circle> in it.
-const ring = { fill: 'none', width: 24, height: 24, stroke: '#5b616e@0.2', strokeWidth: 2, sweep: 360 };
-const arc = { fill: 'none', width: 24, height: 24, stroke: '#ffffff', strokeWidth: 2, sweep: 270, strokeCap: 'round' };
 const withSpinner = (want = { Spinner: { width: 24 }, Track: ring, Arc: arc }) => ({ ...spec,
-  layers: [...spec.layers, { name: 'Spinner', type: 'FRAME', parent: 'Middle', entry: 'spinnerContainerCss', inside: false },
-    { name: 'Track', type: 'ELLIPSE', parent: 'Spinner', entry: 'spinnerContainerCss', inside: true, nth: 0 },
-    { name: 'Arc', type: 'ELLIPSE', parent: 'Spinner', entry: 'spinnerContainerCss', inside: true, nth: 1 }],
+  layers: [...spec.layers, { name: 'Spinner', type: 'FRAME', parent: 'Middle', entry: 'spinnerContainerCss', drawnInParent: false },
+    { name: 'Track', type: 'ELLIPSE', parent: 'Spinner', entry: 'spinnerContainerCss', drawnInParent: true, nth: 0 },
+    { name: 'Arc', type: 'ELLIPSE', parent: 'Spinner', entry: 'spinnerContainerCss', drawnInParent: true, nth: 1 }],
   expected: { 'primary|xs': { light: { ...spec.expected['primary|xs'].light, ...want }, dark: { ...spec.expected['primary|xs'].dark, ...want } } } });
 
 test('probe: each layer found by its entry inside its parent, each Mode measured with its class on the body', () => {

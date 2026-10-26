@@ -8,20 +8,13 @@
 // which returns {checked, mismatches: ['<tuple> <mode> <layer>.<field>: page <value>, Contract <value>']}.
 //
 // A layer's element is found by its node map entry inside its parent's element: a `cds-` entry is that static class,
-// any other a Linaria literal, whose class is `<name>-<hash>`. A layer whose entry is its parent's is drawn inside the
-// parent's element with no class of its own: a TEXT layer is the element holding the text, an ELLIPSE the parent's
-// n-th <circle>, n counting its ELLIPSE siblings (Button's Label in Middle, Track and Arc in Spinner). A layer the
-// Contract hides (`visible: false`) must have no element, and its children are skipped. Compared, as the page
-// computes them:
-//   fill          background-color, or color on a TEXT layer, or fill on an ELLIPSE;
+// any other a Linaria literal, whose class is `<name>-<hash>`. Compared, as the page computes them:
+//   fill          background-color, or color on a TEXT layer;
 //   opacity       opacity, 0 on a TEXT layer whose text is visibility: hidden (loading keeps the label's width);
 //   stroke        outline color and width when strokeAlign is outside (the focus ring), else border width, and the
-//                 border colour when the Contract strokes; on an ELLIPSE, stroke and stroke-width;
-//   padding*, radius (border-top-left-radius), and a numeric width or height (the element's layout box; an
-//                 ELLIPSE's is 2r + stroke-width, its stroke inside the box);
-//   arc sweep and strokeCap on an ELLIPSE (the visible share of pathLength, and stroke-linecap: butt is "none").
-// Paint on a path inside a layer (`Start glyph/Vector`), effects, text styles and the arc's start (a still frame of
-// CDS's rotation) are not compared.
+//                 border colour when the Contract strokes;
+//   padding*, radius (border-top-left-radius), and a numeric width or height (the element's layout box).
+// Paint on a path inside a layer (`Start glyph/Vector`), effects and text styles are not compared.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -38,8 +31,8 @@ export const colorKey = ({ hex, alpha }) => (alpha === 0 ? 'none' : alpha < 1 ? 
 
 /**
  * expectations({contract, nodes, foundations}) -> {collection, modes, layers, expected}: what the probe looks for and what it
- * should find. `layers` is [{name, type, parent, entry, inside, nth}] in anatomy order, `inside` when the layer is
- * drawn in its parent's element and `nth` an ELLIPSE's index among its parent's ELLIPSE children; `expected` is
+ * should find. `layers` is [{name, type, parent, entry, drawnInParent, nth}] in anatomy order, `nth` an ELLIPSE's
+ * index among its parent's ELLIPSE children; `expected` is
  * {<tuple key>: {<mode>: {<layer>: {<field>: value} | null}}}, a colour as colorKey writes it, a length in px, and
  * null for a layer the tuple hides.
  * The modes are those of the Foundations document's one multi-mode collection (CDS's Theme: light, dark).
@@ -52,8 +45,10 @@ export function expectations({ contract, nodes, foundations }) {
   const walk = (node, parent, nth) => {
     if (nodes[node.name] === undefined) throw new Error(`no node for layer "${node.name}" in the node map`);
     const entry = nodes[node.name].split(' ')[0];
-    const inside = parent !== null && entry === layers.find(l => l.name === parent).entry;
-    layers.push({ name: node.name, type: node.type, parent, entry, inside, ...(node.type === 'ELLIPSE' ? { nth } : {}) });
+    // A layer with its parent's entry has no element of its own: it is drawn inside the parent's (Button's Label in
+    // Middle, Track and Arc in Spinner).
+    const drawnInParent = parent !== null && entry === layers.find(l => l.name === parent).entry;
+    layers.push({ name: node.name, type: node.type, parent, entry, drawnInParent, ...(node.type === 'ELLIPSE' ? { nth } : {}) });
     const kids = node.children || [];
     kids.forEach(child => walk(child, node.name, kids.filter(k => k.type === 'ELLIPSE').indexOf(child)));
   };
@@ -79,6 +74,7 @@ export function expectations({ contract, nodes, foundations }) {
       const out = {};
       for (const { name, type, parent } of layers) {
         const l = layout[name] || {}, p = paint[name] || {};
+        // null: the tuple hides the layer, or its parent, so the page must have no element for it.
         if (l.visible === false || out[parent] === null) { out[name] = null; continue; }
         const want = {
           fill: color(p.fill), opacity: number(p.opacity),
@@ -86,6 +82,8 @@ export function expectations({ contract, nodes, foundations }) {
           paddingTop: number(l.paddingTop), paddingBottom: number(l.paddingBottom),
           radius: number(l.radius), width: number(l.width), height: number(l.height),
         };
+        // An ELLIPSE is an SVG <circle>: its stroke is stroke and stroke-width, not a border. The arc's start isn't
+        // compared: it is a still frame of CDS's rotation.
         if (type === 'ELLIPSE') Object.assign(want, { stroke: color(p.stroke), strokeWidth: number(l.strokeWeight), sweep: l.arc && l.arc.sweep, strokeCap: l.strokeCap });
         else if (l.strokeAlign === 'outside') Object.assign(want, { outline: color(p.stroke), outlineWidth: number(l.strokeWeight) });
         else Object.assign(want, { borderWidth: number(l.strokeWeight), border: p.stroke === 'none' ? undefined : color(p.stroke) });
@@ -113,6 +111,8 @@ export function probe(spec, doc, style, color) {
   const paintOf = v => (!v || v === 'none' ? 'none' : color(v));
   const read = (el, type) => {
     const cs = style(el);
+    // A <circle>'s box is 2r + stroke-width (its stroke inside the box), its sweep the visible share of the path
+    // (pathLength, stroke-dasharray, stroke-dashoffset), and stroke-linecap: butt is the Contract's "none".
     if (type === 'ELLIPSE') {
       const sw = parseFloat(cs.strokeWidth), r = parseFloat(el.getAttribute('r'));
       const length = el.getAttribute('pathLength') ? parseFloat(el.getAttribute('pathLength')) : 2 * Math.PI * r;
@@ -153,8 +153,10 @@ export function probe(spec, doc, style, color) {
       const els = {};
       spec.layers.forEach(layer => {
         const parent = layer.parent === null ? scope : els[layer.parent];
+        // A layer drawn in its parent's element is found by type: a TEXT the element holding the text, an ELLIPSE
+        // the parent's n-th <circle>.
         const find = () => {
-          if (!layer.inside) return inside(parent, e => matches(e, layer.entry));
+          if (!layer.drawnInParent) return inside(parent, e => matches(e, layer.entry));
           if (layer.type === 'TEXT') return hasText(parent) ? parent : inside(parent, hasText);
           if (layer.type === 'ELLIPSE') return parent.querySelectorAll('circle')[layer.nth];
         };
