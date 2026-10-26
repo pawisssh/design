@@ -7,6 +7,7 @@
   },
   "scripts": {
     "test": "node --test --test-concurrency=${TEST_CONCURRENCY:-4} skills/*/test/*.test.mjs skills/*/tests/*.test.mjs .github/test/*.test.mjs",
+    "test:skills": "node scripts/test.mjs",
     "check": "b=${BASE:-origin/main}; node .github/duplicates.mjs $b; d=$?; node .github/exports.mjs $b && exit $d"
   }
 }

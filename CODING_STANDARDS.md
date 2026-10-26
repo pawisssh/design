@@ -10,9 +10,13 @@ The judgement calls `/code-review` checks a diff against. Anything a test or a s
 
 **Each shared helper lives in one place.** When a script or test needs something another file in the same skill already does (a repo path, reading JSON, a hash, the text that names a Usage), import that helper, or move it somewhere both files can import it from. Don't write a second copy. Two copies of the same few lines drift apart the next time only one of them is changed. CI's `.github/duplicates.mjs` already fails a pull request that adds a copy of 8 or more lines under `skills/`; review catches the shorter ones and a copy reworded just enough to slip past it.
 
+## Contract validation
+
+**A Contract field the spec rules out, or the builder can't honour, fails `validate`.** When a change adds vocabulary to the Contract, every value it leaves expressible either builds or fails `validate`; an Out of Scope item a Contract could still write is a gap, not optional hardening. In #449, `strokeAlign` on an ELLIPSE (listed under #442's Out of Scope) and `width: "hug"` on an ELLIPSE (which #442 resizes to its `width` and `height`) both passed validation, and the owner caught them (#450).
+
 ## Tests
 
-**A test that reads a committed Contract sets up the selection it needs.** A committed Contract moves from draft to approved when its owner approves it. A test whose case needs a draft or an approval makes one with `asDraft` or `approve`, and takes the rest of the Contract as it is. In #389, two fingerprints tests assumed the committed CDS Button was a draft, and they failed once it was approved.
+**A test that reads a committed Contract takes what it needs from that Contract.** A committed Contract changes: its owner approves it, and its rules gain entries. A test whose case needs a draft or an approval makes one with `asDraft` or `approve`. A path into the Contract comes from the Contract itself, as in `c.layout.length - 1` for a rule the test just pushed, and never from today's count. In #389, two fingerprints tests assumed the committed CDS Button was a draft, and they failed once it was approved. In #449, `$.layout[10]` and `paint[28]` held only while the Carbon Button had 10 layout rules.
 
 ## Domain docs
 
