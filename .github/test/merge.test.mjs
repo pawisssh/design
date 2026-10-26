@@ -1,5 +1,5 @@
 // The merge script's checks (scripts/merge.mjs): the latest `test` run on the head must have passed, the test files a
-// moved main makes it run on the merge tree, and the test files and pinned tools it reads from package.json and test.yml.
+// moved main makes it run on the merge tree, and the test files it reads from package.json.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { areas, isTestFile, mergeTreeTests, runVerdict, testVerdict } from '../../scripts/merge.mjs';
