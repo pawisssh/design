@@ -30,13 +30,15 @@ export function mainCheckoutOf(dir) {
 }
 
 /**
- * The ledger path for a CLI given no `--ledger`. Refused from a linked worktree: its own `.scratch` would
- * fork the ledger away from the main checkout's, which every other session reads.
+ * The ledger path for a CLI given no `--ledger`. From a linked worktree it is the main checkout's, which every
+ * other session reads: the worktree's own `.scratch` would fork the ledger. It says so on stderr.
  */
 export function defaultLedgerPath(fileKey, root = process.env.CLAUDE_PROJECT_DIR || process.cwd(), designSystem = null) {
   const main = mainCheckoutOf(root);
-  if (main) throw new Error(`${root} is a git worktree, so its .scratch is not the shared ledger: pass --ledger ${ledgerPath(fileKey, main, designSystem)}`);
-  return ledgerPath(fileKey, root, designSystem);
+  if (!main) return ledgerPath(fileKey, root, designSystem);
+  const path = ledgerPath(fileKey, main, designSystem);
+  console.error(`${root} is a git worktree: using the main checkout's ledger ${path}`);
+  return path;
 }
 
 export const emptyLedger = fileKey => ({ schemaVersion: 1, fileKey, foundations: null, sets: {} });
