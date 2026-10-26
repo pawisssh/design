@@ -224,7 +224,7 @@ export const PLACE_BUDGET = 45000;
  * A sets call's plan + state JSON, at most (chars): use_figma's 50,000 less the packaged components core and
  * its wrapper (tests/bprime.test.mjs measures them).
  */
-export const SETS_BUDGET = 13400;
+export const SETS_BUDGET = 13200;
 // a reconcile window, at most: its entries carry no fragments
 const RECONCILE_PER_CALL = 500;
 /**
