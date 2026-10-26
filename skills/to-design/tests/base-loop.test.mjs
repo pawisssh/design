@@ -266,9 +266,9 @@ test('main changing the Contract after the branch forked withholds the approve c
   const main = git('rev-parse', '--short', 'origin/main');
   assert.equal(mainChanged(path), main);
 
-  const package_ = formatReview(CONTRACT, rb('v0'), review(CONTRACT, complete(rb('v0')), FOUNDATIONS), { fileKey: 'F', contractPath: 'c', readbackPath: 'r', main });
-  assert.match(package_, new RegExp(`Not ready to approve: origin/main ${main} changed this Contract after the branch forked`));
-  assert.doesNotMatch(package_, /base-loop\.mjs approve/);
+  const pkg = formatReview(CONTRACT, rb('v0'), review(CONTRACT, complete(rb('v0')), FOUNDATIONS), { fileKey: 'F', contractPath: 'c', readbackPath: 'r', staleMain: main });
+  assert.match(pkg, new RegExp(`Not ready to approve: origin/main ${main} changed this Contract after the branch forked`));
+  assert.doesNotMatch(pkg, /base-loop\.mjs approve/);
   writeFileSync(join(repo, 'readback.json'), JSON.stringify(complete(rb('v0'))));
   const run = spawnSync('node', [SCRIPT, 'approve', path, join(repo, 'readback.json'), '--foundations', join(ROOT, 'design-systems/carbon/carbon.foundations.json'),
     '--snapshot-id', CONTRACT.source.snapshotId, '--content-hash', contentHash(CONTRACT)], { encoding: 'utf8' });

@@ -606,16 +606,18 @@ export function rehashSets(from, contract, docText, ledger, { fileKey }) {
     const derive = (mode, batch) => {
       const { plan } = setsPlan(c, docText, ledger, { fileKey, mode, ...(batch != null ? { batch } : {}), at: rec.builtAt });
       delete plan.contentHash;
-      return JSON.stringify(plan);
+      return plan;
     };
     const first = derive('build', 0);
-    const of = JSON.parse(first).options.of;
-    return [first, ...Array.from({ length: of - 1 }, (_, b) => derive('build', b + 1)), derive('place')];
+    return [first, ...Array.from({ length: first.options.of - 1 }, (_, b) => derive('build', b + 1)), derive('place')].map(p => JSON.stringify(p));
   };
   const [a, b] = [plans(from), plans(contract)];
   const differs = b.findIndex((p, i) => p !== a[i]);
-  if (a.length !== b.length || differs !== -1)
-    throw new Error(`${family}: the ${a.length !== b.length ? 'batch count' : differs === b.length - 1 ? 'place plan' : `build batch ${differs}`} differs between the two Contracts, so the set needs its batches rebuilt (sets --next)`);
+  let what = null;
+  if (a.length !== b.length) what = 'batch count';
+  else if (differs === b.length - 1) what = 'place plan';
+  else if (differs !== -1) what = `build batch ${differs}`;
+  if (what) throw new Error(`${family}: the ${what} differs between the two Contracts, so the set needs its batches rebuilt (sets --next)`);
   const out = { ...ledger, sets: { ...ledger.sets, [family]: { ...rec, contentHash: hash } } };
   const base = ledger.bases && ledger.bases[family];
   if (base && base.contentHash === old) out.bases = { ...ledger.bases, [family]: { ...base, contentHash: hash } };

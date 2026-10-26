@@ -1,8 +1,6 @@
 // Every committed Design System through the offline chain: its Foundations document, its Contracts' icons and each
 // Contract's Base Component built on a mock figma, read back with no differences. The other tests use Carbon or
 // shadcn fixtures, so a Code Library they don't cover (CDS's camelCase icon keys, #403) first failed mid-run in Figma.
-// Each Contract is valid first, approval included: a merge that changes an approved Contract voids its approval (rule
-// 8), and no other check reads the committed ones (#389's approval went stale under #417).
 // A Contract whose icon package isn't fetched skips; fetch it with its Adapter's sources script.
 // Run with `node --test skills/to-design/tests/*.test.mjs`.
 import { test } from 'node:test';
@@ -42,8 +40,11 @@ for (const ds of readdirSync(join(ROOT, 'design-systems'))) {
   const withIcons = contracts.map(({ contract: c }) => c).filter(c => c.icons && c.icons.source);
   const missing = withIcons.filter(c => !existsSync(iconsDir(c)));
 
+  // A merge that changes an approved Contract voids its approval (rule 8), and no other check reads the committed
+  // ones (#389's approval went stale under #417). Every invalid file is named, not only the first.
   test(`${ds}: every committed Contract is valid, its approval bound to its content`, () => {
-    for (const { file, contract } of contracts) assert.deepEqual(validate(contract, doc).errors, [], file);
+    const invalid = contracts.map(({ file, contract }) => ({ file, errors: validate(contract, doc).errors })).filter(r => r.errors.length);
+    assert.deepEqual(invalid, []);
   });
 
   test(`${ds}: every committed Contract's Base Component builds and reads back with no differences`,

@@ -361,25 +361,27 @@ function draftedLines(contract) {
  * The origin/main commit (short) when main changed the Contract after this branch forked from it, else null (#389):
  * the approval binds the Contract's whole content (rule 8), so an approval taken then goes stale at the rebase. The
  * branch's own edits (the owner's tweaks) do not count. `fetch` refreshes origin/main first: review fetches, approve
- * compares against what review fetched. Outside a repo, or with no origin/main, there is nothing to compare.
+ * compares against what review fetched. Outside a repo, or with no origin/main, there is nothing to compare. A failed
+ * fetch (offline) is said on stderr, since the comparison then runs against the origin/main last fetched.
  */
 export function mainChanged(contractPath, { fetch = false } = {}) {
   const path = resolvePath(contractPath);
   const git = (...args) => spawnSync('git', ['-C', dirname(path), ...args], { encoding: 'utf8' });
-  if (fetch) git('fetch', '-q', 'origin', 'main');
+  if (fetch && git('remote', 'get-url', 'origin').status === 0 && git('fetch', '-q', 'origin', 'main').status !== 0)
+    console.error('note: fetching origin/main failed, so the approve command is checked against the origin/main last fetched');
   const fork = git('merge-base', 'HEAD', 'origin/main');
   if (fork.status !== 0) return null;
   if (git('diff', '--quiet', fork.stdout.trim(), 'origin/main', '--', path).status !== 1) return null;
   return git('rev-parse', '--short', 'origin/main').stdout.trim();
 }
 
-const staleBase = main => `origin/main ${main} changed this Contract after the branch forked: rebase onto it, then read back and review again`;
+const staleBase = staleMain => `origin/main ${staleMain} changed this Contract after the branch forked: rebase onto it, then read back and review again`;
 
 /**
  * The owner's review package: node link, snapshotId, contentHash, readback diff, owner edits, Drafted values by kind,
- * notes, approve command. `main` is mainChanged's commit: the package then withholds the approve command.
+ * notes, approve command. `staleMain` is mainChanged's commit: the package then withholds the approve command.
  */
-export function formatReview(contract, readback, result, { fileKey, contractPath, readbackPath, main = null }) {
+export function formatReview(contract, readback, result, { fileKey, contractPath, readbackPath, staleMain = null }) {
   const nodeId = String(readback.id || '').replace(/:/g, '-');
   const edits = ownerEdits(contract);
   const notes = contract.notes || [];
@@ -403,7 +405,7 @@ export function formatReview(contract, readback, result, { fileKey, contractPath
     `Verify notes: ${verify.length}`,
     ...verify.map(n => `  ${n.at}: ${n.message}`),
   ];
-  if (main) lines.push(`Not ready to approve: ${staleBase(main)}.`);
+  if (staleMain) lines.push(`Not ready to approve: ${staleBase(staleMain)}.`);
   else if (clean && !warnings.length)
     lines.push('Approve only after the owner types "approve" in chat:',
       `  node skills/to-design/scripts/base-loop.mjs approve ${contractPath} ${readbackPath} --snapshot-id ${contract.source.snapshotId} --content-hash ${contentHash(contract)}`);
@@ -518,15 +520,15 @@ function main() {
     if (!values['file-key']) throw new Error('review needs --file-key');
     // the file's built variables mark the picker's unbuilt tokens (#107); a review needs no ledger otherwise
     const f = (readLedger(values.ledger || defaultLedgerPath(values['file-key'])) || {}).foundations;
-    return print(formatReview(contract, readback, review(contract, readback, foundations, f ? { built: f.variables } : {}), { fileKey: values['file-key'], contractPath: a, readbackPath: b, main: mainChanged(a, { fetch: true }) }));
+    return print(formatReview(contract, readback, review(contract, readback, foundations, f ? { built: f.variables } : {}), { fileKey: values['file-key'], contractPath: a, readbackPath: b, staleMain: mainChanged(a, { fetch: true }) }));
   }
   if (cmd === 'approve') {
     if (values.prototype) {
       const rel = relative(process.env.CLAUDE_PROJECT_DIR || process.cwd(), resolvePath(outPath));
       if (!values.out || !rel.startsWith('.scratch/')) throw new Error('a prototype approval is written only under .scratch/ (pass --out .scratch/...)');
     }
-    const main = mainChanged(a);
-    if (main) throw new Error(staleBase(main));
+    const staleMain = mainChanged(a);
+    if (staleMain) throw new Error(staleBase(staleMain));
     const c = approveReviewed(contract, readback, foundations, {
       snapshotId: values['snapshot-id'], contentHash: values['content-hash'], at: values.at || new Date().toISOString(), prototype: values.prototype,
     });
