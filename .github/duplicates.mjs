@@ -6,11 +6,11 @@
 //
 // A block counts when most of its lines are ones the change adds, so an edit inside a copy already on the base, or a
 // line changed in both copies, is not a new copy.
-import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { addedLines, codeAt, git } from './git.mjs';
 
 export const WINDOW = 8;
-// The code files under skills/ the check reads; fixtures are inputs to tests, not code the repo runs.
+// The code files under skills/ the check reads.
 const CODE = /\.(m?js|py)$/;
 
 // A line as compared, or null for one that never counts: blank, a comment alone, or brackets and punctuation alone.
@@ -63,51 +63,13 @@ export function duplicates(files, added, window = WINDOW) {
   return blocks.filter((d, n) => !blocks.slice(0, n).some(k => k.also.some(a => a.file === d.file && a.from <= d.to && d.from <= a.to)));
 }
 
-// The lines a diff adds to each file: {path: Set of line numbers at the head}. Git ends a path holding a space with a
-// tab on the +++ line.
-export function addedLines(diff) {
-  const added = {};
-  let file = null;
-  for (const l of diff.split('\n')) {
-    const to = l.match(/^\+\+\+ (?:b\/(.*?)\t?|\/dev\/null)$/);
-    if (to) { file = to[1] || null; continue; }
-    const hunk = l.match(/^@@ -\S+ \+(\d+)(?:,(\d+))? @@/);
-    if (hunk && file) {
-      const start = +hunk[1];
-      const n = hunk[2] === undefined ? 1 : +hunk[2];
-      for (let k = start; k < start + n; k++) (added[file] ??= new Set()).add(k);
-    }
-  }
-  return added;
-}
-
-// core.quotePath=false keeps a path with non-ASCII characters as it is, unquoted, in ls-tree and diff.
-const git = (args, input) => execFileSync('git', ['-c', 'core.quotePath=false', ...args], { input, maxBuffer: 1 << 28 });
-
-// Each file's text at `head`, read in one `git cat-file --batch`: per file a header `<oid> blob <size>`, its bytes and
-// a newline.
-function blobs(head, paths) {
-  const out = git(['cat-file', '--batch'], paths.map(p => `${head}:${p}`).join('\n') + '\n');
-  const files = {};
-  let at = 0;
-  for (const p of paths) {
-    const eol = out.indexOf(10, at);
-    const size = +out.subarray(at, eol).toString().split(' ')[2];
-    files[p] = out.subarray(eol + 1, eol + 1 + size).toString('utf8');
-    at = eol + 1 + size + 1;
-  }
-  return files;
-}
-
 function main() {
   const [base, head = 'HEAD'] = process.argv.slice(2);
   if (!base) { console.error('usage: node .github/duplicates.mjs <base ref> [<head ref>]'); process.exit(2); }
-  const code = f => CODE.test(f) && !f.includes('/fixtures/');
-  const tracked = git(['ls-tree', '-r', '-z', '--name-only', head, '--', 'skills']).toString('utf8').split('\0').filter(code);
-  const files = blobs(head, tracked);
+  const files = codeAt(head, ['skills'], CODE);
   // R: a file moved and edited gives the lines its edit adds, under its new path.
   const diff = git(['diff', '-U0', '--no-color', '--diff-filter=AMR', `${base}...${head}`, '--', 'skills']).toString('utf8');
-  const added = Object.fromEntries(Object.entries(addedLines(diff)).filter(([f]) => code(f)));
+  const added = Object.fromEntries(Object.entries(addedLines(diff)).filter(([f]) => f in files));
   const found = duplicates(files, added);
   for (const d of found)
     console.log(`${d.file}:${d.from}-${d.to} repeats ${d.also.map(a => `${a.file}:${a.from}-${a.to}`).join(', ')}`);
