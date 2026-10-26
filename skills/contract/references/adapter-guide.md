@@ -79,7 +79,8 @@ A BOOLEAN may bind different nodes on different variants (`binds[].match`), and 
 | `currentColor` | `{sameAs: "Node.field"}` | Resolved after every rule. |
 | `box-shadow` | `effects`, **reversed** | CSS lists the top shadow first; Figma paints later entries on top. The stroke paints above inner shadows. |
 | `opacity` | `opacity` | It also dims descendants. |
-| `position: absolute` overlays | a note, or an anatomy change | The builder has no absolute children; keep icons in flow. |
+| `position: absolute` overlays, centred | `position: "absolute"`, `constraints: {horizontal: "center", vertical: "center"}`, a fixed `width` and `height` | Only centring for now: an offset overlay (a badge) is a note. The parent needs Auto Layout; put the node under the box it centres on (CDS's spinner sits in `Middle`, not the root). |
+| A drawn circle or arc: an SVG `<circle>` stroke, `stroke-dasharray` / `stroke-dashoffset` | an `ELLIPSE` with `arc: {start, sweep}`, `strokeCap`, `strokeWeight`, `stroke` | 0° is 12 o'clock, clockwise; resolve `rotate` into `start`. The stroke lies inside the box, so an SVG r = 11 in a 24-box is `width: 24`, `strokeWeight: 2`. An arc's parent is a FRAME with `direction: "none"`; stacked shapes (track, then arc) are its children in order. An animated shape is a still frame plus a note. |
 
 **Values.** Bind every token-backed value as `{token: "<flat name>"}`, the Code Library's own name. A value with no token is `{raw, level, reason}`: `info` when derived from tokens (write the derivation, such as `(size − 1lh)/2`), `warning` when it is a constant with no token. A matching hex value is never a token binding.
 

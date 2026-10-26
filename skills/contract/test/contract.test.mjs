@@ -11,6 +11,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import vm from 'node:vm';
 import * as contract from '../scripts/contract.mjs';
+import { withSpinner } from './spinner.mjs';
 
 const root = new URL('../../../', import.meta.url);
 const load = rel => JSON.parse(readFileSync(new URL(rel, root), 'utf8'));
@@ -594,4 +595,81 @@ test('an INSTANCE_SWAP visibleWhen names a Slot axis whose slot is the swapped n
   other.layout[0].set.End = { visible: true };
   swap(other).binds = [{ node: 'End', field: 'mainComponent' }];
   slotRejects(other, 3, 'Slot axis icon shows "Icon", not "End"');
+});
+
+// ---------- absolute nodes and the ELLIPSE (#442), on the Carbon Button with a spinner (spinner.mjs) ----------
+const spinner = edit => withSpinner(button(), edit);
+
+test('an absolute node centred with a fixed size, in a parent with Auto Layout, is valid; so are its full circle and arc', () => {
+  assert.deepEqual(contract.validate(spinner(), foundations), { ok: true, errors: [] });
+});
+
+test('rejects an absolute root, and constraints on the root (rule 3)', () => {
+  rejects(spinner(L => { L.Button = { position: 'absolute' }; }), 3, '"Button" is the root, which cannot be absolute');
+  rejects(spinner(L => { L.Button = { constraints: { horizontal: 'center', vertical: 'center' } }; }), 3, '"Button" is the root');
+});
+
+test('rejects an absolute node whose parent has no Auto Layout in a selected variant (rule 5)', () => {
+  const c = spinner(L => { L.Track.position = 'absolute'; L.Track.constraints = { horizontal: 'center', vertical: 'center' }; });
+  rejects(c, 5, 'absolute Track needs a parent with Auto Layout', '245 selected variants');
+  // the root of a Button whose small size drops its Auto Layout: only those variants fail
+  const sm = spinner();
+  sm.layout.find(r => r.match.size === 'sm').set.Button.direction = 'none';
+  rejects(sm, 5, 'absolute Spinner needs a parent with Auto Layout, but Button', '35 selected variants');
+});
+
+test('rejects an absolute node without a fixed width and height (rule 5)', () => {
+  rejects(spinner(L => { L.Spinner.width = 'hug'; }), 5, 'absolute Spinner needs a fixed width and height');
+  rejects(spinner(L => { L.Spinner.height = 'fixed'; }), 5, 'absolute Spinner needs a fixed width and height');
+});
+
+test('rejects a constraint other than center (rule 3), and constraints without position or position without constraints (rule 5)', () => {
+  for (const constraints of [{ horizontal: 'start', vertical: 'center' }, { horizontal: 'center' }, { horizontal: 'center', vertical: 'center', x: 1 }, 'center'])
+    rejects(spinner(L => { L.Spinner.constraints = constraints; }), 3, '`constraints` is {horizontal: "center", vertical: "center"}');
+  rejects(spinner(L => { delete L.Spinner.position; }), 5, 'Spinner has constraints but is not absolute');
+  rejects(spinner(L => { delete L.Spinner.constraints; }), 5, 'absolute Spinner needs constraints');
+  rejects(spinner(L => { L.Spinner.position = 'relative'; }), 3, '`position` is "absolute"');
+});
+
+test('rejects an ELLIPSE missing arc, or another of its required fields (rule 5)', () => {
+  rejects(spinner(L => { delete L.Arc.arc; }), 5, 'layout Arc.arc is unresolved', '245 selected variants');
+  rejects(spinner(L => { delete L.Track.strokeWeight; }), 5, 'layout Track.strokeWeight is unresolved');
+  rejects(spinner((L, P) => { delete P.Track; }), 5, 'paint Track.stroke is unresolved');
+});
+
+test('rejects a bad arc or strokeCap, either one off an ELLIPSE, and a geometry field in a paint rule (rule 3)', () => {
+  for (const arc of [{ start: 0, sweep: 0 }, { start: 0, sweep: 400 }, { start: 0 }, { sameAs: 'Track.arc' }])
+    rejects(spinner(L => { L.Arc.arc = arc; }), 3, '`arc` is {start, sweep}');
+  rejects(spinner(L => { L.Arc.strokeCap = 'square'; }), 3, '`strokeCap` is "round" or "none"');
+  rejects(spinner(L => { L.Spinner.arc = { start: 0, sweep: 360 }; }), 3, '"Spinner": `arc` is set on ELLIPSE nodes only');
+  rejects(spinner((L, P) => { P.Arc.strokeCap = 'round'; }), 3, '"Arc": `strokeCap` is a layout field, not a paint field');
+});
+
+test('rejects an ELLIPSE as the root or with children (rule 3)', () => {
+  const root = spinner();
+  root.anatomy.type = 'ELLIPSE';
+  rejects(root, 3, '"Button" is an ELLIPSE, which cannot be the root');
+  const parent = spinner();
+  parent.anatomy.children[2].children[0].children = [{ name: 'Dot', type: 'FRAME' }];
+  rejects(parent, 3, '"Track" is an ELLIPSE, which has no children');
+});
+
+test('rejects an arc stroke sameAs a token without STROKE_COLOR (rule 6), and an ELLIPSE fill binds SHAPE_FILL', () => {
+  rejects(spinner((L, P) => { P.Arc.stroke = { sameAs: 'Label.fill' }; }), 6, '"text-on-color" is used as STROKE_COLOR at paint[28].Arc.stroke', '[SHAPE_FILL, TEXT_FILL]');
+  assert.equal(contract.scopeFor(spinner(), 'Track', 'fill'), 'SHAPE_FILL');
+});
+
+test('Spinner stacks its Track and Arc without Auto Layout: an arc needs a FRAME parent whose direction is none (rule 5, #442)', () => {
+  // a FRAME without direction has no Auto Layout either
+  assert.deepEqual(contract.validate(spinner(L => { delete L.Spinner.direction; }), foundations), { ok: true, errors: [] });
+  // with Auto Layout the arc's Figma box would sit in the flow; the full circle Track is fine there
+  const row = contract.validate(spinner(L => { L.Spinner.direction = 'row'; }), foundations);
+  assert.deepEqual(row.errors.map(e => [e.rule, e.at]), [[5, 'layout Arc.arc']]);
+  assert.match(row.errors[0].message, /the arc Arc needs a FRAME parent without Auto Layout \(direction "none"\), not Spinner in 245 selected variants/);
+  // an arc directly under the root COMPONENT, or absolute itself, fails too
+  const atRoot = spinner();
+  atRoot.anatomy.children.push(atRoot.anatomy.children[2].children.pop());
+  rejects(atRoot, 5, 'the arc Arc needs a FRAME parent without Auto Layout', 'not Button');
+  const absolute = spinner(L => { Object.assign(L.Arc, { position: 'absolute', constraints: { horizontal: 'center', vertical: 'center' } }); });
+  rejects(absolute, 5, 'absolute Arc needs a parent with Auto Layout');
 });

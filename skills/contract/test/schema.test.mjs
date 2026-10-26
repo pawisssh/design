@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as contract from '../scripts/contract.mjs';
+import { withSpinner } from './spinner.mjs';
 
 const root = new URL('../../../', import.meta.url);
 const load = rel => JSON.parse(readFileSync(new URL(rel, root), 'utf8'));
@@ -110,4 +111,23 @@ test('the schema rejects the drafted entry shapes validate rejects; a bad key pa
   c.drafted['anatomy.Footer'] = { by: 'owner', was: null };
   assert.deepEqual(check(schema, c), []);
   assert.ok(contract.validate(c, foundations).errors.some(e => e.rule === 9 && e.at === 'drafted.anatomy.Footer'));
+});
+
+test('the Button with an absolute spinner of two ELLIPSEs satisfies the schema, which rejects the geometry values validate rejects (#442)', () => {
+  assert.deepEqual(check(schema, withSpinner(load(fixtures.button))), []);
+  const bad = {
+    position: L => { L.Spinner.position = 'relative'; },
+    constraints: L => { L.Spinner.constraints = { horizontal: 'start', vertical: 'center' }; },
+    arc: L => { L.Arc.arc = { start: 0 }; },
+    strokeCap: L => { L.Arc.strokeCap = 'square'; },
+  };
+  for (const [field, edit] of Object.entries(bad)) {
+    const c = withSpinner(load(fixtures.button), edit);
+    const node = field === 'position' || field === 'constraints' ? 'Spinner' : 'Arc';
+    assert.ok(check(schema, c).some(e => e.startsWith(`$.layout[10].set.${node}.${field}`)), `schema accepts a bad ${field}`);
+    assert.ok(contract.validate(c, foundations).errors.some(e => e.rule === 3), `validate accepts a bad ${field}`);
+  }
+  const shape = withSpinner(load(fixtures.button));
+  shape.anatomy.children[2].type = 'CIRCLE';
+  assert.ok(check(schema, shape).some(e => e.startsWith('$.anatomy.children[2].type')));
 });
