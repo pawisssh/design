@@ -655,7 +655,7 @@ test('rejects an ELLIPSE as the root or with children (rule 3)', () => {
 });
 
 test('rejects an arc stroke sameAs a token without STROKE_COLOR (rule 6), and an ELLIPSE fill binds SHAPE_FILL', () => {
-  rejects(spinner((L, P) => { P.Arc.stroke = { sameAs: 'Label.fill' }; }), 6, '"text-on-color" is used as STROKE_COLOR at paint[28].Arc.stroke', '[SHAPE_FILL, TEXT_FILL]');
+  rejects(spinner((L, P) => { P.Arc.stroke = { sameAs: 'Label.fill' }; }), 6, `"text-on-color" is used as STROKE_COLOR at paint[${spinner().paint.length - 1}].Arc.stroke`, '[SHAPE_FILL, TEXT_FILL]');
   assert.equal(contract.scopeFor(spinner(), 'Track', 'fill'), 'SHAPE_FILL');
 });
 
@@ -666,6 +666,8 @@ test('Spinner stacks its Track and Arc without Auto Layout: an arc needs a FRAME
   const row = contract.validate(spinner(L => { L.Spinner.direction = 'row'; }), foundations);
   assert.deepEqual(row.errors.map(e => [e.rule, e.at]), [[5, 'layout Arc.arc']]);
   assert.match(row.errors[0].message, /the arc Arc needs a FRAME parent without Auto Layout \(direction "none"\), not Spinner in 245 selected variants/);
+  // a direction other than none is not none, even one the builder would read as none (#448)
+  rejects(spinner(L => { L.Spinner.direction = 'HORIZONTAL'; }), 5, 'the arc Arc needs a FRAME parent without Auto Layout');
   // an arc directly under the root COMPONENT, or absolute itself, fails too
   const atRoot = spinner();
   atRoot.anatomy.children.push(atRoot.anatomy.children[2].children.pop());

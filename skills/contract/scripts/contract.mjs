@@ -307,11 +307,9 @@ export function validate(contract, foundations) {
   const gaps = {}; // problem text -> {at, tuples}, so one problem is reported once with its variant count
   const gap = (at, problem, t) => { (gaps[problem] = gaps[problem] || { at, tuples: [] }).tuples.push(t); };
   const slotAxes = c.axes.filter(a => a.slot !== undefined);
-  const parentOf = {};
-  (function walk(n) { for (const k of n.children || []) { parentOf[k.name] = n.name; walk(k); } })(c.anatomy);
   for (const t of selected) {
     const r = resolve(c, t);
-    checkPlacement(anatomy, parentOf, r, gap, t);
+    checkPlacement(c.anatomy, r, gap, t);
     // A Slot axis's node shows exactly where the tuple fills it (#121).
     for (const a of slotAxes) {
       const { filled } = a.values.find(v => v.key === t[a.key]);
@@ -434,6 +432,7 @@ function checkPatterns(c, err) {
 
 // Rule 3 for the geometry fields (#442): an absolute node (`position`, `constraints`) is below the root; an ELLIPSE
 // is a leaf below the root, and only it takes `arc` and `strokeCap`. All are literal layout values, never `sameAs`.
+// Each check returns true, or what the value must be.
 const GEOMETRY = {
   position: v => v === 'absolute' || '`position` is "absolute" (in flow has no `position`)',
   constraints: v => (isObj(v) && Object.keys(v).sort().join() === 'horizontal,vertical' && v.horizontal === 'center' && v.vertical === 'center')
@@ -456,9 +455,9 @@ function checkGeometry(c, anatomy, err) {
         if (!isObj(fields)) continue;
         for (const [field, value] of Object.entries(fields)) {
           if (!GEOMETRY[field]) continue;
-          const ok = GEOMETRY[field](value);
+          const valid = GEOMETRY[field](value);
           if (section !== 'layout') err(3, at, `"${node}": \`${field}\` is a layout field, not a ${section} field`);
-          else if (ok !== true) err(3, at, `"${node}": ${ok}, not ${JSON.stringify(value)}`);
+          else if (valid !== true) err(3, at, `"${node}": ${valid}, not ${JSON.stringify(value)}`);
           if (ELLIPSE_ONLY.includes(field) && !(anatomy[node] && anatomy[node].type === 'ELLIPSE'))
             err(3, at, `"${node}": \`${field}\` is set on ELLIPSE nodes only`);
           if ((field === 'position' || field === 'constraints') && node === c.anatomy.name)
@@ -471,19 +470,21 @@ function checkGeometry(c, anatomy, err) {
 // Rule 5 for one resolved variant (#442). An absolute node has `constraints`, a fixed `width` and `height`, and a
 // parent with Auto Layout; `constraints` without `position` is an error, since Figma takes it on an in-flow child and
 // ignores it. An arc (`sweep` < 360) sits in a FRAME without Auto Layout, at its top left: its Figma box is Figma's.
-function checkPlacement(anatomy, parentOf, r, gap, t) {
+function checkPlacement(parent, r, gap, t) {
   const layout = name => r.layout[name] || {};
-  const flows = name => ['row', 'column'].includes(layout(name).direction);
+  const direction = layout(parent.name).direction;
+  const flows = direction === 'row' || direction === 'column', stacks = direction === undefined || direction === 'none';
   const fixed = v => typeof v === 'number' || (isObj(v) && ('token' in v || 'raw' in v));
-  for (const name of Object.keys(anatomy)) {
-    const L = layout(name), parent = parentOf[name];
-    if (L.position === 'absolute') {
-      if (!flows(parent)) gap(`layout ${name}.position`, `absolute ${name} needs a parent with Auto Layout, but ${parent}'s direction is not row or column`, t);
-      if (!fixed(L.width) || !fixed(L.height)) gap(`layout ${name}.position`, `absolute ${name} needs a fixed width and height (a token or a value)`, t);
-      if (L.constraints === undefined) gap(`layout ${name}.constraints`, `absolute ${name} needs constraints`, t);
-    } else if (L.constraints !== undefined) gap(`layout ${name}.constraints`, `${name} has constraints but is not absolute`, t);
-    if (anatomy[name].type === 'ELLIPSE' && isObj(L.arc) && L.arc.sweep < 360 && (anatomy[parent].type !== 'FRAME' || flows(parent)))
-      gap(`layout ${name}.arc`, `the arc ${name} needs a FRAME parent without Auto Layout (direction "none"), not ${parent}`, t);
+  for (const node of parent.children || []) {
+    const name = node.name, fields = layout(name);
+    if (fields.position === 'absolute') {
+      if (!flows) gap(`layout ${name}.position`, `absolute ${name} needs a parent with Auto Layout, but ${parent.name}'s direction is not row or column`, t);
+      if (!fixed(fields.width) || !fixed(fields.height)) gap(`layout ${name}.position`, `absolute ${name} needs a fixed width and height (a token or a value)`, t);
+      if (fields.constraints === undefined) gap(`layout ${name}.constraints`, `absolute ${name} needs constraints`, t);
+    } else if (fields.constraints !== undefined) gap(`layout ${name}.constraints`, `${name} has constraints but is not absolute`, t);
+    if (node.type === 'ELLIPSE' && isObj(fields.arc) && fields.arc.sweep < 360 && (parent.type !== 'FRAME' || !stacks))
+      gap(`layout ${name}.arc`, `the arc ${name} needs a FRAME parent without Auto Layout (direction "none"), not ${parent.name}`, t);
+    checkPlacement(node, r, gap, t);
   }
 }
 

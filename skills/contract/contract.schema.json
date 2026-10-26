@@ -227,7 +227,7 @@
       }
     },
     "constraints": {
-      "description": "layout only, on an absolute node (#442): where it sits in its parent. Only center for now; start and end may join the enums later",
+      "description": "layout only, on an absolute node (#442): where it sits in its parent. Only center for now",
       "type": "object",
       "required": ["horizontal", "vertical"],
       "properties": { "horizontal": { "enum": ["center"] }, "vertical": { "enum": ["center"] } }

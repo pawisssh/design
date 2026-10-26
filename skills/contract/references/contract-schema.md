@@ -147,7 +147,7 @@ A tweak the owner makes to the Base Component in Figma lands **in place**, on th
 
 **Geometry fields** (#442, layout only, written as literals, never `sameAs`):
 - `position`: `"absolute"`, or absent for a node in the flow. Never on the root.
-- `constraints`: `{horizontal, vertical}`, where the absolute node sits in its parent. Only `center` is allowed for now; `start` and `end` may come later without a schema change.
+- `constraints`: `{horizontal, vertical}`, where the absolute node sits in its parent. Only `center` is allowed for now.
 - `arc`: `{start, sweep}` on an ELLIPSE, with 0 < `sweep` ≤ 360.
 - `strokeCap`: `"round"` or `"none"`, on an ELLIPSE.
 

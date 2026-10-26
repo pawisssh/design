@@ -124,7 +124,7 @@ test('the Button with an absolute spinner of two ELLIPSEs satisfies the schema, 
   for (const [field, edit] of Object.entries(bad)) {
     const c = withSpinner(load(fixtures.button), edit);
     const node = field === 'position' || field === 'constraints' ? 'Spinner' : 'Arc';
-    assert.ok(check(schema, c).some(e => e.startsWith(`$.layout[10].set.${node}.${field}`)), `schema accepts a bad ${field}`);
+    assert.ok(check(schema, c).some(e => e.startsWith(`$.layout[${c.layout.length - 1}].set.${node}.${field}`)), `schema accepts a bad ${field}`);
     assert.ok(contract.validate(c, foundations).errors.some(e => e.rule === 3), `validate accepts a bad ${field}`);
   }
   const shape = withSpinner(load(fixtures.button));
