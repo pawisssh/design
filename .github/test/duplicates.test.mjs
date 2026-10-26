@@ -5,7 +5,8 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { addedLines, duplicates } from '../duplicates.mjs';
+import { duplicates } from '../duplicates.mjs';
+import { addedLines } from '../git.mjs';
 
 const SCRIPT = new URL('../duplicates.mjs', import.meta.url).pathname;
 // Ten counted lines, a function and nine statements, with a blank line, a comment and a lone bracket that never count.
