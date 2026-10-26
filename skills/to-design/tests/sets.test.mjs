@@ -15,6 +15,7 @@ import { pruneList, recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
 import { pack } from './pack.mjs';
 import { BUTTON_CLOSURE_DOC } from './chain.mjs';
+import { withSpinner } from '../../contract/test/spinner.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const BUTTON = JSON.parse(readFileSync(join(ROOT, 'design-systems/carbon/contracts/button.component.json'), 'utf8'));
@@ -496,6 +497,56 @@ test('the coverage check matches every Prop=Value label, cell and wiring; a samp
   assert.ok(t.checked > 0 && t.switching > 0, JSON.stringify(t));
   assert.deepEqual(writes(env.mock), [], 'the theme read restores the modes and writes nothing else');
   assert.deepEqual((await setNode(env)).parent.parent.explicitVariableModes, {});
+});
+
+// The Button with a CDS-style spinner (#442), stroked with a token the closure document's foundations build has.
+const spinnerContract = edit => approve(withSpinner(BUTTON, (layout, paint) => { paint.Track.stroke = { token: 'focus' }; edit(layout, paint); }), AT, { prototype: true });
+
+test('a spinner set packages and fits; coverage finds an absolute node off its centre past the half pixel, and a sample diffs clean', async () => {
+  const env = await setup({ withBase: false });
+  const spinner = spinnerContract(() => {});
+  const runs = await buildAll(env, spinner, { prototype: true });
+  for (const { out } of runs) assert.ok(out.chars <= 50000, `${out.chars} chars`);
+  assert.deepEqual(runs[0].plan.tree.children.find(c => c.name === 'Spinner').children.map(c => c.type), ['ELLIPSE', 'VECTOR']);
+  const cover = async () => (await sets(env, { mode: 'coverage', prototype: true }, { contract: spinner })).result;
+  assert.deepEqual(checkCoverage(spinner, await cover()).problems, []);
+  const sample = await sets(env, { mode: 'sample', sample: [0, 120, TOTAL - 1], prototype: true }, { contract: spinner });
+  assert.deepEqual(checkSample(spinner, sample.result, env.ledger, DOC).problems, []);
+  // the VECTOR's stroke is bound like any other layer's, so the theme read resolves it per mode
+  env.mock.log.length = 0;
+  const read = (await sets(env, { mode: 'theme', sample: [0, 120], prototype: true }, { contract: spinner })).result;
+  const theme = checkTheme(spinner, read, DOC);
+  assert.deepEqual(theme.problems, []);
+  assert.ok(Object.values(read.theme).every(colours => colours['Arc.stroke']), JSON.stringify(read.theme));
+  assert.deepEqual(writes(env.mock), [], 'the theme read writes nothing');
+  const variant = (await setNode(env)).children[3];
+  variant.findOne(x => x.name === 'Spinner').x += 0.6;
+  const off = await cover();
+  assert.deepEqual(checkCoverage(spinner, off).problems.map(p => ({ ...p, px: Math.round(p.px * 1e3) / 1e3 })),
+    [{ what: 'off-centre', name: variant.name, node: 'Spinner', px: 0.1 }]);
+  const { offCentre, ...unread } = off;
+  assert.deepEqual(checkCoverage(spinner, unread).problems, [{ what: 'off-centre', reason: 'unread' }]);
+  // an ELLIPSE drawn as an arc in some variants and a full circle in others has no one layer tree for the set
+  const mixed = spinnerContract(layout => { layout.Arc.arc = { start: 0, sweep: 360 }; });
+  mixed.layout.push({ match: { size: 'sm' }, set: { Arc: { arc: { start: 0, sweep: 270 } } } });
+  assert.throws(() => setsPlan(approve(asDraft(mixed), AT, { prototype: true }), DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, prototype: true, batch: 0 }), /the ELLIPSE Arc is an arc in some selected variants and a full circle in others/);
+});
+
+test('a set whose absolute node is an ELLIPSE itself packages, fits and covers clean', async () => {
+  const env = await setup({ withBase: false });
+  const draft = withSpinner(BUTTON, (layout, paint) => {
+    paint.Track.stroke = { token: 'focus' };
+    Object.assign(layout.Track, { position: 'absolute', constraints: { horizontal: 'center', vertical: 'center' } });
+  });
+  // the Track leaves the Spinner for the root, which has Auto Layout
+  draft.anatomy.children.push(draft.anatomy.children.find(c => c.name === 'Spinner').children.shift());
+  const ring = approve(draft, AT, { prototype: true });
+  const runs = await buildAll(env, ring, { prototype: true });
+  for (const { out } of runs) assert.ok(out.chars <= 50000, `${out.chars} chars`);
+  assert.equal(runs[0].plan.tree.children.find(c => c.name === 'Track').type, 'ELLIPSE');
+  const cover = (await sets(env, { mode: 'coverage', prototype: true }, { contract: ring })).result;
+  assert.deepEqual(checkCoverage(ring, cover).problems, []);
+  assert.deepEqual(cover.offCentre, []);
 });
 
 test('a first loose batch lost before its ledger is found again by a reconcile, and the retry creates nothing', async () => {

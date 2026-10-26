@@ -1,6 +1,6 @@
 ## Tests
 
-`npm test` runs every skill's suite and the CI scripts' (`.github/test`); CI runs it on each PR. Run `node scripts/fetch.mjs` first: it runs every skill's pinned fetch (`skills/*/scripts/sources.mjs` and `deps.mjs`), without which the tests that need them skip.
+`npm test` runs every skill's suite and the CI scripts' (`.github/test`); CI runs it on each PR. Run `node scripts/fetch.mjs` first: it runs every skill's pinned fetch (`skills/*/scripts/sources.mjs` and `deps.mjs`), without which the tests that need them skip. `npm run test:skills -- contract to-design` runs only the named skills' suites.
 
 Before opening a PR, `git fetch origin` and run `npm run check`: CI's checks of the change against `origin/main` (no copied block of 8+ lines under `skills/`, no export nothing imports). For a PR stacked on another branch, set `BASE=origin/<branch>`.
 
