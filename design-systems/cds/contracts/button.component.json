@@ -222,7 +222,7 @@
     "status": "approved",
     "omit": [],
     "expectedCount": 480,
-    "approval": { "by": "owner", "at": "2026-10-26T13:33:10.254Z", "snapshotId": "sha256:b5982a0b4c5d73acb7383a814a22a02a08a3ef64cb32592099bd8b74dd37eddb", "contentHash": "sha256:b0ec2bc2197f5743decad9f377e4ff96554e74dd3ad3f89e47fad3d9ab88e1ba" }
+    "approval": { "by": "owner", "at": "2026-10-26T13:48:32.434Z", "snapshotId": "sha256:b5982a0b4c5d73acb7383a814a22a02a08a3ef64cb32592099bd8b74dd37eddb", "contentHash": "sha256:0ed7f52d9b671c6d7cf0a5f15f883580a8c0fbaa18c14aa1c099105991dcb606" }
   },
   "anatomy": {
     "name": "Button",
