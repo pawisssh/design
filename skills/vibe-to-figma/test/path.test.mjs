@@ -8,14 +8,11 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildFolder } from '../scripts/folder.mjs';
 import { choosePath } from '../scripts/path.mjs';
-import { hasTypescript } from '../../to-handoff/scripts/deps.mjs';
-import { V0 } from './helpers.mjs';
+import { V0, noReader } from './helpers.mjs';
 
 const fixture = name => fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
 const FOLDER = fileURLToPath(new URL('../scripts/folder.mjs', import.meta.url));
 const cli = (...args) => spawnSync(process.execPath, [FOLDER, ...args], { encoding: 'utf8' });
-// Path A reads the Prototype's JSX with To-handoff's React reader before it can say it found nothing (#425).
-const noReader = !hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
 
 test('a project with components.json takes the shadcn path', () => {
   assert.deepEqual(choosePath(V0), { path: 'shadcn' });

@@ -15,8 +15,9 @@ import { buildFolder } from '../scripts/folder.mjs';
 export const V0 = fileURLToPath(new URL('../../to-handoff/test/fixtures/v0-app', import.meta.url));
 const DRAFTS = fileURLToPath(new URL('../../adapter-generic/fixtures/drafts/', import.meta.url));
 export const READABLE = ['alert', 'button', 'card', 'input', 'label', 'select', 'textarea'];
-export const skip = (!hasTools() && 'Generic Adapter tools missing; run: node skills/adapter-generic/scripts/sources.mjs')
-  || (!hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs');
+// Path A reads a Prototype's JSX with To-handoff's React reader (#425).
+export const noReader = !hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
+export const skip = (!hasTools() && 'Generic Adapter tools missing; run: node skills/adapter-generic/scripts/sources.mjs') || noReader;
 // To-design's packager writes a package only inside the main working tree, where the use_figma hook resolves it, so a
 // worktree checked out outside it (under /tmp, say) cannot package a call. In a plain clone MAIN is null, and packageSkip
 // must still be false: node --test reports `skip: null` as skipped while it runs the test, so a failure would not show.
