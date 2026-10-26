@@ -11,10 +11,11 @@ import { fileURLToPath } from 'node:url';
 import { foundationsPlan } from '../scripts/build-plan.mjs';
 import { recordResult } from '../scripts/ledger.mjs';
 import { mockFigma, runPackage } from './mock-figma.mjs';
+import { BUTTON_CLOSURE_DOC } from './chain.mjs';
 // This file's own pack derives the foundations plan first, then packages it with the shared one.
 import { pack as packOnto } from './pack.mjs';
 
-const DOC_PATH = new URL('../../../design-systems/carbon/carbon.foundations.json', import.meta.url);
+const DOC_PATH = BUTTON_CLOSURE_DOC;
 const DOC_TEXT = readFileSync(DOC_PATH, 'utf8');
 const CORE = new URL('../assets/builder-core.js', import.meta.url).pathname;
 const FILE_KEY = 'MOCKFILEKEY';
@@ -365,7 +366,7 @@ test('the build-plan and ledger CLIs run from a path that contains a space', () 
   mkdirSync(join(base, 'skills/contract/scripts'), { recursive: true });
   copyFileSync(new URL('../../contract/scripts/contract.mjs', import.meta.url), join(base, 'skills/contract/scripts/contract.mjs'));
   for (const name of ['build-plan.mjs', 'ledger.mjs', 'base-loop.mjs', 'readback.mjs', 'foundations-subset.mjs']) copyFileSync(new URL(`../scripts/${name}`, import.meta.url), join(dir, name));
-  const plan = spawnSync('node', [join(dir, 'build-plan.mjs'), 'foundations', '--doc', fileURLToPath(DOC_PATH), '--file-key', FILE_KEY, '--out', join(dir, 'run')], { cwd: dir, encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: base } });
+  const plan = spawnSync('node', [join(dir, 'build-plan.mjs'), 'foundations', '--doc', DOC_PATH, '--file-key', FILE_KEY, '--out', join(dir, 'run')], { cwd: dir, encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: base } });
   assert.equal(plan.status, 0, plan.stderr);
   assert.equal(JSON.parse(plan.stdout).status, 'derived');
   assert.equal(JSON.parse(readFileSync(join(dir, 'run', 'plan.json'), 'utf8')).fileKey, FILE_KEY);

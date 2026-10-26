@@ -10,6 +10,9 @@ import { pack } from './pack.mjs';
 export const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 export const CORE = join(ROOT, 'skills/to-design/assets/builder-core.js');
 export const COMPONENTS_CORE = join(ROOT, 'skills/to-design/assets/builder-core-components.js');
+// Carbon's Foundations document as it was with a Button-only closure, frozen so these counts and plans stay put
+// as Contracts are committed.
+export const BUTTON_CLOSURE_DOC = join(ROOT, 'skills/to-design/tests/fixtures/button-closure/carbon.foundations.json');
 
 // -> {call({plan, state}, core) -> result, foundations(docText, options), ledger()}: each call fails on an error or a
 // conflict; foundations builds every chunk of the document.

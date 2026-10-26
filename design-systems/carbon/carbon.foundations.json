@@ -36,15 +36,33 @@
         "family": "button",
         "path": "design-systems/carbon/contracts/button.component.json",
         "snapshotId": "sha256:4c82c3cc7f2af6fa24fba39bb5e159c415b5691800130268c9d8903901164152"
+      },
+      {
+        "family": "select",
+        "path": "design-systems/carbon/contracts/select.component.json",
+        "snapshotId": "sha256:6d36c2b22a7ad32899a5080c48e270fa4578beff8edef845236b574d4c60b2ff"
+      },
+      {
+        "family": "text-input",
+        "path": "design-systems/carbon/contracts/text-input.component.json",
+        "snapshotId": "sha256:1a5e61e829858c59e445d7febf9c44c5d920bae55ddd39de50851196f1502c4c"
+      },
+      {
+        "family": "toast-notification",
+        "path": "design-systems/carbon/contracts/toast-notification.component.json",
+        "snapshotId": "sha256:43954adf2ff1b4015bfe8fb98a58492ea6ec309e3f4f32a316d9003e9119ab8f"
       }
     ],
     "tokens": [
       "background",
       "background-active",
       "background-hover",
+      "background-inverse",
       "body-compact-01",
       "body-compact-02",
       "border-radius-00",
+      "border-strong",
+      "border-subtle",
       "button-danger-active",
       "button-danger-hover",
       "button-danger-primary",
@@ -59,9 +77,17 @@
       "button-tertiary",
       "button-tertiary-active",
       "button-tertiary-hover",
+      "field",
+      "field-hover",
       "focus",
+      "heading-compact-01",
+      "helper-text-01",
+      "icon-disabled",
+      "icon-inverse",
+      "icon-primary",
       "icon-size-01",
       "icon-size-02",
+      "label-01",
       "link-primary",
       "link-primary-hover",
       "size-2xl",
@@ -70,13 +96,25 @@
       "size-sm",
       "size-xl",
       "size-xs",
+      "spacing-02",
       "spacing-03",
       "spacing-05",
       "spacing-07",
+      "support-error",
+      "support-error-inverse",
+      "support-info-inverse",
+      "support-success-inverse",
+      "support-warning",
+      "support-warning-inverse",
       "text-disabled",
+      "text-error",
+      "text-helper",
       "text-inverse",
       "text-on-color",
-      "text-on-color-disabled"
+      "text-on-color-disabled",
+      "text-placeholder",
+      "text-primary",
+      "text-secondary"
     ]
   },
   "collections": [
@@ -4585,7 +4623,9 @@
           "resolved": "#f4f4f4"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "toast-notification"
+      ]
     },
     "background-inverse-hover": {
       "collection": "theme",
@@ -6817,7 +6857,9 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "select",
+        "text-input"
       ]
     },
     "focus-inset": {
@@ -6974,7 +7016,9 @@
           "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select"
+      ]
     },
     "icon-interactive": {
       "collection": "theme",
@@ -7038,7 +7082,9 @@
           "resolved": "#161616"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "toast-notification"
+      ]
     },
     "icon-on-color": {
       "collection": "theme",
@@ -7148,7 +7194,9 @@
           "resolved": "#f4f4f4"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select"
+      ]
     },
     "icon-secondary": {
       "collection": "theme",
@@ -8712,7 +8760,10 @@
           "resolved": "#fa4d56"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "support-error-inverse": {
       "collection": "theme",
@@ -8744,7 +8795,9 @@
           "resolved": "#da1e28"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "toast-notification"
+      ]
     },
     "support-info": {
       "collection": "theme",
@@ -8808,7 +8861,9 @@
           "resolved": "#0043ce"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "toast-notification"
+      ]
     },
     "support-success": {
       "collection": "theme",
@@ -8872,7 +8927,9 @@
           "resolved": "#24a148"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "toast-notification"
+      ]
     },
     "support-warning": {
       "collection": "theme",
@@ -8904,7 +8961,10 @@
           "resolved": "#f1c21b"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "support-warning-inverse": {
       "collection": "theme",
@@ -8936,7 +8996,9 @@
           "resolved": "#f1c21b"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "toast-notification"
+      ]
     },
     "syntax-angle-bracket": {
       "collection": "theme",
@@ -11813,7 +11875,9 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "select",
+        "text-input"
       ]
     },
     "text-error": {
@@ -11846,7 +11910,10 @@
           "resolved": "#ff8389"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "text-helper": {
       "collection": "theme",
@@ -11878,7 +11945,10 @@
           "resolved": "#a8a8a8"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "text-inverse": {
       "collection": "theme",
@@ -11911,7 +11981,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "toast-notification"
       ]
     },
     "text-on-color": {
@@ -12054,7 +12125,9 @@
           "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "text-input"
+      ]
     },
     "text-primary": {
       "collection": "theme",
@@ -12086,7 +12159,10 @@
           "resolved": "#f4f4f4"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "text-secondary": {
       "collection": "theme",
@@ -12118,7 +12194,10 @@
           "resolved": "#c6c6c6"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "toggle-off": {
       "collection": "theme",
@@ -12175,7 +12254,10 @@
           "alias": "border-strong-03"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "border-subtle": {
       "collection": "layer",
@@ -12200,7 +12282,10 @@
           "alias": "border-subtle-02"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "border-subtle-selected": {
       "collection": "layer",
@@ -12275,7 +12360,10 @@
           "alias": "field-03"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "field-hover": {
       "collection": "layer",
@@ -12300,7 +12388,9 @@
           "alias": "field-hover-03"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select"
+      ]
     },
     "layer": {
       "collection": "layer",
@@ -12851,7 +12941,10 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "select",
+        "text-input",
+        "toast-notification"
       ]
     },
     "icon-size-02": {
@@ -12872,7 +12965,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "toast-notification"
       ]
     },
     "layout-01": {
@@ -13170,7 +13264,10 @@
           "from": "0.5 miniUnits x 8"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "spacing-03": {
       "collection": "layout",
@@ -13190,7 +13287,9 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "select",
+        "text-input"
       ]
     },
     "spacing-04": {
@@ -13230,7 +13329,10 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "select",
+        "text-input",
+        "toast-notification"
       ]
     },
     "spacing-06": {
@@ -13557,7 +13659,10 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "select",
+        "text-input",
+        "toast-notification"
       ]
     },
     "body-compact-01-font-weight": {
@@ -13578,7 +13683,10 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "select",
+        "text-input",
+        "toast-notification"
       ]
     },
     "body-compact-01-letter-spacing": {
@@ -13599,7 +13707,10 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "select",
+        "text-input",
+        "toast-notification"
       ]
     },
     "body-compact-01-line-height": {
@@ -13620,7 +13731,10 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "select",
+        "text-input",
+        "toast-notification"
       ]
     },
     "body-compact-02-font-size": {
@@ -15034,7 +15148,10 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "select",
+        "text-input",
+        "toast-notification"
       ]
     },
     "font-family-serif": {
@@ -15605,7 +15722,9 @@
           "from": "rem(scale02), scale02 = 14"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "toast-notification"
+      ]
     },
     "heading-compact-01-font-weight": {
       "collection": "type",
@@ -15624,7 +15743,9 @@
           "from": "fontWeight.ts semibold"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "toast-notification"
+      ]
     },
     "heading-compact-01-letter-spacing": {
       "collection": "type",
@@ -15643,7 +15764,9 @@
           "from": "px"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "toast-notification"
+      ]
     },
     "heading-compact-01-line-height": {
       "collection": "type",
@@ -15662,7 +15785,9 @@
           "from": "1.28572 x 14 = 18.0001, rounded"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "toast-notification"
+      ]
     },
     "heading-compact-02-font-size": {
       "collection": "type",
@@ -15757,7 +15882,10 @@
           "from": "rem(scale01), scale01 = 12"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "helper-text-01-letter-spacing": {
       "collection": "type",
@@ -15776,7 +15904,10 @@
           "from": "px"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "helper-text-01-line-height": {
       "collection": "type",
@@ -15795,7 +15926,10 @@
           "from": "1.33333 x 12 = 16.0000, rounded"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "helper-text-02-font-size": {
       "collection": "type",
@@ -15892,7 +16026,10 @@
           "from": "rem(scale01), scale01 = 12"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "label-01-font-weight": {
       "collection": "type",
@@ -15911,7 +16048,10 @@
           "from": "fontWeight.ts regular"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "label-01-letter-spacing": {
       "collection": "type",
@@ -15930,7 +16070,10 @@
           "from": "px"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "label-01-line-height": {
       "collection": "type",
@@ -15949,7 +16092,10 @@
           "from": "1.33333 x 12 = 16.0000, rounded"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "label-02-font-size": {
       "collection": "type",
@@ -16252,7 +16398,10 @@
         "letterSpacing": "body-compact-01-letter-spacing"
       },
       "usedBy": [
-        "button"
+        "button",
+        "select",
+        "text-input",
+        "toast-notification"
       ]
     },
     "body-compact-02": {
@@ -16879,7 +17028,9 @@
         "fontWeight": "heading-compact-01-font-weight",
         "letterSpacing": "heading-compact-01-letter-spacing"
       },
-      "usedBy": []
+      "usedBy": [
+        "toast-notification"
+      ]
     },
     "heading-compact-02": {
       "name": "Heading/heading-compact-02",
@@ -16926,7 +17077,10 @@
         "lineHeight": "helper-text-01-line-height",
         "letterSpacing": "helper-text-01-letter-spacing"
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "helper-text-02": {
       "name": "Helper/helper-text-02",
@@ -16974,7 +17128,10 @@
         "fontWeight": "label-01-font-weight",
         "letterSpacing": "label-01-letter-spacing"
       },
-      "usedBy": []
+      "usedBy": [
+        "select",
+        "text-input"
+      ]
     },
     "label-02": {
       "name": "Label/label-02",
@@ -17066,7 +17223,7 @@
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
-      "contracts": 1,
+      "contracts": 4,
       "errors": 0
     }
   },
