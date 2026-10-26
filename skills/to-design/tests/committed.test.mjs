@@ -7,6 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { validate } from '../../contract/scripts/contract.mjs';
 import { diff } from '../scripts/base-loop.mjs';
 import { normalizeReadback } from '../scripts/readback.mjs';
 import { basePlan, iconsPlan } from '../scripts/build-plan.mjs';
@@ -38,6 +39,13 @@ for (const ds of readdirSync(join(ROOT, 'design-systems'))) {
     .map(f => ({ file: f, contract: JSON.parse(readFileSync(join(dir, 'contracts', f), 'utf8')) }));
   const withIcons = contracts.map(({ contract: c }) => c).filter(c => c.icons && c.icons.source);
   const missing = withIcons.filter(c => !existsSync(iconsDir(c)));
+
+  // A merge that changes an approved Contract voids its approval (rule 8), and no other check reads the committed
+  // ones (#389's approval went stale under #417). Every invalid file is named, not only the first.
+  test(`${ds}: every committed Contract is valid, its approval bound to its content`, () => {
+    const invalid = contracts.map(({ file, contract }) => ({ file, errors: validate(contract, doc).errors })).filter(r => r.errors.length);
+    assert.deepEqual(invalid, []);
+  });
 
   test(`${ds}: every committed Contract's Base Component builds and reads back with no differences`,
     { skip: missing.length ? `icon package not fetched: ${missing.map(iconsDir).join(', ')}` : false }, async t => {

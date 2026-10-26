@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { applyOmit, approve, asDraft, expand, variantName } from '../../contract/scripts/contract.mjs';
-import { basePlan, decodeEntries, foundationsPlan, iconsPlan, SET_MODES, setsPlan } from '../scripts/build-plan.mjs';
+import { basePlan, decodeEntries, foundationsPlan, iconsPlan, rehashSets, SET_MODES, setsPlan } from '../scripts/build-plan.mjs';
 import { checkCoverage, checkSample, checkTheme } from '../scripts/coverage.mjs';
 import { diff, normalizeBaseResult } from '../scripts/base-loop.mjs';
 import { pruneList, recordResult } from '../scripts/ledger.mjs';
@@ -635,4 +635,20 @@ test('every plan shape the build emits is accepted by the packager, set-only app
   const builds = ['build loose', 'build append', 'build append indexes', 'build append set-only'];
   assert.deepEqual([...shapes].sort(), ['foundations', 'foundations chunk first', 'foundations chunk later', 'icons', 'base', 'base read-only',
     ...builds, ...SET_MODES.filter(m => m !== 'build')].sort());
+});
+
+test('rehash moves a built set to an edit the builder never reads, and refuses one it reads (#389)', async () => {
+  const env = await setup();
+  await buildAll(env);
+  const edited = edit => { const c = asDraft(BUTTON); edit(c); return approve(c, AT); };
+  const evidence = edited(c => { c.axes[0].defaultSource += ' (re-cited)'; });
+  const opts = { fileKey: FILE_KEY, at: AT };
+  assert.ok(setsPlan(evidence, DOC_TEXT, env.ledger, { ...opts, next: true }), 'without a rehash the moved hash asks for every batch again');
+  const ledger = rehashSets(BUTTON, evidence, DOC_TEXT, env.ledger, { fileKey: FILE_KEY });
+  assert.equal(setsPlan(evidence, DOC_TEXT, ledger, { ...opts, next: true }), null, 'built: nothing to re-run');
+  assert.deepEqual(ledger.sets.button.variants, env.ledger.sets.button.variants);
+  assert.equal(ledger.bases.button.contentHash, ledger.sets.button.contentHash, 'the Base record moves with the set');
+  const layout = edited(c => { c.layout[0].set.Button.alignMain = 'center'; });
+  assert.throws(() => rehashSets(BUTTON, layout, DOC_TEXT, env.ledger, { fileKey: FILE_KEY }), /build batch 0 differs .* needs its batches rebuilt/);
+  assert.throws(() => rehashSets(evidence, layout, DOC_TEXT, env.ledger, { fileKey: FILE_KEY }), /not recorded as built from --from/);
 });

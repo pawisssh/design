@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { approve, contentHash, PROTOTYPE_APPROVER, validate } from '../../contract/scripts/contract.mjs';
 import {
-  applyEdits, approveReviewed, diff, discardNote, draftedByKind, formatReview, ownerEdits, regenerate, review, RAW_REASON,
+  applyEdits, approveReviewed, diff, discardNote, draftedByKind, formatReview, mainChanged, ownerEdits, regenerate, review, RAW_REASON,
 } from '../scripts/base-loop.mjs';
 import { expectedBase, normalizeReadback } from '../scripts/readback.mjs';
 
@@ -238,6 +238,43 @@ test('the approve CLI writes a prototype approval only under .scratch/', () => {
   assert.equal(stale.status, 1);
   assert.match(stale.stderr, /the Contract changed since the review/);
   assert.equal(existsSync(join(root, 'owner.json')), false);
+});
+
+test('main changing the Contract after the branch forked withholds the approve command, and approve refuses (#389)', () => {
+  const repo = realpathSync(mkdtempSync(join(tmpdir(), 'base-loop-main-')));
+  const git = (...args) => {
+    const r = spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', '-C', repo, ...args], { encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    return r.stdout.trim();
+  };
+  const path = join(repo, 'button.component.json');
+  const text = readFileSync(join(FIX, 'button.component.json'), 'utf8');
+  const commit = (body, msg) => { writeFileSync(path, body); git('commit', '-qam', msg); };
+  git('init', '-q', '-b', 'main');
+  writeFileSync(path, text);
+  git('add', '.');
+  git('commit', '-qm', 'fork');
+  git('update-ref', 'refs/remotes/origin/main', 'main');
+  git('checkout', '-qb', 'work');
+  assert.equal(mainChanged(path), null, 'main has not moved');
+  commit(text + '\n', "the owner's tweak");
+  assert.equal(mainChanged(path), null, "the branch's own edit does not count");
+  git('checkout', '-q', 'main');
+  commit(text.replace('"description": "', '"description": "Edited. '), "main's edit");
+  git('update-ref', 'refs/remotes/origin/main', 'main');
+  git('checkout', '-q', 'work');
+  const main = git('rev-parse', '--short', 'origin/main');
+  assert.equal(mainChanged(path), main);
+
+  const pkg = formatReview(CONTRACT, rb('v0'), review(CONTRACT, complete(rb('v0')), FOUNDATIONS), { fileKey: 'F', contractPath: 'c', readbackPath: 'r', staleMain: main });
+  assert.match(pkg, new RegExp(`Not ready to approve: origin/main ${main} changed this Contract after the branch forked`));
+  assert.doesNotMatch(pkg, /base-loop\.mjs approve/);
+  writeFileSync(join(repo, 'readback.json'), JSON.stringify(complete(rb('v0'))));
+  const run = spawnSync('node', [SCRIPT, 'approve', path, join(repo, 'readback.json'), '--foundations', join(ROOT, 'design-systems/carbon/carbon.foundations.json'),
+    '--snapshot-id', CONTRACT.source.snapshotId, '--content-hash', contentHash(CONTRACT)], { encoding: 'utf8' });
+  assert.equal(run.status, 1);
+  assert.match(run.stderr, /changed this Contract after the branch forked: rebase onto it/);
+  assert.equal(git('status', '--porcelain', '--', 'button.component.json'), '', 'approve wrote nothing');
 });
 
 test('regenerating from the saved readbacks reproduces the committed outputs byte for byte', () => {
