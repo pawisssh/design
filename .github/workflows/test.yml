@@ -53,18 +53,13 @@ jobs:
           NODE_OPTIONS: >-
             --test-reporter=tap --test-reporter-destination=stdout
             --test-reporter=${{ github.workspace }}/.github/slowest-files.mjs --test-reporter-destination=stdout
-      # A block of 8+ lines the pull request adds under skills/ that the repo already has fails the run; it runs even
-      # when a test fails, so both are reported.
+      # npm run check, the command a session runs before opening a pull request: duplicates.mjs (a copied block of 8+
+      # lines under skills/) and exports.mjs (an export nothing imports). The step runs even when a test fails, so
+      # both are reported.
       - if: github.event_name == 'pull_request' && !cancelled()
         env:
-          BASE_REF: ${{ github.base_ref }}
-        run: node .github/duplicates.mjs "origin/$BASE_REF"
-      # An export the pull request adds under skills/*/scripts/ that no other file imports fails the run, so a module's
-      # interface stays what its callers and tests use.
-      - if: github.event_name == 'pull_request' && !cancelled()
-        env:
-          BASE_REF: ${{ github.base_ref }}
-        run: node .github/exports.mjs "origin/$BASE_REF"
+          BASE: origin/${{ github.base_ref }}
+        run: npm run check
       # Each recorded Handoff that is pending, or has no signed.json byte copy, as a notice and in the job summary,
       # with what blocks its Sign-off. A report only: a regenerated Handoff lands pending for the owner to sign.
       - if: '!cancelled()'
