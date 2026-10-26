@@ -82,11 +82,11 @@ export function addedLines(diff) {
 }
 
 // core.quotePath=false keeps a path with non-ASCII characters as it is, unquoted, in ls-tree and diff.
-const git = (args, input) => execFileSync('git', ['-c', 'core.quotePath=false', ...args], { input, maxBuffer: 1 << 28 });
+export const git = (args, input) => execFileSync('git', ['-c', 'core.quotePath=false', ...args], { input, maxBuffer: 1 << 28 });
 
 // Each file's text at `head`, read in one `git cat-file --batch`: per file a header `<oid> blob <size>`, its bytes and
 // a newline.
-function blobs(head, paths) {
+export function blobs(head, paths) {
   const out = git(['cat-file', '--batch'], paths.map(p => `${head}:${p}`).join('\n') + '\n');
   const files = {};
   let at = 0;
