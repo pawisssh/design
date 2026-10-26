@@ -8,11 +8,14 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildFolder } from '../scripts/folder.mjs';
 import { choosePath } from '../scripts/path.mjs';
+import { hasTypescript } from '../../to-handoff/scripts/deps.mjs';
 import { V0 } from './helpers.mjs';
 
 const fixture = name => fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
 const FOLDER = fileURLToPath(new URL('../scripts/folder.mjs', import.meta.url));
 const cli = (...args) => spawnSync(process.execPath, [FOLDER, ...args], { encoding: 'utf8' });
+// Path A reads the Prototype's JSX with To-handoff's React reader before it can say it found nothing (#425).
+const noReader = !hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
 
 test('a project with components.json takes the shadcn path', () => {
   assert.deepEqual(choosePath(V0), { path: 'shadcn' });
@@ -80,19 +83,27 @@ test('a project that is not a directory is refused plainly', () => {
   assert.match(r.message, /no such directory/);
 });
 
-test('buildFolder refuses before reading anything; path A with nothing to extract says so', async () => {
+// The CLI exits 1 with one plain message, no stack trace and no ENOENT, with or without --all.
+function refusesPlainly(name, found) {
+  for (const extra of [[], ['--all']]) {
+    const r = cli(fixture(name), ...extra);
+    assert.equal(r.status, 1, `${name} ${extra}`);
+    assert.match(r.stderr, found);
+    assert.doesNotMatch(r.stderr + r.stdout, /ENOENT|\n\s+at /);
+    assert.equal(r.stderr.trim().split('\n').length, 1);
+  }
+}
+
+test('buildFolder refuses before reading anything', async () => {
   await assert.rejects(buildFolder({ project: fixture('html-app'), root: tmpdir() }), /plain HTML/);
-  await assert.rejects(buildFolder({ project: fixture('tailwind-no-shadcn'), root: tmpdir() }), /path A found no Component Family/);
 });
 
 test('the CLI exits 1 with one plain message, no stack trace and no ENOENT, with or without --all', () => {
-  for (const [name, found] of [['html-app', /plain HTML/], ['carbon-scss-app', /Carbon/], ['tailwind-no-shadcn', /path A found no Component Family/]]) {
-    for (const extra of [[], ['--all']]) {
-      const r = cli(fixture(name), ...extra);
-      assert.equal(r.status, 1, `${name} ${extra}`);
-      assert.match(r.stderr, found);
-      assert.doesNotMatch(r.stderr + r.stdout, /ENOENT|\n\s+at /);
-      assert.equal(r.stderr.trim().split('\n').length, 1);
-    }
-  }
+  refusesPlainly('html-app', /plain HTML/);
+  refusesPlainly('carbon-scss-app', /Carbon/);
+});
+
+test('path A with nothing to extract says so, from buildFolder and the CLI', { skip: noReader }, async () => {
+  await assert.rejects(buildFolder({ project: fixture('tailwind-no-shadcn'), root: tmpdir() }), /path A found no Component Family/);
+  refusesPlainly('tailwind-no-shadcn', /path A found no Component Family/);
 });
