@@ -36,8 +36,77 @@
     "snapshotId": "sha256:dfc2dd278066e216264212cdac1983ce912017038c724c5acedfe1e8230c8df4"
   },
   "closure": {
-    "contracts": [],
-    "tokens": []
+    "contracts": [
+      {
+        "family": "button",
+        "path": "design-systems/cds/contracts/button.component.json",
+        "snapshotId": "sha256:b5982a0b4c5d73acb7383a814a22a02a08a3ef64cb32592099bd8b74dd37eddb"
+      }
+    ],
+    "tokens": [
+      "bgPrimary",
+      "borderRadius-700",
+      "borderRadius-900",
+      "borderWidth-0",
+      "button-inverse-background",
+      "button-inverse-color",
+      "button-inverse-disabled-background",
+      "button-inverse-hover-background",
+      "button-inverse-pressed-background",
+      "button-inverse-transparent-color",
+      "button-inverse-transparent-hover-background",
+      "button-inverse-transparent-pressed-background",
+      "button-negative-background",
+      "button-negative-color",
+      "button-negative-disabled-background",
+      "button-negative-hover-background",
+      "button-negative-pressed-background",
+      "button-negative-transparent-color",
+      "button-negative-transparent-hover-background",
+      "button-negative-transparent-pressed-background",
+      "button-positive-background",
+      "button-positive-color",
+      "button-positive-disabled-background",
+      "button-positive-hover-background",
+      "button-positive-pressed-background",
+      "button-positive-transparent-color",
+      "button-positive-transparent-hover-background",
+      "button-positive-transparent-pressed-background",
+      "button-primary-background",
+      "button-primary-color",
+      "button-primary-disabled-background",
+      "button-primary-hover-background",
+      "button-primary-pressed-background",
+      "button-primary-transparent-color",
+      "button-primary-transparent-hover-background",
+      "button-primary-transparent-pressed-background",
+      "button-secondary-background",
+      "button-secondary-color",
+      "button-secondary-disabled-background",
+      "button-secondary-hover-background",
+      "button-secondary-pressed-background",
+      "button-secondary-transparent-color",
+      "button-secondary-transparent-hover-background",
+      "button-secondary-transparent-pressed-background",
+      "button-tertiary-background",
+      "button-tertiary-color",
+      "button-tertiary-disabled-background",
+      "button-tertiary-hover-background",
+      "button-tertiary-pressed-background",
+      "button-tertiary-transparent-color",
+      "button-tertiary-transparent-hover-background",
+      "button-tertiary-transparent-pressed-background",
+      "headline",
+      "iconSize-m",
+      "iconSize-s",
+      "label1",
+      "space-0_75",
+      "space-1",
+      "space-1_5",
+      "space-2",
+      "space-3",
+      "space-4"
+    ]
   },
   "collections": [
     {
@@ -4517,7 +4586,9 @@
           "resolved": "#578bfa"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "bgPrimaryWash": {
       "collection": "theme",
@@ -4802,7 +4873,9 @@
           "resolved": "#ffffff"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-inverse-border": {
@@ -4847,7 +4920,9 @@
           "resolved": "#0a0b0d"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-inverse-transparent-background": {
@@ -4914,7 +4989,9 @@
           "resolved": "#ffffff"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-negative-background": {
@@ -4936,7 +5013,9 @@
           "resolved": "#f0616d"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-negative-border": {
@@ -4981,7 +5060,9 @@
           "resolved": "#0a0b0d"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-negative-transparent-background": {
@@ -5048,7 +5129,9 @@
           "resolved": "#f0616d"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-positive-background": {
@@ -5070,7 +5153,9 @@
           "resolved": "#27ad75"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-positive-border": {
@@ -5115,7 +5200,9 @@
           "resolved": "#0a0b0d"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-positive-transparent-background": {
@@ -5182,7 +5269,9 @@
           "resolved": "#27ad75"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-primary-background": {
@@ -5204,7 +5293,9 @@
           "resolved": "#578bfa"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-primary-border": {
@@ -5249,7 +5340,9 @@
           "resolved": "#0a0b0d"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-primary-transparent-background": {
@@ -5316,7 +5409,9 @@
           "resolved": "#578bfa"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-secondary-background": {
@@ -5338,7 +5433,9 @@
           "resolved": "#282b31"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-secondary-border": {
@@ -5383,7 +5480,9 @@
           "resolved": "#ffffff"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-secondary-transparent-background": {
@@ -5450,7 +5549,9 @@
           "resolved": "#ffffff"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-tertiary-background": {
@@ -5472,7 +5573,9 @@
           "resolved": "#32353d"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-tertiary-border": {
@@ -5517,7 +5620,9 @@
           "resolved": "#ffffff"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-tertiary-transparent-background": {
@@ -5584,7 +5689,9 @@
           "resolved": "#ffffff"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "fg": {
@@ -6282,7 +6389,9 @@
           "reason": "getBlendedColor(bgInverse rgb(255,255,255), 0.75, skipContrastOptimization) in dark = rgb(239, 239, 239); Interactable sets it as --inter-disable-bg while disabled"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-inverse-disabled-border": {
@@ -6360,7 +6469,9 @@
           "reason": "getBlendedColor(bgInverse rgb(255,255,255), 0.88) in dark = rgb(247, 247, 247); Interactable sets it as --inter-hover-bg while hovered"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-inverse-hover-border": {
@@ -6436,7 +6547,9 @@
           "reason": "getBlendedColor(bgInverse rgb(255,255,255), 0.82) in dark = rgb(244, 244, 244); Interactable sets it as --inter-press-bg while pressed"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-inverse-pressed-border": {
@@ -6594,7 +6707,9 @@
           "reason": "getBlendedColor(bg rgb(10,11,13), 0.88) in dark = rgb(17, 18, 20); Interactable sets it as --inter-hover-bg while hovered"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-inverse-transparent-hover-border": {
@@ -6672,7 +6787,9 @@
           "reason": "getBlendedColor(bg rgb(10,11,13), 0.82) in dark = rgb(21, 22, 24); Interactable sets it as --inter-press-bg while pressed"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-inverse-transparent-pressed-border": {
@@ -6752,7 +6869,9 @@
           "reason": "getBlendedColor(bgNegative rgb(240,97,109), 0.75, skipContrastOptimization) in dark = rgb(194, 79, 88); Interactable sets it as --inter-disable-bg while disabled"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-negative-disabled-border": {
@@ -6830,7 +6949,9 @@
           "reason": "getBlendedColor(bgNegative rgb(240,97,109), 0.88) in dark = rgb(241, 105, 116); Interactable sets it as --inter-hover-bg while hovered"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-negative-hover-border": {
@@ -6906,7 +7027,9 @@
           "reason": "getBlendedColor(bgNegative rgb(240,97,109), 0.82) in dark = rgb(241, 108, 119); Interactable sets it as --inter-press-bg while pressed"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-negative-pressed-border": {
@@ -7064,7 +7187,9 @@
           "reason": "getBlendedColor(bg rgb(10,11,13), 0.88) in dark = rgb(17, 18, 20); Interactable sets it as --inter-hover-bg while hovered"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-negative-transparent-hover-border": {
@@ -7142,7 +7267,9 @@
           "reason": "getBlendedColor(bg rgb(10,11,13), 0.82) in dark = rgb(21, 22, 24); Interactable sets it as --inter-press-bg while pressed"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-negative-transparent-pressed-border": {
@@ -7222,7 +7349,9 @@
           "reason": "getBlendedColor(bgPositive rgb(39,173,117), 0.75, skipContrastOptimization) in dark = rgb(32, 142, 96); Interactable sets it as --inter-disable-bg while disabled"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-positive-disabled-border": {
@@ -7300,7 +7429,9 @@
           "reason": "getBlendedColor(bgPositive rgb(39,173,117), 0.88) in dark = rgb(50, 177, 124); Interactable sets it as --inter-hover-bg while hovered"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-positive-hover-border": {
@@ -7376,7 +7507,9 @@
           "reason": "getBlendedColor(bgPositive rgb(39,173,117), 0.82) in dark = rgb(55, 179, 127); Interactable sets it as --inter-press-bg while pressed"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-positive-pressed-border": {
@@ -7534,7 +7667,9 @@
           "reason": "getBlendedColor(bg rgb(10,11,13), 0.88) in dark = rgb(17, 18, 20); Interactable sets it as --inter-hover-bg while hovered"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-positive-transparent-hover-border": {
@@ -7612,7 +7747,9 @@
           "reason": "getBlendedColor(bg rgb(10,11,13), 0.82) in dark = rgb(21, 22, 24); Interactable sets it as --inter-press-bg while pressed"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-positive-transparent-pressed-border": {
@@ -7692,7 +7829,9 @@
           "reason": "getBlendedColor(bgPrimary rgb(87,139,250), 0.75, skipContrastOptimization) in dark = rgb(70, 112, 202); Interactable sets it as --inter-disable-bg while disabled"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-primary-disabled-border": {
@@ -7770,7 +7909,9 @@
           "reason": "getBlendedColor(bgPrimary rgb(87,139,250), 0.88) in dark = rgb(95, 144, 250); Interactable sets it as --inter-hover-bg while hovered"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-primary-hover-border": {
@@ -7846,7 +7987,9 @@
           "reason": "getBlendedColor(bgPrimary rgb(87,139,250), 0.82) in dark = rgb(99, 147, 250); Interactable sets it as --inter-press-bg while pressed"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-primary-pressed-border": {
@@ -8004,7 +8147,9 @@
           "reason": "getBlendedColor(bg rgb(10,11,13), 0.88) in dark = rgb(17, 18, 20); Interactable sets it as --inter-hover-bg while hovered"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-primary-transparent-hover-border": {
@@ -8082,7 +8227,9 @@
           "reason": "getBlendedColor(bg rgb(10,11,13), 0.82) in dark = rgb(21, 22, 24); Interactable sets it as --inter-press-bg while pressed"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-primary-transparent-pressed-border": {
@@ -8162,7 +8309,9 @@
           "reason": "getBlendedColor(bgSecondary rgb(40,43,49), 0.75, skipContrastOptimization) in dark = rgb(30, 32, 37); Interactable sets it as --inter-disable-bg while disabled"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-secondary-disabled-border": {
@@ -8240,7 +8389,9 @@
           "reason": "getBlendedColor(bgSecondary rgb(40,43,49), 0.88) in dark = rgb(47, 50, 55); Interactable sets it as --inter-hover-bg while hovered"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-secondary-hover-border": {
@@ -8316,7 +8467,9 @@
           "reason": "getBlendedColor(bgSecondary rgb(40,43,49), 0.82) in dark = rgb(50, 53, 59); Interactable sets it as --inter-press-bg while pressed"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-secondary-pressed-border": {
@@ -8474,7 +8627,9 @@
           "reason": "getBlendedColor(bg rgb(10,11,13), 0.88) in dark = rgb(17, 18, 20); Interactable sets it as --inter-hover-bg while hovered"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-secondary-transparent-hover-border": {
@@ -8552,7 +8707,9 @@
           "reason": "getBlendedColor(bg rgb(10,11,13), 0.82) in dark = rgb(21, 22, 24); Interactable sets it as --inter-press-bg while pressed"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-secondary-transparent-pressed-border": {
@@ -8632,7 +8789,9 @@
           "reason": "getBlendedColor(bgTertiary rgb(50,53,61), 0.75, skipContrastOptimization) in dark = rgb(38, 40, 46); Interactable sets it as --inter-disable-bg while disabled"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-tertiary-disabled-border": {
@@ -8710,7 +8869,9 @@
           "reason": "getBlendedColor(bgTertiary rgb(50,53,61), 0.88) in dark = rgb(57, 59, 67); Interactable sets it as --inter-hover-bg while hovered"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-tertiary-hover-border": {
@@ -8786,7 +8947,9 @@
           "reason": "getBlendedColor(bgTertiary rgb(50,53,61), 0.82) in dark = rgb(60, 63, 70); Interactable sets it as --inter-press-bg while pressed"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-tertiary-pressed-border": {
@@ -8944,7 +9107,9 @@
           "reason": "getBlendedColor(bg rgb(10,11,13), 0.88) in dark = rgb(17, 18, 20); Interactable sets it as --inter-hover-bg while hovered"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-tertiary-transparent-hover-border": {
@@ -9022,7 +9187,9 @@
           "reason": "getBlendedColor(bg rgb(10,11,13), 0.82) in dark = rgb(21, 22, 24); Interactable sets it as --inter-press-bg while pressed"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "button"
+      ],
       "family": "button"
     },
     "button-tertiary-transparent-pressed-border": {
@@ -9225,7 +9392,9 @@
           "value": 40
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "borderRadius-800": {
       "collection": "layout",
@@ -9261,7 +9430,9 @@
           "value": 56
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "borderWidth-0": {
       "collection": "layout",
@@ -9279,7 +9450,9 @@
           "value": 0
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "borderWidth-100": {
       "collection": "layout",
@@ -9513,7 +9686,9 @@
           "value": 24
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "iconSize-s": {
       "collection": "layout",
@@ -9531,7 +9706,9 @@
           "value": 16
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "iconSize-xs": {
       "collection": "layout",
@@ -9621,7 +9798,9 @@
           "value": 6
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "space-1": {
       "collection": "layout",
@@ -9639,7 +9818,9 @@
           "value": 8
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "space-10": {
       "collection": "layout",
@@ -9675,7 +9856,9 @@
           "value": 12
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "space-2": {
       "collection": "layout",
@@ -9693,7 +9876,9 @@
           "value": 16
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "space-3": {
       "collection": "layout",
@@ -9711,7 +9896,9 @@
           "value": 24
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "space-4": {
       "collection": "layout",
@@ -9729,7 +9916,9 @@
           "value": 32
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "space-5": {
       "collection": "layout",
@@ -9933,7 +10122,9 @@
           "from": "var(--defaultFont-sans), the first family of --defaultFont-sans in @coinbase/cds-web esm/styles/defaultFont.css"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "fontFamily-label1": {
       "collection": "type",
@@ -9952,7 +10143,9 @@
           "from": "var(--defaultFont-sans), the first family of --defaultFont-sans in @coinbase/cds-web esm/styles/defaultFont.css"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "fontFamily-label2": {
       "collection": "type",
@@ -10180,7 +10373,9 @@
           "from": "1rem x 16"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "fontSize-label1": {
       "collection": "type",
@@ -10199,7 +10394,9 @@
           "from": "0.875rem x 16"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "fontSize-label2": {
       "collection": "type",
@@ -10421,7 +10618,9 @@
           "value": 600
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "fontWeight-label1": {
       "collection": "type",
@@ -10439,7 +10638,9 @@
           "value": 600
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "fontWeight-label2": {
       "collection": "type",
@@ -10661,7 +10862,9 @@
           "from": "1.5rem x 16"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "lineHeight-label1": {
       "collection": "type",
@@ -10680,7 +10883,9 @@
           "from": "1.25rem x 16"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "lineHeight-label2": {
       "collection": "type",
@@ -10934,7 +11139,9 @@
         "fontWeight": "fontWeight-headline",
         "lineHeight": "lineHeight-headline"
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "label1": {
       "name": "Label/label1",
@@ -10957,7 +11164,9 @@
         "fontWeight": "fontWeight-label1",
         "lineHeight": "lineHeight-label1"
       },
-      "usedBy": []
+      "usedBy": [
+        "button"
+      ]
     },
     "label2": {
       "name": "Label/label2",
@@ -11130,7 +11339,7 @@
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
-      "contracts": 0,
+      "contracts": 1,
       "errors": 0
     }
   },

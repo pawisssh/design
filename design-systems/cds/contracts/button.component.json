@@ -1,0 +1,1786 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "button",
+    "name": "Button",
+    "description": "Buttons trigger an action. A label with an optional start and end icon, in six variants, four sizes, solid or transparent, and a loading state."
+  },
+  "source": {
+    "codeLibrary": "CDS Web",
+    "adapter": "cds",
+    "repository": "https://github.com/coinbase/cds",
+    "tag": "",
+    "commit": "135dc3c64218299bd26f0ce2ccdad628551d63d5",
+    "packages": {
+      "@coinbase/cds-web": "9.29.0",
+      "@coinbase/cds-common": "9.29.0",
+      "@coinbase/cds-icons": "5.26.0"
+    },
+    "files": {
+      "apps/docs/docs/components/inputs/Button/_webExamples.mdx": "sha256:35b9d00f4b40a9b6e79654c9000866a2a3fbb864995d2fcd4e36fd3855329763",
+      "packages/common/src/tokens/button.ts": "sha256:cfb9065030d1719e078ab634ea049eb03212a375c6009ac5b7425e8dae63f4b3",
+      "packages/common/src/tokens/interactable.ts": "sha256:590f7e7a4d688cf4171256b4149b296baa66c591fd1cf587ac84027cdd2ecaf8",
+      "packages/common/src/types/ButtonBaseProps.ts": "sha256:f9c843f9f3eb9a8da6b03db85f7f0ec6958de8d1e2c7acf3035f8d4448a02473",
+      "packages/web/package.json": "sha256:ca0ecd076b55efe0aee663a5b0ac2cf296119192d4f86cfdf1181f19efb84650",
+      "packages/web/src/buttons/Button.tsx": "sha256:5896ffdb7aff0c43947f8005bb18f2172790e3371bb51a3822e2dca7f4d9dd78",
+      "packages/web/src/buttons/__figma__/Button.figma.ts": "sha256:3ea7a86058c1d7874cbff46be144306a1ede092315fe21373963f2c2509b91ae",
+      "packages/web/src/system/Interactable.tsx": "sha256:c5088de3daa71967bfd4e957b6f8c35e823dec614a6f90aefebbd305aaf0558f",
+      "packages/web/src/system/Pressable.tsx": "sha256:29f9bf7310c59ffe8c047d35afc13c9df2f653cd8ecdc12df28ad126c6197cde"
+    },
+    "snapshotId": "sha256:b5982a0b4c5d73acb7383a814a22a02a08a3ef64cb32592099bd8b74dd37eddb"
+  },
+  "axes": [
+    {
+      "key": "variant",
+      "label": "Variant",
+      "default": "primary",
+      "defaultSource": "packages/web/src/buttons/Button.tsx L203 destructured default variant = 'primary'",
+      "values": [
+        {
+          "key": "primary",
+          "label": "Primary",
+          "code": {
+            "variant": "primary"
+          }
+        },
+        {
+          "key": "secondary",
+          "label": "Secondary",
+          "code": {
+            "variant": "secondary"
+          }
+        },
+        {
+          "key": "tertiary",
+          "label": "Tertiary",
+          "code": {
+            "variant": "tertiary"
+          }
+        },
+        {
+          "key": "positive",
+          "label": "Positive",
+          "code": {
+            "variant": "positive"
+          }
+        },
+        {
+          "key": "negative",
+          "label": "Negative",
+          "code": {
+            "variant": "negative"
+          }
+        },
+        {
+          "key": "inverse",
+          "label": "Inverse",
+          "code": {
+            "variant": "inverse"
+          }
+        }
+      ],
+      "dropped": [
+        {
+          "key": "foregroundMuted",
+          "reason": "Deprecated: \"Use `secondary` directly\", kept only for compatibility.",
+          "evidence": [
+            "packages/common/src/types/ButtonBaseProps.ts L7-L10 @deprecated foregroundMuted",
+            "packages/common/src/tokens/button.ts L28-L32 its token map entry"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "size",
+      "label": "Size",
+      "default": "l",
+      "defaultSource": "packages/web/src/buttons/Button.tsx L43 defaultButtonSize = 'l'",
+      "values": [
+        {
+          "key": "xs",
+          "label": "XS",
+          "code": {
+            "size": "xs"
+          }
+        },
+        {
+          "key": "s",
+          "label": "S",
+          "code": {
+            "size": "s"
+          }
+        },
+        {
+          "key": "m",
+          "label": "M",
+          "code": {
+            "size": "m"
+          }
+        },
+        {
+          "key": "l",
+          "label": "L",
+          "code": {
+            "size": "l"
+          }
+        }
+      ],
+      "dropped": [
+        {
+          "key": "compact",
+          "reason": "Deprecated boolean alias of size s (\"Use `size=\"s\"` instead\"); size wins when both are set.",
+          "evidence": [
+            "packages/web/src/buttons/Button.tsx L145-L149 @deprecated compact",
+            "packages/web/src/buttons/Button.tsx L246-L247 resolvedSize = size ?? (compact ? 's' : defaultButtonSize)"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fill",
+      "label": "Fill",
+      "default": "solid",
+      "defaultSource": "packages/web/src/buttons/Button.tsx L206 transparent is undefined unless set",
+      "values": [
+        {
+          "key": "solid",
+          "label": "Solid",
+          "code": {}
+        },
+        {
+          "key": "transparent",
+          "label": "Transparent",
+          "code": {
+            "transparent": true
+          }
+        }
+      ]
+    },
+    {
+      "key": "loading",
+      "label": "Loading",
+      "default": "off",
+      "defaultSource": "packages/web/src/buttons/Button.tsx L204 loading is undefined unless set",
+      "values": [
+        {
+          "key": "off",
+          "label": "Off",
+          "code": {}
+        },
+        {
+          "key": "on",
+          "label": "On",
+          "code": {
+            "loading": true
+          }
+        }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        {
+          "key": "enabled",
+          "label": "Enabled",
+          "code": {}
+        },
+        {
+          "key": "hover",
+          "label": "Hover",
+          "code": null,
+          "css": ":hover"
+        },
+        {
+          "key": "active",
+          "label": "Active",
+          "code": null,
+          "css": ":active, [aria-pressed='true']"
+        },
+        {
+          "key": "focus",
+          "label": "Focus",
+          "code": null,
+          "css": ":focus-visible"
+        },
+        {
+          "key": "disabled",
+          "label": "Disabled",
+          "code": {
+            "disabled": true
+          },
+          "css": ":disabled, [aria-disabled='true']"
+        }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 480,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Button",
+    "type": "COMPONENT",
+    "children": [
+      {
+        "name": "Start icon",
+        "type": "FRAME",
+        "role": "icon-slot",
+        "children": [
+          {
+            "name": "Start glyph",
+            "type": "INSTANCE",
+            "role": "icon",
+            "instanceOf": "icon:default"
+          }
+        ]
+      },
+      {
+        "name": "Label",
+        "type": "TEXT",
+        "role": "label"
+      },
+      {
+        "name": "End icon",
+        "type": "FRAME",
+        "role": "icon-slot",
+        "children": [
+          {
+            "name": "End glyph",
+            "type": "INSTANCE",
+            "role": "icon",
+            "instanceOf": "icon:default"
+          }
+        ]
+      }
+    ]
+  },
+  "properties": [
+    {
+      "key": "label",
+      "label": "Label",
+      "type": "TEXT",
+      "default": "Button",
+      "binds": [
+        {
+          "node": "Label",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "children"
+      }
+    },
+    {
+      "key": "startIcon",
+      "label": "Start icon",
+      "type": "BOOLEAN",
+      "default": false,
+      "binds": [
+        {
+          "node": "Start icon",
+          "field": "visible"
+        }
+      ],
+      "code": {
+        "prop": "startIcon",
+        "whenFalse": "omit"
+      }
+    },
+    {
+      "key": "swapStartIcon",
+      "label": "Swap start icon",
+      "type": "INSTANCE_SWAP",
+      "default": "icon:default",
+      "preferred": "icon:preferred",
+      "binds": [
+        {
+          "node": "Start glyph",
+          "field": "mainComponent"
+        }
+      ],
+      "code": {
+        "prop": "startIcon",
+        "valueFrom": "icon",
+        "visibleWhen": "startIcon"
+      }
+    },
+    {
+      "key": "endIcon",
+      "label": "End icon",
+      "type": "BOOLEAN",
+      "default": false,
+      "binds": [
+        {
+          "node": "End icon",
+          "field": "visible"
+        }
+      ],
+      "code": {
+        "prop": "endIcon",
+        "whenFalse": "omit"
+      }
+    },
+    {
+      "key": "swapEndIcon",
+      "label": "Swap end icon",
+      "type": "INSTANCE_SWAP",
+      "default": "icon:default",
+      "preferred": "icon:preferred",
+      "binds": [
+        {
+          "node": "End glyph",
+          "field": "mainComponent"
+        }
+      ],
+      "code": {
+        "prop": "endIcon",
+        "valueFrom": "icon",
+        "visibleWhen": "endIcon"
+      }
+    }
+  ],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Button": {
+          "direction": "row",
+          "width": "hug",
+          "height": "hug",
+          "alignMain": "center",
+          "alignCross": "center",
+          "gap": {
+            "token": "space-1"
+          },
+          "strokeWeight": {
+            "token": "borderWidth-0"
+          },
+          "strokeAlign": "inside"
+        },
+        "Start icon": {
+          "direction": "row"
+        },
+        "Start glyph": {
+          "width": "fill",
+          "height": "fill"
+        },
+        "Label": {
+          "textResize": "width-and-height"
+        },
+        "End icon": {
+          "direction": "row"
+        },
+        "End glyph": {
+          "width": "fill",
+          "height": "fill"
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "xs"
+      },
+      "set": {
+        "Button": {
+          "paddingLeft": {
+            "token": "space-2"
+          },
+          "paddingRight": {
+            "token": "space-2"
+          },
+          "paddingTop": {
+            "token": "space-0_75"
+          },
+          "paddingBottom": {
+            "token": "space-0_75"
+          },
+          "radius": {
+            "token": "borderRadius-700"
+          }
+        },
+        "Start icon": {
+          "width": {
+            "token": "iconSize-s"
+          },
+          "height": {
+            "token": "iconSize-s"
+          }
+        },
+        "End icon": {
+          "width": {
+            "token": "iconSize-s"
+          },
+          "height": {
+            "token": "iconSize-s"
+          }
+        },
+        "Label": {
+          "textStyle": {
+            "token": "label1"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "s"
+      },
+      "set": {
+        "Button": {
+          "paddingLeft": {
+            "token": "space-2"
+          },
+          "paddingRight": {
+            "token": "space-2"
+          },
+          "paddingTop": {
+            "token": "space-1"
+          },
+          "paddingBottom": {
+            "token": "space-1"
+          },
+          "radius": {
+            "token": "borderRadius-700"
+          }
+        },
+        "Start icon": {
+          "width": {
+            "token": "iconSize-s"
+          },
+          "height": {
+            "token": "iconSize-s"
+          }
+        },
+        "End icon": {
+          "width": {
+            "token": "iconSize-s"
+          },
+          "height": {
+            "token": "iconSize-s"
+          }
+        },
+        "Label": {
+          "textStyle": {
+            "token": "headline"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "m"
+      },
+      "set": {
+        "Button": {
+          "paddingLeft": {
+            "token": "space-3"
+          },
+          "paddingRight": {
+            "token": "space-3"
+          },
+          "paddingTop": {
+            "token": "space-1_5"
+          },
+          "paddingBottom": {
+            "token": "space-1_5"
+          },
+          "radius": {
+            "token": "borderRadius-900"
+          }
+        },
+        "Start icon": {
+          "width": {
+            "token": "iconSize-m"
+          },
+          "height": {
+            "token": "iconSize-m"
+          }
+        },
+        "End icon": {
+          "width": {
+            "token": "iconSize-m"
+          },
+          "height": {
+            "token": "iconSize-m"
+          }
+        },
+        "Label": {
+          "textStyle": {
+            "token": "headline"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "l"
+      },
+      "set": {
+        "Button": {
+          "paddingLeft": {
+            "token": "space-4"
+          },
+          "paddingRight": {
+            "token": "space-4"
+          },
+          "paddingTop": {
+            "token": "space-2"
+          },
+          "paddingBottom": {
+            "token": "space-2"
+          },
+          "radius": {
+            "token": "borderRadius-900"
+          }
+        },
+        "Start icon": {
+          "width": {
+            "token": "iconSize-m"
+          },
+          "height": {
+            "token": "iconSize-m"
+          }
+        },
+        "End icon": {
+          "width": {
+            "token": "iconSize-m"
+          },
+          "height": {
+            "token": "iconSize-m"
+          }
+        },
+        "Label": {
+          "textStyle": {
+            "token": "headline"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus"
+      },
+      "set": {
+        "Button": {
+          "strokeWeight": {
+            "raw": 2,
+            "level": "warning",
+            "reason": "outline-width: 2px on :focus-visible (packages/web/src/system/Interactable.tsx L82) is a constant with no token"
+          },
+          "strokeAlign": "outside"
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Button": {
+          "fill": "none",
+          "stroke": "none",
+          "effects": [],
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opaque unless hovered, pressed, disabled or loading"
+          }
+        },
+        "Label": {
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opaque unless hovered, pressed, disabled or loading"
+          }
+        },
+        "Start icon": {
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opaque unless hovered, pressed, disabled or loading"
+          }
+        },
+        "End icon": {
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opaque unless hovered, pressed, disabled or loading"
+          }
+        },
+        "Start glyph/Vector": {
+          "fill": {
+            "sameAs": "Label.fill",
+            "why": "Button renders the Icon with color=\"currentColor\""
+          }
+        },
+        "End glyph/Vector": {
+          "fill": {
+            "sameAs": "Label.fill",
+            "why": "Button renders the Icon with color=\"currentColor\""
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "primary"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-primary-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "button-primary-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "primary",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": "none"
+        },
+        "Label": {
+          "fill": {
+            "token": "button-primary-transparent-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "secondary"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-secondary-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "button-secondary-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "secondary",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": "none"
+        },
+        "Label": {
+          "fill": {
+            "token": "button-secondary-transparent-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "tertiary"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-tertiary-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "button-tertiary-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "tertiary",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": "none"
+        },
+        "Label": {
+          "fill": {
+            "token": "button-tertiary-transparent-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "positive"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-positive-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "button-positive-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "positive",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": "none"
+        },
+        "Label": {
+          "fill": {
+            "token": "button-positive-transparent-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "negative"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-negative-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "button-negative-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "negative",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": "none"
+        },
+        "Label": {
+          "fill": {
+            "token": "button-negative-transparent-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "inverse"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-inverse-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "button-inverse-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "inverse",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": "none"
+        },
+        "Label": {
+          "fill": {
+            "token": "button-inverse-transparent-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "primary",
+        "state": "hover",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-primary-hover-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "primary",
+        "state": "hover",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-primary-transparent-hover-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "secondary",
+        "state": "hover",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-secondary-hover-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "secondary",
+        "state": "hover",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-secondary-transparent-hover-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "tertiary",
+        "state": "hover",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-tertiary-hover-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "tertiary",
+        "state": "hover",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-tertiary-transparent-hover-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "positive",
+        "state": "hover",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-positive-hover-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "positive",
+        "state": "hover",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-positive-transparent-hover-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "negative",
+        "state": "hover",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-negative-hover-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "negative",
+        "state": "hover",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-negative-transparent-hover-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "inverse",
+        "state": "hover",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-inverse-hover-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "inverse",
+        "state": "hover",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-inverse-transparent-hover-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "hover"
+      },
+      "set": {
+        "Label": {
+          "opacity": {
+            "raw": 0.88,
+            "level": "info",
+            "reason": "opacityHovered (packages/common/src/tokens/interactable.ts L1): Interactable sets --inter-hover-opacity on the button's children (packages/web/src/system/Interactable.tsx L52-L54)"
+          }
+        },
+        "Start icon": {
+          "opacity": {
+            "raw": 0.88,
+            "level": "info",
+            "reason": "opacityHovered (packages/common/src/tokens/interactable.ts L1): Interactable sets --inter-hover-opacity on the button's children (packages/web/src/system/Interactable.tsx L52-L54)"
+          }
+        },
+        "End icon": {
+          "opacity": {
+            "raw": 0.88,
+            "level": "info",
+            "reason": "opacityHovered (packages/common/src/tokens/interactable.ts L1): Interactable sets --inter-hover-opacity on the button's children (packages/web/src/system/Interactable.tsx L52-L54)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "primary",
+        "state": "active",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-primary-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "primary",
+        "state": "active",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-primary-transparent-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "secondary",
+        "state": "active",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-secondary-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "secondary",
+        "state": "active",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-secondary-transparent-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "tertiary",
+        "state": "active",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-tertiary-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "tertiary",
+        "state": "active",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-tertiary-transparent-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "positive",
+        "state": "active",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-positive-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "positive",
+        "state": "active",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-positive-transparent-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "negative",
+        "state": "active",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-negative-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "negative",
+        "state": "active",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-negative-transparent-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "inverse",
+        "state": "active",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-inverse-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "inverse",
+        "state": "active",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-inverse-transparent-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "active"
+      },
+      "set": {
+        "Label": {
+          "opacity": {
+            "raw": 0.82,
+            "level": "info",
+            "reason": "opacityPressed (packages/common/src/tokens/interactable.ts L2): --inter-press-opacity on the button's children (packages/web/src/system/Interactable.tsx L61-L63, packages/web/src/system/Pressable.tsx L50-L53)"
+          }
+        },
+        "Start icon": {
+          "opacity": {
+            "raw": 0.82,
+            "level": "info",
+            "reason": "opacityPressed (packages/common/src/tokens/interactable.ts L2): --inter-press-opacity on the button's children (packages/web/src/system/Interactable.tsx L61-L63, packages/web/src/system/Pressable.tsx L50-L53)"
+          }
+        },
+        "End icon": {
+          "opacity": {
+            "raw": 0.82,
+            "level": "info",
+            "reason": "opacityPressed (packages/common/src/tokens/interactable.ts L2): --inter-press-opacity on the button's children (packages/web/src/system/Interactable.tsx L61-L63, packages/web/src/system/Pressable.tsx L50-L53)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus"
+      },
+      "set": {
+        "Button": {
+          "stroke": {
+            "token": "bgPrimary"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "primary",
+        "state": "disabled",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-primary-disabled-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "secondary",
+        "state": "disabled",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-secondary-disabled-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "tertiary",
+        "state": "disabled",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-tertiary-disabled-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "positive",
+        "state": "disabled",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-positive-disabled-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "negative",
+        "state": "disabled",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-negative-disabled-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "inverse",
+        "state": "disabled",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-inverse-disabled-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "disabled"
+      },
+      "set": {
+        "Button": {
+          "opacity": {
+            "raw": 0.5,
+            "level": "info",
+            "reason": "accessibleOpacityDisabled (packages/common/src/tokens/interactable.ts L3) on :disabled (packages/web/src/system/Interactable.tsx L66-L68)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "primary",
+        "loading": "on",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-primary-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "primary",
+        "loading": "on",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-primary-transparent-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "secondary",
+        "loading": "on",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-secondary-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "secondary",
+        "loading": "on",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-secondary-transparent-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "tertiary",
+        "loading": "on",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-tertiary-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "tertiary",
+        "loading": "on",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-tertiary-transparent-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "positive",
+        "loading": "on",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-positive-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "positive",
+        "loading": "on",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-positive-transparent-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "negative",
+        "loading": "on",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-negative-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "negative",
+        "loading": "on",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-negative-transparent-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "inverse",
+        "loading": "on",
+        "fill": "solid"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-inverse-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "inverse",
+        "loading": "on",
+        "fill": "transparent"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "button-inverse-transparent-pressed-background"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "loading": "on"
+      },
+      "set": {
+        "Button": {
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "Pressable [data-loading='true'] sets opacity 1 (packages/web/src/system/Pressable.tsx L48-L49); Pressable.css follows Interactable.css, so it wins over :disabled"
+          }
+        },
+        "Label": {
+          "opacity": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the label span is visibility: hidden while loading (packages/web/src/buttons/Button.tsx L350, hiddenCss L106-L108); opacity 0 keeps its width"
+          }
+        },
+        "Start icon": {
+          "opacity": {
+            "raw": 0.82,
+            "level": "info",
+            "reason": "opacityPressed (packages/common/src/tokens/interactable.ts L2): --inter-press-opacity on the button's children (packages/web/src/system/Interactable.tsx L61-L63, packages/web/src/system/Pressable.tsx L50-L53)"
+          }
+        },
+        "End icon": {
+          "opacity": {
+            "raw": 0.82,
+            "level": "info",
+            "reason": "opacityPressed (packages/common/src/tokens/interactable.ts L2): --inter-press-opacity on the button's children (packages/web/src/system/Interactable.tsx L61-L63, packages/web/src/system/Pressable.tsx L50-L53)"
+          }
+        }
+      }
+    }
+  ],
+  "icons": {
+    "source": {
+      "package": "@coinbase/cds-icons",
+      "version": "5.26.0",
+      "path": "esm/svgs/{key}-16-inactive.svg",
+      "fallback": "esm/svgs/{key}-24-inactive.svg"
+    },
+    "default": "add",
+    "preferred": [
+      "add",
+      "download",
+      "wallet",
+      "forwardArrow",
+      "externalLink"
+    ]
+  },
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": [
+      {
+        "family": "Inter",
+        "styles": [
+          "Semi Bold"
+        ]
+      }
+    ]
+  },
+  "figma": {
+    "page": "Buttons",
+    "componentSetName": "Button",
+    "description": "CDS Web Button (@coinbase/cds-web 9.29.0). Icon-only buttons are the IconButton family.",
+    "header": {
+      "type": "Component",
+      "title": "Button",
+      "namespace": "@coinbase/cds-web"
+    },
+    "grid": {
+      "columns": [
+        "size"
+      ],
+      "rows": [
+        "variant",
+        "fill",
+        "loading",
+        "state"
+      ]
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@coinbase/cds-web",
+    "component": "Button",
+    "import": "import { Button } from '@coinbase/cds-web/buttons';",
+    "alwaysEmit": []
+  },
+  "notes": [
+    {
+      "level": "info",
+      "at": "axes.state",
+      "message": "A loading Button is also disabled (Pressable.tsx L225-L227), and :disabled sets pointer-events: none (Interactable.tsx L66-L71), so in use a loading Button is never hovered, pressed or focused. Those 48 tuples render as the cascade draws them when the State is forced (the pressed background and child opacity of [data-loading='true'] win, Pressable.tsx L48-L54). They stay in the selection; the owner can omit them in To-preview."
+    },
+    {
+      "level": "info",
+      "at": "axes.state",
+      "message": "Active takes the :active and [aria-pressed='true'] rules (Interactable.tsx L57-L64). Pressable's scaledDownCss also scales the Button to 0.98 on :active (Pressable.tsx L30-L38); a Component Set variant has no transform, so the Active variant is drawn at full size."
+    },
+    {
+      "level": "info",
+      "at": "paint[state=focus].Button.stroke",
+      "message": "The focus ring is a 2px solid outline in bgPrimary, 2px outside the border box (outline-offset, Interactable.tsx L80-L85). The Contract draws it as a 2px outside stroke with no gap. A spread drop shadow could keep the gap, but bgPrimary has no EFFECT_COLOR scope in the foundations document, so an effect cannot bind it (validation rule 6)."
+    },
+    {
+      "level": "verify",
+      "at": "paint[loading=on]",
+      "message": "While loading, CDS centres an indeterminate ProgressCircle (24px, Button.tsx L27 and L327-L340) over the hidden label with position: absolute (spinnerContainerCss, L68-L76). The builder has no absolute children, so the loading variants show only the reserved label width and the icons at the pressed opacity. Compare a loading variant with the preview before approval."
+    },
+    {
+      "level": "info",
+      "at": "layout.Button.strokeWeight",
+      "message": "Button passes borderWidth 0 (Button.tsx L231) with the variant's border colour, so no variant draws a border; stroke is none outside Focus. The variants' border tokens (button-<variant>-border) stay out of the closure."
+    },
+    {
+      "level": "info",
+      "at": "layout.Button.alignMain",
+      "message": "With an icon, iconCss sets justify-content: space-between (Button.tsx L98-L100, L290), and the icon spans grow (flex-grow: 1, L82 and L92). A hugging Button has no free space, so space-between and center place the children alike; center matches the Button without icons (baseCss L51)."
+    },
+    {
+      "level": "info",
+      "at": "family",
+      "message": "block (width 100%, Button.tsx L61-L66) and flush (a negative inline margin, L169-L173 and L266-L275) change how the Button sits in its parent, not how it draws, so they are not axes. compact is the deprecated alias of size s (dropped from size)."
+    },
+    {
+      "level": "info",
+      "at": "properties.startIcon",
+      "message": "startIconActive and endIconActive (Button.tsx L161-L168) pick the active glyph of the same icon; the icon source uses the inactive glyphs only. start and end (L157-L164) take any React node instead of an icon name; the Contract models the icon names, which are the documented use (_webExamples.mdx L203-L232)."
+    },
+    {
+      "level": "info",
+      "at": "code",
+      "message": "CDS's own Code Connect file (Button.figma.ts) maps five variants (no inverse, no deprecated foregroundMuted, L13-L19) and emits start/end nodes (L79-L80). The Contract follows Button.tsx: six variants, from ButtonBaseProps.ts, and the startIcon/endIcon names."
+    }
+  ],
+  "drafted": {
+    "axes.fill.label": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L140-L141 transparent?: boolean, the one prop that drops the background",
+        "Button.tsx:L257 variantMap = transparent ? transparentVariants : variants"
+      ],
+      "fingerprint": "sha256:01e37880023ba93648e5035e2f0b3c865005ccaeb097840fe984540620c0f425"
+    },
+    "axes.fill.values.solid.label": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L257 variants, the map without transparent",
+        "button.ts:L12-L48 variants: each sets a background"
+      ],
+      "fingerprint": "sha256:01e37880023ba93648e5035e2f0b3c865005ccaeb097840fe984540620c0f425"
+    },
+    "axes.fill.values.transparent.label": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L140-L141 the transparent prop",
+        "button.ts:L50-L86 transparentVariants: background bg, borderColor transparent"
+      ],
+      "fingerprint": "sha256:01e37880023ba93648e5035e2f0b3c865005ccaeb097840fe984540620c0f425"
+    },
+    "axes.loading.label": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L135 loading?: boolean",
+        "Button.tsx:L327-L337 the ProgressCircle loading renders"
+      ],
+      "fingerprint": "sha256:4ff3484a05d22c0da53467cf4cc35021c38346dbfba15c47ac2c5ca167c558d2"
+    },
+    "axes.loading.values.off.label": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L204 loading is undefined unless set"
+      ],
+      "fingerprint": "sha256:4ff3484a05d22c0da53467cf4cc35021c38346dbfba15c47ac2c5ca167c558d2"
+    },
+    "axes.loading.values.on.label": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L135 loading?: boolean",
+        "Button.tsx:L350 the label span is hidden while loading"
+      ],
+      "fingerprint": "sha256:4ff3484a05d22c0da53467cf4cc35021c38346dbfba15c47ac2c5ca167c558d2"
+    },
+    "anatomy.Start icon": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L313-L324 span.startNodeCss around the start Icon"
+      ],
+      "fingerprint": "sha256:41fe24b58a7a1424793c3b2d9214fcce266dc2734fe429cb18dd96cb9a4dfaca"
+    },
+    "anatomy.Start glyph": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L317-L322 the Icon named by startIcon, color currentColor"
+      ],
+      "fingerprint": "sha256:ce4e84435e0272ab25ab7f03d8512a3006fca3d79ab09f739e94bd84b0babb39"
+    },
+    "anatomy.End glyph": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L358 the Icon named by endIcon, color currentColor"
+      ],
+      "fingerprint": "sha256:ce4e84435e0272ab25ab7f03d8512a3006fca3d79ab09f739e94bd84b0babb39"
+    },
+    "properties.swapStartIcon.label": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L160 startIcon?: IconName, the icon name the swap sets"
+      ],
+      "fingerprint": "sha256:2c0d8d97bcf7f2ed30466076f387f56fe54a4833dc1e62e4a86ca94b093df91d"
+    },
+    "properties.swapEndIcon.label": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L166 endIcon?: IconName, the icon name the swap sets"
+      ],
+      "fingerprint": "sha256:4dfa95c43efcc2c0db1f9f2b094ef8cc32887cf3f8e2bfc6c2d533c39ae6c486"
+    },
+    "anatomy.Label": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L326-L352 span.middleNodeCss holding the Text and the children"
+      ],
+      "fingerprint": "sha256:a33491e77819a8c3d26042681406fb9d3aa0562f7a7bc530c0ae0325047f9f72"
+    },
+    "anatomy.End icon": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L354-L360 span.endNodeCss around the end Icon"
+      ],
+      "fingerprint": "sha256:9d86a02ae8799a43805362fc428d9d6b6962a5a3a15ef69b953205a93fa76181"
+    },
+    "properties.label.default": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L155-L156 children: React.ReactNode, no default",
+        "Button.figma.ts:L10 Code Connect falls back to the label \"Button\"",
+        "_webExamples.mdx:L203-L232 the examples' labels are one or two words"
+      ],
+      "fingerprint": "sha256:a526903e8f771d031bfda497f266f9db1d1b1dd26a14e3c39b8133b5e1538372"
+    },
+    "layout.Button.alignMain": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L51 baseCss justify-content: center",
+        "Button.tsx:L98-L100 and L290 iconCss justify-content: space-between with an icon"
+      ],
+      "fingerprint": "sha256:3245a0ee77a037cf8eb56383e4c315574fecd09d2a856d78a940c3d79ff7ca1d"
+    },
+    "icons.default": {
+      "by": "agent",
+      "evidence": [
+        "_webExamples.mdx:L218 startIcon=\"add\", the first start icon example"
+      ],
+      "fingerprint": "sha256:f59e1df1d5a0c21aaa6d130c1926c2e2e272715e7d28d1ec0c9dc13a15bbcf72"
+    },
+    "icons.preferred": {
+      "by": "agent",
+      "evidence": [
+        "_webExamples.mdx:L203 endIcon=\"forwardArrow\"",
+        "_webExamples.mdx:L206 endIcon=\"externalLink\"",
+        "_webExamples.mdx:L218 startIcon=\"add\"",
+        "_webExamples.mdx:L221 startIcon=\"download\"",
+        "_webExamples.mdx:L232 startIcon=\"wallet\" with endIcon=\"forwardArrow\""
+      ],
+      "fingerprint": "sha256:f59e1df1d5a0c21aaa6d130c1926c2e2e272715e7d28d1ec0c9dc13a15bbcf72"
+    },
+    "figma.grid": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L31-L35 buttonSizes, one column per size",
+        "button.ts:L12-L86 variants and transparentVariants"
+      ],
+      "fingerprint": "sha256:f59e1df1d5a0c21aaa6d130c1926c2e2e272715e7d28d1ec0c9dc13a15bbcf72"
+    },
+    "family.description": {
+      "by": "agent",
+      "evidence": [
+        "Button.tsx:L131-L173 the variant, loading, transparent, size, startIcon and endIcon props"
+      ],
+      "fingerprint": "sha256:f59e1df1d5a0c21aaa6d130c1926c2e2e272715e7d28d1ec0c9dc13a15bbcf72"
+    }
+  }
+}

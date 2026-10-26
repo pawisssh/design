@@ -1,0 +1,130 @@
+// Drafted-value fingerprints of a CDS Contract (#387, ADR 0010). The first tests run offline on a small
+// hand-written TSX, one per key kind. The last ones check the committed Button drafts against the pinned CDS
+// sources, and skip until `node skills/adapter-cds/scripts/sources.mjs` fetched them.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fingerprints, hasContractSources, readContractSources } from '../scripts/fingerprints.mjs';
+
+const digest = facts => `sha256:${createHash('sha256').update(JSON.stringify(facts)).digest('hex')}`;
+
+const files = {
+  'packages/web/src/chips/Chip Card.tsx': 'const unrelatedCss = css`color: red;`;',
+  'packages/web/src/chips/ChipCard.tsx': [
+    "import { css } from '@linaria/core';",
+    'const rootCss = css`',
+    '  /* the outer box */',
+    '  display:   inline-flex;',
+    '  gap: var(--space-1);',
+    '`;',
+    'const leadCss = css`',
+    '  margin-inline-end: ${space};',
+    '`;',
+    'const plain = `not a css literal`;',
+    'export const ChipCard = () => <div className={cx(COMPONENT_STATIC_CLASSNAME, rootCss)}><span className={leadCss} /></div>;',
+  ].join('\n'),
+  'packages/common/src/tokens/chipCard.ts': 'export const variants = {};',
+};
+const contract = {
+  family: { key: 'chip-card', name: 'Chip Card' },
+  axes: [{ key: 'size', default: 'm', values: [{ key: 's' }, { key: 'm' }] }],
+  properties: [{ key: 'lead', code: { prop: 'start' }, binds: [{ node: 'Lead', field: 'visible' }] }],
+};
+const nodes = { Root: 'cds-ChipCard rootCss', Lead: 'leadCss', Glyph: 'cds-Icon' };
+const run = keys => fingerprints({ contract, nodes, files, keys });
+
+const PARTS = ['leadCss', 'rootCss'];
+const ROOT = { node: 'ChipCard', element: 'cds-ChipCard rootCss', rules: ['rootCss { display: inline-flex; gap: var(--space-1); }'] };
+
+test('the family TSX is <name without spaces>.tsx; parts is its sorted css literal names', () => {
+  assert.deepEqual(run(['anatomy.Root']).facts['anatomy.Root'].parts, PARTS);
+  assert.throws(() => fingerprints({ contract: { ...contract, family: { name: 'Toggle' } }, nodes, files, keys: ['anatomy.Root'] }),
+    /no Toggle\.tsx among the Contract's source files/);
+});
+
+test('a literal\'s rule is `<name> { <body> }`, comments gone, whitespace collapsed, interpolations as written', () => {
+  assert.deepEqual(run(['anatomy.Lead']).facts['anatomy.Lead'].rules, ['leadCss { margin-inline-end: ${space}; }']);
+});
+
+test('axes.<axis>.*: the axis and its value keys', () => {
+  const { facts, fingerprints: fp } = run(['axes.size.label', 'axes.size.values.s.label']);
+  const axis = { axis: 'size', kind: 'axis', values: ['s', 'm'] };
+  assert.deepEqual(facts['axes.size.label'], axis);
+  assert.equal(fp['axes.size.label'], digest(axis));
+  assert.equal(fp['axes.size.values.s.label'], fp['axes.size.label']);
+});
+
+test('family, icons, figma and code: every axis\'s values and default, and the parts', () => {
+  const { facts, fingerprints: fp } = run(['family.description', 'icons.default', 'figma.grid', 'code.alwaysEmit']);
+  const family = { axes: { size: ['s', 'm'] }, defaults: { size: 'm' }, kind: 'family', parts: PARTS };
+  assert.deepEqual(facts['icons.default'], family);
+  for (const k of Object.keys(fp)) assert.equal(fp[k], digest(family), k);
+});
+
+test('anatomy.<layer>: the node keyed by its first entry, cds- dropped, its literals\' rules and the parts', () => {
+  const { facts, fingerprints: fp } = run(['anatomy.Root', 'anatomy.Glyph']);
+  assert.deepEqual(facts['anatomy.Root'], { kind: 'node', ...ROOT, parts: PARTS });
+  assert.equal(fp['anatomy.Root'], digest({ element: ROOT.element, kind: 'node', node: 'ChipCard', parts: PARTS, rules: ROOT.rules }));
+  // A static class alone (the Icon a layer renders) has no literal of the family's: no rules.
+  assert.deepEqual(facts['anatomy.Glyph'], { kind: 'node', node: 'Icon', element: 'cds-Icon', rules: [], parts: PARTS });
+});
+
+test('layout[<match>].<node>.<field>: the node\'s facts, the same under any match', () => {
+  const { facts, fingerprints: fp } = run(['layout.Root.gap', 'layout{"size":"s"}.Root.gap']);
+  assert.deepEqual(facts['layout.Root.gap'], { kind: 'layout', ...ROOT });
+  assert.equal(fp['layout{"size":"s"}.Root.gap'], fp['layout.Root.gap']);
+});
+
+test('properties.<key>.*: the code prop and the first bound node\'s facts', () => {
+  const lead = run(['properties.lead.default']).facts['properties.lead.default'];
+  assert.deepEqual(lead, { kind: 'property', prop: 'start', node: 'leadCss', element: 'leadCss', rules: ['leadCss { margin-inline-end: ${space}; }'], parts: PARTS });
+});
+
+test('keys default to the agent entries of drafted', () => {
+  const drafted = { 'anatomy.Lead': { by: 'agent', evidence: ['ChipCard.tsx:L7 leadCss'], fingerprint: 'sha256:0' }, 'axes.size.label': { by: 'owner', was: 'Size' } };
+  assert.deepEqual(Object.keys(fingerprints({ contract: { ...contract, drafted }, nodes, files }).fingerprints), ['anatomy.Lead']);
+});
+
+test('an unmapped layer, an entry that is no literal, and a key of no kind are refused', () => {
+  assert.throws(() => run(['anatomy.Badge']), /no node for layer "Badge"/);
+  assert.throws(() => fingerprints({ contract, files, nodes: { Root: 'rootCss tailCss' }, keys: ['anatomy.Root'] }),
+    /layer "Root": tailCss is neither a cds- class nor a css literal of ChipCard\.tsx/);
+  assert.throws(() => run(['paint.Root.fill']), /no fingerprint kind for "paint\.Root\.fill"/);
+  assert.throws(() => run(['axes.tone.label']), /no fingerprint kind for "axes\.tone\.label"/);
+});
+
+// ---------- the committed Button drafts, against the pinned sources ----------
+const NODES = new URL('../nodes/button.nodes.json', import.meta.url).pathname;
+const BUTTON = new URL('../../../design-systems/cds/contracts/button.component.json', import.meta.url).pathname;
+const button = JSON.parse(readFileSync(BUTTON, 'utf8'));
+const skip = !hasContractSources(button) && 'run: node skills/adapter-cds/scripts/sources.mjs';
+const SCRIPT = new URL('../scripts/fingerprints.mjs', import.meta.url).pathname;
+const cli = path => spawnSync(process.execPath, [SCRIPT, path, '--nodes', NODES, '--check'], { encoding: 'utf8' });
+
+test('every Button draft has evidence and the fingerprint the script computes', { skip }, () => {
+  const fp = fingerprints({ contract: button, nodes: JSON.parse(readFileSync(NODES, 'utf8')), files: readContractSources(button) }).fingerprints;
+  const agent = Object.entries(button.drafted).filter(([, e]) => e.by === 'agent');
+  assert.ok(agent.length > 0);
+  for (const [key, entry] of agent) {
+    assert.ok(entry.evidence.length > 0, key);
+    assert.equal(entry.fingerprint, fp[key], key);
+  }
+});
+
+test('the CLI --check passes the Button drafts, and fails naming only the entry whose fingerprint moved', { skip }, () => {
+  const ok = cli(BUTTON);
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.match(ok.stdout, new RegExp(`^OK ${Object.keys(button.drafted).length} fingerprints`));
+  const moved = structuredClone(button);
+  moved.drafted['layout.Button.alignMain'].fingerprint = `sha256:${'f'.repeat(64)}`;
+  const path = join(mkdtempSync(join(tmpdir(), 'cds-fingerprints-')), 'button.component.json');
+  writeFileSync(path, JSON.stringify(moved));
+  const bad = cli(path);
+  assert.equal(bad.status, 1);
+  assert.match(bad.stderr, /^layout\.Button\.alignMain: recorded sha256:f{64}, computed sha256:/);
+  assert.equal(bad.stderr.trim().split('\n').length, 1, bad.stderr);
+});

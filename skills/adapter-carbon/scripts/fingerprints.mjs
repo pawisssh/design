@@ -14,11 +14,10 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { canonical, sha256 } from '../../contract/scripts/contract.mjs';
+import { draftedFingerprints, sha256 } from '../../contract/scripts/contract.mjs';
 import { DEFAULT_DIR } from './sources.mjs';
 
 const PREFIX = 'cds';
-const fingerprint = facts => `sha256:${sha256(canonical(facts))}`;
 const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** A nested selector list resolved against its parent's: `&` takes the parent, any other selector descends from it. */
@@ -108,29 +107,7 @@ export function fingerprints({ contract, nodes, files, keys }) {
     return { node: version ? `${key}:${version}` : key, element: [cls, ...more].map(c => `${PREFIX}--${c}`).join(' '),
       rules: [...counts].filter(b => !b.ancestors.some(a => counts.has(a))).map(b => b.text).sort() };
   };
-  const axes = contract.axes || [];
-  const values = a => a.values.map(v => v.key);
-  const factsOf = key => {
-    const [root, ...rest] = key.split('.');
-    if (root === 'axes') {
-      const a = axes.find(x => x.key === rest[0]);
-      if (a) return { kind: 'axis', axis: a.key, values: values(a) };
-    }
-    if (['family', 'icons', 'figma', 'code'].includes(root))
-      return { kind: 'family', axes: Object.fromEntries(axes.map(a => [a.key, values(a)])), defaults: Object.fromEntries(axes.map(a => [a.key, a.default])), parts };
-    if (root === 'anatomy') return { kind: 'node', ...nodeFacts(rest.join('.')), parts };
-    const layout = /^layout(\{.*\})?\.([^.]+)\.[^.]+$/.exec(key);
-    if (layout) return { kind: 'layout', ...nodeFacts(layout[2]) };
-    if (root === 'properties') {
-      const props = contract.properties || [];
-      const p = props.find(q => q.key === rest[0]);
-      if (p && p.code && p.code.prop && p.binds && p.binds.length) return { kind: 'property', prop: p.code.prop, ...nodeFacts(p.binds[0].node), parts };
-    }
-    throw new Error(`no fingerprint kind for "${key}"`);
-  };
-  const list = keys || Object.entries(contract.drafted || {}).filter(([, e]) => e.by === 'agent').map(([k]) => k);
-  const facts = Object.fromEntries(list.map(k => [k, factsOf(k)]));
-  return { facts, fingerprints: Object.fromEntries(list.map(k => [k, fingerprint(facts[k])])) };
+  return draftedFingerprints(contract, { nodeFacts, parts, keys });
 }
 
 /** True when every file the Contract pins is in the sources dir (readContractSources checks their hashes). */
