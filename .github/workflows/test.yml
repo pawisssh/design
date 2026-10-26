@@ -53,6 +53,7 @@ jobs:
           NODE_OPTIONS: >-
             --test-reporter=tap --test-reporter-destination=stdout
             --test-reporter=${{ github.workspace }}/.github/slowest-files.mjs --test-reporter-destination=stdout
+      # The pull-request-only checks; `npm run pr-check` in package.json runs the same list locally, so keep the two in step.
       # A block of 8+ lines the pull request adds under skills/ that the repo already has fails the run; it runs even
       # when a test fails, so both are reported.
       - if: github.event_name == 'pull_request' && !cancelled()

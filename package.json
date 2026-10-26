@@ -1,11 +1,12 @@
 {
   "name": "design",
   "private": true,
-  "description": "No dependencies. `npm test` runs every skill's node:test suite and the CI scripts' (.github/test).",
+  "description": "No dependencies. `npm test` runs every skill's node:test suite and the CI scripts' (.github/test). `npm run pr-check` runs CI's pull-request-only checks against origin/main (or $BASE).",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test --test-concurrency=${TEST_CONCURRENCY:-4} skills/*/test/*.test.mjs skills/*/tests/*.test.mjs .github/test/*.test.mjs"
+    "test": "node --test --test-concurrency=${TEST_CONCURRENCY:-4} skills/*/test/*.test.mjs skills/*/tests/*.test.mjs .github/test/*.test.mjs",
+    "pr-check": "base=${BASE:-origin/main}; node .github/duplicates.mjs \"$base\"; d=$?; node .github/exports.mjs \"$base\"; e=$?; exit $((d | e))"
   }
 }
