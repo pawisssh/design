@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "revision": 6,
-  "status": "pending",
-  "approval": null,
+  "status": "approved",
+  "approval": { "by": "owner", "at": "2026-10-26T16:10:57.124Z", "revision": 6, "contentHash": "sha256:708fb18763ba1e6a2bb20ac48b578ed4fc046119da236a1898c93564e35d0297" },
   "feature": {
     "key": "invite-teammates",
     "name": "Invite teammates",
