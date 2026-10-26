@@ -637,6 +637,22 @@ test('rejects an ELLIPSE missing arc, or another of its required fields (rule 5)
   rejects(spinner((L, P) => { delete P.Track; }), 5, 'paint Track.stroke is unresolved');
 });
 
+test('rejects an ELLIPSE whose width or height is not fixed, in any selected variant (rule 5)', () => {
+  rejects(spinner(L => { L.Track.width = 'hug'; }), 5, 'the ELLIPSE Track needs a fixed width and height', '245 selected variants');
+  rejects(spinner(L => { L.Arc.height = 'fill'; }), 5, 'the ELLIPSE Arc needs a fixed width and height');
+  rejects(spinner(L => { L.Arc.width = 'fixed'; }), 5, 'the ELLIPSE Arc needs a fixed width and height');
+  const small = spinner();
+  small.layout.push({ match: { size: 'sm' }, set: { Track: { height: 'hug' } } });
+  rejects(small, 5, 'the ELLIPSE Track needs a fixed width and height', '35 selected variants');
+});
+
+test('rejects strokeAlign on an ELLIPSE from any layout rule: the builder derives it (rule 3)', () => {
+  rejects(spinner(L => { L.Arc.strokeAlign = 'center'; }), 3, '"Arc": `strokeAlign` is derived on an ELLIPSE');
+  const other = spinner();
+  other.layout[0].set.Track = { strokeAlign: 'inside' };
+  rejects(other, 3, '"Track": `strokeAlign` is derived on an ELLIPSE');
+});
+
 test('rejects a bad arc or strokeCap, either one off an ELLIPSE, and a geometry field in a paint rule (rule 3)', () => {
   for (const arc of [{ start: 0, sweep: 0 }, { start: 0, sweep: 400 }, { start: 0 }, { sameAs: 'Track.arc' }])
     rejects(spinner(L => { L.Arc.arc = arc; }), 3, '`arc` is {start, sweep}');
