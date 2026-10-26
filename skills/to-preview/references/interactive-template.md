@@ -12,7 +12,7 @@ Read when writing an Adapter's preview renderer or changing the page.
 | `stylesheet` | The Code Library's compiled CSS, inlined into the page. |
 | `modeClass(modeKey)` | The class that applies one foundations Theme mode to the page, and so to every specimen and the card chrome. Only a Mode with no `selector` uses it; a Mode's `selector` wins (#109). |
 
-It should refuse to render when the installed packages differ from `contract.source.packages`. The Carbon renderer is [`adapter-carbon/scripts/preview.mjs`](../../adapter-carbon/scripts/preview.mjs).
+Build the props with `codeProps(contract, tuple)` (the full tuple and its axis values' `code` props) and `contentProps(contract, properties, icon)` (the properties' props and children) from the shared [Contract module](../../contract/SKILL.md#contract-module), then merge the axis props over the content props. It should refuse to render when the installed packages differ from `contract.source.packages`. The Carbon renderer is [`adapter-carbon/scripts/preview.mjs`](../../adapter-carbon/scripts/preview.mjs); the CDS one, [`adapter-cds/scripts/preview.mjs`](../../adapter-cds/scripts/preview.mjs), renders one subtree per colour scheme.
 
 ## The page
 
