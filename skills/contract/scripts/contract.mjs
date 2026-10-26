@@ -224,6 +224,7 @@ const REQUIRED = {
   COMPONENT: { layout: ['direction', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'gap'], paint: ['fill', 'stroke'] },
   TEXT: { layout: ['textStyle'], paint: ['fill'] },
   FRAME: { layout: ['width', 'height'], paint: [] },
+  ELLIPSE: { layout: ['width', 'height', 'strokeWeight', 'arc'], paint: ['stroke'] },
   INSTANCE: { layout: [], paint: [] },
 };
 
@@ -308,6 +309,7 @@ export function validate(contract, foundations) {
   const slotAxes = c.axes.filter(a => a.slot !== undefined);
   for (const t of selected) {
     const r = resolve(c, t);
+    checkPlacement(c.anatomy, r, gap, t);
     // A Slot axis's node shows exactly where the tuple fills it (#121).
     for (const a of slotAxes) {
       const { filled } = a.values.find(v => v.key === t[a.key]);
@@ -401,6 +403,7 @@ function checkPatterns(c, err) {
     if (b.match) checkPattern(b.match, `properties.${p.key}.binds[${i}].match`);
     if (!anatomy[b.node]) err(3, `properties.${p.key}.binds[${i}]`, `unknown anatomy node "${b.node}"`);
   }));
+  checkGeometry(c, anatomy, err);
   // A Slot axis (#121, ADR 0011) names a non-root anatomy node; one value fills the slot and one leaves it empty.
   for (const a of c.axes) {
     const at = `axes.${a.key}`;
@@ -425,6 +428,64 @@ function checkPatterns(c, err) {
       .forEach(b => err(3, at, `Slot axis ${axis.key} shows "${axis.slot}", not "${b.node}"`));
   }
   return domain;
+}
+
+// Rule 3 for the geometry fields (#442): an absolute node (`position`, `constraints`) is below the root; an ELLIPSE
+// is a leaf below the root, and only it takes `arc` and `strokeCap`. All are literal layout values, never `sameAs`.
+// Each check returns true, or what the value must be.
+const GEOMETRY = {
+  position: v => v === 'absolute' || '`position` is "absolute" (in flow has no `position`)',
+  constraints: v => (isObj(v) && Object.keys(v).sort().join() === 'horizontal,vertical' && v.horizontal === 'center' && v.vertical === 'center')
+    || '`constraints` is {horizontal: "center", vertical: "center"} (only center for now)',
+  arc: v => (isObj(v) && Number.isFinite(v.start) && Number.isFinite(v.sweep) && v.sweep > 0 && v.sweep <= 360)
+    || '`arc` is {start, sweep} in degrees, with 0 < sweep <= 360',
+  strokeCap: v => ['round', 'none'].includes(v) || '`strokeCap` is "round" or "none"',
+};
+const ELLIPSE_ONLY = ['arc', 'strokeCap'];
+function checkGeometry(c, anatomy, err) {
+  for (const n of Object.values(anatomy)) {
+    if (n.type !== 'ELLIPSE') continue;
+    if (n === c.anatomy) err(3, 'anatomy', `"${n.name}" is an ELLIPSE, which cannot be the root`);
+    if ((n.children || []).length) err(3, `anatomy.${n.name}`, `"${n.name}" is an ELLIPSE, which has no children`);
+  }
+  for (const section of SECTIONS)
+    (c[section] || []).forEach((rule, i) => {
+      const at = `${section}[${i}].set`;
+      for (const [node, fields] of Object.entries(rule.set || {})) {
+        if (!isObj(fields)) continue;
+        for (const [field, value] of Object.entries(fields)) {
+          if (!GEOMETRY[field]) continue;
+          const valid = GEOMETRY[field](value);
+          if (section !== 'layout') err(3, at, `"${node}": \`${field}\` is a layout field, not a ${section} field`);
+          else if (valid !== true) err(3, at, `"${node}": ${valid}, not ${JSON.stringify(value)}`);
+          if (ELLIPSE_ONLY.includes(field) && !(anatomy[node] && anatomy[node].type === 'ELLIPSE'))
+            err(3, at, `"${node}": \`${field}\` is set on ELLIPSE nodes only`);
+          if ((field === 'position' || field === 'constraints') && node === c.anatomy.name)
+            err(3, at, `"${node}" is the root, which cannot be absolute`);
+        }
+      }
+    });
+}
+
+// Rule 5 for one resolved variant (#442). An absolute node has `constraints`, a fixed `width` and `height`, and a
+// parent with Auto Layout; `constraints` without `position` is an error, since Figma takes it on an in-flow child and
+// ignores it. An arc (`sweep` < 360) sits in a FRAME without Auto Layout, at its top left: its Figma box is Figma's.
+function checkPlacement(parent, r, gap, t) {
+  const layout = name => r.layout[name] || {};
+  const direction = layout(parent.name).direction;
+  const flows = direction === 'row' || direction === 'column', stacks = direction === undefined || direction === 'none';
+  const fixed = v => typeof v === 'number' || (isObj(v) && ('token' in v || 'raw' in v));
+  for (const node of parent.children || []) {
+    const name = node.name, fields = layout(name);
+    if (fields.position === 'absolute') {
+      if (!flows) gap(`layout ${name}.position`, `absolute ${name} needs a parent with Auto Layout, but ${parent.name}'s direction is not row or column`, t);
+      if (!fixed(fields.width) || !fixed(fields.height)) gap(`layout ${name}.position`, `absolute ${name} needs a fixed width and height (a token or a value)`, t);
+      if (fields.constraints === undefined) gap(`layout ${name}.constraints`, `absolute ${name} needs constraints`, t);
+    } else if (fields.constraints !== undefined) gap(`layout ${name}.constraints`, `${name} has constraints but is not absolute`, t);
+    if (node.type === 'ELLIPSE' && isObj(fields.arc) && fields.arc.sweep < 360 && (parent.type !== 'FRAME' || !stacks))
+      gap(`layout ${name}.arc`, `the arc ${name} needs a FRAME parent without Auto Layout (direction "none"), not ${parent.name}`, t);
+    checkPlacement(node, r, gap, t);
+  }
 }
 
 // Rule 3 for `code`: `code.required` names props nothing else sets; `code.items` names a Repeated child, and a
@@ -518,10 +579,10 @@ function checkInstances(c, err, familyKnown) {
   for (const key of icons(c)) if (!ICON_KEY.test(key)) err(7, 'icons', `icon key "${key}" is not an icon file name`);
 }
 
-// A fill binds TEXT_FILL on a TEXT node, SHAPE_FILL on a vector inside an instance ("Glyph/Vector"),
+// A fill binds TEXT_FILL on a TEXT node, SHAPE_FILL on an ELLIPSE or a vector inside an instance ("Glyph/Vector"),
 // and FRAME_FILL on a frame or component.
 function fillScope(anatomy, node) {
-  if (node.includes('/')) return 'SHAPE_FILL';
+  if (node.includes('/') || (anatomy[node] && anatomy[node].type === 'ELLIPSE')) return 'SHAPE_FILL';
   return anatomy[node] && anatomy[node].type === 'TEXT' ? 'TEXT_FILL' : 'FRAME_FILL';
 }
 

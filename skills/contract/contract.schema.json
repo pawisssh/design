@@ -172,7 +172,7 @@
       "required": ["name", "type"],
       "properties": {
         "name": { "type": "string", "pattern": "^[^/.]+$" },
-        "type": { "enum": ["COMPONENT", "FRAME", "TEXT", "INSTANCE"] },
+        "type": { "enum": ["COMPONENT", "FRAME", "TEXT", "INSTANCE", "ELLIPSE"], "description": "ELLIPSE (#442): a stroked circle or arc below the root, with no children; its stroke lies inside its box" },
         "role": { "type": "string" },
         "instanceOf": { "type": "string", "pattern": "^(icon|family|sub):.+$" },
         "children": { "type": "array", "items": { "$ref": "#/$defs/node" } }
@@ -213,11 +213,30 @@
           "type": "object",
           "additionalProperties": {
             "type": "object",
-            "properties": { "visible": { "type": "boolean", "description": "layout only: whether the node shows (#93); never on the root" } },
+            "properties": {
+              "visible": { "type": "boolean", "description": "layout only: whether the node shows (#93); never on the root" },
+              "direction": { "type": "string", "description": "row or column (Auto Layout), or none: no Auto Layout, children at the top left in anatomy order, later on top; a FRAME without direction is none (#442)" },
+              "position": { "const": "absolute", "description": "layout only (#442): outside the parent's Auto Layout flow; absent is in flow. Needs constraints, a fixed width and height, a parent with Auto Layout; never on the root" },
+              "constraints": { "$ref": "#/$defs/constraints" },
+              "arc": { "$ref": "#/$defs/arc" },
+              "strokeCap": { "enum": ["round", "none"], "description": "layout only, on an ELLIPSE (#442)" }
+            },
             "additionalProperties": { "$ref": "#/$defs/fieldValue" }
           }
         }
       }
+    },
+    "constraints": {
+      "description": "layout only, on an absolute node (#442): where it sits in its parent. Only center for now",
+      "type": "object",
+      "required": ["horizontal", "vertical"],
+      "properties": { "horizontal": { "enum": ["center"] }, "vertical": { "enum": ["center"] } }
+    },
+    "arc": {
+      "description": "layout only, on an ELLIPSE (#442): degrees, 0 at 12 o'clock, positive clockwise; 0 < sweep <= 360, and 360 is a full circle",
+      "type": "object",
+      "required": ["start", "sweep"],
+      "properties": { "start": { "type": "number" }, "sweep": { "type": "number" } }
     },
     "fieldValue": {
       "anyOf": [
