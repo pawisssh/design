@@ -39,8 +39,9 @@ export const breakpoints = [
 
 // The Contract-writing procedure To-handoff names for a family CDS ships with no Contract yet (#90). It is an agent
 // step: follow the guide against the pinned source, then check the Contract and its Drafted-value fingerprints.
-export const contractProcedure = 'Write the <family> Contract with skills/adapter-cds/SKILL.md §3 against the pinned CDS source, '
-  + 'then run node skills/contract/scripts/check.mjs and node skills/adapter-cds/scripts/fingerprints.mjs --check';
+export const contractProcedure = 'Write the <family> Contract and its node map skills/adapter-cds/nodes/<family>.nodes.json with '
+  + 'skills/adapter-cds/SKILL.md §3 against the pinned CDS source, then run node skills/contract/scripts/check.mjs <draft.json> and '
+  + 'node skills/adapter-cds/scripts/fingerprints.mjs <draft.json> --nodes skills/adapter-cds/nodes/<family>.nodes.json --check';
 
 /**
  * The check a Contract written by `contractProcedure` must pass before To-handoff uses it (#115): the shared Contract
