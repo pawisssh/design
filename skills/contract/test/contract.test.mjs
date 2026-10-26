@@ -286,6 +286,7 @@ test('the icon list is the default icon plus the preferred icons, each once, wit
   assert.deepEqual(contract.icons({ ...c, icons: undefined }), []);
   assert.equal(contract.iconName('arrow--right'), 'Arrow--right');
   assert.equal(contract.iconName('trash-can'), 'Trash-can');
+  assert.equal(contract.iconName('forwardArrow'), 'ForwardArrow');
 });
 
 test('the module runs inlined, without export, in a bare context (no TextEncoder, crypto, structuredClone)', () => {

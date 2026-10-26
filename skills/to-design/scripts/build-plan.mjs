@@ -123,7 +123,7 @@ export function iconsPlan(contracts, iconsDir, ledger, { fileKey, adopt = false,
       throw new Error(`${iconsDir} holds ${pkg.name}@${pkg.version}, the Contracts pin ${source.package}@${source.version}`);
     const keys = [...new Set(withIcons.flatMap(iconKeys))];
     for (const key of keys) {
-      if (!/^[a-z0-9]+(-{1,2}[a-z0-9]+)*$/.test(key)) throw new Error(`icon key "${key}" is not an icon file name`);
+      if (!/^[A-Za-z0-9]+(-{1,2}[A-Za-z0-9]+)*$/.test(key)) throw new Error(`icon key "${key}" is not an icon file name`);
       const tried = [source.path, source.fallback].filter(Boolean).map(t => t.replace('{key}', key));
       const file = tried.find(f => existsSync(join(iconsDir, f)));
       if (!file) throw new Error(`icon ${key}: none of ${tried.join(', ')} in ${source.package}@${source.version}`);
