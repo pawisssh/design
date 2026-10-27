@@ -4,6 +4,7 @@ import { asDraft } from '../scripts/contract.mjs';
 
 const px = n => ({ raw: n, level: 'info', reason: 'spinner test size' });
 
+// To-design's tests override Track's stroke with `focus`: their foundations lack border-subtle-01 (#459).
 /** A draft copy of `button` with the spinner; `edit(spinnerLayout, spinnerPaint)` may change the two rules first. */
 export function withSpinner(button, edit = () => {}) {
   const c = asDraft(button);
