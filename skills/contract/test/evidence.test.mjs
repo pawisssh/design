@@ -54,3 +54,59 @@ test('owner entries are not checked', () => {
   assert.deepEqual(draftedEvidence({ drafted: { 'axes.size.label': { by: 'owner', was: 'Size' } } }, files), []);
   assert.deepEqual(draftedEvidence({}, files), []);
 });
+
+// ---------- a citation in a `reason` or a note (#459) ----------
+// The lines of CDS's ProgressCircle.tsx that #453's Arc note cites, renumbered, and a css literal.
+const circle = {
+  ...files,
+  'packages/web/src/visualizations/ProgressCircle.tsx': [
+    'const progressOffset = 1 - progress;',   // L1
+    '  strokeDashoffset: progressOffset,',    // L2
+    '  pathLength={1}',                       // L3
+    '  strokeDasharray={1}',                  // L4
+    '  progress = indeterminate ? 0.75 : 0,', // L5
+    '  <span className={cx(loading && hiddenCss)}>{children}</span>', // L6
+    'const hiddenCss = css`',                 // L7
+    '  opacity: 0;',                          // L8
+    '`;',                                     // L9
+  ].join('\n'),
+};
+const raw = reason => ({ raw: 24, level: 'info', reason });
+const prose = ({ reason, note }) => draftedEvidence({
+  family: { key: 'button', name: 'Button' },
+  layout: [{ match: {}, set: { Arc: { width: raw(reason || 'a constant') } } }],
+  paint: [{ match: {}, set: { Arc: { stroke: { token: 'focus', by: 'owner', was: raw('ProgressCircle.tsx L1 pathLength, a value the owner replaced') } } } }],
+  notes: note ? [{ level: 'info', at: 'layout.Arc.arc', message: note }] : [],
+}, circle);
+
+test('each citation in a note shows every identifier of its own claim: #453\'s first Arc note fails, the fixed one holds', () => {
+  const good = 'The Contract draws that start: 270 degrees clockwise from 12 o\'clock (an indeterminate progress of 0.75, ProgressCircle.tsx L5, drawn as stroke-dashoffset 1 - 0.75 = 0.25, L1 and L2, of pathLength 1 and stroke-dasharray 1, L3-L4).';
+  assert.deepEqual(prose({ note: good }), []);
+  // #453's first draft, verbatim but for the line numbers: the dashoffset cited the dasharray's lines
+  const bad = 'The Contract draws that start: 270 degrees clockwise from 12 o\'clock (stroke-dashoffset 0.25 of pathLength 1, ProgressCircle.tsx L3-L4).';
+  assert.deepEqual(prose({ note: bad }), [`notes[0]: "${bad}": ProgressCircle.tsx L3-L4: the cited lines do not show stroke-dashoffset`]);
+});
+
+test('a reason cites `<file> L<n>`, and a bare L<n> or one after an identifier is in the last file named', () => {
+  assert.deepEqual(prose({ reason: 'opacity 0 while loading: the label is hidden (packages/web/src/visualizations/ProgressCircle.tsx L6, hiddenCss L6)' }), []);
+  const bad = 'the label is hidden by hiddenCss (ProgressCircle.tsx L5)';
+  assert.deepEqual(prose({ reason: bad }), [`layout[0].set.Arc.width.reason: "${bad}": ProgressCircle.tsx L5: the cited lines do not show hiddenCss`]);
+  assert.match(prose({ reason: 'the label is hidden (L6)' })[0], /: L6 names no file$/);
+  assert.match(prose({ reason: 'the label (ProgressCircle.tsx L12)' })[0], /: L12-L12 is not in ProgressCircle\.tsx \(9 lines\)$/);
+});
+
+test('only identifiers are checked; one that names the block around the cited lines holds', () => {
+  assert.deepEqual(prose({ reason: 'the label is hidden (ProgressCircle.tsx L5)' }), [], 'plain words are not identifiers');
+  assert.deepEqual(prose({ reason: 'opacity 0 in hiddenCss (ProgressCircle.tsx L8)' }), []);
+  assert.match(prose({ reason: 'opacity 0 in progressOffset (ProgressCircle.tsx L8)' })[0], /L8: the cited lines do not show progressOffset$/);
+});
+
+test('a citation that opens a sentence backs the claim after it; a claim stops at its sentence', () => {
+  assert.deepEqual(prose({ note: 'ProgressCircle.tsx L2 sets strokeDashoffset and L3 sets pathLength.' }), []);
+  assert.match(prose({ note: 'ProgressCircle.tsx L4 sets progressOffset' })[0], /L4: the cited lines do not show progressOffset$/);
+  assert.deepEqual(prose({ note: 'The Arc names strokeDasharray. The span hides with hiddenCss (ProgressCircle.tsx L6).' }), []);
+});
+
+test('prose without a citation and an owner\'s `was` are not checked', () => {
+  assert.deepEqual(prose({ reason: 'derived (size − 1lh)/2', note: 'Figma has no animation, so the Arc does not spin.' }), []);
+});

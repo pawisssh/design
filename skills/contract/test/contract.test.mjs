@@ -666,6 +666,22 @@ test('rejects a field the builder draws, set by any rule (rule 3)', () => {
     rejects(spinner(L => { L.Spinner[field] = value; }), 3, `"Spinner": \`${field}\` is drawn by the builder from the Contract, never set`);
 });
 
+test('rejects a field the schema does not list, and a field set in the other section (rule 3, #459)', () => {
+  const c = button();
+  c.layout[0].set.Button.rotation = 90;
+  c.paint[0].set.Button.blendMode = 'MULTIPLY';
+  rejects(c, 3, '"Button": `rotation` is not a layout field');
+  rejects(c, 3, '"Button": `blendMode` is not a paint field');
+  const swapped = button();
+  swapped.paint[0].set.Button.gap = { token: 'spacing-05' };
+  swapped.layout[0].set.Button.fill = 'none';
+  rejects(swapped, 3, '"Button": `gap` is a layout field, not a paint field');
+  rejects(swapped, 3, '"Button": `fill` is a paint field, not a layout field');
+  // one error per field: a drawn field is refused as drawn only
+  const drawn = contract.validate(spinner(L => { L.Spinner.x = 0; }), foundations);
+  assert.deepEqual(drawn.errors.map(e => e.message), ['"Spinner": `x` is drawn by the builder from the Contract, never set']);
+});
+
 test('rejects an arc whose width and height differ, and an ELLIPSE that is an arc in some variants only (rule 5)', () => {
   rejects(spinner(L => { L.Arc.height = { raw: 20, level: 'info', reason: 'test' }; }), 5, 'the arc Arc needs the same width and height', '245 selected variants');
   // a full circle may be an oval

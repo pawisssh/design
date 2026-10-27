@@ -17,7 +17,7 @@ import { CDS, DEFAULT_DIR, hasSources, readSources } from './sources.mjs';
  * fingerprint kind.
  */
 export function fingerprints({ contract, nodes, files, keys }) {
-  // The family's own TSX, `<Family name without spaces>.tsx`, is the only file hashed (#387): CDS styles a component
+  // The family's own TSX, `<Family name without spaces>.tsx`, is the file whose literals are hashed (#387): CDS styles a component
   // with Linaria `css` literals there (`const startNodeCss = css\`…\``), so a layer's facts are the literals its
   // element carries, not stylesheet selectors.
   const tsx = `${contract.family.name.replace(/\s+/g, '')}.tsx`;
@@ -37,7 +37,9 @@ export function fingerprints({ contract, nodes, files, keys }) {
     return { node: entries[0].replace(/^cds-/, ''), element: entries.join(' '),
       rules: entries.filter(e => literals[e]).map(e => literals[e]).sort() };
   };
-  return draftedFingerprints(contract, { nodeFacts, parts: Object.keys(literals).sort(), keys });
+  // A layer drafted from another component's file (Track and Arc from ProgressCircle.tsx) also holds that file's pin:
+  // a change there reopens it (#459).
+  return draftedFingerprints(contract, { nodeFacts, parts: Object.keys(literals).sort(), keys, cited: p => p !== path });
 }
 
 // The Contract's own pin, in the shape sources.mjs reads: its files at its commit, no packages.
