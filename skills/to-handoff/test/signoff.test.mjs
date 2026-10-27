@@ -1,79 +1,25 @@
 // The Handoff Sign-off lifecycle (#116): review, approve, re-run carry-over and Drift check.
 // Sign-off is the owner's and is never simulated: every approval here is a test approval ({test: true}), which
-// approve writes only under <repo>/.scratch/ and validateHandoff rejects anywhere else. Owner answers below are
-// test inputs, never committed in the fixture's decisions.json. Each test assembles its own Design System under
-// .scratch/to-handoff-tests/ (removed after the run) and copies the Prototype there, so nothing committed changes.
+// approve writes only under <repo>/.scratch/ and validateHandoff rejects anywhere else. signed.mjs holds the owner
+// answers, test inputs only, and assembles each test's Design System under .scratch/to-handoff-tests/ (removed
+// after the run), so nothing committed changes.
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { approve as approveContract, proposalContentHash } from '../../contract/scripts/contract.mjs';
+import { proposalContentHash } from '../../contract/scripts/contract.mjs';
 import { hasDeps, hasTypescript } from '../scripts/deps.mjs';
-import { shadcnDesignSystem, V0 } from './helpers.mjs';
+import { fixture, shadcnDesignSystem, V0 } from './helpers.mjs';
+import { AT, DECISIONS, OWNER, SCRATCH, generated, proposalHash, shown, signed } from './signed.mjs';
 import { approve, check, generate, handoffContentHash, loadDesignSystem, review, TEST_APPROVER, validateHandoff } from '../scripts/handoff.mjs';
 
-const repo = p => fileURLToPath(new URL(`../../../${p}`, import.meta.url));
-const fixture = p => fileURLToPath(new URL(`fixtures/invite-teammates/${p}`, import.meta.url));
 const CLI = fileURLToPath(new URL('../scripts/handoff.mjs', import.meta.url));
-// This Design System already has the form-controls text-input Contract, so the email field is a plain Contract
-// usage here rather than the fixture's mid-run draft (#115).
-const { 'contract:text-input': _draft, ...SHARED } = JSON.parse(readFileSync(fixture('decisions.json'), 'utf8'));
-const DECISIONS = { ...SHARED, 'recognise:input[type=email]': { contract: 'text-input', tuple: { size: 'md' }, via: 'element' } };
 const noDeps = !hasDeps() && 'parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
 const noTs = !hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
-const AT = '2026-10-17T12:00:00.000Z';
-
-// The owner's answers to every owner question of the fixture: test inputs only.
-const OWNER = {
-  'question:q-off-axis-email': { by: 'owner', answer: 'Keep the Contract look.' },
-  'question:q-off-axis-role': { by: 'owner', answer: 'Keep the Contract look.' },
-  'question:q-off-axis-copy': { by: 'owner', answer: 'Keep the Contract look.' },
-  'question:q-no-contract-toast': { by: 'owner', answer: 'Raw for now; write the toast Contract next.' },
-  'question:q-font': { by: 'owner', answer: 'Use IBM Plex Sans.' },
-  'question:q-breakpoint-max-width-640px': { by: 'owner', answer: 'sm: stack the form fields.' },
-  'question:q-state-error': { by: 'owner', to: 'developer' },
-};
-
-const SCRATCH = repo('.scratch/to-handoff-tests');
 after(() => rmSync(SCRATCH, { recursive: true, force: true }));
-
-// The form-controls fixtures are drafts. A draft Contract blocks Sign-off, so by default this Design System holds
-// them approved, as test inputs written only under .scratch/; `drafts` keeps the ones it names as drafts.
-function designSystem(base = SCRATCH, { drafts = [] } = {}) {
-  mkdirSync(base, { recursive: true });
-  const dir = mkdtempSync(join(base, 'ds-'));
-  mkdirSync(join(dir, 'contracts'));
-  mkdirSync(join(dir, 'proposals'));
-  mkdirSync(join(dir, 'prototype'));
-  copyFileSync(repo('design-systems/carbon/carbon.foundations.json'), join(dir, 'carbon.foundations.json'));
-  copyFileSync(repo('design-systems/carbon/contracts/button.component.json'), join(dir, 'contracts/button.component.json'));
-  for (const f of ['text-input', 'select']) {
-    const c = read(repo(`skills/contract/test/fixtures/form-controls/${f}.component.json`));
-    writeFileSync(join(dir, `contracts/${f}.component.json`), JSON.stringify(drafts.includes(f) ? c : approveContract(c, AT), null, 2) + '\n');
-  }
-  copyFileSync(fixture('proposals/avatar-stack.proposal.json'), join(dir, 'proposals/avatar-stack.proposal.json'));
-  copyFileSync(fixture('index.html'), join(dir, 'prototype/index.html'));
-  return dir;
-}
-
-async function generated(decisions = { ...DECISIONS, ...OWNER }, base, options) {
-  const ds = designSystem(base, options);
-  const prototype = join(ds, 'prototype/index.html');
-  const result = await generate({ prototype, designSystem: ds, decisions });
-  return { ds, prototype, result, handoffPath: result.path };
-}
-
-const proposalHash = ds => proposalContentHash(JSON.parse(readFileSync(join(ds, 'proposals/avatar-stack.proposal.json'), 'utf8')));
-const shown = (ds, handoffPath) => ({ contentHash: handoffContentHash(JSON.parse(readFileSync(handoffPath, 'utf8'))), proposals: { 'avatar-stack': proposalHash(ds) } });
-
-async function signed() {
-  const g = await generated();
-  await approve({ handoffPath: g.handoffPath, designSystem: g.ds, ...shown(g.ds, g.handoffPath), at: AT, test: true });
-  return g;
-}
 
 const read = p => JSON.parse(readFileSync(p, 'utf8'));
 const styles = h => h.screens.flatMap(s => s.regions.flatMap(r => r.styles || []));

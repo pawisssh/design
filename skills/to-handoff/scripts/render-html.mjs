@@ -21,6 +21,9 @@ const flag = k => `<span class="flag" data-g="${FLAGS[k][0]}">${FLAGS[k][0]} ${F
 const qflag = id => (id ? ` <a class="flag" data-g="?" href="#${esc(id)}">? ${esc(id)}</a>` : '');
 const code = s => `<code>${esc(s)}</code>`;
 
+/** The Rendering's stamp (ADR 0007): `r<revision> · <contentHash, 12 hex> · signed off | pending sign-off`. */
+export const stampOf = h => `r${h.revision} · ${handoffContentHash(h).slice(7, 19)} · ${h.status === 'approved' ? 'signed off' : 'pending sign-off'}`;
+
 /** Render the Handoff at `handoffPath` against `designSystem`; returns the written path. */
 export async function render({ handoffPath, designSystem }) {
   const handoff = JSON.parse(readFileSync(handoffPath, 'utf8'));
@@ -53,7 +56,6 @@ export async function renderHtml(handoff, system) {
     }
     return anyRenderer ? anyRenderer.modeClass(key) : `mode-${key}`;
   };
-  const hash = handoffContentHash(h);
   const screen = h.screens[0];
   const regions = h.screens.flatMap(s => s.regions);
   const usages = regions.flatMap(r => (r.usages || []).map(u => ({ ...u, region: r.id })));
@@ -229,7 +231,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <body class="page">
 <header class="top">
 <h1>${esc(f.name)}</h1>
-<p class="stamp">r${h.revision} · ${hash.slice(7, 19)} · ${h.status === 'approved' ? 'signed off' : 'pending sign-off'}</p>
+<p class="stamp">${esc(stampOf(h))}</p>
 ${theme ? `<label>Mode <select id="mode">${options}</select></label>` : ''}
 <p class="unverified" id="unverified" hidden>Unverified: the Prototype maps only ${esc(Object.keys(h.source.modes).join(', '))} → ${esc(mappedLabel)}.</p>
 </header>
