@@ -223,10 +223,10 @@
   ],
   "excluded": [],
   "selection": {
-    "status": "draft",
+    "status": "approved",
     "omit": [],
     "expectedCount": 480,
-    "approval": null
+    "approval": { "by": "owner", "at": "2026-10-27T04:06:57.010Z", "snapshotId": "sha256:c50a72ac673639dbc18069b83cdbf7e6df76c979098a768075de2fc3703d3697", "contentHash": "sha256:e6eaf1abb89ae8c4bc87ff8495055fdba58a3a473afcf1c826972c745249de26" }
   },
   "anatomy": {
     "name": "Button",
