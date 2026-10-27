@@ -58,7 +58,7 @@ test('the footer reads Source and the Code Library package, or Base Component on
   assert.deepEqual(footer(model.baseId), ['Base Component']);
 });
 
-test('the card chrome uses Carbon tokens, never raw hex; the grid is cards of one size, 200×200 by default, at most 6 columns', () => {
+test('the card chrome uses the chrome roles, never raw hex; the grid is cards of one size, 200×200 by default, at most 6 columns', () => {
   const template = readFileSync(new URL('../assets/catalog-template.html', import.meta.url), 'utf8');
   const css = template.match(/<style>([\s\S]*?)<\/style>/)[1];
   assert.doesNotMatch(css, /#[0-9a-f]{3}(?:[0-9a-f]{3})?\b/i);

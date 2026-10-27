@@ -11,6 +11,7 @@ Read when writing an Adapter's preview renderer or changing the page.
 | `render(tuple, properties)` | HTML text of the real Code Library component for one tuple `{axisKey: valueKey}`. Map axis values through their Contract `code` props, and fill a missing axis with its `default`. A value with `code: null` renders like the default; the page forces it through its CSS pseudo-class. Without `properties` it renders the specimen: TEXT properties at their defaults, and the default icon shown. To-handoff passes a usage's `properties`, keyed by Contract property key (`{label: "Save", icon: false}`); a missing key takes its Contract default. Each `code.required` prop comes from `properties[<prop>]`, else from a per-tuple placeholder (`<family>-<values>`). |
 | `stylesheet` | The Code Library's compiled CSS, inlined into the page. |
 | `modeClass(modeKey)` | The class that applies one foundations Theme mode to the page, and so to every specimen and the card chrome. Only a Mode with no `selector` uses it; a Mode's `selector` wins (#109). |
+| `chrome` | The colours of the page around the specimens (#392), `{page, card, border, text, textSecondary}` and optionally `{control, controlBorder, focus, warning, error}`, each one CSS value. Normally a `var(--…)` the renderer's own `stylesheet` sets in each Mode's class, so the chrome follows the Theme and Layer toggles. `buildCatalog` refuses a renderer with no `chrome`, one missing a required role, an unknown role, or a value with `;`, `{`, `}`, `<` or `>`. |
 
 Build the props with `codeProps(contract, tuple)` (the full tuple and its axis values' `code` props) and `contentProps(contract, properties, icon)` (the properties' props and children) from the shared [Contract module](../../contract/SKILL.md#contract-module), then merge the axis props over the content props. It should refuse to render when the installed packages differ from `contract.source.packages`. The Carbon renderer is [`adapter-carbon/scripts/preview.mjs`](../../adapter-carbon/scripts/preview.mjs); the CDS one, [`adapter-cds/scripts/preview.mjs`](../../adapter-cds/scripts/preview.mjs), renders one subtree per colour scheme.
 
@@ -39,7 +40,22 @@ A card is one column (`minmax(0,1fr)`), so its text never widens it. The label w
 - the specimen host, centred; an unchecked card's specimen is dimmed to 40%;
 - the footer, `Source` and `sourceLabel`, or `Base Component` on the base card.
 
-The chrome uses Carbon `--cds-*` tokens from the library stylesheet, never raw hex: page `--cds-layer-01` (gray in White, as in the reference), card `--cds-layer-background`, falling back to `--cds-background` (the surface Carbon designs components on, which follows the Layer Mode), border `--cds-border-subtle-01`, text `--cds-text-primary` and `--cds-text-secondary`. The first toggle (Theme) puts its Mode class on `<body>`, so the specimens and the chrome switch together. Each later toggle (Layer) puts its class on a `div.tp-mode-host` wrapped around the grid, inside the Theme, because Carbon's theme classes re-declare the level-one contextual tokens and a Layer class on the same element would lose to them. A specimen counts as rendered for export only if it rendered with every toggle at its default.
+**Chrome.** To-preview knows no Code Library, so the chrome's colours are the renderer's `chrome`, never raw hex and never one Design System's token names (#392). `buildCatalog` declares each role as a custom property, `--tp-<role>` (`textSecondary` is `--tp-text-secondary`), on every element of the page: a `var()` then resolves where it is used, so a card takes its Layer's surface. The template's CSS reads only those properties:
+
+| Role | Styles | Without it |
+|---|---|---|
+| `page` | the page behind the grid | required |
+| `card` | each card, and the header | required |
+| `border` | card borders, the header's rule | required |
+| `text` | the page text, the checkbox accent | required |
+| `textSecondary` | the card footer, the status line | required |
+| `control` | toolbar select and button backgrounds | `card` |
+| `controlBorder` | their borders | `border` |
+| `focus` | the focus outline | `text` |
+| `warning` | a Drafted label's dotted underline | `textSecondary` |
+| `error` | the error line | `text` |
+
+Carbon's renderer gives the tokens the chrome always used: page `--cds-layer-01` (gray in White, as in the reference), card `--cds-layer-background`, falling back to `--cds-background` (the surface Carbon designs components on, which follows the Layer Mode), border `--cds-border-subtle-01`, text `--cds-text-primary` and `--cds-text-secondary`, controls `--cds-field-02` and `--cds-border-strong-01`, then `--cds-focus`, `--cds-support-warning` and `--cds-text-error`. CDS's gives `defaultTheme`'s colours (`--color-bgAlternate`, `--color-bg`, `--color-bgLine`, `--color-fg`, `--color-fgMuted` and others), and the Generic Adapter's gives shadcn's (`--muted`, `--card`, `--border`, `--foreground`, `--muted-foreground` and others). The first toggle (Theme) puts its Mode class on `<body>`, so the specimens and the chrome switch together. Each later toggle (Layer) puts its class on a `div.tp-mode-host` wrapped around the grid, inside the Theme, because Carbon's theme classes re-declare the level-one contextual tokens and a Layer class on the same element would lose to them. A specimen counts as rendered for export only if it rendered with every toggle at its default.
 
 **Forcing a State.** Every style rule whose selector uses a forced pseudo-class gets a copy with the pseudo-class replaced by a class (`:hover` becomes `.tp-force-hover`), inserted right after the original. Copies from a hover-capability media query (`@media (any-hover: hover)`) go beside the query, so they apply in any browser. Every element of the rendered specimen gets the class, its root and each descendant, because a form control styles `:hover` and `:focus` on its nested `<input>` or `<select>` (#93).
 

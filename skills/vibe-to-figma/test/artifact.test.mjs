@@ -10,7 +10,7 @@ import { hasRuntime, loadChromium } from '../../to-handoff/scripts/deps.mjs';
 import { approveFolder, storedExport } from '../scripts/approve.mjs';
 import { buildReview, reviewModel } from '../scripts/review.mjs';
 import { catalog, checked, open, status, written } from './browser.mjs';
-import { READABLE, V0, selections, skip, snapshot, v0Folder } from './helpers.mjs';
+import { READABLE, V0, chrome, selections, skip, snapshot, v0Folder } from './helpers.mjs';
 
 const require = createRequire(import.meta.url);
 const { reviewExport } = require('../assets/review-export.js');
@@ -84,7 +84,7 @@ test('saved ticks approve refuses as the export does: another Foundations docume
 
 // ---- In a browser -------------------------------------------------------------------------------------------------
 const browserSkip = skip || (!hasRuntime() && 'To-handoff runtime or browser missing: run node skills/to-handoff/scripts/deps.mjs');
-const stub = () => ({ stylesheet: '', modeClass: m => `mode-${m}`, render: t => `<div>${Object.values(t).join(' ')}</div>` });
+const stub = () => ({ stylesheet: '', modeClass: m => `mode-${m}`, chrome, render: t => `<div>${Object.values(t).join(' ')}</div>` });
 
 test('as an Artifact: ticks save to the db as the owner ticks, and survive a reload', { skip: browserSkip }, async () => {
   const { dir } = await v0Folder();

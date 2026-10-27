@@ -8,9 +8,12 @@ import { buildCatalog } from '../scripts/catalog.mjs';
 
 const button = JSON.parse(readFileSync(new URL('../../../design-systems/carbon/contracts/button.component.json', import.meta.url)));
 const foundations = JSON.parse(readFileSync(new URL('../../../design-systems/carbon/carbon.foundations.json', import.meta.url)));
+// The decided chrome roles (#392), each a custom property of the stub's own.
+const chrome = { page: 'var(--lib-page)', card: 'var(--lib-card)', border: 'var(--lib-border)', text: 'var(--lib-text)', textSecondary: 'var(--lib-muted)' };
 const stub = {
   stylesheet: '.lib-button{color:red}',
   modeClass: mode => `theme-${mode}`,
+  chrome,
   render: tuple => `<button class="lib-button">${Object.values(tuple).join(' ')}</button>`,
 };
 // The page embeds its data as JSON in <script type="application/json" id="catalog">.
@@ -106,11 +109,46 @@ test('form controls get a catalog whose Hover and Focus are forced through their
   assert.equal(Object.keys(select.specimens).length, 52);
 });
 
-// The chrome should be the template's own, with a Code Library's custom properties (Carbon's --cds-*) styling only its
-// specimens. Known failure (#392): this asserts the Carbon names are still there, so it fails once the fix lands; then
-// assert the list is empty.
-test('the template chrome reads Carbon custom properties (known: #392)', () => {
+// The chrome is the template's own: a Code Library's custom properties (Carbon's --cds-*) style only its specimens, and
+// the chrome reads the renderer's roles through To-preview's --tp-* properties (#392).
+test('the template chrome reads no Code Library custom property', () => {
   const css = readFileSync(new URL('../assets/catalog-template.html', import.meta.url), 'utf8').match(/<style>([\s\S]*?)<\/style>/)[1];
   const foreign = new Set([...css.matchAll(/var\(\s*(--[\w-]+)/g)].map(m => m[1]).filter(n => !n.startsWith('--tp-')));
-  assert.notDeepEqual([...foreign], [], '#392 no longer fails here: assert the list is empty');
+  assert.deepEqual([...foreign], []);
+});
+
+// The page's chrome roles as the page declares them: {'--tp-page': 'var(--lib-page)', …}.
+const chromeOf = html => Object.fromEntries([...html.match(/<style id="tp-chrome">[^{]*\{([^}]*)\}/)[1].matchAll(/(--tp-[\w-]+):([^;]+)/g)].map(m => [m[1], m[2]]));
+
+test("the chrome takes each role from the renderer's chrome, and a role it leaves out from a decided one (#392)", () => {
+  assert.deepEqual(chromeOf(buildCatalog({ contract: button, foundations, renderer: stub })), {
+    '--tp-page': 'var(--lib-page)', '--tp-card': 'var(--lib-card)', '--tp-border': 'var(--lib-border)',
+    '--tp-text': 'var(--lib-text)', '--tp-text-secondary': 'var(--lib-muted)',
+    '--tp-control': 'var(--tp-card)', '--tp-control-border': 'var(--tp-border)', '--tp-focus': 'var(--tp-text)',
+    '--tp-warning': 'var(--tp-text-secondary)', '--tp-error': 'var(--tp-text)',
+  });
+  const own = { ...chrome, control: 'var(--lib-field)', controlBorder: 'var(--lib-strong)', focus: 'var(--lib-focus)', warning: 'var(--lib-warning)', error: 'var(--lib-error, #c00)' };
+  const page = chromeOf(buildCatalog({ contract: button, foundations, renderer: { ...stub, chrome: own } }));
+  assert.equal(page['--tp-control'], 'var(--lib-field)');
+  assert.equal(page['--tp-control-border'], 'var(--lib-strong)');
+  assert.equal(page['--tp-focus'], 'var(--lib-focus)');
+  assert.equal(page['--tp-warning'], 'var(--lib-warning)');
+  assert.equal(page['--tp-error'], 'var(--lib-error, #c00)');
+});
+
+test('a renderer with no chrome, or a chrome missing a decided role, gets no catalog (#392)', () => {
+  const { chrome: _, ...bare } = stub;
+  assert.throws(() => buildCatalog({ contract: button, foundations, renderer: bare }),
+    /the preview renderer returns no chrome: \{page, card, border, text, textSecondary\}/);
+  const { textSecondary: __, ...partial } = chrome;
+  assert.throws(() => buildCatalog({ contract: button, foundations, renderer: { ...stub, chrome: partial } }), /chrome\.textSecondary is missing/);
+});
+
+test('a chrome role that is unknown, or not one CSS value, is refused', () => {
+  const build = extra => () => buildCatalog({ contract: button, foundations, renderer: { ...stub, chrome: { ...chrome, ...extra } } });
+  assert.throws(build({ surface: 'red' }), /chrome\.surface is not a chrome role/);
+  assert.throws(build({ card: '' }), /chrome\.card/);
+  assert.throws(build({ card: 7 }), /chrome\.card/);
+  assert.throws(build({ card: 'red} body{display:none' }), /chrome\.card "red\} body\{display:none" is not one CSS value/);
+  assert.throws(build({ border: 'red</style><script>' }), /chrome\.border/);
 });

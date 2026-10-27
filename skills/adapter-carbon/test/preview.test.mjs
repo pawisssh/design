@@ -29,6 +29,17 @@ test('the stylesheet is the compiled Carbon CSS and each Theme mode has its them
   for (const cls of ['.cds--btn--primary', '.cds--g100', '.cds--white']) assert.ok(stylesheet.includes(cls), cls);
 });
 
+test("the catalog chrome is Carbon's tokens, each one every Theme class sets (#392)", { skip }, async () => {
+  const { stylesheet, chrome } = await previewRenderer(button);
+  const names = Object.values(chrome).flatMap(value => [...value.matchAll(/var\((--[\w-]+)/g)].map(m => m[1]));
+  assert.deepEqual(names, ['--cds-layer-01', '--cds-layer-background', '--cds-background', '--cds-border-subtle-01', '--cds-text-primary',
+    '--cds-text-secondary', '--cds-field-02', '--cds-border-strong-01', '--cds-focus', '--cds-support-warning', '--cds-text-error']);
+  for (const theme of ['white', 'g10', 'g90', 'g100']) {
+    const rules = [...stylesheet.matchAll(new RegExp(`\\.cds--${theme}\\s*\\{([^}]*)\\}`, 'g'))].map(m => m[1]).join(';');
+    for (const name of names) assert.match(rules, new RegExp(`${name}:`), `.cds--${theme} sets ${name}`);
+  }
+});
+
 test('refuses to render when the installed packages differ from the Contract pin', { skip }, async () => {
   const moved = JSON.parse(JSON.stringify(button));
   moved.source.packages['@carbon/react'] = '1.119.0';

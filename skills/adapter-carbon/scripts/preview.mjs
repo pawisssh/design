@@ -96,6 +96,13 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
   return {
     stylesheet: readFileSync(join(dir, 'node_modules/@carbon/styles/css/styles.css'), 'utf8'),
     modeClass: mode => `cds--${mode}`,
+    // The catalog chrome's colours (#392), the tokens it always used: the page is --cds-layer-01 (gray in White) and a
+    // card the surface Carbon designs components on, which follows the Layer Mode. A Theme class sets each token.
+    chrome: {
+      page: 'var(--cds-layer-01)', card: 'var(--cds-layer-background, var(--cds-background))', border: 'var(--cds-border-subtle-01)',
+      text: 'var(--cds-text-primary)', textSecondary: 'var(--cds-text-secondary)', control: 'var(--cds-field-02)',
+      controlBorder: 'var(--cds-border-strong-01)', focus: 'var(--cds-focus)', warning: 'var(--cds-support-warning)', error: 'var(--cds-text-error)',
+    },
     render(tuple, properties) {
       const { tuple: full, props: axisProps } = codeProps(contract, tuple);
       const { props, children } = contentFor(properties, full);

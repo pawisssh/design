@@ -96,6 +96,7 @@ export async function pathAFolder() {
   return { proto, root, dir, library: join(dir, 'library') };
 }
 
-/** A stand-in preview renderer, and the review data embedded in a built page. */
-export const stub = () => ({ stylesheet: '.lib{color:red}', modeClass: m => `mode-${m}`, render: t => `<div class="lib">${Object.values(t).join(' ')}</div>` });
+/** A stand-in preview renderer, its catalog chrome the stand-in's own custom properties, and the review data embedded in a built page. */
+export const chrome = { page: 'var(--lib-page)', card: 'var(--lib-card)', border: 'var(--lib-border)', text: 'var(--lib-text)', textSecondary: 'var(--lib-muted)' };
+export const stub = () => ({ stylesheet: '.lib{color:red}', modeClass: m => `mode-${m}`, chrome, render: t => `<div class="lib">${Object.values(t).join(' ')}</div>` });
 export const embedded = html => JSON.parse(html.match(/<script type="application\/json" id="review">([\s\S]*?)<\/script>/)[1]);

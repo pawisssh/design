@@ -95,5 +95,5 @@ test('a small CDS Prototype runs through To-handoff to a validated Handoff whose
   const html = readFileSync(await render({ handoffPath: result.path, designSystem: ds }), 'utf8');
   for (const [variant, label] of [['secondary', 'Cancel'], ['primary', 'Send']])
     assert.match(html, new RegExp(`<button class="[^"]*\\bcds-Interactable\\b[^"]*\\bcds-Button\\b[^"]*" style="[^"]*" type="button" data-variant="${variant}">.*?<span class="">${label}</span>`));
-  assert.match(html, /\.cds-preview-scheme\.light\{[^}]*--color-bgPrimary:rgb\(0,82,255\)/);
+  assert.match(html, /\.cds-preview-scheme\.light,\.cds-preview-light\{[^}]*--color-bgPrimary:rgb\(0,82,255\)/);
 });

@@ -82,6 +82,16 @@ test('the stylesheet is the compiled project CSS with no @supports guard, the da
   assert.ok(!stylesheet.includes('mode-light'));
 });
 
+test("the catalog chrome is shadcn's colour variables, each set for Light in :root and for Dark in .dark (#392)", { skip }, async () => {
+  const { stylesheet, chrome } = await rendererOf('button');
+  const names = Object.values(chrome).map(value => value.match(/^var\((--[\w-]+)\)$/)[1]);
+  assert.deepEqual(names, ['--muted', '--card', '--border', '--foreground', '--muted-foreground', '--input', '--ring', '--destructive']);
+  for (const selector of [':root', '.dark']) {
+    const rules = [...stylesheet.matchAll(/(?<=^|\})\s*([^{}]+)\{([^{}]*)\}/g)].filter(m => m[1].trim() === selector).map(m => m[2]).join(';');
+    for (const name of names) assert.match(rules, new RegExp(`(?:^|[;\\s])${name}:`), `${selector} sets ${name}`);
+  }
+});
+
 test('refuses a project whose files are not the Contract\'s snapshot', { skip }, async () => {
   const project = mkdtempSync(join(tmpdir(), 'generic-preview-'));
   cpSync(FIXTURE, project, { recursive: true });

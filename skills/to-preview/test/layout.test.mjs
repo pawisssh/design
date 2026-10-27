@@ -1,7 +1,7 @@
 // The catalog grid in a browser: cards are 200×200 unless a specimen cannot fit one, as a 288px Toast or a tall Card
 // cannot, and a card's text stays inside it.
-// A stub renderer gives specimens of known widths, and no stylesheet, so a card's border is none and its chrome is
-// the 16px padding each side: a 200px card has a 168px specimen host.
+// A stub renderer gives specimens of known widths, and no stylesheet, so its chrome's custom properties are unset, a
+// card's border is none and its chrome is the 16px padding each side: a 200px card has a 168px specimen host.
 // Needs To-handoff's runtime (node skills/to-handoff/scripts/deps.mjs); without it these tests skip.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -14,7 +14,8 @@ const button = json('carbon/contracts/button.component.json'), foundations = jso
 // The shadcn Card: its root width is fill, and its footer source is a long package path and hash.
 const card = json('shadcn/contracts/card.component.json'), shadcnButton = json('shadcn/contracts/button.component.json'), shadcnFoundations = json('shadcn/shadcn.foundations.json');
 const skip = hasRuntime() ? false : 'To-handoff runtime or browser missing: run node skills/to-handoff/scripts/deps.mjs';
-const stub = render => ({ stylesheet: '', modeClass: mode => `theme-${mode}`, render });
+const chrome = { page: 'var(--lib-page)', card: 'var(--lib-card)', border: 'var(--lib-border)', text: 'var(--lib-text)', textSecondary: 'var(--lib-muted)' };
+const stub = render => ({ stylesheet: '', modeClass: mode => `theme-${mode}`, chrome, render });
 
 // The page with every specimen rendered: each card's width, and each specimen's width beside its host's.
 async function layout(renderer, { contract = button, system = foundations, viewport = { width: 2400, height: 900 } } = {}) {
@@ -89,4 +90,40 @@ test('a specimen whose Contract root width is fill fills its card; a hug one kee
   for (const c of fill.cells) assert.equal(c.specimen, c.host, `${c.id}: the Card fills its card`);
   const hug = await layout(stub(block));
   for (const c of hug.cells) assert.ok(c.specimen < c.host, `${c.id}: the Button keeps its own width`);
+});
+
+// #392: the chrome is the renderer's, through custom properties its own stylesheet sets per Mode class, so the page
+// follows the Theme toggle on <body> and the cards follow the Layer toggle on the wrapper around the grid.
+test("the chrome follows the renderer's custom properties through the Theme and Layer toggles", { skip }, async () => {
+  const stylesheet = '.cds--white{--lib-page:rgb(1, 1, 1);--lib-card:rgb(2, 2, 2);--lib-border:rgb(3, 3, 3);--lib-text:rgb(4, 4, 4);--lib-muted:rgb(5, 5, 5)}'
+    + '.cds--g100{--lib-page:rgb(101, 1, 1);--lib-card:rgb(102, 2, 2);--lib-border:rgb(103, 3, 3);--lib-text:rgb(104, 4, 4);--lib-muted:rgb(105, 5, 5)}'
+    + '.cds--layer-two{--lib-card:rgb(22, 2, 2)}';
+  const renderer = { ...stub(() => '<div style="width:40px;height:20px"></div>'), stylesheet };
+  const { chromium, launchOptions } = loadChromium();
+  const browser = await chromium.launch(launchOptions);
+  try {
+    const tab = await browser.newPage();
+    await tab.setContent(buildCatalog({ contract: button, foundations, renderer }), { waitUntil: 'load' });
+    await tab.waitForFunction(() => !document.getElementById('export').disabled);
+    const colours = () => tab.evaluate(() => {
+      const style = sel => getComputedStyle(document.querySelector(sel));
+      return { page: style('body').backgroundColor, text: style('body').color, header: style('body > header').backgroundColor,
+        card: style('.tp-cell').backgroundColor, border: style('.tp-cell').borderTopColor, foot: style('.tp-card-foot').color,
+        control: style('.tp-toolbar select').backgroundColor, controlBorder: style('.tp-toolbar select').borderTopColor };
+    });
+    // Theme and Layer are the toolbar's last two selects.
+    const choose = (n, value) => tab.evaluate(([n, value]) => {
+      const selects = [...document.querySelectorAll('#filters select')], select = selects[selects.length - 2 + n];
+      select.value = value; select.dispatchEvent(new Event('change'));
+    }, [n, value]);
+    assert.deepEqual(await colours(), { page: 'rgb(1, 1, 1)', text: 'rgb(4, 4, 4)', header: 'rgb(2, 2, 2)', card: 'rgb(2, 2, 2)',
+      border: 'rgb(3, 3, 3)', foot: 'rgb(5, 5, 5)', control: 'rgb(2, 2, 2)', controlBorder: 'rgb(3, 3, 3)' });
+    await choose(1, 'two');
+    assert.equal((await colours()).card, 'rgb(22, 2, 2)', 'a card is the surface of its Layer');
+    assert.equal((await colours()).header, 'rgb(2, 2, 2)', 'the header is outside the Layer');
+    await choose(1, 'one');
+    await choose(0, 'g100');
+    assert.deepEqual(await colours(), { page: 'rgb(101, 1, 1)', text: 'rgb(104, 4, 4)', header: 'rgb(102, 2, 2)', card: 'rgb(102, 2, 2)',
+      border: 'rgb(103, 3, 3)', foot: 'rgb(105, 5, 5)', control: 'rgb(102, 2, 2)', controlBorder: 'rgb(103, 3, 3)' });
+  } finally { await browser.close(); }
 });
