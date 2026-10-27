@@ -2,7 +2,7 @@
 // word its claim names. The two citations #387's review found a line off are the first cases.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { draftedEvidence } from '../scripts/contract.mjs';
+import { draftedEvidence, reasonEvidence } from '../scripts/contract.mjs';
 
 const files = {
   'packages/web/src/buttons/Button.tsx': [
@@ -53,4 +53,32 @@ test('normalise rewrites the source before the match; a claim naming no source w
 test('owner entries are not checked', () => {
   assert.deepEqual(draftedEvidence({ drafted: { 'axes.size.label': { by: 'owner', was: 'Size' } } }, files), []);
   assert.deepEqual(draftedEvidence({}, files), []);
+});
+
+// reasonEvidence (#460): a reason or note cites as `<file> L<n>` or `<file>:L<n>`, and a bare `L<n>` is in the file
+// named last. Only texts citing an `L<n>` are checked.
+const reasons = (reason, note) => reasonEvidence({
+  layout: [{ when: {}, set: { 'End glyph': { width: { value: 16, reason } } } }],
+  notes: note ? [{ at: 'code', severity: 'info', message: note }] : [],
+}, files);
+
+test('a reason cites `<file> L<n>` and bare `L<n>` in the file named last', () => {
+  assert.deepEqual(reasons('Button.tsx L3 wraps it in endNodeCss; the Icon is at L4'), []);
+  assert.deepEqual(reasons('Button.tsx:L3-L4 endNodeCss, then Icon (L4)'), []);
+  assert.deepEqual(reasons('a fixed 16 px glyph, no citation'), []);
+});
+
+test('a reason fails when its citation does not hold', () => {
+  assert.deepEqual(reasons('the Icon sits at L4'), [
+    'layout[0].End glyph.width.reason: "the Icon sits at L4": L4 names no file']);
+  assert.match(reasons('Button.tsx L7 renders the Icon')[0], /L7-L7 is not in Button.tsx \(6 lines\)$/);
+  assert.match(reasons('Button.tsx L1 wraps it in endNodeCss')[0], /the cited lines show none of endNodeCss$/);
+  assert.match(reasons('the size is at _mixins.scss L1')[0], /more than one source file is _mixins.scss$/);
+});
+
+test('a note is checked as a reason is; a slip in a value its line holds is not caught', () => {
+  assert.match(reasons(undefined, 'Button.figma.ts maps it (L13-L19)')[0], /^note at code: .*: L13 names no file$/);
+  // #453's first draft gave a dashoffset of 0.25 at a line that held pathLength: the line exists and names the
+  // word, so only a review catches the value.
+  assert.deepEqual(reasons(undefined, 'Button.tsx L4 Icon color is 0.25'), []);
 });

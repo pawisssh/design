@@ -1021,43 +1021,75 @@ export function draftedFingerprints(contract, { nodeFacts, parts, keys }) {
 const PROSE = new Set(('the and with for its from each one not but has are was this that into any all per via when ' +
   'then than there their them they which what who out off two how can may own').split(' '));
 
+// One text's citations, checked against `files` ({path: text}): each `<file>:L<a>[-L<b>]` or `<file> L<a>` range
+// must lie in exactly one source path (the path, or its last segments), and a bare `L<n>` is in the file named last,
+// `file` before any. When the text names a word its files hold, the cited lines must hold one of those words, so a
+// citation a line off shows none. Returns why a citation does not hold, or undefined.
+function citationProblem(text, files, norm, file) {
+  const paths = Object.keys(files);
+  const ref = /(?:([\w./-]+\.\w+)(?::| +))?(?<![\w-])L(\d+)(?:-L(\d+))?/g;
+  const cited = [], texts = [];
+  let m;
+  while ((m = ref.exec(text))) {
+    if (m[1]) file = m[1];
+    if (!file) return `L${m[2]} names no file`;
+    const hits = paths.filter(p => p === file || p.endsWith(`/${file}`));
+    if (hits.length !== 1) return `${hits.length ? 'more than one' : 'no'} source file is ${file}`;
+    const lines = files[hits[0]].split('\n'), a = +m[2], b = +(m[3] || m[2]);
+    if (a < 1 || b < a || b > lines.length) return `L${a}-L${b} is not in ${file} (${lines.length} lines)`;
+    cited.push(norm(lines.slice(a - 1, b).join('\n')));
+    texts.push(norm(files[hits[0]]));
+  }
+  const words = (text.replace(ref, ' ').match(/[\w$][\w$-]*[\w$]/g) || [])
+    .filter((w, i, all) => w.length > 2 && all.indexOf(w) === i && !PROSE.has(w.toLowerCase()));
+  const named = words.filter(w => texts.some(t => t.includes(w)));
+  if (named.length && !named.some(w => cited.some(t => t.includes(w)))) return `the cited lines show none of ${named.join(', ')}`;
+}
+
 /**
  * The citations in `drafted`'s agent evidence that do not hold (ADR 0010, #387): `files` is {path: text} of the
  * Contract's source files. An evidence string is `<file>:L<a>[-L<b>] what it shows`; the claim may cite more ranges,
- * `L<n>` in the same file or `<other file>:L<n>`. Each file must be exactly one path (the path, or its last segments),
- * and each range must lie in it. When the claim names a word its files hold, the cited lines must hold one of those
- * words, so a citation a line off shows none. `normalise(text)` rewrites source text before the match (Carbon's
- * `#{$prefix}` as `cds`). Returns ['<key>: "<evidence>": <why>'], empty when every citation holds.
+ * `L<n>` in the same file or `<other file>:L<n>`, each checked as citationProblem says. `normalise(text)` rewrites
+ * source text before the match (Carbon's `#{$prefix}` as `cds`). Returns ['<key>: "<evidence>": <why>'], empty when
+ * every citation holds.
  */
 export function draftedEvidence(contract, files, normalise) {
   const norm = normalise || (t => t);
-  const paths = Object.keys(files);
   const problem = ev => {
     const head = /^([^\s:]+):L\d/.exec(ev);
     if (!head) return 'it cites no <file>:L<n>';
-    const rest = ev.slice(head[1].length + 1);
-    const ref = /(?:([\w./-]+\.\w+):)?L(\d+)(?:-L(\d+))?/g;
-    const cited = [], texts = [];
-    let file = head[1], m;
-    while ((m = ref.exec(rest))) {
-      if (m[1]) file = m[1];
-      const hits = paths.filter(p => p === file || p.endsWith(`/${file}`));
-      if (hits.length !== 1) return `${hits.length ? 'more than one' : 'no'} source file is ${file}`;
-      const lines = files[hits[0]].split('\n'), a = +m[2], b = +(m[3] || m[2]);
-      if (a < 1 || b < a || b > lines.length) return `L${a}-L${b} is not in ${file} (${lines.length} lines)`;
-      cited.push(norm(lines.slice(a - 1, b).join('\n')));
-      texts.push(norm(files[hits[0]]));
-    }
-    const words = (rest.replace(ref, ' ').match(/[\w$][\w$-]*[\w$]/g) || [])
-      .filter((w, i, all) => w.length > 2 && all.indexOf(w) === i && !PROSE.has(w.toLowerCase()));
-    const named = words.filter(w => texts.some(t => t.includes(w)));
-    if (named.length && !named.some(w => cited.some(t => t.includes(w)))) return `the cited lines show none of ${named.join(', ')}`;
+    return citationProblem(ev.slice(head[1].length + 1), files, norm, head[1]);
   };
   const out = [];
   for (const key of Object.keys(contract.drafted || {})) {
     const e = contract.drafted[key];
     if (e.by === 'agent') for (const ev of e.evidence) { const p = problem(ev); if (p) out.push(`${key}: "${ev}": ${p}`); }
   }
+  return out;
+}
+
+/**
+ * The citations in the Contract's `reason`s (in layout and paint) and note messages that do not hold, checked as
+ * citationProblem says (#460). A text that cites no `L<n>` is prose and passes. Returns ['<where>: "<text>": <why>'],
+ * `<where>` the reason's path (`layout[0].Spinner.width.reason`) or the note's `at`.
+ */
+export function reasonEvidence(contract, files, normalise) {
+  const norm = normalise || (t => t);
+  const out = [];
+  const check = (where, text) => {
+    if (!/(?<![\w-])L\d/.test(text)) return;
+    const p = citationProblem(text, files, norm);
+    if (p) out.push(`${where}: "${text}": ${p}`);
+  };
+  const walk = (value, path) => {
+    if (Array.isArray(value)) value.forEach((v, i) => walk(v, `${path}[${i}]`));
+    else if (isObj(value)) for (const [k, v] of Object.entries(value)) {
+      if (k === 'reason' && typeof v === 'string') check(`${path}.reason`, v);
+      else walk(v, k === 'set' ? path : `${path}.${k}`);
+    }
+  };
+  for (const section of ['layout', 'paint']) (contract[section] || []).forEach((rule, i) => walk(rule.set, `${section}[${i}]`));
+  for (const n of contract.notes || []) if (typeof n.message === 'string') check(`note at ${n.at}`, n.message);
   return out;
 }
 
