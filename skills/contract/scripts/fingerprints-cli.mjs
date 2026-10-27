@@ -2,7 +2,7 @@
 //   node skills/adapter-<x>/scripts/fingerprints.mjs <contract.json> --nodes <nodes.json> [--check | --write] [--dir <dir>]
 // With neither flag it prints {key: fingerprint} for every agent entry of `drafted`.
 // --check prints `OK <n> fingerprints`, or names on stderr each entry whose fingerprint moved and each citation
-// `draftedEvidence` refuses, and exits 1. An approved Contract's citations print as `note:` lines and pass: its
+// `draftedEvidence` refuses (in evidence, a `reason` or a note), and exits 1. An approved Contract's citations print as `note:` lines and pass: its
 // evidence changes at its next re-approval, never by a write that voids the approval.
 // --write records the computed fingerprints, writing the Contract as a draft only when one changed, and prints each
 // entry whose recorded fingerprint moved: those are the values to re-draft (an entry with none yet is only recorded).

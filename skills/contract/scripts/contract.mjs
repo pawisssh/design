@@ -1035,43 +1035,122 @@ export function draftedFingerprints(contract, { nodeFacts, parts, keys }) {
 const PROSE = new Set(('the and with for its from each one not but has are was this that into any all per via when ' +
   'then than there their them they which what who out off two how can may own').split(' '));
 
+// A citation: `<file>:L<a>[-L<b>]`, or `<file> L<a>` in a reason or a note; a bare `L<n>` is in the last file named.
+const FILE = /[\w./-]+\.[A-Za-z]\w*/g;
+const CITE = /(?:([\w./-]+\.[A-Za-z]\w*)[: ])?\bL(\d+)(?:-L(\d+))?\b/g;
+// In a reason or a note a claim's identifier matches source text across case and hyphens: `stroke-dashoffset`
+// names `strokeDashoffset`.
+const fold = t => t.toLowerCase().replace(/-/g, '');
+// An identifier, not a plain word: camelCase, or holding `-`, `_` or `$`.
+const IDENT = /[A-Za-z_$][\w$-]*[\w$]/g;
+const isIdent = w => /[a-z][A-Z]|[-_$]/.test(w);
+
 /**
- * The citations in `drafted`'s agent evidence that do not hold (ADR 0010, #387): `files` is {path: text} of the
- * Contract's source files. An evidence string is `<file>:L<a>[-L<b>] what it shows`; the claim may cite more ranges,
- * `L<n>` in the same file or `<other file>:L<n>`. Each file must be exactly one path (the path, or its last segments),
- * and each range must lie in it. When the claim names a word its files hold, the cited lines must hold one of those
- * words, so a citation a line off shows none. `normalise(text)` rewrites source text before the match (Carbon's
- * `#{$prefix}` as `cds`). Returns ['<key>: "<evidence>": <why>'], empty when every citation holds.
+ * The citations that do not hold (ADR 0010, #387, #459): `files` is {path: text} of the Contract's source files.
+ * They are checked in `drafted`'s agent evidence, in every `reason` (an owner's `was` skipped) and in every note.
+ * An evidence string is `<file>:L<a>[-L<b>] what it shows`; the claim may cite more ranges, `L<n>` in the same file or
+ * `<other file>:L<n>`. A reason or a note cites `<file> L<n>` or `<file>:L<n>` anywhere, and a bare `L<n>` is in the
+ * last file it named. Each file must be exactly one path (the path, or its last segments), and each range must lie in
+ * it. In evidence, when the claim (the whole string) names a word its files hold, the cited lines must hold one of
+ * those words, so a citation a line off shows none. In a reason or a note each citation, or run of citations ("L132
+ * and L140"), backs the claim before it, back to the previous run or the start of its sentence or `;` clause; a run
+ * that opens one (or follows a `:`) backs the claim after it, to the next run or the clause's end. The cited lines must show every identifier that claim names and the cited files hold (camelCase, or
+ * with `-`, `_` or `$`; the family's name and source file names aside), or sit inside the block it names. `normalise(text)` rewrites source text before
+ * the match (Carbon's `#{$prefix}` as `cds`).
+ * Returns ['<key or path>: "<text>": <why>'], empty when every citation holds.
  */
 export function draftedEvidence(contract, files, normalise) {
   const norm = normalise || (t => t);
   const paths = Object.keys(files);
-  const problem = ev => {
-    const head = /^([^\s:]+):L\d/.exec(ev);
-    if (!head) return 'it cites no <file>:L<n>';
-    const rest = ev.slice(head[1].length + 1);
-    const ref = /(?:([\w./-]+\.\w+):)?L(\d+)(?:-L(\d+))?/g;
-    const cited = [], texts = [];
-    let file = head[1], m;
-    while ((m = ref.exec(rest))) {
-      if (m[1]) file = m[1];
-      const hits = paths.filter(p => p === file || p.endsWith(`/${file}`));
+  const sources = file => paths.filter(p => p === file || p.endsWith(`/${file}`));
+  // Each citation in `text` as {start, end, lines, text}, the cited lines and their file as `as` writes them; or why
+  // one fails.
+  const cite = (text, as) => {
+    const named = [...text.matchAll(FILE)].filter(m => sources(m[0]).length === 1);
+    const out = [];
+    for (const m of text.matchAll(CITE)) {
+      const file = m[1] || (named.filter(f => f.index + f[0].length <= m.index).at(-1) || [])[0];
+      if (!file) return `L${m[2]} names no file`;
+      const hits = sources(file);
       if (hits.length !== 1) return `${hits.length ? 'more than one' : 'no'} source file is ${file}`;
       const lines = files[hits[0]].split('\n'), a = +m[2], b = +(m[3] || m[2]);
       if (a < 1 || b < a || b > lines.length) return `L${a}-L${b} is not in ${file} (${lines.length} lines)`;
-      cited.push(norm(lines.slice(a - 1, b).join('\n')));
-      texts.push(norm(files[hits[0]]));
+      out.push({ start: m.index, end: m.index + m[0].length, a, lines: as(norm(lines.slice(a - 1, b).join('\n'))), text: as(norm(files[hits[0]])) });
     }
-    const words = (rest.replace(ref, ' ').match(/[\w$][\w$-]*[\w$]/g) || [])
-      .filter((w, i, all) => w.length > 2 && all.indexOf(w) === i && !PROSE.has(w.toLowerCase()));
-    const named = words.filter(w => texts.some(t => t.includes(w)));
-    if (named.length && !named.some(w => cited.some(t => t.includes(w)))) return `the cited lines show none of ${named.join(', ')}`;
+    return out;
+  };
+  // The words of the claim that its cited files hold (none of PROSE), and whether the cited lines show one of them.
+  const named = (claim, cites) => (claim.replace(CITE, ' ').match(/[\w$][\w$-]*[\w$]/g) || [])
+    .filter((w, i, all) => w.length > 2 && all.indexOf(w) === i && !PROSE.has(w.toLowerCase()) && cites.some(c => c.text.includes(w)));
+  const none = (words, cites) => words.length && !words.some(w => cites.some(c => c.lines.includes(w)))
+    ? `the cited lines show none of ${words.join(', ')}` : undefined;
+  const exact = t => t;
+  // Whether `id` names a block around the cited lines (`const baseCss = css\``, `&:focus-visible {`, a function): its
+  // last line before them opens a bracket or a template literal that is still open where they start.
+  const encloses = (c, id) => {
+    const above = c.text.split('\n').slice(0, c.a - 1);
+    const k = above.findLastIndex(l => l.includes(id));
+    if (k < 0) return false;
+    let depth = 0, tpl = false, low = Infinity;
+    above.slice(k).forEach((l, j) => {
+      for (const ch of j ? l : l.slice(l.indexOf(id))) {
+        if (ch === '`') depth += (tpl = !tpl) ? 1 : -1;
+        else depth += '{(['.includes(ch) ? 1 : '})]'.includes(ch) ? -1 : 0;
+        if (j) low = Math.min(low, depth);
+      }
+      if (!j) low = depth;
+    });
+    return low > 0;
+  };
+  // The family's own name ("button") is in all its files, so in prose it is no identifier.
+  const family = new Set(String((contract.family || {}).name || '').toLowerCase().split(/\s+/));
+  const evidence = ev => {
+    const head = /^([^\s:]+):L\d/.exec(ev);
+    if (!head) return ['it cites no <file>:L<n>'];
+    const cites = cite(ev, exact);
+    if (typeof cites === 'string') return [cites];
+    const why = none(named(ev, cites), cites);
+    return why ? [why] : [];
+  };
+  const prose = text => {
+    const cites = cite(text, fold);
+    if (typeof cites === 'string') return [cites];
+    const runs = [];
+    for (const c of cites) {
+      const last = runs.at(-1);
+      if (last && /^(?:[\s,;]|\band\b)*$/.test(text.slice(last.end, c.start))) { last.cites.push(c); last.end = c.end; }
+      else runs.push({ start: c.start, end: c.end, cites: [c] });
+    }
+    let taken = 0;
+    return runs.flatMap((r, i) => {
+      // The claim before the run, within its sentence or `;` clause and after text a run before took; else after it.
+      let claim = text.slice(Math.max(i ? runs[i - 1].end : 0, taken), r.start).split(/[.;]\s/).at(-1);
+      if (/(?:^|:)$/.test(claim.replace(/(?:[\s(,]|\band\b)+$/, ''))) {
+        claim = text.slice(r.end, i + 1 < runs.length ? runs[i + 1].start : text.length).split(/[.;]\s/)[0];
+        taken = r.end + claim.length;
+      }
+      // a source file's name ("Button.figma.ts") is not an identifier of the claim
+      const ids = (claim.replace(FILE, f => sources(f).length ? ' ' : f).match(IDENT) || [])
+        .filter((w, j, all) => isIdent(w) && all.indexOf(w) === j && !family.has(w.toLowerCase()) && r.cites.some(c => c.text.includes(fold(w))));
+      const missing = ids.filter(w => !r.cites.some(c => c.lines.includes(fold(w)) || encloses(c, fold(w))));
+      return missing.length ? [`${text.slice(r.start, r.end)}: the cited lines do not show ${missing.join(', ')}`] : [];
+    });
   };
   const out = [];
+  const report = (at, text, whys) => whys.forEach(why => out.push(`${at}: "${text}": ${why}`));
   for (const key of Object.keys(contract.drafted || {})) {
     const e = contract.drafted[key];
-    if (e.by === 'agent') for (const ev of e.evidence) { const p = problem(ev); if (p) out.push(`${key}: "${ev}": ${p}`); }
+    if (e.by === 'agent') for (const ev of e.evidence) report(key, ev, evidence(ev));
   }
+  const walk = (v, at) => {
+    if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${at}[${i}]`));
+    else if (isObj(v)) for (const [k, x] of Object.entries(v)) {
+      if (k === 'reason' && typeof x === 'string') report(`${at}.reason`, x, prose(x));
+      else if (k !== 'was') walk(x, `${at}.${k}`);
+    }
+  };
+  for (const [k, v] of Object.entries(contract)) if (k !== 'drafted' && k !== 'notes') walk(v, k);
+  (contract.notes || []).forEach((n, i) => { if (isObj(n) && typeof n.message === 'string') report(`notes[${i}]`, n.message, prose(n.message)); });
   return out;
 }
 
