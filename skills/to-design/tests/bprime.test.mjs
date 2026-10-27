@@ -266,10 +266,12 @@ test('a first build above MAX_COMBINE variants is refused: its one combine call 
   assert.throws(() => setsPlan(big, SHADCN_DOC, shadcnLedger(big, null), { fileKey: FILE_KEY, at: AT, prototype: true, batch: 0 }), new RegExp(`3456 variants.*${MAX_COMBINE}`));
 });
 
-test('every sets package keeps the core and the plan under 50,000 chars: the plan budget leaves room for the core', () => {
+test('every sets package keeps the core and the plan under 50,000 chars: the plan budget leaves room for the core', t => {
   const c = approve(SHADCN_BUTTON, AT, { prototype: true });
   const { plan, state } = setsPlan(c, SHADCN_DOC, shadcnLedger(c, null), { fileKey: FILE_KEY, at: AT, prototype: true, batch: 0 });
   const { out } = pack(plan, state, COMPONENTS_CORE);
   const overhead = out.chars - JSON.stringify(plan).length - JSON.stringify(state).length;
+  // On every run, so the next core edit knows its room before it fails (#459).
+  t.diagnostic(`core overhead ${overhead}, headroom ${50000 - overhead - SETS_BUDGET}`);
   assert.ok(overhead + SETS_BUDGET <= 50000, `core overhead ${overhead} + plan budget ${SETS_BUDGET} leaves ${50000 - overhead - SETS_BUDGET}: the core grew, so lower SETS_BUDGET in scripts/build-plan.mjs to ${50000 - overhead} or less, then lower the fresh.perCall > 30 floor in the per-call test above to match`);
 });

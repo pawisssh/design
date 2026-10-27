@@ -86,6 +86,23 @@ test('properties.<key>.*: the code prop and the first bound node\'s facts', () =
   assert.deepEqual(lead, { kind: 'property', prop: 'start', node: 'leadCss', element: 'leadCss', rules: ['leadCss { margin-inline-end: ${space}; }'], parts: PARTS });
 });
 
+test('a node, layout or property key also holds the pin of each other file its evidence cites (#459)', () => {
+  const pinned = { ...contract, source: { files: {
+    'packages/web/src/chips/ChipCard.tsx': 'sha256:1', 'packages/common/src/tokens/chipCard.ts': 'sha256:2', 'packages/web/src/chips/Chip Card.tsx': 'sha256:3' } },
+  drafted: {
+    'anatomy.Lead': { by: 'agent', evidence: ['ChipCard.tsx:L7 leadCss', 'chipCard.ts:L1 variants'] },
+    'layout.Root.gap': { by: 'agent', evidence: ['packages/common/src/tokens/chipCard.ts:L1 variants'] },
+    'properties.lead.default': { by: 'agent', evidence: ['ChipCard.tsx:L11 start'] },
+    'axes.size.label': { by: 'agent', evidence: ['chipCard.ts:L1 variants'] } } };
+  const { facts } = fingerprints({ contract: pinned, nodes, files });
+  // the family TSX's literals are its facts already, so its pin is not
+  const cited = { cited: { 'packages/common/src/tokens/chipCard.ts': 'sha256:2' } };
+  assert.deepEqual(facts['anatomy.Lead'], { kind: 'node', node: 'leadCss', element: 'leadCss', rules: ['leadCss { margin-inline-end: ${space}; }'], parts: PARTS, ...cited });
+  assert.deepEqual(facts['layout.Root.gap'], { kind: 'layout', ...ROOT, ...cited });
+  assert.equal('cited' in facts['properties.lead.default'], false);
+  assert.equal('cited' in facts['axes.size.label'], false, 'an axis key is drafted from the axis, not from a file');
+});
+
 test('keys default to the agent entries of drafted', () => {
   const drafted = { 'anatomy.Lead': { by: 'agent', evidence: ['ChipCard.tsx:L7 leadCss'], fingerprint: 'sha256:0' }, 'axes.size.label': { by: 'owner', was: 'Size' } };
   assert.deepEqual(Object.keys(fingerprints({ contract: { ...contract, drafted }, nodes, files }).fingerprints), ['anatomy.Lead']);

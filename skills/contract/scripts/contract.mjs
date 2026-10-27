@@ -396,13 +396,20 @@ function checkPatterns(c, err) {
   for (const section of SECTIONS)
     (c[section] || []).forEach((rule, i) => {
       checkPattern(rule.match, `${section}[${i}].match`);
+      const at = `${section}[${i}].set`;
       for (const [node, fields] of Object.entries(rule.set || {})) {
-        if (!nodeKnown(node)) err(3, `${section}[${i}].set`, `unknown anatomy node "${node}"`);
+        if (!nodeKnown(node)) err(3, at, `unknown anatomy node "${node}"`);
+        if (!isObj(fields)) continue;
+        // Each field is one the schema lists for its section (#459); a drawn field has its own error (checkGeometry).
+        for (const field of Object.keys(fields)) {
+          if (FIELDS[section].has(field) || DRAWN.includes(field)) continue;
+          const other = SECTIONS.find(s => s !== section);
+          err(3, at, FIELDS[other].has(field) ? `"${node}": \`${field}\` is a ${other} field, not a ${section} field`
+            : `"${node}": \`${field}\` is not a ${section} field`);
+        }
         // `visible` (#93): a layout field that shows or hides an anatomy node below the root.
-        if (!isObj(fields) || !('visible' in fields)) continue;
-        const at = `${section}[${i}].set`;
-        if (section !== 'layout') err(3, at, `"${node}": \`visible\` is a layout field, not a ${section} field`);
-        else if (typeof fields.visible !== 'boolean') err(3, at, `"${node}": \`visible\` is true or false, not ${JSON.stringify(fields.visible)}`);
+        if (section !== 'layout' || !('visible' in fields)) continue;
+        if (typeof fields.visible !== 'boolean') err(3, at, `"${node}": \`visible\` is true or false, not ${JSON.stringify(fields.visible)}`);
         else if (node === c.anatomy.name) err(3, at, `"${node}" is the root, which cannot be hidden`);
         else if (!anatomy[node]) err(3, at, `"${node}": \`visible\` is set on anatomy nodes only`);
       }
@@ -450,6 +457,14 @@ const GEOMETRY = {
   strokeCap: v => ['round', 'none'].includes(v) || '`strokeCap` is "round" or "none"',
 };
 const ELLIPSE_ONLY = ['arc', 'strokeCap'];
+// The fields a rule may set, per section (contract-schema.md, Rules): the layout fields and the geometry fields
+// (#442), and the paint fields. validate rule 3 refuses any other name (#459).
+const FIELDS = {
+  layout: new Set(['direction', 'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight', 'alignMain', 'alignCross',
+    'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'gap', 'radius', 'strokeWeight', 'strokeAlign', 'textStyle',
+    'textResize', 'visible', ...Object.keys(GEOMETRY)]),
+  paint: new Set(['fill', 'stroke', 'effects', 'opacity']),
+};
 // Fields the builder derives (an ELLIPSE's path and stroke, an absolute node's place and its parent's clip, #442).
 const DRAWN = ['path', 'dashPattern', 'x', 'y', 'offCentre', 'clipsContent'];
 function checkGeometry(c, anatomy, err) {
@@ -472,8 +487,7 @@ function checkGeometry(c, anatomy, err) {
           if (DRAWN.includes(field)) err(3, at, `"${node}": \`${field}\` is drawn by the builder from the Contract, never set`);
           if (!GEOMETRY[field]) continue;
           const valid = GEOMETRY[field](value);
-          if (section !== 'layout') err(3, at, `"${node}": \`${field}\` is a layout field, not a ${section} field`);
-          else if (valid !== true) err(3, at, `"${node}": ${valid}, not ${JSON.stringify(value)}`);
+          if (section === 'layout' && valid !== true) err(3, at, `"${node}": ${valid}, not ${JSON.stringify(value)}`);
           if (ELLIPSE_ONLY.includes(field) && !ellipse)
             err(3, at, `"${node}": \`${field}\` is set on ELLIPSE nodes only`);
           if ((field === 'position' || field === 'constraints') && node === c.anatomy.name)
@@ -992,11 +1006,21 @@ export function draftedValue(contract, key) {
  * The fingerprint of each `drafted` key (ADR 0010): `sha256:` of the canonical facts its key kind is drafted from.
  * The Adapter reads its Code Library and passes `nodeFacts(layer)` (the layer's {node, element, rules, ...}; it throws on
  * a layer it can't map) and `parts`, the family's part names; the key kinds are the same for every Adapter (#144, #387).
- * `keys` defaults to the agent entries of `drafted`. Returns {facts: {key: facts}, fingerprints: {key: "sha256:…"}}.
- * Throws on a key with no fingerprint kind.
+ * `keys` defaults to the agent entries of `drafted`. With `cited(path)`, a node, layout or property key's facts also
+ * hold `cited`: the `source.files` pin of each file its evidence cites that `cited` keeps (the files `nodeFacts`
+ * doesn't read already), so a change in another component's file reopens it (#459). Returns {facts: {key: facts},
+ * fingerprints: {key: "sha256:…"}}. Throws on a key with no fingerprint kind.
  */
-export function draftedFingerprints(contract, { nodeFacts, parts, keys }) {
+export function draftedFingerprints(contract, { nodeFacts, parts, keys, cited }) {
   const axes = contract.axes || [];
+  const pins = (contract.source || {}).files || {};
+  const citedOf = key => {
+    const entry = (contract.drafted || {})[key];
+    const files = ((entry && entry.evidence) || []).flatMap(ev => [...ev.matchAll(CITE)].map(m => m[1]).filter(Boolean));
+    const hit = Object.keys(pins).filter(p => cited(p) && files.some(f => isFile(p, f))).sort();
+    return hit.length ? { cited: Object.fromEntries(hit.map(p => [p, pins[p]])) } : {};
+  };
+  const withCited = (key, facts) => (cited ? { ...facts, ...citedOf(key) } : facts);
   const values = a => a.values.map(v => v.key);
   const factsOf = key => {
     const [root, ...rest] = key.split('.');
@@ -1004,12 +1028,12 @@ export function draftedFingerprints(contract, { nodeFacts, parts, keys }) {
     if (axis) return { kind: 'axis', axis: axis.key, values: values(axis) };
     if (['family', 'icons', 'figma', 'code'].includes(root))
       return { kind: 'family', axes: Object.fromEntries(axes.map(a => [a.key, values(a)])), defaults: Object.fromEntries(axes.map(a => [a.key, a.default])), parts };
-    if (root === 'anatomy') return { kind: 'node', ...nodeFacts(rest.join('.')), parts };
+    if (root === 'anatomy') return withCited(key, { kind: 'node', ...nodeFacts(rest.join('.')), parts });
     // A layout rule's match is not a fact: `layout{"size":"sm"}.Box.height` hashes like `layout.Box.height`.
     const layout = /^layout(\{.*\})?\.([^.]+)\.[^.]+$/.exec(key);
-    if (layout) return { kind: 'layout', ...nodeFacts(layout[2]) };
+    if (layout) return withCited(key, { kind: 'layout', ...nodeFacts(layout[2]) });
     const p = root === 'properties' && (contract.properties || []).find(q => q.key === rest[0]);
-    if (p && p.code && p.code.prop && p.binds && p.binds.length) return { kind: 'property', prop: p.code.prop, ...nodeFacts(p.binds[0].node), parts };
+    if (p && p.code && p.code.prop && p.binds && p.binds.length) return withCited(key, { kind: 'property', prop: p.code.prop, ...nodeFacts(p.binds[0].node), parts });
     throw new Error(`no fingerprint kind for "${key}"`);
   };
   const list = keys || Object.entries(contract.drafted || {}).filter(([, e]) => e.by === 'agent').map(([k]) => k);
@@ -1021,43 +1045,125 @@ export function draftedFingerprints(contract, { nodeFacts, parts, keys }) {
 const PROSE = new Set(('the and with for its from each one not but has are was this that into any all per via when ' +
   'then than there their them they which what who out off two how can may own').split(' '));
 
+// A citation: `<file>:L<a>[-L<b>]`, or `<file> L<a>` in a reason or a note; a bare `L<n>` is in the last file named.
+const FILE = /[\w./-]+\.[A-Za-z]\w*/g;
+const CITE = new RegExp(`(?:(${FILE.source})[: ])?\\bL(\\d+)(?:-L(\\d+))?\\b`, 'g');
+// Whether a source path is the cited file: the path, or its last segments.
+const isFile = (path, file) => path === file || path.endsWith(`/${file}`);
+// In a reason or a note a claim's identifier matches source text across case and hyphens: `stroke-dashoffset`
+// names `strokeDashoffset`.
+const fold = t => t.toLowerCase().replace(/-/g, '');
+// An identifier, not a plain word: camelCase, or holding `-`, `_` or `$`.
+const IDENT = /[A-Za-z_$][\w$-]*[\w$]/g;
+const isIdent = w => /[a-z][A-Z]|[-_$]/.test(w);
+
 /**
- * The citations in `drafted`'s agent evidence that do not hold (ADR 0010, #387): `files` is {path: text} of the
- * Contract's source files. An evidence string is `<file>:L<a>[-L<b>] what it shows`; the claim may cite more ranges,
- * `L<n>` in the same file or `<other file>:L<n>`. Each file must be exactly one path (the path, or its last segments),
- * and each range must lie in it. When the claim names a word its files hold, the cited lines must hold one of those
- * words, so a citation a line off shows none. `normalise(text)` rewrites source text before the match (Carbon's
- * `#{$prefix}` as `cds`). Returns ['<key>: "<evidence>": <why>'], empty when every citation holds.
+ * The citations that do not hold (ADR 0010, #387, #459): `files` is {path: text} of the Contract's source files.
+ * They are checked in `drafted`'s agent evidence, in every `reason` (an owner's `was` skipped) and in every note.
+ * An evidence string is `<file>:L<a>[-L<b>] what it shows`; the claim may cite more ranges, `L<n>` in the same file or
+ * `<other file>:L<n>`. A reason or a note cites `<file> L<n>` or `<file>:L<n>` anywhere, and a bare `L<n>` is in the
+ * last file it named. Each file must be exactly one path (the path, or its last segments), and each range must lie in
+ * it. In evidence, when the claim (the whole string) names a word its files hold, the cited lines must hold one of
+ * those words, so a citation a line off shows none. In a reason or a note each citation, or run of citations ("L132
+ * and L140"), backs the claim before it, back to the previous run or the start of its sentence or `;` clause; a run
+ * that opens one (or follows a `:`) backs the claim after it, to the next run or the clause's end. The cited lines
+ * must show every identifier that claim names and the cited files hold (camelCase, or with `-`, `_` or `$`; the
+ * family's name and source file names aside), or sit inside the block it names. `normalise(text)` rewrites source
+ * text before the match (Carbon's `#{$prefix}` as `cds`).
+ * Returns ['<key or path>: "<text>": <why>'], empty when every citation holds.
  */
 export function draftedEvidence(contract, files, normalise) {
   const norm = normalise || (t => t);
   const paths = Object.keys(files);
-  const problem = ev => {
-    const head = /^([^\s:]+):L\d/.exec(ev);
-    if (!head) return 'it cites no <file>:L<n>';
-    const rest = ev.slice(head[1].length + 1);
-    const ref = /(?:([\w./-]+\.\w+):)?L(\d+)(?:-L(\d+))?/g;
-    const cited = [], texts = [];
-    let file = head[1], m;
-    while ((m = ref.exec(rest))) {
-      if (m[1]) file = m[1];
-      const hits = paths.filter(p => p === file || p.endsWith(`/${file}`));
+  const sources = file => paths.filter(p => isFile(p, file));
+  // Each citation in `text` as {start, end, lines, text}, the cited lines and their file as `as` writes them; or why
+  // one fails.
+  const cite = (text, as) => {
+    const mentions = [...text.matchAll(FILE)].filter(m => sources(m[0]).length === 1);
+    const out = [];
+    for (const m of text.matchAll(CITE)) {
+      const file = m[1] || (mentions.filter(f => f.index + f[0].length <= m.index).at(-1) || [])[0];
+      if (!file) return `L${m[2]} names no file`;
+      const hits = sources(file);
       if (hits.length !== 1) return `${hits.length ? 'more than one' : 'no'} source file is ${file}`;
       const lines = files[hits[0]].split('\n'), a = +m[2], b = +(m[3] || m[2]);
       if (a < 1 || b < a || b > lines.length) return `L${a}-L${b} is not in ${file} (${lines.length} lines)`;
-      cited.push(norm(lines.slice(a - 1, b).join('\n')));
-      texts.push(norm(files[hits[0]]));
+      out.push({ start: m.index, end: m.index + m[0].length, a, lines: as(norm(lines.slice(a - 1, b).join('\n'))), text: as(norm(files[hits[0]])) });
     }
-    const words = (rest.replace(ref, ' ').match(/[\w$][\w$-]*[\w$]/g) || [])
-      .filter((w, i, all) => w.length > 2 && all.indexOf(w) === i && !PROSE.has(w.toLowerCase()));
-    const named = words.filter(w => texts.some(t => t.includes(w)));
-    if (named.length && !named.some(w => cited.some(t => t.includes(w)))) return `the cited lines show none of ${named.join(', ')}`;
+    return out;
+  };
+  // The words of the claim that its cited files hold (none of PROSE), and whether the cited lines show one of them.
+  const named = (claim, cites) => (claim.replace(CITE, ' ').match(/[\w$][\w$-]*[\w$]/g) || [])
+    .filter((w, i, all) => w.length > 2 && all.indexOf(w) === i && !PROSE.has(w.toLowerCase()) && cites.some(c => c.text.includes(w)));
+  const none = (words, cites) => words.length && !words.some(w => cites.some(c => c.lines.includes(w)))
+    ? `the cited lines show none of ${words.join(', ')}` : undefined;
+  const exact = t => t;
+  // Whether `id` names a block around the cited lines (`const baseCss = css\``, `&:focus-visible {`, a function): its
+  // last line before them opens a bracket or a template literal that is still open where they start.
+  const encloses = (c, id) => {
+    const above = c.text.split('\n').slice(0, c.a - 1);
+    const k = above.findLastIndex(l => l.includes(id));
+    if (k < 0) return false;
+    let depth = 0, tpl = false, low = Infinity;
+    above.slice(k).forEach((l, j) => {
+      for (const ch of j ? l : l.slice(l.indexOf(id))) {
+        if (ch === '`') depth += (tpl = !tpl) ? 1 : -1;
+        else depth += '{(['.includes(ch) ? 1 : '})]'.includes(ch) ? -1 : 0;
+        if (j) low = Math.min(low, depth);
+      }
+      if (!j) low = depth;
+    });
+    return low > 0;
+  };
+  // The family's own name ("button") is in all its files, so in prose it is no identifier.
+  const family = new Set(String((contract.family || {}).name || '').toLowerCase().split(/\s+/));
+  const evidence = ev => {
+    const head = /^([^\s:]+):L\d/.exec(ev);
+    if (!head) return ['it cites no <file>:L<n>'];
+    const cites = cite(ev, exact);
+    if (typeof cites === 'string') return [cites];
+    const why = none(named(ev, cites), cites);
+    return why ? [why] : [];
+  };
+  const prose = text => {
+    const cites = cite(text, fold);
+    if (typeof cites === 'string') return [cites];
+    const runs = [];
+    for (const c of cites) {
+      const last = runs.at(-1);
+      if (last && /^(?:[\s,;]|\band\b)*$/.test(text.slice(last.end, c.start))) { last.cites.push(c); last.end = c.end; }
+      else runs.push({ start: c.start, end: c.end, cites: [c] });
+    }
+    let taken = 0;
+    return runs.flatMap((r, i) => {
+      // The claim before the run, within its sentence or `;` clause and after text a run before took; else after it.
+      let claim = text.slice(Math.max(i ? runs[i - 1].end : 0, taken), r.start).split(/[.;]\s/).at(-1);
+      if (/(?:^|:)$/.test(claim.replace(/(?:[\s(,]|\band\b)+$/, ''))) {
+        claim = text.slice(r.end, i + 1 < runs.length ? runs[i + 1].start : text.length).split(/[.;]\s/)[0];
+        taken = r.end + claim.length;
+      }
+      // a source file's name ("Button.figma.ts") is not an identifier of the claim
+      const ids = (claim.replace(FILE, f => sources(f).length ? ' ' : f).match(IDENT) || [])
+        .filter((w, j, all) => isIdent(w) && all.indexOf(w) === j && !family.has(w.toLowerCase()) && r.cites.some(c => c.text.includes(fold(w))));
+      const missing = ids.filter(w => !r.cites.some(c => c.lines.includes(fold(w)) || encloses(c, fold(w))));
+      return missing.length ? [`${text.slice(r.start, r.end)}: the cited lines do not show ${missing.join(', ')}`] : [];
+    });
   };
   const out = [];
+  const report = (at, text, whys) => whys.forEach(why => out.push(`${at}: "${text}": ${why}`));
   for (const key of Object.keys(contract.drafted || {})) {
     const e = contract.drafted[key];
-    if (e.by === 'agent') for (const ev of e.evidence) { const p = problem(ev); if (p) out.push(`${key}: "${ev}": ${p}`); }
+    if (e.by === 'agent') for (const ev of e.evidence) report(key, ev, evidence(ev));
   }
+  const walk = (v, at) => {
+    if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${at}[${i}]`));
+    else if (isObj(v)) for (const [k, x] of Object.entries(v)) {
+      if (k === 'reason' && typeof x === 'string') report(`${at}.reason`, x, prose(x));
+      else if (k !== 'was') walk(x, `${at}.${k}`);
+    }
+  };
+  for (const [k, v] of Object.entries(contract)) if (k !== 'drafted' && k !== 'notes') walk(v, k);
+  (contract.notes || []).forEach((n, i) => { if (isObj(n) && typeof n.message === 'string') report(`notes[${i}]`, n.message, prose(n.message)); });
   return out;
 }
 

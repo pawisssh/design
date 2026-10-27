@@ -223,10 +223,10 @@
   ],
   "excluded": [],
   "selection": {
-    "status": "approved",
+    "status": "draft",
     "omit": [],
     "expectedCount": 480,
-    "approval": { "by": "owner", "at": "2026-10-27T04:06:57.010Z", "snapshotId": "sha256:c50a72ac673639dbc18069b83cdbf7e6df76c979098a768075de2fc3703d3697", "contentHash": "sha256:e6eaf1abb89ae8c4bc87ff8495055fdba58a3a473afcf1c826972c745249de26" }
+    "approval": null
   },
   "anatomy": {
     "name": "Button",
@@ -1877,14 +1877,14 @@
       "evidence": [
         "ProgressCircle.tsx:L232-L240 the circle stroked var(--color-bgLine)"
       ],
-      "fingerprint": "sha256:ce52a7bf3f9281abcb90b4520a8f06da1458fc8f0bcd105adb4e91fec2296c60"
+      "fingerprint": "sha256:68e94d0031c2e0addb9bbc89ab2cb44e28851a8ba43c71df755fe12e7dcec7f1"
     },
     "anatomy.Arc": {
       "by": "agent",
       "evidence": [
         "ProgressCircle.tsx:L149-L160 the motion.circle with strokeLinecap round, the progress arc"
       ],
-      "fingerprint": "sha256:ce52a7bf3f9281abcb90b4520a8f06da1458fc8f0bcd105adb4e91fec2296c60"
+      "fingerprint": "sha256:68e94d0031c2e0addb9bbc89ab2cb44e28851a8ba43c71df755fe12e7dcec7f1"
     },
     "anatomy.End icon": {
       "by": "agent",
@@ -1900,7 +1900,7 @@
         "Button.figma.ts:L10 Code Connect falls back to the label \"Button\"",
         "_webExamples.mdx:L204-L233 the examples' labels are one or two words: \"See more\", \"Open link\", \"Add item\", \"Download\", \"Connect wallet\""
       ],
-      "fingerprint": "sha256:43badcd53a564ff4f3ed6b561c140ec04499839c8d25d779379467bd8bc19b04"
+      "fingerprint": "sha256:7bc9b5c4f2324c8712880cbd9acf5228d0f4ae9f8112a3f35ffa3b45607108f4"
     },
     "layout.Button.alignMain": {
       "by": "agent",
