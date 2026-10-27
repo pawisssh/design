@@ -4,7 +4,6 @@ import { asDraft } from '../scripts/contract.mjs';
 
 const px = n => ({ raw: n, level: 'info', reason: 'spinner test size' });
 
-// To-design's tests override Track's stroke with `focus`: their foundations lack border-subtle-01 (#459).
 /** A draft copy of `button` with the spinner; `edit(spinnerLayout, spinnerPaint)` may change the two rules first. */
 export function withSpinner(button, edit = () => {}) {
   const c = asDraft(button);
@@ -15,6 +14,7 @@ export function withSpinner(button, edit = () => {}) {
     Track: { width: px(24), height: px(24), strokeWeight: px(2), arc: { start: 0, sweep: 360 } },
     Arc: { width: px(24), height: px(24), strokeWeight: px(2), arc: { start: 0, sweep: 270 }, strokeCap: 'round' },
   } };
+  // To-design's tests override Track's stroke with `focus`: their foundations lack border-subtle-01 (#459).
   const paint = { match: {}, set: { Track: { stroke: { token: 'border-subtle-01' } }, Arc: { stroke: { sameAs: 'Track.stroke' } } } };
   edit(layout.set, paint.set);
   c.layout.push(layout);

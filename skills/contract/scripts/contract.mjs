@@ -72,14 +72,6 @@ export function contentProps(contract, properties, icon) {
 }
 
 const SECTIONS = ['layout', 'paint'];
-// The fields a rule may set, per section (contract-schema.md, Rules): the layout fields and the geometry fields
-// (#442), and the paint fields. validate rule 3 refuses any other name (#459).
-const FIELDS = {
-  layout: new Set(['direction', 'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight', 'alignMain', 'alignCross',
-    'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'gap', 'radius', 'strokeWeight', 'strokeAlign', 'textStyle',
-    'textResize', 'visible', 'position', 'constraints', 'arc', 'strokeCap']),
-  paint: new Set(['fill', 'stroke', 'effects', 'opacity']),
-};
 // A copy of plain JSON data, as a JSON round trip gives it but without the text in between (resolve copies per tuple):
 // an undefined, function or symbol drops out of an object and is null in an array, as is a number that is not finite;
 // -0 is 0.
@@ -465,6 +457,14 @@ const GEOMETRY = {
   strokeCap: v => ['round', 'none'].includes(v) || '`strokeCap` is "round" or "none"',
 };
 const ELLIPSE_ONLY = ['arc', 'strokeCap'];
+// The fields a rule may set, per section (contract-schema.md, Rules): the layout fields and the geometry fields
+// (#442), and the paint fields. validate rule 3 refuses any other name (#459).
+const FIELDS = {
+  layout: new Set(['direction', 'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight', 'alignMain', 'alignCross',
+    'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'gap', 'radius', 'strokeWeight', 'strokeAlign', 'textStyle',
+    'textResize', 'visible', ...Object.keys(GEOMETRY)]),
+  paint: new Set(['fill', 'stroke', 'effects', 'opacity']),
+};
 // Fields the builder derives (an ELLIPSE's path and stroke, an absolute node's place and its parent's clip, #442).
 const DRAWN = ['path', 'dashPattern', 'x', 'y', 'offCentre', 'clipsContent'];
 function checkGeometry(c, anatomy, err) {
@@ -1007,17 +1007,17 @@ export function draftedValue(contract, key) {
  * The Adapter reads its Code Library and passes `nodeFacts(layer)` (the layer's {node, element, rules, ...}; it throws on
  * a layer it can't map) and `parts`, the family's part names; the key kinds are the same for every Adapter (#144, #387).
  * `keys` defaults to the agent entries of `drafted`. With `cited(path)`, a node, layout or property key's facts also
- * hold `cited`: the `source.files` pin of each file its evidence cites that `cited` keeps (the files `nodeFacts` doesn't
- * read already), so a change in another component's file reopens it (#459). Returns {facts: {key: facts}, fingerprints:
- * {key: "sha256:…"}}. Throws on a key with no fingerprint kind.
+ * hold `cited`: the `source.files` pin of each file its evidence cites that `cited` keeps (the files `nodeFacts`
+ * doesn't read already), so a change in another component's file reopens it (#459). Returns {facts: {key: facts},
+ * fingerprints: {key: "sha256:…"}}. Throws on a key with no fingerprint kind.
  */
 export function draftedFingerprints(contract, { nodeFacts, parts, keys, cited }) {
   const axes = contract.axes || [];
   const pins = (contract.source || {}).files || {};
   const citedOf = key => {
     const entry = (contract.drafted || {})[key];
-    const named = new Set(((entry && entry.evidence) || []).flatMap(ev => [...ev.matchAll(/([\w./-]+\.[A-Za-z]\w*):L\d/g)].map(m => m[1])));
-    const hit = Object.keys(pins).filter(p => cited(p) && [...named].some(f => p === f || p.endsWith(`/${f}`))).sort();
+    const files = ((entry && entry.evidence) || []).flatMap(ev => [...ev.matchAll(CITE)].map(m => m[1]).filter(Boolean));
+    const hit = Object.keys(pins).filter(p => cited(p) && files.some(f => isFile(p, f))).sort();
     return hit.length ? { cited: Object.fromEntries(hit.map(p => [p, pins[p]])) } : {};
   };
   const withCited = (key, facts) => (cited ? { ...facts, ...citedOf(key) } : facts);
@@ -1047,7 +1047,9 @@ const PROSE = new Set(('the and with for its from each one not but has are was t
 
 // A citation: `<file>:L<a>[-L<b>]`, or `<file> L<a>` in a reason or a note; a bare `L<n>` is in the last file named.
 const FILE = /[\w./-]+\.[A-Za-z]\w*/g;
-const CITE = /(?:([\w./-]+\.[A-Za-z]\w*)[: ])?\bL(\d+)(?:-L(\d+))?\b/g;
+const CITE = new RegExp(`(?:(${FILE.source})[: ])?\\bL(\\d+)(?:-L(\\d+))?\\b`, 'g');
+// Whether a source path is the cited file: the path, or its last segments.
+const isFile = (path, file) => path === file || path.endsWith(`/${file}`);
 // In a reason or a note a claim's identifier matches source text across case and hyphens: `stroke-dashoffset`
 // names `strokeDashoffset`.
 const fold = t => t.toLowerCase().replace(/-/g, '');
@@ -1064,22 +1066,23 @@ const isIdent = w => /[a-z][A-Z]|[-_$]/.test(w);
  * it. In evidence, when the claim (the whole string) names a word its files hold, the cited lines must hold one of
  * those words, so a citation a line off shows none. In a reason or a note each citation, or run of citations ("L132
  * and L140"), backs the claim before it, back to the previous run or the start of its sentence or `;` clause; a run
- * that opens one (or follows a `:`) backs the claim after it, to the next run or the clause's end. The cited lines must show every identifier that claim names and the cited files hold (camelCase, or
- * with `-`, `_` or `$`; the family's name and source file names aside), or sit inside the block it names. `normalise(text)` rewrites source text before
- * the match (Carbon's `#{$prefix}` as `cds`).
+ * that opens one (or follows a `:`) backs the claim after it, to the next run or the clause's end. The cited lines
+ * must show every identifier that claim names and the cited files hold (camelCase, or with `-`, `_` or `$`; the
+ * family's name and source file names aside), or sit inside the block it names. `normalise(text)` rewrites source
+ * text before the match (Carbon's `#{$prefix}` as `cds`).
  * Returns ['<key or path>: "<text>": <why>'], empty when every citation holds.
  */
 export function draftedEvidence(contract, files, normalise) {
   const norm = normalise || (t => t);
   const paths = Object.keys(files);
-  const sources = file => paths.filter(p => p === file || p.endsWith(`/${file}`));
+  const sources = file => paths.filter(p => isFile(p, file));
   // Each citation in `text` as {start, end, lines, text}, the cited lines and their file as `as` writes them; or why
   // one fails.
   const cite = (text, as) => {
-    const named = [...text.matchAll(FILE)].filter(m => sources(m[0]).length === 1);
+    const mentions = [...text.matchAll(FILE)].filter(m => sources(m[0]).length === 1);
     const out = [];
     for (const m of text.matchAll(CITE)) {
-      const file = m[1] || (named.filter(f => f.index + f[0].length <= m.index).at(-1) || [])[0];
+      const file = m[1] || (mentions.filter(f => f.index + f[0].length <= m.index).at(-1) || [])[0];
       if (!file) return `L${m[2]} names no file`;
       const hits = sources(file);
       if (hits.length !== 1) return `${hits.length ? 'more than one' : 'no'} source file is ${file}`;
