@@ -1006,11 +1006,21 @@ export function draftedValue(contract, key) {
  * The fingerprint of each `drafted` key (ADR 0010): `sha256:` of the canonical facts its key kind is drafted from.
  * The Adapter reads its Code Library and passes `nodeFacts(layer)` (the layer's {node, element, rules, ...}; it throws on
  * a layer it can't map) and `parts`, the family's part names; the key kinds are the same for every Adapter (#144, #387).
- * `keys` defaults to the agent entries of `drafted`. Returns {facts: {key: facts}, fingerprints: {key: "sha256:…"}}.
- * Throws on a key with no fingerprint kind.
+ * `keys` defaults to the agent entries of `drafted`. With `cited(path)`, a node, layout or property key's facts also
+ * hold `cited`: the `source.files` pin of each file its evidence cites that `cited` keeps (the files `nodeFacts` doesn't
+ * read already), so a change in another component's file reopens it (#459). Returns {facts: {key: facts}, fingerprints:
+ * {key: "sha256:…"}}. Throws on a key with no fingerprint kind.
  */
-export function draftedFingerprints(contract, { nodeFacts, parts, keys }) {
+export function draftedFingerprints(contract, { nodeFacts, parts, keys, cited }) {
   const axes = contract.axes || [];
+  const pins = (contract.source || {}).files || {};
+  const citedOf = key => {
+    const entry = (contract.drafted || {})[key];
+    const named = new Set(((entry && entry.evidence) || []).flatMap(ev => [...ev.matchAll(/([\w./-]+\.[A-Za-z]\w*):L\d/g)].map(m => m[1])));
+    const hit = Object.keys(pins).filter(p => cited(p) && [...named].some(f => p === f || p.endsWith(`/${f}`))).sort();
+    return hit.length ? { cited: Object.fromEntries(hit.map(p => [p, pins[p]])) } : {};
+  };
+  const withCited = (key, facts) => (cited ? { ...facts, ...citedOf(key) } : facts);
   const values = a => a.values.map(v => v.key);
   const factsOf = key => {
     const [root, ...rest] = key.split('.');
@@ -1018,12 +1028,12 @@ export function draftedFingerprints(contract, { nodeFacts, parts, keys }) {
     if (axis) return { kind: 'axis', axis: axis.key, values: values(axis) };
     if (['family', 'icons', 'figma', 'code'].includes(root))
       return { kind: 'family', axes: Object.fromEntries(axes.map(a => [a.key, values(a)])), defaults: Object.fromEntries(axes.map(a => [a.key, a.default])), parts };
-    if (root === 'anatomy') return { kind: 'node', ...nodeFacts(rest.join('.')), parts };
+    if (root === 'anatomy') return withCited(key, { kind: 'node', ...nodeFacts(rest.join('.')), parts });
     // A layout rule's match is not a fact: `layout{"size":"sm"}.Box.height` hashes like `layout.Box.height`.
     const layout = /^layout(\{.*\})?\.([^.]+)\.[^.]+$/.exec(key);
-    if (layout) return { kind: 'layout', ...nodeFacts(layout[2]) };
+    if (layout) return withCited(key, { kind: 'layout', ...nodeFacts(layout[2]) });
     const p = root === 'properties' && (contract.properties || []).find(q => q.key === rest[0]);
-    if (p && p.code && p.code.prop && p.binds && p.binds.length) return { kind: 'property', prop: p.code.prop, ...nodeFacts(p.binds[0].node), parts };
+    if (p && p.code && p.code.prop && p.binds && p.binds.length) return withCited(key, { kind: 'property', prop: p.code.prop, ...nodeFacts(p.binds[0].node), parts });
     throw new Error(`no fingerprint kind for "${key}"`);
   };
   const list = keys || Object.entries(contract.drafted || {}).filter(([, e]) => e.by === 'agent').map(([k]) => k);
