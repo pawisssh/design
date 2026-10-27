@@ -1,13 +1,11 @@
 #!/usr/bin/env node
 // Render comparison of a CDS Contract against its To-preview catalog page: what the real component computes, tuple by
 // tuple and Theme Mode by Mode, beside the Contract resolved through the Foundations document.
-//   node skills/adapter-cds/scripts/compare.mjs <contract.json> --nodes <nodes.json> [--foundations <file>] [--out <file>]
+//   node skills/adapter-cds/scripts/compare.mjs <contract.json> --nodes <nodes.json> [--foundations <file>] [--out <file>] [--run]
 // writes compare.js next to the catalog page (default .scratch/to-preview/<family>/compare.js). With the page open in
 // the browser pane (the `to-preview` launch config serves .scratch/to-preview on 8737), the agent runs
 //   (await import('./compare.js')).compare()
 // which returns {checked, mismatches: ['<tuple> <mode> <layer>.<field>: page <value>, Contract <value>']}.
-// With --run it does that itself (runInChrome): it prints `checked <n>, <m> mismatches` and each mismatch, and exits 1
-// on any. Chrome is $CHROME, else the macOS app.
 //
 // A layer's element is found by its node map entry inside its parent's element: a `cds-` entry is that static class,
 // any other a Linaria literal, whose class is `<name>-<hash>`. Compared, as the page computes them:
@@ -192,15 +190,21 @@ export const compareModule = spec =>
   `const colorKey = ${colorKey.toString()};\n` +
   `export function compare() {\n  return (${probe.toString()})(spec, document, el => getComputedStyle(el), text => colorKey(convert(text)));\n}\n`;
 
-export const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+
+/** Why runInChrome can't run here, or '' when Chrome is at `chrome`. */
+export const missingChrome = (chrome = CHROME) => (existsSync(chrome) ? '' : `no Chrome at ${chrome}: set CHROME`);
 
 /**
- * Opens `<dir>/index.html` in headless Chrome and resolves with what `(await import('./compare.js')).compare()`
- * returns there: dir is served on a free local port, and the page posts the result back once loaded. Rejects when
- * Chrome is missing, compare() throws, or no result comes within `timeout` ms.
+ * --run (#460): opens `<dir>/index.html` in headless Chrome and resolves with what
+ * `(await import('./compare.js')).compare()` returns there. dir is served on a free local port, and the page posts the
+ * result back once loaded. Rejects when the page or Chrome is missing, compare() throws, or no result comes within
+ * `timeout` ms. The CLI prints `checked <n>, <m> mismatches` and each mismatch, and exits 1 on any.
  */
 export async function runInChrome(dir, { chrome = CHROME, timeout = 120000 } = {}) {
-  if (!existsSync(chrome)) throw new Error(`no Chrome at ${chrome}: set CHROME`);
+  if (missingChrome(chrome)) throw new Error(missingChrome(chrome));
+  const page = join(dir, 'index.html');
+  if (!existsSync(page)) throw new Error(`no catalog page at ${page}: run skills/to-preview/scripts/catalog.mjs`);
   const runner = `<script type="module">
 addEventListener('load', async () => {
   let body;
@@ -221,8 +225,8 @@ addEventListener('load', async () => {
     const file = join(dir, path === '/' ? 'index.html' : path);
     if (!file.startsWith(dir) || !existsSync(file)) { res.statusCode = 404; return res.end(); }
     res.setHeader('content-type', types[extname(file)] || 'application/octet-stream');
-    // The catalog page has no </body>: a script after the last element still runs in the body.
-    res.end(file === join(dir, 'index.html') ? readFileSync(file, 'utf8') + runner : readFileSync(file));
+    // The catalog page has no </body> (#460): a script after the last element still runs in the body.
+    res.end(file === page ? readFileSync(file, 'utf8') + runner : readFileSync(file));
   });
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   const profile = mkdtempSync(join(tmpdir(), 'cds-compare-chrome-'));
@@ -240,7 +244,7 @@ addEventListener('load', async () => {
     clearTimeout(timer);
     server.closeAllConnections();
     server.close();
-    // Chrome's helpers share its process group; its profile goes once they have exited.
+    // Chrome's helpers share its process group (detached), and its profile goes once they have exited (#460).
     if (browser.exitCode === null && browser.signalCode === null) { process.kill(-browser.pid); await exited; }
     rmSync(profile, { recursive: true, force: true, maxRetries: 5 });
   }

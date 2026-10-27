@@ -4,11 +4,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { CHROME, colorKey, compareModule, expectations, probe, runInChrome } from '../scripts/compare.mjs';
+import { colorKey, compareModule, expectations, missingChrome, probe, runInChrome } from '../scripts/compare.mjs';
 import { hasPreviewPackages, previewRenderer } from '../scripts/preview.mjs';
 import { PREVIEW_MISSING } from './helpers.mjs';
 import { convert } from '../../contract/scripts/color.mjs';
@@ -175,7 +175,7 @@ test('compare.js runs the probe from its own text, on the page\'s document', asy
 });
 
 test('--run compares the real Button page in headless Chrome, and names a value the Contract changes', {
-  skip: !hasPreviewPackages() ? PREVIEW_MISSING : !existsSync(CHROME) && `no Chrome at ${CHROME}: set CHROME`,
+  skip: !hasPreviewPackages() ? PREVIEW_MISSING : missingChrome() || false,
 }, async () => {
   const { buildCatalog } = await import('../../to-preview/scripts/catalog.mjs');
   const dir = mkdtempSync(join(tmpdir(), 'cds-compare-run-'));
@@ -183,9 +183,9 @@ test('--run compares the real Button page in headless Chrome, and names a value 
   const path = rel => new URL(rel, import.meta.url).pathname;
   const run = spawnSync(process.execPath, [path('../scripts/compare.mjs'), path('../../../design-systems/cds/contracts/button.component.json'),
     '--nodes', path('../nodes/button.nodes.json'), '--out', join(dir, 'compare.js'), '--run'], { encoding: 'utf8' });
-  assert.equal(run.status, 0, run.stderr + run.stdout);
-  assert.match(run.stdout, /^checked 960, 0 mismatches$/m);
   const changed = expectations({ contract, nodes, foundations });
+  assert.equal(run.status, 0, run.stderr + run.stdout);
+  assert.match(run.stdout, new RegExp(`^checked ${Object.keys(changed.expected).length * changed.modes.length}, 0 mismatches$`, 'm'));
   const loading = Object.keys(changed.expected).find(k => changed.expected[k].light.Arc);
   changed.expected[loading].light.Arc.sweep = 180;
   writeFileSync(join(dir, 'compare.js'), compareModule(changed));

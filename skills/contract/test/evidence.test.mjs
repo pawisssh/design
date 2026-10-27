@@ -57,28 +57,33 @@ test('owner entries are not checked', () => {
 
 // reasonEvidence (#460): a reason or note cites as `<file> L<n>` or `<file>:L<n>`, and a bare `L<n>` is in the file
 // named last. Only texts citing an `L<n>` are checked.
-const reasons = (reason, note) => reasonEvidence({
+const reasonProblems = (reason, note) => reasonEvidence({
+  axes: [{ key: 'size', values: [], dropped: [{ value: 'xl', reason: 'Button.tsx L9 has no xl' }] }],
   layout: [{ when: {}, set: { 'End glyph': { width: { value: 16, reason } } } }],
   notes: note ? [{ at: 'code', severity: 'info', message: note }] : [],
 }, files);
+const AXIS = 'axes[0].dropped[0].reason: "Button.tsx L9 has no xl": L9-L9 is not in Button.tsx (6 lines)';
 
-test('a reason cites `<file> L<n>` and bare `L<n>` in the file named last', () => {
-  assert.deepEqual(reasons('Button.tsx L3 wraps it in endNodeCss; the Icon is at L4'), []);
-  assert.deepEqual(reasons('Button.tsx:L3-L4 endNodeCss, then Icon (L4)'), []);
-  assert.deepEqual(reasons('a fixed 16 px glyph, no citation'), []);
+test('a reason cites `<file> L<n>`, and a bare `L<n>` is in the file named last, in a citation or the prose', () => {
+  assert.deepEqual(reasonProblems('Button.tsx L3 wraps it in endNodeCss; the Icon is at L4'), [AXIS]);
+  assert.deepEqual(reasonProblems('Button.tsx:L3-L4 endNodeCss, then Icon (L4)'), [AXIS]);
+  assert.deepEqual(reasonProblems('the Icon (Button.tsx) sits at L4'), [AXIS]);
+  assert.deepEqual(reasonProblems('a fixed 16 px glyph, no citation'), [AXIS]);
 });
 
 test('a reason fails when its citation does not hold', () => {
-  assert.deepEqual(reasons('the Icon sits at L4'), [
+  const problem = reason => reasonProblems(reason).filter(p => p !== AXIS);
+  assert.deepEqual(problem('the Icon sits at L4'), [
     'layout[0].End glyph.width.reason: "the Icon sits at L4": L4 names no file']);
-  assert.match(reasons('Button.tsx L7 renders the Icon')[0], /L7-L7 is not in Button.tsx \(6 lines\)$/);
-  assert.match(reasons('Button.tsx L1 wraps it in endNodeCss')[0], /the cited lines show none of endNodeCss$/);
-  assert.match(reasons('the size is at _mixins.scss L1')[0], /more than one source file is _mixins.scss$/);
+  assert.match(problem('Button.tsx L7 renders the Icon')[0], /L7-L7 is not in Button.tsx \(6 lines\)$/);
+  assert.match(problem('Button.tsx L1 wraps it in endNodeCss')[0], /the cited lines show none of endNodeCss$/);
+  assert.match(problem('the size is at _mixins.scss L1')[0], /more than one source file is _mixins.scss$/);
 });
 
-test('a note is checked as a reason is; a slip in a value its line holds is not caught', () => {
-  assert.match(reasons(undefined, 'Button.figma.ts maps it (L13-L19)')[0], /^note at code: .*: L13 names no file$/);
+test('a note is checked as a reason is; a file that is no source names none; a wrong value its line holds passes', () => {
+  const notes = note => reasonProblems(undefined, note).filter(p => p !== AXIS);
+  assert.match(notes('Other.figma.ts maps it (L13-L19)')[0], /^note at code: .*: L13 names no file$/);
   // #453's first draft gave a dashoffset of 0.25 at a line that held pathLength: the line exists and names the
   // word, so only a review catches the value.
-  assert.deepEqual(reasons(undefined, 'Button.tsx L4 Icon color is 0.25'), []);
+  assert.deepEqual(notes('Button.tsx L4 Icon color is 0.25'), []);
 });

@@ -1021,26 +1021,34 @@ export function draftedFingerprints(contract, { nodeFacts, parts, keys }) {
 const PROSE = new Set(('the and with for its from each one not but has are was this that into any all per via when ' +
   'then than there their them they which what who out off two how can may own').split(' '));
 
-// One text's citations, checked against `files` ({path: text}): each `<file>:L<a>[-L<b>]` or `<file> L<a>` range
-// must lie in exactly one source path (the path, or its last segments), and a bare `L<n>` is in the file named last,
-// `file` before any. When the text names a word its files hold, the cited lines must hold one of those words, so a
-// citation a line off shows none. Returns why a citation does not hold, or undefined.
-function citationProblem(text, files, norm, file) {
-  const paths = Object.keys(files);
-  const ref = /(?:([\w./-]+\.\w+)(?::| +))?(?<![\w-])L(\d+)(?:-L(\d+))?/g;
+// One text's citations, checked against `files` ({path: text}) (#460): a file written right before a range
+// (`<file>:L<a>[-L<b>]` or `<file> L<a>`) must be exactly one source path (the path, or its last segments), and a bare
+// `L<n>` is in the file named last, `file` before any; a file named in the prose counts when it is one source path.
+// Each range must lie in its file. When the text names a word its cited files hold, the cited lines must hold one of
+// those words, so a citation a line off shows none; a wrong value on a line that holds a named word passes. Returns
+// why a citation does not hold, or undefined.
+function citationProblem(text, files, normalise, file) {
+  const norm = normalise || (t => t);
+  const sources = name => Object.keys(files).filter(p => p === name || p.endsWith(`/${name}`));
+  const token = /([\w./-]+\.[A-Za-z]\w*)|(?<![\w-])L(\d+)(?:-L(\d+))?/g;
   const cited = [], texts = [];
   let m;
-  while ((m = ref.exec(text))) {
-    if (m[1]) file = m[1];
+  while ((m = token.exec(text))) {
+    if (m[1]) {
+      const hits = sources(m[1]);
+      if (/^(?::| +)L\d/.test(text.slice(token.lastIndex)) || hits.length === 1) file = m[1];
+      continue;
+    }
     if (!file) return `L${m[2]} names no file`;
-    const hits = paths.filter(p => p === file || p.endsWith(`/${file}`));
+    const hits = sources(file);
     if (hits.length !== 1) return `${hits.length ? 'more than one' : 'no'} source file is ${file}`;
     const lines = files[hits[0]].split('\n'), a = +m[2], b = +(m[3] || m[2]);
     if (a < 1 || b < a || b > lines.length) return `L${a}-L${b} is not in ${file} (${lines.length} lines)`;
     cited.push(norm(lines.slice(a - 1, b).join('\n')));
     texts.push(norm(files[hits[0]]));
   }
-  const words = (text.replace(ref, ' ').match(/[\w$][\w$-]*[\w$]/g) || [])
+  // The words are the text's own, less its citations: a dotted name (`div.cds--form`) stays whole.
+  const words = (text.replace(/(?:[\w./-]+\.[A-Za-z]\w*(?::| +))?(?<![\w-])L\d+(?:-L\d+)?/g, ' ').match(/[\w$][\w$-]*[\w$]/g) || [])
     .filter((w, i, all) => w.length > 2 && all.indexOf(w) === i && !PROSE.has(w.toLowerCase()));
   const named = words.filter(w => texts.some(t => t.includes(w)));
   if (named.length && !named.some(w => cited.some(t => t.includes(w)))) return `the cited lines show none of ${named.join(', ')}`;
@@ -1054,11 +1062,10 @@ function citationProblem(text, files, norm, file) {
  * every citation holds.
  */
 export function draftedEvidence(contract, files, normalise) {
-  const norm = normalise || (t => t);
   const problem = ev => {
     const head = /^([^\s:]+):L\d/.exec(ev);
     if (!head) return 'it cites no <file>:L<n>';
-    return citationProblem(ev.slice(head[1].length + 1), files, norm, head[1]);
+    return citationProblem(ev.slice(head[1].length + 1), files, normalise, head[1]);
   };
   const out = [];
   for (const key of Object.keys(contract.drafted || {})) {
@@ -1069,27 +1076,27 @@ export function draftedEvidence(contract, files, normalise) {
 }
 
 /**
- * The citations in the Contract's `reason`s (in layout and paint) and note messages that do not hold, checked as
- * citationProblem says (#460). A text that cites no `L<n>` is prose and passes. Returns ['<where>: "<text>": <why>'],
- * `<where>` the reason's path (`layout[0].Spinner.width.reason`) or the note's `at`.
+ * The citations in the Contract's `reason`s (anywhere: layout, paint, axes, selection, excluded) and note messages
+ * that do not hold, checked as citationProblem says (#460). A text that cites no `L<n>` is prose and passes. Returns
+ * ['<where>: "<text>": <why>'], `<where>` the reason's path (`layout[0].Spinner.width.reason`, a rule's `set` left
+ * out) or the note's `at`.
  */
 export function reasonEvidence(contract, files, normalise) {
-  const norm = normalise || (t => t);
   const out = [];
-  const check = (where, text) => {
+  const checkCitations = (where, text) => {
     if (!/(?<![\w-])L\d/.test(text)) return;
-    const p = citationProblem(text, files, norm);
-    if (p) out.push(`${where}: "${text}": ${p}`);
+    const problem = citationProblem(text, files, normalise);
+    if (problem) out.push(`${where}: "${text}": ${problem}`);
   };
   const walk = (value, path) => {
     if (Array.isArray(value)) value.forEach((v, i) => walk(v, `${path}[${i}]`));
     else if (isObj(value)) for (const [k, v] of Object.entries(value)) {
-      if (k === 'reason' && typeof v === 'string') check(`${path}.reason`, v);
+      if (k === 'reason' && typeof v === 'string') checkCitations(`${path}.reason`, v);
       else walk(v, k === 'set' ? path : `${path}.${k}`);
     }
   };
-  for (const section of ['layout', 'paint']) (contract[section] || []).forEach((rule, i) => walk(rule.set, `${section}[${i}]`));
-  for (const n of contract.notes || []) if (typeof n.message === 'string') check(`note at ${n.at}`, n.message);
+  for (const [k, v] of Object.entries(contract)) if (k !== 'notes' && k !== 'drafted') walk(v, k);
+  for (const n of contract.notes || []) if (typeof n.message === 'string') checkCitations(`note at ${n.at}`, n.message);
   return out;
 }
 
