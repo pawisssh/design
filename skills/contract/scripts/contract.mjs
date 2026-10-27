@@ -72,6 +72,14 @@ export function contentProps(contract, properties, icon) {
 }
 
 const SECTIONS = ['layout', 'paint'];
+// The fields a rule may set, per section (contract-schema.md, Rules): the layout fields and the geometry fields
+// (#442), and the paint fields. validate rule 3 refuses any other name (#459).
+const FIELDS = {
+  layout: new Set(['direction', 'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight', 'alignMain', 'alignCross',
+    'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'gap', 'radius', 'strokeWeight', 'strokeAlign', 'textStyle',
+    'textResize', 'visible', 'position', 'constraints', 'arc', 'strokeCap']),
+  paint: new Set(['fill', 'stroke', 'effects', 'opacity']),
+};
 // A copy of plain JSON data, as a JSON round trip gives it but without the text in between (resolve copies per tuple):
 // an undefined, function or symbol drops out of an object and is null in an array, as is a number that is not finite;
 // -0 is 0.
@@ -396,13 +404,20 @@ function checkPatterns(c, err) {
   for (const section of SECTIONS)
     (c[section] || []).forEach((rule, i) => {
       checkPattern(rule.match, `${section}[${i}].match`);
+      const at = `${section}[${i}].set`;
       for (const [node, fields] of Object.entries(rule.set || {})) {
-        if (!nodeKnown(node)) err(3, `${section}[${i}].set`, `unknown anatomy node "${node}"`);
+        if (!nodeKnown(node)) err(3, at, `unknown anatomy node "${node}"`);
+        if (!isObj(fields)) continue;
+        // Each field is one the schema lists for its section (#459); a drawn field has its own error (checkGeometry).
+        for (const field of Object.keys(fields)) {
+          if (FIELDS[section].has(field) || DRAWN.includes(field)) continue;
+          const other = SECTIONS.find(s => s !== section);
+          err(3, at, FIELDS[other].has(field) ? `"${node}": \`${field}\` is a ${other} field, not a ${section} field`
+            : `"${node}": \`${field}\` is not a ${section} field`);
+        }
         // `visible` (#93): a layout field that shows or hides an anatomy node below the root.
-        if (!isObj(fields) || !('visible' in fields)) continue;
-        const at = `${section}[${i}].set`;
-        if (section !== 'layout') err(3, at, `"${node}": \`visible\` is a layout field, not a ${section} field`);
-        else if (typeof fields.visible !== 'boolean') err(3, at, `"${node}": \`visible\` is true or false, not ${JSON.stringify(fields.visible)}`);
+        if (section !== 'layout' || !('visible' in fields)) continue;
+        if (typeof fields.visible !== 'boolean') err(3, at, `"${node}": \`visible\` is true or false, not ${JSON.stringify(fields.visible)}`);
         else if (node === c.anatomy.name) err(3, at, `"${node}" is the root, which cannot be hidden`);
         else if (!anatomy[node]) err(3, at, `"${node}": \`visible\` is set on anatomy nodes only`);
       }
@@ -472,8 +487,7 @@ function checkGeometry(c, anatomy, err) {
           if (DRAWN.includes(field)) err(3, at, `"${node}": \`${field}\` is drawn by the builder from the Contract, never set`);
           if (!GEOMETRY[field]) continue;
           const valid = GEOMETRY[field](value);
-          if (section !== 'layout') err(3, at, `"${node}": \`${field}\` is a layout field, not a ${section} field`);
-          else if (valid !== true) err(3, at, `"${node}": ${valid}, not ${JSON.stringify(value)}`);
+          if (section === 'layout' && valid !== true) err(3, at, `"${node}": ${valid}, not ${JSON.stringify(value)}`);
           if (ELLIPSE_ONLY.includes(field) && !ellipse)
             err(3, at, `"${node}": \`${field}\` is set on ELLIPSE nodes only`);
           if ((field === 'position' || field === 'constraints') && node === c.anatomy.name)
