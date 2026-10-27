@@ -1,6 +1,7 @@
 // Drafted-value fingerprints of a CDS Contract (#387, ADR 0010). The first tests run offline on a small
-// hand-written TSX, one per key kind. The last ones check the committed Button drafts against the pinned CDS
-// sources, and skip until `node skills/adapter-cds/scripts/sources.mjs` fetched them.
+// hand-written TSX, one per key kind, then on test/fixtures/anchors' families with no cds-<Family> class (#470). The
+// last ones check the committed Button drafts against the pinned CDS sources, and skip until
+// `node skills/adapter-cds/scripts/sources.mjs` fetched them.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -11,6 +12,7 @@ import { join } from 'node:path';
 import { asDraft } from '../../contract/scripts/contract.mjs';
 import { writeJson } from '../../contract/scripts/io.mjs';
 import { fingerprints, hasContractSources, readContractSources } from '../scripts/fingerprints.mjs';
+import { ANCHORS, anchorFamily } from './helpers.mjs';
 
 const digest = facts => `sha256:${createHash('sha256').update(JSON.stringify(facts)).digest('hex')}`;
 
@@ -38,6 +40,7 @@ const contract = {
 };
 const nodes = { Root: 'cds-ChipCard rootCss', Lead: 'leadCss', Glyph: 'cds-Icon' };
 const run = keys => fingerprints({ contract, nodes, files, keys });
+const SCRIPT = new URL('../scripts/fingerprints.mjs', import.meta.url).pathname;
 
 const PARTS = ['leadCss', 'rootCss'];
 const ROOT = { node: 'ChipCard', element: 'cds-ChipCard rootCss', rules: ['rootCss { display: inline-flex; gap: var(--space-1); }'] };
@@ -116,12 +119,43 @@ test('an unmapped layer, an entry that is no literal, and a key of no kind are r
   assert.throws(() => run(['axes.tone.label']), /no fingerprint kind for "axes\.tone\.label"/);
 });
 
+test('a static class comes before the literals on its element: it is the identifying entry (#470)', () => {
+  assert.throws(() => fingerprints({ contract, files, nodes: { Root: 'rootCss cds-ChipCard' }, keys: ['anatomy.Root'] }),
+    /layer "Root": its static class cds-ChipCard is the identifying entry, so it comes first/);
+});
+
+// ---------- families with no cds-<Family> class (#470), from test/fixtures/anchors ----------
+const anchored = key => {
+  const { contract: c, nodes: n } = anchorFamily(key);
+  return fingerprints({ contract: c, nodes: n, files: readContractSources(c, join(ANCHORS, 'sources')) }).facts;
+};
+
+test('Tag is keyed by its lowercase static class: the node is `tag`, and the Label drawn in it takes that entry', () => {
+  const facts = anchored('tag');
+  assert.deepEqual([facts['anatomy.Label'].node, facts['anatomy.Label'].element, facts['anatomy.Label'].rules], ['tag', 'cds-tag', []]);
+  assert.deepEqual(facts['anatomy.Start'].rules, ['nodeCss { display: flex; align-items: center; }']);
+});
+
+test('Checkbox is keyed by its first Linaria literal: the node is the literal\'s name', () => {
+  const facts = anchored('checkbox');
+  assert.deepEqual([facts['anatomy.Mark'].node, facts['anatomy.Mark'].element], ['markCss', 'markCss']);
+  assert.deepEqual(facts['anatomy.Mark'].parts, ['checkboxCss', 'markCss']);
+});
+
+test('the CLI --check passes both fixture families', () => {
+  for (const [key, n] of [['tag', 3], ['checkbox', 2]]) {
+    const { path, nodesPath } = anchorFamily(key);
+    const run = spawnSync(process.execPath, [SCRIPT, path, '--nodes', nodesPath, '--dir', join(ANCHORS, 'sources'), '--check'], { encoding: 'utf8' });
+    assert.equal(run.status, 0, run.stderr);
+    assert.equal(run.stdout, `OK ${n} fingerprints\n`, key);
+  }
+});
+
 // ---------- the committed Button drafts, against the pinned sources ----------
 const NODES = new URL('../nodes/button.nodes.json', import.meta.url).pathname;
 const BUTTON = new URL('../../../design-systems/cds/contracts/button.component.json', import.meta.url).pathname;
 const button = JSON.parse(readFileSync(BUTTON, 'utf8'));
 const skip = !hasContractSources(button) && 'run: node skills/adapter-cds/scripts/sources.mjs';
-const SCRIPT = new URL('../scripts/fingerprints.mjs', import.meta.url).pathname;
 const cli = path => spawnSync(process.execPath, [SCRIPT, path, '--nodes', NODES, '--check'], { encoding: 'utf8' });
 
 test('every Button draft has evidence and the fingerprint the script computes', { skip }, () => {

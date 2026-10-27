@@ -11,29 +11,42 @@ import { fingerprintsCli } from '../../contract/scripts/fingerprints-cli.mjs';
 import { CDS, DEFAULT_DIR, hasSources, readSources } from './sources.mjs';
 
 /**
+ * The path of the family's own TSX among `paths`: `<Family name without spaces>.tsx`. Its literals are what a layer's
+ * facts hash (#387): CDS styles a component with Linaria `css` literals there (`const startNodeCss = css\`…\``), not
+ * with stylesheet selectors. Throws when no path is that file.
+ */
+export function familyTsx(contract, paths) {
+  const tsx = `${contract.family.name.replace(/\s+/g, '')}.tsx`;
+  const path = paths.find(p => p.endsWith(`/${tsx}`));
+  if (!path) throw new Error(`no ${tsx} among the Contract's source files`);
+  return path;
+}
+
+/**
  * fingerprints({contract, nodes, files, keys}) -> {facts: {key: facts}, fingerprints: {key: "sha256:…"}}.
  * `files` is {path: text} of the Contract's source files; `keys` defaults to the agent entries of `drafted`.
  * Throws on a family TSX the files lack, a layer the node map lacks, a literal the TSX lacks, and a key with no
  * fingerprint kind.
  */
 export function fingerprints({ contract, nodes, files, keys }) {
-  // The family's own TSX, `<Family name without spaces>.tsx`, is the file whose literals are hashed (#387): CDS styles a component
-  // with Linaria `css` literals there (`const startNodeCss = css\`…\``), so a layer's facts are the literals its
-  // element carries, not stylesheet selectors.
-  const tsx = `${contract.family.name.replace(/\s+/g, '')}.tsx`;
-  const path = Object.keys(files).find(p => p.endsWith(`/${tsx}`));
-  if (!path) throw new Error(`no ${tsx} among the Contract's source files`);
+  const path = familyTsx(contract, Object.keys(files));
+  const tsx = path.split('/').pop();
   // Each literal as `<name> { <body> }`: comments stripped, whitespace collapsed to one space, `${…}` as written.
   const literals = {};
   for (const [, name, body] of files[path].matchAll(/const\s+(\w+)\s*=\s*css`([^`]*)`/g))
     literals[name] = `${name} { ${body.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').trim()} }`;
   // The node map names a layer by its element's static class (`cds-Button`) and the literals it carries, the
   // identifying entry first ("cds-Button baseCss iconCss", "startNodeCss"). The node key is that entry, `cds-` dropped.
+  // In #470: a family with no `cds-<Family>` class is keyed by the static class CDS gives the element, in either case
+  // (`cds-tag`, `cds-Control`), else by the element's first literal (`checkboxCss`), so a static class comes first.
   const nodeFacts = layer => {
     if (nodes[layer] === undefined) throw new Error(`no node for layer "${layer}" in the node map`);
     const entries = nodes[layer].split(' ');
     for (const e of entries) if (!e.startsWith('cds-') && !literals[e])
       throw new Error(`layer "${layer}": ${e} is neither a cds- class nor a css literal of ${tsx}`);
+    const fixed = entries.find(e => e.startsWith('cds-'));
+    if (fixed && fixed !== entries[0])
+      throw new Error(`layer "${layer}": its static class ${fixed} is the identifying entry, so it comes first`);
     return { node: entries[0].replace(/^cds-/, ''), element: entries.join(' '),
       rules: entries.filter(e => literals[e]).map(e => literals[e]).sort() };
   };

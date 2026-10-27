@@ -1,0 +1,24 @@
+{
+  "family": { "key": "tag", "name": "Tag" },
+  "source": {
+    "adapter": "cds",
+    "commit": "135dc3c64218299bd26f0ce2ccdad628551d63d5",
+    "files": { "packages/web/src/tag/Tag.tsx": "sha256:a60052e44e0c0fde2790015b30431217a7a4d57607ef1872569381ebd589867d" }
+  },
+  "axes": [{ "key": "intent", "label": "Intent", "default": "informational", "values": [
+    { "key": "informational", "label": "Informational", "code": {} },
+    { "key": "promotional", "label": "Promotional", "code": { "intent": "promotional" } }] }],
+  "selection": { "status": "draft", "omit": [], "expectedCount": 2, "approval": null },
+  "anatomy": { "name": "Tag", "type": "COMPONENT", "children": [
+    { "name": "Start", "type": "FRAME" }, { "name": "Label", "type": "TEXT", "role": "label" }] },
+  "layout": [{ "match": {}, "set": { "Tag": { "direction": "row", "paddingLeft": { "token": "space-1" },
+    "paddingRight": { "token": "space-1" }, "radius": { "token": "borderRadius-200" } } } }],
+  "paint": [
+    { "match": {}, "set": { "Tag": { "fill": { "token": "bgPositiveWash" } }, "Label": { "fill": { "token": "fgPositive" } } } },
+    { "match": { "intent": "promotional" }, "set": { "Tag": { "fill": { "token": "bgPositive" } }, "Label": { "fill": { "token": "fgInverse" } } } }],
+  "drafted": {
+    "axes.intent.label": { "by": "agent", "evidence": ["Tag.tsx:L10 intent = 'informational'"], "fingerprint": "sha256:4aed3844eb27afca23201e8cd8e1f3450046dbe6edbc381963acb57bc89b012a" },
+    "anatomy.Start": { "by": "agent", "evidence": ["Tag.tsx:L17 nodeCss holds start"], "fingerprint": "sha256:a577a971c37df1b709fd82431f6ca89deb5d74d455c8e331e3f2eab087f4efa3" },
+    "anatomy.Label": { "by": "agent", "evidence": ["Tag.tsx:L18 Text holds children"], "fingerprint": "sha256:bae5f46c74d54905595041cd6281e1574eb7b18ed0302931b1907af6333eb902" }
+  }
+}
