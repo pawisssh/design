@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -358,14 +358,31 @@ test('the package leaves out review-only fields, and the stripped document build
 
 // ---- CLIs ----
 
-test('the build-plan and ledger CLIs run from a path that contains a space', () => {
-  // The scripts keep their place next to the shared Contract module they import.
+// A copy of every To-design and shared Contract script under a path that contains a space, in their places, so a
+// new import between them needs no edit here (#459).
+function copyScripts() {
   const base = join(realpathSync(mkdtempSync(join(tmpdir(), 'to-design-cli-'))), 'a space');
+  for (const skill of ['to-design', 'contract']) {
+    const from = fileURLToPath(new URL(`../../${skill}/scripts/`, import.meta.url)), to = join(base, 'skills', skill, 'scripts');
+    mkdirSync(to, { recursive: true });
+    for (const name of readdirSync(from).filter(f => f.endsWith('.mjs'))) copyFileSync(join(from, name), join(to, name));
+  }
+  return base;
+}
+
+test('every relative import of a copied script resolves inside the copy (#459)', () => {
+  const base = copyScripts();
+  for (const skill of ['to-design', 'contract']) {
+    const dir = join(base, 'skills', skill, 'scripts');
+    for (const name of readdirSync(dir).filter(f => f.endsWith('.mjs')))
+      for (const [, rel] of readFileSync(join(dir, name), 'utf8').matchAll(/^(?:import|export)\b[^;]*?from '(\.{1,2}\/[^']+)'/gms))
+        assert.ok(existsSync(join(dir, rel)), `skills/${skill}/scripts/${name} imports ${rel}, which the copy lacks`);
+  }
+});
+
+test('the build-plan and ledger CLIs run from a path that contains a space', () => {
+  const base = copyScripts();
   const dir = join(base, 'skills/to-design/scripts');
-  mkdirSync(dir, { recursive: true });
-  mkdirSync(join(base, 'skills/contract/scripts'), { recursive: true });
-  copyFileSync(new URL('../../contract/scripts/contract.mjs', import.meta.url), join(base, 'skills/contract/scripts/contract.mjs'));
-  for (const name of ['build-plan.mjs', 'ledger.mjs', 'base-loop.mjs', 'readback.mjs', 'foundations-subset.mjs', 'foundations-value.mjs']) copyFileSync(new URL(`../scripts/${name}`, import.meta.url), join(dir, name));
   const plan = spawnSync('node', [join(dir, 'build-plan.mjs'), 'foundations', '--doc', DOC_PATH, '--file-key', FILE_KEY, '--out', join(dir, 'run')], { cwd: dir, encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: base } });
   assert.equal(plan.status, 0, plan.stderr);
   assert.equal(JSON.parse(plan.stdout).status, 'derived');
