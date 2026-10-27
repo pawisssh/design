@@ -197,5 +197,5 @@ test('the CLI --write leaves an approved Contract whose fingerprints agree untou
   writeFileSync(path, JSON.stringify(c));
   const check = spawnSync(process.execPath, [script, path, '--nodes', NODES, '--check'], { encoding: 'utf8' });
   assert.equal(check.status, 0, check.stderr);
-  assert.match(check.stdout, /^OK \d+ fingerprints\nnote: anatomy\.Box: "_text-input\.scss:L1 the \.cds--text-input box": the cited lines show none of cds--text-input, box\n(?:note: notes\[\d+\]: .*\n)*$/);
+  assert.match(check.stdout, /^OK \d+ fingerprints\nnote: anatomy\.Box: "_text-input\.scss:L1 the \.cds--text-input box": the cited lines show none of cds--text-input, box\nnote: notes\[0\]: .*\nnote: notes\[1\]: .*\nnote: notes\[3\]: .*\n$/, 'the notes flagged in #462');
 });
