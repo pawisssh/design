@@ -26,6 +26,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { closure, closureContracts, expand, resolve, validate } from '../../contract/scripts/contract.mjs';
+import { readContractSources } from './fingerprints.mjs';
 import {
   CDS, CONTRACTS_DIR, DEFAULT_DIR, FOUNDATIONS_DIR, FOUNDATIONS_PINNED, REPO_ROOT, fetchFoundationsPackages, fetchSources,
   hasFoundationsPackages, hasSources, readSources, sha256, snapshotId,
@@ -45,20 +46,21 @@ const FILE = {
   interactableTokens: 'packages/common/src/tokens/interactable.ts',
   interProps: 'packages/web/src/system/interactableCSSProperties.ts',
 };
-// The compiled modules evaluated, as `<package>/<member>` and the export taken (none: the whole module).
+// The compiled modules evaluated, as `<package>/<member>` and the export taken.
 const MODULES = {
   defaultTheme: [WEB, 'package/esm/themes/defaultTheme.js', 'defaultTheme'],
   createThemeCssVars: [WEB, 'package/esm/core/createThemeCssVars.js', 'createThemeCssVars'],
   getBlendedColor: [COMMON, 'package/esm/color/getBlendedColor.js', 'getBlendedColor'],
-  button: [COMMON, 'package/esm/tokens/button.js'],
-  interactable: [COMMON, 'package/esm/tokens/interactable.js'],
 };
 const DEFAULT_FONT_CSS = 'package/esm/styles/defaultFont.css';
 
-// Component token maps, by Component Family: the cds-common module, its source, and the props type whose
-// `@deprecated` variants get scopes []. A family's tokens are emitted only when the family is asked for (--family) or
-// has a Contract.
-const COMPONENTS = { button: { module: 'button', source: 'packages/common/src/tokens/button.ts', props: 'packages/common/src/types/ButtonBaseProps.ts' } };
+// in (#396): a Component Family's token map is cds-common's compiled `esm/tokens/<family>.js`, when the pinned tarball
+// has one that exports `variants`, and its TypeScript `packages/common/src/tokens/<family>.ts` is the evidence. The
+// family's Contract pins that file, as it pins the props type (TYPES) whose `@deprecated` variants get scopes [].
+// A family's tokens are emitted only when the family is asked for (--family) or has a Contract.
+const tokenModule = name => `package/esm/tokens/${name}.js`;
+const tokenSource = name => `packages/common/src/tokens/${name}.ts`;
+const TYPES = 'packages/common/src/types/';
 // A component token's role in the map -> its name suffix and scopes.
 const ROLE = { color: ['color', ['SHAPE_FILL', 'TEXT_FILL']], background: ['background', ['FRAME_FILL']], borderColor: ['border', ['STROKE_COLOR']] };
 // The roles Interactable blends per state: it leaves the text colour as it is.
@@ -142,23 +144,33 @@ function hook() {
 
 /**
  * Import the named compiled modules from the extracted tarballs in `sources` (readSources output), with d3-color
- * from `depsDir`. Returns {defaultTheme, createThemeCssVars, getBlendedColor, button, interactable, hashes}.
+ * from `depsDir`, and the token map of each of `families`. Returns {defaultTheme, createThemeCssVars, getBlendedColor,
+ * interactable, tokens: {family: module, or null when cds-common has no esm/tokens/<family>.js}, hashes}.
  */
-export async function loadModules(sources, depsDir = FOUNDATIONS_DIR) {
+export async function loadModules(sources, families = [], depsDir = FOUNDATIONS_DIR) {
   if (!hasFoundationsPackages(depsDir))
     fail(`d3-color missing in ${depsDir}; run: node skills/adapter-cds/scripts/sources.mjs`);
   const npm = pathToFileURL(join(sources.packages[WEB].dir, '..') + '/').href;
   hook();
   roots.set(npm, pathToFileURL(join(depsDir, 'node_modules/d3-color/src/index.js')).href);
   const out = { hashes: {} };
-  for (const [name, [pkg, member, exported]] of Object.entries(MODULES)) {
+  const load = async (pkg, member) => {
     const file = join(sources.packages[pkg].dir, member);
     if (!existsSync(file)) fail(`${pkg}: ${member} is not extracted; run: node skills/adapter-cds/scripts/sources.mjs`);
     out.hashes[`${pkg}/${member.replace(/^package\//, '')}`] = `sha256:${sha256(readFileSync(file))}`;
-    const mod = await import(pathToFileURL(file).href);
-    out[name] = exported ? mod[exported] : mod;
+    return import(pathToFileURL(file).href);
+  };
+  for (const [name, [pkg, member, exported]] of Object.entries(MODULES)) {
+    out[name] = (await load(pkg, member))[exported];
     if (!out[name]) fail(`${pkg}/${member} has no ${name} export`);
   }
+  // The token modules in name order, interactable's (the state opacities) among the families' maps, as `hashes` lists them.
+  const extracted = new Set(sources.packages[COMMON].members);
+  const names = [...new Set(['interactable', ...families])].filter(n => extracted.has(tokenModule(n))).sort(byKey);
+  const loaded = {};
+  for (const name of names) loaded[name] = await load(COMMON, tokenModule(name));
+  out.interactable = loaded.interactable || fail(`${COMMON}: ${tokenModule('interactable')} is not extracted; run: node skills/adapter-cds/scripts/sources.mjs`);
+  out.tokens = Object.fromEntries(families.map(f => [f, loaded[f] || null]));
   return out;
 }
 
@@ -219,6 +231,21 @@ function interactableBlends(files, interactable) {
   });
 }
 
+/**
+ * The `@deprecated` variants of `family`'s props type: its Contracts' pinned files under TYPES (Button's
+ * ButtonBaseProps.ts), read from the sources dir `dir` and checked against the pin. Returns Map(variant -> [what the
+ * doc comment says, file]); empty for a family with no Contract or none that pins a props type.
+ */
+function deprecatedVariants(contracts, family, dir) {
+  const out = new Map();
+  for (const { contract } of contracts.filter(c => c.contract.family.key === family)) {
+    const files = Object.fromEntries(Object.entries(contract.source.files).filter(([p]) => p.startsWith(TYPES)));
+    for (const [path, text] of Object.entries(readContractSources({ source: { ...contract.source, files } }, dir)))
+      for (const d of text.matchAll(/@deprecated ([^.\n]*\.)[^\n]*\n\s*\*\/\s*\n\s*\|\s*'(\w+)'/g)) out.set(d[2], [d[1], path]);
+  }
+  return out;
+}
+
 /** The first family of `--defaultFont-sans` in cds-web's defaultFont.css: Inter. */
 function defaultFont(sources) {
   const file = join(sources.packages[WEB].dir, DEFAULT_FONT_CSS);
@@ -242,10 +269,12 @@ const themeFor = (theme, scheme) => ({
  * @param sources   readSources() output.
  * @param contracts [{path, contract}]: the Contracts of the Design System; `path` is relative to the repo root.
  * @param families  Component Family keys whose tokens to emit besides the Contracts' families (`--family`).
- * @param modules   loadModules() output; tests pass an altered copy. Loaded from `sources` when omitted.
+ * @param modules   loadModules() output for the families emitted; tests pass an altered copy. Loaded from `sources`
+ *                  when omitted.
+ * @param dir       the sources dir, for the props types the Contracts pin beyond `sources.files`.
  * @returns {doc, text, documentHash, summary}. Throws on any failed check (see the header).
  */
-export async function generate({ sources, contracts = [], families = [], modules }) {
+export async function generate({ sources, contracts = [], families = [], modules, dir = DEFAULT_DIR }) {
   for (const { path, contract } of contracts) {
     const structural = validate(contract, { variables: {}, textStyles: {} }).errors.filter(e => e.rule === 'schema' || e.rule === 3);
     if (structural.length) fail(`Contract ${path}: ${structural.map(e => `rule ${e.rule} at ${e.at}: ${e.message}`).join('; ')}`);
@@ -255,7 +284,8 @@ export async function generate({ sources, contracts = [], families = [], modules
       if (CDS.packages[name] && version !== CDS.packages[name].version)
         fail(`Contract ${path} pins ${name}@${version} but the step reads ${name}@${CDS.packages[name].version}`);
   }
-  const mods = modules || await loadModules(sources);
+  const emitFamilies = [...new Set([...families, ...contracts.map(c => c.contract.family.key)])].sort(byKey);
+  const mods = modules || await loadModules(sources, emitFamilies);
   const files = sources.files;
   const theme = mods.defaultTheme;
 
@@ -277,9 +307,6 @@ export async function generate({ sources, contracts = [], families = [], modules
       }
     }
   const withStroke = (name, scopes) => (strokedViaSameAs.has(name) && !scopes.includes('STROKE_COLOR') ? [...scopes, 'STROKE_COLOR'] : scopes);
-  const emitFamilies = [...new Set([...families, ...contracts.map(c => c.contract.family.key)])].sort(byKey);
-  const unknownFamily = emitFamilies.filter(f => !COMPONENTS[f]);
-  if (unknownFamily.length) fail(`no CDS component token map for family ${unknownFamily.join(', ')}`);
 
   const variables = {};
   const textStyles = {};
@@ -348,30 +375,44 @@ export async function generate({ sources, contracts = [], families = [], modules
   notes.push({ level: 'info', at: 'variables.currentColor',
     message: 'currentColor (--color-currentColor) is not carried: it is the CSS keyword, not a colour, in both schemes.' });
 
-  // 4. Each family's component tokens, aliasing the Theme colour its token map names, then its Synthesized tokens
+  // 4. Each family's component tokens, aliasing the Theme colour its token map names, then its Synthesized tokens.
+  // in (#396): a family with no token map gets neither, only the closure, and a note says so; the run goes on.
   const synthesized = {};
-  if (emitFamilies.length) {
+  const mapped = emitFamilies.filter(family => {
+    if (!(family in mods.tokens)) fail(`the modules were loaded without family ${family}'s token map`);
+    if (mods.tokens[family]?.variants) return true;
+    const member = tokenModule(family).replace(/^package\//, '');
+    const why = mods.tokens[family] ? `${member} exports no variants` : `has no ${member}`;
+    notes.push({ level: 'info', at: `variables.${family}-*`, message: `${family} has no component token map: ${COMMON}@${CDS.packages[COMMON].version} ${why}, so the document carries no ${family} component or Synthesized tokens, only the Theme, Layout and Type tokens its Contract binds.` });
+    return false;
+  });
+  if (mapped.length) {
     const blends = interactableBlends(files, mods.interactable);
-    for (const family of emitFamilies) {
-      const map = mods[COMPONENTS[family].module];
-      const deprecated = new Map([...files[COMPONENTS[family].props].matchAll(/@deprecated ([^.\n]*\.)[^\n]*\n\s*\*\/\s*\n\s*\|\s*'(\w+)'/g)].map(d => [d[2], d[1]]));
+    for (const family of mapped) {
+      const map = mods.tokens[family];
+      const source = tokenSource(family);
+      const deprecated = deprecatedVariants(contracts, family, dir);
+      const unknownRoles = new Set();
+      // transparentVariants is optional: Banner's map has variants only.
       for (const [mapKey, suffix] of [['variants', ''], ['transparentVariants', '-transparent']]) {
-        if (!map[mapKey]) fail(`${COMPONENTS[family].source}: no ${mapKey}`);
-        for (const variant of Object.keys(map[mapKey]).sort(byKey)) {
+        for (const variant of Object.keys(map[mapKey] || {}).sort(byKey)) {
           const roles = map[mapKey][variant];
           const base = `${family}-${variant}${suffix}`;
           const scopesFor = scopes => (deprecated.has(variant) ? [] : scopes);
-          for (const [role, [part, scopes]] of Object.entries(ROLE)) {
+          // A role the step doesn't know (Banner's iconColor) gets no token, and a note; a known role the variant
+          // lacks (Banner's color) gets none either.
+          Object.keys(roles).filter(r => !ROLE[r]).forEach(r => unknownRoles.add(r));
+          for (const [role, [part, scopes]] of Object.entries(ROLE).filter(([r]) => r in roles)) {
             const target = roles[role];
             if (!variables[target] || variables[target].collection !== 'theme') fail(`${base}-${part}: ${target} is not a Theme colour`);
             const name = `${base}-${part}`;
             variables[name] = { collection: 'theme', name: `${cap(family)}/${name}`, type: 'COLOR',
-              source: `${COMPONENTS[family].source}#${mapKey}.${variant}.${role}`, scopes: scopesFor(withStroke(name, scopes)), codeSyntax: {},
+              source: `${source}#${mapKey}.${variant}.${role}`, scopes: scopesFor(withStroke(name, scopes)), codeSyntax: {},
               values: Object.fromEntries(SCHEMES.map(([s]) => [s, { alias: target, resolved: variables[target].values[s].resolved }])),
               usedBy: users(name), family };
           }
           for (const b of blends) {
-            for (const [role, [part]] of BLENDED.map(r => [r, ROLE[r]])) {
+            for (const [role, [part]] of BLENDED.filter(r => r in roles).map(r => [r, ROLE[r]])) {
               const name = `${base}-${b.figmaState}-${part}`;
               const target = roles[role];
               const values = {};
@@ -394,8 +435,10 @@ export async function generate({ sources, contracts = [], families = [], modules
           }
         }
       }
-      for (const [variant, says] of deprecated)
-        notes.push({ level: 'info', at: `variables.${family}-${variant}-*`, message: `${variant} is @deprecated in ${COMPONENTS[family].props} ("${says}"); its tokens, plain and transparent, have scopes [], which keep them out of Figma's pickers.` });
+      for (const [variant, [says, path]] of deprecated)
+        notes.push({ level: 'info', at: `variables.${family}-${variant}-*`, message: `${variant} is @deprecated in ${path} ("${says}"); its tokens, plain and transparent, have scopes [], which keep them out of Figma's pickers.` });
+      if (unknownRoles.size)
+        notes.push({ level: 'info', at: `variables.${family}-*`, message: `${family}'s token map (${source}) also names ${[...unknownRoles].join(', ')}, which get no component token: the step carries ${Object.keys(ROLE).join(', ')}.` });
       const props = blends.flatMap(b => [b.property.background, b.property.border]).join(', ');
       notes.push(
         { level: 'info', at: `variables.${family}-*.codeSyntax`, message: `CDS emits no custom property for a ${cap(family)} token: ${cap(family)} paints var(--color-<token>), the Theme colour each one aliases, so codeSyntax is empty and a reference by that custom property matches the Theme colour.` },
@@ -563,7 +606,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     if (!hasSources(sourcesDir)) await fetchSources(sourcesDir);
     if (!hasFoundationsPackages()) fetchFoundationsPackages();
     const contracts = readContracts(opt('--contracts', CONTRACTS_DIR));
-    const { text, documentHash, summary } = await generate({ sources: readSources(sourcesDir), contracts, families });
+    const { text, documentHash, summary } = await generate({ sources: readSources(sourcesDir), contracts, families, dir: sourcesDir });
     writeFileSync(out, text);
     console.log([...summary, `wrote ${relative(process.cwd(), out)} (${text.length} chars, documentHash ${documentHash})`, 'OK'].join('\n'));
   } catch (e) {
