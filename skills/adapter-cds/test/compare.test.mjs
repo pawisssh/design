@@ -1,13 +1,16 @@
 // Render comparison (compare.mjs): the expectations come from the committed Button Contract and Foundations, offline;
 // the probe runs on a small fake of the catalog page, and once from compare.js's own text to show it needs nothing
-// outside its body.
+// outside its body. --run takes the real Button page through headless Chrome.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { colorKey, compareModule, expectations, probe } from '../scripts/compare.mjs';
+import { colorKey, compareModule, expectations, missingChrome, probe, runInChrome } from '../scripts/compare.mjs';
+import { hasPreviewPackages, previewRenderer } from '../scripts/preview.mjs';
+import { PREVIEW_MISSING } from './helpers.mjs';
 import { convert } from '../../contract/scripts/color.mjs';
 
 const load = rel => JSON.parse(readFileSync(new URL(rel, import.meta.url), 'utf8'));
@@ -169,4 +172,22 @@ test('compare.js runs the probe from its own text, on the page\'s document', asy
     delete globalThis.document;
     delete globalThis.getComputedStyle;
   }
+});
+
+test('--run compares the real Button page in headless Chrome, and names a value the Contract changes', {
+  skip: !hasPreviewPackages() ? PREVIEW_MISSING : missingChrome() || false,
+}, async () => {
+  const { buildCatalog } = await import('../../to-preview/scripts/catalog.mjs');
+  const dir = mkdtempSync(join(tmpdir(), 'cds-compare-run-'));
+  writeFileSync(join(dir, 'index.html'), buildCatalog({ contract, foundations, renderer: await previewRenderer(contract) }));
+  const path = rel => new URL(rel, import.meta.url).pathname;
+  const run = spawnSync(process.execPath, [path('../scripts/compare.mjs'), path('../../../design-systems/cds/contracts/button.component.json'),
+    '--nodes', path('../nodes/button.nodes.json'), '--out', join(dir, 'compare.js'), '--run'], { encoding: 'utf8' });
+  const changed = expectations({ contract, nodes, foundations });
+  assert.equal(run.status, 0, run.stderr + run.stdout);
+  assert.match(run.stdout, new RegExp(`^checked ${Object.keys(changed.expected).length * changed.modes.length}, 0 mismatches$`, 'm'));
+  const loading = Object.keys(changed.expected).find(k => changed.expected[k].light.Arc);
+  changed.expected[loading].light.Arc.sweep = 180;
+  writeFileSync(join(dir, 'compare.js'), compareModule(changed));
+  assert.deepEqual((await runInChrome(dir)).mismatches, [`${loading} light Arc.sweep: page 270, Contract 180`]);
 });
