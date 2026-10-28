@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { check } from '../scripts/from-prototype.mjs';
-import { DEFAULT_DIR, TOOLS } from '../../adapter-generic/scripts/sources.mjs';
+import { TOOLS } from '../../adapter-generic/scripts/sources.mjs';
 import { fileHash } from '../../to-handoff/scripts/hash.mjs';
 import { REPO_ROOT as REPO } from '../../to-handoff/scripts/system.mjs';
 
@@ -745,8 +745,10 @@ test('a name collision with a committed Design System or another scratch folder 
 test('every run writes nothing, runs and fetches nothing, leaves the Prototype as it was, and loads no fetched parser', () => {
   // A child process whose fs writes, child processes and fetch are recorded before the check is imported, so the
   // answer doesn't depend on what other test files write meanwhile; its module cache holds only what the check loads.
+  // The shared tools folders other suites fetch and render into are covered by that record alone (#517); each
+  // Prototype is also listed before and after.
   const script = `
-    import { existsSync, readdirSync, statSync } from 'node:fs';
+    import { statSync } from 'node:fs';
     import { createRequire, syncBuiltinESMExports } from 'node:module';
     const require = createRequire(import.meta.url);
     const calls = [];
@@ -761,29 +763,25 @@ test('every run writes nothing, runs and fetches nothing, leaves the Prototype a
     syncBuiltinESMExports();
     const { check } = await import(${JSON.stringify(new URL('../scripts/from-prototype.mjs', import.meta.url).href)});
     const { files } = await import(${JSON.stringify(new URL('../../vibe-to-figma/scripts/path.mjs', import.meta.url).href)});
-    const [prototypes, tools] = JSON.parse(process.argv[1]);
+    const prototypes = JSON.parse(process.argv[1]);
     const list = p => statSync(p).isFile() ? [statSync(p).mtimeMs] : [...files(p)].map(f => f + ' ' + statSync(f).mtimeMs);
-    const listTools = p => existsSync(p) ? readdirSync(p).map(n => n + ' ' + statSync(p + '/' + n).mtimeMs) : [];
-    const listed = [...prototypes.map(p => [p, list]), ...tools.map(p => [p, listTools])];
-    const before = listed.map(([p, of]) => JSON.stringify(of(p)));
+    const before = prototypes.map(p => JSON.stringify(list(p)));
     for (const p of prototypes) for (const options of ${JSON.stringify(OPTION_SETS)}) check(p, options);
-    const changed = listed.filter(([p, of], i) => JSON.stringify(of(p)) !== before[i]).map(([p]) => p);
+    const changed = prototypes.filter((p, i) => JSON.stringify(list(p)) !== before[i]);
     const loaded = Object.keys(require.cache).filter(k => k.includes('/.scratch/'));
     console.log(JSON.stringify({ calls, changed, loaded }));
   `;
   const fixtures = [handoff('v0-app'), handoff('next-app'), handoff('vite-app'), handoff('tailwind-app'), handoff('conditions-app'),
     handoff('invite-teammates'), vibe('path-a-app'), vibe('tailwind-no-shadcn'), vibe('carbon-scss-app'), vibe('html-app'), join(vibe('html-app'), 'index.html')];
-  // Each Handoff row's variant, each Component Sets row's (#435), the lockfile and Tailwind rows' (#434), and the tools
-  // folders the readers fetch into.
+  // Each Handoff row's variant, each Component Sets row's (#435), and the lockfile and Tailwind rows' (#434).
   const made = [...VARIANTS.map(variant), ...Object.values(SETS_VARIANTS).map(make => make())];
   const variants = [BARE, ...Object.values(LOCK_VARIANTS).map(([dir]) => dir)];
-  const tools = [DEFAULT_DIR, join(REPO, '.scratch/to-handoff')];
   let r;
-  try { r = spawnSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify([[...fixtures, ...made, ...variants], tools])], { encoding: 'utf8' }); }
+  try { r = spawnSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify([...fixtures, ...made, ...variants])], { encoding: 'utf8' }); }
   finally { for (const d of made) rmSync(d, { recursive: true, force: true }); }
   assert.equal(r.status, 0, r.stderr);
   const { calls, changed, loaded } = JSON.parse(r.stdout);
   assert.deepEqual(calls, [], 'nothing written, run or fetched');
-  assert.deepEqual(changed, [], 'every Prototype and tools folder is as it was');
+  assert.deepEqual(changed, [], `every Prototype is as it was; changed: ${changed.join(', ')}`);
   assert.deepEqual(loaded, []);
 });
