@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 // From-Prototype (spec #343): one entry from a Prototype to Component Sets or a Handoff. Its check names the
-// Prototype's kind and gives each output's verdict; its hand-over entry writes the publish copy of a signed-off
-// Handoff's Rendering, which the agent publishes as a private Artifact.
-//   node skills/from-prototype/scripts/from-prototype.mjs check <prototype> [--figma <url>] [--handoff]
+// Prototype's kind, gives each output's verdict, asks the owner's questions and plans the stages; its hand-over entry
+// writes the publish copy of a signed-off Handoff's Rendering, which the agent publishes as a private Artifact.
+//   node skills/from-prototype/scripts/from-prototype.mjs check <prototype> [--figma <url>] [--handoff] [--ds <ds>]
+//        [--name <name>] [--all]
 //   node skills/from-prototype/scripts/from-prototype.mjs hand-over <handoff.json> [--out <dir under .scratch/>]
 //
-// check exits 1 when an output it was asked for is refused, else 0. hand-over exits 1 with its reason when it
-// refuses, writing nothing.
+// check exits 0 with the plan, 2 with the owner's questions, and 1 when an output it was asked for is refused or none
+// is possible. hand-over exits 1 with its reason when it refuses, writing nothing.
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -14,6 +15,8 @@ import { fileURLToPath } from 'node:url';
 import { handoffContentHash } from '../../to-handoff/scripts/hash.mjs';
 import { stampOf } from '../../to-handoff/scripts/render-html.mjs';
 import { REPO_ROOT, inScratch } from '../../to-handoff/scripts/system.mjs';
+import { fileKeyOf } from '../../vibe-to-figma/scripts/build.mjs';
+import { folderName } from '../../vibe-to-figma/scripts/folder.mjs';
 import { files, utilitiesIn } from '../../vibe-to-figma/scripts/path.mjs';
 
 // The Prototype kinds, ADR 0019's.
@@ -116,6 +119,9 @@ const COMPONENT_SETS = [
   { name: 'reader', kinds: [UNKNOWN], message: 'no reader for what was found' },
   { name: 'mixed', kinds: [PATH_A], effect: 'note', ticket: '#331', test: p => !classStyled(p).length,
     message: p => `its own class-styled stylesheets (${classStyled(p).join(', ')}) are read as path A until #331 decides a React app that mixes them with Tailwind utilities` },
+  // Only when Component Sets are asked. The agent's one read of the file through the owner's Figma connection is the
+  // SKILL.md's step after the check: the check fetches nothing.
+  { name: 'figma', kinds: KINDS.map(k => k.kind), test: p => !figmaRefusal(p), message: p => `the Figma link is refused: ${figmaRefusal(p)}` },
 ];
 const HANDOFF = [
   { name: 'reader', kinds: [OTHER], message: NOT_SUPPORTED },
@@ -124,6 +130,11 @@ const HANDOFF = [
     message: 'no reader for this React setup: To-handoff reads Next.js App Router or Vite' },
   { name: 'reader', kinds: [UNKNOWN], message: 'no reader for what was found' },
 ];
+
+function figmaRefusal(p) {
+  if (p.options.figma === undefined) return null;
+  try { fileKeyOf(p.options.figma); return null; } catch (e) { return e.message; }
+}
 
 // A stylesheet of the Prototype's own, with class rules and no Tailwind import.
 const classStyled = p => p.all.filter(f => STYLES.has(extname(f)) && !/\.module\.s?css$/.test(f))
@@ -136,47 +147,103 @@ function verdictOf(table, p, yes) {
   return { verdict: reasons.length ? 'no' : yes, reasons, notes: failing.filter(f => f.note).map(f => f.message) };
 }
 
+const OUTPUTS = { componentSets: 'Component Sets', handoff: 'a Handoff' };
+const SCRATCH_ROOT = '.scratch/design-systems';
+
 /**
- * check(prototype) -> {kind, evidence, verdicts: {componentSets, handoff}, questions, plan}: the Prototype's kind and
- * the files that show it, and each output's verdict ({verdict, reasons: [{row, message, ticket}], notes}) from its
- * gate rows (spec #343 The check). `prototype` is a folder, or for plain HTML one HTML file. It reads file names,
- * package.json and text; it writes nothing, fetches nothing and loads no fetched parser.
+ * check(prototype, {figma, handoff, ds, name, all}) -> {kind, evidence, verdicts: {componentSets, handoff}, questions,
+ * plan}: the Prototype's kind and the files that show it, each output's verdict ({verdict, reasons: [{row, message,
+ * ticket}], notes}) from its gate rows, the owner's open questions ({id, question, options?}), and the plan, settled
+ * only when no question is open and nothing asked is refused (spec #343 The check; Owner questions; The stages).
+ * `prototype` is a folder, or for plain HTML one HTML file; `figma` (a link) asks for Component Sets and `handoff` for
+ * a Handoff against the Design System `ds`. It reads file names, package.json and text; it writes nothing, fetches
+ * nothing and loads no fetched parser.
  */
-export function check(prototype) {
+export function check(prototype, options = {}) {
   const p = reading(prototype);
+  p.options = options;
   for (const { kind, evidence } of KINDS) {
     const found = evidence(p);
     if (found.length) { p.kind = kind; p.evidence = [...found, ...frameworks(p)]; break; }
   }
-  return {
-    kind: p.kind,
-    evidence: p.evidence,
-    verdicts: {
-      componentSets: verdictOf(COMPONENT_SETS, p, p.kind === SHADCN ? 'yes, by the shadcn path' : 'yes, by path A'),
-      handoff: verdictOf(HANDOFF, p, 'yes'),
-    },
-    // The outputs question and the plan land with #437.
-    questions: [],
-    plan: null,
+  const verdicts = {
+    componentSets: verdictOf(COMPONENT_SETS, p, p.kind === SHADCN ? 'yes, by the shadcn path' : 'yes, by path A'),
+    handoff: verdictOf(HANDOFF, p, 'yes'),
   };
+  const asked = [options.figma !== undefined && 'componentSets', options.handoff && 'handoff'].filter(Boolean);
+  const questions = asked.some(o => verdicts[o].verdict === 'no') ? [] : questionsOf(p, asked, verdicts);
+  const plan = asked.length && !questions.length && !asked.some(o => verdicts[o].verdict === 'no') ? planOf(p, asked) : null;
+  return { kind: p.kind, evidence: p.evidence, verdicts, questions, plan };
+}
+
+// The owner's questions (spec #343 Owner questions): with no output asked, one question offering only the outputs
+// whose verdict is not "no"; a Handoff asked with no --ds asks its Design System. The Design System's default, the
+// own-folder answer and the rerun rule are #438's.
+function questionsOf(p, asked, verdicts) {
+  if (!asked.length) {
+    const possible = Object.keys(OUTPUTS).filter(o => verdicts[o].verdict !== 'no');
+    const question = possible.length === 2 ? 'Which outputs should this run make: Component Sets, a Handoff, or both?'
+      : `Should this run make ${OUTPUTS[possible[0]]}? It is the only output possible.`;
+    return possible.length ? [{ id: 'outputs', question,
+      options: possible.map(o => ({ output: o, verdict: verdicts[o].verdict, flag: o === 'handoff' ? '--handoff' : '--figma <url>' })) }] : [];
+  }
+  const questions = [];
+  if (asked.includes('handoff') && !p.options.ds) questions.push({ id: 'designSystem', question: 'Which Design System is the Handoff against?', options: designSystems() });
+  const own = ownFolder(p);
+  if (own.refused && asked.includes('componentSets')) questions.push({ id: 'name', question: `What is this Prototype's own folder called? ${own.refused}` });
+  return questions;
+}
+
+// The Prototype's own folder (#320 D4, #324 D5): Vibe-to-Figma's folder name under the scratch root.
+function ownFolder(p) {
+  try { return { name: folderName(p.root, p.options.name) }; } catch (e) { return { refused: e.message }; }
+}
+
+// The ordered stages after the check (spec #343 The stages), each with its folder and Design System. Component Sets
+// always come from the Prototype's own folder; a Handoff runs against --ds, which is the own folder when it names it.
+function planOf(p, asked) {
+  const { name: own } = ownFolder(p);
+  const ds = p.options.ds;
+  const at = (stage, designSystem, extra) => ({ stage, folder: `${SCRATCH_ROOT}/${designSystem}`, designSystem, ...extra });
+  const folderStep = asked.includes('componentSets') || ds === own;
+  const stages = [
+    ...(folderStep ? [at('folder', own, p.options.all ? { all: true } : {}), at('review-page', own), at('approve', own, { owner: true })] : []),
+    ...(asked.includes('componentSets') ? [at('figma-build', own, { figma: p.options.figma })] : []),
+    ...(asked.includes('handoff') ? [...(ds === own ? [] : [at('scratch-copy', ds)]), at('generate', ds), at('review', ds), at('sign-off', ds, { owner: true })] : []),
+  ];
+  return { outputs: asked, stages: [...stages, { stage: 'hand-over', outputs: asked }] };
 }
 
 // The Design Systems here: committed, and scratch copies under .scratch/design-systems/.
 const designSystems = () => [...new Set(['design-systems', '.scratch/design-systems'].map(d => join(REPO_ROOT, d))
   .filter(existsSync).flatMap(d => readdirSync(d).filter(n => !n.startsWith('.') && statSync(join(d, n)).isDirectory())))].sort();
 
-// The check's message (#324 D7): what was found, each output's verdict and reason, what is still possible, and that
-// nothing was fetched or written.
-function message(prototype, r) {
+const STAGES = { folder: "Vibe-to-Figma's folder step", 'review-page': "Vibe-to-Figma's review page", approve: "the owner's approve",
+  'figma-build': 'the Figma build', 'scratch-copy': "the Design System's scratch copy", generate: "To-handoff's generate",
+  review: "To-handoff's `review`", 'sign-off': "the owner's Sign-off", 'hand-over': 'the hand-over' };
+
+// The check's message (#324 D7): what was found, each output's verdict and reason, what is still possible, the owner's
+// questions or the plan, and that nothing was fetched or written.
+function message(prototype, r, options = {}) {
+  const command = o => `\`node skills/from-prototype/scripts/from-prototype.mjs check ${prototype} ${o === 'handoff'
+    ? `--handoff${options.ds ? ` --ds ${options.ds}` : ''}` : `--figma ${options.figma ?? '<url>'}`}\``;
   const sentence = s => s[0].toUpperCase() + s.slice(1).replace('ADR 0019', `ADR 0019: ${ADR}`) + '.';
   const line = (name, v) => `- ${name}: ${v.verdict}.${[...v.reasons.map(x => x.message), ...v.notes.map(n => `note: ${n}`)].map(s => ' ' + sentence(s)).join('')}`;
   const { componentSets: sets, handoff } = r.verdicts;
+  // Component Sets refused only for their link: the Prototype can still have them, and a Handoff can run alone.
+  const linkOnly = sets.reasons.every(x => x.row === 'figma');
   const possible = sets.verdict === 'no' && handoff.verdict !== 'no'
-    ? `A Handoff against a Design System your developers already build with is still possible. Here: ${designSystems().map(d => `\`${d}\``).join(', ')}. Run again with \`--handoff\` if one of them is it.`
-    : sets.verdict !== 'no' && handoff.verdict === 'no' ? 'Component Sets alone are still possible: run again with `--figma <url>`.'
+    ? linkOnly ? `A Handoff can run alone: ${command('handoff')}.`
+      : `A Handoff against a Design System your developers already build with is still possible. Here: ${designSystems().map(d => `\`${d}\``).join(', ')}. Run ${command('handoff')} if one of them is it.`
+    : sets.verdict !== 'no' && handoff.verdict === 'no' ? `Component Sets alone are still possible: ${command('componentSets')}.`
     : sets.verdict === 'no' ? 'Nothing else is possible for this Prototype today.' : null;
+  const questions = r.questions.flatMap(q => [`Owner question: ${q.question}`, ...q.id === 'outputs'
+    ? q.options.map(o => `- ${OUTPUTS[o.output]} (${o.verdict}): run again with \`${o.flag}\``)
+    : q.id === 'designSystem' ? [`- here: ${q.options.map(d => `\`${d}\``).join(', ')}. Run again with \`--ds <design-system>\`.`] : []]);
+  const plan = r.plan ? ['Plan:', ...r.plan.stages.map((s, i) => `${i + 1}. ${STAGES[s.stage]}${s.stage === 'hand-over'
+    ? ` of ${s.outputs.map(o => OUTPUTS[o]).join(' and ')}` : `: ${s.folder} (Design System \`${s.designSystem}\`)${s.figma ? ` into ${s.figma}` : ''}`}`)] : [];
   return [`${prototype}: ${r.kind} (${r.evidence.join(', ')}).`, line('Component Sets', sets), line('Handoff', handoff),
-    ...(possible ? [possible] : []), '', 'Nothing was fetched or written.'].join('\n');
+    ...(possible ? [possible] : []), ...questions, ...plan, '', 'Nothing was fetched or written.'].join('\n');
 }
 
 // An Artifact's limits, as the Artifact tool states them: the page and each text file at most 16 MB, each binary
@@ -245,24 +312,25 @@ export function handOver({ handoffPath, out }) {
   return { dir: at, title, files: ['index.html', ...shots], bytes };
 }
 
-const USAGE = 'usage: from-prototype.mjs check <prototype> [--figma <url>] [--handoff]\n'
+const USAGE = 'usage: from-prototype.mjs check <prototype> [--figma <url>] [--handoff] [--ds <ds>] [--name <name>] [--all]\n'
   + '       from-prototype.mjs hand-over <handoff.json> [--out <dir under .scratch/>]';
 
 function main(argv) {
   let parsed;
   try {
     parsed = parseArgs({ args: argv, allowPositionals: true,
-      options: { out: { type: 'string' }, figma: { type: 'string' }, handoff: { type: 'boolean' } } });
+      options: { out: { type: 'string' }, figma: { type: 'string' }, handoff: { type: 'boolean' }, ds: { type: 'string' },
+        name: { type: 'string' }, all: { type: 'boolean' } } });
   } catch (e) { console.error(`${e.message}\n${USAGE}`); return 1; }
   const { positionals, values } = parsed;
   const [command, input] = positionals;
   if (!['check', 'hand-over'].includes(command) || !input) { console.error(USAGE); return 1; }
   if (command === 'check') {
-    const r = check(input);
-    console.log(message(input, r));
-    // An asked output that is refused stops the run (#324 D7); with none asked, the verdicts alone (#437 asks).
-    const asked = [values.figma !== undefined && 'componentSets', values.handoff && 'handoff'].filter(Boolean);
-    return asked.some(o => r.verdicts[o].verdict === 'no') ? 1 : 0;
+    const { figma, handoff, ds, name, all } = values;
+    const r = check(input, { figma, handoff, ds, name, all });
+    console.log(message(input, r, values));
+    // 0 with the plan, 2 with the owner's questions, 1 when an asked output is refused or none is possible (#324 D7).
+    return r.plan ? 0 : r.questions.length ? 2 : 1;
   }
   try {
     const r = handOver({ handoffPath: input, out: values.out });
