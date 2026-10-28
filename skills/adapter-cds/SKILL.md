@@ -120,7 +120,7 @@ node skills/adapter-cds/scripts/foundations.mjs --family button
 | --- | --- | --- | --- |
 | Primitives (hidden) | Default | `light-<hue><step>`, `dark-<hue><step>`: both spectrums, as hex | `Light/blue60` |
 | Theme | Light, Dark | the semantic colours by CDS's keys (`bgPrimary`), each aliasing the Primitive its `defaultTheme.ts` template names; alpha templates hold the flattened colour with the alias in `from` | `Background/bgPrimary` |
-| Layout | Default | `space-<key>` (dots as `_`: `space-0_25`), `borderRadius-`, `borderWidth-`, `iconSize-`, `controlSize-<key>`, in px | `Spacing/space-0_25` |
+| Layout | Default | `space-<key>` (dots as `_`: `space-0_25`), `borderRadius-`, `borderWidth-`, `iconSize-`, `controlSize-`, `avatarSize-<key>`, in px | `Spacing/space-0_25` |
 | Type | Default | `fontFamily-`, `fontSize-`, `fontWeight-`, `lineHeight-<text key>`; rem is ×16 | `Font size/fontSize-body` |
 
 Light and Dark have no selector: ThemeProvider sets the custom properties inline for its `activeColorScheme`. Text Styles are named by CDS's text keys (`Body/body`, `Display/display1`), in Inter, the first family of `--defaultFont-sans`, with letter spacing 0, and bind the four Type variables.
@@ -131,9 +131,10 @@ Component tokens and Synthesized tokens go in the Theme collection, with `family
 - Synthesized ([ADR 0009](../../docs/adr/0009-mode-specific-styling-becomes-synthesized-tokens.md)): `<family>-<variant>[-transparent]-<hover|pressed|disabled>-<background|border>`, the colour `Interactable` computes with `getBlendedColor` at `opacityHovered`, `opacityPressed` and `opacityDisabled` (disabled skips contrast optimization). Each Mode's value is `getBlendedColor`'s output as a raw colour, with the call in `from` and the derivation in `reason`; the tests recompute every one. `source` is `synthesized: packages/common/src/tokens/interactable.ts blend(<token>, <opacity>)`. They sort after the other Theme tokens.
 - Both have empty `codeSyntax`: CDS emits no custom property for them. Button paints `var(--color-<token>)`, which must keep matching the Theme colour, and Interactable's `--inter-*` properties hold a different colour per element.
 - A `@deprecated` variant in `ButtonBaseProps.ts` (`foregroundMuted`) gets scopes `[]`.
+- A `colorSchemeMap` instead of `variants` (Avatar's, #478) gives `<family>-<scheme>-color` per colour scheme, aliasing the Primitive the map names in each Mode (`avatar-blue-color` → `light-blue60`, `dark-blue60`), checked against the active scheme's spectrum property the component paints (`rgb(var(--blue60))`). Its scopes are `FRAME_FILL` and `EFFECT_COLOR`, the fill and ring Avatar paints with `currentColor`, and it has no Synthesized tokens.
 - A colour token a Contract strokes through `sameAs` also gets `STROKE_COLOR`, so rule 6 passes: Button's Arc strokes `sameAs: "Label.fill"`, so the `button-<variant>[-transparent]-color` tokens are `["SHAPE_FILL", "TEXT_FILL", "STROKE_COLOR"]`.
 
-Not carried, each with a note: shadows (`elevation1`, `elevation2`), `avatarSize`, illustration colours, `textTransform`, `fontFamilyMono`, `currentColor`, the scheme-fixed `--lightColor-*`/`--darkColor-*` copies, the unprefixed spectrum, and every theme but `defaultTheme`.
+Not carried, each with a note: shadows (`elevation1`, `elevation2`), illustration colours, `textTransform`, `fontFamilyMono`, `currentColor`, the scheme-fixed `--lightColor-*`/`--darkColor-*` copies, the unprefixed spectrum, and every theme but `defaultTheme`.
 
 Tests: `node --test skills/adapter-cds/test/*.test.mjs`. The Foundations tests skip, saying so, until the fetch has run.
 

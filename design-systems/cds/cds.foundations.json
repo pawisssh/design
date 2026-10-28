@@ -9247,6 +9247,114 @@
       "usedBy": [],
       "family": "button"
     },
+    "avatarSize-l": {
+      "collection": "layout",
+      "name": "Avatar size/avatarSize-l",
+      "type": "FLOAT",
+      "source": "packages/web/src/themes/defaultTheme.ts#avatarSize.l",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--avatarSize-l)"
+      },
+      "values": {
+        "default": {
+          "value": 32
+        }
+      },
+      "usedBy": []
+    },
+    "avatarSize-m": {
+      "collection": "layout",
+      "name": "Avatar size/avatarSize-m",
+      "type": "FLOAT",
+      "source": "packages/web/src/themes/defaultTheme.ts#avatarSize.m",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--avatarSize-m)"
+      },
+      "values": {
+        "default": {
+          "value": 24
+        }
+      },
+      "usedBy": []
+    },
+    "avatarSize-s": {
+      "collection": "layout",
+      "name": "Avatar size/avatarSize-s",
+      "type": "FLOAT",
+      "source": "packages/web/src/themes/defaultTheme.ts#avatarSize.s",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--avatarSize-s)"
+      },
+      "values": {
+        "default": {
+          "value": 16
+        }
+      },
+      "usedBy": []
+    },
+    "avatarSize-xl": {
+      "collection": "layout",
+      "name": "Avatar size/avatarSize-xl",
+      "type": "FLOAT",
+      "source": "packages/web/src/themes/defaultTheme.ts#avatarSize.xl",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--avatarSize-xl)"
+      },
+      "values": {
+        "default": {
+          "value": 40
+        }
+      },
+      "usedBy": []
+    },
+    "avatarSize-xxl": {
+      "collection": "layout",
+      "name": "Avatar size/avatarSize-xxl",
+      "type": "FLOAT",
+      "source": "packages/web/src/themes/defaultTheme.ts#avatarSize.xxl",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--avatarSize-xxl)"
+      },
+      "values": {
+        "default": {
+          "value": 48
+        }
+      },
+      "usedBy": []
+    },
+    "avatarSize-xxxl": {
+      "collection": "layout",
+      "name": "Avatar size/avatarSize-xxxl",
+      "type": "FLOAT",
+      "source": "packages/web/src/themes/defaultTheme.ts#avatarSize.xxxl",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--avatarSize-xxxl)"
+      },
+      "values": {
+        "default": {
+          "value": 56
+        }
+      },
+      "usedBy": []
+    },
     "borderRadius-0": {
       "collection": "layout",
       "name": "Border radius/borderRadius-0",
@@ -11332,12 +11440,11 @@
         "@coinbase/cds-common/esm/tokens/button.js": "sha256:d6fe0f4cd49b7b6431f4e1265a2a86f45d915335eca817c0f389387b264eec9c",
         "@coinbase/cds-common/esm/tokens/interactable.js": "sha256:cf9d0fd9a4731f1a3e015efdb7483de505fdcd67995388c6c336866a05fab4f3"
       },
-      "matched": 844,
+      "matched": 856,
       "missing": [],
       "differs": [],
       "excluded": {
         "activeColorScheme": 1,
-        "avatarSize": 6,
         "currentColor": 1,
         "darkColor": 43,
         "fontFamilyMono": 13,
@@ -11382,17 +11489,12 @@
     {
       "level": "info",
       "at": "variables.iconSize-*",
-      "message": "The schema has no Icon size or Control size group for CDS; they take the Size scope WIDTH_HEIGHT, as Carbon's Icon size does."
+      "message": "The schema has no Icon size, Control size or Avatar size group for CDS; they take the Size scope WIDTH_HEIGHT, as Carbon's Icon size does."
     },
     {
       "level": "info",
       "at": "variables",
       "message": "Shadow (elevation1, elevation2) is not carried: the Foundations document holds variables and Text Styles, not effect styles."
-    },
-    {
-      "level": "info",
-      "at": "variables",
-      "message": "avatarSize is not carried: Avatar is not a family this document serves."
     },
     {
       "level": "info",

@@ -76,6 +76,8 @@ const LAYOUT_GROUP = {
   borderWidth: ['Border width', ['STROKE_FLOAT']],
   iconSize: ['Icon size', ['WIDTH_HEIGHT']],
   controlSize: ['Control size', ['WIDTH_HEIGHT']],
+  // in (#478): Avatar sizes itself with var(--avatarSize-<size>) (Avatar.tsx), so its Contract binds these.
+  avatarSize: ['Avatar size', ['WIDTH_HEIGHT']],
 };
 // Type groups, which are also the Text Style fields -> Figma group, scope and type.
 const TYPE_GROUP = {
@@ -88,7 +90,6 @@ const FONT_STYLE = { 400: 'Regular', 600: 'Semi Bold' }; // Inter's Figma style 
 // What createThemeCssVars emits that the document leaves out, by custom-property prefix, and why (a note each).
 const EXCLUDED = [
   ['--shadow-', 'shadow', 'Shadow (elevation1, elevation2) is not carried: the Foundations document holds variables and Text Styles, not effect styles.'],
-  ['--avatarSize-', 'avatarSize', 'avatarSize is not carried: Avatar is not a family this document serves.'],
   ['--illustration-', 'illustrationColor', 'Illustration colours are not carried: they paint CDS\'s themeable SVG illustrations, not components.'],
   ['--textTransform-', 'textTransform', 'textTransform is not carried: a Text Style has no text case. CDS sets caption to uppercase; the caption Text Style is not.'],
   ['--fontFamilyMono-', 'fontFamilyMono', 'fontFamilyMono is not carried: the Text Styles are CDS\'s sans styles (fontFamily).'],
@@ -380,9 +381,9 @@ export async function generate({ sources, contracts = [], families = [], modules
   const synthesized = {};
   const mapped = emitFamilies.filter(family => {
     if (!(family in mods.tokens)) fail(`the modules were loaded without family ${family}'s token map`);
-    if (mods.tokens[family]?.variants) return true;
+    if (mods.tokens[family]?.variants || mods.tokens[family]?.colorSchemeMap) return true;
     const member = tokenModule(family).replace(/^package\//, '');
-    const why = mods.tokens[family] ? `${member} exports no variants` : `has no ${member}`;
+    const why = mods.tokens[family] ? `${member} exports neither variants nor colorSchemeMap` : `has no ${member}`;
     notes.push({ level: 'info', at: `variables.${family}-*`, message: `${family} has no component token map: ${COMMON}@${CDS.packages[COMMON].version} ${why}, so the document carries no ${family} component or Synthesized tokens, only the Theme, Layout and Type tokens its Contract binds.` });
     return false;
   });
@@ -391,6 +392,30 @@ export async function generate({ sources, contracts = [], families = [], modules
     for (const family of mapped) {
       const map = mods.tokens[family];
       const source = tokenSource(family);
+      // in (#478): Avatar's map is `colorSchemeMap`, a colour scheme -> the spectrum colour Avatar's wrapper sets as its
+      // `color` (`rgb(var(--blue60))`), which the fallback fills and the selected ring paints as currentColor. Each is a
+      // component token `<family>-<scheme>-color` aliasing that colour's Primitive in each Mode, checked against the
+      // active scheme's spectrum property createThemeCssVars emits (`--blue60`). No Interactable blend, so no
+      // Synthesized tokens.
+      if (!map.variants) {
+        for (const scheme of Object.keys(map.colorSchemeMap).sort(byKey)) {
+          const key = map.colorSchemeMap[scheme];
+          const name = `${family}-${scheme}-color`;
+          const values = {};
+          for (const [s] of SCHEMES) {
+            const target = variables[`${s}-${key}`] || fail(`${name}: ${key} is not a ${s} spectrum colour`);
+            const got = emitted[s][`--${key}`];
+            if (!sameColor(parseColor(got), parseColor(target.values.default.value)))
+              fail(`${name}/${s}: the document has ${target.values.default.value}, createThemeCssVars emits --${key}: ${got}`);
+            checks.css++;
+            values[s] = { alias: `${s}-${key}`, resolved: target.values.default.value };
+          }
+          variables[name] = { collection: 'theme', name: `${cap(family)}/${name}`, type: 'COLOR', source: `${source}#colorSchemeMap.${scheme}`,
+            scopes: ['FRAME_FILL', 'EFFECT_COLOR'], codeSyntax: {}, values, usedBy: users(name), family };
+        }
+        notes.push({ level: 'info', at: `variables.${family}-*`, message: `${family}'s token map (${source}) is colorSchemeMap: each colour scheme names the spectrum colour ${cap(family)} paints with, rgb(var(--<colour>)) in the active scheme. Each ${family}-<scheme>-color aliases that colour's Light or Dark Primitive per Mode, scoped to the frame fills and effects that paint it as currentColor. CDS emits no custom property for it, so codeSyntax is empty.` });
+        continue;
+      }
       const deprecated = deprecatedVariants(contracts, family, dir);
       const unknownRoles = new Set();
       // transparentVariants is optional: Banner's map has variants only.
@@ -463,7 +488,7 @@ export async function generate({ sources, contracts = [], families = [], modules
         scopes, codeSyntax: { WEB: `var(--${name})` }, values: { default: { value: px } }, usedBy: users(name) };
     }
   }
-  notes.push({ level: 'info', at: 'variables.iconSize-*', message: 'The schema has no Icon size or Control size group for CDS; they take the Size scope WIDTH_HEIGHT, as Carbon\'s Icon size does.' });
+  notes.push({ level: 'info', at: 'variables.iconSize-*', message: 'The schema has no Icon size, Control size or Avatar size group for CDS; they take the Size scope WIDTH_HEIGHT, as Carbon\'s Icon size does.' });
 
   // 6. Type: a variable per text key for each group, and a Text Style per key, in the sans font
   const font = defaultFont(sources);
