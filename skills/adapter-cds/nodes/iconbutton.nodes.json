@@ -1,0 +1,8 @@
+{
+  "IconButton": "cds-IconButton baseCss",
+  "Icon": "cds-Icon",
+  "Glyph": "cds-IconButton-icon",
+  "Spinner": "cds-IconButton-progressCircle",
+  "Track": "cds-IconButton-progressCircle",
+  "Arc": "cds-IconButton-progressCircle"
+}

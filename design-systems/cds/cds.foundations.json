@@ -53,6 +53,11 @@
         "snapshotId": "sha256:f8d83191536e81c0c3b73b4238ed8c09f1152dc981a4fc7319b40d1b14a1ce59"
       },
       {
+        "family": "iconbutton",
+        "path": "design-systems/cds/contracts/iconbutton.component.json",
+        "snapshotId": "sha256:16a56f618489b08ff960995ba3fca8826b6c3e65c9e6fd915697e4086602aa87"
+      },
+      {
         "family": "radio",
         "path": "design-systems/cds/contracts/radio.component.json",
         "snapshotId": "sha256:d56fc38616a8bb1cc6e75fa5e45d5be3a3c9e178bbdf7204323c1bc7288b22c6"
@@ -4691,6 +4696,7 @@
       },
       "usedBy": [
         "button",
+        "iconbutton",
         "switch"
       ]
     },
@@ -4970,6 +4976,7 @@
       "usedBy": [
         "button",
         "checkbox",
+        "iconbutton",
         "radio",
         "switch"
       ]
@@ -5262,7 +5269,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -5310,7 +5318,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -5380,7 +5389,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -5404,7 +5414,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -5452,7 +5463,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -5522,7 +5534,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -5546,7 +5559,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -5594,7 +5608,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -5664,7 +5679,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -5688,7 +5704,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -5736,7 +5753,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -5806,7 +5824,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -5830,7 +5849,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -5878,7 +5898,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -5948,7 +5969,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -5972,7 +5994,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -6020,7 +6043,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -6090,7 +6114,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -7389,7 +7414,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -7469,7 +7495,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -7547,7 +7574,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -7707,7 +7735,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -7787,7 +7816,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -7869,7 +7899,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -7949,7 +7980,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -8027,7 +8059,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -8187,7 +8220,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -8267,7 +8301,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -8349,7 +8384,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -8429,7 +8465,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -8507,7 +8544,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -8667,7 +8705,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -8747,7 +8786,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -8829,7 +8869,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -8909,7 +8950,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -8987,7 +9029,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -9147,7 +9190,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -9227,7 +9271,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -9309,7 +9354,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -9389,7 +9435,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -9467,7 +9514,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -9627,7 +9675,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -9707,7 +9756,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -9789,7 +9839,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -9869,7 +9920,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -9947,7 +9999,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -10107,7 +10160,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -10187,7 +10241,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ],
       "family": "button"
     },
@@ -10435,6 +10490,7 @@
       },
       "usedBy": [
         "avatar",
+        "iconbutton",
         "radio",
         "switch",
         "tag"
@@ -10606,7 +10662,8 @@
       },
       "usedBy": [
         "avatar",
-        "button"
+        "button",
+        "iconbutton"
       ]
     },
     "borderWidth-100": {
@@ -10857,7 +10914,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ]
     },
     "iconSize-s": {
@@ -10877,7 +10935,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ]
     },
     "iconSize-xs": {
@@ -11001,6 +11060,7 @@
       "usedBy": [
         "button",
         "checkbox",
+        "iconbutton",
         "radio",
         "switch",
         "tag"
@@ -11041,7 +11101,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ]
     },
     "space-2": {
@@ -11061,7 +11122,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "iconbutton"
       ]
     },
     "space-3": {
@@ -12574,7 +12636,7 @@
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
-      "contracts": 6,
+      "contracts": 7,
       "errors": 0
     }
   },
@@ -12588,6 +12650,11 @@
       "level": "info",
       "at": "variables.checkbox-*",
       "message": "checkbox has no component token map: @coinbase/cds-common@9.29.0 has no esm/tokens/checkbox.js, so the document carries no checkbox component tokens or state blends from one."
+    },
+    {
+      "level": "info",
+      "at": "variables.iconbutton-*",
+      "message": "iconbutton has no component token map: @coinbase/cds-common@9.29.0 has no esm/tokens/iconbutton.js, so the document carries no iconbutton component tokens or state blends from one."
     },
     {
       "level": "info",
