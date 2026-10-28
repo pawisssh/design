@@ -265,6 +265,33 @@ test('probe: Tag and Checkbox pass on their pages, a literal found by its compil
     ['off light Mark: no element markCss', 'on light Mark: no element markCss', 'off dark Mark: no element markCss', 'on dark Mark: no element markCss']);
 });
 
+// ---------- a fixed icon, named per state (#474) ----------
+test('expectations: a fixed-icon INSTANCE carries its icon name; a swappable one does not', () => {
+  const { contract: c, nodes: n } = anchorFamily('checkbox');
+  c.anatomy.children[0].children = [{ name: 'Glyph', type: 'INSTANCE', role: 'icon', instanceOf: 'icon:checkmark' }];
+  const layers = expectations({ contract: c, nodes: { ...n, Glyph: 'cds-Icon' }, foundations, classes: literalClasses(readFileSync(join(ANCHORS, compiledCssPath(c)), 'utf8')) }).layers;
+  assert.deepEqual(layers.map(l => [l.name, l.icon]), [['Checkbox', undefined], ['Mark', undefined], ['Glyph', 'checkmark']]);
+  assert.deepEqual(expectations({ contract, nodes, foundations, classes }).layers.filter(l => l.icon), [], "Button's glyphs are icon:default");
+});
+
+// A labelled Checkbox: its Icon names the glyph it draws, and the glyph, icon-font text, comes before the label.
+const glyphPage = name => fakePage({ on: () => new El('cds-Control', {}, [
+  new El('cds-Icon', {}, [new El('iconCss-i1', { attrs: { 'aria-hidden': 'true', 'data-icon-name': name }, text: '\u{F0234}', w: 16, h: 16 })]),
+  new El('baseCss-t1', { text: 'Label', style: { color: 'rgb(10, 11, 13)' } })]) });
+const glyphSpec = { collection: 'theme', modes: ['light', 'dark'],
+  layers: [{ name: 'Checkbox', type: 'COMPONENT', parent: null, entry: 'cds-Control', className: 'cds-Control' },
+    { name: 'Checkmark', type: 'INSTANCE', parent: 'Checkbox', entry: 'cds-Icon', className: 'cds-Icon', icon: 'checkmark' },
+    { name: 'Minus', type: 'INSTANCE', parent: 'Checkbox', entry: 'cds-Icon', className: 'cds-Icon', icon: 'minus' },
+    { name: 'Label', type: 'TEXT', parent: 'Checkbox', entry: 'cds-Control', className: 'cds-Control', drawnInParent: true }],
+  expected: { on: Object.fromEntries(['light', 'dark'].map(m => [m, { Checkmark: { opacity: 1, width: 16 }, Minus: null, Label: { color: '#0a0b0d' } }])) } };
+
+test('probe: a fixed-icon INSTANCE is the glyph of its name, and the label skips it', () => {
+  assert.deepEqual(probe(glyphSpec, ...Object.values(glyphPage('checkmark'))), { checked: 2, mismatches: [] });
+  assert.deepEqual(probe(glyphSpec, ...Object.values(glyphPage('minus'))).mismatches, [
+    'on light Checkmark: no element cds-Icon', 'on light Minus.visible: page true, Contract false',
+    'on dark Checkmark: no element cds-Icon', 'on dark Minus.visible: page true, Contract false']);
+});
+
 test('compare.js runs the probe from its own text, on the page\'s document', async () => {
   const { doc, style } = page({ padding: '12px' });
   const path = join(mkdtempSync(join(tmpdir(), 'cds-compare-')), 'compare.mjs');

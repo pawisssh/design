@@ -103,7 +103,11 @@ export function expectations({ contract, nodes, foundations, classes }) {
     // A layer with its parent's entry has no element of its own: it is drawn inside the parent's (Button's Label in
     // Middle, Track and Arc in Spinner).
     const drawnInParent = parent !== null && entry === layers.find(l => l.name === parent).entry;
-    layers.push({ name: node.name, type: node.type, parent, entry, className, drawnInParent, ...(node.type === 'ELLIPSE' ? { nth } : {}) });
+    // In #474: CDS draws one Icon and names its glyph per state (Checkbox's checkmark or minus), so a fixed-icon
+    // INSTANCE (`icon:checkmark`, not the swappable `icon:default`) is that Icon's glyph of that name.
+    const icon = node.type === 'INSTANCE' && /^icon:/.test(node.instanceOf || '') && !['icon:default', 'icon:preferred'].includes(node.instanceOf)
+      ? node.instanceOf.slice('icon:'.length) : undefined;
+    layers.push({ name: node.name, type: node.type, parent, entry, className, drawnInParent, ...(node.type === 'ELLIPSE' ? { nth } : {}), ...(icon ? { icon } : {}) });
     const kids = node.children || [];
     kids.forEach(child => walk(child, node.name, kids.filter(k => k.type === 'ELLIPSE').indexOf(child)));
   };
@@ -163,6 +167,7 @@ export function probe(spec, doc, style, color) {
   const hasClass = (el, className) => [].concat(className).some(c => classes(el).indexOf(c) >= 0);
   const inside = (el, test) => Array.prototype.find.call(el.querySelectorAll('*'), test);
   const hasText = el => Array.prototype.some.call(el.childNodes, n => n.nodeType === 3 && n.textContent.trim());
+  const glyph = (el, name) => (el.getAttribute('data-icon-name') === name ? el : inside(el, e => e.getAttribute('data-icon-name') === name));
   const paintOf = v => (!v || v === 'none' ? 'none' : color(v));
   // in (#472): the elements of the layers beside `layer` in its parent, with everything inside them.
   const siblingElements = (layer, parent) => {
@@ -226,6 +231,8 @@ export function probe(spec, doc, style, color) {
         // nodeCss), so a layer takes the first element no other layer took; and a TEXT skips the text inside a sibling
         // layer's element (the glyph of Tag's Start icon, a font icon, is text too).
         const find = () => {
+          // A fixed-icon INSTANCE is the glyph of its name inside its entry's element: the glyph carries its size and opacity.
+          if (layer.icon) { const host = inside(parent, e => hasClass(e, layer.className) && glyph(e, layer.icon)); return host && glyph(host, layer.icon); }
           if (!layer.drawnInParent) return inside(parent, e => hasClass(e, layer.className) && taken.indexOf(e) < 0);
           if (layer.type === 'TEXT') {
             const skip = siblingElements(layer, parent);

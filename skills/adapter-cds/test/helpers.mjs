@@ -11,3 +11,7 @@ export const anchorFamily = key => {
   const path = `${ANCHORS}${key}.component.json`, nodesPath = `${ANCHORS}${key}.nodes.json`;
   return { path, nodesPath, contract: JSON.parse(readFileSync(path, 'utf8')), nodes: JSON.parse(readFileSync(nodesPath, 'utf8')) };
 };
+
+// One Theme Mode's subtree of a CDS specimen: the preview renders one per Mode, `light` then `dark`.
+export const scheme = (html, mode) =>
+  html.match(new RegExp(`<div class="cds-default ${mode} cds-preview-scheme"[^>]*>([\\s\\S]*?)</div>(?=<div class="cds-default|</div>$)`))[1];
