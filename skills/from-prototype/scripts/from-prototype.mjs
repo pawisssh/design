@@ -12,11 +12,13 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, wri
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
-import { lockfileRules } from '../../adapter-generic/scripts/sources.mjs';
+import { LAYOUTS, blocks, fontOf } from '../../adapter-generic/scripts/foundations.mjs';
+import { cssEntry, lockfileRules } from '../../adapter-generic/scripts/sources.mjs';
 import { handoffContentHash } from '../../to-handoff/scripts/hash.mjs';
 import { stampOf } from '../../to-handoff/scripts/render-html.mjs';
 import { REPO_ROOT, inScratch } from '../../to-handoff/scripts/system.mjs';
 import { fileKeyOf } from '../../vibe-to-figma/scripts/build.mjs';
+import { stylesheets } from '../../vibe-to-figma/scripts/extract.mjs';
 import { folderName } from '../../vibe-to-figma/scripts/folder.mjs';
 import { files, utilitiesIn } from '../../vibe-to-figma/scripts/path.mjs';
 
@@ -163,6 +165,9 @@ const COMPONENT_SETS = [
   { name: 'reader', kinds: [MODULES, OTHER], message: NOT_SUPPORTED },
   { name: 'reader', kinds: [NATIVE], message: 'out of scope' },
   { name: 'reader', kinds: [UNKNOWN], message: 'no reader for what was found' },
+  { name: 'peer-react-or-found-library', kinds: [SHADCN, PATH_A], ticket: '#358',
+    test: p => !peerOnlyReact(p) && (p.kind !== SHADCN || p.all.includes('components.json')),
+    message: 'not yet: the readers need React outside `peerDependencies` and a `components.json` (#358)' },
   { name: 'mixed', kinds: [PATH_A], effect: 'note', ticket: '#331', test: p => !classStyled(p).length,
     message: p => `its own class-styled stylesheets (${classStyled(p).join(', ')}) are read as path A until #331 decides a React app that mixes them with Tailwind utilities` },
   adapterRow('lockfile', (f, p) => lockfileWording(f, adapterRules(p).lockfiles)),
@@ -172,7 +177,16 @@ const COMPONENT_SETS = [
   adapterRow('tailwind-integrity'),
   // The Adapter found no stylesheet that imports tailwindcss (its cssEntry); path A has no components.json to name one.
   { name: 'tailwind-stylesheet', kinds: [PATH_A], ticket: '#364', test: p => adapterRules(p).css !== null, message: 'no stylesheet imports `tailwindcss`' },
+  { name: 'shadcn-theme', kinds: [SHADCN, PATH_A], ticket: '#360', test: p => !olderTheme(p).length,
+    message: p => `not yet (#360): the Adapter reads shadcn's nova theme; this Prototype has the older form (${olderTheme(p).join('; ')})` },
+  { name: 'text-style-font', kinds: [SHADCN, PATH_A], ticket: '#367', test: p => !unreadFont(p).length,
+    message: p => `not yet (#367): the Adapter can't read the Prototype's font for its Text Styles (${unreadFont(p).join('; ')})` },
   adapterRow('code-library-pins', f => ({ message: f.message, ticket: '#359' })),
+  { name: 'screens', kinds: [SHADCN], effect: 'note', ticket: '#350', test: p => !wouter(p),
+    message: 'with wouter the default family list comes from one screen, and `--all` takes every file, until #350' },
+  { name: 'screens', kinds: [SHADCN], ticket: '#361', test: p => !unreadDataRouter(p),
+    message: "only with `--all`: the screens can't be read until #361 (a data router built in another file, or `Component:` routes)" },
+  { name: 'screens', kinds: REACT, effect: 'note', ticket: '#349', message: "a form's controls inside a render prop are not counted yet (#349)" },
   // Only when Component Sets are asked (#437). The agent's one read of the file through the owner's Figma connection is the
   // SKILL.md's step after the check: the check fetches nothing.
   { name: 'figma', kinds: KINDS.map(k => k.kind), test: p => !figmaRefusal(p), message: p => `the Figma link is refused: ${figmaRefusal(p)}` },
@@ -219,6 +233,42 @@ const classStyled = p => p.all.filter(f => STYLES.has(extname(f)) && !/\.module\
 
 // A row's message or ticket: as written, or what its function gives for this Prototype.
 const of = (value, p) => typeof value === 'function' ? value(p) : value;
+
+// The CSS entry the Adapter's Foundations read takes today: components.json's tailwind.css, else on path A the
+// stylesheet extract.mjs takes. With it, the stylesheets it imports by relative path. None when there is no entry.
+function themeSheets(p) {
+  let entry;
+  try { entry = p.all.includes('components.json') ? JSON.parse(p.text('components.json')).tailwind?.css : cssEntry(p.root); } catch { /* none */ }
+  entry = entry && relative(p.root, join(p.root, entry));
+  return entry && p.all.includes(entry) ? Object.keys(stylesheets(p.root, entry)) : [];
+}
+
+// The older shadcn theme (#360): its tokens only in a stylesheet the entry imports, or its radius scale written as
+// `calc(var(--radius) - Npx)`.
+function olderTheme(p) {
+  const [entry, ...rest] = themeSheets(p);
+  const tokens = f => blocks(p.text(f)).some(b => b.prelude === ':root' && Object.keys(b.decls).length);
+  const elsewhere = entry && !tokens(entry) ? rest.filter(tokens) : [];
+  return [...elsewhere.map(f => `tokens in ${f}, which ${entry} imports`),
+    ...[entry, ...rest].filter(Boolean).flatMap(f => [...new Set(p.text(f).match(/calc\(\s*var\(--radius\)\s*[-+]\s*\d*\.?\d+px\s*\)/g) || [])].map(c => `\`${c}\` in ${f}`))];
+}
+
+// Where the Adapter's Foundations font read fails (#367): the entry's @theme has no --font-sans, or a --font-* `var()`
+// that fontOf can't follow. Its next/font loaders are read as text, a `variable:` string each, since their parser is
+// fetched; a loader names a family only when the layout imports next/font/google.
+function unreadFont(p) {
+  const [entry] = themeSheets(p);
+  if (!entry) return [];
+  const theme = {};
+  for (const b of blocks(p.text(entry)).filter(x => /^@theme\b/.test(x.prelude)))
+    for (const [k, value] of Object.entries(b.decls)) theme[k] = { value, at: `${entry} ${b.prelude} ${k}` };
+  const layout = LAYOUTS.find(f => p.all.includes(f));
+  const loaders = layout && /from\s*["']next\/font\//.test(p.text(layout)) ? [...p.text(layout).matchAll(/\bvariable\s*:\s*["'](--[\w-]+)["']/g)]
+    .map(m => ({ variable: m[1], family: /from\s*["']next\/font\/google["']/.test(p.text(layout)) || null })) : [];
+  const unread = k => { try { fontOf(k, theme, loaders, layout, entry, []); return null; } catch (e) { return e.message; } };
+  return [...('--font-sans' in theme ? [] : [`${entry} declares no @theme --font-sans`]),
+    ...Object.keys(theme).filter(k => /^--font-(?!weight-)[\w-]+$/.test(k)).map(unread).filter(Boolean)];
+}
 
 // A failing row refuses, unless its effect is `note`, or `closes`: that closes the own-folder route, so the output is
 // only against a Design System the owner names.

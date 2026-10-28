@@ -73,6 +73,8 @@ test('the path A fixtures take path A; a Handoff reads only on Next or Vite, and
     assert.deepEqual(r.verdicts.handoff.reasons, [{ row: 'own-folder', message: "To-handoff can't yet recognise its sites through the Family map (#265)", ticket: '#265' }]);
   }
   assert.equal(check(vibe('path-a-app')).verdicts.componentSets.verdict, 'yes, by path A');
+  // tailwind-app has no lockfile, and its stylesheet names no font (the text-style-font row, #367): both are listed.
+  assert.deepEqual(check(handoff('tailwind-app')).verdicts.componentSets.reasons.map(r => r.row), ['lockfile', 'text-style-font']);
   const bare = check(BARE);
   assert.equal(bare.verdicts.componentSets.verdict, 'yes, by path A');
   assert.equal(bare.verdicts.handoff.verdict, 'no');
@@ -82,7 +84,7 @@ test('the path A fixtures take path A; a Handoff reads only on Next or Vite, and
 test('a path A app with its own class-styled stylesheets gets a note naming them, linking #331', () => {
   const r = check(handoff('tailwind-app'));
   assert.ok(r.verdicts.componentSets.notes.some(n => n.includes('src/summary.css') && n.includes('#331')), r.verdicts.componentSets.notes.join('\n'));
-  assert.deepEqual(check(vibe('path-a-app')).verdicts.componentSets.notes, []);
+  assert.ok(!check(vibe('path-a-app')).verdicts.componentSets.notes.some(n => n.includes('#331')));
 });
 
 test('the Carbon + SCSS fixtures are React + CSS or SCSS classes: Component Sets not yet (#310)', () => {
@@ -407,6 +409,102 @@ test('a Handoff asked with no --ds, or Component Sets with no folder name, is an
   assert.equal(scss.plan, null);
 });
 
+const OPTION_SETS = [{}, { figma: FIGMA }, { figma: 'https://www.figma.com/design/abc/x', handoff: true, ds: 'carbon' }, { figma: FIGMA, handoff: true, ds: 'carbon' }, { handoff: true }];
+
+// Component Sets rows #435 adds (spec #343 The gate table). Each variant is a committed fixture with a lockfile,
+// changed in one way; the owner sees the verdict, the failing row's reason and ticket, and the CLI's exit code.
+const V0_CSS = read(join(handoff('v0-app'), 'app/globals.css'));
+const V0_PKG = JSON.parse(read(join(handoff('v0-app'), 'package.json')));
+// Figma Make's package.json: React only as an optional peer.
+const MAKE_PKG = { name: 'make-app', private: true, type: 'module', peerDependencies: { react: '19.2.4', 'react-dom': '19.2.4' },
+  peerDependenciesMeta: { react: { optional: true }, 'react-dom': { optional: true } }, devDependencies: PATH_A_PKG.devDependencies };
+const [V0_HEAD, V0_TOKENS] = [V0_CSS.slice(0, V0_CSS.indexOf('\n:root {')), V0_CSS.slice(V0_CSS.indexOf('\n:root {') + 1)];
+const USES_BUTTON = { 'src/app/components/ui/button.tsx': UTILITIES, 'src/App.tsx': BUTTON_APP };
+const V0_ROUTER_PKG = { ...V0_PKG, dependencies: { ...V0_PKG.dependencies, 'react-router': '7.9.0' } };
+const SETS_ROUTES = 'import { createBrowserRouter } from "react-router";\nimport Page from "./page";\nexport const router = createBrowserRouter([{ path: "/", element: <Page /> }]);\n';
+const SETS_VARIANTS = {
+  makeUsed: () => prototype({ 'package.json': MAKE_PKG, ...USES_BUTTON }, vibe('path-a-app')),
+  // A found folder with no components.json, React in dependencies.
+  foundFolder: () => prototype(USES_BUTTON, vibe('path-a-app')),
+  makeUnused: () => prototype({ 'package.json': MAKE_PKG, 'src/app/components/ui/button.tsx': 'export const Button = () => null;\n' }, vibe('path-a-app')),
+  tokensImported: () => prototype({ 'app/globals.css': V0_HEAD.replace('@import "shadcn/tailwind.css";\n', '$&@import "./theme.css";\n'), 'app/theme.css': V0_TOKENS }, handoff('v0-app')),
+  radiusMinus: () => prototype({ 'app/globals.css': V0_CSS.replace('calc(var(--radius) * 0.8)', 'calc(var(--radius) - 2px)') }, handoff('v0-app')),
+  noFont: () => prototype({ 'src/index.css': '@import "tailwindcss";\n' }, vibe('path-a-app')),
+  fontUnfollowed: () => prototype({ 'app/globals.css': V0_CSS.replace('var(--font-geist-mono)', 'var(--font-code)') }, handoff('v0-app')),
+  wouter: () => prototype({ 'package.json': { ...V0_PKG, dependencies: { ...V0_PKG.dependencies, wouter: '3.7.1' } } }, handoff('v0-app')),
+  routerElsewhere: () => prototype({ 'package.json': V0_ROUTER_PKG,
+    'app/routes.tsx': SETS_ROUTES, 'app/router.tsx': 'import { RouterProvider } from "react-router/dom";\nimport { router } from "./routes";\nexport default () => <RouterProvider router={router} />;\n' }, handoff('v0-app')),
+  componentRoutes: () => prototype({ 'package.json': V0_ROUTER_PKG,
+    'app/router.tsx': 'import { createBrowserRouter, RouterProvider } from "react-router";\nimport Page from "./page";\nconst router = createBrowserRouter([{ path: "/", Component: Page }]);\nexport default () => <RouterProvider router={router} />;\n' }, handoff('v0-app')),
+};
+// Each variant's one refusal: its row, its ticket, the message, and the CLI's exit 1 with the reason printed.
+function refusedBy(dir, row, ticket, ...says) {
+  const sets = check(dir).verdicts.componentSets;
+  assert.equal(sets.verdict, 'no', dir);
+  const reason = sets.reasons.find(r => r.row === row);
+  assert.ok(reason, `${dir}: no ${row} reason in ${JSON.stringify(sets.reasons)}`);
+  assert.equal(reason.ticket, ticket);
+  for (const text of says) assert.ok(reason.message.includes(text), `${reason.message} names ${text}`);
+  const out = run(dir, '--figma', FIGMA);
+  assert.equal(out.status, 1, out.stderr);
+  assert.ok(out.stdout.includes(reason.message.slice(1)), out.stdout);
+}
+const withVariants = (names, body) => {
+  const dirs = names.map(n => SETS_VARIANTS[n]());
+  try { body(...dirs); } finally { for (const d of dirs) rmSync(d, { recursive: true, force: true }); }
+};
+
+test('two Figma Make shapes, React only as an optional peer and no components.json, are refused until #358', () => {
+  withVariants(['makeUsed', 'makeUnused', 'foundFolder'], (used, unused, found) => {
+    assert.equal(check(used).kind, 'React + Tailwind + shadcn');
+    assert.equal(check(unused).kind, 'React + Tailwind, no Code Library');
+    for (const dir of [used, unused])
+      refusedBy(dir, 'peer-react-or-found-library', '#358', 'not yet: the readers need React outside `peerDependencies` and a `components.json` (#358)');
+    // A found folder with no components.json is refused with React in dependencies too.
+    refusedBy(found, 'peer-react-or-found-library', '#358');
+  });
+});
+
+test("the older shadcn theme is refused until #360, naming which form it has", () => {
+  withVariants(['tokensImported', 'radiusMinus'], (tokens, radius) => {
+    refusedBy(tokens, 'shadcn-theme', '#360', "not yet (#360): the Adapter reads shadcn's nova theme; this Prototype has the older form",
+      'tokens in app/theme.css, which app/globals.css imports');
+    refusedBy(radius, 'shadcn-theme', '#360', '`calc(var(--radius) - 2px)` in app/globals.css');
+  });
+});
+
+test("a stylesheet with no @theme --font-sans, or a font var() the Adapter can't follow, is refused until #367", () => {
+  withVariants(['noFont', 'fontUnfollowed'], (none, unfollowed) => {
+    refusedBy(none, 'text-style-font', '#367', "not yet (#367): the Adapter can't read the Prototype's font for its Text Styles",
+      'src/index.css declares no @theme --font-sans');
+    refusedBy(unfollowed, 'text-style-font', '#367', '--font-mono refers to --font-code, which no next/font loader in app/layout.tsx sets');
+  });
+});
+
+test('wouter gets a note until #350; a data router defined in another file, or Component: routes, need --all until #361', () => {
+  withVariants(['wouter', 'routerElsewhere', 'componentRoutes'], (wouter, elsewhere, component) => {
+    const sets = check(wouter).verdicts.componentSets;
+    assert.equal(sets.verdict, 'yes, by the shadcn path');
+    assert.ok(sets.notes.some(n => n.includes('wouter') && n.includes('`--all`') && n.includes('#350')), sets.notes.join('\n'));
+    const out = run(wouter, '--figma', FIGMA);
+    assert.equal(out.status, 0, out.stdout);
+    assert.match(out.stdout, /Note: with wouter the default family list comes from one screen/);
+    for (const dir of [elsewhere, component])
+      refusedBy(dir, 'screens', '#361', "only with `--all`: the screens can't be read until #361 (a data router built in another file, or `Component:` routes)");
+  });
+});
+
+test("every React kind's Component Sets verdict notes that a form's controls inside a render prop are not counted (#349)", () => {
+  const modules = prototype({ 'package.json': { dependencies: { react: '19.2.4' }, devDependencies: { vite: '7.0.0' } }, 'src/App.tsx': 'import s from "./App.module.css";\nexport default () => <p className={s.x}>Hi</p>;\n', 'src/App.module.css': '.x { color: red; }' });
+  try {
+    for (const dir of [handoff('v0-app'), vibe('path-a-app'), handoff('vite-app'), modules]) {
+      const notes = check(dir).verdicts.componentSets.notes;
+      assert.ok(notes.includes("a form's controls inside a render prop are not counted yet (#349)"), `${dir}: ${notes.join('\n')}`);
+    }
+    assert.deepEqual(check(vibe('html-app')).verdicts.componentSets.notes, []);
+  } finally { rmSync(modules, { recursive: true, force: true }); }
+});
+
 // The lockfile and Tailwind rows (#434, spec #343 Component Sets rows): one variant per row, a committed fixture copied
 // and changed, with every row it fails as {row, message, ticket}, in the table's order. A ticket is named only where
 // it lifts the refusal.
@@ -425,11 +523,6 @@ const workspaceApp = () => {
   rmSync(join(root, 'apps/web/package-lock.json'));
   return join(root, 'apps/web');
 };
-// Figma Make's package.json: React only as an optional peer. Once #435's peer-react-or-found-library row lands, the
-// bundle fails that row too.
-const MAKE_BUNDLE = { 'package.json': { name: 'make-app', private: true, type: 'module', peerDependencies: { react: '19.2.4', 'react-dom': '19.2.4' },
-  peerDependenciesMeta: { react: { optional: true }, 'react-dom': { optional: true } }, devDependencies: PATH_A_PKG.devDependencies },
-'src/app/components/ui/button.tsx': UTILITIES, 'src/App.tsx': BUTTON_APP };
 const { version: SHADCN_PIN } = TOOLS.shadcn;
 const { version: TAILWIND_PIN, integrity: TAILWIND_INTEGRITY } = TOOLS.tailwindcss;
 const OTHER_SHA512 = 'sha512-' + 'A'.repeat(86) + '==';
@@ -452,7 +545,8 @@ const LOCK_VARIANTS = {
   'no stylesheet that imports tailwindcss': [copied({ 'src/index.css': 'body { margin: 0; }\n' }, vibe('path-a-app')), [NO_STYLESHEET]],
   'a shadcn pin mismatch': [copied({ 'package-lock.json': lockWith(handoff('v0-app'), 'shadcn', { version: '4.21.0' }) }, handoff('v0-app')),
     [{ row: 'code-library-pins', message: `the project resolves shadcn@4.21.0, but the Adapter pins shadcn@${SHADCN_PIN}`, ticket: '#359' }]],
-  'a Figma Make bundle with no lockfile': [copied(MAKE_BUNDLE, vibe('path-a-app'), ['package-lock.json']), [NO_LOCKFILE]],
+  'a Figma Make bundle with no lockfile': [copied({ 'package.json': MAKE_PKG, ...USES_BUTTON }, vibe('path-a-app'), ['package-lock.json']),
+    [{ row: 'peer-react-or-found-library', message: 'not yet: the readers need React outside `peerDependencies` and a `components.json` (#358)', ticket: '#358' }, NO_LOCKFILE]],
 };
 
 test('each lockfile and Tailwind row refuses Component Sets with its reason and ticket, and the CLI exits 1', () => {
@@ -481,11 +575,9 @@ test('every failing row is listed, not only the first, and a Handoff against a n
   const bare = check(vibe('tailwind-no-shadcn'));
   assert.deepEqual(bare.verdicts.componentSets.reasons, [NO_LOCKFILE, NO_STYLESHEET]);
   const app = check(handoff('tailwind-app'));
-  assert.deepEqual(app.verdicts.componentSets.reasons, [NO_LOCKFILE]);
+  assert.deepEqual(app.verdicts.componentSets.reasons[0], NO_LOCKFILE);
   assert.equal(app.verdicts.handoff.verdict, 'only against a Design System you name');
 });
-
-const OPTION_SETS = [{}, { figma: FIGMA }, { figma: 'https://www.figma.com/design/abc/x', handoff: true, ds: 'carbon' }, { figma: FIGMA, handoff: true, ds: 'carbon' }, { handoff: true }];
 
 test('every run writes nothing, runs and fetches nothing, leaves the Prototype as it was, and loads no fetched parser', () => {
   // A child process whose fs writes, child processes and fetch are recorded before the check is imported, so the
@@ -518,8 +610,9 @@ test('every run writes nothing, runs and fetches nothing, leaves the Prototype a
   `;
   const fixtures = [handoff('v0-app'), handoff('next-app'), handoff('vite-app'), handoff('tailwind-app'), handoff('conditions-app'),
     handoff('invite-teammates'), vibe('path-a-app'), vibe('tailwind-no-shadcn'), vibe('carbon-scss-app'), vibe('html-app'), join(vibe('html-app'), 'index.html')];
-  // The Handoff rows' variants (#436) and the lockfile and Tailwind rows' (#434), and the tools folders the readers fetch into.
-  const made = VARIANTS.map(variant);
+  // Each Handoff row's variant, each Component Sets row's (#435), the lockfile and Tailwind rows' (#434), and the tools
+  // folders the readers fetch into.
+  const made = [...VARIANTS.map(variant), ...Object.values(SETS_VARIANTS).map(make => make())];
   const variants = [BARE, ...Object.values(LOCK_VARIANTS).map(([dir]) => dir)];
   const tools = [DEFAULT_DIR, join(REPO_ROOT, '.scratch/to-handoff')];
   let r;

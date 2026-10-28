@@ -51,7 +51,7 @@ const FAMILIES = new Set(['sidebar', 'chart']);
 const FONT_STYLE = { 100: 'Thin', 200: 'ExtraLight', 300: 'Light', 400: 'Regular', 500: 'Medium', 600: 'SemiBold', 700: 'Bold',
   800: 'ExtraBold', 900: 'Black' };
 // Where a Next.js project's root layout sits: its next/font loaders set the font variables at runtime.
-const LAYOUTS = ['app/layout.tsx', 'src/app/layout.tsx', 'app/layout.jsx', 'src/app/layout.jsx'];
+export const LAYOUTS = ['app/layout.tsx', 'src/app/layout.tsx', 'app/layout.jsx', 'src/app/layout.jsx'];
 const SPACING = ['0', 'px', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '5', '6', '7', '8', '9', '10', '11', '12', '14', '16',
   '20', '24', '28', '32', '36', '40', '44', '48', '52', '56', '60', '64', '72', '80', '96'];
 
@@ -63,7 +63,7 @@ const isColour = text => /^(#|(rgba?|hsla?|oklab|oklch|color|color-mix)\(|(trans
 // ---------- reading CSS ----------
 
 /** Top-level blocks of a stylesheet: [{prelude, decls: {name: value}}], custom properties only, comments removed. */
-function blocks(css) {
+export function blocks(css) {
   const text = css.replace(/\/\*[\s\S]*?\*\//g, '');
   const out = [];
   let depth = 0, start = 0, open = 0;
@@ -397,7 +397,7 @@ async function crossCheckPalette({ doc, palette, css, project, cssFile, tools, p
 }
 
 /** A font a `@theme --font-<k>` names (#160): {family, source}. Pushes a note on how it was read; throws when none is. */
-function fontOf(k, theme, loaders, layout, cssFile, notes, seen = []) {
+export function fontOf(k, theme, loaders, layout, cssFile, notes, seen = []) {
   const t = theme[k];
   const by = l => `${l.family} (${l.module}, ${layout}:${l.line})`;
   const ref = /^var\((--[\w-]+)\)$/.exec(t.value);
