@@ -1,11 +1,30 @@
 ---
 name: from-prototype
-description: One entry from a Prototype to Component Sets in Figma, a Handoff for developers, or both. Today it holds only the hand-over, the last stage: after the owner's Sign-off, a Handoff's Rendering is published as a private Artifact. Use when a To-handoff Handoff is signed off and the owner wants it handed over.
+description: One entry from a Prototype to Component Sets in Figma, a Handoff for developers, or both. Today it holds the check, which names a Prototype's kind and says which outputs it can have, and the hand-over, the last stage: after the owner's Sign-off, a Handoff's Rendering is published as a private Artifact. Use when the owner asks what a Prototype can become, or when a To-handoff Handoff is signed off and the owner wants it handed over.
 ---
 
 # From-Prototype
 
-From-Prototype (spec [#343](https://github.com/pawisssh/design/issues/343)) is where every run on a Prototype starts. It runs the stages each output needs, then hands each output over. This folder holds only the hand-over today. The check, the outputs question and the plan land in [#433](https://github.com/pawisssh/design/issues/433)–[#438](https://github.com/pawisssh/design/issues/438), and until then the stages run alone: [Vibe-to-Figma](../vibe-to-figma/SKILL.md) for Component Sets, [To-handoff](../to-handoff/SKILL.md) for a Handoff.
+From-Prototype (spec [#343](https://github.com/pawisssh/design/issues/343)) is where every run on a Prototype starts. It runs the stages each output needs, then hands each output over. This folder holds the check and the hand-over today. The check's other gate rows, the outputs question and the plan land in [#434](https://github.com/pawisssh/design/issues/434)–[#438](https://github.com/pawisssh/design/issues/438), and until then the stages run alone: [Vibe-to-Figma](../vibe-to-figma/SKILL.md) for Component Sets, [To-handoff](../to-handoff/SKILL.md) for a Handoff.
+
+## The check
+
+Run it on the Prototype before any stage. `<prototype>` is a folder, or for plain HTML one HTML file.
+
+```
+node skills/from-prototype/scripts/from-prototype.mjs check <prototype> [--figma <url>] [--handoff]
+```
+
+`--figma` asks for Component Sets and `--handoff` for a Handoff. The check reads file names, `package.json` and source text. It writes nothing, fetches nothing and loads no fetched parser. It prints:
+
+1. the Prototype's kind ([ADR 0019](../../docs/adr/0019-a-prototype-reaches-component-sets-or-a-handoff-by-its-kind.md)'s) and the files that show it;
+2. each output's verdict, with each refusing gate's reason and the ticket it waits on;
+3. what is still possible;
+4. "Nothing was fetched or written."
+
+It exits 1 when an output it was asked for is refused, and 0 otherwise. **Give the owner the message as printed.** On exit 1, run no stage: the flow never switches outputs on its own ([#324](https://github.com/pawisssh/design/issues/324) D7).
+
+Today only each output's `reader` gate is checked. A "yes" can still be refused later, by a stage, for a reason a later gate row will name.
 
 ## The hand-over
 
@@ -64,4 +83,4 @@ An Artifact starts private. **Never share it.** Sharing is the owner's act.
 
 ## Tests
 
-`node --test skills/from-prototype/test/*.test.mjs`. `test/hand-over.test.mjs` signs off To-handoff's "Invite teammates" fixture with a test approval under `.scratch/from-prototype-tests/`, as `signoff.test.mjs` does (its setup is To-handoff's `test/signed.mjs`). The fixture is run with the runtime reader, so it has screenshots. The test renders the Handoff, writes the copy, and checks the copy and each refusal. It skips without the runtime reader (`node skills/to-handoff/scripts/deps.mjs`) or Carbon's sources (`node skills/adapter-carbon/scripts/sources.mjs`).
+`node --test skills/from-prototype/test/*.test.mjs`. `test/check.test.mjs` runs the check on Vibe-to-Figma's and To-handoff's committed fixtures, and on temp-dir Prototypes for the other kinds. It asserts each kind, its evidence and each verdict, the CLI's message and exit code, and, in a child process that records file writes, child processes and fetches, that the check makes none, leaves the Prototype as it was and loads no fetched parser. `test/hand-over.test.mjs` signs off To-handoff's "Invite teammates" fixture with a test approval under `.scratch/from-prototype-tests/`, as `signoff.test.mjs` does (its setup is To-handoff's `test/signed.mjs`). The fixture is run with the runtime reader, so it has screenshots. The test renders the Handoff, writes the copy, and checks the copy and each refusal. It skips without the runtime reader (`node skills/to-handoff/scripts/deps.mjs`) or Carbon's sources (`node skills/adapter-carbon/scripts/sources.mjs`).

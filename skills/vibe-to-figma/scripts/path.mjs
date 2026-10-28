@@ -21,7 +21,7 @@ const UTILITY = new RegExp(String.raw`^(?:[\w\[\]=.*&-]+:)*!?-?(?:`
   + String.raw`|flex-(?:row|col|wrap|1|auto|none)|overflow-[a-z]+|cursor-[a-z-]+|transition-[a-z]+)(?:/(?:\d+|\[[^\]]+\]))?$`);
 const MIN_UTILITIES = 3;
 
-function* files(dir) {
+export function* files(dir) {
   for (const name of readdirSync(dir).sort()) {
     if (name.startsWith('.') || SKIP_DIRS.has(name)) continue;
     const path = join(dir, name);
@@ -34,7 +34,7 @@ function* files(dir) {
 
 // Every string and template literal of a source file is searched, not just the className attribute's, so a class
 // string held in a constant or a cva() call counts, as does a template with ${} parts.
-function utilitiesIn(source) {
+export function utilitiesIn(source) {
   const found = new Set();
   for (const m of source.matchAll(/"([^"\n]*)"|'([^'\n]*)'|`([^`]*)`/g)) {
     for (const t of (m[1] ?? m[2] ?? m[3]).split(/[\s"'`{}()$,;]+/)) if (t && UTILITY.test(t)) found.add(t);
