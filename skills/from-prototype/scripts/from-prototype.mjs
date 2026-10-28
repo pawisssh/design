@@ -124,7 +124,7 @@ const KINDS = [
     ...p.all.filter(f => STYLES.has(extname(f))), ...(p.pkg ? ['package.json lists no React'] : [])] },
   { kind: UNKNOWN, evidence: p => !p.given ? ['no such file or folder'] : p.given.isFile() && !p.html ? ['a file that is not HTML']
     : !p.all.length ? ['an empty folder']
-    : [p.pkg ? 'a package.json with no React, Vue, Svelte or Angular' : 'no package.json and no HTML file'] },
+    : [p.pkg ? 'a package.json with no React, Vue, Svelte or Angular' : p.all.includes('package.json') ? 'a package.json that is not valid JSON' : 'no package.json and no HTML file'] },
 ];
 
 // The framework, named beside the kind's own evidence.

@@ -3,7 +3,7 @@
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -64,6 +64,14 @@ test("plain HTML, a Carbon + SCSS app, a CSS-classes React app and a missing fol
   const classes = copy(fixture('path-a-app'), dir => writeFileSync(join(dir, 'src/App.tsx'), 'export default () => <div className="phc-card"><button className="phc-btn">Add</button></div>;\n'));
   refusesPlainly(classes, /React \+ CSS or SCSS classes/);
   refusesPlainly(join(tmpdir(), 'vibe-to-figma-no-such-project'), /unknown \(no such file or folder\)/);
+});
+
+test('a broken symlink, a missing or invalid package.json are refused plainly, naming what was found', () => {
+  const dir = tmp();
+  symlinkSync(join(dir, 'gone'), join(dir, 'dangling'));
+  refusesPlainly(dir, /unknown \(an empty folder\)/);
+  writeFileSync(join(dir, 'package.json'), '{ not json');
+  refusesPlainly(dir, /unknown \(a package\.json that is not valid JSON\)/);
 });
 
 test('a run with no Figma link reaches the folder step', { skip }, () => {

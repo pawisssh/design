@@ -45,8 +45,9 @@ const CatalogSelection = createRequire(import.meta.url)('../../to-preview/assets
 export function routeOf(project, { all = false } = {}) {
   const options = { componentSets: true, all };
   const r = check(project, options);
-  if (r.verdicts.componentSets.verdict === 'no') throw new Error(message(project, r, options));
-  return { path: r.verdicts.componentSets.verdict === 'yes, by path A' ? 'A' : 'shadcn' };
+  const { verdict } = r.verdicts.componentSets;
+  if (verdict === 'no') throw new Error(message(project, r, options));
+  return { path: verdict === 'yes, by path A' ? 'A' : 'shadcn' };
 }
 
 /** Writes `text` to `path` unless it already holds exactly that. Returns whether it wrote. */
