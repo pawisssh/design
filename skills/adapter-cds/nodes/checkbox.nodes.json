@@ -1,0 +1,8 @@
+{
+  "Checkbox": "cds-Control",
+  "Control": "cds-Control-icon",
+  "Box": "checkboxCss",
+  "Checkmark": "cds-Icon",
+  "Minus": "cds-Icon",
+  "Label": "cds-Control"
+}
