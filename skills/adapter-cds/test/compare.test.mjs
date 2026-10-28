@@ -84,6 +84,7 @@ class El {
     return { add: c => set([...this.cls.split(' ').filter(x => x && x !== c), c]), remove: c => set(this.cls.split(' ').filter(x => x && x !== c)) };
   }
   get childNodes() { return [...(this.text ? [{ nodeType: 3, textContent: this.text }] : []), ...this.kids]; }
+  get children() { return this.kids; }
   get firstElementChild() { return this.kids[0] || null; }
   querySelectorAll(sel) {
     const all = [];
@@ -301,6 +302,30 @@ test('probe: a fixed-icon INSTANCE is the glyph of its name, and the label skips
   assert.deepEqual(probe(glyphSpec, ...Object.values(glyphPage('minus'))).mismatches, [
     'on light Checkmark: no element cds-Icon', 'on light Minus.visible: page true, Contract false',
     'on dark Checkmark: no element cds-Icon', 'on dark Minus.visible: page true, Contract false']);
+});
+
+// ---------- layers with no anchor of their own (#473) ----------
+// A Chip: its root by its literal, a class-less content wrapper, and two cds-Icon slots around the label, each glyph
+// drawn as aria-hidden text in its slot.
+const chipPage = ({ end = true, endWidth = 24 } = {}) => fakePage({ s: () => new El('transitionCss-x', { style: { backgroundColor: 'rgb(238, 240, 243)' } }, [
+  new El('', { style: { paddingLeft: '16px' } }, [
+    new El('cds-Icon', { w: 24 }, [new El('iconCss-i1', { text: '\u{F07F8}', attrs: { 'aria-hidden': 'true' } })]),
+    new El('', { text: 'Chip', style: { color: 'rgb(10, 11, 13)' } }),
+    ...(end ? [new El('cds-Icon', { w: endWidth }, [new El('iconCss-i1', { text: '\u{F0089}', attrs: { 'aria-hidden': 'true' } })])] : [])])]) });
+const chipSpec = (end = { width: 24 }) => ({ collection: 'theme', modes: ['light'],
+  layers: [['Chip', 'COMPONENT', null, 'transitionCss'], ['Content', 'FRAME', 'Chip', 'transitionCss'], ['Start icon', 'FRAME', 'Content', 'cds-Icon'],
+    ['Start glyph', 'INSTANCE', 'Start icon', 'cds-Icon'], ['Label', 'TEXT', 'Content', 'transitionCss'], ['End icon', 'FRAME', 'Content', 'cds-Icon']]
+    .map(([name, type, parent, entry], i, all) => ({ name, type, parent, entry, className: entry === 'transitionCss' ? 'transitionCss-x' : entry,
+      drawnInParent: parent !== null && all.find(l => l[0] === parent)[3] === entry })),
+  expected: { s: { light: { Chip: { fill: '#eef0f3' }, Content: { paddingLeft: 16 }, 'Start icon': { width: 24 }, Label: { color: '#0a0b0d' }, 'End icon': end } } } });
+
+test('probe: a class-less wrapper is its parent\'s one child, a glyph its slot, and two slots with one class each take their own (#473)', () => {
+  const light = page => { page.doc.body.cls = 'tp-page cds-preview-light'; return Object.values(page); };
+  assert.deepEqual(probe(chipSpec(), ...light(chipPage())), { checked: 1, mismatches: [] });
+  assert.deepEqual(probe(chipSpec(), ...light(chipPage({ endWidth: 16 }))).mismatches, ['s light End icon.width: page 16, Contract 24'],
+    'the second cds-Icon is the End icon');
+  assert.deepEqual(probe(chipSpec(null), ...light(chipPage({ end: false }))), { checked: 1, mismatches: [] });
+  assert.deepEqual(probe(chipSpec(null), ...light(chipPage())).mismatches, ['s light End icon.visible: page true, Contract false']);
 });
 
 // ---------- elements with no class of their own, prefixed ids and an <input>'s placeholder (#477) ----------

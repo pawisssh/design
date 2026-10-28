@@ -53,6 +53,11 @@
         "snapshotId": "sha256:f8d83191536e81c0c3b73b4238ed8c09f1152dc981a4fc7319b40d1b14a1ce59"
       },
       {
+        "family": "chip",
+        "path": "design-systems/cds/contracts/chip.component.json",
+        "snapshotId": "sha256:809bb9a8559ced215309b8943db4bc8af861c452eafde889dae0fa81989ac180"
+      },
+      {
         "family": "iconbutton",
         "path": "design-systems/cds/contracts/iconbutton.component.json",
         "snapshotId": "sha256:16a56f618489b08ff960995ba3fca8826b6c3e65c9e6fd915697e4086602aa87"
@@ -149,8 +154,11 @@
       "button-secondary-background",
       "button-secondary-color",
       "button-secondary-disabled-background",
+      "button-secondary-disabled-border",
       "button-secondary-hover-background",
+      "button-secondary-hover-border",
       "button-secondary-pressed-background",
+      "button-secondary-pressed-border",
       "button-secondary-transparent-color",
       "button-secondary-transparent-hover-background",
       "button-secondary-transparent-pressed-background",
@@ -4993,6 +5001,7 @@
       "usedBy": [
         "button",
         "checkbox",
+        "chip",
         "iconbutton",
         "radio",
         "switch",
@@ -5047,6 +5056,7 @@
       },
       "usedBy": [
         "avatar",
+        "chip",
         "textinput"
       ]
     },
@@ -6162,6 +6172,7 @@
       },
       "usedBy": [
         "checkbox",
+        "chip",
         "radio",
         "switch",
         "textinput"
@@ -6298,6 +6309,7 @@
         }
       },
       "usedBy": [
+        "chip",
         "textinput"
       ]
     },
@@ -9382,6 +9394,7 @@
       },
       "usedBy": [
         "button",
+        "chip",
         "iconbutton"
       ],
       "family": "button"
@@ -9423,7 +9436,9 @@
           "reason": "getBlendedColor(bgSecondary rgb(40,43,49), 0.75, skipContrastOptimization) in dark = rgb(30, 32, 37); Interactable sets it as --inter-disable-borderColor while disabled"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "chip"
+      ],
       "family": "button"
     },
     "button-secondary-hover-background": {
@@ -9463,6 +9478,7 @@
       },
       "usedBy": [
         "button",
+        "chip",
         "iconbutton"
       ],
       "family": "button"
@@ -9502,7 +9518,9 @@
           "reason": "getBlendedColor(bgSecondary rgb(40,43,49), 0.88) in dark = rgb(47, 50, 55); Interactable sets it as --inter-hover-borderColor while hovered"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "chip"
+      ],
       "family": "button"
     },
     "button-secondary-pressed-background": {
@@ -9542,6 +9560,7 @@
       },
       "usedBy": [
         "button",
+        "chip",
         "iconbutton"
       ],
       "family": "button"
@@ -9581,7 +9600,9 @@
           "reason": "getBlendedColor(bgSecondary rgb(40,43,49), 0.82) in dark = rgb(50, 53, 59); Interactable sets it as --inter-press-borderColor while pressed"
         }
       },
-      "usedBy": [],
+      "usedBy": [
+        "chip"
+      ],
       "family": "button"
     },
     "button-secondary-transparent-disabled-background": {
@@ -10632,7 +10653,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "chip"
       ]
     },
     "borderRadius-800": {
@@ -10714,6 +10736,7 @@
       "usedBy": [
         "avatar",
         "checkbox",
+        "chip",
         "radio",
         "switch",
         "textinput"
@@ -10945,6 +10968,7 @@
       },
       "usedBy": [
         "button",
+        "chip",
         "iconbutton"
       ]
     },
@@ -11010,6 +11034,7 @@
       "usedBy": [
         "avatar",
         "checkbox",
+        "chip",
         "switch"
       ]
     },
@@ -11072,6 +11097,7 @@
       },
       "usedBy": [
         "button",
+        "chip",
         "textinput"
       ]
     },
@@ -11094,6 +11120,7 @@
       "usedBy": [
         "button",
         "checkbox",
+        "chip",
         "iconbutton",
         "radio",
         "switch",
@@ -11137,6 +11164,7 @@
       },
       "usedBy": [
         "button",
+        "chip",
         "iconbutton",
         "textinput"
       ]
@@ -11159,6 +11187,7 @@
       },
       "usedBy": [
         "button",
+        "chip",
         "iconbutton",
         "textinput"
       ]
@@ -11414,7 +11443,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "chip"
       ]
     },
     "fontFamily-label1": {
@@ -11436,6 +11466,7 @@
       },
       "usedBy": [
         "button",
+        "chip",
         "tag"
       ]
     },
@@ -11678,7 +11709,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "chip"
       ]
     },
     "fontSize-label1": {
@@ -11700,6 +11732,7 @@
       },
       "usedBy": [
         "button",
+        "chip",
         "tag"
       ]
     },
@@ -11936,7 +11969,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "chip"
       ]
     },
     "fontWeight-label1": {
@@ -11957,6 +11991,7 @@
       },
       "usedBy": [
         "button",
+        "chip",
         "tag"
       ]
     },
@@ -12193,7 +12228,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "chip"
       ]
     },
     "lineHeight-label1": {
@@ -12215,6 +12251,7 @@
       },
       "usedBy": [
         "button",
+        "chip",
         "tag"
       ]
     },
@@ -12483,7 +12520,8 @@
         "lineHeight": "lineHeight-headline"
       },
       "usedBy": [
-        "button"
+        "button",
+        "chip"
       ]
     },
     "label1": {
@@ -12509,6 +12547,7 @@
       },
       "usedBy": [
         "button",
+        "chip",
         "tag"
       ]
     },
@@ -12664,6 +12703,7 @@
         "@coinbase/cds-common/esm/color/getBlendedColor.js": "sha256:16cf385834c79cb1dd5b273098c26587a7f789d27648bf8aa50338c9cbbad9dc",
         "@coinbase/cds-common/esm/tokens/avatar.js": "sha256:163348ea10e13ef86afabe79451815e1e58c78df688f881bf73eace6030bc382",
         "@coinbase/cds-common/esm/tokens/button.js": "sha256:d6fe0f4cd49b7b6431f4e1265a2a86f45d915335eca817c0f389387b264eec9c",
+        "@coinbase/cds-common/esm/tokens/chip.js": "sha256:e39b0350475ee96f723559eb2dae2fa9951ad1aa811817617ea06e4daaf3ed7f",
         "@coinbase/cds-common/esm/tokens/interactable.js": "sha256:cf9d0fd9a4731f1a3e015efdb7483de505fdcd67995388c6c336866a05fab4f3",
         "@coinbase/cds-common/esm/tokens/tags.js": "sha256:2b40d8275e1a1608c0f083236a9d1442b404f5a76e888bd264540e0bbc8c75b1"
       },
@@ -12688,7 +12728,7 @@
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
-      "contracts": 8,
+      "contracts": 9,
       "errors": 0
     }
   },
@@ -12702,6 +12742,11 @@
       "level": "info",
       "at": "variables.checkbox-*",
       "message": "checkbox has no component token map: @coinbase/cds-common@9.29.0 has no esm/tokens/checkbox.js, so the document carries no checkbox component tokens or state blends from one."
+    },
+    {
+      "level": "info",
+      "at": "variables.chip-*",
+      "message": "chip has no component token map: @coinbase/cds-common@9.29.0 esm/tokens/chip.js exports neither variants nor colorSchemeMap, so the document carries no chip component tokens or state blends from one."
     },
     {
       "level": "info",

@@ -1,0 +1,718 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "chip",
+    "name": "Chip",
+    "description": "Chips are compact pressable pills for filters and choices. A label with an optional start and end icon, in two sizes."
+  },
+  "source": {
+    "codeLibrary": "CDS Web",
+    "adapter": "cds",
+    "repository": "https://github.com/coinbase/cds",
+    "tag": "",
+    "commit": "135dc3c64218299bd26f0ce2ccdad628551d63d5",
+    "packages": {
+      "@coinbase/cds-web": "9.29.0",
+      "@coinbase/cds-common": "9.29.0",
+      "@coinbase/cds-icons": "5.26.0"
+    },
+    "files": {
+      "apps/docs/docs/components/inputs/Chip/_webExamples.mdx": "sha256:0605a6107de799c37684c72937566f3f7c9165bd0a505bfe29ffa412f31164e7",
+      "packages/common/src/tokens/chip.ts": "sha256:7f81ee56a32783b9a160aa891da0a9da5db1745d1733cb8371791c3ca0ca47b2",
+      "packages/common/src/tokens/interactable.ts": "sha256:590f7e7a4d688cf4171256b4149b296baa66c591fd1cf587ac84027cdd2ecaf8",
+      "packages/web/package.json": "sha256:ca0ecd076b55efe0aee663a5b0ac2cf296119192d4f86cfdf1181f19efb84650",
+      "packages/web/src/chips/Chip.tsx": "sha256:2a438b8ef58e4ffd7fdadd893452b8918290777d308627b82eb9e25fef3223db",
+      "packages/web/src/chips/ChipProps.ts": "sha256:530ee7b53966b4058b7b9dcdd43e7bf332661648a02e30084779357d51df4525",
+      "packages/web/src/icons/createIcon.tsx": "sha256:f2f25c72613cbdd07b817885817efff7832d6eca297faaa25892b7a7442841aa",
+      "packages/web/src/system/Interactable.tsx": "sha256:c5088de3daa71967bfd4e957b6f8c35e823dec614a6f90aefebbd305aaf0558f",
+      "packages/web/src/system/Pressable.tsx": "sha256:29f9bf7310c59ffe8c047d35afc13c9df2f653cd8ecdc12df28ad126c6197cde"
+    },
+    "snapshotId": "sha256:809bb9a8559ced215309b8943db4bc8af861c452eafde889dae0fa81989ac180"
+  },
+  "axes": [
+    {
+      "key": "size",
+      "label": "Size",
+      "default": "s",
+      "defaultSource": "packages/web/src/chips/Chip.tsx L32 defaultChipSize: ChipSize = 's'",
+      "values": [
+        {
+          "key": "xs",
+          "label": "XS",
+          "code": {
+            "size": "xs"
+          }
+        },
+        {
+          "key": "s",
+          "label": "S",
+          "code": {
+            "size": "s"
+          }
+        }
+      ],
+      "dropped": [
+        {
+          "key": "compact",
+          "reason": "Deprecated boolean alias of size xs (\"Use `size=\"xs\"` instead\"); size wins when both are set.",
+          "evidence": [
+            "packages/web/src/chips/ChipProps.ts L84-L89 @deprecated compact",
+            "packages/web/src/chips/Chip.tsx L49-L51 chipSizes[size ?? (compact ? 'xs' : defaultChipSize)]"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        {
+          "key": "enabled",
+          "label": "Enabled",
+          "code": {}
+        },
+        {
+          "key": "hover",
+          "label": "Hover",
+          "code": null,
+          "css": ":hover"
+        },
+        {
+          "key": "active",
+          "label": "Active",
+          "code": null,
+          "css": ":active, [aria-pressed='true']"
+        },
+        {
+          "key": "focus",
+          "label": "Focus",
+          "code": null,
+          "css": ":focus-visible"
+        },
+        {
+          "key": "disabled",
+          "label": "Disabled",
+          "code": {
+            "disabled": true
+          },
+          "css": ":disabled, [aria-disabled='true']"
+        }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 10,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Chip",
+    "type": "COMPONENT",
+    "children": [
+      {
+        "name": "Content",
+        "type": "FRAME",
+        "children": [
+          {
+            "name": "Start icon",
+            "type": "FRAME",
+            "role": "icon-slot",
+            "children": [
+              {
+                "name": "Start glyph",
+                "type": "INSTANCE",
+                "role": "icon",
+                "instanceOf": "icon:default"
+              }
+            ]
+          },
+          {
+            "name": "Label",
+            "type": "TEXT",
+            "role": "label"
+          },
+          {
+            "name": "End icon",
+            "type": "FRAME",
+            "role": "icon-slot",
+            "children": [
+              {
+                "name": "End glyph",
+                "type": "INSTANCE",
+                "role": "icon",
+                "instanceOf": "icon:default"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "properties": [
+    {
+      "key": "label",
+      "label": "Label",
+      "type": "TEXT",
+      "default": "Chip",
+      "binds": [
+        {
+          "node": "Label",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "children"
+      }
+    },
+    {
+      "key": "startIcon",
+      "label": "Start icon",
+      "type": "BOOLEAN",
+      "default": false,
+      "binds": [
+        {
+          "node": "Start icon",
+          "field": "visible"
+        }
+      ],
+      "code": {
+        "prop": "start",
+        "whenFalse": "omit"
+      }
+    },
+    {
+      "key": "swapStartIcon",
+      "label": "Swap start icon",
+      "type": "INSTANCE_SWAP",
+      "default": "icon:default",
+      "preferred": "icon:preferred",
+      "binds": [
+        {
+          "node": "Start glyph",
+          "field": "mainComponent"
+        }
+      ],
+      "code": {
+        "prop": "start",
+        "valueFrom": "icon",
+        "visibleWhen": "startIcon",
+        "element": "Icon"
+      }
+    },
+    {
+      "key": "endIcon",
+      "label": "End icon",
+      "type": "BOOLEAN",
+      "default": false,
+      "binds": [
+        {
+          "node": "End icon",
+          "field": "visible"
+        }
+      ],
+      "code": {
+        "prop": "end",
+        "whenFalse": "omit"
+      }
+    },
+    {
+      "key": "swapEndIcon",
+      "label": "Swap end icon",
+      "type": "INSTANCE_SWAP",
+      "default": "icon:default",
+      "preferred": "icon:preferred",
+      "binds": [
+        {
+          "node": "End glyph",
+          "field": "mainComponent"
+        }
+      ],
+      "code": {
+        "prop": "end",
+        "valueFrom": "icon",
+        "visibleWhen": "endIcon",
+        "element": "Icon"
+      }
+    }
+  ],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Chip": {
+          "direction": "row",
+          "width": "hug",
+          "height": "hug",
+          "alignMain": "start",
+          "alignCross": "center",
+          "paddingLeft": {
+            "token": "space-0"
+          },
+          "paddingRight": {
+            "token": "space-0"
+          },
+          "paddingTop": {
+            "token": "space-0"
+          },
+          "paddingBottom": {
+            "token": "space-0"
+          },
+          "gap": {
+            "token": "space-0"
+          },
+          "radius": {
+            "token": "borderRadius-700"
+          },
+          "strokeWeight": {
+            "token": "borderWidth-100"
+          },
+          "strokeAlign": "inside",
+          "maxWidth": {
+            "raw": 200,
+            "level": "warning",
+            "reason": "maxWidth = chipMaxWidth (packages/web/src/chips/Chip.tsx L71), 200 in packages/common/src/tokens/chip.ts L1, a constant with no token"
+          }
+        },
+        "Content": {
+          "direction": "row",
+          "width": "hug",
+          "height": "hug",
+          "alignMain": "start",
+          "alignCross": "center",
+          "gap": {
+            "token": "space-1"
+          },
+          "maxWidth": {
+            "raw": 200,
+            "level": "warning",
+            "reason": "Content takes maxWidth too (packages/web/src/chips/Chip.tsx L119), chipMaxWidth = 200 (packages/common/src/tokens/chip.ts L1), a constant with no token"
+          }
+        },
+        "Start icon": {
+          "direction": "row",
+          "width": {
+            "token": "iconSize-m"
+          },
+          "height": {
+            "token": "iconSize-m"
+          }
+        },
+        "Start glyph": {
+          "width": "fill",
+          "height": "fill"
+        },
+        "Label": {
+          "textResize": "width-and-height"
+        },
+        "End icon": {
+          "direction": "row",
+          "width": {
+            "token": "iconSize-m"
+          },
+          "height": {
+            "token": "iconSize-m"
+          }
+        },
+        "End glyph": {
+          "width": "fill",
+          "height": "fill"
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "xs"
+      },
+      "set": {
+        "Content": {
+          "paddingLeft": {
+            "token": "space-1_5"
+          },
+          "paddingRight": {
+            "token": "space-1_5"
+          },
+          "paddingTop": {
+            "token": "space-0_75"
+          },
+          "paddingBottom": {
+            "token": "space-0_75"
+          }
+        },
+        "Label": {
+          "textStyle": {
+            "token": "label1"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "s"
+      },
+      "set": {
+        "Content": {
+          "paddingLeft": {
+            "token": "space-2"
+          },
+          "paddingRight": {
+            "token": "space-2"
+          },
+          "paddingTop": {
+            "token": "space-1"
+          },
+          "paddingBottom": {
+            "token": "space-1"
+          }
+        },
+        "Label": {
+          "textStyle": {
+            "token": "headline"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus"
+      },
+      "set": {
+        "Chip": {
+          "strokeWeight": {
+            "raw": 2,
+            "level": "warning",
+            "reason": "outline-width: 2px on :focus-visible (packages/web/src/system/Interactable.tsx L82) is a constant with no token"
+          },
+          "strokeAlign": "outside"
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Chip": {
+          "fill": {
+            "token": "bgSecondary"
+          },
+          "stroke": {
+            "token": "bgSecondary"
+          },
+          "effects": [],
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opaque unless disabled"
+          }
+        },
+        "Content": {
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opaque unless hovered or pressed"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "fg"
+          }
+        },
+        "Start glyph/Vector": {
+          "fill": {
+            "token": "fgPrimary"
+          }
+        },
+        "End glyph/Vector": {
+          "fill": {
+            "token": "fgPrimary"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "hover"
+      },
+      "set": {
+        "Chip": {
+          "fill": {
+            "token": "button-secondary-hover-background"
+          },
+          "stroke": {
+            "token": "button-secondary-hover-border"
+          }
+        },
+        "Content": {
+          "opacity": {
+            "raw": 0.88,
+            "level": "info",
+            "reason": "opacityHovered (packages/common/src/tokens/interactable.ts L1): Interactable sets --inter-hover-opacity on the chip's children (packages/web/src/system/Interactable.tsx L52-L54), and Content is its one child (packages/web/src/chips/Chip.tsx L114-L140)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "active"
+      },
+      "set": {
+        "Chip": {
+          "fill": {
+            "token": "button-secondary-pressed-background"
+          },
+          "stroke": {
+            "token": "button-secondary-pressed-border"
+          }
+        },
+        "Content": {
+          "opacity": {
+            "raw": 0.82,
+            "level": "info",
+            "reason": "opacityPressed (packages/common/src/tokens/interactable.ts L2): --inter-press-opacity on the chip's children (packages/web/src/system/Interactable.tsx L61-L63), and Content is its one child (packages/web/src/chips/Chip.tsx L114-L140)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus"
+      },
+      "set": {
+        "Chip": {
+          "stroke": {
+            "token": "bgPrimary"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "disabled"
+      },
+      "set": {
+        "Chip": {
+          "fill": {
+            "token": "button-secondary-disabled-background"
+          },
+          "stroke": {
+            "token": "button-secondary-disabled-border"
+          },
+          "opacity": {
+            "raw": 0.5,
+            "level": "info",
+            "reason": "accessibleOpacityDisabled (packages/common/src/tokens/interactable.ts L3) on :disabled (packages/web/src/system/Interactable.tsx L66-L68)"
+          }
+        }
+      }
+    }
+  ],
+  "icons": {
+    "source": {
+      "package": "@coinbase/cds-icons",
+      "version": "5.26.0",
+      "path": "esm/svgs/{key}-16-inactive.svg",
+      "fallback": "esm/svgs/{key}-24-inactive.svg"
+    },
+    "default": "star",
+    "preferred": [
+      "star",
+      "caretDown"
+    ]
+  },
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": [
+      {
+        "family": "Inter",
+        "styles": [
+          "Semi Bold"
+        ]
+      }
+    ]
+  },
+  "figma": {
+    "page": "Chips",
+    "componentSetName": "Chip",
+    "description": "CDS Web Chip (@coinbase/cds-web 9.29.0), the pressable Chip (with onClick). InputChip, MediaChip, SelectChip and TabbedChips are their own families.",
+    "header": {
+      "type": "Component",
+      "title": "Chip",
+      "namespace": "@coinbase/cds-web"
+    },
+    "grid": {
+      "columns": [
+        "size"
+      ],
+      "rows": [
+        "state"
+      ]
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@coinbase/cds-web",
+    "component": "Chip",
+    "import": "import { Chip } from '@coinbase/cds-web/chips';",
+    "alwaysEmit": [],
+    "required": [
+      "onClick"
+    ]
+  },
+  "notes": [
+    {
+      "level": "info",
+      "at": "family",
+      "message": "Chip renders through Pressable only when it has onClick (Chip.tsx L167-L175); without it, it is a plain HStack (L176-L183), which has no hover, pressed, disabled or focus styles and no border. The Contract draws the pressable Chip, the one with states, so code.required names onClick: a snippet must pass a handler, and the preview renderer passes a no-op. A static Chip looks like the Enabled variant without its 1px border."
+    },
+    {
+      "level": "info",
+      "at": "family",
+      "message": "active (ChipProps.ts L49) inverts the colour scheme inside the Chip: InvertedThemeProvider wraps it (Chip.tsx L92-L95), so background, colour and icons resolve in the opposite Mode (_webExamples.mdx L55). A variant cannot bind the other Mode's value of a Theme colour, so active is not an axis: in Figma, an active Chip is an instance whose Theme mode is set to the other Mode. activeBackground and activeColor (ChipProps.ts L58-L67) paint other tokens instead, and inverted and invertColorScheme (L69-L83) are deprecated aliases of active."
+    },
+    {
+      "level": "info",
+      "at": "family",
+      "message": "background and color (Chip.tsx L81, L87) default to bgSecondary and fg, the tokens the Contract binds; a Chip given other tokens is a local override. maxWidth (L71) and numberOfLines (L77) truncate a long label with an ellipsis at 200px on one line; Figma text does not truncate, so the label is drawn whole, under the maxWidth."
+    },
+    {
+      "level": "info",
+      "at": "paint[state=hover].Chip.fill",
+      "message": "cds-common has no Chip token map (chip.ts L1 exports only chipMaxWidth), so the Foundations document carries no chip tokens. Interactable blends a state colour from the element's background and border colour (Interactable.tsx L276-L320), and the Chip passes background bgSecondary (Chip.tsx L81, L102) and no borderColor, which defaults to the background (Interactable.tsx L208). The button-secondary-<hover|pressed|disabled>-<background|border> Synthesized tokens are that same blend of bgSecondary, so the states bind them; the render comparison checks the values in both Modes."
+    },
+    {
+      "level": "info",
+      "at": "layout.Chip.strokeWeight",
+      "message": "The Chip passes no borderWidth, so Interactable's default borderWidth 100 applies (Interactable.tsx L209): a 1px border in the background colour, blended alike in each state, so it never shows. In CSS the border adds to the box, so CDS's Chip is 2px wider and taller than its content; the Contract's inside stroke does not, so the Figma Chip is 2px smaller each way."
+    },
+    {
+      "level": "info",
+      "at": "axes.state",
+      "message": "Active takes the :active and [aria-pressed='true'] rules (Interactable.tsx L57-L64). Pressable's scaledDownCss also scales the Chip to 0.98 on :active (Pressable.tsx L30-L38), and transitionCss animates the background over 150ms (Chip.tsx L34-L36); a Component Set variant has neither, so Active is drawn at full size."
+    },
+    {
+      "level": "info",
+      "at": "paint[state=focus].Chip.stroke",
+      "message": "The focus ring is a 2px solid outline in bgPrimary, 2px outside the border box (outline-offset, Interactable.tsx L80-L85). The Contract draws it as a 2px outside stroke with no gap, in place of the 1px border, which has the fill's colour. A spread drop shadow could keep the gap, but bgPrimary has no EFFECT_COLOR scope in the foundations document, so an effect cannot bind it (validation rule 6)."
+    },
+    {
+      "level": "info",
+      "at": "paint.Content.opacity",
+      "message": "Interactable sets the hovered and pressed opacity on the Chip's direct children (> *, Interactable.tsx L52-L54 and L61-L63). The Chip's one child is the content HStack (Chip.tsx L114-L140), which holds start, the label and end, so the opacity is on Content."
+    },
+    {
+      "level": "info",
+      "at": "properties.startIcon",
+      "message": "start and end (ChipProps.ts L29-L32) take any React node; the docs place an Icon or a RemoteImage there (_webExamples.mdx L26-L28, L34). The Contract models an icon, the Icon the docs write, <Icon name=\"star\" />: code.element \"Icon\" renders that element, and Icon's defaults give the glyph fgPrimary at size m (createIcon.tsx L210, L214). A RemoteImage start is MediaChip's use, a later family."
+    },
+    {
+      "level": "info",
+      "at": "code",
+      "message": "CDS has no Code Connect file for Chip at the pin (no Chip.figma.ts under chips/__figma__), so the Contract's code mapping follows Chip.tsx and ChipProps.ts alone."
+    }
+  ],
+  "drafted": {
+    "anatomy.Content": {
+      "by": "agent",
+      "evidence": [
+        "Chip.tsx:L114-L128 the HStack with gap, padding and maxWidth around the content"
+      ],
+      "fingerprint": "sha256:62fa0eac2aeaac05ac2ced9119467aafdeb62555f97496325ae1b11dce85d311"
+    },
+    "anatomy.Start icon": {
+      "by": "agent",
+      "evidence": [
+        "Chip.tsx:L129 {start} first in the content",
+        "_webExamples.mdx:L26 start={<Icon name=\"star\" />}"
+      ],
+      "fingerprint": "sha256:40be4b0c731d1833aecd4d6693ce06135cf3e75a90ae9651a48c12ec16c81a45"
+    },
+    "anatomy.Start glyph": {
+      "by": "agent",
+      "evidence": [
+        "createIcon.tsx:L210-L214 color fgPrimary and size m, the Icon's glyph defaults"
+      ],
+      "fingerprint": "sha256:f269bdaabba1360e9dcf0bc384b77dc2a15f8cd978562ad596790cad971fe37f"
+    },
+    "anatomy.Label": {
+      "by": "agent",
+      "evidence": [
+        "Chip.tsx:L130-L133 the Text holding string children"
+      ],
+      "fingerprint": "sha256:62fa0eac2aeaac05ac2ced9119467aafdeb62555f97496325ae1b11dce85d311"
+    },
+    "anatomy.End icon": {
+      "by": "agent",
+      "evidence": [
+        "Chip.tsx:L139 {end} last in the content",
+        "_webExamples.mdx:L27 end={<Icon name=\"caretDown\" />}"
+      ],
+      "fingerprint": "sha256:40be4b0c731d1833aecd4d6693ce06135cf3e75a90ae9651a48c12ec16c81a45"
+    },
+    "anatomy.End glyph": {
+      "by": "agent",
+      "evidence": [
+        "createIcon.tsx:L210-L214 color fgPrimary and size m, the Icon's glyph defaults"
+      ],
+      "fingerprint": "sha256:f269bdaabba1360e9dcf0bc384b77dc2a15f8cd978562ad596790cad971fe37f"
+    },
+    "properties.label.default": {
+      "by": "agent",
+      "evidence": [
+        "ChipProps.ts:L27-L28 children?: React.ReactNode, no default",
+        "_webExamples.mdx:L9 <Chip>Basic Chip</Chip>, the first example"
+      ],
+      "fingerprint": "sha256:7d0a969cc93a054ff5603e45aedcce516dc0b952eb38801dc9f743bc3daa0110"
+    },
+    "properties.swapStartIcon.label": {
+      "by": "agent",
+      "evidence": [
+        "ChipProps.ts:L29-L30 start?: React.ReactNode, the node the swap fills"
+      ],
+      "fingerprint": "sha256:9574958e52853311d55e80a4f5d74fd1625f54848eff1de50f12c2967574c758"
+    },
+    "properties.swapEndIcon.label": {
+      "by": "agent",
+      "evidence": [
+        "ChipProps.ts:L31-L32 end?: React.ReactNode, the node the swap fills"
+      ],
+      "fingerprint": "sha256:75484e2e7be097ff6ed324994220a70c30f649f57d5d9efeabfeb2615e709387"
+    },
+    "icons.default": {
+      "by": "agent",
+      "evidence": [
+        "_webExamples.mdx:L26 start={<Icon name=\"star\" />}, the first start icon example"
+      ],
+      "fingerprint": "sha256:b94ce6e4b263506fc49d712cc119b8fadf1c8fc033734b33123778ab736d1a7b"
+    },
+    "icons.preferred": {
+      "by": "agent",
+      "evidence": [
+        "_webExamples.mdx:L26 <Icon name=\"star\" />",
+        "_webExamples.mdx:L27 <Icon name=\"caretDown\" />"
+      ],
+      "fingerprint": "sha256:b94ce6e4b263506fc49d712cc119b8fadf1c8fc033734b33123778ab736d1a7b"
+    },
+    "figma.grid": {
+      "by": "agent",
+      "evidence": [
+        "Chip.tsx:L19-L21 chipSizes, one column per size"
+      ],
+      "fingerprint": "sha256:b94ce6e4b263506fc49d712cc119b8fadf1c8fc033734b33123778ab736d1a7b"
+    },
+    "family.description": {
+      "by": "agent",
+      "evidence": [
+        "ChipProps.ts:L27-L32 children, start and end",
+        "ChipProps.ts:L94 size?: ChipSize",
+        "_webExamples.mdx:L3 With onClick, it becomes a button"
+      ],
+      "fingerprint": "sha256:b94ce6e4b263506fc49d712cc119b8fadf1c8fc033734b33123778ab736d1a7b"
+    }
+  }
+}

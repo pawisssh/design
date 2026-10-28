@@ -115,6 +115,17 @@ test('refuses a code.import outside code.package, and an icon CDS does not have'
   assert.throws(() => render({}, { startIcon: true, swapStartIcon: 'icon:notAnIcon' }), /@coinbase\/cds-icons has no icon notAnIcon/);
 });
 
+test('code.required takes only event handlers, and code.element only "Icon" on an icon INSTANCE_SWAP (#473)', { skip }, async () => {
+  const id = JSON.parse(JSON.stringify(button));
+  id.code.required = ['onClick', 'id'];
+  await assert.rejects(previewRenderer(id), /renders only event handlers in code\.required, not id/);
+  for (const [key, element] of [['swapStartIcon', 'Svg'], ['startIcon', 'Icon']]) {
+    const bad = JSON.parse(JSON.stringify(button));
+    bad.properties.find(p => p.key === key).code.element = element;
+    await assert.rejects(previewRenderer(bad), new RegExp(`properties\\.${key}\\.code\\.element: only an INSTANCE_SWAP with valueFrom "icon" takes an element`));
+  }
+});
+
 // A TextInput with its start icon on a Slot axis and its end icon behind a BOOLEAN, as its Contract has them (#477).
 const textInput = {
   source: { packages: button.source.packages },

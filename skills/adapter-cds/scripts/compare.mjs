@@ -9,7 +9,8 @@
 //
 // A layer's element is found by its node map entry inside its parent's element: a `cds-` entry is that static class,
 // any other a Linaria literal, found by its compiled class in the family's stylesheet (a Record of literals by any of
-// its members' classes). Compared, as the page computes them:
+// its members' classes); a layer with its parent's entry is found by its type (see probe). Compared, as the page
+// computes them:
 //   fill          background-color, or color on a TEXT layer; not on an <img>, whose fill is its picture;
 //   opacity       opacity, 0 on a TEXT layer whose text is visibility: hidden (loading keeps the label's width);
 //   stroke        outline color and width when strokeAlign is outside (the focus ring), else border width, and the
@@ -103,8 +104,8 @@ export function expectations({ contract, nodes, foundations, classes }) {
     // and its children are found inside its parent's element.
     const className = entry === '' ? null : entry.startsWith('cds-') ? entry : classes[entry];
     if (!className && entry !== '') throw new Error(`layer "${node.name}": no compiled class for ${entry}`);
-    // A layer with its parent's entry has no element of its own: it is drawn inside the parent's (Button's Label in
-    // Middle, Track and Arc in Spinner).
+    // A layer with its parent's entry has no anchor of its own: it is drawn inside the parent's element (Button's
+    // Label in Middle, Track and Arc in Spinner), or is its class-less child (Chip's Content, #473).
     const drawnInParent = entry !== '' && parent !== null && entry === layers.find(l => l.name === parent).entry;
     // In #474: CDS draws one Icon and names its glyph per state (Checkbox's checkmark or minus), so a fixed-icon
     // INSTANCE (`icon:checkmark`, not the swappable `icon:default`) is that Icon's glyph of that name.
@@ -251,7 +252,9 @@ export function probe(spec, doc, style, color) {
         if (layer.className === null) return layer.parent === null ? scope.firstElementChild : undefined;
         // A layer drawn in its parent's element is found by type: a TEXT the element holding the text, an ELLIPSE
         // the parent's n-th <circle>. In #472: a TEXT skips the text inside a sibling layer's element (the glyph of
-        // Tag's Start icon, a font icon, is text too).
+        // Tag's Start icon, a font icon, is text too). In #473: a FRAME is the parent's one element child, a wrapper with
+        // no class of its own (Chip's content HStack), and an INSTANCE the parent's element, a glyph drawn in its slot
+        // (Chip's Icon).
         // A fixed-icon INSTANCE is the glyph of its name inside its entry's element: the glyph carries its size and opacity.
         if (layer.icon) { const host = inside(parent, e => hasClass(e, layer.className) && glyph(e, layer.icon)); return host && glyph(host, layer.icon); }
         if (!layer.drawnInParent) {
@@ -267,6 +270,8 @@ export function probe(spec, doc, style, color) {
           return hasText(parent) ? parent : inside(parent, e => hasText(e) && skip.indexOf(e) < 0);
         }
         if (layer.type === 'ELLIPSE') return parent.querySelectorAll('circle')[layer.nth];
+        if (layer.type === 'FRAME') return parent.children.length === 1 ? parent.children[0] : undefined;
+        if (layer.type === 'INSTANCE') return parent;
       };
       const hidden = [];
       spec.layers.forEach(layer => {
