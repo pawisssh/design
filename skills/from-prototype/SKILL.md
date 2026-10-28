@@ -5,7 +5,7 @@ description: One entry from a Prototype to Component Sets in Figma, a Handoff fo
 
 # From-Prototype
 
-From-Prototype (spec [#343](https://github.com/pawisssh/design/issues/343)) is where every run on a Prototype starts. It runs the stages each output needs, then hands each output over. The stages are [Vibe-to-Figma](../vibe-to-figma/SKILL.md)'s for Component Sets and [To-handoff](../to-handoff/SKILL.md)'s for a Handoff. The check's other gate rows land in [#434](https://github.com/pawisssh/design/issues/434)–[#436](https://github.com/pawisssh/design/issues/436), and the Design System's default and rerun rule in [#438](https://github.com/pawisssh/design/issues/438).
+From-Prototype (spec [#343](https://github.com/pawisssh/design/issues/343)) is where every run on a Prototype starts. It runs the stages each output needs, then hands each output over. The stages are [Vibe-to-Figma](../vibe-to-figma/SKILL.md)'s for Component Sets and [To-handoff](../to-handoff/SKILL.md)'s for a Handoff. The check's other gate rows land in [#434](https://github.com/pawisssh/design/issues/434)–[#436](https://github.com/pawisssh/design/issues/436).
 
 ## The check
 
@@ -26,7 +26,8 @@ node skills/from-prototype/scripts/from-prototype.mjs check <prototype> [--figma
 **Give the owner the message as printed.** Then by its exit code:
 
 - **2, the owner's questions.** With no output asked, one question offers only the outputs whose verdict is not "no", with the Design System question beside it when a Handoff is among them. A Handoff asked with no `--ds` asks its Design System, and so does `--ds` naming the own folder of a Prototype that can't have Component Sets. Component Sets with no usable folder name ask for `--name`. Wait for the owner's own chat answer, the only one that counts, then run the check again with it as options.
-- **1, a refusal.** An output asked for is refused, or nothing is possible. Run no stage. When the other output can run alone, the message gives its command; run it only on the owner's word. The flow never switches outputs on its own ([#324](https://github.com/pawisssh/design/issues/324) D7).
+- **The Design System question** ([#321](https://github.com/pawisssh/design/issues/321)'s order) lists the Design Systems here, committed and under `.scratch/design-systems/`, as "if your developers build with one of these". Never suggest one because it looks closest. "None: this Prototype's own folder" is offered only while that route is open. The default is a Design System whose Contracts' package the Prototype depends on (`@carbon/react` gives `carbon`), else the own folder; there is none when the Prototype has both. A Handoff of this Prototype's feature key already in a Design System here answers the question, and nothing is asked: the message names it.
+- **1, a refusal.** An output asked for is refused, or nothing is possible, or `--ds` names no Design System here, or the Prototype's own folder name is taken by a committed Design System or another scratch folder (run again with `--name`). Run no stage. When the other output can run alone, the message gives its command; run it only on the owner's word. The flow never switches outputs on its own ([#324](https://github.com/pawisssh/design/issues/324) D7).
 - **0, the plan.** Run [the stages](#the-stages) in its order.
 
 **The Figma file.** On exit 0 with Component Sets, before any stage, read the linked file once through the owner's Figma connection: one read-only call on the link's file key, such as `get_metadata`. If it fails, give the owner "Component Sets: no: <the reason>" and run no stage.
@@ -35,7 +36,12 @@ Today each output's `reader` gate and the `figma` link are checked. A "yes" can 
 
 ## The stages
 
-The plan lists the stages in order, each with its folder under `.scratch/design-systems/` and its Design System. Run each by its own section, with its own questions: the folder step's requests (exit 2), To-handoff's decisions, and the owner's approve and Sign-off. Component Sets always come from the Prototype's own folder, `.scratch/design-systems/<name>/`; a named Design System changes only the Handoff. With both outputs, neither waits on the other's result: a failed coverage check is reported and the Handoff stages still run.
+The plan lists the stages in order, each with its folder under `.scratch/design-systems/` and its Design System, then its notes. Give the owner each note:
+
+- **A new Handoff.** `--ds` names another Design System than the one this Prototype's Handoff is already in.
+- **The committed Design System has moved** since its scratch copy was made, with the files that differ. Refresh the copy only when the owner says so in chat: copy those files from `design-systems/<ds>/` over the copy's, keeping its `handoffs/` and any Contract written mid-run. Refreshing puts the copy's signed Handoffs into Drift.
+
+Run each stage by its own section, with its own questions: the folder step's requests (exit 2), To-handoff's decisions, and the owner's approve and Sign-off. Component Sets always come from the Prototype's own folder, `.scratch/design-systems/<name>/`; a named Design System changes only the Handoff. With both outputs, neither waits on the other's result: a failed coverage check is reported and the Handoff stages still run.
 
 | Stage | Run |
 |---|---|
@@ -43,7 +49,7 @@ The plan lists the stages in order, each with its folder under `.scratch/design-
 | `review-page` | [Vibe-to-Figma's review page](../vibe-to-figma/SKILL.md#2-the-review-page) for that folder |
 | `approve` | [the owner's approve](../vibe-to-figma/SKILL.md#3-approve): wait for it, as that section says |
 | `figma-build` | [the Figma build](../vibe-to-figma/SKILL.md#4-figma-build) into the plan's link, the file read above |
-| `scratch-copy` | copy `design-systems/<ds>/` to `.scratch/design-systems/<ds>/` when it is absent; a folder already there is used in place |
+| `scratch-copy` | copy `design-systems/<ds>/` to `.scratch/design-systems/<ds>/`. The plan has it only when the copy is absent; a copy already there is used in place |
 | `generate` | [To-handoff's generate](../to-handoff/SKILL.md#2-generate-ask-answer-re-run) with `--ds` the stage's folder |
 | `review` | [To-handoff's `review`](../to-handoff/SKILL.md#5-sign-off-review-approve-check), and give the owner the package |
 | `sign-off` | the owner's Sign-off, by To-handoff's `approve`: wait for it, as that section says |
@@ -108,4 +114,4 @@ An Artifact starts private. **Never share it.** Sharing is the owner's act.
 
 ## Tests
 
-`node --test skills/from-prototype/test/*.test.mjs`. `test/check.test.mjs` runs the check on Vibe-to-Figma's and To-handoff's committed fixtures, and on temp-dir Prototypes for the other kinds. It asserts each kind, its evidence and each verdict, the owner's questions, the plan's stages, the CLI's message and its exit codes 0, 1 and 2, and, in a child process that records file writes, child processes and fetches, that the check makes none, leaves the Prototype as it was and loads no fetched parser. `test/hand-over.test.mjs` signs off To-handoff's "Invite teammates" fixture with a test approval under `.scratch/from-prototype-tests/`, as `signoff.test.mjs` does (its setup is To-handoff's `test/signed.mjs`). The fixture is run with the runtime reader, so it has screenshots. The test renders the Handoff, writes the copy, and checks the copy and each refusal. It skips without the runtime reader (`node skills/to-handoff/scripts/deps.mjs`) or Carbon's sources (`node skills/adapter-carbon/scripts/sources.mjs`).
+`node --test skills/from-prototype/test/*.test.mjs`. `test/check.test.mjs` runs the check on Vibe-to-Figma's and To-handoff's committed fixtures, and on temp-dir Prototypes for the other kinds. It asserts each kind, its evidence and each verdict, the owner's questions, the plan's stages, the Handoff's Design System in a temp repo root (the check's `root` option), the CLI's message and its exit codes 0, 1 and 2, and, in a child process that records file writes, child processes and fetches, that the check makes none, leaves the Prototype as it was and loads no fetched parser. `test/hand-over.test.mjs` signs off To-handoff's "Invite teammates" fixture with a test approval under `.scratch/from-prototype-tests/`, as `signoff.test.mjs` does (its setup is To-handoff's `test/signed.mjs`). The fixture is run with the runtime reader, so it has screenshots. The test renders the Handoff, writes the copy, and checks the copy and each refusal. It skips without the runtime reader (`node skills/to-handoff/scripts/deps.mjs`) or Carbon's sources (`node skills/adapter-carbon/scripts/sources.mjs`).
