@@ -95,7 +95,7 @@ function cdsCss(dir, componentCss) {
  * stubbed. Returns the loaded bundle and the stubbed `.css` files in import order (a post-order walk of the
  * metafile, whose imports are in source order, so a module's dependencies' CSS comes before its own).
  */
-async function bundle(dir, specifier, component) {
+async function bundle(dir, specifier, component, { icon = false } = {}) {
   if (!/^[A-Za-z_$][\w$]*$/.test(component)) throw new Error(`code.component ${component} is not an export name`);
   const require = createRequire(join(dir, 'package.json'));
   const esbuild = require('esbuild');
@@ -108,6 +108,8 @@ async function bundle(dir, specifier, component) {
     "export { defaultTheme } from '@coinbase/cds-web/themes/defaultTheme';",
     "export { glyphMap } from '@coinbase/cds-icons/glyphMap';",
     "export { AnimatePresence } from 'framer-motion';",
+    // Only for a Contract that renders an Icon element itself, so no other bundle gains Icon's CSS.
+    ...(icon ? ["export { Icon } from '@coinbase/cds-web/icons';"] : []),
     // The one export, so the bundle (and so the CSS) holds only what the component imports.
     `export { ${component} as Component } from ${JSON.stringify(specifier)};`,
   ].join('\n');
@@ -157,13 +159,21 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
     const got = JSON.parse(readFileSync(file, 'utf8')).version;
     if (want !== got) throw new Error(`${name} ${got} is installed but the Contract pins ${want}`);
   }
-  // contentProps has no `code.required` placeholders (the Carbon renderer's); no CDS Contract needs them yet.
-  if (contract.code.required && contract.code.required.length)
-    throw new Error(`the CDS preview renderer does not render code.required props (${contract.code.required.join(', ')})`);
+  // in (#473): a `code.required` event handler (Chip's onClick, which makes it a Pressable) gets a no-op, in every
+  // render; CDS has no other required prop yet, so any other is refused.
+  const required = contract.code.required || [];
+  const unhandled = required.filter(prop => !/^on[A-Z]/.test(prop));
+  if (unhandled.length) throw new Error(`the CDS preview renderer renders only event handlers in code.required, not ${unhandled.join(', ')}`);
+  // in (#473): an icon property with `code.element: "Icon"` is a React node prop (Chip's start and end), which takes
+  // <Icon name> rather than the icon's name (Button's startIcon).
+  const elements = contract.properties.filter(p => p.code && p.code.element !== undefined);
+  for (const p of elements)
+    if (p.code.element !== 'Icon' || p.type !== 'INSTANCE_SWAP' || p.code.valueFrom !== 'icon')
+      throw new Error(`properties.${p.key}.code.element: only an INSTANCE_SWAP with valueFrom "icon" takes an element, and the one element is "Icon"`);
   const specifier = importSpecifier(contract);
-  const { lib, css } = await bundle(dir, specifier, contract.code.component);
+  const { lib, css } = await bundle(dir, specifier, contract.code.component, { icon: elements.length > 0 });
   const { React, renderToStaticMarkup, ThemeContext, ThemeProvider, MediaQueryProvider, createThemeCssVars, defaultTheme, glyphMap,
-    AnimatePresence, Component } = lib;
+    AnimatePresence, Icon, Component } = lib;
   if (!Component) throw new Error(`${specifier} has no export ${contract.code.component}`);
 
   // A CDS icon is a name (`startIcon="add"`), drawn from the CoinbaseIcons font.
@@ -199,6 +209,8 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
       // Content props from the properties (contract.mjs's contentProps), then each axis value's code props over them.
       const axis = codeProps(contract, tuple).props;
       const { props, children } = contentProps(contract, properties, iconFor);
+      for (const p of elements) if (props[p.code.prop] !== undefined) props[p.code.prop] = h(Icon, { name: props[p.code.prop] });
+      for (const prop of required) props[prop] = () => {};
       Object.assign(props, axis);
       // In #475: the page never runs an animation, so a part CDS animates in on mount would stay at its first frame
       // (Radio's dot: useMotionProps' initial 'exit', opacity 0). AnimatePresence initial={false} renders every motion
