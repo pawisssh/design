@@ -617,6 +617,18 @@ test('an absolute node centred with a fixed size, in a parent with Auto Layout, 
   assert.deepEqual(contract.validate(spinner(), foundations), { ok: true, errors: [] });
 });
 
+test('rejects a direction outside row, column and none, as Figma names it (rule 3, #448)', () => {
+  const withDirection = direction => {
+    const c = button();
+    c.layout.find(r => r.set.Button && r.set.Button.direction).set.Button.direction = direction;
+    return c;
+  };
+  for (const direction of ['HORIZONTAL', 'VERTICAL'])
+    rejects(withDirection(direction), 3, `"Button": \`direction\` is "row", "column" or "none", not "${direction}"`);
+  for (const direction of ['row', 'column', 'none'])
+    assert.deepEqual(contract.validate(withDirection(direction), foundations).errors.filter(e => e.message.includes('`direction`')), [], direction);
+});
+
 test('rejects an absolute root, and constraints on the root (rule 3)', () => {
   rejects(spinner(L => { L.Button = { position: 'absolute' }; }), 3, '"Button" is the root, which cannot be absolute');
   rejects(spinner(L => { L.Button = { constraints: { horizontal: 'center', vertical: 'center' } }; }), 3, '"Button" is the root');
@@ -747,8 +759,8 @@ test('Spinner stacks its Track and Arc without Auto Layout: an arc needs a FRAME
   const row = contract.validate(spinner(L => { L.Spinner.direction = 'row'; }), foundations);
   assert.deepEqual(row.errors.map(e => [e.rule, e.at]), [[5, 'layout Arc.arc']]);
   assert.match(row.errors[0].message, /the arc Arc needs a FRAME parent without Auto Layout \(direction "none"\), not Spinner in 245 selected variants/);
-  // a direction other than none is not none, even one the builder would read as none (#448)
-  rejects(spinner(L => { L.Spinner.direction = 'HORIZONTAL'; }), 5, 'the arc Arc needs a FRAME parent without Auto Layout');
+  // a direction the builder would read as none is refused before it, by rule 3 (#448)
+  rejects(spinner(L => { L.Spinner.direction = 'HORIZONTAL'; }), 3, '"Spinner": `direction` is "row", "column" or "none", not "HORIZONTAL"');
   // an arc directly under the root COMPONENT, or absolute itself, fails too
   const atRoot = spinner();
   atRoot.anatomy.children.push(atRoot.anatomy.children[2].children.pop());
