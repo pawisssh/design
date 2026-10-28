@@ -10,6 +10,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { check } from '../scripts/from-prototype.mjs';
+import { DEFAULT_DIR, REPO_ROOT, TOOLS } from '../../adapter-generic/scripts/sources.mjs';
 
 const CLI = fileURLToPath(new URL('../scripts/from-prototype.mjs', import.meta.url));
 const vibe = name => fileURLToPath(new URL(`../../vibe-to-figma/test/fixtures/${name}`, import.meta.url));
@@ -27,6 +28,7 @@ function prototype(files, fixture) {
   }
   return dir;
 }
+const BUTTON_APP = 'import { Button } from "@/app/components/ui/button";\nexport default () => <Button>Hi</Button>;\n';
 const SHELL = '<div id="root"></div><script type="module" src="/src/main.tsx"></script>';
 const UTILITIES = 'export default () => <div className="flex items-center gap-2 p-4 rounded-md bg-slate-200">Hi</div>;\n';
 const reasons = verdict => verdict.reasons.map(r => r.message);
@@ -58,7 +60,7 @@ test('the v0 fixture is React + Tailwind + shadcn on Next, and both outputs read
 test("To-handoff's Next fixture is shadcn on Next: its lockfile resolves no tailwindcss, which closes the own-folder Handoff", () => {
   const r = check(handoff('next-app'));
   assert.equal(r.kind, 'React + Tailwind + shadcn');
-  assert.deepEqual(r.verdicts.componentSets.reasons, [{ row: 'tailwind-version', message: 'package-lock.json resolves no tailwindcss', ticket: '#364' }]);
+  assert.deepEqual(r.verdicts.componentSets.reasons, [{ row: 'tailwind-version', message: 'package-lock.json resolves no tailwindcss', ticket: undefined }]);
   assert.equal(r.verdicts.handoff.verdict, 'only against a Design System you name');
 });
 
@@ -168,7 +170,7 @@ test('a Vue package, a Svelte file and CSS modules or CSS-in-JS are refused as n
 
 test('a Figma Make bundle is never plain HTML: React only in peerDependencies still counts', () => {
   const make = { 'package.json': { peerDependencies: { react: '18.3.1', 'react-dom': '18.3.1' }, devDependencies: { vite: '6.3.5', tailwindcss: '4.1.12', '@tailwindcss/vite': '4.1.12' } }, 'index.html': '<div id="root"></div><script type="module" src="/src/main.tsx"></script>', 'vite.config.ts': "export default { resolve: { alias: { '@': './src' } } };\n" };
-  const used = prototype({ ...make, 'src/app/App.tsx': 'import { Button } from "@/app/components/ui/button";\nexport default () => <Button>Hi</Button>;\n', 'src/app/components/ui/button.tsx': UTILITIES });
+  const used = prototype({ ...make, 'src/app/App.tsx': BUTTON_APP, 'src/app/components/ui/button.tsx': UTILITIES });
   const unused = prototype({ ...make, 'src/app/App.tsx': UTILITIES, 'src/app/components/ui/button.tsx': 'export const Button = () => null;\n' });
   try {
     const u = check(used);
@@ -405,9 +407,10 @@ test('a Handoff asked with no --ds, or Component Sets with no folder name, is an
   assert.equal(scss.plan, null);
 });
 
-// The lockfile and Tailwind rows (#434, spec #343 The gate table): one variant per row, a committed fixture copied and
-// changed, with every row it fails as {row, message, ticket}, in the table's order.
-const NO_LOCKFILE = { row: 'lockfile', message: 'this Prototype has no lockfile: run `npm install --package-lock-only --ignore-scripts` in your project', ticket: '#354' };
+// The lockfile and Tailwind rows (#434, spec #343 Component Sets rows): one variant per row, a committed fixture copied
+// and changed, with every row it fails as {row, message, ticket}, in the table's order. A ticket is named only where
+// it lifts the refusal.
+const NO_LOCKFILE = { row: 'lockfile', message: 'this Prototype has no lockfile: run `npm install --package-lock-only --ignore-scripts` in your project', ticket: undefined };
 const NO_STYLESHEET = { row: 'tailwind-stylesheet', message: 'no stylesheet imports `tailwindcss`', ticket: '#364' };
 const NOT_YET_LOCK = { row: 'lockfile', message: 'not yet: the reader needs a `package-lock.json`', ticket: '#354' };
 const lockWith = (fixture, name, change) => {
@@ -422,13 +425,21 @@ const workspaceApp = () => {
   rmSync(join(root, 'apps/web/package-lock.json'));
   return join(root, 'apps/web');
 };
-const MAKE_BUNDLE = { 'package.json': { name: 'make-app', private: true, type: 'module', peerDependencies: { react: '19.2.4', 'react-dom': '19.2.4' }, devDependencies: PATH_A_PKG.devDependencies },
-  'src/app/components/ui/button.tsx': UTILITIES, 'src/App.tsx': 'import { Button } from "@/app/components/ui/button";\nexport default () => <Button>Hi</Button>;\n' };
+// Figma Make's package.json: React only as an optional peer. Once #435's peer-react-or-found-library row lands, the
+// bundle fails that row too.
+const MAKE_BUNDLE = { 'package.json': { name: 'make-app', private: true, type: 'module', peerDependencies: { react: '19.2.4', 'react-dom': '19.2.4' },
+  peerDependenciesMeta: { react: { optional: true }, 'react-dom': { optional: true } }, devDependencies: PATH_A_PKG.devDependencies },
+'src/app/components/ui/button.tsx': UTILITIES, 'src/App.tsx': BUTTON_APP };
+const { version: SHADCN_PIN } = TOOLS.shadcn;
+const { version: TAILWIND_PIN, integrity: TAILWIND_INTEGRITY } = TOOLS.tailwindcss;
+const OTHER_SHA512 = 'sha512-' + 'A'.repeat(86) + '==';
 const LOCK_VARIANTS = {
   'only a bun.lock': [copied({ 'bun.lock': '{ "lockfileVersion": 1 }\n' }, vibe('path-a-app'), ['package-lock.json']), [NOT_YET_LOCK]],
+  'only a bun.lockb': [copied({ 'bun.lockb': 'bun binary' }, vibe('path-a-app'), ['package-lock.json']),
+    [{ row: 'lockfile', message: "not supported: the reader takes `bun.lock`, not bun's binary `bun.lockb`", ticket: undefined }]],
   'a pnpm-lock.yaml at a workspace root above the app': [workspaceApp(), [NOT_YET_LOCK]],
   'only a yarn.lock': [copied({ 'yarn.lock': '# yarn lockfile v1\n' }, vibe('path-a-app'), ['package-lock.json']),
-    [{ row: 'lockfile', message: 'not supported: no tool writes yarn by default (ADR 0019)', ticket: '#354' }]],
+    [{ row: 'lockfile', message: 'not supported: no tool writes yarn by default (ADR 0019)', ticket: undefined }]],
   'no lockfile': [copied({}, vibe('path-a-app'), ['package-lock.json']), [NO_LOCKFILE]],
   // Tailwind 3 is written with @tailwind directives: both rows fail, and both are listed.
   'tailwindcss 3.x': [copied({ 'package-lock.json': lockWith(vibe('path-a-app'), 'tailwindcss', { version: '3.4.17' }),
@@ -436,13 +447,13 @@ const LOCK_VARIANTS = {
   [{ row: 'tailwind-version', message: 'not yet: the reader compiles Tailwind 4; this project resolves tailwindcss@3.4.17', ticket: '#364' }, NO_STYLESHEET]],
   'no sha512 integrity': [copied({ 'package-lock.json': lockWith(vibe('path-a-app'), 'tailwindcss', { integrity: 'sha1-K3tQ6lJm9nK1ZQ0x4P2y7r8sT1o=' }) }, vibe('path-a-app')),
     [{ row: 'tailwind-integrity', message: 'package-lock.json gives tailwindcss@4.2.2 no sha512 integrity (sha1-K3tQ6lJm9nK1ZQ0x4P2y7r8sT1o=), the only one the tools step checks', ticket: undefined }]],
+  'an integrity that contradicts the pin': [copied({ 'package-lock.json': lockWith(handoff('v0-app'), 'tailwindcss', { integrity: OTHER_SHA512 }) }, handoff('v0-app')),
+    [{ row: 'tailwind-integrity', message: `tailwindcss@${TAILWIND_PIN}: the lockfile's integrity ${OTHER_SHA512} does not match the Adapter's pin ${TAILWIND_INTEGRITY}`, ticket: undefined }]],
   'no stylesheet that imports tailwindcss': [copied({ 'src/index.css': 'body { margin: 0; }\n' }, vibe('path-a-app')), [NO_STYLESHEET]],
   'a shadcn pin mismatch': [copied({ 'package-lock.json': lockWith(handoff('v0-app'), 'shadcn', { version: '4.21.0' }) }, handoff('v0-app')),
-    [{ row: 'code-library-pins', message: 'the project resolves shadcn@4.21.0, but the Adapter pins shadcn@4.22.0', ticket: '#359' }]],
+    [{ row: 'code-library-pins', message: `the project resolves shadcn@4.21.0, but the Adapter pins shadcn@${SHADCN_PIN}`, ticket: '#359' }]],
   'a Figma Make bundle with no lockfile': [copied(MAKE_BUNDLE, vibe('path-a-app'), ['package-lock.json']), [NO_LOCKFILE]],
 };
-// The CLI's sentence for a reason, as the message prints it.
-const printed = m => m[0].toUpperCase() + m.slice(1).replace('(ADR 0019)', '(ADR 0019: docs/adr/0019-a-prototype-reaches-component-sets-or-a-handoff-by-its-kind.md)') + '.';
 
 test('each lockfile and Tailwind row refuses Component Sets with its reason and ticket, and the CLI exits 1', () => {
   for (const [name, [dir, reasons]] of Object.entries(LOCK_VARIANTS)) {
@@ -451,11 +462,19 @@ test('each lockfile and Tailwind row refuses Component Sets with its reason and 
     assert.deepEqual(r.verdicts.componentSets.reasons, reasons, name);
     const out = run(dir, '--figma', FIGMA);
     assert.equal(out.status, 1, `${name}: ${out.stderr}`);
-    for (const { message } of reasons) assert.ok(out.stdout.includes(printed(message)), `${name}: ${out.stdout}`);
+    // The CLI prints each reason as a sentence, ADR 0019 with its path.
+    for (const { message } of reasons) assert.ok(out.stdout.includes(message.slice(1).replace(/ \(ADR 0019\)$/, '')), `${name}: ${out.stdout}`);
   }
   assert.equal(check(LOCK_VARIANTS['a Figma Make bundle with no lockfile'][0]).kind, 'React + Tailwind + shadcn');
-  // The stylesheet row is path A's: the shadcn path names its stylesheet in components.json.
-  assert.equal(check(handoff('v0-app')).verdicts.componentSets.verdict, 'yes, by the shadcn path');
+});
+
+test("the shadcn path's pins are checked in the stylesheet components.json names, as the Adapter reads it", () => {
+  // A shallower stylesheet imports shadcn at a version the Adapter doesn't pin; components.json names one that doesn't.
+  const v0 = handoff('v0-app');
+  const dir = copied({ 'package-lock.json': lockWith(v0, 'shadcn', { version: '4.21.0' }), 'extra.css': '@import "tailwindcss";\n@import "shadcn/tailwind.css";\n',
+    'app/globals.css': read(join(v0, 'app/globals.css')).replace('@import "shadcn/tailwind.css";\n', '') }, v0);
+  assert.equal(check(dir).verdicts.componentSets.verdict, 'yes, by the shadcn path');
+  assert.equal(check(v0).verdicts.componentSets.verdict, 'yes, by the shadcn path');
 });
 
 test('every failing row is listed, not only the first, and a Handoff against a named Design System is not refused by them', () => {
@@ -502,8 +521,7 @@ test('every run writes nothing, runs and fetches nothing, leaves the Prototype a
   // The Handoff rows' variants (#436) and the lockfile and Tailwind rows' (#434), and the tools folders the readers fetch into.
   const made = VARIANTS.map(variant);
   const variants = [BARE, ...Object.values(LOCK_VARIANTS).map(([dir]) => dir)];
-  const repo = fileURLToPath(new URL('../../../', import.meta.url));
-  const tools = ['.scratch/adapter-generic/tools', '.scratch/to-handoff'].map(d => join(repo, d));
+  const tools = [DEFAULT_DIR, join(REPO_ROOT, '.scratch/to-handoff')];
   let r;
   try { r = spawnSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify([[...fixtures, ...made, ...variants], tools])], { encoding: 'utf8' }); }
   finally { for (const d of made) rmSync(d, { recursive: true, force: true }); }

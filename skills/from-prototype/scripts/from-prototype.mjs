@@ -128,21 +128,28 @@ const unreadDataRouter = p => p.code.some(f => /<RouterProvider\b/.test(p.text(f
   || p.code.some(f => DATA_ROUTER.test(p.text(f)) && /\bComponent\s*:/.test(p.text(f)));
 
 // The Generic Adapter's lockfile and Tailwind rules (#432), applied once per check: each row below reads its own
-// failures from them rather than copying them (spec #343).
-const adapterRules = p => (p.adapterRules ??= lockfileRules(p.root));
+// failures from them rather than copying them (spec #343). The shadcn path's stylesheet is the one components.json
+// names, as projectPins reads it; without one, the Adapter's cssEntry finds it.
+const adapterRules = p => (p.adapterRules ??= lockfileRules(p.root, namedStylesheet(p)));
 const adapterFailures = (p, rule) => adapterRules(p).failures.filter(f => f.rule === rule);
-// A row for one of the Adapter's rules, on both React + Tailwind paths: it fails with each of the rule's failures,
-// worded by `wording`, the Adapter's own message by default.
-function adapterRule(name, ticket, wording = f => f.message) {
-  return { name, kinds: [SHADCN, PATH_A], ticket, test: p => !adapterFailures(p, name).length,
-    message: p => adapterFailures(p, name).map(f => wording(f, p)).join('; ') };
+function namedStylesheet(p) {
+  try { return JSON.parse(p.text('components.json')).tailwind?.css || undefined; } catch { return undefined; }
 }
-// The lockfile row's wording, by the lockfiles the Adapter found: it reads only package-lock.json today (#354).
-function lockfileMessage(failure, lockfiles) {
-  if (lockfiles.includes('package-lock.json')) return failure.message;
-  if (lockfiles.some(f => f.startsWith('bun.') || basename(f) === 'pnpm-lock.yaml')) return 'not yet: the reader needs a `package-lock.json`';
-  if (lockfiles.includes('yarn.lock')) return 'not supported: no tool writes yarn by default (ADR 0019)';
-  return 'this Prototype has no lockfile: run `npm install --package-lock-only --ignore-scripts` in your project';
+// A row for one of the Adapter's rules, on both React + Tailwind paths: it fails with each of the rule's failures,
+// worded by `wording` as {message, ticket}, the Adapter's own message and no ticket by default.
+function adapterRow(name, wording = f => ({ message: f.message })) {
+  const worded = p => adapterFailures(p, name).map(f => wording(f, p));
+  return { name, kinds: [SHADCN, PATH_A], test: p => !adapterFailures(p, name).length,
+    message: p => worded(p).map(w => w.message).join('; '), ticket: p => worded(p).find(w => w.ticket)?.ticket };
+}
+// The lockfile row's wording, by the lockfiles the Adapter found: it reads only package-lock.json today, and #354
+// lets bun.lock and a pnpm workspace lock through.
+function lockfileWording(failure, lockfiles) {
+  if (lockfiles.includes('package-lock.json')) return { message: failure.message };
+  if (lockfiles.some(f => f === 'bun.lock' || basename(f) === 'pnpm-lock.yaml')) return { message: 'not yet: the reader needs a `package-lock.json`', ticket: '#354' };
+  if (lockfiles.includes('bun.lockb')) return { message: "not supported: the reader takes `bun.lock`, not bun's binary `bun.lockb`" };
+  if (lockfiles.includes('yarn.lock')) return { message: 'not supported: no tool writes yarn by default (ADR 0019)' };
+  return { message: 'this Prototype has no lockfile: run `npm install --package-lock-only --ignore-scripts` in your project' };
 }
 
 // Each output's gate rows, in order (spec #343 The gate table): name, the kinds it applies to, its test (passes when
@@ -158,12 +165,14 @@ const COMPONENT_SETS = [
   { name: 'reader', kinds: [UNKNOWN], message: 'no reader for what was found' },
   { name: 'mixed', kinds: [PATH_A], effect: 'note', ticket: '#331', test: p => !classStyled(p).length,
     message: p => `its own class-styled stylesheets (${classStyled(p).join(', ')}) are read as path A until #331 decides a React app that mixes them with Tailwind utilities` },
-  adapterRule('lockfile', '#354', (f, p) => lockfileMessage(f, adapterRules(p).lockfiles)),
-  adapterRule('tailwind-version', '#364', f => f.version ? `not yet: the reader compiles Tailwind 4; this project resolves tailwindcss@${f.version}` : f.message),
-  adapterRule('tailwind-integrity'),
+  adapterRow('lockfile', (f, p) => lockfileWording(f, adapterRules(p).lockfiles)),
+  // #364 carries Tailwind 3.4; any other version, or none resolved, stays the Adapter's refusal.
+  adapterRow('tailwind-version', f => /^3\./.test(f.version ?? '')
+    ? { message: `not yet: the reader compiles Tailwind 4; this project resolves tailwindcss@${f.version}`, ticket: '#364' } : { message: f.message }),
+  adapterRow('tailwind-integrity'),
   // The Adapter found no stylesheet that imports tailwindcss (its cssEntry); path A has no components.json to name one.
   { name: 'tailwind-stylesheet', kinds: [PATH_A], ticket: '#364', test: p => adapterRules(p).css !== null, message: 'no stylesheet imports `tailwindcss`' },
-  adapterRule('code-library-pins', '#359'),
+  adapterRow('code-library-pins', f => ({ message: f.message, ticket: '#359' })),
   // Only when Component Sets are asked (#437). The agent's one read of the file through the owner's Figma connection is the
   // SKILL.md's step after the check: the check fetches nothing.
   { name: 'figma', kinds: KINDS.map(k => k.kind), test: p => !figmaRefusal(p), message: p => `the Figma link is refused: ${figmaRefusal(p)}` },
@@ -208,11 +217,14 @@ function figmaRefusal(p) {
 const classStyled = p => p.all.filter(f => STYLES.has(extname(f)) && !/\.module\.s?css$/.test(f))
   .filter(f => { const css = p.text(f); return !/tailwindcss/.test(css) && /(?:^|[\s,}])\.[A-Za-z_][\w-]*[^{};]*\{/m.test(css); });
 
+// A row's message or ticket: as written, or what its function gives for this Prototype.
+const of = (value, p) => typeof value === 'function' ? value(p) : value;
+
 // A failing row refuses, unless its effect is `note`, or `closes`: that closes the own-folder route, so the output is
 // only against a Design System the owner names.
 function verdictOf(table, p, yes) {
   const failing = table.filter(row => row.kinds.includes(p.kind) && !row.test?.(p))
-    .map(row => ({ row: row.name, message: typeof row.message === 'function' ? row.message(p) : row.message, ticket: row.ticket, effect: row.effect }));
+    .map(row => ({ row: row.name, message: of(row.message, p), ticket: of(row.ticket, p), effect: row.effect }));
   const withEffect = wanted => failing.filter(f => f.effect === wanted).map(({ effect, ...r }) => r);
   const refusals = withEffect(undefined), closes = withEffect('closes');
   return { verdict: refusals.length ? 'no' : closes.length ? 'only against a Design System you name' : yes,
