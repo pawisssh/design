@@ -23,6 +23,18 @@ export function familyTsx(contract, paths) {
 }
 
 /**
+ * {name: {member: body}} of the Records of `css` literals in a TSX's text. In #478: an element can carry only a member
+ * of one (Avatar's fallback Box: `className={borderRadiusCss[shape]}`, `const borderRadiusCss: Record<AvatarShape,
+ * LinariaClassName> = { circle: css`…`, … }`), so the node map names it by its Record, `borderRadiusCss`.
+ */
+export function literalRecords(text) {
+  const out = {};
+  for (const [, name, body] of text.matchAll(/const\s+(\w+)\s*(?::[^=;]+)?=\s*\{((?:\s*\w+:\s*css`[^`]*`,?)+)\s*\};/g))
+    out[name] = Object.fromEntries([...body.matchAll(/(\w+):\s*css`([^`]*)`/g)].map(([, member, rule]) => [member, rule]));
+  return out;
+}
+
+/**
  * fingerprints({contract, nodes, files, keys}) -> {facts: {key: facts}, fingerprints: {key: "sha256:…"}}.
  * `files` is {path: text} of the Contract's source files; `keys` defaults to the agent entries of `drafted`.
  * Throws on a family TSX the files lack, a layer the node map lacks, a literal the TSX lacks, and a key with no
@@ -32,9 +44,13 @@ export function fingerprints({ contract, nodes, files, keys }) {
   const path = familyTsx(contract, Object.keys(files));
   const tsx = path.split('/').pop();
   // Each literal as `<name> { <body> }`: comments stripped, whitespace collapsed to one space, `${…}` as written.
+  const clean = body => body.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').trim();
   const literals = {};
   for (const [, name, body] of files[path].matchAll(/const\s+(\w+)\s*=\s*css`([^`]*)`/g))
-    literals[name] = `${name} { ${body.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').trim()} }`;
+    literals[name] = `${name} { ${clean(body)} }`;
+  // A Record of literals as `<name> { <member> { <body> } … }`, its members in source order.
+  for (const [name, members] of Object.entries(literalRecords(files[path])))
+    literals[name] = `${name} { ${Object.entries(members).map(([m, body]) => `${m} { ${clean(body)} }`).join(' ')} }`;
   // The node map names a layer by its element's static class (`cds-Button`) and the literals it carries, the
   // identifying entry first ("cds-Button baseCss iconCss", "startNodeCss"). The node key is that entry, `cds-` dropped.
   // In #470: a family with no `cds-<Family>` class is keyed by the static class CDS gives the element, in either case
