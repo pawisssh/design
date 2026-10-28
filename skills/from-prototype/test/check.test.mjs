@@ -97,6 +97,17 @@ test('the path A fixtures take path A; a Handoff reads only on Next or Vite, and
   assert.deepEqual(reasons(bare.verdicts.handoff), ['no reader for this React setup: To-handoff reads Next.js App Router or Vite']);
 });
 
+// The utilities that make a React + Tailwind project path A, as Vibe-to-Figma's route counted them before the check took it (#252, #439).
+test('what counts as Tailwind: opacity, fractions, semantic colours, ${} templates and class strings held in constants', () => {
+  const kind = (source, tailwind = true) => check(copied({ 'package.json': { dependencies: { react: '19.2.4' }, devDependencies: tailwind ? { tailwindcss: '4.2.2' } : {} }, 'src/App.tsx': source })).kind;
+  const PATH_A = 'React + Tailwind, no Code Library';
+  assert.equal(kind('export default () => <i className="w-1/2 h-10 bg-primary text-foreground hover:bg-primary/90" />;'), PATH_A);
+  assert.equal(kind('export default () => <i className={`p-4 ${on ? "m-2" : ""} w-4 gap-2`} />;'), PATH_A);
+  assert.equal(kind('const base = cva("p-4 m-2 w-4 flex"); export default () => <i className={base()} />;'), PATH_A);
+  assert.notEqual(kind('export default () => <i className="container p-3 mb-2 text-center" />;', false), PATH_A); // Bootstrap
+  assert.notEqual(kind('export default () => <i className="card rounded border truncate underline italic" />;'), PATH_A);
+});
+
 test('a path A app with its own class-styled stylesheets gets a note naming them, linking #331', () => {
   const r = check(handoff('tailwind-app'));
   assert.ok(r.verdicts.componentSets.notes.some(n => n.includes('src/summary.css') && n.includes('#331')), r.verdicts.componentSets.notes.join('\n'));
@@ -367,6 +378,17 @@ test('a Figma link that is not a Design file link is refused before anything is 
   assert.doesNotMatch(bad.stdout + bad.stderr, /\n\s+at /);
 });
 
+// Vibe-to-Figma run alone (#439, spec #343 Vibe-to-Figma changes): Component Sets asked with the link left to the build.
+test('Component Sets asked with no Figma link are checked by every row but the link, and a refusal is worded as when they are asked', () => {
+  const v0 = check(handoff('v0-app'), { componentSets: true });
+  assert.equal(v0.verdicts.componentSets.verdict, 'yes, by the shadcn path');
+  assert.deepEqual(v0.plan.outputs, ['componentSets']);
+  const html = check(vibe('html-app'), { componentSets: true });
+  assert.equal(html.verdicts.componentSets.verdict, 'no');
+  assert.deepEqual([html.questions, html.plan], [[], null]);
+  assert.deepEqual(html, check(vibe('html-app'), { figma: FIGMA }));
+});
+
 const stagesOf = r => r.plan.stages.map(s => [s.stage, s.designSystem].filter(Boolean).join(' '));
 
 test('a settled run exits 0 with the stages, each with its folder and Design System', () => {
@@ -431,7 +453,7 @@ test('a Handoff asked with no --ds, or Component Sets with no folder name, is an
   assert.equal(scss.plan, null);
 });
 
-const OPTION_SETS = [{}, { figma: FIGMA }, { figma: 'https://www.figma.com/design/abc/x', handoff: true, ds: 'carbon' }, { figma: FIGMA, handoff: true, ds: 'carbon' }, { handoff: true }];
+const OPTION_SETS = [{}, { figma: FIGMA }, { componentSets: true }, { componentSets: true, all: true }, { figma: 'https://www.figma.com/design/abc/x', handoff: true, ds: 'carbon' }, { figma: FIGMA, handoff: true, ds: 'carbon' }, { handoff: true }];
 
 // Component Sets rows #435 adds (spec #343 The gate table). Each variant is a committed fixture with a lockfile,
 // changed in one way; the owner sees the verdict, the failing row's reason and ticket, and the CLI's exit code.
@@ -511,8 +533,10 @@ test('wouter gets a note until #350; a data router defined in another file, or C
     const out = run(wouter, '--figma', FIGMA);
     assert.equal(out.status, 0, out.stdout);
     assert.match(out.stdout, /Note: with wouter the default family list comes from one screen/);
-    for (const dir of [elsewhere, component])
+    for (const dir of [elsewhere, component]) {
       refusedBy(dir, 'screens', '#361', "only with `--all`: the screens can't be read until #361 (a data router built in another file, or `Component:` routes)");
+      assert.equal(check(dir, { figma: FIGMA, all: true }).verdicts.componentSets.verdict, 'yes, by the shadcn path', dir);
+    }
   });
 });
 
@@ -762,7 +786,7 @@ test('every run writes nothing, runs and fetches nothing, leaves the Prototype a
     globalThis.fetch = url => { calls.push('fetch ' + url); throw new Error('no fetch'); };
     syncBuiltinESMExports();
     const { check } = await import(${JSON.stringify(new URL('../scripts/from-prototype.mjs', import.meta.url).href)});
-    const { files } = await import(${JSON.stringify(new URL('../../vibe-to-figma/scripts/path.mjs', import.meta.url).href)});
+    const { sourceFiles: files } = await import(${JSON.stringify(new URL('../../adapter-generic/scripts/sources.mjs', import.meta.url).href)});
     const prototypes = JSON.parse(process.argv[1]);
     const list = p => statSync(p).isFile() ? [statSync(p).mtimeMs] : [...files(p)].map(f => f + ' ' + statSync(f).mtimeMs);
     const before = prototypes.map(p => JSON.stringify(list(p)));

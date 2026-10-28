@@ -4,7 +4,10 @@
 // use, through the Generic Adapter. It writes no review page, approves nothing and touches no Figma file.
 //
 //   node skills/vibe-to-figma/scripts/folder.mjs <project> [--all] [--name <name>] [--root <dir>]
-//     [--drafts <file>]... [--requests <file>]
+//     [--drafts <file>]... [--requests <file>] [--tools <dir>]
+//
+// It takes no Figma link: only the build needs one. Before it fetches a tool or reads a component, From-Prototype's
+// check routes it, by its Component Sets half: the shadcn path, path A, or the check's own refusal (exit 1).
 //
 // A family the Adapter cannot read (sonner's Toaster) is skipped and named in the report with the Adapter's
 // reason; the run goes on. While any Drafted value is open, the CLI writes every family's requests to one file
@@ -27,19 +30,24 @@ import { readJson, writeJson } from '../../contract/scripts/io.mjs';
 import { generate as contractOf, readFamily } from '../../adapter-generic/scripts/components.mjs';
 import { generate as foundationsOf } from '../../adapter-generic/scripts/foundations.mjs';
 import { DEFAULT_DIR, REPO_ROOT, fetchTools, hasTools } from '../../adapter-generic/scripts/sources.mjs';
+import { check, message } from '../../from-prototype/scripts/from-prototype.mjs';
 import { extract } from './extract.mjs';
-import { choosePath } from './path.mjs';
 import { usedFamilies } from './used.mjs';
 
 export const DESIGN_SYSTEMS = join(REPO_ROOT, 'design-systems');
 const NAME = /^[a-z0-9][a-z0-9._-]*$/;
 const CatalogSelection = createRequire(import.meta.url)('../../to-preview/assets/selection-model.js');
 
-/** The route of `project` (#252): {path: 'shadcn' | 'A'}, or the plain message thrown when it is refused. */
-export function routeOf(project) {
-  const route = choosePath(project);
-  if (route.path === 'refused') throw new Error(route.message);
-  return route;
+/**
+ * The route of `project` (#439, spec #343 Vibe-to-Figma changes): {path: 'shadcn' | 'A'} by From-Prototype's check of
+ * Component Sets, or the check's own message thrown when it refuses them. It reads, and fetches nothing.
+ */
+export function routeOf(project, { all = false } = {}) {
+  const options = { componentSets: true, all };
+  const r = check(project, options);
+  const { verdict } = r.verdicts.componentSets;
+  if (verdict === 'no') throw new Error(message(project, r, options));
+  return { path: verdict === 'yes, by path A' ? 'A' : 'shadcn' };
 }
 
 /** Writes `text` to `path` unless it already holds exactly that. Returns whether it wrote. */
@@ -93,7 +101,7 @@ export function folderName(project, name) {
  * ("skipped: <the Adapter's reason>").
  */
 export async function buildFolder({ project: prototype, name, root = DESIGN_SYSTEMS, all = false, drafts = {}, answers = {}, tools = DEFAULT_DIR, depsDir } = {}) {
-  const route = routeOf(prototype);
+  const route = routeOf(prototype, { all });
   // Path A (#257, ADR 0016): extract.mjs reads the Prototype's JSX into an Extracted Library, written to
   // design-systems/<name>/library/ with the Family map, <name>.family-map.json, and the report the review page's Families tab reads, <name>.families-report.json. The Contracts are then read from that library,
   // never from the Prototype. The agent's one batch of judgement is a drafts file holding {"groups": {...}}; while any of it
@@ -245,9 +253,10 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const opt = flag => (args.includes(flag) ? args[args.indexOf(flag) + 1] : undefined);
   try {
     const project = args[0] && !args[0].startsWith('-') ? resolve(args[0]) : null;
-    if (!project) throw new Error('usage: folder.mjs <project> [--all] [--name <name>] [--root <dir>] [--drafts <file>]... [--requests <file>]');
-    const route = routeOf(project);
-    if (!hasTools()) await fetchTools();
+    if (!project) throw new Error('usage: folder.mjs <project> [--all] [--name <name>] [--root <dir>] [--drafts <file>]... [--requests <file>] [--tools <dir>]');
+    const route = routeOf(project, { all: args.includes('--all') });
+    const tools = opt('--tools') ? resolve(opt('--tools')) : DEFAULT_DIR;
+    if (!hasTools(tools)) await fetchTools(tools);
     const drafts = {}, answers = { groups: {} };
     args.forEach((a, i) => {
       if (a !== '--drafts') return;
@@ -255,7 +264,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
       Object.assign(answers.groups, readAnswers(resolve(args[i + 1])).groups);
     });
     const root = opt('--root') ? resolve(opt('--root')) : DESIGN_SYSTEMS;
-    const r = await buildFolder({ project, name: opt('--name'), root, all: args.includes('--all'), drafts, answers });
+    const r = await buildFolder({ project, name: opt('--name'), root, all: args.includes('--all'), drafts, answers, tools });
     const rel = p => relative(process.cwd(), p);
     const requestsFile = name => resolve(opt('--requests') || join(REPO_ROOT, `.scratch/vibe-to-figma/${name}.requests.json`));
     if (r.extraction) {

@@ -122,8 +122,3 @@ test('a group the answers leave open stops the run before any file is written', 
   assert.deepEqual(report.extraction.map(g => g.id), [id]);
   assert.equal(existsSync(join(root, 'path-a-app')), false);
 });
-
-test('a Prototype with no repeated element names its refusal', { skip }, async () => {
-  const project = fileURLToPath(new URL('./fixtures/tailwind-no-shadcn', import.meta.url));
-  await assert.rejects(buildFolder({ project, root: scratch() }), /path A found no Component Family/);
-});

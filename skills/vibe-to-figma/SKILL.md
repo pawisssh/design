@@ -1,23 +1,23 @@
 ---
 name: vibe-to-figma
-description: One command from a React + Tailwind Prototype (a v0 app with shadcn, or a React app with Tailwind 4 utilities in its JSX) to its own Design System folder and, after the owner approves, Component Sets in Figma. Use when the owner wants a Prototype's Component Families laid out as Figma Component Sets, or runs /vibe-to-figma.
+description: Component Sets' stages for a React + Tailwind Prototype (a v0 app with shadcn, or a React app with Tailwind 4 utilities in its JSX): its own Design System folder, the review page, the owner's approve and the Figma build. A run usually starts at From-Prototype, which runs these stages. Use when the owner runs /vibe-to-figma, or From-Prototype's plan reaches one of its stages.
 ---
 
 # Vibe-to-Figma
 
 ```
-/vibe-to-figma <project> <figma-file-url> [--all] [--name <name>]
+/vibe-to-figma <project> [<figma-file-url>] [--all] [--name <name>]
 ```
 
-Runs the existing skills end to end on a Prototype (spec [#175](https://github.com/pawisssh/design/issues/175)). It adds no Adapter and no builder: the [Generic Adapter](../adapter-generic/SKILL.md) reads the project, [To-preview](../to-preview/SKILL.md) and [Contract](../contract/SKILL.md) approval narrow and approve it, and [To-design](../to-design/SKILL.md) builds it. [To-handoff](../to-handoff/SKILL.md) reads the same folder afterwards. It is one-way: pulling Figma edits back into code is phase 2 of #175, a separate skill, Figma-to-Vibe ([ADR 0017](../../docs/adr/0017-vibe-to-figma-stays-one-way.md)).
+A run on a Prototype usually starts at [From-Prototype](../from-prototype/SKILL.md): its check says whether the Prototype can have Component Sets, and its plan runs this skill's steps under `.scratch/design-systems/`. Run alone, `/vibe-to-figma` runs the existing skills end to end on a Prototype (spec [#175](https://github.com/pawisssh/design/issues/175)). The Figma link is optional: only [4. Figma build](#4-figma-build) needs it, so a folder-only run takes none. It adds no Adapter and no builder: the [Generic Adapter](../adapter-generic/SKILL.md) reads the project, [To-preview](../to-preview/SKILL.md) and [Contract](../contract/SKILL.md) approval narrow and approve it, and [To-design](../to-design/SKILL.md) builds it. [To-handoff](../to-handoff/SKILL.md) reads the same folder afterwards. It is one-way: pulling Figma edits back into code is phase 2 of #175, a separate skill, Figma-to-Vibe ([ADR 0017](../../docs/adr/0017-vibe-to-figma-stays-one-way.md)).
 
 ## Which path
 
-`folder.mjs` chooses its path before it fetches a tool or reads a component (`choosePath(project)`, [`scripts/path.mjs`](scripts/path.mjs); [#252](https://github.com/pawisssh/design/issues/252), spec [#249](https://github.com/pawisssh/design/issues/249), [ADR 0016](../../docs/adr/0016-a-prototype-with-no-code-library-gets-an-extracted-library.md)). Three outcomes:
+Run alone, `folder.mjs` is routed by [From-Prototype's check](../from-prototype/SKILL.md), its Component Sets half, before it fetches a tool or reads a component (`routeOf(project, {all})`, [`scripts/folder.mjs`](scripts/folder.mjs); [#439](https://github.com/pawisssh/design/issues/439), spec [#343](https://github.com/pawisssh/design/issues/343)). Three outcomes:
 
-- **`components.json`:** the shadcn path below, unchanged.
-- **No `components.json`, a React project that lists `tailwindcss` in package.json and carries Tailwind utilities in its source className strings:** path A: the folder step extracts a library from the JSX ([#257](https://github.com/pawisssh/design/issues/257)). On path A, read [references/path-a.md](references/path-a.md) before any run: its requests and answers take their own form, and the owner corrects its grouping there. A Prototype with nothing to extract stops with a plain "path A found no Component Family" message (exit 1).
-- **Anything else:** refused with one message (exit 1, no stack trace) naming what was found and what the skill needs: plain HTML; a Carbon app (use the Carbon Adapter); a React project styled by SCSS or CSS classes; a React project with no `tailwindcss` or no Tailwind utilities in className; no React at all. `--all` gets the same message.
+- **`yes, by the shadcn path`:** the shadcn path below, unchanged.
+- **`yes, by path A`** (no `components.json`, a React project that lists `tailwindcss` and carries Tailwind utilities in its source className strings): the folder step extracts a library from the JSX ([#257](https://github.com/pawisssh/design/issues/257), [ADR 0016](../../docs/adr/0016-a-prototype-with-no-code-library-gets-an-extracted-library.md)). On path A, read [references/path-a.md](references/path-a.md) before any run: its requests and answers take their own form, and the owner corrects its grouping there. A Prototype with nothing to extract stops with a plain "path A found no Component Family" message (exit 1).
+- **`no`:** refused before the tool fetch (exit 1, no stack trace) with the check's own message: the kind, each output's verdict with the rows that refuse it and their tickets, and what is still possible. A yarn-only lockfile, plain HTML or a Carbon app are refused here. Give the owner the message as it is.
 
 ## Inputs
 
@@ -27,10 +27,10 @@ Runs the existing skills end to end on a Prototype (spec [#175](https://github.c
 ## 1. The Design System folder
 
 ```
-node skills/vibe-to-figma/scripts/folder.mjs <project> [--all] [--name <name>] [--root <dir>] [--drafts <file>]... [--requests <file>]
+node skills/vibe-to-figma/scripts/folder.mjs <project> [--all] [--name <name>] [--root <dir>] [--drafts <file>]... [--requests <file>] [--tools <dir>]
 ```
 
-It writes `design-systems/<name>/`: `<name>.foundations.json` and `contracts/<family>.component.json`, one draft Contract per Component Family. With `--root <dir>` the folder is `<dir>/<name>/`; a trial run passes `--root .scratch/<run>`, so it writes no `design-systems/<name>/`. It approves nothing and touches no Figma file. The seams are `usedFamilies(project, {all})` ([`scripts/used.mjs`](scripts/used.mjs)) and `buildFolder({project, name, root, all, drafts})` ([`scripts/folder.mjs`](scripts/folder.mjs)).
+It writes `design-systems/<name>/`: `<name>.foundations.json` and `contracts/<family>.component.json`, one draft Contract per Component Family. With `--root <dir>` the folder is `<dir>/<name>/`; From-Prototype passes `--root .scratch/design-systems`, and a trial run `--root .scratch/<run>`, so neither writes `design-systems/<name>/`. `--tools <dir>` reads the Adapter's tools from there, fetching them when absent; by default `.scratch/adapter-generic/tools/`. It approves nothing and touches no Figma file. The seams are `usedFamilies(project, {all})` ([`scripts/used.mjs`](scripts/used.mjs)) and `buildFolder({project, name, root, all, drafts})` ([`scripts/folder.mjs`](scripts/folder.mjs)).
 
 - **Name.** `package.json` `name` without its npm scope, or `--name`. It must be lowercase letters, digits, `.`, `_` or `-`, and it is the Foundations document's `designSystem.key` too, which names the file, the folder and the To-design ledger section.
 - **Which families.** A Component Family is keyed by its file in the Code Library folder (`components/ui/select.tsx` is `select`, whichever of its exports a screen renders). By default, the families the Prototype's screens render, read with To-handoff's static React reader: each page's tree and the layouts it mounts in, so the root layout's Toaster counts. `--all` takes every `.tsx` file in the Code Library folder.
@@ -99,7 +99,7 @@ Done when it prints `OK`. Afterwards To-handoff generates against `design-system
 
 ## 4. Figma build
 
-After the approve prints `OK`, build the approved Contracts into the one file the owner linked, `<figma-file-url>`. Write to no other file. Each call is a To-design plan, packaged by To-design's packager and sent with `use_figma`, so the [To-design](../to-design/SKILL.md) call cycle and its hook apply. Loop:
+After the approve prints `OK`, build the approved Contracts into the one file the owner linked, `<figma-file-url>`. A run started with no link asks the owner for it now, and the build waits for it. Write to no other file. Each call is a To-design plan, packaged by To-design's packager and sent with `use_figma`, so the [To-design](../to-design/SKILL.md) call cycle and its hook apply. Loop:
 
 ```
 node skills/vibe-to-figma/scripts/build.mjs next design-systems/<name> <figma-file-url> --out .scratch/vibe-to-figma/<name>/runs/<n> [--namespace <prefix>]
