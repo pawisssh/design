@@ -8,7 +8,8 @@
 // which returns {checked, mismatches: ['<tuple> <mode> <layer>.<field>: page <value>, Contract <value>']}.
 //
 // A layer's element is found by its node map entry inside its parent's element: a `cds-` entry is that static class,
-// any other a Linaria literal, whose class is `<name>-<hash>`. Compared, as the page computes them:
+// any other a Linaria literal, found by its compiled class in the family's stylesheet. Compared, as the page computes
+// them:
 //   fill          background-color, or color on a TEXT layer;
 //   opacity       opacity, 0 on a TEXT layer whose text is visibility: hidden (loading keeps the label's width);
 //   stroke        outline color and width when strokeAlign is outside (the focus ring), else border width, and the
@@ -26,21 +27,59 @@ import { expand, resolve, tupleKey } from '../../contract/scripts/contract.mjs';
 import { convert } from '../../contract/scripts/color.mjs';
 import { foundationsPathFor, readJson } from '../../contract/scripts/io.mjs';
 import { valueAt } from '../../to-design/scripts/foundations-value.mjs';
+import { familyTsx } from './fingerprints.mjs';
+import { CDS, DEFAULT_DIR, readSources } from './sources.mjs';
 
 const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 
 /** A converted colour as both sides write it: "#rrggbb", "#rrggbb@<alpha>" below 1, "none" at alpha 0. */
 export const colorKey = ({ hex, alpha }) => (alpha === 0 ? 'none' : alpha < 1 ? `${hex}@${Math.round(alpha * 100) / 100}` : hex);
 
+const WEB = '@coinbase/cds-web';
+
 /**
- * expectations({contract, nodes, foundations}) -> {collection, modes, layers, expected}: what the probe looks for and what it
- * should find. `layers` is [{name, type, parent, entry, drawnInParent, nth}] in anatomy order, `nth` an ELLIPSE's
- * index among its parent's ELLIPSE children; `expected` is
+ * The family's compiled stylesheet in @coinbase/cds-web: its TSX `packages/web/src/<path>.tsx` compiles to
+ * `esm/<path>.css` (Button's `esm/buttons/Button.css`).
+ */
+export function compiledCssPath(contract) {
+  const tsx = familyTsx(contract, Object.keys(contract.source.files));
+  if (!tsx.startsWith('packages/web/src/')) throw new Error(`${tsx} is not under packages/web/src: ${WEB} compiles no stylesheet for it`);
+  return `esm/${tsx.slice('packages/web/src/'.length).replace(/\.tsx$/, '.css')}`;
+}
+
+/**
+ * {literal: class} of a compiled stylesheet. In #470: a literal's name is no anchor on the page, since another
+ * component can name its own literal alike (CDS defines `baseCss` in 20 files), so a literal-keyed layer is found by
+ * the one class Linaria compiles it to, `<name>-<hash>` (`.checkboxCss-c198zdvk{…}`). Throws on a name with two.
+ */
+export function literalClasses(css) {
+  const out = {};
+  for (const [, cls, name] of css.matchAll(/\.(([A-Za-z_$][\w$]*)-[a-z0-9]+)(?![\w-])/g)) {
+    if (out[name] && out[name] !== cls) throw new Error(`${name} has two compiled classes, ${out[name]} and ${cls}`);
+    out[name] = cls;
+  }
+  return out;
+}
+
+/** literalClasses of the family's compiled stylesheet, read from the fetched cds-web package with its hashes checked. */
+export function compiledClasses(contract, dir = DEFAULT_DIR) {
+  const path = `package/${compiledCssPath(contract)}`;
+  const web = readSources(dir, { ...CDS, files: {}, packages: { [WEB]: CDS.packages[WEB] } }).packages[WEB];
+  if (!web.members.includes(path)) throw new Error(`no ${path} in ${WEB}@${CDS.packages[WEB].version}`);
+  return literalClasses(readFileSync(join(web.dir, path), 'utf8'));
+}
+
+/**
+ * expectations({contract, nodes, foundations, classes}) -> {collection, modes, layers, expected}: what the probe looks
+ * for and what it should find. `classes` is {literal: class}, from compiledClasses. `layers` is
+ * [{name, type, parent, entry, className, drawnInParent, nth}] in anatomy order, `className` the class that finds the
+ * element (the static class as written, a literal's compiled class), `nth` an ELLIPSE's index among its parent's
+ * ELLIPSE children; `expected` is
  * {<tuple key>: {<mode>: {<layer>: {<field>: value} | null}}}, a colour as colorKey writes it, a length in px, and
  * null for a layer the tuple hides.
  * The modes are those of the Foundations document's one multi-mode collection (CDS's Theme: light, dark).
  */
-export function expectations({ contract, nodes, foundations }) {
+export function expectations({ contract, nodes, foundations, classes }) {
   const multi = foundations.collections.filter(c => c.modes.length > 1);
   if (multi.length !== 1) throw new Error(`the page shows one Theme Mode at a time; the Foundations document has ${multi.length} multi-mode collections`);
   const theme = multi[0];
@@ -48,10 +87,12 @@ export function expectations({ contract, nodes, foundations }) {
   const walk = (node, parent, nth) => {
     if (nodes[node.name] === undefined) throw new Error(`no node for layer "${node.name}" in the node map`);
     const entry = nodes[node.name].split(' ')[0];
+    const className = entry.startsWith('cds-') ? entry : classes[entry];
+    if (!className) throw new Error(`layer "${node.name}": no compiled class for ${entry}`);
     // A layer with its parent's entry has no element of its own: it is drawn inside the parent's (Button's Label in
     // Middle, Track and Arc in Spinner).
     const drawnInParent = parent !== null && entry === layers.find(l => l.name === parent).entry;
-    layers.push({ name: node.name, type: node.type, parent, entry, drawnInParent, ...(node.type === 'ELLIPSE' ? { nth } : {}) });
+    layers.push({ name: node.name, type: node.type, parent, entry, className, drawnInParent, ...(node.type === 'ELLIPSE' ? { nth } : {}) });
     const kids = node.children || [];
     kids.forEach(child => walk(child, node.name, kids.filter(k => k.type === 'ELLIPSE').indexOf(child)));
   };
@@ -108,7 +149,6 @@ export function expectations({ contract, nodes, foundations }) {
  */
 export function probe(spec, doc, style, color) {
   const classes = el => String(el.getAttribute('class') || '').split(/\s+/);
-  const matches = (el, entry) => classes(el).some(c => (entry.indexOf('cds-') === 0 ? c === entry : c.indexOf(entry + '-') === 0));
   const inside = (el, test) => Array.prototype.find.call(el.querySelectorAll('*'), test);
   const hasText = el => Array.prototype.some.call(el.childNodes, n => n.nodeType === 3 && n.textContent.trim());
   const paintOf = v => (!v || v === 'none' ? 'none' : color(v));
@@ -159,7 +199,7 @@ export function probe(spec, doc, style, color) {
         // A layer drawn in its parent's element is found by type: a TEXT the element holding the text, an ELLIPSE
         // the parent's n-th <circle>.
         const find = () => {
-          if (!layer.drawnInParent) return inside(parent, e => matches(e, layer.entry));
+          if (!layer.drawnInParent) return inside(parent, e => classes(e).indexOf(layer.className) >= 0);
           if (layer.type === 'TEXT') return hasText(parent) ? parent : inside(parent, hasText);
           if (layer.type === 'ELLIPSE') return parent.querySelectorAll('circle')[layer.nth];
         };
@@ -256,7 +296,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
       options: { nodes: { type: 'string' }, foundations: { type: 'string' }, out: { type: 'string' }, run: { type: 'boolean' } } });
     if (!path || extra.length || !opt.nodes) throw new Error('usage: compare.mjs <contract.json> --nodes <nodes.json> [--foundations <file>] [--out <file>] [--run]');
     const contract = readJson(path);
-    const spec = expectations({ contract, nodes: readJson(opt.nodes), foundations: readJson(foundationsPathFor(path, opt.foundations)) });
+    const spec = expectations({ contract, nodes: readJson(opt.nodes), foundations: readJson(foundationsPathFor(path, opt.foundations)),
+      classes: compiledClasses(contract) });
     const out = opt.out || join(REPO_ROOT, '.scratch/to-preview', contract.family.key, 'compare.js');
     mkdirSync(dirname(out), { recursive: true });
     writeFileSync(out, compareModule(spec));
