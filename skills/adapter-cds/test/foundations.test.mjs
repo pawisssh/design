@@ -9,7 +9,7 @@ import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { generate, loadModules, readContracts } from '../scripts/foundations.mjs';
-import { CDS, REPO_ROOT, hasFoundationsPackages, hasSources, readSources } from '../scripts/sources.mjs';
+import { CDS, REPO_ROOT, hasFoundationsPackages, hasSources, readSources, sha256 } from '../scripts/sources.mjs';
 import { closure } from '../../contract/scripts/contract.mjs';
 import { SOURCES_MISSING } from './helpers.mjs';
 
@@ -20,7 +20,7 @@ const PATH = 'design-systems/cds/contracts/button.component.json';
 
 const skip = hasSources() && hasFoundationsPackages() ? false : SOURCES_MISSING;
 const sources = skip ? null : readSources();
-const modules = skip ? null : await loadModules(sources);
+const modules = skip ? null : await loadModules(sources, ['button']);
 const run = (opts = {}) => generate({ sources, modules, families: ['button'], ...opts });
 const docOnce = skip ? null : (await run()).doc;
 
@@ -38,18 +38,18 @@ const rgba = text => {
 };
 const valueColor = v => rgba(v.raw || v.value || v.resolved).slice(0, 3).concat(v.alpha ?? 1);
 
-/** A minimal Button Contract at the pinned commit that paints the root with `paint`'s tokens. */
-const contract = ({ fill = 'button-primary-background', commit = CDS.commit, web = CDS.packages['@coinbase/cds-web'].version } = {}) => ({
+/** A minimal Contract for `family` (Button by default) at the pinned commit that paints the root with `fill`. */
+const contract = ({ family = 'button', fill = 'button-primary-background', commit = CDS.commit, web = CDS.packages['@coinbase/cds-web'].version } = {}) => ({
   schemaVersion: 1,
-  family: { key: 'button', name: 'Button' },
+  family: { key: family, name: family.charAt(0).toUpperCase() + family.slice(1) },
   source: { codeLibrary: 'CDS Web', adapter: 'cds', repository: CDS.repository, tag: '', commit,
     packages: { '@coinbase/cds-web': web }, files: {}, snapshotId: 'sha256:test' },
   axes: [{ key: 'variant', label: 'Variant', default: 'primary', defaultSource: 'test', values: [{ key: 'primary', label: 'Primary' }] }],
   excluded: [],
   selection: { omit: [], expectedCount: 1, approval: null, status: 'draft' },
-  anatomy: { name: 'Button', type: 'FRAME' },
+  anatomy: { name: 'Root', type: 'FRAME' },
   properties: [], layout: [],
-  paint: [{ match: {}, set: { Button: { fill: { token: fill } } } }],
+  paint: [{ match: {}, set: { Root: { fill: { token: fill } } } }],
   subComponents: [], dependencies: { families: [] }, figma: {}, code: {},
 });
 // The modules with createThemeCssVars or a token map changed, for the failure tests.
@@ -67,7 +67,7 @@ test('two CLI runs write byte-identical documents, equal to the committed one', 
 });
 
 test('the committed document is exactly what generate returns for --family button and the committed Contracts', { skip }, async () => {
-  assert.equal((await run({ contracts: readContracts() })).text, read(COMMITTED));
+  assert.equal((await generate({ sources, families: ['button'], contracts: readContracts() })).text, read(COMMITTED));
 });
 
 test('collections: hidden Primitives, Theme in Light and Dark without a selector, Layout and Type', { skip }, () => {
@@ -166,7 +166,7 @@ test('generation fails, naming the token, on a value or template it cannot read'
 
 test('Button\'s component tokens alias the Theme colour its token map names, with family', { skip }, () => {
   const v = docOnce.variables;
-  const { variants, transparentVariants } = modules.button;
+  const { variants, transparentVariants } = modules.tokens.button;
   const component = Object.entries(v).filter(([, x]) => x.family && !x.source.startsWith('synthesized: '));
   assert.equal(component.length, (Object.keys(variants).length + Object.keys(transparentVariants).length) * 3);
   assert.deepEqual(v['button-primary-background'], { collection: 'theme', name: 'Button/button-primary-background', type: 'COLOR',
@@ -174,9 +174,7 @@ test('Button\'s component tokens alias the Theme colour its token map names, wit
     values: { light: { alias: 'bgPrimary', resolved: '#0052ff' }, dark: { alias: 'bgPrimary', resolved: '#578bfa' } }, usedBy: [], family: 'button' });
   assert.equal(v['button-secondary-transparent-border'].values.light.alias, 'transparent');
   assert.deepEqual(v['button-primary-color'].scopes, ['SHAPE_FILL', 'TEXT_FILL'], 'no Contract strokes it');
-  // foregroundMuted is deprecated in ButtonBaseProps.ts: out of the pickers
-  assert.deepEqual(v['button-foregroundMuted-background'].scopes, []);
-  assert.deepEqual(v['button-foregroundMuted-hover-background'].scopes, []);
+  assert.deepEqual(docOnce.checks.css.modules['@coinbase/cds-common/esm/tokens/button.js'], `sha256:${sha256(readFileSync(join(sources.packages['@coinbase/cds-common'].dir, 'package/esm/tokens/button.js')))}`);
   for (const name of ['bg', 'fgMuted', 'space-1', 'light-blue60']) assert.equal(v[name].family, undefined, name);
 });
 
@@ -198,7 +196,7 @@ test('every Synthesized token equals getBlendedColor\'s output for its token and
   const opacity = { hover: 0.88, pressed: 0.82, disabled: 0.75 };
   for (const [name, x] of synth) {
     const [, variant, transparent, state, part] = /^button-(\w+?)(-transparent)?-(hover|pressed|disabled)-(background|border)$/.exec(name);
-    const map = modules.button[transparent ? 'transparentVariants' : 'variants'][variant];
+    const map = modules.tokens.button[transparent ? 'transparentVariants' : 'variants'][variant];
     const token = map[part === 'border' ? 'borderColor' : 'background'];
     assert.equal(x.family, 'button');
     assert.equal(x.name, `Button/${name}`);
@@ -228,8 +226,8 @@ test('every Synthesized token equals getBlendedColor\'s output for its token and
 });
 
 test('a Synthesized name a CDS token already has fails generation', { skip }, async () => {
-  const button = { ...modules.button, variants: { ...modules.button.variants, 'primary-hover': modules.button.variants.primary } };
-  await assert.rejects(run({ modules: { ...modules, button } }), /the Synthesized token button-primary-hover-background has the name of a CDS token \(packages\/common\/src\/tokens\/button\.ts#variants\.primary-hover\.background\)/);
+  const button = { ...modules.tokens.button, variants: { ...modules.tokens.button.variants, 'primary-hover': modules.tokens.button.variants.primary } };
+  await assert.rejects(run({ modules: { ...modules, tokens: { button } } }), /the Synthesized token button-primary-hover-background has the name of a CDS token \(packages\/common\/src\/tokens\/button\.ts#variants\.primary-hover\.background\)/);
 });
 
 test('Layout and Type: px values, and Text Styles named by CDS\'s text keys in Inter', { skip }, () => {
@@ -267,7 +265,60 @@ test('generation fails on an unknown token, a rule 6 scope violation, or a Contr
   await assert.rejects(one(contract({ fill: 'fgMuted' })), /fails validation rule 6[\s\S]*fgMuted/);
   await assert.rejects(one(contract({ commit: '0'.repeat(40) })), /pins commit 0{40} but the sources are commit 135dc3c/);
   await assert.rejects(one(contract({ web: '9.28.0' })), /pins @coinbase\/cds-web@9\.28\.0 but the step reads @coinbase\/cds-web@9\.29\.0/);
-  await assert.rejects(run({ families: ['avatar'] }), /no CDS component token map for family avatar/);
+});
+
+// in (#396): a family's token map is cds-common's esm/tokens/<family>.js, read from the pinned tarball.
+test('a second family with a token map gets its component tokens from cds-common\'s esm/tokens/<family>.js: Banner', { skip }, async () => {
+  const path = 'design-systems/cds/contracts/banner.component.json';
+  const { doc } = await generate({ sources, contracts: [{ path, contract: contract({ family: 'banner', fill: 'banner-informational-background' }) }] });
+  const v = doc.variables;
+  assert.deepEqual(v['banner-informational-background'], { collection: 'theme', name: 'Banner/banner-informational-background', type: 'COLOR',
+    source: 'packages/common/src/tokens/banner.ts#variants.informational.background', scopes: ['FRAME_FILL'], codeSyntax: {},
+    values: { light: { alias: 'bgSecondary', resolved: v.bgSecondary.values.light.resolved }, dark: { alias: 'bgSecondary', resolved: v.bgSecondary.values.dark.resolved } },
+    usedBy: ['banner'], family: 'banner' });
+  assert.equal(v['banner-error-border'].values.light.alias, 'bgNegative');
+  // banner.js has variants only, each with background and borderColor among the roles the step knows
+  const component = Object.keys(v).filter(k => v[k].family === 'banner' && !v[k].source.startsWith('synthesized: '));
+  assert.deepEqual(component, ['error', 'informational', 'promotional', 'warning'].flatMap(x => [`banner-${x}-background`, `banner-${x}-border`]));
+  assert.ok(!Object.keys(v).some(k => k.startsWith('button-')), 'no Button tokens without a Button Contract or --family button');
+  assert.ok(doc.checks.css.modules['@coinbase/cds-common/esm/tokens/banner.js']);
+  assert.equal(doc.checks.css.modules['@coinbase/cds-common/esm/tokens/button.js'], undefined);
+  const roles = doc.notes.find(n => n.at === 'variables.banner-*');
+  assert.match(roles.message, /iconColor, textColor, primaryActionColor, secondaryActionColor, iconButtonColor/);
+  assert.equal(roles.level, 'info');
+});
+
+test('a family with no token map gets no component tokens, only its closure, and an info note: Switch; the run does not fail', { skip }, async () => {
+  const path = 'design-systems/cds/contracts/switch.component.json';
+  const { doc, summary } = await generate({ sources, contracts: [{ path, contract: contract({ family: 'switch', fill: 'bgPrimary' }) }] });
+  assert.ok(!Object.values(doc.variables).some(x => x.family), 'no component or Synthesized tokens');
+  assert.deepEqual(doc.closure.tokens, ['bgPrimary']);
+  assert.deepEqual(doc.variables.bgPrimary.usedBy, ['switch']);
+  assert.deepEqual(doc.notes.filter(n => n.at === 'variables.switch-*'), [{ level: 'info', at: 'variables.switch-*',
+    message: 'switch has no component token map: @coinbase/cds-common@9.29.0 has no esm/tokens/switch.js, so the document carries no switch component or Synthesized tokens, only the Theme, Layout and Type tokens its Contract binds.' }]);
+  assert.match(summary[0], /^families switch;/);
+});
+
+test('--family chip: a cds-common token module with no variants is no token map either', { skip }, async () => {
+  const { doc } = await generate({ sources, families: ['chip'] });
+  assert.ok(!Object.values(doc.variables).some(x => x.family));
+  assert.match(doc.notes.find(n => n.at === 'variables.chip-*').message, /^chip has no component token map: @coinbase\/cds-common@9\.29\.0 esm\/tokens\/chip\.js exports no variants, so/);
+});
+
+test('the @deprecated variants come from the props type the Contract pins under packages/common/src/types/', { skip }, async () => {
+  const button = readContracts().filter(c => c.contract.family.key === 'button');
+  const pinned = (await generate({ sources, contracts: button })).doc;
+  // foregroundMuted is deprecated in ButtonBaseProps.ts, which the Button Contract pins: out of the pickers
+  assert.ok(button[0].contract.source.files['packages/common/src/types/ButtonBaseProps.ts']);
+  for (const name of ['button-foregroundMuted-background', 'button-foregroundMuted-hover-background', 'button-foregroundMuted-transparent-color'])
+    assert.deepEqual(pinned.variables[name].scopes, [], name);
+  assert.match(pinned.notes.find(n => n.at === 'variables.button-foregroundMuted-*').message, /^foregroundMuted is @deprecated in packages\/common\/src\/types\/ButtonBaseProps\.ts \("Use `secondary` directly\."\)/);
+  // a Contract that pins no props type, or no Contract (--family button), deprecates nothing
+  for (const opts of [{ contracts: [{ path: PATH, contract: contract() }] }, {}]) {
+    const { doc } = await run(opts);
+    assert.deepEqual(doc.variables['button-foregroundMuted-background'].scopes, ['FRAME_FILL']);
+    assert.ok(!doc.notes.some(n => n.at === 'variables.button-foregroundMuted-*'));
+  }
 });
 
 test('the step uses the shared closure() and validate(), never a copy', () => {
