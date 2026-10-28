@@ -11406,7 +11406,7 @@
     {
       "level": "info",
       "at": "variables.radio-*",
-      "message": "radio has no component token map: @coinbase/cds-common@9.29.0 has no esm/tokens/radio.js, so the document carries no radio component or Synthesized tokens, only the Theme, Layout and Type tokens its Contract binds."
+      "message": "radio has no component token map: @coinbase/cds-common@9.29.0 has no esm/tokens/radio.js, so the document carries no radio component tokens or state blends from one."
     },
     {
       "level": "info",
