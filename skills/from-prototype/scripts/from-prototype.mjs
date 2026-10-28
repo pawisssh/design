@@ -13,7 +13,7 @@ import { basename, dirname, extname, join, relative, resolve, sep } from 'node:p
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { LAYOUTS, blocks, fontOf } from '../../adapter-generic/scripts/foundations.mjs';
-import { cssEntry, lockfileRules } from '../../adapter-generic/scripts/sources.mjs';
+import { cssEntry, lockfileRules, sourceFiles as files } from '../../adapter-generic/scripts/sources.mjs';
 import { featureOf } from '../../to-handoff/scripts/feature-key.mjs';
 import { fileHash, handoffContentHash } from '../../to-handoff/scripts/hash.mjs';
 import { stampOf } from '../../to-handoff/scripts/render-html.mjs';
@@ -21,7 +21,6 @@ import { REPO_ROOT, inScratch } from '../../to-handoff/scripts/system.mjs';
 import { fileKeyOf } from '../../vibe-to-figma/scripts/build.mjs';
 import { stylesheets } from '../../vibe-to-figma/scripts/extract.mjs';
 import { folderName } from '../../vibe-to-figma/scripts/folder.mjs';
-import { files, utilitiesIn } from '../../vibe-to-figma/scripts/path.mjs';
 
 // The Prototype kinds, ADR 0019's.
 const SHADCN = 'React + Tailwind + shadcn';
@@ -42,6 +41,27 @@ const STYLES = new Set(['.css', '.scss', '.sass']);
 const UI_FOLDERS = ['components/ui', 'src/components/ui', 'src/app/components/ui'];
 const CSS_IN_JS = ['styled-components', '@emotion/styled', '@emotion/react', '@emotion/css', '@stitches/react', '@vanilla-extract/css', '@linaria/core', '@linaria/react', 'goober', 'styled-jsx'];
 const MIN_UTILITIES = 3;
+
+// A Tailwind utility as written in a class string: a hyphenated utility with a scale, fraction or colour, behind any
+// variants (`hover:`, `md:`, `data-[x=y]:`), `!`, and an opacity (`/50`). A bare word such as `border` or `flex` is
+// not one: plain CSS classes use those too.
+const SCALE = String.raw`(?:\d+(?:\.\d+)?(?:/\d+)?|px|auto|full|screen|min|max|fit|\[[^\]]+\])`;
+const UTILITY = new RegExp(String.raw`^(?:[\w\[\]=.*&-]+:)*!?-?(?:`
+  + String.raw`(?:p|px|py|pt|pr|pb|pl|m|mx|my|mt|mr|mb|ml|gap|gap-x|gap-y|space-x|space-y|w|h|size|min-w|max-w|min-h|max-h|top|left|right|bottom|inset|z|basis|leading|tracking|opacity|duration|delay|col-span|row-span|grid-cols|grid-rows)-${SCALE}`
+  + String.raw`|(?:bg|text|border|ring|fill|stroke|outline|divide|from|to|via|shadow|accent|caret|decoration)-[a-z][a-z0-9-]*|(?:bg|text|border|ring|fill|stroke|outline|shadow)-\[[^\]]+\]`
+  + String.raw`|rounded-[a-z0-9\[][\w\[\]#%.-]*|border-[xytblr]-?\d*|font-(?:thin|light|normal|medium|semibold|bold|extrabold|black|sans|serif|mono)`
+  + String.raw`|items-(?:start|end|center|baseline|stretch)|justify-(?:start|end|center|between|around|evenly)|self-(?:auto|start|end|center|stretch)|text-(?:left|center|right)`
+  + String.raw`|flex-(?:row|col|wrap|1|auto|none)|overflow-[a-z]+|cursor-[a-z-]+|transition-[a-z]+)(?:/(?:\d+|\[[^\]]+\]))?$`);
+
+// Every string and template literal of a source file is searched, not just the className attribute's, so a class
+// string held in a constant or a cva() call counts, as does a template with ${} parts.
+function utilitiesIn(source) {
+  const found = new Set();
+  for (const m of source.matchAll(/"([^"\n]*)"|'([^'\n]*)'|`([^`]*)`/g)) {
+    for (const t of (m[1] ?? m[2] ?? m[3]).split(/[\s"'`{}()$,;]+/)) if (t && UTILITY.test(t)) found.add(t);
+  }
+  return found;
+}
 
 // What the check reads of a Prototype: file names, package.json and text, never a parser that has to be fetched.
 function reading(prototype) {
@@ -84,7 +104,7 @@ const KINDS = [
   { kind: OTHER, evidence: p => [...declaredOf(p, ['vue', 'nuxt', 'svelte', '@sveltejs/kit', '@angular/core']), ...p.all.filter(f => ['.vue', '.svelte'].includes(extname(f))).slice(0, 1)] },
   { kind: SHADCN, evidence: p => p.html ? [] : p.all.includes('components.json') ? ['components.json'] : [codeLibraryFolder(p)].filter(Boolean) },
   // The mixed kind keeps today's rule until #331: enough utilities make it path A, with a note (the `mixed` row).
-  // Carbon first, as choosePath has it: a Carbon app is styled by Carbon's SCSS, whatever else its classNames hold.
+  // Carbon first: a Carbon app is styled by Carbon's SCSS, whatever else its classNames hold.
   { kind: PATH_A, evidence: p => p.declared.has('react') && tailwindDeclared(p) && !carbon(p).length
     && new Set(p.code.flatMap(f => [...utilitiesIn(p.text(f))])).size >= MIN_UTILITIES ? ['tailwindcss', 'Tailwind utilities in className'] : [] },
   { kind: MODULES, evidence: p => !p.declared.has('react') ? [] : [...p.all.filter(f => /\.module\.s?css$/.test(f)),
@@ -185,7 +205,7 @@ const COMPONENT_SETS = [
   adapterRow('code-library-pins', f => ({ message: f.message, ticket: '#359' })),
   { name: 'screens', kinds: [SHADCN], effect: 'note', ticket: '#350', test: p => !wouter(p),
     message: 'with wouter the default family list comes from one screen, and `--all` takes every file, until #350' },
-  { name: 'screens', kinds: [SHADCN], ticket: '#361', test: p => !unreadDataRouter(p),
+  { name: 'screens', kinds: [SHADCN], ticket: '#361', test: p => p.options.all || !unreadDataRouter(p),
     message: "only with `--all`: the screens can't be read until #361 (a data router built in another file, or `Component:` routes)" },
   { name: 'screens', kinds: REACT, effect: 'note', ticket: '#349', message: "a form's controls inside a render prop are not counted yet (#349)" },
   // Only when Component Sets are asked (#437). The agent's one read of the file through the owner's Figma connection is the
@@ -288,7 +308,7 @@ const ticked = (names, sep = ', ') => names.map(n => `\`${n}\``).join(sep);
 const SCRATCH_ROOT = '.scratch/design-systems';
 
 /**
- * check(prototype, {figma, handoff, ds, name, all, root}) -> {kind, evidence, verdicts: {componentSets, handoff},
+ * check(prototype, {figma, componentSets, handoff, ds, name, all, root}) -> {kind, evidence, verdicts: {componentSets, handoff},
  * questions, refusals, designSystem, designSystems, plan}: the Prototype's kind and the files that show it, each
  * output's verdict ({verdict, reasons: [{row, message, ticket}], notes}) from its gate rows, a plain HTML Handoff's with
  * the `page` it reads, the owner's open questions ({id, question, options?}), what refuses the run beside the verdicts
@@ -296,7 +316,8 @@ const SCRATCH_ROOT = '.scratch/design-systems';
  * Design Systems already holding a Handoff of its feature key), the Design Systems here, and the plan, settled only
  * when no question is open and nothing asked is refused (spec #343 The check; Owner questions; The Handoff's Design
  * System; The stages). `prototype` is a folder, or for plain HTML one HTML file; `figma` (a link) asks for Component
- * Sets and `handoff` for a Handoff against the Design System `ds`. `root` is the repo whose design-systems/ and
+ * Sets, as `componentSets` does with the link left to the build (Vibe-to-Figma run alone, #439), and `handoff` for a
+ * Handoff against the Design System `ds`. `root` is the repo whose design-systems/ and
  * .scratch/design-systems/ are read (this checkout by default). It reads file names, package.json and text; it writes
  * nothing, fetches nothing and loads no fetched parser.
  */
@@ -312,7 +333,7 @@ export function check(prototype, options = {}) {
   const verdicts = { componentSets: p.componentSets, handoff: verdictOf(HANDOFF, p, 'yes, against its own folder') };
   // Plain HTML reaches To-handoff as one HTML file: the folder's one page, found without naming it.
   if ([HTML, HTML_UTILITIES].includes(p.kind) && verdicts.handoff.verdict !== 'no') verdicts.handoff.page = htmlFiles(p)[0];
-  const asked = [options.figma !== undefined && 'componentSets', options.handoff && 'handoff'].filter(Boolean);
+  const asked = [(options.figma !== undefined || options.componentSets) && 'componentSets', options.handoff && 'handoff'].filter(Boolean);
   const ds = designSystemOf(p, verdicts.handoff);
   if (ds.against) verdicts.handoff.verdict = `yes, against \`${ds.against}\``;
   const refused = asked.some(o => verdicts[o].verdict === 'no');
@@ -458,7 +479,7 @@ const STAGES = { folder: "Vibe-to-Figma's folder step", 'review-page': "Vibe-to-
 
 // The check's message (#324 D7): what was found, each output's verdict and reason, what is still possible, the owner's
 // questions or the plan, and that nothing was fetched or written.
-function message(prototype, r, options = {}) {
+export function message(prototype, r, options = {}) {
   const command = o => `\`node skills/from-prototype/scripts/from-prototype.mjs check ${prototype} ${o === 'handoff'
     ? `--handoff${options.ds ? ` --ds ${options.ds}` : ''}`
     : `--figma ${options.figma ?? '<url>'}${options.name ? ` --name ${options.name}` : ''}${options.all ? ' --all' : ''}`}\``;
