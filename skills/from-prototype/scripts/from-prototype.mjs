@@ -105,8 +105,8 @@ const tanstackStart = p => p.declared.has('@tanstack/react-start') && p.all.some
 const frameworks = p => [...declaredOf(p, ['next', 'vite']), ...(tanstackStart(p) ? ['TanStack Start'] : [])];
 
 // What To-handoff's React reader takes, as its reactKind and readers find it, with no parser: Next before Vite, React
-// outside peerDependencies, the script index.html loads (its readVite regex) and the App Router's root layout. Whether the module script
-// renders JSX is left to the reader stage, after the fetch.
+// outside peerDependencies, the script index.html loads (readVite's regex) and the App Router's root layout. Whether
+// that module script renders JSX is left to the reader stage, after the fetch.
 const built = (p, name) => !!(p.pkg?.dependencies?.[name] || p.pkg?.devDependencies?.[name]);
 const onNext = p => built(p, 'next');
 const onVite = p => !onNext(p) && built(p, 'vite');
