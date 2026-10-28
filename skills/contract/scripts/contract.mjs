@@ -497,8 +497,8 @@ function checkGeometry(c, anatomy, err) {
     });
 }
 
-// A size that is a token or a value, not `hug`, `fill` or `fixed` (#442).
-const isFixedSize = v => typeof v === 'number' || (isObj(v) && ('token' in v || 'raw' in v));
+// A size that is a token or a number, not `hug`, `fill` or `fixed` (#442), nor a raw that is not a number (#458).
+const isFixedSize = v => typeof v === 'number' || (isObj(v) && ('token' in v || Number.isFinite(v.raw)));
 const sizeKey = v => isObj(v) ? ('token' in v ? `token ${v.token}` : v.raw) : v;
 
 // Rule 5 for one resolved variant (#442). An absolute node and an ELLIPSE have a fixed `width` and `height`. An
@@ -511,8 +511,9 @@ function checkPlacement(parent, r, gap, t) {
   const flows = direction === 'row' || direction === 'column', stacks = direction === undefined || direction === 'none';
   for (const node of parent.children || []) {
     const name = node.name, fields = layout(name), absolute = fields.position === 'absolute';
-    if ((absolute || node.type === 'ELLIPSE') && (!isFixedSize(fields.width) || !isFixedSize(fields.height)))
-      gap(`layout ${name}.${absolute ? 'position' : 'width'}`, `${absolute ? 'absolute' : 'the ELLIPSE'} ${name} needs a fixed width and height (a token or a value)`, t);
+    const loose = ['width', 'height'].find(f => !isFixedSize(fields[f]));
+    if ((absolute || node.type === 'ELLIPSE') && loose)
+      gap(`layout ${name}.${loose}`, `${absolute ? 'absolute' : 'the ELLIPSE'} ${name} needs a fixed width and height (a token or a number); its ${loose} is not`, t);
     if (absolute) {
       if (!flows) gap(`layout ${name}.position`, `absolute ${name} needs a parent with Auto Layout, but ${parent.name}'s direction is not row or column`, t);
       if (fields.constraints === undefined) gap(`layout ${name}.constraints`, `absolute ${name} needs constraints`, t);
@@ -565,15 +566,22 @@ function checkDefaults(c, domain, err) {
     if (!domain[a.key].includes(a.default)) err(2, `axes.${a.key}.default`, `default "${a.default}" is not a value of ${a.key}`);
 }
 
+// The size fields, which the builder writes as a number: a raw one that is not a number gives Figma no size (#458).
+const SIZES = new Set(['width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight', 'paddingTop', 'paddingRight',
+  'paddingBottom', 'paddingLeft', 'gap', 'radius', 'strokeWeight']);
+
 // Rule 6. `extra(variable, token, path)` returns a further problem for a token use, or undefined.
 function checkTokens(c, foundations, err, extra) {
   for (const section of SECTIONS)
     (c[section] || []).forEach((rule, i) => {
       for (const [node, fields] of Object.entries(rule.set || {}))
         for (const [field, value] of Object.entries(fields))
-          walkRefs(value, `${section}[${i}].${node}.${field}`, (ref, path) => {
-            if ('raw' in ref && (!['info', 'warning'].includes(ref.level) || !ref.reason))
+          walkRefs(value, `${section}[${i}].${node}.${field}`, (ref, path, key) => {
+            if (!('raw' in ref)) return;
+            if (!['info', 'warning'].includes(ref.level) || !ref.reason)
               err(6, path, `the raw value at ${path} needs \`level\` (info or warning) and \`reason\``);
+            if (key === undefined && SIZES.has(field) && !Number.isFinite(ref.raw))
+              err(6, path, `the raw value at ${path} is ${JSON.stringify(ref.raw)}, not a number: the builder writes \`${field}\` as one`);
           });
     });
   const seen = new Set();
