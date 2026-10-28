@@ -75,9 +75,9 @@ test('the Carbon + SCSS fixtures are React + CSS or SCSS classes: Component Sets
   }
   // The Vite app's Handoff reads, with no own folder since it can't have Component Sets; the Carbon + SCSS fixture
   // declares neither Next nor Vite.
-  const vite = check(handoff('vite-app')).verdicts.handoff;
-  assert.equal(vite.verdict, 'only against a Design System you name');
-  assert.deepEqual(vite.reasons, [{ row: 'own-folder', message: "it can't have Component Sets, so it has no own folder", ticket: undefined }]);
+  const viteApp = check(handoff('vite-app')).verdicts.handoff;
+  assert.equal(viteApp.verdict, 'only against a Design System you name');
+  assert.deepEqual(viteApp.reasons, [{ row: 'own-folder', message: "it can't have Component Sets, so it has no own folder", ticket: undefined }]);
   assert.equal(check(vibe('carbon-scss-app')).verdicts.handoff.verdict, 'no');
   const plain = check(handoff('conditions-app'));
   assert.equal(plain.kind, 'React + CSS or SCSS classes');
@@ -294,8 +294,9 @@ test('every run writes nothing, runs and fetches nothing, leaves the Prototype a
   const prototypes = [handoff('v0-app'), handoff('next-app'), handoff('vite-app'), handoff('tailwind-app'), handoff('conditions-app'),
     handoff('invite-teammates'), vibe('path-a-app'), vibe('tailwind-no-shadcn'), vibe('carbon-scss-app'), vibe('html-app'), join(vibe('html-app'), 'index.html')];
   const made = VARIANTS.map(variant);
-  const r = spawnSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify([...prototypes, ...made])], { encoding: 'utf8' });
-  for (const d of made) rmSync(d, { recursive: true, force: true });
+  let r;
+  try { r = spawnSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify([...prototypes, ...made])], { encoding: 'utf8' }); }
+  finally { for (const d of made) rmSync(d, { recursive: true, force: true }); }
   assert.equal(r.status, 0, r.stderr);
   const { calls, changed, loaded } = JSON.parse(r.stdout);
   assert.deepEqual(calls, [], 'nothing written, run or fetched');

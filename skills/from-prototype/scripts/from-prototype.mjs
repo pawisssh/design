@@ -105,12 +105,13 @@ const tanstackStart = p => p.declared.has('@tanstack/react-start') && p.all.some
 const frameworks = p => [...declaredOf(p, ['next', 'vite']), ...(tanstackStart(p) ? ['TanStack Start'] : [])];
 
 // What To-handoff's React reader takes, as its reactKind and readers find it, with no parser: Next before Vite, React
-// outside peerDependencies, the Vite shell's module script and the App Router's root layout. Whether the module script
+// outside peerDependencies, the script index.html loads (its readVite regex) and the App Router's root layout. Whether the module script
 // renders JSX is left to the reader stage, after the fetch.
-const onNext = p => p.declared.has('next');
-const onVite = p => !onNext(p) && p.declared.has('vite');
-const peerOnlyReact = p => !p.pkg?.dependencies?.react && !p.pkg?.devDependencies?.react;
-const viteShell = p => p.all.includes('index.html') && /<script\b[^>]*\bsrc=["']\/?([^"']+\.[jt]sx?)["']/.test(p.text('index.html'));
+const built = (p, name) => !!(p.pkg?.dependencies?.[name] || p.pkg?.devDependencies?.[name]);
+const onNext = p => built(p, 'next');
+const onVite = p => !onNext(p) && built(p, 'vite');
+const peerOnlyReact = p => !!p.pkg?.peerDependencies?.react && !built(p, 'react');
+const viteShell = p => p.all.includes('index.html') && /<script\b[^>]*\bsrc=["']\/?[^"']+\.[jt]sx?["']/.test(p.text('index.html'));
 const appRouter = p => {
   const app = ['app', `src${sep}app`].find(d => p.all.some(f => f.startsWith(d + sep)));
   return !!app && ['.tsx', '.ts', '.jsx', '.js'].some(e => p.all.includes(join(app, 'layout' + e)));
@@ -123,8 +124,9 @@ const unreadDataRouter = p => p.code.some(f => /<RouterProvider\b/.test(p.text(f
   || p.code.some(f => DATA_ROUTER.test(p.text(f)) && /\bComponent\s*:/.test(p.text(f)));
 
 // Each output's gate rows, in order (spec #343 The gate table): name, the kinds it applies to, its test (passes when
-// true; a row with none fails for every kind it names), its effect when it fails (a refusal unless `note`), its
-// message, and the ticket it waits on. A gate ticket lands by adding or changing its own rows.
+// true; a row with none fails for every kind it names), its effect when it fails (a refusal unless `note` or
+// `closes`, see verdictOf), its message, and the ticket it waits on. A gate ticket lands by adding or changing its
+// own rows.
 const COMPONENT_SETS = [
   { name: 'reader', kinds: [CLASSES], message: 'not yet: Component Sets for this kind are charted in map #310', ticket: '#310' },
   { name: 'reader', kinds: [HTML], message: 'not yet: there is no reader for plain HTML + CSS classes (spec #339)', ticket: '#339' },
@@ -174,10 +176,10 @@ const classStyled = p => p.all.filter(f => STYLES.has(extname(f)) && !/\.module\
 function verdictOf(table, p, yes) {
   const failing = table.filter(row => row.kinds.includes(p.kind) && !row.test?.(p))
     .map(row => ({ row: row.name, message: typeof row.message === 'function' ? row.message(p) : row.message, ticket: row.ticket, effect: row.effect }));
-  const of = effect => failing.filter(f => f.effect === effect).map(({ effect, ...r }) => r);
-  const refusals = of(undefined), closes = of('closes');
+  const withEffect = wanted => failing.filter(f => f.effect === wanted).map(({ effect, ...r }) => r);
+  const refusals = withEffect(undefined), closes = withEffect('closes');
   return { verdict: refusals.length ? 'no' : closes.length ? 'only against a Design System you name' : yes,
-    reasons: refusals.length ? refusals : closes, notes: of('note').map(f => f.message) };
+    reasons: refusals.length ? refusals : closes, notes: withEffect('note').map(f => f.message) };
 }
 
 /**
