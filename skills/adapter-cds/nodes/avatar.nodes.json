@@ -1,0 +1,7 @@
+{
+  "Avatar": "cds-Avatar wrapperCss",
+  "Shape": "avatarCss borderRadiusCss",
+  "Image": "cds-RemoteImage",
+  "Fallback": "borderRadiusCss",
+  "Initial": "borderRadiusCss"
+}
