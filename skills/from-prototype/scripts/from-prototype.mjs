@@ -14,7 +14,8 @@ import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { LAYOUTS, blocks, fontOf } from '../../adapter-generic/scripts/foundations.mjs';
 import { cssEntry } from '../../adapter-generic/scripts/sources.mjs';
-import { handoffContentHash } from '../../to-handoff/scripts/hash.mjs';
+import { featureOf } from '../../to-handoff/scripts/feature-key.mjs';
+import { fileHash, handoffContentHash } from '../../to-handoff/scripts/hash.mjs';
 import { stampOf } from '../../to-handoff/scripts/render-html.mjs';
 import { REPO_ROOT, inScratch } from '../../to-handoff/scripts/system.mjs';
 import { fileKeyOf } from '../../vibe-to-figma/scripts/build.mjs';
@@ -246,20 +247,27 @@ function verdictOf(table, p, yes) {
 }
 
 const OUTPUTS = { componentSets: 'Component Sets', handoff: 'a Handoff' };
+// Names as the message writes them: each in backticks, joined.
+const ticked = (names, sep = ', ') => names.map(n => `\`${n}\``).join(sep);
 const SCRATCH_ROOT = '.scratch/design-systems';
 
 /**
- * check(prototype, {figma, handoff, ds, name, all}) -> {kind, evidence, verdicts: {componentSets, handoff}, questions,
- * plan}: the Prototype's kind and the files that show it, each output's verdict ({verdict, reasons: [{row, message,
- * ticket}], notes}) from its gate rows, a plain HTML Handoff's with the `page` it reads, the owner's open questions ({id, question, options?}), and the plan, settled
- * only when no question is open and nothing asked is refused (spec #343 The check; Owner questions; The stages).
- * `prototype` is a folder, or for plain HTML one HTML file; `figma` (a link) asks for Component Sets and `handoff` for
- * a Handoff against the Design System `ds`. It reads file names, package.json and text; it writes nothing, fetches
- * nothing and loads no fetched parser.
+ * check(prototype, {figma, handoff, ds, name, all, root}) -> {kind, evidence, verdicts: {componentSets, handoff},
+ * questions, refusals, designSystem, designSystems, plan}: the Prototype's kind and the files that show it, each
+ * output's verdict ({verdict, reasons: [{row, message, ticket}], notes}) from its gate rows, a plain HTML Handoff's with
+ * the `page` it reads, the owner's open questions ({id, question, options?}), what refuses the run beside the verdicts
+ * (an unknown `ds`, a name collision), the Handoff's Design System once settled ({name, existing}: `existing` names the
+ * Design Systems already holding a Handoff of its feature key), the Design Systems here, and the plan, settled only
+ * when no question is open and nothing asked is refused (spec #343 The check; Owner questions; The Handoff's Design
+ * System; The stages). `prototype` is a folder, or for plain HTML one HTML file; `figma` (a link) asks for Component
+ * Sets and `handoff` for a Handoff against the Design System `ds`. `root` is the repo whose design-systems/ and
+ * .scratch/design-systems/ are read (this checkout by default). It reads file names, package.json and text; it writes
+ * nothing, fetches nothing and loads no fetched parser.
  */
 export function check(prototype, options = {}) {
   const p = reading(prototype);
   p.options = options;
+  p.repo = options.root ?? REPO_ROOT;
   for (const { kind, evidence } of KINDS) {
     const found = evidence(p);
     if (found.length) { p.kind = kind; p.evidence = [...found, ...frameworks(p)]; break; }
@@ -269,30 +277,35 @@ export function check(prototype, options = {}) {
   // Plain HTML reaches To-handoff as one HTML file: the folder's one page, found without naming it.
   if ([HTML, HTML_UTILITIES].includes(p.kind) && verdicts.handoff.verdict !== 'no') verdicts.handoff.page = htmlFiles(p)[0];
   const asked = [options.figma !== undefined && 'componentSets', options.handoff && 'handoff'].filter(Boolean);
+  const ds = designSystemOf(p, verdicts.handoff);
+  if (ds.against) verdicts.handoff.verdict = `yes, against \`${ds.against}\``;
   const refused = asked.some(o => verdicts[o].verdict === 'no');
-  const questions = refused ? [] : questionsOf(p, asked, verdicts);
-  const plan = asked.length && !questions.length && !refused ? planOf(p, asked) : null;
-  return { kind: p.kind, evidence: p.evidence, verdicts, questions, plan };
+  const refusals = refused ? [] : refusalsOf(p, asked, ds);
+  const questions = refused || refusals.length ? [] : questionsOf(p, asked, verdicts, ds);
+  const plan = asked.length && !questions.length && !refused && !refusals.length ? planOf(p, asked, ds) : null;
+  return { kind: p.kind, evidence: p.evidence, verdicts, questions, refusals, designSystem: ds.settled, designSystems: ds.here.names, plan };
 }
 
 // The owner's questions (spec #343 Owner questions): with no output asked, one question offering only the outputs
-// whose verdict is not "no", and the Design System question beside it when a Handoff is among them; a Handoff asked
-// with no --ds asks its Design System. The Design System's default, the own-folder answer and the rerun rule are #438's.
-function questionsOf(p, asked, verdicts) {
-  const designSystem = { id: 'designSystem', question: 'Which Design System is the Handoff against?', options: designSystems() };
+// whose verdict is not "no", and the Design System question beside it when a Handoff is among them and its Design System
+// is not settled; a Handoff asked with no --ds and no existing Handoff asks its Design System (#438).
+function questionsOf(p, asked, verdicts, ds) {
+  const designSystem = { id: 'designSystem', question: `Which Design System is the Handoff against?${ds.existing.length > 1
+    ? ` This Prototype's Handoff \`${ds.key}\` is already in ${ticked(ds.existing, ' and ')}.` : ''}`,
+  options: ds.options, own: ds.own, default: ds.default, imported: ds.imported, ...(ds.existing.length > 1 ? { existing: ds.existing } : {}) };
   if (!asked.length) {
     const possible = Object.keys(OUTPUTS).filter(o => verdicts[o].verdict !== 'no');
     const question = possible.length === 2 ? 'Which outputs should this run make: Component Sets, a Handoff, or both?'
       : `Should this run make ${OUTPUTS[possible[0]]}? It is the only output possible.`;
     return possible.length ? [{ id: 'outputs', question,
       options: possible.map(o => ({ output: o, verdict: verdicts[o].verdict, flag: o === 'handoff' ? '--handoff' : '--figma <url>' })) },
-    ...(possible.includes('handoff') ? [designSystem] : [])] : [];
+    ...(possible.includes('handoff') && !ds.answer ? [designSystem] : [])] : [];
   }
   const questions = [];
   const own = ownFolder(p);
-  if (asked.includes('handoff') && !p.options.ds) questions.push(designSystem);
+  if (asked.includes('handoff') && !ds.answer) questions.push(designSystem);
   // The own folder named while Component Sets are "no": Vibe-to-Figma's folder step would refuse it (the own-folder row).
-  if (asked.includes('handoff') && p.options.ds === own.name && verdicts.componentSets.verdict === 'no') {
+  if (asked.includes('handoff') && ds.ownAnswer && verdicts.componentSets.verdict === 'no') {
     questions.push({ ...designSystem, question: `Which Design System is the Handoff against? Not \`${own.name}\`, this Prototype's own folder: it can't have Component Sets, so its own folder can't be made.` });
   }
   if (own.refused && asked.includes('componentSets')) questions.push({ id: 'name', question: `What is this Prototype's own folder called? ${own.refused}` });
@@ -304,24 +317,104 @@ function ownFolder(p) {
   try { return { name: folderName(p.root, p.options.name) }; } catch (e) { return { refused: e.message }; }
 }
 
-// The ordered stages after the check (spec #343 The stages), each with its folder and Design System. Component Sets
-// always come from the Prototype's own folder; a Handoff runs against --ds, which is the own folder when it names it.
-function planOf(p, asked) {
+// The ordered stages after the check (spec #343 The stages; Scratch roots), each with its folder and Design System.
+// Component Sets always come from the Prototype's own folder; a Handoff runs against the settled Design System, which
+// is the own folder when --ds names it. A committed Design System is used through its scratch copy: the Handoff stage
+// makes it when it is absent, and one already there is used in place. `notes` are what the owner is told: a --ds that
+// makes a new Handoff, and a committed Design System that moved since its copy was made (`moved`).
+function planOf(p, asked, { answer: ds, ownAnswer, here, existing, key }) {
   const { name: own } = ownFolder(p);
-  const ds = p.options.ds;
   const stageAt = (stage, designSystem, extra) => ({ stage, folder: `${SCRATCH_ROOT}/${designSystem}`, designSystem, ...extra });
-  const folderStep = asked.includes('componentSets') || ds === own;
+  const folderStep = asked.includes('componentSets') || ownAnswer;
+  const handoff = asked.includes('handoff');
+  const throughCopy = handoff && !ownAnswer && here.committed.has(ds);
   const stages = [
     ...(folderStep ? [stageAt('folder', own, p.options.all ? { all: true } : {}), stageAt('review-page', own), stageAt('approve', own, { owner: true })] : []),
     ...(asked.includes('componentSets') ? [stageAt('figma-build', own, { figma: p.options.figma })] : []),
-    ...(asked.includes('handoff') ? [...(ds === own ? [] : [stageAt('scratch-copy', ds)]), stageAt('generate', ds), stageAt('review', ds), stageAt('sign-off', ds, { owner: true })] : []),
+    ...(handoff ? [...(throughCopy && !here.scratch.has(ds) ? [stageAt('scratch-copy', ds)] : []), stageAt('generate', ds), stageAt('review', ds), stageAt('sign-off', ds, { owner: true })] : []),
   ];
-  return { outputs: asked, stages: [...stages, { stage: 'hand-over', outputs: asked }] };
+  const files = throughCopy && here.scratch.has(ds) ? movedFiles(p.repo, ds) : [];
+  const notes = [
+    ...(handoff && existing.length && !existing.includes(ds)
+      ? [`this Prototype's Handoff \`${key}\` is already in ${ticked(existing, ' and ')}; \`--ds ${ds}\` makes a new Handoff`] : []),
+    ...(files.length ? [`the committed Design System \`${ds}\` has moved since its scratch copy was made: ${files.join(', ')}. Refreshing the copy replaces those files and puts the copy's signed Handoffs into Drift, so it is refreshed only when the owner says so in chat, keeping its \`handoffs/\` and any Contract written mid-run`] : []),
+  ];
+  return { outputs: asked, stages: [...stages, { stage: 'hand-over', outputs: asked }], notes, ...(files.length ? { moved: { designSystem: ds, files } } : {}) };
 }
 
-// The Design Systems here: committed, and scratch copies under .scratch/design-systems/.
-const designSystems = () => [...new Set(['design-systems', '.scratch/design-systems'].map(d => join(REPO_ROOT, d))
-  .filter(existsSync).flatMap(d => readdirSync(d).filter(n => !n.startsWith('.') && statSync(join(d, n)).isDirectory())))].sort();
+// The Design Systems here (spec #343 The Handoff's Design System): the committed folders and those under
+// .scratch/design-systems/, a scratch copy and its committed folder as one name.
+function hereOf(repo) {
+  const under = d => existsSync(join(repo, d)) ? readdirSync(join(repo, d)).filter(n => !n.startsWith('.') && statSync(join(repo, d, n)).isDirectory()) : [];
+  const committed = new Set(under('design-systems')), scratch = new Set(under(SCRATCH_ROOT));
+  return { committed, scratch, names: [...new Set([...committed, ...scratch])].sort() };
+}
+// A Design System's folder: its scratch copy wins over the committed folder of the same name.
+const folderOf = (repo, here, ds) => join(repo, here.scratch.has(ds) ? SCRATCH_ROOT : 'design-systems', ds);
+const json = path => { try { return JSON.parse(readFileSync(path, 'utf8')); } catch { return null; } };
+
+// The packages a Design System's Contracts name as their code (ADR 0005). shadcn's name project files (`@/…`), which
+// no package.json depends on, so shadcn is never a default by import.
+function packagesOf(dir) {
+  const at = join(dir, 'contracts');
+  return existsSync(at) ? [...new Set(readdirSync(at).filter(f => f.endsWith('.component.json')).map(f => json(join(at, f))?.code?.package).filter(Boolean))] : [];
+}
+
+// The committed Foundations document and Contracts that differ from the scratch copy's files of the same names, or are
+// missing from it (Scratch roots: the copy moved).
+function movedFiles(repo, ds) {
+  const committed = join(repo, 'design-systems', ds), copy = join(repo, SCRATCH_ROOT, ds);
+  const contracts = existsSync(join(committed, 'contracts')) ? readdirSync(join(committed, 'contracts')).map(f => `contracts/${f}`) : [];
+  return [`${ds}.foundations.json`, ...contracts].filter(f => existsSync(join(committed, f)))
+    .filter(f => !existsSync(join(copy, f)) || !readFileSync(join(copy, f)).equals(readFileSync(join(committed, f)))).sort();
+}
+
+// A scratch folder is this Prototype's own (Scratch roots: a name collision) when its Family map's sites are this
+// Prototype's files, as extract() reads the map back on a rerun, or when every Prototype file its Foundations document
+// read (components.json, the stylesheet, package-lock.json, the root layout) is this Prototype's, byte for byte.
+function isOwn(p, dir, name) {
+  const sites = Object.values(json(join(dir, `${name}.family-map.json`))?.families ?? {}).flatMap(f => f.sites ?? []);
+  if (sites.length && sites.every(s => typeof s.file === 'string' && existsSync(join(p.root, s.file)))) return true;
+  const read = Object.entries(json(join(dir, `${name}.foundations.json`))?.source?.files ?? {});
+  return read.length > 0 && read.every(([f, hash]) => p.all.includes(f) && hash === fileHash(readFileSync(join(p.root, f))));
+}
+
+// The Handoff's Design System (spec #343, by #321's order): the list, the own folder while that route is open, the
+// default, and the answer: --ds, else the Design System an existing Handoff of this feature key is in (the rerun rule).
+// `against` is the Design System whose Code Library the Prototype imports when it has no own folder: its Handoff is
+// against it (#321 step 2).
+function designSystemOf(p, handoff) {
+  const here = hereOf(p.repo);
+  const own = ownFolder(p).name;
+  const ownOpen = handoff.verdict === 'yes, against its own folder' && !!own;
+  const readable = handoff.verdict !== 'no';
+  const imported = readable ? here.names.flatMap(n => packagesOf(folderOf(p.repo, here, n)).filter(pkg => built(p, pkg)).slice(0, 1).map(pkg => ({ name: n, package: pkg }))) : [];
+  const key = readable ? featureOf(handoff.page ? join(p.root, handoff.page) : p.root).key : null;
+  const existing = key ? here.names.filter(n => [join(p.repo, 'design-systems', n), join(p.repo, SCRATCH_ROOT, n)]
+    .some(d => existsSync(join(d, 'handoffs', key, 'handoff.json')))) : [];
+  const answer = p.options.ds ?? (existing.length === 1 ? existing[0] : null);
+  const against = imported.length === 1 && !ownOpen ? imported[0].name : null;
+  const byOrder = existing.length > 1 ? null : against ?? (ownOpen && !imported.length ? own : null);
+  return { here, key, existing, answer, ownAnswer: !!own && answer === own && !here.committed.has(own),
+    settled: answer ? { name: answer, key, existing } : null,
+    options: here.names.filter(n => n !== own || here.committed.has(n)), own: ownOpen ? own : undefined, default: byOrder, against,
+    imported };
+}
+
+// What refuses a run beside the verdicts (spec #343 The Handoff's Design System; Scratch roots): an unknown --ds, and
+// the own folder's name taken by a committed Design System or a scratch folder that isn't this Prototype's own.
+function refusalsOf(p, asked, ds) {
+  const { here } = ds;
+  const own = ownFolder(p).name;
+  const unknown = p.options.ds && !here.names.includes(p.options.ds) && p.options.ds !== own;
+  const inPlay = own && (asked.includes('componentSets') || (asked.includes('handoff') && ds.ownAnswer));
+  const taken = !inPlay ? null : here.committed.has(own) ? `the committed Design System \`${own}\`'s copy`
+    : here.scratch.has(own) && !isOwn(p, join(p.repo, SCRATCH_ROOT, own), own) ? 'a folder that is not this Prototype\'s own' : null;
+  return [
+    ...(unknown ? [`\`--ds ${p.options.ds}\` names no Design System here: ${ticked(here.names)}`] : []),
+    ...(taken ? [`this Prototype's own folder, \`${SCRATCH_ROOT}/${own}\`, is taken by ${taken}: pass \`--name\``] : []),
+  ];
+}
 
 const STAGES = { folder: "Vibe-to-Figma's folder step", 'review-page': "Vibe-to-Figma's review page", approve: "the owner's approve",
   'figma-build': 'the Figma build', 'scratch-copy': "the Design System's scratch copy", generate: "To-handoff's generate",
@@ -338,18 +431,32 @@ function message(prototype, r, options = {}) {
   const { componentSets: sets, handoff } = r.verdicts;
   // Component Sets refused only for their link (#437): the Prototype can still have them, and a Handoff can run alone.
   const linkOnly = sets.reasons.every(x => x.row === 'figma');
-  const possible = r.plan ? null : sets.verdict === 'no' && handoff.verdict !== 'no'
+  const possible = r.plan || r.refusals.length ? null : sets.verdict === 'no' && handoff.verdict !== 'no'
     ? linkOnly ? `A Handoff can run alone: ${command('handoff')}.`
-      : `A Handoff against a Design System your developers already build with is still possible. Here: ${designSystems().map(d => `\`${d}\``).join(', ')}. Run ${command('handoff')} if one of them is it.`
+      : `A Handoff against a Design System your developers already build with is still possible. Here: ${ticked(r.designSystems)}. Run ${command('handoff')} if one of them is it.`
     : sets.verdict !== 'no' && handoff.verdict === 'no' ? `Component Sets alone are still possible: ${command('componentSets')}.`
     : sets.verdict === 'no' ? 'Nothing else is possible for this Prototype today.' : null;
   const questions = r.questions.flatMap(q => [`Owner question: ${q.question}`, ...q.id === 'outputs'
     ? q.options.map(o => `- ${OUTPUTS[o.output]} (${o.verdict}): run again with \`${o.flag}\``)
-    : q.id === 'designSystem' ? [`- here: ${q.options.map(d => `\`${d}\``).join(', ')}. Run again with \`--ds <design-system>\`.`] : []]);
+    : q.id === 'designSystem' ? designSystemLines(q) : []]);
+  const settled = r.designSystem && !options.ds && r.designSystem.existing.includes(r.designSystem.name)
+    ? [`The Handoff's Design System: \`${r.designSystem.name}\`, where this Prototype's Handoff \`${r.designSystem.key}\` already is.`] : [];
   const plan = r.plan ? ['Plan:', ...r.plan.stages.map((s, i) => `${i + 1}. ${STAGES[s.stage]}${s.stage === 'hand-over'
     ? ` of ${s.outputs.map(o => OUTPUTS[o]).join(' and ')}` : `: ${s.folder} (Design System \`${s.designSystem}\`)${s.figma ? ` into ${s.figma}` : ''}${s.all ? ', `--all`' : ''}`}`)] : [];
   return [`${prototype}: ${r.kind} (${r.evidence.join(', ')}).`, line('Component Sets', sets), line('Handoff', handoff),
-    ...(possible ? [possible] : []), ...questions, ...plan, '', 'Nothing was fetched or written.'].join('\n');
+    ...r.refusals.map(x => `- ${x}.`), ...(possible ? [possible] : []), ...questions, ...settled, ...plan,
+    ...(r.plan?.notes ?? []).map(n => `Note: ${n}.`), '', 'Nothing was fetched or written.'].join('\n');
+}
+
+// The Design System question's options (spec #343): the Design Systems here, worded by what the developers build with,
+// never by look; the own folder while that route is open; and the default #321's order gives, or why there is none.
+function designSystemLines(q) {
+  return [`- if your developers build with one of these: ${ticked(q.options)}. Run again with \`--ds <design-system>\`.`,
+    ...(q.own ? [`- None: this Prototype's own folder, \`${q.own}\`. Run again with \`--ds ${q.own}\`.`] : []),
+    q.default && q.default === q.own ? `- default: \`${q.own}\`, this Prototype's own folder.`
+      : q.default ? `- default: \`${q.default}\`, whose Contracts' package \`${q.imported.find(i => i.name === q.default).package}\` this Prototype depends on.`
+      : q.own && q.imported.length ? `- no default: this Prototype has its own folder and imports ${ticked(q.imported.map(i => i.name))}'s Code Library (#321 D6).`
+      : '- no default: name the one your developers build with.'];
 }
 
 // An Artifact's limits, as the Artifact tool states them: the page and each text file at most 16 MB, each binary
