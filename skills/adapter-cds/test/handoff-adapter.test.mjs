@@ -22,11 +22,9 @@ const themeOf = foundations => Object.values(foundations.collections).find(c => 
 test('To-handoff loads the CDS Design System with this module as its Adapter', async () => {
   const system = await loadDesignSystem(CDS_DS);
   assert.equal(system.adapter.contractProcedure, adapter.contractProcedure);
-  // every committed CDS Contract, by its family key: the families grow one ticket at a time (#469)
-  const committed = readdirSync(CONTRACTS_DIR).filter(f => f.endsWith('.component.json'))
-    .map(f => JSON.parse(readFileSync(join(CONTRACTS_DIR, f), 'utf8')).family.key);
+  // Every committed Contract, read from the folder: each family ticket of #469 adds one.
+  const committed = readdirSync(CONTRACTS_DIR).filter(f => f.endsWith('.component.json')).map(f => f.replace('.component.json', ''));
   assert.deepEqual(Object.keys(system.contracts).sort(), committed.sort());
-  assert.ok(committed.includes('button'));
   for (const name of ['roleGroups', 'surfaces', 'themeWrapper', 'breakpoints', 'contractProcedure', 'checkContract', 'available', 'renderer'])
     assert.ok(system.adapter[name], name);
 });

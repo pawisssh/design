@@ -41,8 +41,10 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
   const CASE = { strokeAlign: 'strokeAlign', strokeCap: 'strokeCap', position: 'layoutPositioning' };
   // An absolute node is placed after its size, in the probed order (#442): positioning, x/y centred, constraints.
   // The plan's drawn fields (readback.mjs draw) after the Contract's: path, offCentre, x, y, dashPattern, clipsContent.
+  // path before strokeCap (#455): writing vectorPaths replaces the vector network, whose new vertices take cap NONE.
+  // strokeWeight and strokeAlign are node fields that survive it (a live rerun read them unchanged).
   const ORDER = ['direction', 'alignMain', 'alignCross', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'gap', 'minWidth', 'maxWidth',
-    'minHeight', 'maxHeight', 'width', 'height', 'position', 'offCentre', 'constraints', 'x', 'y', 'radius', 'strokeWeight', 'strokeAlign', 'strokeCap', 'path',
+    'minHeight', 'maxHeight', 'width', 'height', 'position', 'offCentre', 'constraints', 'x', 'y', 'radius', 'strokeWeight', 'strokeAlign', 'path', 'strokeCap',
     'dashPattern', 'clipsContent', 'textStyle', 'textResize', 'fill', 'stroke', 'effects', 'opacity'];
   const slices = { base: baseSlice, sets: setsSlice };
   if (!slices[plan.slice]) return { error: 'unknown-slice', slice: plan.slice };

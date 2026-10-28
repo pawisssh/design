@@ -46,6 +46,11 @@
         "family": "button",
         "path": "design-systems/cds/contracts/button.component.json",
         "snapshotId": "sha256:c50a72ac673639dbc18069b83cdbf7e6df76c979098a768075de2fc3703d3697"
+      },
+      {
+        "family": "radio",
+        "path": "design-systems/cds/contracts/radio.component.json",
+        "snapshotId": "sha256:d56fc38616a8bb1cc6e75fa5e45d5be3a3c9e178bbdf7204323c1bc7288b22c6"
       }
     ],
     "tokens": [
@@ -66,7 +71,9 @@
       "avatarSize-xl",
       "avatarSize-xxl",
       "avatarSize-xxxl",
+      "bg",
       "bgLine",
+      "bgLineHeavy",
       "bgPrimary",
       "bgSecondary",
       "body",
@@ -125,7 +132,10 @@
       "button-tertiary-transparent-color",
       "button-tertiary-transparent-hover-background",
       "button-tertiary-transparent-pressed-background",
+      "controlSize-radioSize",
+      "fg",
       "fgInverse",
+      "fgMuted",
       "headline",
       "iconSize-m",
       "iconSize-s",
@@ -4491,7 +4501,9 @@
           "resolved": "#0a0b0d"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "radio"
+      ]
     },
     "bgAlternate": {
       "collection": "theme",
@@ -4665,7 +4677,9 @@
           "reason": "alpha: a Figma alias cannot carry alpha, so this mode holds the flattened RGBA"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "radio"
+      ]
     },
     "bgLineInverse": {
       "collection": "theme",
@@ -4896,7 +4910,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "radio"
       ]
     },
     "bgPrimaryWash": {
@@ -6039,7 +6054,9 @@
           "resolved": "#ffffff"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "radio"
+      ]
     },
     "fgInverse": {
       "collection": "theme",
@@ -6089,7 +6106,9 @@
           "resolved": "#8a919e"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "radio"
+      ]
     },
     "fgNegative": {
       "collection": "theme",
@@ -9734,7 +9753,8 @@
         }
       },
       "usedBy": [
-        "avatar"
+        "avatar",
+        "radio"
       ]
     },
     "borderRadius-200": {
@@ -9923,7 +9943,8 @@
         }
       },
       "usedBy": [
-        "avatar"
+        "avatar",
+        "radio"
       ]
     },
     "borderWidth-200": {
@@ -10032,7 +10053,9 @@
           "value": 20
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "radio"
+      ]
     },
     "controlSize-switchHeight": {
       "collection": "layout",
@@ -10275,7 +10298,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "radio"
       ]
     },
     "space-10": {
@@ -10484,7 +10508,8 @@
         }
       },
       "usedBy": [
-        "avatar"
+        "avatar",
+        "radio"
       ]
     },
     "fontFamily-caption": {
@@ -10739,7 +10764,8 @@
         }
       },
       "usedBy": [
-        "avatar"
+        "avatar",
+        "radio"
       ]
     },
     "fontSize-caption": {
@@ -10993,7 +11019,8 @@
         }
       },
       "usedBy": [
-        "avatar"
+        "avatar",
+        "radio"
       ]
     },
     "fontWeight-caption": {
@@ -11236,7 +11263,8 @@
         }
       },
       "usedBy": [
-        "avatar"
+        "avatar",
+        "radio"
       ]
     },
     "lineHeight-caption": {
@@ -11497,7 +11525,8 @@
         "lineHeight": "lineHeight-body"
       },
       "usedBy": [
-        "avatar"
+        "avatar",
+        "radio"
       ]
     },
     "caption": {
@@ -11815,7 +11844,7 @@
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
-      "contracts": 2,
+      "contracts": 3,
       "errors": 0
     }
   },
@@ -11824,6 +11853,11 @@
       "level": "info",
       "at": "variables.currentColor",
       "message": "currentColor (--color-currentColor) is not carried: it is the CSS keyword, not a colour, in both schemes."
+    },
+    {
+      "level": "info",
+      "at": "variables.radio-*",
+      "message": "radio has no component token map: @coinbase/cds-common@9.29.0 has no esm/tokens/radio.js, so the document carries no radio component or Synthesized tokens, only the Theme, Layout and Type tokens its Contract binds."
     },
     {
       "level": "info",

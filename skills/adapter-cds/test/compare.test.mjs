@@ -196,6 +196,20 @@ test('probe: a Record entry is found by any of its members\' classes, and an <im
     ['circle light Image.fill: page none, Contract #0052ff', 'circle dark Image.fill: page none, Contract #0052ff']);
 });
 
+test('probe: a filled <circle> with no stroke is 2r wide, its 1px default stroke-width unpainted (#475)', () => {
+  const dotPage = stroke => fakePage({ on: () => new El('baseCss-r1', { w: 20, h: 20 }, [new El('', { tag: 'svg' }, [
+    circle({ r: '6.666666666666667' }, { fill: 'rgb(0, 82, 255)', stroke, strokeWidth: '1px' })])]) });
+  const dot = { fill: '#0052ff', stroke: 'none', strokeWidth: 0, width: 13.333, height: 13.333, sweep: 360 };
+  const spec = { collection: 'theme', modes: ['light'],
+    layers: [{ name: 'Circle', type: 'COMPONENT', parent: null, entry: 'baseCss', className: 'baseCss-r1' },
+      { name: 'Dot', type: 'ELLIPSE', parent: 'Circle', entry: 'baseCss', className: 'baseCss-r1', drawnInParent: true, nth: 0 }],
+    expected: { on: { light: { Circle: { width: 20 }, Dot: dot } } } };
+  assert.deepEqual(probe(spec, ...Object.values(dotPage('none'))), { checked: 1, mismatches: [] });
+  assert.deepEqual(probe(spec, ...Object.values(dotPage('rgb(0, 82, 255)'))).mismatches, [
+    'on light Dot.stroke: page #0052ff, Contract none', 'on light Dot.strokeWidth: page 1, Contract 0',
+    'on light Dot.width: page 14.333333333333334, Contract 13.333', 'on light Dot.height: page 14.333333333333334, Contract 13.333']);
+});
+
 // ---------- families with no cds-<Family> class (#470) ----------
 const anchored = key => {
   const { contract: c, nodes: n } = anchorFamily(key);

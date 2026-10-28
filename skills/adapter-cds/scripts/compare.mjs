@@ -168,8 +168,9 @@ export function probe(spec, doc, style, color) {
     const cs = style(el);
     // A <circle>'s box is 2r + stroke-width (its stroke inside the box), its sweep the visible share of the path
     // (pathLength, stroke-dasharray, stroke-dashoffset), and stroke-linecap: butt is the Contract's "none".
+    // In #475: an unstroked circle (Radio's filled Dot) draws no stroke, so its width is 0, not the 1px default.
     if (type === 'ELLIPSE') {
-      const sw = parseFloat(cs.strokeWidth), r = parseFloat(el.getAttribute('r'));
+      const sw = cs.stroke === 'none' ? 0 : parseFloat(cs.strokeWidth), r = parseFloat(el.getAttribute('r'));
       const length = el.getAttribute('pathLength') ? parseFloat(el.getAttribute('pathLength')) : 2 * Math.PI * r;
       const dash = cs.strokeDasharray && cs.strokeDasharray !== 'none' ? Math.min(parseFloat(cs.strokeDasharray), length) : length;
       return { fill: paintOf(cs.fill), stroke: paintOf(cs.stroke), strokeWidth: sw, opacity: parseFloat(cs.opacity),
