@@ -43,6 +43,11 @@
         "snapshotId": "sha256:c50a72ac673639dbc18069b83cdbf7e6df76c979098a768075de2fc3703d3697"
       },
       {
+        "family": "checkbox",
+        "path": "design-systems/cds/contracts/checkbox.component.json",
+        "snapshotId": "sha256:f8d83191536e81c0c3b73b4238ed8c09f1152dc981a4fc7319b40d1b14a1ce59"
+      },
+      {
         "family": "radio",
         "path": "design-systems/cds/contracts/radio.component.json",
         "snapshotId": "sha256:d56fc38616a8bb1cc6e75fa5e45d5be3a3c9e178bbdf7204323c1bc7288b22c6"
@@ -122,11 +127,13 @@
       "button-tertiary-transparent-hover-background",
       "button-tertiary-transparent-pressed-background",
       "caption",
+      "controlSize-checkboxSize",
       "controlSize-radioSize",
       "controlSize-switchHeight",
       "controlSize-switchThumbSize",
       "controlSize-switchWidth",
       "fg",
+      "fgInverse",
       "fgMuted",
       "headline",
       "iconSize-m",
@@ -4246,6 +4253,7 @@
         }
       },
       "usedBy": [
+        "checkbox",
         "radio"
       ]
     },
@@ -4423,6 +4431,7 @@
         }
       },
       "usedBy": [
+        "checkbox",
         "radio"
       ]
     },
@@ -4660,6 +4669,7 @@
       },
       "usedBy": [
         "button",
+        "checkbox",
         "radio",
         "switch"
       ]
@@ -5805,6 +5815,7 @@
         }
       },
       "usedBy": [
+        "checkbox",
         "radio",
         "switch"
       ]
@@ -5831,7 +5842,9 @@
           "resolved": "#0a0b0d"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "checkbox"
+      ]
     },
     "fgMuted": {
       "collection": "theme",
@@ -5856,6 +5869,7 @@
         }
       },
       "usedBy": [
+        "checkbox",
         "radio",
         "switch"
       ]
@@ -9973,6 +9987,7 @@
         }
       },
       "usedBy": [
+        "checkbox",
         "tag"
       ]
     },
@@ -10183,6 +10198,7 @@
         }
       },
       "usedBy": [
+        "checkbox",
         "radio",
         "switch"
       ]
@@ -10275,7 +10291,9 @@
           "value": 20
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "checkbox"
+      ]
     },
     "controlSize-radioSize": {
       "collection": "layout",
@@ -10470,6 +10488,7 @@
         }
       },
       "usedBy": [
+        "checkbox",
         "switch"
       ]
     },
@@ -10551,6 +10570,7 @@
       },
       "usedBy": [
         "button",
+        "checkbox",
         "radio",
         "switch",
         "tag"
@@ -10762,6 +10782,7 @@
         }
       },
       "usedBy": [
+        "checkbox",
         "radio",
         "switch"
       ]
@@ -11019,6 +11040,7 @@
         }
       },
       "usedBy": [
+        "checkbox",
         "radio",
         "switch"
       ]
@@ -11275,6 +11297,7 @@
         }
       },
       "usedBy": [
+        "checkbox",
         "radio",
         "switch"
       ]
@@ -11520,6 +11543,7 @@
         }
       },
       "usedBy": [
+        "checkbox",
         "radio",
         "switch"
       ]
@@ -11783,6 +11807,7 @@
         "lineHeight": "lineHeight-body"
       },
       "usedBy": [
+        "checkbox",
         "radio",
         "switch"
       ]
@@ -12104,7 +12129,7 @@
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
-      "contracts": 4,
+      "contracts": 5,
       "errors": 0
     }
   },
@@ -12113,6 +12138,11 @@
       "level": "info",
       "at": "variables.currentColor",
       "message": "currentColor (--color-currentColor) is not carried: it is the CSS keyword, not a colour, in both schemes."
+    },
+    {
+      "level": "info",
+      "at": "variables.checkbox-*",
+      "message": "checkbox has no component token map: @coinbase/cds-common@9.29.0 has no esm/tokens/checkbox.js, so the document carries no checkbox component tokens or state blends from one."
     },
     {
       "level": "info",

@@ -1,0 +1,453 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "checkbox",
+    "name": "Checkbox",
+    "description": "Checkboxes select one or more options. A box that is unchecked, checked with a checkmark, or indeterminate with a minus, beside its label."
+  },
+  "source": {
+    "codeLibrary": "CDS Web",
+    "adapter": "cds",
+    "repository": "https://github.com/coinbase/cds",
+    "tag": "",
+    "commit": "135dc3c64218299bd26f0ce2ccdad628551d63d5",
+    "packages": {
+      "@coinbase/cds-web": "9.29.0",
+      "@coinbase/cds-common": "9.29.0",
+      "@coinbase/cds-icons": "5.26.0"
+    },
+    "files": {
+      "apps/docs/docs/components/inputs/Checkbox/_webExamples.mdx": "sha256:e87fc1647fe0a0e2dfd5d6ea885ddcf590bec0e33bd884c9bf6b39fd831b81d1",
+      "packages/common/src/motion/checkbox.ts": "sha256:5d4f4f5bf4803fb0755d395774bbbd53ccf0bf8e94850e795344daf1495d8436",
+      "packages/common/src/tokens/interactable.ts": "sha256:590f7e7a4d688cf4171256b4149b296baa66c591fd1cf587ac84027cdd2ecaf8",
+      "packages/web/package.json": "sha256:ca0ecd076b55efe0aee663a5b0ac2cf296119192d4f86cfdf1181f19efb84650",
+      "packages/web/src/controls/Checkbox.tsx": "sha256:6e649c96ca0efce4e71f641198cbf6c4c9e301a599d3d0660e96eb9a52ef99b6",
+      "packages/web/src/controls/Control.tsx": "sha256:edfb07475694587f95ee3e713a03953c2ae1d3195d9f4c778c592476dcd40d95",
+      "packages/web/src/controls/__figma__/Checkbox.figma.ts": "sha256:5db512e012f71fb959c8402306a6eea8065905af06e646c806a5f13ff14b913c",
+      "packages/web/src/system/Interactable.tsx": "sha256:c5088de3daa71967bfd4e957b6f8c35e823dec614a6f90aefebbd305aaf0558f",
+      "packages/web/src/typography/Text.tsx": "sha256:854b7763c92617955872dc76d6b20b93d04dcd330a689ab4096c879436552595"
+    },
+    "snapshotId": "sha256:f8d83191536e81c0c3b73b4238ed8c09f1152dc981a4fc7319b40d1b14a1ce59"
+  },
+  "axes": [
+    {
+      "key": "checked",
+      "label": "Checked",
+      "default": "off",
+      "defaultSource": "packages/web/src/controls/Checkbox.tsx L67-L68 checked and indeterminate are undefined unless set",
+      "values": [
+        { "key": "off", "label": "Off", "code": {} },
+        { "key": "on", "label": "On", "code": { "checked": true } },
+        { "key": "indeterminate", "label": "Indeterminate", "code": { "indeterminate": true } }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        { "key": "enabled", "label": "Enabled", "code": {} },
+        { "key": "hover", "label": "Hover", "code": null, "css": ":hover" },
+        { "key": "active", "label": "Active", "code": null, "css": ":active" },
+        { "key": "focus", "label": "Focus", "code": null, "css": ":focus-visible" },
+        { "key": "disabled", "label": "Disabled", "code": { "disabled": true }, "css": ":disabled, [aria-disabled='true']" }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 15,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Checkbox",
+    "type": "COMPONENT",
+    "children": [
+      {
+        "name": "Control",
+        "type": "FRAME",
+        "children": [
+          {
+            "name": "Box",
+            "type": "FRAME",
+            "children": [
+              { "name": "Checkmark", "type": "INSTANCE", "role": "icon", "instanceOf": "icon:checkmark" },
+              { "name": "Minus", "type": "INSTANCE", "role": "icon", "instanceOf": "icon:minus" }
+            ]
+          }
+        ]
+      },
+      { "name": "Label", "type": "TEXT", "role": "label" }
+    ]
+  },
+  "properties": [
+    {
+      "key": "label",
+      "label": "Label",
+      "type": "TEXT",
+      "default": "Label",
+      "binds": [{ "node": "Label", "field": "characters" }],
+      "code": { "prop": "children" }
+    }
+  ],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Checkbox": {
+          "direction": "row",
+          "width": "hug",
+          "height": "hug",
+          "alignMain": "start",
+          "alignCross": "center",
+          "gap": { "token": "space-1" },
+          "paddingTop": { "token": "space-0" },
+          "paddingRight": { "token": "space-0" },
+          "paddingBottom": { "token": "space-0" },
+          "paddingLeft": { "token": "space-0" }
+        },
+        "Control": {
+          "direction": "row",
+          "width": "hug",
+          "height": "hug",
+          "radius": { "token": "borderRadius-100" },
+          "strokeWeight": { "token": "borderWidth-100" },
+          "strokeAlign": "inside"
+        },
+        "Box": {
+          "direction": "row",
+          "width": { "token": "controlSize-checkboxSize" },
+          "height": { "token": "controlSize-checkboxSize" },
+          "alignMain": "center",
+          "alignCross": "center",
+          "radius": { "token": "borderRadius-100" },
+          "strokeWeight": { "token": "borderWidth-100" },
+          "strokeAlign": "inside"
+        },
+        "Checkmark": {
+          "width": { "raw": 16, "level": "info", "reason": "iconSize = checkboxSize - iconPadding, with iconPadding = checkboxSize / 5 (packages/web/src/controls/Checkbox.tsx L80-L82): 20 - 4 at controlSize-checkboxSize 20" },
+          "height": { "raw": 16, "level": "info", "reason": "iconSize = checkboxSize - iconPadding, with iconPadding = checkboxSize / 5 (packages/web/src/controls/Checkbox.tsx L80-L82): 20 - 4 at controlSize-checkboxSize 20" },
+          "visible": false
+        },
+        "Minus": {
+          "width": { "raw": 16, "level": "info", "reason": "iconSize = checkboxSize - iconPadding, with iconPadding = checkboxSize / 5 (packages/web/src/controls/Checkbox.tsx L80-L82): 20 - 4 at controlSize-checkboxSize 20" },
+          "height": { "raw": 16, "level": "info", "reason": "iconSize = checkboxSize - iconPadding, with iconPadding = checkboxSize / 5 (packages/web/src/controls/Checkbox.tsx L80-L82): 20 - 4 at controlSize-checkboxSize 20" },
+          "visible": true
+        },
+        "Label": {
+          "textStyle": { "token": "body" },
+          "textResize": "width-and-height"
+        }
+      }
+    },
+    {
+      "match": { "checked": "on" },
+      "set": {
+        "Checkmark": { "visible": true },
+        "Minus": { "visible": false }
+      }
+    },
+    {
+      "match": { "state": "focus" },
+      "set": {
+        "Control": {
+          "strokeWeight": { "raw": 2, "level": "warning", "reason": "outline-width: 2px on :has(:focus-visible) (packages/web/src/controls/Control.tsx L53-L57) is a constant with no token" },
+          "strokeAlign": "outside"
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Checkbox": {
+          "fill": "none",
+          "stroke": "none",
+          "effects": [],
+          "opacity": { "raw": 1, "level": "info", "reason": "opaque in every state" }
+        },
+        "Control": {
+          "fill": "none",
+          "stroke": "none",
+          "opacity": { "raw": 1, "level": "info", "reason": "opaque unless disabled" }
+        },
+        "Box": {
+          "fill": { "token": "bg" },
+          "stroke": { "token": "bgLineHeavy" },
+          "opacity": { "raw": 1, "level": "info", "reason": "opaque unless hovered or pressed" }
+        },
+        "Checkmark": {
+          "opacity": { "raw": 1, "level": "info", "reason": "shown only when checked, and then opaque: opacity filled ? 1 : 0 (packages/web/src/controls/Checkbox.tsx L96)" }
+        },
+        "Checkmark/Vector": {
+          "fill": { "token": "fgInverse" }
+        },
+        "Minus": {
+          "opacity": { "raw": 0, "level": "info", "reason": "CDS still renders the minus glyph when unchecked, transparent: opacity filled ? 1 : 0 (packages/web/src/controls/Checkbox.tsx L96)" }
+        },
+        "Minus/Vector": {
+          "fill": { "token": "fgInverse" }
+        },
+        "Label": {
+          "fill": { "token": "fgMuted" },
+          "opacity": { "raw": 1, "level": "info", "reason": "opaque unless disabled" }
+        }
+      }
+    },
+    {
+      "match": { "checked": "on" },
+      "set": {
+        "Box": {
+          "fill": { "token": "bgPrimary" },
+          "stroke": { "token": "bgPrimary" }
+        },
+        "Label": {
+          "fill": { "token": "fg" }
+        }
+      }
+    },
+    {
+      "match": { "checked": "indeterminate" },
+      "set": {
+        "Box": {
+          "fill": { "token": "bgPrimary" },
+          "stroke": { "token": "bgPrimary" }
+        },
+        "Minus": {
+          "opacity": { "raw": 1, "level": "info", "reason": "indeterminate is filled, so the minus glyph is opaque: opacity filled ? 1 : 0 (packages/web/src/controls/Checkbox.tsx L96)" }
+        }
+      }
+    },
+    {
+      "match": { "state": "hover" },
+      "set": {
+        "Box": {
+          "opacity": { "raw": 0.88, "level": "info", "reason": "opacityHovered (packages/common/src/tokens/interactable.ts L1): --inter-hover-opacity on the children of the Control's Interactable (packages/web/src/system/Interactable.tsx L49-L54), and the Box is its visible child" }
+        }
+      }
+    },
+    {
+      "match": { "state": "active" },
+      "set": {
+        "Box": {
+          "opacity": { "raw": 0.82, "level": "info", "reason": "opacityPressed (packages/common/src/tokens/interactable.ts L2): --inter-press-opacity on the children of the Control's Interactable (packages/web/src/system/Interactable.tsx L57-L63), and the Box is its visible child" }
+        }
+      }
+    },
+    {
+      "match": { "state": "focus" },
+      "set": {
+        "Control": {
+          "stroke": { "token": "bgPrimary" }
+        }
+      }
+    },
+    {
+      "match": { "state": "disabled" },
+      "set": {
+        "Control": {
+          "opacity": { "raw": 0.5, "level": "info", "reason": "accessibleOpacityDisabled (packages/common/src/tokens/interactable.ts L3) on [aria-disabled='true'] (packages/web/src/system/Interactable.tsx L66-L68)" }
+        },
+        "Label": {
+          "opacity": { "raw": 0.5, "level": "info", "reason": "the disabled Text takes disabledCss, opacity accessibleOpacityDisabled (packages/web/src/typography/Text.tsx L26-L27)" }
+        }
+      }
+    }
+  ],
+  "icons": {
+    "source": {
+      "package": "@coinbase/cds-icons",
+      "version": "5.26.0",
+      "path": "esm/svgs/{key}-16-inactive.svg",
+      "fallback": "esm/svgs/{key}-24-inactive.svg"
+    },
+    "default": "checkmark",
+    "preferred": ["checkmark", "minus"]
+  },
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": [{ "family": "Inter", "styles": ["Regular"] }]
+  },
+  "figma": {
+    "page": "Checkboxes",
+    "componentSetName": "Checkbox",
+    "description": "CDS Web Checkbox (@coinbase/cds-web 9.29.0). CheckboxCell and CheckboxGroup are their own families.",
+    "header": {
+      "type": "Component",
+      "title": "Checkbox",
+      "namespace": "@coinbase/cds-web"
+    },
+    "grid": {
+      "columns": ["checked"],
+      "rows": ["state"]
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@coinbase/cds-web",
+    "component": "Checkbox",
+    "import": "import { Checkbox } from '@coinbase/cds-web/controls';",
+    "alwaysEmit": []
+  },
+  "notes": [
+    {
+      "level": "info",
+      "at": "axes.checked",
+      "message": "Checked takes the checked and indeterminate props, which CDS treats as one fill: filled = checked || indeterminate (Checkbox.tsx L78) picks the background and borderColor (L70-L71). With both set, the glyph is the checkmark (L131), so that pair draws as On and is not a value. CDS's own Code Connect makes checked and indeterminate two true/false variants (Checkbox.figma.ts L16-L18); the Contract follows Checkbox.tsx."
+    },
+    {
+      "level": "info",
+      "at": "paint[checked=indeterminate].Label.fill",
+      "message": "An indeterminate Checkbox's label stays fgMuted, as CDS renders it: Control colours the label fg when checked || indeterminate (Control.tsx L137), but Checkbox keeps indeterminate for itself (Checkbox.tsx L68) and passes Control only checked (L107). The Contract follows the render, not Control's intent."
+    },
+    {
+      "level": "info",
+      "at": "axes.state",
+      "message": "Checkbox renders through Control, whose Interactable wraps the native input and the Box (Control.tsx L169-L201). The input covers it at opacity 0 (inputBaseCss, L40-L47), so the Interactable takes :hover and :active, and dims its children (Interactable.tsx L49-L64): the Box. Control never sets pressed, so [aria-pressed='true'] does not apply. readOnly disables the Interactable too (Control.tsx L177) and dims the label (L250): it draws as Disabled, so it is not an axis."
+    },
+    {
+      "level": "info",
+      "at": "paint[state=focus].Control.stroke",
+      "message": "The focus ring is a 2px solid outline in bgPrimary, 1px outside the Control (outline-offset on :has(:focus-visible), Control.tsx L53-L59): the native input takes focus, not the Control. The Contract draws it as a 2px outside stroke with no gap. To-preview forces :focus-visible on every element, so its Focus page also draws checkboxCss's own ring on the Box (Checkbox.tsx L32-L37), which a focused Checkbox never shows: the Box is not focusable."
+    },
+    {
+      "level": "info",
+      "at": "layout.Control.strokeWeight",
+      "message": "Interactable gives the Control a 1px border by default (borderWidth = 100, Interactable.tsx L209), transparent in every state (transparentWhileInactiveCss, L100-L108). In CSS that border makes the Control 22px square around the 20px Box; a Figma inside stroke takes no space, so the Control hugs the Box and the label sits 2px nearer."
+    },
+    {
+      "level": "info",
+      "at": "layout.Checkbox.alignCross",
+      "message": "Control aligns the label row to its top (alignItems flex-start, Control.tsx L243) and centres the Control in a box one body line high (height var(--lineHeight-body), L244), so the box lines up with the label's first line. That box has no element to anchor a layer on, so the Contract centres the Control on the row instead: the same for a one-line label, but a wrapped label's box sits mid-label in Figma."
+    },
+    {
+      "level": "info",
+      "at": "paint.Minus.opacity",
+      "message": "The glyph sits in a motion div that fades and scales it in when filled and out when not (useMotionProps, Checkbox.tsx L84-L88; fadeIn and scaleUpS over moderate1, motion/checkbox.ts L6-L7). The Contract draws the frame it settles on, and the preview renderer renders that frame. Figma has no animation."
+    },
+    {
+      "level": "info",
+      "at": "properties.label",
+      "message": "Without children, Control renders only the Interactable, with no label (Control.tsx L236), as the Custom Layout example does (_webExamples.mdx L35-L39). The Contract always draws the Label: no property can leave out the children the specimen renders, so an unlabelled Checkbox is the Control frame alone."
+    },
+    {
+      "level": "info",
+      "at": "family",
+      "message": "controlColor, background, borderColor, borderRadius, borderWidth, controlSize and elevation recolour or resize the Checkbox (Checkbox.tsx L69-L75; _webExamples.mdx L89-L117), and font sets the label's text style (Control.tsx L146). The Contract draws their defaults; they are not axes."
+    },
+    {
+      "level": "info",
+      "at": "code",
+      "message": "CDS's own Code Connect file imports from @coinbase/cds-web/controls (Checkbox.figma.ts L31), as the Contract does, and maps a \"show label\" boolean (L13) that the Contract has no property for (see properties.label)."
+    }
+  ],
+  "drafted": {
+    "axes.checked.label": {
+      "by": "agent",
+      "evidence": [
+        "Checkbox.tsx:L67-L68 checked and indeterminate, the two props the axis sets",
+        "Checkbox.tsx:L78 filled = checked || indeterminate"
+      ],
+      "fingerprint": "sha256:5c3337f3f1355f59e305dceefbe79c91cdf8fdf31df73735721b2947e472b181"
+    },
+    "axes.checked.values.off.label": {
+      "by": "agent",
+      "evidence": [
+        "Checkbox.tsx:L70-L71 neither checked nor indeterminate: background bg, borderColor bgLineHeavy"
+      ],
+      "fingerprint": "sha256:5c3337f3f1355f59e305dceefbe79c91cdf8fdf31df73735721b2947e472b181"
+    },
+    "axes.checked.values.on.label": {
+      "by": "agent",
+      "evidence": [
+        "Checkbox.tsx:L131 checked names the checkmark"
+      ],
+      "fingerprint": "sha256:5c3337f3f1355f59e305dceefbe79c91cdf8fdf31df73735721b2947e472b181"
+    },
+    "anatomy.Control": {
+      "by": "agent",
+      "evidence": [
+        "Control.tsx:L169-L181 the Interactable around the input and the Box, controlClassNames.icon"
+      ],
+      "fingerprint": "sha256:028da3a894f5e999d39c1e125a336c1799a2d78812c44a8114b8cb94867e9e5e"
+    },
+    "anatomy.Box": {
+      "by": "agent",
+      "evidence": [
+        "Checkbox.tsx:L113-L127 the Box with checkboxCss, background and borderColor"
+      ],
+      "fingerprint": "sha256:efa370852044d127d9a5fac51304b84432ab68be8b3d1165a783dbdcd2997b21"
+    },
+    "anatomy.Checkmark": {
+      "by": "agent",
+      "evidence": [
+        "Checkbox.tsx:L129-L135 the Icon, name checkmark when checked"
+      ],
+      "fingerprint": "sha256:abb42cfceebb30261acbe3860515b11be093548c483ecf14baaef2694e0b1ba6"
+    },
+    "anatomy.Minus": {
+      "by": "agent",
+      "evidence": [
+        "Checkbox.tsx:L131 name minus unless checked"
+      ],
+      "fingerprint": "sha256:abb42cfceebb30261acbe3860515b11be093548c483ecf14baaef2694e0b1ba6"
+    },
+    "anatomy.Label": {
+      "by": "agent",
+      "evidence": [
+        "Control.tsx:L247-L260 the Text holding the label, in font body"
+      ],
+      "fingerprint": "sha256:8cb413536134cc3d93473297ee2571474bc21db75f7dc0da31f9e619019ccab3"
+    },
+    "properties.label.default": {
+      "by": "agent",
+      "evidence": [
+        "Control.tsx:L92 children, the label, has no default",
+        "Checkbox.figma.ts:L10 Code Connect falls back to the label 'Label'"
+      ],
+      "fingerprint": "sha256:1c0b7261394762c4b4bcbf89d8c576c606ef8a9b2c99a27122391c88888a476f"
+    },
+    "layout.Checkbox.alignCross": {
+      "by": "agent",
+      "evidence": [
+        "Control.tsx:L243 alignItems flex-start on the label row",
+        "Control.tsx:L244 the Control centred in a box lineHeight high"
+      ],
+      "fingerprint": "sha256:f0e9b3f03f989648eba87363264627af43a4b52420317babfc3ec90afe4edf4d"
+    },
+    "icons.default": {
+      "by": "agent",
+      "evidence": [
+        "Checkbox.tsx:L131 name checkmark when checked"
+      ],
+      "fingerprint": "sha256:808bd9fddcabb8881499df838601bcc3b36575b684cd37aa2a42ce8a1a6c1aa9"
+    },
+    "icons.preferred": {
+      "by": "agent",
+      "evidence": [
+        "Checkbox.tsx:L131 name checkmark or minus"
+      ],
+      "fingerprint": "sha256:808bd9fddcabb8881499df838601bcc3b36575b684cd37aa2a42ce8a1a6c1aa9"
+    },
+    "figma.grid": {
+      "by": "agent",
+      "evidence": [
+        "Checkbox.tsx:L67-L68 checked and indeterminate, one column per value"
+      ],
+      "fingerprint": "sha256:808bd9fddcabb8881499df838601bcc3b36575b684cd37aa2a42ce8a1a6c1aa9"
+    },
+    "family.description": {
+      "by": "agent",
+      "evidence": [
+        "Control.tsx:L91-L104 children, checked, disabled and indeterminate"
+      ],
+      "fingerprint": "sha256:808bd9fddcabb8881499df838601bcc3b36575b684cd37aa2a42ce8a1a6c1aa9"
+    }
+  }
+}
