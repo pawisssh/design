@@ -170,17 +170,25 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
   // Each scheme's theme as ThemeProvider builds it (read back from ThemeContext), and the theme variables it would
   // write inline, as one rule. A specimen's ThemeProvider sits in a ThemeContext holding that same theme, so
   // it writes only what differs (`--activeColorScheme`): one copy of the ~12 KB of variables per page, not two per
-  // specimen.
+  // specimen. The rule also sets them on the element the scheme's Mode class is on, so the catalog chrome, outside
+  // every specimen, takes that scheme's colours (#392); a specimen's own scheme still wins inside it.
   const themes = {};
   for (const scheme of SCHEMES) {
     const Capture = () => void (themes[scheme] = React.useContext(ThemeContext)) || null;
     renderToStaticMarkup(h(ThemeProvider, { theme: defaultTheme, activeColorScheme: scheme }, h(Capture)));
   }
   const themeCss = SCHEMES.map(scheme =>
-    `.cds-preview-scheme.${scheme}{${Object.entries(createThemeCssVars(themes[scheme])).map(([k, v]) => `${k}:${v}`).join(';')}}`).join('\n');
+    `.cds-preview-scheme.${scheme},.${modeClass(scheme)}{${Object.entries(createThemeCssVars(themes[scheme])).map(([k, v]) => `${k}:${v}`).join(';')}}`).join('\n');
   return {
     stylesheet: [interCss(dir), cdsCss(dir, css), themeCss, MODE_CSS].join('\n'),
     modeClass,
+    // The catalog chrome's colours (#392): defaultTheme's, which themeCss sets on the page per Mode class. The page is
+    // bgAlternate, the gray behind a surface, and a card bg, the surface.
+    chrome: {
+      page: 'var(--color-bgAlternate)', card: 'var(--color-bg)', border: 'var(--color-bgLine)', text: 'var(--color-fg)',
+      textSecondary: 'var(--color-fgMuted)', controlBorder: 'var(--color-bgLineHeavy)', focus: 'var(--color-bgPrimary)',
+      warning: 'var(--color-fgWarning)', error: 'var(--color-fgNegative)',
+    },
     render(tuple, properties) {
       // Content props from the properties (contract.mjs's contentProps), then each axis value's code props over them.
       const axis = codeProps(contract, tuple).props;

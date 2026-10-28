@@ -59,11 +59,25 @@ test('each Mode renders the specimen under ThemeProvider with its activeColorSch
   assert.equal(hover('light'), 'rgb(0, 72, 224)');
   assert.equal(hover('dark'), 'rgb(95, 144, 250)');
   // The theme variables ThemeProvider would write inline sit in the stylesheet, once per scheme.
-  assert.match(stylesheet, /\.cds-preview-scheme\.light\{[^}]*--color-bgPrimary:rgb\(0,82,255\)/);
-  assert.match(stylesheet, /\.cds-preview-scheme\.dark\{[^}]*--color-bgPrimary:rgb\(87,139,250\)/);
+  assert.match(stylesheet, /\.cds-preview-scheme\.light,\.cds-preview-light\{[^}]*--color-bgPrimary:rgb\(0,82,255\)/);
+  assert.match(stylesheet, /\.cds-preview-scheme\.dark,\.cds-preview-dark\{[^}]*--color-bgPrimary:rgb\(87,139,250\)/);
   assert.deepEqual(['light', 'dark'].map(modeClass), ['cds-preview-light', 'cds-preview-dark']);
   assert.match(stylesheet, /\.cds-preview-dark \.cds-preview-scheme\.light\{display:none\}/);
   assert.throws(() => modeClass('white'), /CDS has no colour scheme for the Theme Mode white/);
+});
+
+test("the catalog chrome is defaultTheme's colours, which each Mode class sets on the page (#392)", { skip }, async () => {
+  const { stylesheet, chrome } = await previewRenderer(button);
+  assert.deepEqual(chrome, {
+    page: 'var(--color-bgAlternate)', card: 'var(--color-bg)', border: 'var(--color-bgLine)', text: 'var(--color-fg)',
+    textSecondary: 'var(--color-fgMuted)', controlBorder: 'var(--color-bgLineHeavy)', focus: 'var(--color-bgPrimary)',
+    warning: 'var(--color-fgWarning)', error: 'var(--color-fgNegative)',
+  });
+  for (const mode of ['light', 'dark']) {
+    const rule = stylesheet.match(new RegExp(`(?:^|[},])\\.cds-preview-${mode}\\{([^}]*)\\}`, 'm'));
+    assert.ok(rule, `a rule sets the theme variables on .cds-preview-${mode}`);
+    for (const value of Object.values(chrome)) assert.match(rule[1], new RegExp(`(?:^|;)${value.match(/var\((--[\w-]+)\)/)[1]}:rgba?\\(`), `${mode}: ${value}`);
+  }
 });
 
 test("the stylesheet is CDS's CSS in @layer cds order, then the icon font, with Inter and CoinbaseIcons inlined", { skip }, async () => {

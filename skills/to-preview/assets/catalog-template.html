@@ -4,31 +4,33 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Component preview</title>
 <!-- library-styles -->
+<!-- chrome -->
 <style>
-  /* Chrome colours are Carbon tokens (--cds-*) from the library stylesheet; the Theme toggle puts its Mode class on <body>,
-     a Layer toggle on a wrapper around the grid, and a card's background is the layer's own surface, --cds-layer-background (at level one it equals --cds-background). */
+  /* Chrome colours are the --tp-* roles, which the tp-chrome style block sets from the renderer's chrome, normally to
+     the library's own custom properties; the Theme toggle puts its Mode class on <body>, a Layer toggle on a wrapper
+     around the grid, and each element resolves a role where it is, so a card's background is its Layer's surface. */
   body > header,.tp-main,.tp-toolbar,.tp-cell,.tp-specimen,.tp-toolbar select,#export,.tp-toolbar button{box-sizing:border-box}
-  body.tp-page{margin:0;font:14px/1.4 system-ui,sans-serif;color:var(--cds-text-primary);background:var(--cds-layer-01)}
-  #export,.tp-toolbar button,.tp-toolbar select{font:inherit} #export,.tp-toolbar button{cursor:pointer;padding:8px 12px;border:1px solid var(--cds-border-strong-01);background:var(--cds-field-02);color:var(--cds-text-primary)}
+  body.tp-page{margin:0;font:14px/1.4 system-ui,sans-serif;color:var(--tp-text);background:var(--tp-page)}
+  #export,.tp-toolbar button,.tp-toolbar select{font:inherit} #export,.tp-toolbar button{cursor:pointer;padding:8px 12px;border:1px solid var(--tp-control-border);background:var(--tp-control);color:var(--tp-text)}
   #export:disabled{cursor:default;opacity:.5}
-  #export:focus-visible,.tp-toolbar button:focus-visible,.tp-toolbar select:focus-visible,.tp-card-head > input:focus-visible{outline:2px solid var(--cds-focus);outline-offset:2px}
-  body > header{padding:20px 24px;background:var(--cds-background);border-bottom:1px solid var(--cds-border-subtle-01);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  #export:focus-visible,.tp-toolbar button:focus-visible,.tp-toolbar select:focus-visible,.tp-card-head > input:focus-visible{outline:2px solid var(--tp-focus);outline-offset:2px}
+  body > header{padding:20px 24px;background:var(--tp-card);border-bottom:1px solid var(--tp-border);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
   body > header > h1{font-size:20px;margin:0} .tp-main{padding:24px;min-width:0}
   .tp-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 20px}.tp-toolbar label{display:flex;gap:5px;align-items:center}
-  .tp-toolbar select{padding:7px;border:1px solid var(--cds-border-strong-01);background:var(--cds-field-02);color:var(--cds-text-primary)}
+  .tp-toolbar select{padding:7px;border:1px solid var(--tp-control-border);background:var(--tp-control);color:var(--tp-text)}
   /* Cards butt together with shared 1px borders: each card overlaps the one before it by its border.
      A catalog's cards share one size, 200×200 unless a specimen needs more; sizeCells() sets it. Each card is one
      column (minmax(0,1fr)), so its text wraps or cuts inside it and never widens it. */
   #grid{--tp-cell-width:200px;--tp-cell-height:200px;display:grid;grid-template-columns:repeat(auto-fill,var(--tp-cell-width));max-width:calc(6 * var(--tp-cell-width));box-sizing:content-box;padding:1px 0 0 1px}
-  .tp-cell{width:var(--tp-cell-width);height:var(--tp-cell-height);margin:-1px 0 0 -1px;padding:16px;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr auto;row-gap:8px;border:1px solid var(--cds-border-subtle-01);background:var(--cds-layer-background,var(--cds-background))}
-  .tp-card-head{display:flex;gap:8px;align-items:start;justify-content:space-between}.tp-card-head > input{margin:0;flex:none;accent-color:var(--cds-icon-primary)}
+  .tp-cell{width:var(--tp-cell-width);height:var(--tp-cell-height);margin:-1px 0 0 -1px;padding:16px;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr auto;row-gap:8px;border:1px solid var(--tp-border);background:var(--tp-card)}
+  .tp-card-head{display:flex;gap:8px;align-items:start;justify-content:space-between}.tp-card-head > input{margin:0;flex:none;accent-color:var(--tp-text)}
   .tp-card-name{font-size:12px;line-height:16px;overflow-wrap:anywhere}
-  .tp-drafted{font-style:italic;text-decoration:underline dotted var(--cds-support-warning);text-underline-offset:2px}.tp-drafted::after{content:"*"}
+  .tp-drafted{font-style:italic;text-decoration:underline dotted var(--tp-warning);text-underline-offset:2px}.tp-drafted::after{content:"*"}
   .tp-specimen{display:flex;align-items:center;justify-content:center;min-height:0;min-width:0}
   .tp-specimen > .tp-fill{flex:1 1 auto}
   .tp-omitted .tp-specimen{opacity:.4} #grid.tp-measuring .tp-specimen{width:min-content} #grid.tp-measuring-height .tp-cell{height:auto}
-  .tp-card-foot{display:flex;flex-wrap:wrap;column-gap:16px;font-size:12px;line-height:16px;color:var(--cds-text-secondary)}.tp-card-foot > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-  .tp-cell[hidden]{display:none} #status{color:var(--cds-text-secondary);flex:1} #error{color:var(--cds-text-error);white-space:pre-wrap}
+  .tp-card-foot{display:flex;flex-wrap:wrap;column-gap:16px;font-size:12px;line-height:16px;color:var(--tp-text-secondary)}.tp-card-foot > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .tp-cell[hidden]{display:none} #status{color:var(--tp-text-secondary);flex:1} #error{color:var(--tp-error);white-space:pre-wrap}
   @media(max-width:760px){.tp-main{padding:16px}}
 </style>
 <body class="tp-page">

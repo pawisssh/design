@@ -256,6 +256,12 @@ export async function previewRenderer(contract, { project = FIXTURE, dir: base =
   return {
     stylesheet,
     modeClass: mode => `mode-${mode}`,
+    // The catalog chrome's colours (#392): shadcn's theme variables, which the project's CSS sets in :root and again in
+    // .dark, so the chrome follows Dark. The page is muted, as Carbon's is its gray layer; shadcn has no warning colour.
+    chrome: {
+      page: 'var(--muted)', card: 'var(--card)', border: 'var(--border)', text: 'var(--foreground)', textSecondary: 'var(--muted-foreground)',
+      controlBorder: 'var(--input)', focus: 'var(--ring)', error: 'var(--destructive)',
+    },
     render(tuple, properties) {
       const text = p => (properties && properties[p.key] !== undefined ? properties[p.key] : p.default);
       const full = {};
