@@ -334,6 +334,24 @@ test('generation fails when the pinned Switch.tsx no longer picks the thumb colo
   await assert.rejects(generate({ sources, contracts, dir }), /switch-thumb-background: cannot read defaultControlColor in packages\/web\/src\/controls\/Switch\.tsx/);
 });
 
+// in (#472): Tag's map is tags.js's tagEmphasisColorMap, spectrum keys the active scheme resolves.
+test('a family whose token map picks spectrum keys gets a token per Mode aliasing that scheme\'s Primitive: Tag', { skip }, async () => {
+  const path = 'design-systems/cds/contracts/tag.component.json';
+  const { doc } = await generate({ sources, contracts: [{ path, contract: contract({ family: 'tag', fill: 'tag-low-blue-background' }) }] });
+  const v = doc.variables;
+  assert.deepEqual(v['tag-low-blue-background'], { collection: 'theme', name: 'Tag/tag-low-blue-background', type: 'COLOR',
+    source: 'packages/common/src/tokens/tags.ts#tagEmphasisColorMap.low.blue.background', scopes: ['FRAME_FILL'], codeSyntax: {},
+    values: { light: { alias: 'light-blue0', resolved: v['light-blue0'].values.default.value }, dark: { alias: 'dark-blue0', resolved: v['dark-blue0'].values.default.value } },
+    usedBy: ['tag'], family: 'tag' });
+  assert.deepEqual(v['tag-high-yellow-color'].values.dark, { alias: 'dark-yellow70', resolved: v['dark-yellow70'].values.default.value });
+  assert.deepEqual(v['tag-high-yellow-color'].scopes, ['SHAPE_FILL', 'TEXT_FILL']);
+  const tag = Object.keys(v).filter(k => v[k].family === 'tag');
+  assert.equal(tag.length, 2 * 6 * 2, 'two emphases, six colour schemes, background and color');
+  assert.ok(!tag.some(k => /-(hover|pressed|disabled)-/.test(k)), 'no Synthesized tokens: Tag renders no Interactable');
+  assert.ok(doc.checks.css.modules['@coinbase/cds-common/esm/tokens/tags.js']);
+  assert.match(doc.notes.find(n => n.at === 'variables.tag-*').message, /aliases light-<key> in Light and dark-<key> in Dark/);
+});
+
 test('--family chip: a cds-common token module with no variants is no token map either', { skip }, async () => {
   const { doc } = await generate({ sources, families: ['chip'] });
   assert.ok(!Object.values(doc.variables).some(x => x.family));
