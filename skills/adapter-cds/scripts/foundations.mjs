@@ -60,6 +60,15 @@ const DEFAULT_FONT_CSS = 'package/esm/styles/defaultFont.css';
 // A family's tokens are emitted only when the family is asked for (--family) or has a Contract.
 const tokenModule = name => `package/esm/tokens/${name}.js`;
 const tokenSource = name => `packages/common/src/tokens/${name}.ts`;
+// in (#472): a family whose token map picks spectrum keys, not Theme colours, named here with its module and export.
+// Tag paints rgb(theme.spectrum[key]) inline, the key from tags.ts's tagEmphasisColorMap[emphasis][colorScheme]
+// (Tag.tsx L107-L111), and the active scheme's spectrum is that scheme's Primitives. So each component token is
+// `<family>-<emphasis>-<colorScheme>-<part>`, aliasing `light-<key>` in Light and `dark-<key>` in Dark. Tag renders
+// no Interactable, so it has no Synthesized tokens.
+const SPECTRUM_MAPS = {
+  tag: { module: 'tags', map: 'tagEmphasisColorMap', roles: { background: ['background', ['FRAME_FILL']], foreground: ['color', ['SHAPE_FILL', 'TEXT_FILL']] } },
+};
+const moduleOf = family => SPECTRUM_MAPS[family]?.module ?? family;
 const TYPES = 'packages/common/src/types/';
 // A component token's role in the map -> its name suffix and scopes.
 const ROLE = { color: ['color', ['SHAPE_FILL', 'TEXT_FILL']], background: ['background', ['FRAME_FILL']], borderColor: ['border', ['STROKE_COLOR']] };
@@ -67,6 +76,10 @@ const ROLE = { color: ['color', ['SHAPE_FILL', 'TEXT_FILL']], background: ['back
 const BLENDED = ['background', 'borderColor'];
 // Interactable's states, as Interactable.tsx names them -> the Synthesized name's state.
 const STATES = [['Hovered', 'hover'], ['Pressed', 'pressed'], ['Disabled', 'disabled']];
+// in (#476): a colour a component picks per colour scheme in its own TSX is one Theme colour in neither Mode, so it is
+// a Synthesized token (ADR 0009) aliasing each Mode's pick. Switch's thumb is `fgInverse` in Light and `fg` in Dark
+// (white in both). Each entry: [family, the TSX a Contract of the family pins, the `const` that picks, token, scopes].
+const SCHEME_PICKS = [['switch', 'packages/web/src/controls/Switch.tsx', 'defaultControlColor', 'switch-thumb-background', ['FRAME_FILL']]];
 // Theme colours: Figma group by name prefix, longest first.
 const THEME_GROUP = [['bgLine', 'Line'], ['bgElevation', 'Elevation'], ['bg', 'Background'], ['fg', 'Foreground'], ['accent', 'Accent'], ['transparent', 'Transparent']];
 // Layout groups of the theme -> Figma group and scopes. Figma has no PADDING scope; GAP covers padding and gap (#27).
@@ -167,11 +180,11 @@ export async function loadModules(sources, families = [], depsDir = FOUNDATIONS_
   }
   // The token modules in name order, interactable's (the state opacities) among the families' maps, as `hashes` lists them.
   const extracted = new Set(sources.packages[COMMON].members);
-  const names = [...new Set(['interactable', ...families])].filter(n => extracted.has(tokenModule(n))).sort(byKey);
+  const names = [...new Set(['interactable', ...families.map(moduleOf)])].filter(n => extracted.has(tokenModule(n))).sort(byKey);
   const loaded = {};
   for (const name of names) loaded[name] = await load(COMMON, tokenModule(name));
   out.interactable = loaded.interactable || fail(`${COMMON}: ${tokenModule('interactable')} is not extracted; run: node skills/adapter-cds/scripts/sources.mjs`);
-  out.tokens = Object.fromEntries(families.map(f => [f, loaded[f] || null]));
+  out.tokens = Object.fromEntries(families.map(f => [f, loaded[moduleOf(f)] || null]));
   return out;
 }
 
@@ -379,17 +392,43 @@ export async function generate({ sources, contracts = [], families = [], modules
   // 4. Each family's component tokens, aliasing the Theme colour its token map names, then its Synthesized tokens.
   // in (#396): a family with no token map gets neither, only the closure, and a note says so; the run goes on.
   const synthesized = {};
+  // A SPECTRUM_MAPS family's component tokens: one per group, key and role of its map, each Mode aliasing that
+  // scheme's Primitive of the spectrum key.
+  const spectrumTokens = family => {
+    const { module, map: exported, roles } = SPECTRUM_MAPS[family];
+    const map = mods.tokens[family][exported];
+    for (const group of Object.keys(map).sort(byKey)) {
+      for (const key of Object.keys(map[group]).sort(byKey)) {
+        for (const [role, [part, scopes]] of Object.entries(roles)) {
+          const name = `${family}-${group}-${key}-${part}`;
+          const target = map[group][key][role];
+          const values = {};
+          for (const [s] of SCHEMES) {
+            const primitive = `${s}-${target}`;
+            if (!variables[primitive]) fail(`${name}/${s}: ${target} is not a ${s}Spectrum key`);
+            values[s] = { alias: primitive, resolved: variables[primitive].values.default.value };
+          }
+          variables[name] = { collection: 'theme', name: `${cap(family)}/${name}`, type: 'COLOR',
+            source: `${tokenSource(module)}#${exported}.${group}.${key}.${role}`, scopes: withStroke(name, scopes), codeSyntax: {},
+            values, usedBy: users(name), family };
+        }
+      }
+    }
+    notes.push({ level: 'info', at: `variables.${family}-*`, message: `${cap(family)} paints rgb(theme.spectrum[<key>]) inline, the key from ${tokenSource(module)}'s ${exported}; the active scheme's spectrum is that scheme's Primitives, so each ${family} token aliases light-<key> in Light and dark-<key> in Dark. CDS emits no custom property for it, so codeSyntax is empty. ${cap(family)} renders no Interactable, so it has no Synthesized tokens.` });
+  };
   const mapped = emitFamilies.filter(family => {
     if (!(family in mods.tokens)) fail(`the modules were loaded without family ${family}'s token map`);
-    if (mods.tokens[family]?.variants || mods.tokens[family]?.colorSchemeMap) return true;
-    const member = tokenModule(family).replace(/^package\//, '');
-    const why = mods.tokens[family] ? `${member} exports neither variants nor colorSchemeMap` : `has no ${member}`;
-    notes.push({ level: 'info', at: `variables.${family}-*`, message: `${family} has no component token map: ${COMMON}@${CDS.packages[COMMON].version} ${why}, so the document carries no ${family} component or Synthesized tokens, only the Theme, Layout and Type tokens its Contract binds.` });
+    const spectrumMap = SPECTRUM_MAPS[family];
+    if (spectrumMap ? mods.tokens[family]?.[spectrumMap.map] : mods.tokens[family]?.variants || mods.tokens[family]?.colorSchemeMap) return true;
+    const member = tokenModule(moduleOf(family)).replace(/^package\//, '');
+    const why = mods.tokens[family] ? `${member} exports ${spectrumMap ? `no ${spectrumMap.map}` : 'neither variants nor colorSchemeMap'}` : `has no ${member}`;
+    notes.push({ level: 'info', at: `variables.${family}-*`, message: `${family} has no component token map: ${COMMON}@${CDS.packages[COMMON].version} ${why}, so the document carries no ${family} component tokens or state blends from one.` });
     return false;
   });
   if (mapped.length) {
     const blends = interactableBlends(files, mods.interactable);
     for (const family of mapped) {
+      if (SPECTRUM_MAPS[family]) { spectrumTokens(family); continue; }
       const map = mods.tokens[family];
       const source = tokenSource(family);
       // in (#478): Avatar's map is `colorSchemeMap`, a colour scheme -> the spectrum colour Avatar's wrapper sets as its
@@ -470,6 +509,26 @@ export async function generate({ sources, contracts = [], families = [], modules
         { level: 'info', at: `variables.${family}-*-{${STATES.map(s => s[1]).join(',')}}-*`, message: `Synthesized tokens (ADR 0009): Interactable computes each state's colour per element with getBlendedColor and sets it inline as ${props}. Those properties hold a different colour on every element, so codeSyntax is empty. Disabled also sets opacity 0.5 on the whole element (accessibleOpacityDisabled), which no colour token carries.` },
       );
     }
+  }
+  for (const [family, file, pick, name, scopes] of SCHEME_PICKS.filter(([f]) => emitFamilies.includes(f))) {
+    // Only a Contract that pins the file says what it picks; without one (--family alone) there is no token.
+    const pinned = contracts.filter(c => c.contract.family.key === family && c.contract.source.files[file]);
+    const picks = new Set(pinned.map(({ contract }) => {
+      const text = readContractSources({ source: { ...contract.source, files: { [file]: contract.source.files[file] } } }, dir)[file];
+      const m = new RegExp(`const ${pick} = activeColorScheme === 'dark' \\? '(\\w+)' : '(\\w+)';`).exec(text);
+      return m ? JSON.stringify({ dark: m[1], light: m[2] }) : fail(`${name}: cannot read ${pick} in ${file}`);
+    }));
+    if (picks.size > 1) fail(`${name}: the ${family} Contracts' ${file} pick ${pick} differently`);
+    if (!picks.size) continue;
+    const by = JSON.parse([...picks][0]);
+    for (const [s] of SCHEMES)
+      if (!variables[by[s]] || variables[by[s]].collection !== 'theme') fail(`${name}/${s}: ${by[s]} is not a Theme colour`);
+    synthesized[name] = { collection: 'theme', name: `${cap(family)}/${name}`, type: 'COLOR',
+      source: `synthesized: ${file} ${pick} (activeColorScheme === 'dark' ? '${by.dark}' : '${by.light}')`,
+      scopes: withStroke(name, scopes), codeSyntax: {},
+      values: Object.fromEntries(SCHEMES.map(([s]) => [s, { alias: by[s], resolved: variables[by[s]].values[s].resolved }])),
+      usedBy: users(name), family };
+    notes.push({ level: 'info', at: `variables.${name}`, message: `Synthesized token (ADR 0009): ${file} picks ${pick} by the active colour scheme, ${by.light} in Light and ${by.dark} in Dark, so no one Theme colour holds it in both Modes. It aliases each Mode's pick. CDS emits no custom property for it (the element paints var(--color-${by.light}) or var(--color-${by.dark})), so codeSyntax is empty.` });
   }
   for (const name of Object.keys(synthesized).sort(byKey)) {
     if (variables[name]) fail(`the Synthesized token ${name} has the name of a CDS token (${variables[name].source})`);

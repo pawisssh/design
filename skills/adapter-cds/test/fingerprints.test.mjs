@@ -12,6 +12,7 @@ import { join } from 'node:path';
 import { asDraft } from '../../contract/scripts/contract.mjs';
 import { writeJson } from '../../contract/scripts/io.mjs';
 import { fingerprints, hasContractSources, literalRecords, readContractSources } from '../scripts/fingerprints.mjs';
+import { readContracts } from '../scripts/foundations.mjs';
 import { ANCHORS, anchorFamily } from './helpers.mjs';
 
 const digest = facts => `sha256:${createHash('sha256').update(JSON.stringify(facts)).digest('hex')}`;
@@ -177,13 +178,20 @@ const button = JSON.parse(readFileSync(BUTTON, 'utf8'));
 const skip = !hasContractSources(button) && 'run: node skills/adapter-cds/scripts/sources.mjs';
 const cli = path => spawnSync(process.execPath, [SCRIPT, path, '--nodes', NODES, '--check'], { encoding: 'utf8' });
 
-test('every Button draft has evidence and the fingerprint the script computes', { skip }, () => {
-  const fp = fingerprints({ contract: button, nodes: JSON.parse(readFileSync(NODES, 'utf8')), files: readContractSources(button) }).fingerprints;
-  const agent = Object.entries(button.drafted).filter(([, e]) => e.by === 'agent');
-  assert.ok(agent.length > 0);
-  for (const [key, entry] of agent) {
-    assert.ok(entry.evidence.length > 0, key);
-    assert.equal(entry.fingerprint, fp[key], key);
+// Every committed CDS Contract, with its node map nodes/<family>.nodes.json, so a new family (#469) is covered too.
+const committed = readContracts();
+test('every draft of each committed CDS Contract has evidence and the fingerprint the script computes', {
+  skip: !committed.every(c => hasContractSources(c.contract)) && 'run: node skills/adapter-cds/scripts/sources.mjs',
+}, () => {
+  for (const { path, contract } of committed) {
+    const nodes = JSON.parse(readFileSync(new URL(`../nodes/${contract.family.key}.nodes.json`, import.meta.url), 'utf8'));
+    const fp = fingerprints({ contract, nodes, files: readContractSources(contract) }).fingerprints;
+    const agent = Object.entries(contract.drafted).filter(([, e]) => e.by === 'agent');
+    assert.ok(agent.length > 0, path);
+    for (const [key, entry] of agent) {
+      assert.ok(entry.evidence.length > 0, `${path} ${key}`);
+      assert.equal(entry.fingerprint, fp[key], `${path} ${key}`);
+    }
   }
 });
 

@@ -2,7 +2,8 @@
 // FRAME without Auto Layout, centred in the root, holding a full-circle `Track` and a 270° `Arc`, both ELLIPSE.
 import { asDraft } from '../scripts/contract.mjs';
 
-const px = n => ({ raw: n, level: 'info', reason: 'spinner test size' });
+/** A raw size, as the spinner's nodes take it. */
+export const px = n => ({ raw: n, level: 'info', reason: 'spinner test size' });
 
 /** A draft copy of `button` with the spinner; `edit(spinnerLayout, spinnerPaint)` may change the two rules first. */
 export function withSpinner(button, edit = () => {}) {

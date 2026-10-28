@@ -5,9 +5,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { generate, loadModules, readContracts } from '../scripts/foundations.mjs';
 import { CDS, REPO_ROOT, hasFoundationsPackages, hasSources, readSources, sha256 } from '../scripts/sources.mjs';
 import { closure } from '../../contract/scripts/contract.mjs';
@@ -295,8 +295,61 @@ test('a family with no token map gets no component tokens, only its closure, and
   assert.deepEqual(doc.closure.tokens, ['bgPrimary']);
   assert.deepEqual(doc.variables.bgPrimary.usedBy, ['switch']);
   assert.deepEqual(doc.notes.filter(n => n.at === 'variables.switch-*'), [{ level: 'info', at: 'variables.switch-*',
-    message: 'switch has no component token map: @coinbase/cds-common@9.29.0 has no esm/tokens/switch.js, so the document carries no switch component or Synthesized tokens, only the Theme, Layout and Type tokens its Contract binds.' }]);
+    message: 'switch has no component token map: @coinbase/cds-common@9.29.0 has no esm/tokens/switch.js, so the document carries no switch component tokens or state blends from one.' }]);
   assert.match(summary[0], /^families switch;/);
+});
+
+// in (#476): Switch.tsx picks the thumb colour by colour scheme, so it is a Synthesized token aliasing each Mode's pick.
+const SWITCH_TSX = 'packages/web/src/controls/Switch.tsx';
+/** A Switch Contract pinning `text` as Switch.tsx, written into the sources dir `dir` when given. */
+const switchPinning = (text, dir) => {
+  const c = contract({ family: 'switch', fill: 'switch-thumb-background' });
+  if (dir) {
+    const file = join(dir, 'cds', SWITCH_TSX);
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, text);
+  }
+  c.source.files = { [SWITCH_TSX]: `sha256:${sha256(text)}` };
+  return [{ path: 'design-systems/cds/contracts/switch.component.json', contract: c }];
+};
+const fetched = join(REPO_ROOT, '.scratch/adapter-cds/sources/cds', SWITCH_TSX);
+
+test('a Contract that pins Switch.tsx gets switch-thumb-background, fgInverse in Light and fg in Dark', { skip: skip || (!existsSync(fetched) && SOURCES_MISSING) }, async () => {
+  const switchText = readFileSync(fetched, 'utf8');
+  const { doc, summary } = await generate({ sources, contracts: switchPinning(switchText) });
+  const v = doc.variables;
+  assert.deepEqual(v['switch-thumb-background'], { collection: 'theme', name: 'Switch/switch-thumb-background', type: 'COLOR',
+    source: `synthesized: ${SWITCH_TSX} defaultControlColor (activeColorScheme === 'dark' ? 'fg' : 'fgInverse')`, scopes: ['FRAME_FILL'], codeSyntax: {},
+    values: { light: { alias: 'fgInverse', resolved: '#ffffff' }, dark: { alias: 'fg', resolved: '#ffffff' } }, usedBy: ['switch'], family: 'switch' });
+  assert.equal(Object.keys(v).filter(k => v[k].collection === 'theme').at(-1), 'switch-thumb-background', 'Synthesized, so last of the Theme');
+  assert.match(doc.notes.find(n => n.at === 'variables.switch-thumb-background').message, /picks defaultControlColor by the active colour scheme, fgInverse in Light and fg in Dark/);
+  assert.match(summary[0], /\(1 Synthesized\)/);
+  const bare = await generate({ sources, families: ['switch'] });
+  assert.ok(!bare.doc.variables['switch-thumb-background'], 'no Contract pins Switch.tsx, so nothing says what it picks');
+});
+
+test('generation fails when the pinned Switch.tsx no longer picks the thumb colour by scheme', { skip }, async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'cds-switch-'));
+  const contracts = switchPinning("const defaultControlColor = 'fgInverse';\n", dir);
+  await assert.rejects(generate({ sources, contracts, dir }), /switch-thumb-background: cannot read defaultControlColor in packages\/web\/src\/controls\/Switch\.tsx/);
+});
+
+// in (#472): Tag's map is tags.js's tagEmphasisColorMap, spectrum keys the active scheme resolves.
+test('a family whose token map picks spectrum keys gets a token per Mode aliasing that scheme\'s Primitive: Tag', { skip }, async () => {
+  const path = 'design-systems/cds/contracts/tag.component.json';
+  const { doc } = await generate({ sources, contracts: [{ path, contract: contract({ family: 'tag', fill: 'tag-low-blue-background' }) }] });
+  const v = doc.variables;
+  assert.deepEqual(v['tag-low-blue-background'], { collection: 'theme', name: 'Tag/tag-low-blue-background', type: 'COLOR',
+    source: 'packages/common/src/tokens/tags.ts#tagEmphasisColorMap.low.blue.background', scopes: ['FRAME_FILL'], codeSyntax: {},
+    values: { light: { alias: 'light-blue0', resolved: v['light-blue0'].values.default.value }, dark: { alias: 'dark-blue0', resolved: v['dark-blue0'].values.default.value } },
+    usedBy: ['tag'], family: 'tag' });
+  assert.deepEqual(v['tag-high-yellow-color'].values.dark, { alias: 'dark-yellow70', resolved: v['dark-yellow70'].values.default.value });
+  assert.deepEqual(v['tag-high-yellow-color'].scopes, ['SHAPE_FILL', 'TEXT_FILL']);
+  const tag = Object.keys(v).filter(k => v[k].family === 'tag');
+  assert.equal(tag.length, 2 * 6 * 2, 'two emphases, six colour schemes, background and color');
+  assert.ok(!tag.some(k => /-(hover|pressed|disabled)-/.test(k)), 'no Synthesized tokens: Tag renders no Interactable');
+  assert.ok(doc.checks.css.modules['@coinbase/cds-common/esm/tokens/tags.js']);
+  assert.match(doc.notes.find(n => n.at === 'variables.tag-*').message, /aliases light-<key> in Light and dark-<key> in Dark/);
 });
 
 test('--family chip: a cds-common token module with no variants is no token map either', { skip }, async () => {
