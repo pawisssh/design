@@ -107,6 +107,30 @@ test('a citation that opens a sentence backs the claim after it; a claim stops a
   assert.deepEqual(prose({ note: 'The Arc names strokeDasharray. The span hides with hiddenCss (ProgressCircle.tsx L6).' }), []);
 });
 
+test('a claim ends at a contrast word, as at its sentence: what follows is the next claim (#462)', () => {
+  for (const word of ['while', 'whereas', 'but', 'though']) {
+    assert.deepEqual(prose({ note: `ProgressCircle.tsx L2 sets strokeDashoffset ${word} pathLength stays 1.` }), [], word);
+    assert.deepEqual(prose({ note: `progressOffset is strokeDashoffset, ${word} pathLength stays 1 (ProgressCircle.tsx L3).` }), [], word);
+  }
+  // #462's select notes[0], renumbered: the outer path's colour is a claim of its own, with no citation
+  assert.deepEqual(prose({ note: 'The span is two-toned: ProgressCircle.tsx L6 hides it with hiddenCss while the Arc takes strokeDasharray.' }), []);
+  const own = 'ProgressCircle.tsx L3 sets strokeDashoffset while pathLength stays 1.';
+  assert.deepEqual(prose({ note: own }), [`notes[0]: "${own}": ProgressCircle.tsx L3: the cited lines do not show strokeDashoffset`], 'the claim before the word is still checked');
+  const next = 'ProgressCircle.tsx L2 sets strokeDashoffset while pathLength stays 1 (L4).';
+  assert.deepEqual(prose({ note: next }), [`notes[0]: "${next}": L4: the cited lines do not show pathLength`], 'the claim after it is checked against its own citation');
+  assert.deepEqual(prose({ note: 'ProgressCircle.tsx L2 sets strokeDashoffset while L3 sets pathLength.' }), []);
+});
+
+test('a citation that opens a clause mid-sentence backs the clause after it (#462)', () => {
+  // #462's text-input notes[3], renumbered: L3 was checked against L2's clause
+  assert.deepEqual(prose({ note: 'With a progress, ProgressCircle.tsx L2 sets strokeDashoffset and L3 sets pathLength.' }), []);
+  const bad = 'With a progress, ProgressCircle.tsx L3 sets strokeDashoffset.';
+  assert.deepEqual(prose({ note: bad }), [`notes[0]: "${bad}": ProgressCircle.tsx L3: the cited lines do not show strokeDashoffset`]);
+  const after = 'The span takes hiddenCss (ProgressCircle.tsx L6) and L3 sets strokeDashoffset.';
+  assert.deepEqual(prose({ note: after }), [`notes[0]: "${after}": L3: the cited lines do not show strokeDashoffset`]);
+  assert.deepEqual(prose({ note: 'The span takes hiddenCss, ProgressCircle.tsx L6, and opacity 0.' }), [], 'one followed by punctuation backs the claim before');
+});
+
 test('prose without a citation and an owner\'s `was` are not checked', () => {
   assert.deepEqual(prose({ reason: 'derived (size − 1lh)/2', note: 'Figma has no animation, so the Arc does not spin.' }), []);
 });

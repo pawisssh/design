@@ -1056,6 +1056,9 @@ const PROSE = new Set(('the and with for its from each one not but has are was t
 // A citation: `<file>:L<a>[-L<b>]`, or `<file> L<a>` in a reason or a note; a bare `L<n>` is in the last file named.
 const FILE = /[\w./-]+\.[A-Za-z]\w*/g;
 const CITE = new RegExp(`(?:(${FILE.source})[: ])?\\bL(\\d+)(?:-L(\\d+))?\\b`, 'g');
+// The end of a claim in a reason or a note: its sentence's, its `;` clause's, or a contrast word, so in "L1 shows a
+// while b", b is the next claim's (#462).
+const CLAUSE = /[.;]\s|\b(?:while|whereas|but|though)\b/;
 // Whether a source path is the cited file: the path, or its last segments.
 const isFile = (path, file) => path === file || path.endsWith(`/${file}`);
 // In a reason or a note a claim's identifier matches source text across case and hyphens: `stroke-dashoffset`
@@ -1074,7 +1077,8 @@ const isIdent = w => /[a-z][A-Z]|[-_$]/.test(w);
  * it. In evidence, when the claim (the whole string) names a word its files hold, the cited lines must hold one of
  * those words, so a citation a line off shows none. In a reason or a note each citation, or run of citations ("L132
  * and L140"), backs the claim before it, back to the previous run or the start of its sentence or `;` clause; a run
- * that opens one (or follows a `:`) backs the claim after it, to the next run or the clause's end. The cited lines
+ * that opens one (or follows a `:`, or a `,` or `and` with a word after the run) backs the claim after it, to the next
+ * run or the clause's end. A contrast word (while, whereas, but, though) ends a claim as a clause does. The cited lines
  * must show every identifier that claim names and the cited files hold (camelCase, or with `-`, `_` or `$`; the
  * family's name and source file names aside), or sit inside the block it names. `normalise(text)` rewrites source
  * text before the match (Carbon's `#{$prefix}` as `cds`).
@@ -1145,9 +1149,11 @@ export function draftedEvidence(contract, files, normalise) {
     let taken = 0;
     return runs.flatMap((r, i) => {
       // The claim before the run, within its sentence or `;` clause and after text a run before took; else after it.
-      let claim = text.slice(Math.max(i ? runs[i - 1].end : 0, taken), r.start).split(/[.;]\s/).at(-1);
-      if (/(?:^|:)$/.test(claim.replace(/(?:[\s(,]|\band\b)+$/, ''))) {
-        claim = text.slice(r.end, i + 1 < runs.length ? runs[i + 1].start : text.length).split(/[.;]\s/)[0];
+      let claim = text.slice(Math.max(i ? runs[i - 1].end : 0, taken), r.start).split(CLAUSE).at(-1);
+      // A run that opens a clause mid-sentence ("…, L171 sets", "… and L107 places") is its subject (#462).
+      const opens = /(?:,|\band)\s*$/.test(claim) && /^\s+[a-z]/.test(text.slice(r.end));
+      if (opens || /(?:^|:)$/.test(claim.replace(/(?:[\s(,]|\band\b)+$/, ''))) {
+        claim = text.slice(r.end, i + 1 < runs.length ? runs[i + 1].start : text.length).split(CLAUSE)[0];
         taken = r.end + claim.length;
       }
       // a source file's name ("Button.figma.ts") is not an identifier of the claim
