@@ -20,7 +20,7 @@ export function readHtml(path, rel, { depsDir, text = readFileSync(path, 'utf8')
   const lines = lineStarts(text);
   const at = offset => { const l = lineOf(lines, offset); return `${rel}:${l + 1}:${offset - lines[l] + 1}`; };
   const doc = parse5.parse(text, { sourceCodeLocationInfo: true });
-  const out = { file: rel, text, at, title: null, rules: [], scripts: [], root: null, mounts: [] };
+  const out = { file: rel, text, at, rules: [], scripts: [], root: null, mounts: [] };
 
   const convert = (node, parent, ctx) => {
     if (node.nodeName === '#text') {
@@ -47,7 +47,6 @@ export function readHtml(path, rel, { depsDir, text = readFileSync(path, 'utf8')
       const valueStart = text.indexOf(el.attrs.style, ctx.base + aloc.startOffset);
       el.inline = parseInline(el.attrs.style, valueStart >= 0 ? valueStart : ctx.base + aloc.startOffset);
     }
-    if (el.tag === 'title') out.title = node.childNodes.map(c => c.value || '').join('').trim();
     if (el.tag === 'style') {
       const t = node.childNodes[0];
       if (t) out.rules.push(...parseCss(t.value, ctx.base + t.sourceCodeLocation.startOffset));
