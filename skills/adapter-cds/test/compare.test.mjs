@@ -220,6 +220,20 @@ test('expectations: a static class is matched as written, in either case, and a 
   assert.throws(() => expectations({ contract: c, nodes: n, foundations, classes: {} }), /layer "Checkbox": no compiled class for checkboxCss/);
 });
 
+// in (#472): Tag's Start icon and End icon both carry nodeCss, and a font icon's glyph is text.
+test('probe: two layers with one entry take an element each, and a TEXT skips the text in a sibling layer', () => {
+  const layers = [{ name: 'Tag', type: 'COMPONENT', parent: null, entry: 'cds-tag', className: 'cds-tag' },
+    { name: 'Start icon', type: 'FRAME', parent: 'Tag', entry: 'nodeCss', className: 'nodeCss-n1' },
+    { name: 'Label', type: 'TEXT', parent: 'Tag', entry: 'cds-tag', className: 'cds-tag', drawnInParent: true },
+    { name: 'End icon', type: 'FRAME', parent: 'Tag', entry: 'nodeCss', className: 'nodeCss-n1' }];
+  const want = { 'Start icon': { width: 12 }, Label: { color: '#ffffff' }, 'End icon': { width: 14 } };
+  const tagSpec = { collection: 'theme', modes: ['light', 'dark'], layers, expected: { blue: { light: want, dark: want } } };
+  const glyph = () => new El('iconCss-i1', { text: '\u{f000e}', style: { color: 'rgb(0, 0, 0)' } });
+  const icons = fakePage({ blue: () => new El('cds-tag', {}, [new El('nodeCss-n1', { w: 12 }, [glyph()]),
+    new El('baseCss-t1', { text: 'Tag', style: { color: 'rgb(255, 255, 255)' } }), new El('nodeCss-n1', { w: 14 }, [glyph()])]) });
+  assert.deepEqual(probe(tagSpec, ...Object.values(icons)), { checked: 2, mismatches: [] });
+});
+
 test('probe: Tag and Checkbox pass on their pages, a literal found by its compiled class and not by its name', () => {
   assert.deepEqual(probe(anchored('tag'), ...Object.values(tagPage())), { checked: 4, mismatches: [] });
   assert.deepEqual(probe(anchored('checkbox'), ...Object.values(checkboxPage())), { checked: 4, mismatches: [] });
