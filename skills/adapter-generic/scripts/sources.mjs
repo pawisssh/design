@@ -11,8 +11,8 @@
 // in gitignored scratch.
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
@@ -54,45 +54,118 @@ export const TOOLS = {
 
 /**
  * The packages one project is read with (#253): {name: pin}, each pin {version, integrity, extract, stylesheet?}.
- * - `tailwindcss` is the version the project's lockfile resolves, with the lockfile's own `integrity`; it must be a 4.x.
- *   The Adapter's pin of that version is used only to cross-check an integrity it also knows.
- * - `shadcn` and `tw-animate-css` are present only when the project's CSS imports them, and the lockfile must then
- *   resolve the pinned version of each.
- * - `typescript` is the Adapter's pin.
- * Throws, naming the package, when the lockfile disagrees.
+ * The project's components.json names its stylesheet; the rules are lockfileRules'. Throws the first rule that fails.
  */
 export function projectPins(project) {
-  const fail = msg => { throw new Error(msg); };
-  const read = rel => (existsSync(join(project, rel)) ? readFileSync(join(project, rel), 'utf8') : fail(`no ${rel}: the Adapter reads resolved versions from it`));
-  const cssFile = (JSON.parse(read('components.json')).tailwind || {}).css || fail('components.json names no tailwind.css');
-  const resolved = JSON.parse(read('package-lock.json')).packages || {};
+  const path = join(project, 'components.json');
+  if (!existsSync(path)) throw new Error('no components.json: the Adapter reads resolved versions from it');
+  const css = (JSON.parse(readFileSync(path, 'utf8')).tailwind || {}).css;
+  if (!css) throw new Error('components.json names no tailwind.css');
+  const { pins, failures } = lockfileRules(project, css);
+  if (failures.length) throw new Error(failures[0].message);
+  return pins;
+}
+
+// The folders a project's own files are never in.
+const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', 'out']);
+
+/** Every file under `dir`, in byte order, skipping dot-folders, dot-files and SKIP_DIRS. */
+export function* sourceFiles(dir) {
+  for (const name of readdirSync(dir).sort()) {
+    if (name.startsWith('.') || SKIP_DIRS.has(name)) continue;
+    const path = join(dir, name);
+    let isDir;
+    try { isDir = statSync(path).isDirectory(); } catch { continue; } // a broken symlink is no file of the project
+    if (isDir) yield* sourceFiles(path);
+    else yield path;
+  }
+}
+
+/** The project's stylesheet that imports Tailwind (`@import "tailwindcss"`), the shallowest first, relative to it; null when none does. */
+export function cssEntry(project) {
+  const found = [...sourceFiles(project)].filter(f => extname(f) === '.css' && /@import\s+(?:url\(\s*)?["']tailwindcss["']/.test(readFileSync(f, 'utf8')))
+    .map(f => relative(project, f)).sort((a, b) => a.split(sep).length - b.split(sep).length || (a < b ? -1 : a > b ? 1 : 0));
+  return found[0] ?? null;
+}
+
+const LOCKFILES = ['bun.lock', 'bun.lockb', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock'];
+
+// The lockfiles a project has, relative to it (#432, spec #343's lockfile row): its own, and a pnpm workspace's
+// `pnpm-lock.yaml` in a folder above, up to the one that holds `.git`.
+function lockfilesOf(project) {
+  const found = LOCKFILES.filter(f => existsSync(join(project, f)));
+  for (let dir = resolve(project); !existsSync(join(dir, '.git')) && dirname(dir) !== dir;) {
+    dir = dirname(dir);
+    if (existsSync(join(dir, 'pnpm-lock.yaml'))) { found.push(relative(project, join(dir, 'pnpm-lock.yaml'))); break; }
+  }
+  return found;
+}
+
+/**
+ * The Adapter's lockfile rules, applied to one project folder by path (#432): what projectPins refuses, without a
+ * components.json, so From-Prototype's gate rows call them rather than copy them (spec #343). Reads only, and
+ * returns each rule that fails rather than throwing it (a `project` that is no folder still throws).
+ * - `lockfile`: the Adapter reads `package-lock.json` only. `lockfiles` names the ones the project has.
+ * - `tailwind-version`: `tailwindcss` is the version the lockfile resolves, with the lockfile's own `integrity`; it
+ *   must be a 4.x.
+ * - `tailwind-integrity`: that integrity must be a sha512, and for a version the Adapter pins, the pin's.
+ * - `code-library-pins`: `shadcn` and `tw-animate-css` are present only when the project's CSS imports them, and the
+ *   lockfile must then resolve the pinned version of each. `typescript` is the Adapter's pin.
+ * `css` is the project's Tailwind stylesheet, relative to it (cssEntry by default); with none, no import is checked.
+ * One it names that isn't there fails `tailwind-stylesheet`.
+ * -> {pins (null when a rule fails), lockfiles, css, failures: [{rule, message, ...the values it names}]}, the
+ * failures in the order projectPins refuses them.
+ */
+export function lockfileRules(project, css = cssEntry(project)) {
+  const failures = [];
+  const fail = (rule, message, values = {}) => failures.push({ rule, message, ...values });
+  const lockfiles = lockfilesOf(project);
+  let pins = null;
+  const out = () => ({ pins: failures.length ? null : pins, lockfiles, css, failures });
+  if (!lockfiles.includes('package-lock.json')) {
+    fail('lockfile', 'no package-lock.json: the Adapter reads resolved versions from it');
+    return out();
+  }
+  let resolved;
+  try { resolved = JSON.parse(readFileSync(join(project, 'package-lock.json'), 'utf8'))?.packages || {}; } catch (e) {
+    fail('lockfile', `package-lock.json is not JSON: ${e.message}`);
+    return out();
+  }
   const lock = name => resolved[`node_modules/${name}`];
 
-  const tw = lock('tailwindcss') || fail('package-lock.json resolves no tailwindcss');
-  if (!/^4\./.test(tw.version)) fail(`the project resolves tailwindcss@${tw.version}, but the Adapter compiles Tailwind 4 only`);
-  if (!/^sha512-/.test(tw.integrity || '')) fail(`package-lock.json gives tailwindcss@${tw.version} no sha512 integrity (${tw.integrity || 'none'}), the only one the tools step checks`);
+  const tw = lock('tailwindcss');
   const known = TOOLS.tailwindcss;
-  if (tw.version === known.version && tw.integrity !== known.integrity)
-    fail(`tailwindcss@${tw.version}: the lockfile's integrity ${tw.integrity} does not match the Adapter's pin ${known.integrity}`);
-  const pins = { typescript: TOOLS.typescript, tailwindcss: { ...known, version: tw.version, integrity: tw.integrity } };
+  if (!tw) fail('tailwind-version', 'package-lock.json resolves no tailwindcss');
+  else {
+    const tailwind4 = /^4\./.test(tw.version);
+    if (!tailwind4) fail('tailwind-version', `the project resolves tailwindcss@${tw.version}, but the Adapter compiles Tailwind 4 only`, { version: tw.version });
+    if (!/^sha512-/.test(tw.integrity || ''))
+      fail('tailwind-integrity', `package-lock.json gives tailwindcss@${tw.version} no sha512 integrity (${tw.integrity || 'none'}), the only one the tools step checks`, { version: tw.version, integrity: tw.integrity });
+    else if (tailwind4 && tw.version === known.version && tw.integrity !== known.integrity)
+      fail('tailwind-integrity', `tailwindcss@${tw.version}: the lockfile's integrity ${tw.integrity} does not match the Adapter's pin ${known.integrity}`,
+        { version: tw.version, integrity: tw.integrity, pinned: known.integrity });
+    pins = { typescript: TOOLS.typescript, tailwindcss: { ...known, version: tw.version, integrity: tw.integrity } };
+  }
 
   // The packages the CSS imports, through the relative stylesheets it imports (comments aside).
   const imported = new Set();
   const scan = rel => {
-    const css = read(rel).replace(/\/\*[\s\S]*?\*\//g, '');
-    for (const [, id] of css.matchAll(/@import\s+(?:url\(\s*)?["']([^"']+)["']/g)) {
+    if (!existsSync(join(project, rel))) { fail('tailwind-stylesheet', `no ${rel}: the Adapter reads resolved versions from it`); return; }
+    const text = readFileSync(join(project, rel), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    for (const [, id] of text.matchAll(/@import\s+(?:url\(\s*)?["']([^"']+)["']/g)) {
       if (!id.startsWith('.')) imported.add(id.replace(/^((?:@[^/]+\/)?[^/]+).*$/, '$1'));
       else if (existsSync(join(project, dirname(rel), id))) scan(join(dirname(rel), id));
     }
   };
-  scan(cssFile);
+  if (css) scan(css);
   for (const name of Object.keys(TOOLS).filter(n => TOOLS[n].stylesheet && n !== 'tailwindcss').sort()) {
     if (!imported.has(name)) continue;
     const got = (lock(name) || {}).version;
-    if (got !== TOOLS[name].version) fail(`the project resolves ${name}@${got}, but the Adapter pins ${name}@${TOOLS[name].version}`);
-    pins[name] = TOOLS[name];
+    if (got !== TOOLS[name].version)
+      fail('code-library-pins', `the project resolves ${name}@${got}, but the Adapter pins ${name}@${TOOLS[name].version}`, { name, version: got, pinned: TOOLS[name].version });
+    else if (pins) pins[name] = TOOLS[name];
   }
-  return pins;
+  return out();
 }
 
 /** The pinned packages of `pins` whose CSS the project imports, by name. */
