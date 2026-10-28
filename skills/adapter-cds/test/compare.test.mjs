@@ -264,3 +264,12 @@ test('--run compares the real Button page in headless Chrome, and names a value 
   writeFileSync(join(dir, 'compare.js'), compareModule(changed));
   assert.deepEqual((await runInChrome(dir)).mismatches, [`${loading} light Arc.sweep: page 270, Contract 180`]);
 });
+
+test('--run opens the page at device pixel ratio 2, where a border below 1px reads as written (#476)', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'cds-compare-dpr-'));
+  writeFileSync(join(dir, 'index.html'), '');
+  const chrome = join(dir, 'chrome');
+  writeFileSync(chrome, `#!/bin/sh\necho "$@" > '${join(dir, 'args')}'\n`, { mode: 0o755 });
+  await assert.rejects(runInChrome(dir, { chrome }), /Chrome exited \(0\) before compare\(\) answered/);
+  assert.match(readFileSync(join(dir, 'args'), 'utf8'), /(^| )--force-device-scale-factor=2 /);
+});
