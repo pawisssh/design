@@ -67,6 +67,10 @@ const ROLE = { color: ['color', ['SHAPE_FILL', 'TEXT_FILL']], background: ['back
 const BLENDED = ['background', 'borderColor'];
 // Interactable's states, as Interactable.tsx names them -> the Synthesized name's state.
 const STATES = [['Hovered', 'hover'], ['Pressed', 'pressed'], ['Disabled', 'disabled']];
+// in (#476): a colour a component picks per colour scheme in its own TSX is one Theme colour in neither Mode, so it is
+// a Synthesized token (ADR 0009) aliasing each Mode's pick. Switch's thumb is `fgInverse` in Light and `fg` in Dark
+// (white in both). Each entry: [family, the TSX a Contract of the family pins, the `const` that picks, token, scopes].
+const SCHEME_PICKS = [['switch', 'packages/web/src/controls/Switch.tsx', 'defaultControlColor', 'switch-thumb-background', ['FRAME_FILL']]];
 // Theme colours: Figma group by name prefix, longest first.
 const THEME_GROUP = [['bgLine', 'Line'], ['bgElevation', 'Elevation'], ['bg', 'Background'], ['fg', 'Foreground'], ['accent', 'Accent'], ['transparent', 'Transparent']];
 // Layout groups of the theme -> Figma group and scopes. Figma has no PADDING scope; GAP covers padding and gap (#27).
@@ -383,7 +387,7 @@ export async function generate({ sources, contracts = [], families = [], modules
     if (mods.tokens[family]?.variants) return true;
     const member = tokenModule(family).replace(/^package\//, '');
     const why = mods.tokens[family] ? `${member} exports no variants` : `has no ${member}`;
-    notes.push({ level: 'info', at: `variables.${family}-*`, message: `${family} has no component token map: ${COMMON}@${CDS.packages[COMMON].version} ${why}, so the document carries no ${family} component or Synthesized tokens, only the Theme, Layout and Type tokens its Contract binds.` });
+    notes.push({ level: 'info', at: `variables.${family}-*`, message: `${family} has no component token map: ${COMMON}@${CDS.packages[COMMON].version} ${why}, so the document carries no ${family} component tokens or state blends from one.` });
     return false;
   });
   if (mapped.length) {
@@ -445,6 +449,26 @@ export async function generate({ sources, contracts = [], families = [], modules
         { level: 'info', at: `variables.${family}-*-{${STATES.map(s => s[1]).join(',')}}-*`, message: `Synthesized tokens (ADR 0009): Interactable computes each state's colour per element with getBlendedColor and sets it inline as ${props}. Those properties hold a different colour on every element, so codeSyntax is empty. Disabled also sets opacity 0.5 on the whole element (accessibleOpacityDisabled), which no colour token carries.` },
       );
     }
+  }
+  for (const [family, file, pick, name, scopes] of SCHEME_PICKS.filter(([f]) => emitFamilies.includes(f))) {
+    // Only a Contract that pins the file says what it picks; without one (--family alone) there is no token.
+    const pinned = contracts.filter(c => c.contract.family.key === family && c.contract.source.files[file]);
+    const picks = new Set(pinned.map(({ contract }) => {
+      const text = readContractSources({ source: { ...contract.source, files: { [file]: contract.source.files[file] } } }, dir)[file];
+      const m = new RegExp(`const ${pick} = activeColorScheme === 'dark' \\? '(\\w+)' : '(\\w+)';`).exec(text);
+      return m ? JSON.stringify({ dark: m[1], light: m[2] }) : fail(`${name}: cannot read ${pick} in ${file}`);
+    }));
+    if (picks.size > 1) fail(`${name}: the ${family} Contracts' ${file} pick ${pick} differently`);
+    if (!picks.size) continue;
+    const by = JSON.parse([...picks][0]);
+    for (const [s] of SCHEMES)
+      if (!variables[by[s]] || variables[by[s]].collection !== 'theme') fail(`${name}/${s}: ${by[s]} is not a Theme colour`);
+    synthesized[name] = { collection: 'theme', name: `${cap(family)}/${name}`, type: 'COLOR',
+      source: `synthesized: ${file} ${pick} (activeColorScheme === 'dark' ? '${by.dark}' : '${by.light}')`,
+      scopes: withStroke(name, scopes), codeSyntax: {},
+      values: Object.fromEntries(SCHEMES.map(([s]) => [s, { alias: by[s], resolved: variables[by[s]].values[s].resolved }])),
+      usedBy: users(name), family };
+    notes.push({ level: 'info', at: `variables.${name}`, message: `Synthesized token (ADR 0009): ${file} picks ${pick} by the active colour scheme, ${by.light} in Light and ${by.dark} in Dark, so no one Theme colour holds it in both Modes. It aliases each Mode's pick. CDS emits no custom property for it (the element paints var(--color-${by.light}) or var(--color-${by.dark})), so codeSyntax is empty.` });
   }
   for (const name of Object.keys(synthesized).sort(byKey)) {
     if (variables[name]) fail(`the Synthesized token ${name} has the name of a CDS token (${variables[name].source})`);

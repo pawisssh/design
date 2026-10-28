@@ -271,8 +271,10 @@ addEventListener('load', async () => {
   });
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   const profile = mkdtempSync(join(tmpdir(), 'cds-compare-chrome-'));
+  // in (#476): at device pixel ratio 2, a border below 1px reads as written. At 1, Chrome snaps it to one device
+  // pixel, so Switch's 0.5px thumb border would read as 1px.
   const browser = spawn(chrome, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
-    `--user-data-dir=${profile}`, `http://127.0.0.1:${server.address().port}/index.html`], { stdio: 'ignore', detached: true });
+    '--force-device-scale-factor=2', `--user-data-dir=${profile}`, `http://127.0.0.1:${server.address().port}/index.html`], { stdio: 'ignore', detached: true });
   const exited = new Promise(r => { browser.on('exit', r); browser.on('error', r); });
   let timer;
   try {

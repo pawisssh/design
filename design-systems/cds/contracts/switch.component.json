@@ -1,0 +1,635 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "switch",
+    "name": "Switch",
+    "description": "Switches turn one setting on or off. A track with a thumb that slides to its end when checked, and a label, in three colour variants."
+  },
+  "source": {
+    "codeLibrary": "CDS Web",
+    "adapter": "cds",
+    "repository": "https://github.com/coinbase/cds",
+    "tag": "",
+    "commit": "135dc3c64218299bd26f0ce2ccdad628551d63d5",
+    "packages": {
+      "@coinbase/cds-web": "9.29.0",
+      "@coinbase/cds-common": "9.29.0",
+      "@coinbase/cds-icons": "5.26.0"
+    },
+    "files": {
+      "apps/docs/docs/components/inputs/Switch/_webExamples.mdx": "sha256:06d97345705a5f4f190daf6935529f4d2f8fa2627c40191fa903c55a0838835a",
+      "packages/common/src/motion/switch.ts": "sha256:141af14693cdfc33141636cf1125b7ea7212166b69b8a8b0617517b3a8992654",
+      "packages/common/src/tokens/interactable.ts": "sha256:590f7e7a4d688cf4171256b4149b296baa66c591fd1cf587ac84027cdd2ecaf8",
+      "packages/web/package.json": "sha256:ca0ecd076b55efe0aee663a5b0ac2cf296119192d4f86cfdf1181f19efb84650",
+      "packages/web/src/controls/Control.tsx": "sha256:edfb07475694587f95ee3e713a03953c2ae1d3195d9f4c778c592476dcd40d95",
+      "packages/web/src/controls/Switch.tsx": "sha256:01dd3c636a7f37e723c10b39e8c88945d08b2bca2c9051b3e5945c95793a4c1e",
+      "packages/web/src/controls/__figma__/Switch.figma.ts": "sha256:946b5f671e9ec467c28bf49dfc3fe6bf05c9804b27df0a3ff5f5a11e219a03a7",
+      "packages/web/src/system/Interactable.tsx": "sha256:c5088de3daa71967bfd4e957b6f8c35e823dec614a6f90aefebbd305aaf0558f",
+      "packages/web/src/typography/Text.tsx": "sha256:854b7763c92617955872dc76d6b20b93d04dcd330a689ab4096c879436552595"
+    },
+    "snapshotId": "sha256:5e68b3c3fdc661471da66a5aea526dcde44061ff56ce8f37372aa044f99b2a4b"
+  },
+  "axes": [
+    {
+      "key": "variant",
+      "label": "Variant",
+      "default": "primary",
+      "defaultSource": "packages/web/src/controls/Switch.tsx L116 destructured default variant = 'primary'",
+      "values": [
+        {
+          "key": "primary",
+          "label": "Primary",
+          "code": {
+            "variant": "primary"
+          }
+        },
+        {
+          "key": "positive",
+          "label": "Positive",
+          "code": {
+            "variant": "positive"
+          }
+        },
+        {
+          "key": "negative",
+          "label": "Negative",
+          "code": {
+            "variant": "negative"
+          }
+        }
+      ]
+    },
+    {
+      "key": "checked",
+      "label": "Checked",
+      "default": "off",
+      "defaultSource": "packages/web/src/controls/Switch.tsx L112 checked is undefined unless set",
+      "values": [
+        {
+          "key": "off",
+          "label": "Off",
+          "code": {}
+        },
+        {
+          "key": "on",
+          "label": "On",
+          "code": {
+            "checked": true
+          }
+        }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        {
+          "key": "enabled",
+          "label": "Enabled",
+          "code": {}
+        },
+        {
+          "key": "hover",
+          "label": "Hover",
+          "code": null,
+          "css": ":hover"
+        },
+        {
+          "key": "active",
+          "label": "Active",
+          "code": null,
+          "css": ":active"
+        },
+        {
+          "key": "focus",
+          "label": "Focus",
+          "code": null,
+          "css": ":focus-visible"
+        },
+        {
+          "key": "disabled",
+          "label": "Disabled",
+          "code": {
+            "disabled": true
+          },
+          "css": ":disabled, [aria-disabled='true']"
+        }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 30,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Switch",
+    "type": "COMPONENT",
+    "children": [
+      {
+        "name": "Control",
+        "type": "FRAME",
+        "children": [
+          {
+            "name": "Track",
+            "type": "FRAME",
+            "children": [
+              {
+                "name": "Thumb",
+                "type": "FRAME"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Label",
+        "type": "TEXT",
+        "role": "label"
+      }
+    ]
+  },
+  "properties": [
+    {
+      "key": "label",
+      "label": "Label",
+      "type": "TEXT",
+      "default": "Dark Mode",
+      "binds": [
+        {
+          "node": "Label",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "children"
+      }
+    }
+  ],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Switch": {
+          "direction": "row",
+          "width": "hug",
+          "height": "hug",
+          "alignMain": "start",
+          "alignCross": "center",
+          "gap": {
+            "token": "space-1"
+          },
+          "paddingLeft": {
+            "token": "space-0"
+          },
+          "paddingRight": {
+            "token": "space-0"
+          },
+          "paddingTop": {
+            "token": "space-0"
+          },
+          "paddingBottom": {
+            "token": "space-0"
+          }
+        },
+        "Control": {
+          "direction": "row",
+          "width": "hug",
+          "height": "hug",
+          "radius": {
+            "token": "borderRadius-1000"
+          },
+          "strokeWeight": {
+            "token": "borderWidth-100"
+          },
+          "strokeAlign": "inside"
+        },
+        "Track": {
+          "direction": "row",
+          "width": {
+            "token": "controlSize-switchWidth"
+          },
+          "height": {
+            "token": "controlSize-switchHeight"
+          },
+          "paddingLeft": {
+            "raw": 1,
+            "level": "warning",
+            "reason": "padding: 1px in trackCss (packages/web/src/controls/Switch.tsx L35) is a constant with no token"
+          },
+          "paddingRight": {
+            "raw": 1,
+            "level": "warning",
+            "reason": "padding: 1px in trackCss (packages/web/src/controls/Switch.tsx L35) is a constant with no token"
+          },
+          "paddingTop": {
+            "raw": 1,
+            "level": "warning",
+            "reason": "padding: 1px in trackCss (packages/web/src/controls/Switch.tsx L35) is a constant with no token"
+          },
+          "paddingBottom": {
+            "raw": 1,
+            "level": "warning",
+            "reason": "padding: 1px in trackCss (packages/web/src/controls/Switch.tsx L35) is a constant with no token"
+          },
+          "alignMain": "start",
+          "alignCross": "center",
+          "radius": {
+            "token": "borderRadius-1000"
+          }
+        },
+        "Thumb": {
+          "width": {
+            "token": "controlSize-switchThumbSize"
+          },
+          "height": {
+            "token": "controlSize-switchThumbSize"
+          },
+          "radius": {
+            "token": "borderRadius-1000"
+          },
+          "strokeWeight": {
+            "raw": 0.5,
+            "level": "warning",
+            "reason": "border: 0.5px solid var(--color-bgLine) in thumbCss (packages/web/src/controls/Switch.tsx L49) is a constant with no token"
+          },
+          "strokeAlign": "inside"
+        },
+        "Label": {
+          "textStyle": {
+            "token": "body"
+          },
+          "textResize": "width-and-height"
+        }
+      }
+    },
+    {
+      "match": {
+        "checked": "on"
+      },
+      "set": {
+        "Track": {
+          "alignMain": "end"
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus"
+      },
+      "set": {
+        "Control": {
+          "strokeWeight": {
+            "raw": 2,
+            "level": "warning",
+            "reason": "outline-width: 2px while the input inside has :focus-visible (packages/web/src/controls/Control.tsx L53-L59) is a constant with no token"
+          },
+          "strokeAlign": "outside"
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Switch": {
+          "fill": "none",
+          "stroke": "none",
+          "effects": []
+        },
+        "Control": {
+          "fill": "none",
+          "stroke": "none",
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opaque unless disabled"
+          }
+        },
+        "Track": {
+          "fill": {
+            "token": "bgTertiary"
+          },
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opaque unless hovered or pressed"
+          }
+        },
+        "Thumb": {
+          "fill": {
+            "token": "switch-thumb-background"
+          },
+          "stroke": {
+            "token": "bgLine"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "fgMuted"
+          },
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opaque unless disabled"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "primary",
+        "checked": "on"
+      },
+      "set": {
+        "Track": {
+          "fill": {
+            "token": "bgPrimary"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "positive",
+        "checked": "on"
+      },
+      "set": {
+        "Track": {
+          "fill": {
+            "token": "bgPositive"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "negative",
+        "checked": "on"
+      },
+      "set": {
+        "Track": {
+          "fill": {
+            "token": "bgNegative"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "checked": "on"
+      },
+      "set": {
+        "Label": {
+          "fill": {
+            "token": "fg"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "hover"
+      },
+      "set": {
+        "Track": {
+          "opacity": {
+            "raw": 0.88,
+            "level": "info",
+            "reason": "opacityHovered (packages/common/src/tokens/interactable.ts L1): Interactable sets it on its children (packages/web/src/system/Interactable.tsx L52-L54), and the Track is the Control's child beside the hidden input (packages/web/src/controls/Control.tsx L183-L200)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "active"
+      },
+      "set": {
+        "Track": {
+          "opacity": {
+            "raw": 0.82,
+            "level": "info",
+            "reason": "opacityPressed (packages/common/src/tokens/interactable.ts L2): Interactable sets it on its children while pressed (packages/web/src/system/Interactable.tsx L61-L63), the Track among them"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus"
+      },
+      "set": {
+        "Control": {
+          "stroke": {
+            "token": "bgPrimary"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "disabled"
+      },
+      "set": {
+        "Control": {
+          "opacity": {
+            "raw": 0.5,
+            "level": "info",
+            "reason": "accessibleOpacityDisabled (packages/common/src/tokens/interactable.ts L3) on [aria-disabled='true'] (packages/web/src/system/Interactable.tsx L66-L68)"
+          }
+        },
+        "Label": {
+          "opacity": {
+            "raw": 0.5,
+            "level": "info",
+            "reason": "accessibleOpacityDisabled in disabledCss (packages/web/src/typography/Text.tsx L26-L27), which the label Text takes while disabled (packages/web/src/controls/Control.tsx L250)"
+          }
+        }
+      }
+    }
+  ],
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": [
+      {
+        "family": "Inter",
+        "styles": [
+          "Regular"
+        ]
+      }
+    ]
+  },
+  "figma": {
+    "page": "Switches",
+    "componentSetName": "Switch",
+    "description": "CDS Web Switch (@coinbase/cds-web 9.29.0).",
+    "header": {
+      "type": "Component",
+      "title": "Switch",
+      "namespace": "@coinbase/cds-web"
+    },
+    "grid": {
+      "columns": [
+        "checked"
+      ],
+      "rows": [
+        "variant",
+        "state"
+      ]
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@coinbase/cds-web",
+    "component": "Switch",
+    "import": "import { Switch } from '@coinbase/cds-web/controls';",
+    "alwaysEmit": []
+  },
+  "notes": [
+    {
+      "level": "info",
+      "at": "axes.variant",
+      "message": "The variant paints the Track only while checked: background = checked ? switchVariantBackground[variant] : 'bgTertiary' (Switch.tsx L119). Off is bgTertiary in every variant, so Positive and Negative Off draw as Primary Off. Those 10 tuples stay in the selection; the owner can omit them in To-preview."
+    },
+    {
+      "level": "info",
+      "at": "axes.state",
+      "message": "Switch renders through Control, whose Interactable is a div wrapping the hidden input and the Track (Control.tsx L169-L201). Hover and Active take Interactable's :hover and :active rules (Interactable.tsx L49-L64): the background blends of transparent stay transparent, and the children dim. Disabled sets aria-disabled on that div (Interactable.tsx L244), which [aria-disabled='true'] styles; a div never matches :disabled. Control uses no Pressable, so nothing scales while pressed."
+    },
+    {
+      "level": "info",
+      "at": "paint[state=focus].Control.stroke",
+      "message": "The focus ring is Control's interactableCss outline while the input inside has :focus-visible (Control.tsx L53-L59): 2px solid bgPrimary, offset 1px outside the Control's 1px border. The Contract draws it as a 2px outside stroke on the Control, with no gap. A spread drop shadow could keep the gap, but bgPrimary has no EFFECT_COLOR scope, so an effect cannot bind it (validation rule 6). To-preview forces Focus with the class it puts on every element, so the page draws the same outline."
+    },
+    {
+      "level": "info",
+      "at": "layout.Control.strokeWeight",
+      "message": "Interactable's default borderWidth = 100 (Interactable.tsx L209) gives the Control a 1px border, transparent in every state: transparentWhileInactiveCss (L100-L108), and the hover, pressed and disabled blends of transparent are transparent. On the page the Control is 54 x 34 around the 52 x 32 Track. Figma's inside stroke takes no room, so the Control hugs the Track at 52 x 32; nothing visible moves."
+    },
+    {
+      "level": "info",
+      "at": "layout.Thumb",
+      "message": "The thumb's slide is drawn at its end positions: Off at the Track's start, On at its end, as trackCss [data-filled='true'] justify-content: flex-end does (Switch.tsx L41-L43). CDS places the thumb absolutely at top and left (switchHeight - switchThumbSize) / 2 = 1px (L51-L55) and moves it by x = switchWidth - switchHeight = 20px when checked (L96-L105), animated with switchTransitionConfig (switch.ts L6-L9); the Track's background-color fades over 0.2s (Switch.tsx L37-L39). Figma has no animation. The Thumb sits in the Track's flow inside its 1px padding, which puts it where CDS's end positions do."
+    },
+    {
+      "level": "info",
+      "at": "paint.Thumb.fill",
+      "message": "The thumb is defaultControlColor: fgInverse in Light, fg in Dark (Switch.tsx L131). No one Theme colour holds it in both Modes, so it binds the Synthesized token switch-thumb-background (ADR 0009), which the Foundations step reads from Switch.tsx. controlColor (L160) replaces it, and elevation (L164) adds a shadow; the Contract draws neither."
+    },
+    {
+      "level": "info",
+      "at": "layout.Switch.gap",
+      "message": "With a label, Control wraps the switch and the label Text in a label element: a row with gap={1} (Control.tsx L243), the switch centred in a Box as tall as the body line (L244). Switch gives its root alignItems center and a minHeight of switchHeight when it has children (Switch.tsx L176-L183). The Contract draws one centred row with gap space-1. The label is fgMuted unless checked (Control.tsx L137), in the body font (L146)."
+    },
+    {
+      "level": "info",
+      "at": "properties.label",
+      "message": "The Label is always drawn. A Switch without children renders no label element (Control.tsx L236), and CDS's own Figma component hides it with a show label boolean (Switch.figma.ts L9). The Contract has no property that can drop a text prop, only an icon swap, so a Switch without a label is the same Component with its Label text cleared."
+    },
+    {
+      "level": "info",
+      "at": "family",
+      "message": "Props that override the drawing are not axes: controlColor, background, borderColor, borderWidth and borderRadius (Switch.tsx L115-L122), and elevation. readOnly draws as Disabled: Control disables its Interactable for disabled || readOnly (Control.tsx L177). indeterminate only changes the label colour (L137), and a switch has no indeterminate drawing."
+    },
+    {
+      "level": "info",
+      "at": "code",
+      "message": "CDS's own Code Connect file (Switch.figma.ts) maps checked and disabled (L13-L14), emits checked={false} when off (L21), and has no variant. The Contract follows Switch.tsx: the variant prop (L78) as an axis, checked set only when on, and disabled through the State axis. The Contract imports Switch from @coinbase/cds-web/controls. That subpath is the exports map's ./controls (package.json L99-L102)."
+    }
+  ],
+  "drafted": {
+    "axes.checked.label": {
+      "by": "agent",
+      "evidence": [
+        "Control.tsx:L93-L94 checked?: boolean, Set the control to selected/on",
+        "Switch.tsx:L119 checked picks the track background"
+      ],
+      "fingerprint": "sha256:d7e11f36e73d719bea3fbe952d3b7f1f0959bde4cc04ba06fc71a18d0b57a544"
+    },
+    "axes.checked.values.off.label": {
+      "by": "agent",
+      "evidence": [
+        "Switch.tsx:L119 'bgTertiary' unless checked",
+        "Switch.tsx:L102-L103 unchecked: x: 0"
+      ],
+      "fingerprint": "sha256:d7e11f36e73d719bea3fbe952d3b7f1f0959bde4cc04ba06fc71a18d0b57a544"
+    },
+    "axes.checked.values.on.label": {
+      "by": "agent",
+      "evidence": [
+        "Control.tsx:L93-L94 Set the control to selected/on",
+        "Switch.tsx:L97-L101 checked: the thumb travels to the end"
+      ],
+      "fingerprint": "sha256:d7e11f36e73d719bea3fbe952d3b7f1f0959bde4cc04ba06fc71a18d0b57a544"
+    },
+    "anatomy.Control": {
+      "by": "agent",
+      "evidence": [
+        "Control.tsx:L169-L201 the Interactable div around the input and the track, controlClassNames.icon"
+      ],
+      "fingerprint": "sha256:a5b9f9e26707aac94c19db877821d17242a67b5fa99198b569bd39f4c15b8ad4"
+    },
+    "anatomy.Track": {
+      "by": "agent",
+      "evidence": [
+        "Switch.tsx:L146-L157 the track Box, switchClassNames.track"
+      ],
+      "fingerprint": "sha256:ecfcbda7ce17489bf412b907b52cc8996b675c2eabe26a6683285fe0f61259f4"
+    },
+    "anatomy.Thumb": {
+      "by": "agent",
+      "evidence": [
+        "Switch.tsx:L158-L170 the MotionBox thumb, switchClassNames.thumb"
+      ],
+      "fingerprint": "sha256:86f1e48ee4f789a368d0d2ad1a36f349eeb25a129c847d309aa4dc5ebc297205"
+    },
+    "anatomy.Label": {
+      "by": "agent",
+      "evidence": [
+        "Control.tsx:L247-L260 the Text holding the label",
+        "Switch.tsx:L139 label={children}"
+      ],
+      "fingerprint": "sha256:11351ad43800d137a814ab55869dd5ac2fa73541e2768e91d456fb8b022800bb"
+    },
+    "properties.label.default": {
+      "by": "agent",
+      "evidence": [
+        "Switch.tsx:L91 children?: React.ReactNode, no default",
+        "_webExamples.mdx:L6-L7 the first example's label, Dark Mode"
+      ],
+      "fingerprint": "sha256:f3b31f0a7e3abedab87f3176034006701d0715fa3a0d4120b21c3edcd4ff632c"
+    },
+    "layout.Track.alignMain": {
+      "by": "agent",
+      "evidence": [
+        "Switch.tsx:L154 justifyContent=\"flex-start\" on the track",
+        "Switch.tsx:L41-L43 [data-filled='true'] justify-content: flex-end"
+      ],
+      "fingerprint": "sha256:70b41726e9e08c1e38270a899cfa20891a08afe4054951511a87155efa583dec"
+    },
+    "figma.grid": {
+      "by": "agent",
+      "evidence": [
+        "Switch.tsx:L59 SwitchVariant, one row group per variant",
+        "Switch.figma.ts:L13 checked, the variant CDS's own Figma component has"
+      ],
+      "fingerprint": "sha256:9f47fc3ea8b88361ca927072c264ec5f7591add94a130fdb50e66142c42432e2"
+    },
+    "family.description": {
+      "by": "agent",
+      "evidence": [
+        "Switch.tsx:L68-L92 the controlColor, variant and children props",
+        "Switch.tsx:L96-L105 thumbMotionVariants, checked and unchecked"
+      ],
+      "fingerprint": "sha256:9f47fc3ea8b88361ca927072c264ec5f7591add94a130fdb50e66142c42432e2"
+    }
+  }
+}

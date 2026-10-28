@@ -1,0 +1,7 @@
+{
+  "Switch": "cds-Switch",
+  "Control": "cds-Control-icon",
+  "Track": "cds-Switch-track trackCss",
+  "Thumb": "cds-Switch-thumb thumbCss",
+  "Label": "cds-Switch"
+}
