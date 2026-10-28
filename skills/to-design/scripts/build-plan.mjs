@@ -232,6 +232,19 @@ const RECONCILE_PER_CALL = 500;
  * read came to 74.5KB), so 400 rows and the set's own fields stay well under use_figma's 20KB output.
  */
 export const COVERAGE_PER_CALL = 400;
+/**
+ * A sample or theme read's output, at most (bytes): use_figma's 20KB less a tenth, for an anatomy whose layers carry
+ * more fields than the one measured.
+ */
+export const READ_OUTPUT = 18000;
+/**
+ * Read output per layer of the anatomy, per variant (bytes). Measured live on the CDS Button (#456), 10 layers with a
+ * spinner: a sample read 3.23-3.31KB per variant, a theme read 0.43KB.
+ */
+export const READ_PER_LAYER = { sample: 340, theme: 45 };
+const layersOf = node => 1 + (node.children || []).reduce((m, c) => m + layersOf(c), 0);
+/** A sample or theme plan's estimated read output (bytes): its variants × the anatomy's layers × READ_PER_LAYER. */
+export const readEstimate = plan => plan.selection.entries.length * layersOf(plan.tree) * READ_PER_LAYER[plan.options.mode];
 // The Component Header template every family page's Header is an instance of (one per file):
 // TEXT properties with their font style and size.
 export const TEMPLATES = {
@@ -304,7 +317,8 @@ export function entrySpec(plan, entry) {
  * family's next step from the ledger, or returns null when it is built.
  * Other modes read only: `reconcile` (the ledger section rebuilt from what the file holds, after a lost
  * connection; windowed by `batch`), `coverage` (every variant's name, grid cell and property wiring), `sample` and
- * `theme` (full values, or the resolved colours per mode, of the variants at the expansion indexes `sample`),
+ * `theme` (full values, or the resolved colours per mode, of the variants at the expansion indexes `sample`, split into
+ * as many calls as SETS_BUDGET and READ_OUTPUT need and then read by `batch`, #456),
  * `prune-preview` (every ledger orphan with its instance count in the file); `prune` deletes the orphans on
  * `prune`, the owner-confirmed list {variant name: instance count from the preview} (#67).
  * Per call: loose batches take up to PER_CALL (flat in set size); appends take appendPerCall(total), or up to
@@ -458,6 +472,47 @@ export function setsPlan(contract, docText, ledger, {
     return { plan, state: { schemaVersion: 1, fileKey, variables, textStyles, icons, bases, sets: {}, templates: ledger.templates || null } };
   }
 
+  // The family's ledger record, with the variant ids of the picked entries only: a call carries no other ids.
+  function addRecord(picked, state) {
+    if (!rec) return;
+    // Ids are recorded by expansion index, and another Contract may expand differently (an omit edit shifts the
+    // indexes), so they are carried only for the Contract the set was built from; otherwise the core finds each
+    // variant by name in the set (or loose on the page).
+    const carried = {};
+    for (const i of picked) if (ids[i]) carried[i] = ids[i];
+    // A tuple the selection takes back reuses its orphan's id (#67). The other orphans stay in the ledger:
+    // a build package carries none of them.
+    const { orphans = {}, ...kept } = rec;
+    for (const i of picked) { const o = orphans[variantName(contract, tuples[i])]; if (o && !carried[i]) carried[i] = o.id; }
+    state.sets[family] = { ...kept, variants: carried };
+    // the prune modes read the orphans, by name, and work only on a set every batch was rebuilt from this Contract;
+    // coverage reads their ids, to tell an orphan from a node under its name
+    if (mode.startsWith('prune') || mode === 'coverage') state.sets[family].orphans = Object.fromEntries(Object.entries(orphans).map(([n, o]) => [n, o.id]));
+  }
+  const callChars = (picked, mode, options) => {
+    const { plan, state } = assemble(picked, mode, options);
+    addRecord(picked, state);
+    return { plan, size: JSON.stringify(plan).length + JSON.stringify(state).length };
+  };
+
+  // A sample or theme read's calls (#456): the indexes in the order given, each call taking the next while its plan and
+  // state fit SETS_BUDGET and its read stays under READ_OUTPUT. Counted at the largest batch and of, so calls never move.
+  function readCalls(indexes, mode) {
+    const bound = { batch: indexes.length, of: indexes.length };
+    const calls = [];
+    for (const i of indexes) {
+      const last = calls[calls.length - 1];
+      const fits = w => { const { plan, size } = callChars(w, mode, bound); return size <= SETS_BUDGET && readEstimate(plan) <= READ_OUTPUT; };
+      if (last && fits([...last, i])) { last.push(i); continue; }
+      if (!fits([i])) {
+        const { plan, size } = callChars([i], mode, bound);
+        throw new Error(`the ${mode} read of index ${i} alone takes ${size} chars (SETS_BUDGET ${SETS_BUDGET} next to the core) and reads about ${readEstimate(plan)} bytes (READ_OUTPUT ${READ_OUTPUT}): no --sample split fits it, so leave it out of --sample`);
+      }
+      calls.push([i]);
+    }
+    return calls;
+  }
+
   // Per call: the largest n up to `start` whose every window fits SETS_BUDGET, counting the family's ledger record and
   // the header template at their largest (ids of 11 chars, 20 per variant id), so batch boundaries never move as the
   // ledger fills.
@@ -548,7 +603,14 @@ export function setsPlan(contract, docText, ledger, {
     }
   } else {
     if (!sample.length || sample.some(i => !Number.isInteger(i) || i < 0 || i >= total)) throw new Error(`sample must list expansion indexes 0..${total - 1}`);
-    picked = [...new Set(sample)];
+    // in one call when it fits, else by --batch, as a reconcile
+    const unique = [...new Set(sample)];
+    const calls = readCalls(unique, mode);
+    const of = calls.length;
+    if (batch == null && of > 1) throw new Error(`a ${mode} read of these ${unique.length} indexes takes ${of} calls: give --batch 0..${of - 1} with the same --sample`);
+    if (batch != null && (!Number.isInteger(batch) || batch < 0 || batch >= of)) throw new Error(`batch must be 0..${of - 1} (${of} ${mode} calls for --sample)`);
+    picked = calls[batch || 0];
+    if (batch != null) options = { batch, of };
   }
   const { plan, state } = assemble(picked, mode, options);
   const { entries } = plan.selection;
@@ -566,27 +628,12 @@ export function setsPlan(contract, docText, ledger, {
         if (JSON.stringify(spec[sec]) !== JSON.stringify(Object.fromEntries(Object.entries(r[sec]).map(([node, fl]) => [node, stripFields(fl)]))))
           throw new Error(`entry ${e[0]} does not resolve to the Contract's ${sec}`);
     });
-  // The family's ledger record, with the variant ids of this call's entries only: a call carries no other ids.
-  if (rec) {
-    // Ids are recorded by expansion index, and another Contract may expand differently (an omit edit shifts the
-    // indexes), so they are carried only for the Contract the set was built from; otherwise the core finds each
-    // variant by name in the set (or loose on the page).
-    const carried = {};
-    for (const i of picked) if (ids[i]) carried[i] = ids[i];
-    // A tuple the selection takes back reuses its orphan's id (#67). The other orphans stay in the ledger:
-    // a build package carries none of them.
-    const { orphans = {}, ...kept } = rec;
-    for (const i of picked) { const o = orphans[variantName(contract, tuples[i])]; if (o && !carried[i]) carried[i] = o.id; }
-    state.sets[family] = { ...kept, variants: carried };
-    // the prune modes read the orphans, by name, and work only on a set every batch was rebuilt from this Contract;
-    // coverage reads their ids, to tell an orphan from a node under its name
-    if (mode.startsWith('prune') || mode === 'coverage') state.sets[family].orphans = Object.fromEntries(Object.entries(orphans).map(([n, o]) => [n, o.id]));
-  }
+  addRecord(picked, state);
   if (mode.startsWith('prune') && (!rec || rec.contentHash !== plan.contentHash || !(rec.variants || [null]).every(Boolean)))
     throw new Error(`the ${family} set is not built from this Contract yet: rebuild every batch first, then preview or prune its orphans`);
   const size = JSON.stringify(plan).length + JSON.stringify(state).length;
   if (size > SETS_BUDGET)
-    throw new Error(`the ${mode} plan and state take ${size} chars, above SETS_BUDGET (${SETS_BUDGET}) next to the core: ${mode === 'reconcile' ? 'reconcile by --batch' : 'lower --per-call'}`);
+    throw new Error(`the ${mode} plan and state take ${size} chars, above SETS_BUDGET (${SETS_BUDGET}) next to the core: ${mode === 'reconcile' ? 'reconcile by --batch' : ['sample', 'theme'].includes(mode) ? 'give fewer --sample indexes' : 'lower --per-call'}`);
   return { plan, state };
 }
 
@@ -633,7 +680,7 @@ const USAGE = [
   '       build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--read-only] [--page <name>] [--ledger <path>]',
   '       build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir>',
   '                      [--next | --mode build|combine|place|reconcile|coverage|sample|theme|prune-preview|prune] [--batch N] [--per-call N] [--budget ms (mode place)]',
-  '                      [--sample i,j] [--prune-list <prune.json> (mode prune)] [--adopt] [--prototype (a Contract under .scratch only)] [--page <name>] [--ledger <path>]',
+  '                      [--sample i,j (modes sample and theme; --batch N when it takes several calls)] [--prune-list <prune.json> (mode prune)] [--adopt] [--prototype (a Contract under .scratch only)] [--page <name>] [--ledger <path>]',
   '       build-plan.mjs rehash --from <component.json the set was built from> --contract <component.json> --doc <foundations.json> --file-key <key> [--ledger <path>]',
 ].join('\n');
 
