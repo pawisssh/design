@@ -46,13 +46,21 @@
         "family": "radio",
         "path": "design-systems/cds/contracts/radio.component.json",
         "snapshotId": "sha256:d56fc38616a8bb1cc6e75fa5e45d5be3a3c9e178bbdf7204323c1bc7288b22c6"
+      },
+      {
+        "family": "switch",
+        "path": "design-systems/cds/contracts/switch.component.json",
+        "snapshotId": "sha256:5e68b3c3fdc661471da66a5aea526dcde44061ff56ce8f37372aa044f99b2a4b"
       }
     ],
     "tokens": [
       "bg",
       "bgLine",
       "bgLineHeavy",
+      "bgNegative",
+      "bgPositive",
       "bgPrimary",
+      "bgTertiary",
       "body",
       "borderRadius-1000",
       "borderRadius-700",
@@ -108,18 +116,23 @@
       "button-tertiary-transparent-hover-background",
       "button-tertiary-transparent-pressed-background",
       "controlSize-radioSize",
+      "controlSize-switchHeight",
+      "controlSize-switchThumbSize",
+      "controlSize-switchWidth",
       "fg",
       "fgMuted",
       "headline",
       "iconSize-m",
       "iconSize-s",
       "label1",
+      "space-0",
       "space-0_75",
       "space-1",
       "space-1_5",
       "space-2",
       "space-3",
-      "space-4"
+      "space-4",
+      "switch-thumb-background"
     ]
   },
   "collections": [
@@ -4335,7 +4348,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "switch"
       ]
     },
     "bgLineHeavy": {
@@ -4472,7 +4486,9 @@
           "resolved": "#f0616d"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "switch"
+      ]
     },
     "bgNegativeWash": {
       "collection": "theme",
@@ -4558,7 +4574,9 @@
           "resolved": "#27ad75"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "switch"
+      ]
     },
     "bgPositiveWash": {
       "collection": "theme",
@@ -4608,7 +4626,8 @@
       },
       "usedBy": [
         "button",
-        "radio"
+        "radio",
+        "switch"
       ]
     },
     "bgPrimaryWash": {
@@ -4705,7 +4724,9 @@
           "resolved": "#32353d"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "switch"
+      ]
     },
     "bgWarning": {
       "collection": "theme",
@@ -5750,7 +5771,8 @@
         }
       },
       "usedBy": [
-        "radio"
+        "radio",
+        "switch"
       ]
     },
     "fgInverse": {
@@ -5800,7 +5822,8 @@
         }
       },
       "usedBy": [
-        "radio"
+        "radio",
+        "switch"
       ]
     },
     "fgNegative": {
@@ -9269,6 +9292,30 @@
       "usedBy": [],
       "family": "button"
     },
+    "switch-thumb-background": {
+      "collection": "theme",
+      "name": "Switch/switch-thumb-background",
+      "type": "COLOR",
+      "source": "synthesized: packages/web/src/controls/Switch.tsx defaultControlColor (activeColorScheme === 'dark' ? 'fg' : 'fgInverse')",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "fgInverse",
+          "resolved": "#ffffff"
+        },
+        "dark": {
+          "alias": "fg",
+          "resolved": "#ffffff"
+        }
+      },
+      "usedBy": [
+        "switch"
+      ],
+      "family": "switch"
+    },
     "borderRadius-0": {
       "collection": "layout",
       "name": "Border radius/borderRadius-0",
@@ -9322,7 +9369,8 @@
         }
       },
       "usedBy": [
-        "radio"
+        "radio",
+        "switch"
       ]
     },
     "borderRadius-200": {
@@ -9510,7 +9558,8 @@
         }
       },
       "usedBy": [
-        "radio"
+        "radio",
+        "switch"
       ]
     },
     "borderWidth-200": {
@@ -9639,7 +9688,9 @@
           "value": 32
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "switch"
+      ]
     },
     "controlSize-switchThumbSize": {
       "collection": "layout",
@@ -9657,7 +9708,9 @@
           "value": 30
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "switch"
+      ]
     },
     "controlSize-switchWidth": {
       "collection": "layout",
@@ -9675,7 +9728,9 @@
           "value": 52
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "switch"
+      ]
     },
     "controlSize-tileSize": {
       "collection": "layout",
@@ -9787,7 +9842,9 @@
           "value": 0
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "switch"
+      ]
     },
     "space-0_25": {
       "collection": "layout",
@@ -9863,7 +9920,8 @@
       },
       "usedBy": [
         "button",
-        "radio"
+        "radio",
+        "switch"
       ]
     },
     "space-10": {
@@ -10072,7 +10130,8 @@
         }
       },
       "usedBy": [
-        "radio"
+        "radio",
+        "switch"
       ]
     },
     "fontFamily-caption": {
@@ -10325,7 +10384,8 @@
         }
       },
       "usedBy": [
-        "radio"
+        "radio",
+        "switch"
       ]
     },
     "fontSize-caption": {
@@ -10577,7 +10637,8 @@
         }
       },
       "usedBy": [
-        "radio"
+        "radio",
+        "switch"
       ]
     },
     "fontWeight-caption": {
@@ -10818,7 +10879,8 @@
         }
       },
       "usedBy": [
-        "radio"
+        "radio",
+        "switch"
       ]
     },
     "lineHeight-caption": {
@@ -11077,7 +11139,8 @@
         "lineHeight": "lineHeight-body"
       },
       "usedBy": [
-        "radio"
+        "radio",
+        "switch"
       ]
     },
     "caption": {
@@ -11393,7 +11456,7 @@
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
-      "contracts": 2,
+      "contracts": 3,
       "errors": 0
     }
   },
@@ -11410,6 +11473,11 @@
     },
     {
       "level": "info",
+      "at": "variables.switch-*",
+      "message": "switch has no component token map: @coinbase/cds-common@9.29.0 has no esm/tokens/switch.js, so the document carries no switch component tokens or state blends from one."
+    },
+    {
+      "level": "info",
       "at": "variables.button-foregroundMuted-*",
       "message": "foregroundMuted is @deprecated in packages/common/src/types/ButtonBaseProps.ts (\"Use `secondary` directly.\"); its tokens, plain and transparent, have scopes [], which keep them out of Figma's pickers."
     },
@@ -11422,6 +11490,11 @@
       "level": "info",
       "at": "variables.button-*-{hover,pressed,disabled}-*",
       "message": "Synthesized tokens (ADR 0009): Interactable computes each state's colour per element with getBlendedColor and sets it inline as --inter-hover-bg, --inter-hover-borderColor, --inter-press-bg, --inter-press-borderColor, --inter-disable-bg, --inter-disable-borderColor. Those properties hold a different colour on every element, so codeSyntax is empty. Disabled also sets opacity 0.5 on the whole element (accessibleOpacityDisabled), which no colour token carries."
+    },
+    {
+      "level": "info",
+      "at": "variables.switch-thumb-background",
+      "message": "Synthesized token (ADR 0009): packages/web/src/controls/Switch.tsx picks defaultControlColor by the active colour scheme, fgInverse in Light and fg in Dark, so no one Theme colour holds it in both Modes. It aliases each Mode's pick. CDS emits no custom property for it (the element paints var(--color-fgInverse) or var(--color-fg)), so codeSyntax is empty."
     },
     {
       "level": "info",
