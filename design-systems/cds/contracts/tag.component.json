@@ -1,0 +1,771 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "tag",
+    "name": "Tag",
+    "description": "Tags note a characteristic or state of an object. A label with an optional start and end icon, informational or promotional, in low or high emphasis and six colour schemes."
+  },
+  "source": {
+    "codeLibrary": "CDS Web",
+    "adapter": "cds",
+    "repository": "https://github.com/coinbase/cds",
+    "tag": "",
+    "commit": "135dc3c64218299bd26f0ce2ccdad628551d63d5",
+    "packages": {
+      "@coinbase/cds-web": "9.29.0",
+      "@coinbase/cds-common": "9.29.0",
+      "@coinbase/cds-icons": "5.26.0"
+    },
+    "files": {
+      "apps/docs/docs/components/typography/Tag/_webExamples.mdx": "sha256:1d6c45cdb1b07b2836632685a2bc663f25464f3256d6b788658ad78b40fc2ab2",
+      "packages/common/src/tokens/tags.ts": "sha256:1227d5f00aa90584f31023edf4104e985dd5835e8b37a162edf481509fd65a31",
+      "packages/common/src/types/TagBaseProps.ts": "sha256:40897356fe90f5d278bbb9b20e30a0902058fe100cf8b815e95fe1478da63494",
+      "packages/web/package.json": "sha256:ca0ecd076b55efe0aee663a5b0ac2cf296119192d4f86cfdf1181f19efb84650",
+      "packages/web/src/tag/Tag.tsx": "sha256:c15d99d98b1f947b0f0270c64989e962b4276ce35c5d7e4471faf01401c757bd",
+      "packages/web/src/tag/__figma__/Tag.figma.ts": "sha256:2c01e926bdaa978e3068b1f8d5296479d2395eaaf991506213607ac4d2f6da93"
+    },
+    "snapshotId": "sha256:8c7c845116b45b193bb55dac8c64068f972e9f01ef5174d02b83d64a38ae40a9"
+  },
+  "axes": [
+    {
+      "key": "intent",
+      "label": "Intent",
+      "default": "informational",
+      "defaultSource": "packages/web/src/tag/Tag.tsx L80 destructured default intent = 'informational'",
+      "values": [
+        {
+          "key": "informational",
+          "label": "Informational",
+          "code": {}
+        },
+        {
+          "key": "promotional",
+          "label": "Promotional",
+          "code": {
+            "intent": "promotional"
+          }
+        }
+      ]
+    },
+    {
+      "key": "emphasis",
+      "label": "Emphasis",
+      "default": "low",
+      "defaultSource": "packages/web/src/tag/Tag.tsx L81 emphasis = intent === 'informational' ? 'low' : 'high', low at the default intent",
+      "values": [
+        {
+          "key": "low",
+          "label": "Low",
+          "code": {
+            "emphasis": "low"
+          }
+        },
+        {
+          "key": "high",
+          "label": "High",
+          "code": {
+            "emphasis": "high"
+          }
+        }
+      ]
+    },
+    {
+      "key": "colorScheme",
+      "label": "Color scheme",
+      "default": "blue",
+      "defaultSource": "packages/web/src/tag/Tag.tsx L82 destructured default colorScheme = 'blue'",
+      "values": [
+        {
+          "key": "green",
+          "label": "Green",
+          "code": {
+            "colorScheme": "green"
+          }
+        },
+        {
+          "key": "blue",
+          "label": "Blue",
+          "code": {}
+        },
+        {
+          "key": "yellow",
+          "label": "Yellow",
+          "code": {
+            "colorScheme": "yellow"
+          }
+        },
+        {
+          "key": "purple",
+          "label": "Purple",
+          "code": {
+            "colorScheme": "purple"
+          }
+        },
+        {
+          "key": "red",
+          "label": "Red",
+          "code": {
+            "colorScheme": "red"
+          }
+        },
+        {
+          "key": "gray",
+          "label": "Gray",
+          "code": {
+            "colorScheme": "gray"
+          }
+        }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 24,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Tag",
+    "type": "COMPONENT",
+    "children": [
+      {
+        "name": "Start icon",
+        "type": "FRAME",
+        "role": "icon-slot",
+        "children": [
+          {
+            "name": "Start glyph",
+            "type": "INSTANCE",
+            "role": "icon",
+            "instanceOf": "icon:default"
+          }
+        ]
+      },
+      {
+        "name": "Label",
+        "type": "TEXT",
+        "role": "label"
+      },
+      {
+        "name": "End icon",
+        "type": "FRAME",
+        "role": "icon-slot",
+        "children": [
+          {
+            "name": "End glyph",
+            "type": "INSTANCE",
+            "role": "icon",
+            "instanceOf": "icon:default"
+          }
+        ]
+      }
+    ]
+  },
+  "properties": [
+    {
+      "key": "label",
+      "label": "Label",
+      "type": "TEXT",
+      "default": "Tag",
+      "binds": [
+        {
+          "node": "Label",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "children"
+      }
+    },
+    {
+      "key": "startIcon",
+      "label": "Start icon",
+      "type": "BOOLEAN",
+      "default": false,
+      "binds": [
+        {
+          "node": "Start icon",
+          "field": "visible"
+        }
+      ],
+      "code": {
+        "prop": "startIcon",
+        "whenFalse": "omit"
+      }
+    },
+    {
+      "key": "swapStartIcon",
+      "label": "Swap start icon",
+      "type": "INSTANCE_SWAP",
+      "default": "icon:default",
+      "preferred": "icon:preferred",
+      "binds": [
+        {
+          "node": "Start glyph",
+          "field": "mainComponent"
+        }
+      ],
+      "code": {
+        "prop": "startIcon",
+        "valueFrom": "icon",
+        "visibleWhen": "startIcon"
+      }
+    },
+    {
+      "key": "endIcon",
+      "label": "End icon",
+      "type": "BOOLEAN",
+      "default": false,
+      "binds": [
+        {
+          "node": "End icon",
+          "field": "visible"
+        }
+      ],
+      "code": {
+        "prop": "endIcon",
+        "whenFalse": "omit"
+      }
+    },
+    {
+      "key": "swapEndIcon",
+      "label": "Swap end icon",
+      "type": "INSTANCE_SWAP",
+      "default": "icon:default",
+      "preferred": "icon:preferred",
+      "binds": [
+        {
+          "node": "End glyph",
+          "field": "mainComponent"
+        }
+      ],
+      "code": {
+        "prop": "endIcon",
+        "valueFrom": "icon",
+        "visibleWhen": "endIcon"
+      }
+    }
+  ],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Tag": {
+          "direction": "row",
+          "width": "hug",
+          "height": "hug",
+          "alignMain": "center",
+          "alignCross": "center",
+          "gap": {
+            "token": "space-0_5"
+          },
+          "paddingTop": {
+            "token": "space-0_25"
+          },
+          "paddingBottom": {
+            "token": "space-0_25"
+          }
+        },
+        "Start icon": {
+          "width": {
+            "token": "iconSize-xs"
+          },
+          "height": {
+            "token": "iconSize-xs"
+          },
+          "direction": "row"
+        },
+        "Start glyph": {
+          "width": "fill",
+          "height": "fill"
+        },
+        "Label": {
+          "textResize": "width-and-height"
+        },
+        "End icon": {
+          "width": {
+            "token": "iconSize-xs"
+          },
+          "height": {
+            "token": "iconSize-xs"
+          },
+          "direction": "row"
+        },
+        "End glyph": {
+          "width": "fill",
+          "height": "fill"
+        }
+      }
+    },
+    {
+      "match": {
+        "intent": "informational"
+      },
+      "set": {
+        "Tag": {
+          "paddingLeft": {
+            "token": "space-0_5"
+          },
+          "paddingRight": {
+            "token": "space-0_5"
+          },
+          "radius": {
+            "token": "borderRadius-100"
+          }
+        },
+        "Label": {
+          "textStyle": {
+            "token": "label1"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "intent": "promotional"
+      },
+      "set": {
+        "Tag": {
+          "paddingLeft": {
+            "token": "space-1"
+          },
+          "paddingRight": {
+            "token": "space-1"
+          },
+          "radius": {
+            "token": "borderRadius-1000"
+          }
+        },
+        "Label": {
+          "textStyle": {
+            "token": "caption"
+          }
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Tag": {
+          "stroke": "none",
+          "effects": []
+        },
+        "Start glyph/Vector": {
+          "fill": {
+            "sameAs": "Label.fill",
+            "why": "Tag renders the Icon with color=\"currentColor\""
+          }
+        },
+        "End glyph/Vector": {
+          "fill": {
+            "sameAs": "Label.fill",
+            "why": "Tag renders the Icon with color=\"currentColor\""
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "emphasis": "low",
+        "colorScheme": "green"
+      },
+      "set": {
+        "Tag": {
+          "fill": {
+            "token": "tag-low-green-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "tag-low-green-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "emphasis": "low",
+        "colorScheme": "blue"
+      },
+      "set": {
+        "Tag": {
+          "fill": {
+            "token": "tag-low-blue-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "tag-low-blue-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "emphasis": "low",
+        "colorScheme": "yellow"
+      },
+      "set": {
+        "Tag": {
+          "fill": {
+            "token": "tag-low-yellow-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "tag-low-yellow-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "emphasis": "low",
+        "colorScheme": "purple"
+      },
+      "set": {
+        "Tag": {
+          "fill": {
+            "token": "tag-low-purple-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "tag-low-purple-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "emphasis": "low",
+        "colorScheme": "red"
+      },
+      "set": {
+        "Tag": {
+          "fill": {
+            "token": "tag-low-red-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "tag-low-red-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "emphasis": "low",
+        "colorScheme": "gray"
+      },
+      "set": {
+        "Tag": {
+          "fill": {
+            "token": "tag-low-gray-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "tag-low-gray-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "emphasis": "high",
+        "colorScheme": "green"
+      },
+      "set": {
+        "Tag": {
+          "fill": {
+            "token": "tag-high-green-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "tag-high-green-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "emphasis": "high",
+        "colorScheme": "blue"
+      },
+      "set": {
+        "Tag": {
+          "fill": {
+            "token": "tag-high-blue-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "tag-high-blue-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "emphasis": "high",
+        "colorScheme": "yellow"
+      },
+      "set": {
+        "Tag": {
+          "fill": {
+            "token": "tag-high-yellow-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "tag-high-yellow-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "emphasis": "high",
+        "colorScheme": "purple"
+      },
+      "set": {
+        "Tag": {
+          "fill": {
+            "token": "tag-high-purple-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "tag-high-purple-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "emphasis": "high",
+        "colorScheme": "red"
+      },
+      "set": {
+        "Tag": {
+          "fill": {
+            "token": "tag-high-red-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "tag-high-red-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "emphasis": "high",
+        "colorScheme": "gray"
+      },
+      "set": {
+        "Tag": {
+          "fill": {
+            "token": "tag-high-gray-background"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "tag-high-gray-color"
+          }
+        }
+      }
+    }
+  ],
+  "icons": {
+    "source": {
+      "package": "@coinbase/cds-icons",
+      "version": "5.26.0",
+      "path": "esm/svgs/{key}-16-inactive.svg",
+      "fallback": "esm/svgs/{key}-24-inactive.svg"
+    },
+    "default": "add",
+    "preferred": [
+      "add",
+      "close"
+    ]
+  },
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": [
+      {
+        "family": "Inter",
+        "styles": [
+          "Semi Bold"
+        ]
+      }
+    ]
+  },
+  "figma": {
+    "page": "Tags",
+    "componentSetName": "Tag",
+    "description": "CDS Web Tag (@coinbase/cds-web 9.29.0).",
+    "header": {
+      "type": "Component",
+      "title": "Tag",
+      "namespace": "@coinbase/cds-web"
+    },
+    "grid": {
+      "columns": [
+        "colorScheme"
+      ],
+      "rows": [
+        "intent",
+        "emphasis"
+      ]
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@coinbase/cds-web",
+    "component": "Tag",
+    "import": "import { Tag } from '@coinbase/cds-web/tag';",
+    "alwaysEmit": []
+  },
+  "notes": [
+    {
+      "level": "info",
+      "at": "axes.emphasis",
+      "message": "emphasis defaults by intent: low when informational, high when promotional (Tag.tsx L81). Both values carry their emphasis prop, so a promotional Tag at Low emphasis emits emphasis=\"low\" and one at High emphasis is unambiguous whatever the intent. Intent picks the padding, radius and font (tags.ts L9-L22); emphasis and colorScheme pick the colours (tagEmphasisColorMap[emphasis][colorScheme], Tag.tsx L107)."
+    },
+    {
+      "level": "info",
+      "at": "axes",
+      "message": "Tag renders a Box, not Interactable or Pressable (Tag.tsx L117-L132), and Tag.css styles only nodeCss (L25-L28), so the Contract has no State axis."
+    },
+    {
+      "level": "info",
+      "at": "paint",
+      "message": "Tag paints its colours inline as rgb(theme.spectrum[<key>]) (Tag.tsx L107-L114) over Box's background=\"bg\" (Tag.tsx L120), the key from tagEmphasisColorMap (tags.ts L32-L85). The Foundations document carries each as tag-<emphasis>-<colorScheme>-<background|color>, aliasing the scheme's Primitive in each Mode."
+    },
+    {
+      "level": "info",
+      "at": "layout.Label.textStyle",
+      "message": "A promotional Tag sets its label in caption (tagFontMap, tags.ts L14-L17), which CDS draws uppercase (--text-textTransform: var(--textTransform-caption)). A Text Style has no text case, so the Figma label keeps the case it is typed in."
+    },
+    {
+      "level": "info",
+      "at": "family",
+      "message": "background and color (@danger custom spectrum colours, Tag.tsx L52-L55) override the colour scheme, and maxWidth (L56-L57) truncates the label (overflow=\"truncate\", L149); without one nothing truncates. The Box layout props (paddingX, paddingY, gap, font and the rest, L91-L102) override the defaults the Contract draws. None of them is an axis."
+    },
+    {
+      "level": "info",
+      "at": "properties.startIcon",
+      "message": "startIconActive and endIconActive (Tag.tsx L62-L69) pick the active glyph of the same icon; the icon source uses the inactive glyphs only. start and end (L58-L65) take any React node, and win over startIcon and endIcon (L133-L139, L156-L162); the Contract models the icon names, at Icon size xs (L137, L160)."
+    },
+    {
+      "level": "info",
+      "at": "code",
+      "message": "CDS's own Code Connect file (Tag.figma.ts) maps intent, emphasis and colorScheme as the Contract does (L8-L25), and always emits emphasis (L33). It maps no icons; the Contract adds startIcon and endIcon from Tag.tsx."
+    },
+    {
+      "level": "info",
+      "at": "paint",
+      "message": "The deprecated tagColorMap (tags.ts L95-L102) is the old name of tagEmphasisColorMap by intent; Tag.tsx reads tagEmphasisColorMap (L107)."
+    }
+  ],
+  "drafted": {
+    "anatomy.Start icon": {
+      "by": "agent",
+      "evidence": [
+        "Tag.tsx:L135-L139 span.nodeCss around the start Icon"
+      ],
+      "fingerprint": "sha256:bab589c37b598e102d08135e0a9e7c64c6459ef7a4a0bd1eef8822952030f1d7"
+    },
+    "anatomy.Start glyph": {
+      "by": "agent",
+      "evidence": [
+        "Tag.tsx:L137 the Icon named by startIcon, color currentColor, size xs"
+      ],
+      "fingerprint": "sha256:07f0dfe11025f3c040f77ff4190c71f43f1e094a84bdace247dfd438db8cbd97"
+    },
+    "anatomy.Label": {
+      "by": "agent",
+      "evidence": [
+        "Tag.tsx:L141-L154 the Text holding the children, color currentColor"
+      ],
+      "fingerprint": "sha256:bae5f46c74d54905595041cd6281e1574eb7b18ed0302931b1907af6333eb902"
+    },
+    "anatomy.End icon": {
+      "by": "agent",
+      "evidence": [
+        "Tag.tsx:L158-L162 span.nodeCss around the end Icon"
+      ],
+      "fingerprint": "sha256:bab589c37b598e102d08135e0a9e7c64c6459ef7a4a0bd1eef8822952030f1d7"
+    },
+    "anatomy.End glyph": {
+      "by": "agent",
+      "evidence": [
+        "Tag.tsx:L160 the Icon named by endIcon, color currentColor, size xs"
+      ],
+      "fingerprint": "sha256:07f0dfe11025f3c040f77ff4190c71f43f1e094a84bdace247dfd438db8cbd97"
+    },
+    "properties.swapStartIcon.label": {
+      "by": "agent",
+      "evidence": [
+        "Tag.tsx:L60-L61 startIcon?: IconName, the icon name the swap sets"
+      ],
+      "fingerprint": "sha256:664986087e081ad000966406c98e6395f8bf6a9e52ce40aed1f12a79370ec1f4"
+    },
+    "properties.swapEndIcon.label": {
+      "by": "agent",
+      "evidence": [
+        "Tag.tsx:L66-L67 endIcon?: IconName, the icon name the swap sets"
+      ],
+      "fingerprint": "sha256:15ec53a20bd80514403da89c99994bcee074c57931bd64c5adac57f3135e1ac3"
+    },
+    "properties.label.default": {
+      "by": "agent",
+      "evidence": [
+        "Tag.tsx:L35-L36 children: React.ReactNode, no default",
+        "Tag.figma.ts:L29 Code Connect falls back to the label 'Tag'"
+      ],
+      "fingerprint": "sha256:637953d1c68557114c5b3f37b6d6d65dac9f9709d848b9839ae67cea6e21e474"
+    },
+    "icons.default": {
+      "by": "agent",
+      "evidence": [
+        "_webExamples.mdx:L99 startIcon=\"add\", the first icon example"
+      ],
+      "fingerprint": "sha256:211edea0474e94aee9ad7b4e4a3ea24e41423d82cc739776b9d353cdd3f315fc"
+    },
+    "icons.preferred": {
+      "by": "agent",
+      "evidence": [
+        "_webExamples.mdx:L99 startIcon=\"add\"",
+        "_webExamples.mdx:L102 endIcon=\"add\"",
+        "_webExamples.mdx:L129 name=\"close\" on the end node"
+      ],
+      "fingerprint": "sha256:211edea0474e94aee9ad7b4e4a3ea24e41423d82cc739776b9d353cdd3f315fc"
+    },
+    "figma.grid": {
+      "by": "agent",
+      "evidence": [
+        "TagBaseProps.ts:L7-L10 the six colour schemes, one column each",
+        "tags.ts:L32-L85 tagEmphasisColorMap by emphasis, then colorScheme"
+      ],
+      "fingerprint": "sha256:211edea0474e94aee9ad7b4e4a3ea24e41423d82cc739776b9d353cdd3f315fc"
+    },
+    "family.description": {
+      "by": "agent",
+      "evidence": [
+        "_webExamples.mdx:L3 \"used to note a characteristic or state of an object\"",
+        "Tag.tsx:L37-L67 the intent, emphasis, colorScheme, startIcon and endIcon props"
+      ],
+      "fingerprint": "sha256:211edea0474e94aee9ad7b4e4a3ea24e41423d82cc739776b9d353cdd3f315fc"
+    }
+  }
+}
