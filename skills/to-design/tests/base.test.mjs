@@ -244,6 +244,9 @@ test('a spinner builds: the arc is a VECTOR read back rebased at (1, 1), 22×22,
   const comp = await env.mock.figma.getNodeByIdAsync(readback.id);
   const [spinner, track, arc] = ['Spinner', 'Track', 'Arc'].map(n => comp.findOne(x => x.name === n));
   assert.deepEqual([arc.type, arc.x, arc.y, arc.width, arc.height], ['VECTOR', 1, 1, 22, 22]);
+  // one pass keeps the round cap: the path is written before it, since writing vectorPaths resets it (#455)
+  assert.equal(arc.strokeCap, 'ROUND');
+  assert.equal(readback.layout.Arc.strokeCap, 'round');
   assert.deepEqual(env.mock.log.filter(([op, id]) => id === arc.id && ['resize', 'node.x', 'node.y'].includes(op)), [], 'nothing sizes or places the arc');
   assert.deepEqual([track.type, track.x, track.y, track.fills], ['ELLIPSE', 0, 0, []]);
   assert.deepEqual([spinner.layoutPositioning, spinner.x, spinner.constraints], ['ABSOLUTE', (comp.width - 24) / 2, { horizontal: 'CENTER', vertical: 'CENTER' }]);

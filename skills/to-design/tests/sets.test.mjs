@@ -508,6 +508,9 @@ test('a spinner set packages and fits; coverage finds an absolute node off its c
   const runs = await buildAll(env, spinner, { prototype: true });
   for (const { out } of runs) assert.ok(out.chars <= 50000, `${out.chars} chars`);
   assert.deepEqual(runs[0].plan.tree.children.find(c => c.name === 'Spinner').children.map(c => c.type), ['ELLIPSE', 'VECTOR']);
+  // every variant's fresh Arc keeps its round cap after one build pass (#455: 479 of 480 lost it live)
+  const caps = (await setNode(env)).children.map(v => v.findOne(x => x.name === 'Arc').strokeCap);
+  assert.deepEqual([caps.length, [...new Set(caps)]], [TOTAL, ['ROUND']]);
   const cover = async () => (await sets(env, { mode: 'coverage', prototype: true }, { contract: spinner })).result;
   assert.deepEqual(checkCoverage(spinner, await cover()).problems, []);
   const sample = await sets(env, { mode: 'sample', sample: [0, 120, TOTAL - 1], prototype: true }, { contract: spinner });
