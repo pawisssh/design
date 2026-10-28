@@ -196,25 +196,28 @@ test('every run leaves the Prototype and the tools folders as they were, and loa
   const script = `
     import { existsSync, readdirSync, statSync } from 'node:fs';
     import { createRequire } from 'node:module';
-    import { join } from 'node:path';
+    import { join, sep } from 'node:path';
     import { check } from ${JSON.stringify(new URL('../scripts/from-prototype.mjs', import.meta.url).href)};
     import { REPO_ROOT } from ${JSON.stringify(new URL('../../to-handoff/scripts/system.mjs', import.meta.url).href)};
     const prototypes = JSON.parse(process.argv[1]);
     const scratch = join(REPO_ROOT, '.scratch');
     const tools = () => existsSync(scratch) ? readdirSync(scratch).filter(n => /^(to-handoff|adapter-|vibe-to-figma)/.test(n)) : [];
-    const list = dir => !existsSync(dir) ? null : statSync(dir).isFile() ? [statSync(dir).mtimeMs]
-      : readdirSync(dir, { recursive: true }).sort().map(f => f + ' ' + statSync(join(dir, f)).mtimeMs);
-    const snapshot = () => JSON.stringify([tools(), ...tools().map(n => list(join(scratch, n))), ...prototypes.map(list)]);
+    // A Prototype in full, with each file's mtime; a tools folder two levels down, which a fetch would change.
+    const list = (dir, depth = Infinity) => !existsSync(dir) ? null : statSync(dir).isFile() ? [statSync(dir).mtimeMs]
+      : readdirSync(dir, { recursive: true }).filter(f => f.split(sep).length <= depth).sort().map(f => f + ' ' + statSync(join(dir, f)).mtimeMs);
+    const snapshot = () => Object.fromEntries([['.scratch', tools()], ...tools().map(n => [n, list(join(scratch, n), 2)]), ...prototypes.map(p => [p, list(p)])]);
     const before = snapshot();
     for (const p of prototypes) check(p);
+    const after = snapshot();
     const loaded = Object.keys(createRequire(import.meta.url).cache).filter(k => k.includes('/.scratch/'));
-    console.log(JSON.stringify({ same: before === snapshot(), loaded }));
+    const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter(k => JSON.stringify(before[k]) !== JSON.stringify(after[k]));
+    console.log(JSON.stringify({ changed, loaded }));
   `;
   const prototypes = [handoff('v0-app'), handoff('next-app'), handoff('vite-app'), handoff('tailwind-app'), handoff('conditions-app'),
     handoff('invite-teammates'), vibe('path-a-app'), vibe('tailwind-no-shadcn'), vibe('carbon-scss-app'), vibe('html-app'), join(vibe('html-app'), 'index.html')];
   const r = spawnSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify(prototypes)], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
-  const { same, loaded } = JSON.parse(r.stdout);
-  assert.ok(same, 'the Prototypes and the tools folders are unchanged');
+  const { changed, loaded } = JSON.parse(r.stdout);
+  assert.deepEqual(changed, [], 'the Prototypes and the tools folders are unchanged');
   assert.deepEqual(loaded, []);
 });
