@@ -101,8 +101,26 @@ const KINDS = [
 ];
 
 // The framework, named beside the kind's own evidence.
-const frameworks = p => [...declaredOf(p, ['next', 'vite']),
-  ...(p.declared.has('@tanstack/react-start') && p.all.some(f => f.startsWith(`src${sep}routes${sep}__root.`)) ? ['TanStack Start'] : [])];
+const tanstackStart = p => p.declared.has('@tanstack/react-start') && p.all.some(f => f.startsWith(`src${sep}routes${sep}__root.`));
+const frameworks = p => [...declaredOf(p, ['next', 'vite']), ...(tanstackStart(p) ? ['TanStack Start'] : [])];
+
+// What To-handoff's React reader takes, as its reactKind and readers find it, with no parser: Next before Vite, React
+// outside peerDependencies, the Vite shell's module script and the App Router's root layout. Whether the module script
+// renders JSX is left to the reader stage, after the fetch.
+const onNext = p => p.declared.has('next');
+const onVite = p => !onNext(p) && p.declared.has('vite');
+const peerOnlyReact = p => !p.pkg?.dependencies?.react && !p.pkg?.devDependencies?.react;
+const viteShell = p => p.all.includes('index.html') && /<script\b[^>]*\bsrc=["']\/?([^"']+\.[jt]sx?)["']/.test(p.text('index.html'));
+const appRouter = p => {
+  const app = ['app', `src${sep}app`].find(d => p.all.some(f => f.startsWith(d + sep)));
+  return !!app && ['.tsx', '.ts', '.jsx', '.js'].some(e => p.all.includes(join(app, 'layout' + e)));
+};
+// The routes To-handoff's Vite reader can't read yet: wouter (#350), and a data router it can't follow (#361): one
+// built in a file other than the one that renders its RouterProvider, or routes that name a `Component:`.
+const wouter = p => p.declared.has('wouter');
+const DATA_ROUTER = /\bcreate(?:Browser|Hash|Memory)Router\s*\(/;
+const unreadDataRouter = p => p.code.some(f => /<RouterProvider\b/.test(p.text(f)) && !DATA_ROUTER.test(p.text(f)))
+  || p.code.some(f => DATA_ROUTER.test(p.text(f)) && /\bComponent\s*:/.test(p.text(f)));
 
 // Each output's gate rows, in order (spec #343 The gate table): name, the kinds it applies to, its test (passes when
 // true; a row with none fails for every kind it names), its effect when it fails (a refusal unless `note`), its
@@ -123,24 +141,51 @@ const HANDOFF = [
   { name: 'reader', kinds: REACT, test: p => p.declared.has('next') || p.declared.has('vite'),
     message: 'no reader for this React setup: To-handoff reads Next.js App Router or Vite' },
   { name: 'reader', kinds: [UNKNOWN], message: 'no reader for what was found' },
+  { name: 'peer-react', kinds: REACT, test: p => !peerOnlyReact(p), message: 'not yet: React only in `peerDependencies` (#358)', ticket: '#358' },
+  { name: 'vite-shell', kinds: REACT, test: p => !onVite(p) || !tanstackStart(p), ticket: '#348',
+    message: "not yet: a TanStack Start build is a Cloudflare Worker, which the run can't serve yet (#348)" },
+  { name: 'vite-shell', kinds: REACT, test: p => !onVite(p) || tanstackStart(p) || viteShell(p),
+    message: p => p.all.includes('index.html') ? '`index.html` loads no module script: To-handoff reads a Vite app from it'
+      : 'no `index.html`: To-handoff reads a Vite app from its `index.html`' },
+  { name: 'next-app-router', kinds: REACT, test: p => !onNext(p) || appRouter(p),
+    message: 'no `app/` or `src/app/` with a root layout: To-handoff reads only the App Router' },
+  { name: 'html-file', kinds: [HTML, HTML_UTILITIES], test: p => htmlFiles(p).length === 1,
+    message: p => `name the page: run again with the HTML file's path, one of ${htmlFiles(p).join(', ')}. Several pages are not specified yet (the map's 'Plain HTML beyond one banner')` },
+  { name: 'routes', kinds: REACT, effect: 'note', test: p => !onVite(p) || !wouter(p), ticket: '#350',
+    message: "reads as one screen, `index`: To-handoff's Vite reader reads react-router routes, and wouter waits on #350" },
+  { name: 'routes', kinds: REACT, effect: 'note', test: p => !onVite(p) || !unreadDataRouter(p), ticket: '#361',
+    message: 'reads as one screen, `index`: a data router built in another file, or `Component:` routes, wait on #361' },
+  { name: 'runtime-lockfile', kinds: [...REACT, HTML, HTML_UTILITIES], effect: 'note', ticket: '#354',
+    test: p => !p.all.includes('package.json') || p.all.includes('package-lock.json'),
+    message: 'the runtime read runs `npm ci`; without a `package-lock.json` the Handoff is likely static-only, with a `q-runtime` question: run `npm install --package-lock-only --ignore-scripts` in your project (#354)' },
+  // The own-folder route (#265): closed for path A and plain HTML, and for a kind that can't have Component Sets.
+  { name: 'own-folder', kinds: [PATH_A, HTML], effect: 'closes', ticket: '#265',
+    message: "To-handoff can't yet recognise its sites through the Family map (#265)" },
+  { name: 'own-folder', kinds: [SHADCN, CLASSES, MODULES, HTML_UTILITIES], effect: 'closes', test: p => p.componentSets.verdict !== 'no',
+    message: "it can't have Component Sets, so it has no own folder" },
 ];
 
 // A stylesheet of the Prototype's own, with class rules and no Tailwind import.
 const classStyled = p => p.all.filter(f => STYLES.has(extname(f)) && !/\.module\.s?css$/.test(f))
   .filter(f => { const css = p.text(f); return !/tailwindcss/.test(css) && /(?:^|[\s,}])\.[A-Za-z_][\w-]*[^{};]*\{/m.test(css); });
 
+// A failing row refuses, unless its effect is `note`, or `closes`: that closes the own-folder route, so the output is
+// only against a Design System the owner names.
 function verdictOf(table, p, yes) {
   const failing = table.filter(row => row.kinds.includes(p.kind) && !row.test?.(p))
-    .map(row => ({ row: row.name, message: typeof row.message === 'function' ? row.message(p) : row.message, ticket: row.ticket, note: row.effect === 'note' }));
-  const reasons = failing.filter(f => !f.note).map(({ note, ...r }) => r);
-  return { verdict: reasons.length ? 'no' : yes, reasons, notes: failing.filter(f => f.note).map(f => f.message) };
+    .map(row => ({ row: row.name, message: typeof row.message === 'function' ? row.message(p) : row.message, ticket: row.ticket, effect: row.effect }));
+  const of = effect => failing.filter(f => f.effect === effect).map(({ effect, ...r }) => r);
+  const refusals = of(undefined), closes = of('closes');
+  return { verdict: refusals.length ? 'no' : closes.length ? 'only against a Design System you name' : yes,
+    reasons: refusals.length ? refusals : closes, notes: of('note').map(f => f.message) };
 }
 
 /**
  * check(prototype) -> {kind, evidence, verdicts: {componentSets, handoff}, questions, plan}: the Prototype's kind and
  * the files that show it, and each output's verdict ({verdict, reasons: [{row, message, ticket}], notes}) from its
- * gate rows (spec #343 The check). `prototype` is a folder, or for plain HTML one HTML file. It reads file names,
- * package.json and text; it writes nothing, fetches nothing and loads no fetched parser.
+ * gate rows (spec #343 The check), a plain HTML Handoff's with the `page` it reads. `prototype` is a folder, or for
+ * plain HTML one HTML file. It reads file names, package.json and text; it writes nothing, fetches nothing and loads
+ * no fetched parser.
  */
 export function check(prototype) {
   const p = reading(prototype);
@@ -148,13 +193,14 @@ export function check(prototype) {
     const found = evidence(p);
     if (found.length) { p.kind = kind; p.evidence = [...found, ...frameworks(p)]; break; }
   }
+  p.componentSets = verdictOf(COMPONENT_SETS, p, p.kind === SHADCN ? 'yes, by the shadcn path' : 'yes, by path A');
+  const handoff = verdictOf(HANDOFF, p, 'yes, against its own folder');
+  // Plain HTML reaches To-handoff as one HTML file: the folder's one page, found without naming it.
+  if ([HTML, HTML_UTILITIES].includes(p.kind) && handoff.verdict !== 'no') handoff.page = htmlFiles(p)[0];
   return {
     kind: p.kind,
     evidence: p.evidence,
-    verdicts: {
-      componentSets: verdictOf(COMPONENT_SETS, p, p.kind === SHADCN ? 'yes, by the shadcn path' : 'yes, by path A'),
-      handoff: verdictOf(HANDOFF, p, 'yes'),
-    },
+    verdicts: { componentSets: p.componentSets, handoff },
     // The outputs question and the plan land with #437.
     questions: [],
     plan: null,
