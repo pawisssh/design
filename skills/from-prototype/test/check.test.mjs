@@ -5,7 +5,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,6 +27,21 @@ function prototype(files, fixture) {
     writeFileSync(join(dir, path), typeof text === 'string' ? text : JSON.stringify(text));
   }
   return dir;
+}
+// A repo root in a temp folder (#438): the committed carbon and shadcn folders' Foundations documents and Contracts,
+// a scratch copy of each Design System in `copies`, and the files given, so a test never touches the real
+// design-systems/ or .scratch/.
+const REPO = fileURLToPath(new URL('../../../', import.meta.url));
+function repoRoot(files = {}, copies = []) {
+  const dir = prototype(files);
+  const copy = (ds, to) => { for (const f of [`${ds}.foundations.json`, 'contracts']) cpSync(join(REPO, 'design-systems', ds, f), join(dir, to, ds, f), { recursive: true }); };
+  for (const ds of ['carbon', 'shadcn']) copy(ds, 'design-systems');
+  for (const ds of copies) copy(ds, '.scratch/design-systems');
+  return dir;
+}
+function withRoot(files, body, copies) {
+  const root = repoRoot(files, copies);
+  try { body(root); } finally { rmSync(root, { recursive: true, force: true }); }
 }
 const SHELL = '<div id="root"></div><script type="module" src="/src/main.tsx"></script>';
 const UTILITIES = 'export default () => <div className="flex items-center gap-2 p-4 rounded-md bg-slate-200">Hi</div>;\n';
@@ -79,10 +95,10 @@ test('the Carbon + SCSS fixtures are React + CSS or SCSS classes: Component Sets
     assert.equal(r.verdicts.componentSets.verdict, 'no');
     assert.deepEqual(reasons(r.verdicts.componentSets), ['not yet: Component Sets for this kind are charted in map #310']);
   }
-  // The Vite app's Handoff reads, with no own folder since it can't have Component Sets; the Carbon + SCSS fixture
-  // declares neither Next nor Vite.
+  // The Vite app's Handoff reads, against `carbon` by import (#321 step 2), with no own folder since it can't have
+  // Component Sets; the Carbon + SCSS fixture declares neither Next nor Vite.
   const viteApp = check(handoff('vite-app')).verdicts.handoff;
-  assert.equal(viteApp.verdict, 'only against a Design System you name');
+  assert.equal(viteApp.verdict, 'yes, against `carbon`');
   assert.deepEqual(viteApp.reasons, [{ row: 'own-folder', message: "it can't have Component Sets, so it has no own folder", ticket: undefined }]);
   assert.equal(check(vibe('carbon-scss-app')).verdicts.handoff.verdict, 'no');
   const plain = check(handoff('conditions-app'));
@@ -276,9 +292,11 @@ test('a Carbon app with Tailwind utilities is still Carbon, and a file given tha
 });
 
 test('no output asked: exit 2 with one question offering only the outputs whose verdict is not "no", and the Design System question beside a Handoff', () => {
+  // The v0 fixture's Handoff, `request-access`, is committed in shadcn: the rerun rule answers its Design System.
   const both = run(handoff('v0-app'));
   assert.equal(both.status, 2, both.stderr);
-  assert.match(both.stdout, /Owner question: Which outputs should this run make: Component Sets, a Handoff, or both\?\n- Component Sets \(yes, by the shadcn path\): run again with `--figma <url>`\n- a Handoff \(yes, against its own folder\): run again with `--handoff`\nOwner question: Which Design System is the Handoff against\?\n/);
+  assert.match(both.stdout, /Owner question: Which outputs should this run make: Component Sets, a Handoff, or both\?\n- Component Sets \(yes, by the shadcn path\): run again with `--figma <url>`\n- a Handoff \(yes, against its own folder\): run again with `--handoff`\nThe Handoff's Design System: `shadcn`, where this Prototype's Handoff `request-access` already is\.\n/);
+  assert.deepEqual(check(handoff('v0-app')).questions.map(q => q.id), ['outputs']);
   assert.equal(both.stdout.trim().split('\n').at(-1), 'Nothing was fetched or written.');
 
   const html = check(vibe('html-app'));
@@ -343,19 +361,23 @@ test('a settled run exits 0 with the stages, each with its folder and Design Sys
   assert.deepEqual(sets.plan.stages.filter(s => s.owner).map(s => s.stage), ['approve']);
   assert.equal(sets.plan.stages[3].figma, FIGMA);
 
-  const named = check(handoff('vite-app'), { handoff: true, ds: 'carbon' });
-  assert.deepEqual(stagesOf(named), ['scratch-copy carbon', 'generate carbon', 'review carbon', 'sign-off carbon', 'hand-over']);
-  assert.ok(named.plan.stages.slice(0, -1).every(s => s.folder === '.scratch/design-systems/carbon'));
+  withRoot({}, root => {
+    const named = check(handoff('vite-app'), { handoff: true, ds: 'carbon', root });
+    assert.deepEqual(stagesOf(named), ['scratch-copy carbon', 'generate carbon', 'review carbon', 'sign-off carbon', 'hand-over']);
+    assert.ok(named.plan.stages.slice(0, -1).every(s => s.folder === '.scratch/design-systems/carbon'));
+  });
 
   // The own folder named with --ds: the folder step and its approve, with no Figma link, then To-handoff against it.
   assert.deepEqual(stagesOf(check(handoff('v0-app'), { handoff: true, ds: 'v0-app' })),
     ['folder v0-app', 'review-page v0-app', 'approve v0-app', 'generate v0-app', 'review v0-app', 'sign-off v0-app', 'hand-over']);
 
   // Both: the folder step and its approve once, the Figma build, then the Handoff against the settled Design System.
-  const both = check(handoff('v0-app'), { figma: FIGMA, handoff: true, ds: 'carbon' });
-  assert.deepEqual(stagesOf(both), ['folder v0-app', 'review-page v0-app', 'approve v0-app', 'figma-build v0-app',
-    'scratch-copy carbon', 'generate carbon', 'review carbon', 'sign-off carbon', 'hand-over']);
-  assert.deepEqual(both.plan.stages.at(-1).outputs, ['componentSets', 'handoff']);
+  withRoot({}, root => {
+    const both = check(handoff('v0-app'), { figma: FIGMA, handoff: true, ds: 'carbon', root });
+    assert.deepEqual(stagesOf(both), ['folder v0-app', 'review-page v0-app', 'approve v0-app', 'figma-build v0-app',
+      'scratch-copy carbon', 'generate carbon', 'review carbon', 'sign-off carbon', 'hand-over']);
+    assert.deepEqual(both.plan.stages.at(-1).outputs, ['componentSets', 'handoff']);
+  });
 
   // --name and --all pass to the folder step.
   const renamed = check(handoff('v0-app'), { figma: FIGMA, name: 'mine', all: true });
@@ -367,14 +389,14 @@ test('a settled run exits 0 with the stages, each with its folder and Design Sys
   assert.equal(out.status, 0, out.stderr);
   assert.match(out.stdout, /Plan:\n1\. Vibe-to-Figma's folder step: \.scratch\/design-systems\/v0-app \(Design System `v0-app`\)\n/);
   assert.ok(out.stdout.includes(`4. the Figma build: .scratch/design-systems/v0-app (Design System \`v0-app\`) into ${FIGMA}\n`), out.stdout);
-  assert.match(out.stdout, /5\. the Design System's scratch copy: \.scratch\/design-systems\/carbon \(Design System `carbon`\)\n/);
-  assert.match(out.stdout, /9\. the hand-over of Component Sets and a Handoff\n\nNothing was fetched or written\.\n$/);
+  // --ds naming another Design System than the committed `request-access` Handoff's: the plan says it makes a new one.
+  assert.match(out.stdout, /\d\. the hand-over of Component Sets and a Handoff\nNote: this Prototype's Handoff `request-access` is already in `shadcn`; `--ds carbon` makes a new Handoff\.\n\nNothing was fetched or written\.\n$/);
 });
 
 test('a Handoff asked with no --ds, or Component Sets with no folder name, is an owner question: exit 2, no plan', () => {
   const r = run(handoff('vite-app'), '--handoff');
   assert.equal(r.status, 2, r.stderr);
-  assert.match(r.stdout, /Owner question: Which Design System is the Handoff against\?\n- here: .*`carbon`.*\. Run again with `--ds <design-system>`\./);
+  assert.match(r.stdout, /Owner question: Which Design System is the Handoff against\?\n- if your developers build with one of these: .*`carbon`.*\. Run again with `--ds <design-system>`\./);
   assert.equal(check(handoff('vite-app'), { handoff: true }).plan, null);
 
   const unnamed = prototype({ 'package.json': { dependencies: { react: '19.2.4' }, devDependencies: { vite: '7.0.0', tailwindcss: '4.2.2' } }, 'src/App.tsx': UTILITIES });
@@ -489,6 +511,137 @@ test("every React kind's Component Sets verdict notes that a form's controls ins
     }
     assert.deepEqual(check(vibe('html-app')).verdicts.componentSets.notes, []);
   } finally { rmSync(modules, { recursive: true, force: true }); }
+});
+
+// The Handoff's Design System (#438, spec #343 The Handoff's Design System; Scratch roots).
+const handoffAt = (ds, key) => ({ [`.scratch/design-systems/${ds}/handoffs/${key}/handoff.json`]: '{}' });
+const dsQuestion = r => r.questions.find(q => q.id === 'designSystem');
+
+test('--handoff alone on the Carbon fixture: exit 2 with the Design System question, `carbon` its default by import', () => {
+  const r = run(handoff('vite-app'), '--handoff');
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stdout, /- Handoff: yes, against `carbon`\./);
+  assert.match(r.stdout, /\n- if your developers build with one of these: .*`carbon`.*\. Run again with `--ds <design-system>`\.\n- default: `carbon`, whose Contracts' package `@carbon\/react` this Prototype depends on\.\n/);
+  assert.doesNotMatch(r.stdout, /None: this Prototype's own folder/);
+  assert.equal(dsQuestion(check(handoff('vite-app'), { handoff: true })).default, 'carbon');
+});
+
+test("the list shows a scratch copy and its committed folder as one, and the own folder only while that route is open", () => {
+  withRoot({ '.scratch/design-systems/mine/mine.foundations.json': '{}' }, root => {
+    const v0 = dsQuestion(check(handoff('v0-app'), { handoff: true, root }));
+    assert.deepEqual(v0.options, ['carbon', 'mine', 'shadcn']);
+    assert.equal(v0.own, 'v0-app');
+    // Path A's own-folder route is closed until #265, and the Carbon app can't have Component Sets.
+    for (const dir of [vibe('path-a-app'), handoff('vite-app'), vibe('html-app')]) {
+      const q = dsQuestion(check(dir, { handoff: true, root }));
+      assert.deepEqual(q.options, ['carbon', 'mine', 'shadcn'], dir);
+      assert.equal(q.own, undefined, dir);
+    }
+  }, ['carbon']);
+});
+
+test('the default: a Design System whose Contracts\' package the Prototype depends on, else the own folder, else none; never shadcn by import', () => {
+  const carbonV0 = prototype({ 'package.json': { ...V0_PKG, dependencies: { ...V0_PKG.dependencies, '@carbon/react': '1.90.0' } } }, handoff('v0-app'));
+  try {
+    withRoot({}, root => {
+      assert.equal(dsQuestion(check(handoff('vite-app'), { handoff: true, root })).default, 'carbon');
+      // The v0 fixture names shadcn's Code Library, yet shadcn's Contracts name project files: its own folder.
+      assert.equal(dsQuestion(check(handoff('v0-app'), { handoff: true, root })).default, 'v0-app');
+      assert.equal(check(handoff('v0-app'), { root }).verdicts.handoff.verdict, 'yes, against its own folder');
+      // Both its own folder and an imported Design System: no default (#321 D6).
+      const both = check(carbonV0, { handoff: true, root });
+      assert.equal(dsQuestion(both).default, null);
+      assert.equal(both.verdicts.handoff.verdict, 'yes, against its own folder');
+      for (const dir of [vibe('path-a-app'), vibe('html-app')]) assert.equal(dsQuestion(check(dir, { handoff: true, root })).default, null, dir);
+    });
+  } finally { rmSync(carbonV0, { recursive: true, force: true }); }
+});
+
+test('the rerun rule: an existing Handoff of the feature key is the answer; --ds naming another makes a new Handoff', () => {
+  withRoot(handoffAt('carbon', 'project-members'), root => {
+    const r = check(handoff('vite-app'), { handoff: true, root });
+    assert.deepEqual(r.questions, []);
+    assert.deepEqual(r.designSystem, { name: 'carbon', key: 'project-members', existing: ['carbon'] });
+    assert.deepEqual(stagesOf(r), ['generate carbon', 'review carbon', 'sign-off carbon', 'hand-over']);
+    assert.deepEqual(r.plan.notes, []);
+    // No output asked: the outputs question alone.
+    assert.deepEqual(check(handoff('vite-app'), { root }).questions.map(q => q.id), ['outputs']);
+    const other = check(handoff('vite-app'), { handoff: true, ds: 'shadcn', root });
+    assert.deepEqual(stagesOf(other), ['scratch-copy shadcn', 'generate shadcn', 'review shadcn', 'sign-off shadcn', 'hand-over']);
+    assert.deepEqual(other.plan.notes, ["this Prototype's Handoff `project-members` is already in `carbon`; `--ds shadcn` makes a new Handoff"]);
+    assert.deepEqual(check(handoff('vite-app'), { handoff: true, ds: 'carbon', root }).plan.notes, []);
+  }, ['carbon']);
+  // In two Design Systems: the owner names one of them.
+  withRoot({ ...handoffAt('carbon', 'project-members'), ...handoffAt('shadcn', 'project-members') }, root => {
+    const q = dsQuestion(check(handoff('vite-app'), { handoff: true, root }));
+    assert.deepEqual(q.existing, ['carbon', 'shadcn']);
+    assert.equal(q.default, null);
+  }, ['carbon', 'shadcn']);
+});
+
+test('an unknown --ds is refused, listing the Design Systems here', () => {
+  withRoot({}, root => {
+    const r = check(handoff('vite-app'), { handoff: true, ds: 'nope', root });
+    assert.deepEqual(r.refusals, ['`--ds nope` names no Design System here: `carbon`, `shadcn`']);
+    assert.deepEqual(r.questions, []);
+    assert.equal(r.plan, null);
+  });
+  const out = run(handoff('vite-app'), '--handoff', '--ds', 'nope');
+  assert.equal(out.status, 1, out.stderr);
+  assert.match(out.stdout, /\n- `--ds nope` names no Design System here: .*`carbon`.*\.\n/);
+  assert.doesNotMatch(out.stdout, /still possible/);
+});
+
+test('a scratch copy is used in place: the plan names the committed files that moved, and the check never copies', () => {
+  withRoot({}, root => {
+    check(handoff('vite-app'), { handoff: true, ds: 'carbon', root });
+    assert.equal(existsSync(join(root, '.scratch/design-systems/carbon')), false);
+  });
+  withRoot({}, root => {
+    assert.deepEqual(check(handoff('vite-app'), { handoff: true, ds: 'carbon', root }).plan.notes, []);
+    const copy = join(root, '.scratch/design-systems/carbon');
+    writeFileSync(join(copy, 'carbon.foundations.json'), '{}');
+    rmSync(join(copy, 'contracts/select.component.json'));
+    writeFileSync(join(copy, 'contracts/written-mid-run.component.json'), '{}');
+    const r = check(handoff('vite-app'), { handoff: true, ds: 'carbon', root });
+    assert.deepEqual(stagesOf(r), ['generate carbon', 'review carbon', 'sign-off carbon', 'hand-over']);
+    assert.deepEqual(r.plan.moved, { designSystem: 'carbon', files: ['carbon.foundations.json', 'contracts/select.component.json'] });
+    assert.equal(r.plan.notes.length, 1);
+    for (const part of ['the committed Design System `carbon` has moved since its scratch copy was made: carbon.foundations.json, contracts/select.component.json',
+      "puts the copy's signed Handoffs into Drift", 'only when the owner says so in chat', '`handoffs/`'])
+      assert.ok(r.plan.notes[0].includes(part), r.plan.notes[0]);
+  }, ['carbon']);
+});
+
+test('a name collision with a committed Design System or another scratch folder is refused until --name is passed', () => {
+  const named = name => prototype({ 'package.json': { ...PATH_A_PKG, name } }, vibe('path-a-app'));
+  const carbonApp = named('carbon');
+  try {
+    withRoot({ '.scratch/design-systems/path-a-app/path-a-app.foundations.json': '{}' }, root => {
+      for (const [dir, name] of [[carbonApp, 'carbon'], [vibe('path-a-app'), 'path-a-app']]) {
+        const r = check(dir, { figma: FIGMA, root });
+        assert.equal(r.refusals.length, 1, dir);
+        assert.match(r.refusals[0], new RegExp(`^this Prototype's own folder, \`\\.scratch/design-systems/${name}\`, is taken by .*: pass \`--name\`$`));
+        assert.equal(r.plan, null);
+        assert.deepEqual(r.questions, []);
+        assert.deepEqual(check(dir, { figma: FIGMA, name: 'mine', root }).refusals, []);
+      }
+      // Its own folder is not taken: no collision when the Handoff is against another Design System.
+      assert.ok(check(carbonApp, { handoff: true, ds: 'shadcn', root }).plan);
+    });
+    // A scratch folder is this Prototype's own when its Family map's sites are this Prototype's files, or its Foundations
+    // document read this Prototype's components.json.
+    const map = JSON.stringify({ families: { card: { by: 'agent', sites: [{ file: 'src/App.tsx', path: 'App>div' }] } } });
+    const v0Hash = `sha256:${createHash('sha256').update(readFileSync(join(handoff('v0-app'), 'components.json'))).digest('hex')}`;
+    withRoot({ '.scratch/design-systems/path-a-app/path-a-app.family-map.json': map,
+      '.scratch/design-systems/v0-app/v0-app.foundations.json': JSON.stringify({ source: { files: { 'components.json': v0Hash } } }) }, root => {
+      assert.deepEqual(check(vibe('path-a-app'), { figma: FIGMA, root }).refusals, []);
+      assert.deepEqual(stagesOf(check(handoff('v0-app'), { figma: FIGMA, root })), ['folder v0-app', 'review-page v0-app', 'approve v0-app', 'figma-build v0-app', 'hand-over']);
+    });
+    const out = run(carbonApp, '--figma', FIGMA);
+    assert.equal(out.status, 1, out.stderr);
+    assert.match(out.stdout, /pass `--name`/);
+  } finally { rmSync(carbonApp, { recursive: true, force: true }); }
 });
 
 test('every run writes nothing, runs and fetches nothing, leaves the Prototype as it was, and loads no fetched parser', () => {
