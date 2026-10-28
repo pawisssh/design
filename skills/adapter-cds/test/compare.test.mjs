@@ -74,6 +74,7 @@ test('expectations: colours per Mode, lengths from the layout collection, the st
 class El {
   constructor(cls, opts = {}, kids = []) {
     Object.assign(this, { cls, tag: opts.tag, attrs: opts.attrs || {}, own: opts.style || {}, text: opts.text, kids, w: opts.w || 0, h: opts.h || 0 });
+    kids.forEach(k => { k.parentElement = this; });
   }
   get tagName() { return (this.tag || 'div').toUpperCase(); }
   getAttribute(n) { return n === 'class' ? this.cls : n in this.attrs ? this.attrs[n] : null; }
@@ -111,14 +112,16 @@ const fakePage = specimens => {
 };
 
 // One Button.
-const page = ({ labelHidden = false, padding = '8px', spinner = false, dashoffset = '0.25px' } = {}) => fakePage({
+// `dim` wraps the spinner in an element with no layer of its own and that opacity.
+const page = ({ labelHidden = false, padding = '8px', spinner = false, dashoffset = '0.25px', dim } = {}) => fakePage({
   'primary|xs': mode =>
     new El('cds-Button baseCss-a1', { style: { backgroundColor: mode === 'light' ? 'rgb(0, 82, 255)' : 'rgb(87, 139, 250)', paddingLeft: padding, outlineStyle: 'solid', outlineWidth: '2px', outlineColor: 'rgb(0, 82, 255)' } }, [
       new El('startNodeCss-b2', { w: 16, h: 16 }),
       new El('middleNodeCss-c3', {}, [
         ...(spinner ? [new El('spinnerContainerCss-e5', { w: 24, h: 24 }, [new El('svgCss-f6', { tag: 'svg' }, [
           circle({}, { stroke: 'rgba(91, 97, 110, 0.2)' }),
-          circle({ pathLength: '1' }, { stroke: 'rgb(255, 255, 255)', strokeLinecap: 'round', strokeDasharray: '1px', strokeDashoffset: dashoffset })])])] : []),
+          circle({ pathLength: '1' }, { stroke: 'rgb(255, 255, 255)', strokeLinecap: 'round', strokeDasharray: '1px', strokeDashoffset: dashoffset })])])]
+          .map(s => (dim ? new El('', { style: { opacity: dim } }, [s]) : s)) : []),
         new El('baseCss-g7', {}, [new El('hiddenCss-d4', { text: 'Button', style: { color: 'rgba(255, 255, 255, 0.5)', visibility: labelHidden ? 'hidden' : 'visible' } })])]),
     ]),
 });
@@ -208,6 +211,13 @@ test('probe: a filled <circle> with no stroke is 2r wide, its 1px default stroke
   assert.deepEqual(probe(spec, ...Object.values(dotPage('rgb(0, 82, 255)'))).mismatches, [
     'on light Dot.stroke: page #0052ff, Contract none', 'on light Dot.strokeWidth: page 1, Contract 0',
     'on light Dot.width: page 14.333333333333334, Contract 13.333', 'on light Dot.height: page 14.333333333333334, Contract 13.333']);
+});
+
+test('probe: an element with no layer of its own passes its opacity on to the layer inside it (#471)', () => {
+  const dimmed = withSpinner({ Spinner: { width: 24, opacity: 0.82 }, Track: ring, Arc: arc });
+  assert.deepEqual(probe(dimmed, ...Object.values(page({ spinner: true, dim: '0.82' }))), { checked: 2, mismatches: [] });
+  assert.deepEqual(probe(dimmed, ...Object.values(page({ spinner: true }))).mismatches, [
+    'primary|xs light Spinner.opacity: page 1, Contract 0.82', 'primary|xs dark Spinner.opacity: page 1, Contract 0.82']);
 });
 
 // ---------- families with no cds-<Family> class (#470) ----------

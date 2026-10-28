@@ -248,6 +248,10 @@ export function probe(spec, doc, style, color) {
         els[layer.name] = el;
         if (!want) return;
         const got = read(el, layer.type);
+        // In (#471): an element between this layer's and its parent layer's, with no layer of its own, passes its
+        // opacity on to this layer, as Figma would draw it. IconButton's loading ProgressCircle sits in such an
+        // element, its VisualizationContainer, which Interactable dims as the IconButton's child (> *).
+        if (el !== parent) for (let e = el.parentElement; e && e !== parent; e = e.parentElement) got.opacity *= parseFloat(style(e).opacity);
         // An <img>'s picture is its fill, and no computed style holds it (Avatar's Image, #478).
         Object.keys(want).filter(field => !(field === 'fill' && el.tagName === 'IMG')).forEach(field => {
           const a = got[field], b = want[field];
