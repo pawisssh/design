@@ -27,7 +27,12 @@ test('an HTML file: its <title>, else its file name', () => {
 
 test('an HTML <title> reads as parse5 reads it: any case, with attributes, its entities decoded, trimmed, outside comments', () => {
   const dir = project({ 'a.html': '<!-- <title>Old</title> -->\n<HEAD><TITLE lang="en">\n  Q&amp;A &#8211; &#x41;nswers&nbsp;</TITLE></HEAD>' });
-  assert.deepEqual(featureOf(join(dir, 'a.html')), { name: 'Q&A – Answers', key: 'q-a-answers' });
+  assert.deepEqual(featureOf(join(dir, 'a.html')), { name: 'Q&A \u2013 Answers', key: 'q-a-answers' });
+});
+
+test('an HTML <title>: the common named entities, a bad code point as U+FFFD, CRLF as LF, never one in a raw-text element', () => {
+  const dir = project({ 'a.html': '<textarea><title>Typed</title></textarea><template><title>Later</title></template><title>A &mdash; B&hellip; &copy;&#99999999;\r\nC</title>' });
+  assert.deepEqual(featureOf(join(dir, 'a.html')), { name: 'A \u2014 B\u2026 \u00a9\ufffd\nC', key: 'a-b-c' });
 });
 
 test("the head's <title> names the feature, not an inline SVG's later one", () => {
@@ -56,6 +61,7 @@ test('Next: metadata.title as a default or absolute, behind as or satisfies', ()
   assert.equal(featureOf(project(layout("export const metadata = { title: { template: '%s | X', default: 'By default' } };"))).name, 'By default');
   assert.equal(featureOf(project(layout('export const metadata = ({ title: { absolute: "Absolute" } }) satisfies Metadata;'))).name, 'Absolute');
   assert.equal(featureOf(project(layout("export const metadata = { 'title': 'Quoted' } as Metadata;"))).name, 'from-package');
+  assert.equal(featureOf(project(layout("export const metadata: Shaped<{ f: (x: string) => void }> = { title: 'Behind an arrow type' };"))).name, 'Behind an arrow type');
 });
 
 test("Next: only the top-level title counts, never a nested one, a comment's or a string's", () => {

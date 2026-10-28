@@ -1,6 +1,5 @@
-// A Prototype's feature key (#431, spec #343 the rerun rule): the name its Handoff lives under, from text alone, so
-// generate and From-Prototype's check take it from one function before anything is fetched. It loads Node's own
-// modules only: no parse5, no TypeScript.
+// A Prototype's feature key (spec #343, the rerun rule): the name its Handoff lives under, which To-handoff's generate
+// and From-Prototype's check both take from here. Node's own modules only: no parse5, no TypeScript.
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { basename, join, posix } from 'node:path';
 
@@ -14,49 +13,65 @@ export function packageOf(root) {
   return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
 }
 
+/** 'react-next' or 'react-vite' for a React project folder (by its package.json), else null. */
+export function reactKind(root) {
+  const pkg = packageOf(root);
+  const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+  if (!deps.react) return null;
+  return deps.next ? 'react-next' : deps.vite ? 'react-vite' : null;
+}
+
+// A Next app's App Router folder: app/, else src/app/.
+export function appDirOf(root) {
+  return ['app', 'src/app'].find(d => existsSync(join(root, d)) && statSync(join(root, d)).isDirectory()) || null;
+}
+
 /**
- * featureOf(prototype) -> {name, key}. An HTML file: its <title>, else its file name. A folder: a Next app's root
- * layout `metadata.title`, any other's index.html <title>, else the package name, else the folder name.
+ * featureOf(prototype) -> {name, key}, read as text so it loads no parser that has to be fetched (#431). An HTML
+ * file: its <title>, else its file name. A folder: a Next app's root layout `metadata.title`, any other's
+ * index.html <title>, else the package name, else the folder name. It never refuses: which Prototypes reach a
+ * Handoff is the check's gate rows' call.
  */
 export function featureOf(prototype) {
   if (/\.html?$/i.test(prototype)) {
     const name = htmlTitle(readFileSync(prototype, 'utf8')) || basename(prototype).replace(/\.html?$/, '');
     return { name, key: kebab(name) };
   }
-  const pkg = packageOf(prototype);
-  const deps = { ...pkg.dependencies, ...pkg.devDependencies };
   const text = rel => (rel && existsSync(join(prototype, rel)) ? readFileSync(join(prototype, rel), 'utf8') : '');
-  const title = deps.next ? metadataTitle(text(rootLayout(prototype))) : htmlTitle(text('index.html'));
-  const name = title || pkg.name || posix.basename(prototype);
+  const app = reactKind(prototype) === 'react-next' && appDirOf(prototype);
+  const layout = app && EXTS.map(e => posix.join(app, 'layout' + e)).find(f => existsSync(join(prototype, f)));
+  const title = app ? metadataTitle(text(layout)) : htmlTitle(text('index.html'));
+  const name = title || packageOf(prototype).name || posix.basename(prototype);
   return { name, key: kebab(name) };
 }
 
-// The first <title> outside comments, scripts and styles, its entities decoded and trimmed as parse5 gives it. The
-// head's comes first, so an inline SVG's later <title> never names the feature.
+// The first <title> outside comments and raw-text elements, CRLF as LF, its entities decoded and trimmed (#431).
+// Where parse5 let the last one win, the head's now does, so an inline SVG's <title> never names the feature.
+const RAW_TEXT = /<(script|style|textarea|template|noscript|iframe|xmp)\b[\s\S]*?<\/\1\s*>/gi;
 function htmlTitle(text) {
-  const markup = text.replace(/<!--[\s\S]*?(?:-->|$)/g, '').replace(/<(script|style)\b[\s\S]*?<\/\1\s*>/gi, '');
+  const markup = text.replace(/\r\n?/g, '\n').replace(/<!--[\s\S]*?(?:--!?>|$)/g, '').replace(RAW_TEXT, '');
   const m = /<title(?=[\s/>])[^>]*>([\s\S]*?)<\/title\s*>/i.exec(markup);
   return m ? decodeEntities(m[1]).trim() : '';
 }
 
-const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+// The named entities a title is likely to hold; any other stays as written. A code point HTML forbids is U+FFFD.
+const ENTITIES = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00a0', ndash: '\u2013', mdash: '\u2014', hellip: '\u2026',
+  lsquo: '\u2018', rsquo: '\u2019', ldquo: '\u201c', rdquo: '\u201d', laquo: '\u00ab', raquo: '\u00bb', middot: '\u00b7',
+  bull: '\u2022', copy: '\u00a9', reg: '\u00ae', trade: '\u2122', times: '\u00d7', rarr: '\u2192', larr: '\u2190',
+};
+const codePoint = n => (n === 0 || n > 0x10ffff || (n >= 0xd800 && n <= 0xdfff) ? '\ufffd' : String.fromCodePoint(n));
 const decodeEntities = s => s.replace(/&(?:#(\d+)|#x([0-9a-f]+)|([a-z]+));/gi, (all, dec, hex, named) =>
-  dec || hex ? String.fromCodePoint(parseInt(dec || hex, dec ? 10 : 16)) : ENTITIES[named.toLowerCase()] ?? all);
+  dec || hex ? codePoint(parseInt(dec || hex, dec ? 10 : 16)) : ENTITIES[named] ?? all);
 
-// The root layout, as the reader finds it: in app/, else src/app/.
-function rootLayout(root) {
-  const app = ['app', 'src/app'].find(d => existsSync(join(root, d)) && statSync(join(root, d)).isDirectory());
-  return app && EXTS.map(e => posix.join(app, 'layout' + e)).find(f => existsSync(join(root, f)));
-}
-
-// `export const metadata = {title}`: the top-level title's string, or its `default` or `absolute`, as the React
-// reader's TypeScript AST gives it. A computed title, a quoted key or generateMetadata gives none.
-function metadataTitle(text) {
+// `export const metadata = {title}` in a layout or page, from its text (#431): the top-level title's string or
+// template without holes, or its `default` or `absolute`. A computed title, a quoted key or generateMetadata gives none.
+export function metadataTitle(text) {
   const t = tokens(text);
   const at = t.findIndex((k, i) => k.v === 'export' && ['const', 'let', 'var'].includes(t[i + 1]?.v) && t[i + 2]?.v === 'metadata');
   if (at < 0) return null;
   let i = at + 3;
-  while (i < t.length && !punct(t[i], '=')) i++;
+  while (i < t.length && !(punct(t[i], '=') && !punct(t[i + 1], '>'))) i++;
   const value = stringAt(t, props(t, i + 1).get('title'));
   if (typeof value === 'string' || !value) return value || null;
   const inner = [...props(t, value.object)].find(([k]) => k === 'default' || k === 'absolute');

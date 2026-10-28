@@ -18,7 +18,7 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { parseCss } from './css.mjs';
-import { EXTS, packageOf } from './feature-key.mjs';
+import { EXTS, appDirOf, metadataTitle, packageOf, reactKind } from './feature-key.mjs';
 import { loadTypescript } from './deps.mjs';
 import { lineOf, lineStarts, readHtml, walk } from './reader.mjs';
 
@@ -29,14 +29,6 @@ const ATTR_NAMES = { className: 'class', htmlFor: 'for' };
 const HOSTS = { 'next/link': { default: 'a' }, 'next/image': { default: 'img' }, 'react-router': { Link: 'a', NavLink: 'a' }, 'react-router-dom': { Link: 'a', NavLink: 'a' } };
 const ROUTERS = new Set(['react-router', 'react-router-dom']);
 const ROUTER_PARTS = new Set(['Routes', 'Route', 'Outlet', 'RouterProvider']);
-
-/** 'react-next' or 'react-vite' for a React project folder (by its package.json), else null. */
-export function reactKind(root) {
-  const pkg = packageOf(root);
-  const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-  if (!deps.react) return null;
-  return deps.next ? 'react-next' : deps.vite ? 'react-vite' : null;
-}
 
 /**
  * The Code Library folder (#84, #102), relative to the root with a trailing slash: components.json
@@ -520,19 +512,8 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
   // ---------- Next.js App Router ----------
 
   const special = (dir, name) => EXTS.map(e => posix.join(dir, name + e)).find(isFile) || null;
-  // `export const metadata = {title}` in a layout or page: the title string, or its `default`.
-  const metadataTitle = file => {
-    const d = file && source(file).exports.get('metadata');
-    const o = d && d.initializer && unwrap(d.initializer);
-    if (!o || !ts.isObjectLiteralExpression(o)) return null;
-    const p = o.properties.find(x => ts.isPropertyAssignment(x) && x.name.getText(source(file).sf) === 'title');
-    const v = p && unwrap(p.initializer);
-    if (v && ts.isStringLiteral(v)) return v.text;
-    const def = v && ts.isObjectLiteralExpression(v) && v.properties.find(x => ts.isPropertyAssignment(x) && /^(default|absolute)$/.test(x.name.getText(source(file).sf)));
-    return def && ts.isStringLiteral(def.initializer) ? def.initializer.text : null;
-  };
   const readNext = () => {
-    const app = ['app', 'src/app'].find(d => existsSync(join(root, d)) && statSync(join(root, d)).isDirectory());
+    const app = appDirOf(root);
     if (!app) throw new Error(`${root} has no app/ folder: only the App Router is read`);
     const rootLayout = special(app, 'layout');
     if (!rootLayout) throw new Error(`${app}/ has no root layout`);
@@ -585,7 +566,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
       const top = content({ s: null, parent: null, cond: [], repeat: null, stack: [], props: null, children: null });
       const rootEl = top.find(n => n.type === 'element' && n.tag === 'html');
       if (!rootEl) throw new Error(`${rootLayout} renders no <html>`);
-      return { id: screenIdOf(route), name: metadataTitle(page) || route, route, offset: pageAt, root: rootEl, mount: mount || findEl(rootEl, e => e.tag === 'body') };
+      return { id: screenIdOf(route), name: metadataTitle(readFileSync(join(root, page), 'utf8')) || route, route, offset: pageAt, root: rootEl, mount: mount || findEl(rootEl, e => e.tag === 'body') };
     });
     return { screens, routes };
   };
