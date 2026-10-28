@@ -1,0 +1,1557 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "avatar",
+    "name": "Avatar",
+    "description": "Avatars show a person or an entity: an image, or the name's initial on a colour, in three shapes and six sizes, with an optional selected ring."
+  },
+  "source": {
+    "codeLibrary": "CDS Web",
+    "adapter": "cds",
+    "repository": "https://github.com/coinbase/cds",
+    "tag": "",
+    "commit": "135dc3c64218299bd26f0ce2ccdad628551d63d5",
+    "packages": {
+      "@coinbase/cds-web": "9.29.0",
+      "@coinbase/cds-common": "9.29.0",
+      "@coinbase/cds-icons": "5.26.0"
+    },
+    "files": {
+      "apps/docs/docs/components/media/Avatar/_webExamples.mdx": "sha256:7402b1ef76a5d5f2cf073406ce37d8d98bb8233ef12f187541bb47d0e34aff78",
+      "packages/common/src/svg/shape.ts": "sha256:7df9e4865b17b6cee737dd4a4605d740412d5d74aceeda7057fa7cb8a502ae56",
+      "packages/common/src/tokens/avatar.ts": "sha256:e65a1287d0c77827b1f1dc0900f9b3b5b4f98c969be4df19b5da04a378aa72d2",
+      "packages/common/src/tokens/borderRadius.ts": "sha256:99007ba6e57ca4177d6821fecd72225b9124605294e2ce60ea509049aac25eea",
+      "packages/common/src/types/AvatarBaseProps.ts": "sha256:88f489228cdef03ecdfd52d133f02c47dcfe90c6a5550e1429a502c02285c23f",
+      "packages/common/src/types/AvatarSize.ts": "sha256:1c9b15ff833f20dc0e02d6f3107173bc078b682e985087b6a230cf4b6bb56310",
+      "packages/web/package.json": "sha256:ca0ecd076b55efe0aee663a5b0ac2cf296119192d4f86cfdf1181f19efb84650",
+      "packages/web/src/media/Avatar.tsx": "sha256:9f0a5abf950e86fa6e3687f41c882bfc62899273b01b0db3d36d350f2272fba2",
+      "packages/web/src/media/Hexagon.tsx": "sha256:9bdc27228eebafe15420a74170758eef3f0c21ecf366502302d41fead15b085d",
+      "packages/web/src/media/RemoteImage.tsx": "sha256:6dbe10cd62f5fcd0d1a7ba23ad82787efd9666fc14ed901a538403b1d3ceabb2",
+      "packages/web/src/media/__figma__/Avatar.figma.ts": "sha256:37c03b4174f9122fe5bd26dd707fb59a63d114798b60ff0192653e50d3fa640a"
+    },
+    "snapshotId": "sha256:3eaae0917ca5671e05971d566467e00546a11a091d7c2654131829fd097b1ef3"
+  },
+  "axes": [
+    {
+      "key": "shape",
+      "label": "Shape",
+      "default": "circle",
+      "defaultSource": "packages/web/src/media/Avatar.tsx L151 destructured default shape = 'circle'",
+      "values": [
+        {
+          "key": "circle",
+          "label": "Circle",
+          "code": {
+            "shape": "circle"
+          }
+        },
+        {
+          "key": "square",
+          "label": "Square",
+          "code": {
+            "shape": "square"
+          }
+        },
+        {
+          "key": "hexagon",
+          "label": "Hexagon",
+          "code": {
+            "shape": "hexagon"
+          }
+        }
+      ]
+    },
+    {
+      "key": "size",
+      "label": "Size",
+      "default": "l",
+      "defaultSource": "packages/web/src/media/Avatar.tsx L152 destructured default size = 'l'",
+      "values": [
+        {
+          "key": "s",
+          "label": "S",
+          "code": {
+            "size": "s"
+          }
+        },
+        {
+          "key": "m",
+          "label": "M",
+          "code": {
+            "size": "m"
+          }
+        },
+        {
+          "key": "l",
+          "label": "L",
+          "code": {
+            "size": "l"
+          }
+        },
+        {
+          "key": "xl",
+          "label": "XL",
+          "code": {
+            "size": "xl"
+          }
+        },
+        {
+          "key": "xxl",
+          "label": "XXL",
+          "code": {
+            "size": "xxl"
+          }
+        },
+        {
+          "key": "xxxl",
+          "label": "XXXL",
+          "code": {
+            "size": "xxxl"
+          }
+        }
+      ]
+    },
+    {
+      "key": "content",
+      "label": "Content",
+      "default": "image",
+      "defaultSource": "packages/web/src/media/Avatar.tsx L248 RemoteImage when src is set or name is not; an Avatar with neither shows fallbackImageSrc (L253)",
+      "values": [
+        {
+          "key": "image",
+          "label": "Image",
+          "code": {
+            "name": null
+          }
+        },
+        {
+          "key": "initial",
+          "label": "Initial",
+          "code": {}
+        }
+      ]
+    },
+    {
+      "key": "colorScheme",
+      "label": "Color Scheme",
+      "default": "blue",
+      "defaultSource": "packages/web/src/media/Avatar.tsx L154 destructured default colorScheme = 'blue' (@default blue, L127)",
+      "values": [
+        {
+          "key": "blue",
+          "label": "Blue",
+          "code": {
+            "colorScheme": "blue"
+          }
+        },
+        {
+          "key": "teal",
+          "label": "Teal",
+          "code": {
+            "colorScheme": "teal"
+          }
+        },
+        {
+          "key": "purple",
+          "label": "Purple",
+          "code": {
+            "colorScheme": "purple"
+          }
+        },
+        {
+          "key": "pink",
+          "label": "Pink",
+          "code": {
+            "colorScheme": "pink"
+          }
+        },
+        {
+          "key": "green",
+          "label": "Green",
+          "code": {
+            "colorScheme": "green"
+          }
+        },
+        {
+          "key": "gray",
+          "label": "Gray",
+          "code": {
+            "colorScheme": "gray"
+          }
+        },
+        {
+          "key": "orange",
+          "label": "Orange",
+          "code": {
+            "colorScheme": "orange"
+          }
+        },
+        {
+          "key": "yellow",
+          "label": "Yellow",
+          "code": {
+            "colorScheme": "yellow"
+          }
+        },
+        {
+          "key": "indigo",
+          "label": "Indigo",
+          "code": {
+            "colorScheme": "indigo"
+          }
+        },
+        {
+          "key": "red",
+          "label": "Red",
+          "code": {
+            "colorScheme": "red"
+          }
+        },
+        {
+          "key": "chartreuse",
+          "label": "Chartreuse",
+          "code": {
+            "colorScheme": "chartreuse"
+          }
+        }
+      ]
+    },
+    {
+      "key": "selected",
+      "label": "Selected",
+      "default": "off",
+      "defaultSource": "packages/web/src/media/Avatar.tsx L156 selected is undefined unless set",
+      "values": [
+        {
+          "key": "off",
+          "label": "Off",
+          "code": {}
+        },
+        {
+          "key": "on",
+          "label": "On",
+          "code": {
+            "selected": true
+          }
+        }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [
+      {
+        "match": {
+          "content": "image",
+          "selected": "off",
+          "colorScheme": [
+            "teal",
+            "purple",
+            "pink",
+            "green",
+            "gray",
+            "orange",
+            "yellow",
+            "indigo",
+            "red",
+            "chartreuse"
+          ]
+        },
+        "reason": "twin: an image Avatar that is not selected paints no colour scheme, so each of these draws as its Blue tuple"
+      }
+    ],
+    "expectedCount": 612,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Avatar",
+    "type": "COMPONENT",
+    "children": [
+      {
+        "name": "Shape",
+        "type": "FRAME",
+        "children": [
+          {
+            "name": "Image",
+            "type": "FRAME"
+          },
+          {
+            "name": "Fallback",
+            "type": "FRAME",
+            "children": [
+              {
+                "name": "Initial",
+                "type": "TEXT",
+                "role": "label"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "properties": [
+    {
+      "key": "initial",
+      "label": "Initial",
+      "type": "TEXT",
+      "default": "A",
+      "binds": [
+        {
+          "node": "Initial",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "name"
+      }
+    }
+  ],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Avatar": {
+          "direction": "row",
+          "width": "hug",
+          "height": "hug",
+          "alignMain": "start",
+          "alignCross": "start",
+          "paddingTop": {
+            "token": "space-0"
+          },
+          "paddingRight": {
+            "token": "space-0"
+          },
+          "paddingBottom": {
+            "token": "space-0"
+          },
+          "paddingLeft": {
+            "token": "space-0"
+          },
+          "gap": {
+            "token": "space-0"
+          }
+        },
+        "Shape": {
+          "direction": "row",
+          "alignMain": "center",
+          "alignCross": "center",
+          "strokeWeight": {
+            "token": "borderWidth-100"
+          },
+          "strokeAlign": "inside"
+        },
+        "Image": {
+          "visible": true
+        },
+        "Fallback": {
+          "direction": "row",
+          "alignMain": "center",
+          "alignCross": "center",
+          "visible": true
+        },
+        "Initial": {
+          "textResize": "width-and-height",
+          "textStyle": {
+            "token": "body"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "s"
+      },
+      "set": {
+        "Shape": {
+          "width": {
+            "token": "avatarSize-s"
+          },
+          "height": {
+            "token": "avatarSize-s"
+          }
+        },
+        "Image": {
+          "width": {
+            "token": "avatarSize-s"
+          },
+          "height": {
+            "token": "avatarSize-s"
+          }
+        },
+        "Fallback": {
+          "width": {
+            "token": "avatarSize-s"
+          },
+          "height": {
+            "token": "avatarSize-s"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "m"
+      },
+      "set": {
+        "Shape": {
+          "width": {
+            "token": "avatarSize-m"
+          },
+          "height": {
+            "token": "avatarSize-m"
+          }
+        },
+        "Image": {
+          "width": {
+            "token": "avatarSize-m"
+          },
+          "height": {
+            "token": "avatarSize-m"
+          }
+        },
+        "Fallback": {
+          "width": {
+            "token": "avatarSize-m"
+          },
+          "height": {
+            "token": "avatarSize-m"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "l"
+      },
+      "set": {
+        "Shape": {
+          "width": {
+            "token": "avatarSize-l"
+          },
+          "height": {
+            "token": "avatarSize-l"
+          }
+        },
+        "Image": {
+          "width": {
+            "token": "avatarSize-l"
+          },
+          "height": {
+            "token": "avatarSize-l"
+          }
+        },
+        "Fallback": {
+          "width": {
+            "token": "avatarSize-l"
+          },
+          "height": {
+            "token": "avatarSize-l"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "xl"
+      },
+      "set": {
+        "Shape": {
+          "width": {
+            "token": "avatarSize-xl"
+          },
+          "height": {
+            "token": "avatarSize-xl"
+          }
+        },
+        "Image": {
+          "width": {
+            "token": "avatarSize-xl"
+          },
+          "height": {
+            "token": "avatarSize-xl"
+          }
+        },
+        "Fallback": {
+          "width": {
+            "token": "avatarSize-xl"
+          },
+          "height": {
+            "token": "avatarSize-xl"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "xxl"
+      },
+      "set": {
+        "Shape": {
+          "width": {
+            "token": "avatarSize-xxl"
+          },
+          "height": {
+            "token": "avatarSize-xxl"
+          }
+        },
+        "Image": {
+          "width": {
+            "token": "avatarSize-xxl"
+          },
+          "height": {
+            "token": "avatarSize-xxl"
+          }
+        },
+        "Fallback": {
+          "width": {
+            "token": "avatarSize-xxl"
+          },
+          "height": {
+            "token": "avatarSize-xxl"
+          }
+        },
+        "Initial": {
+          "textStyle": {
+            "token": "title2"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "xxxl"
+      },
+      "set": {
+        "Shape": {
+          "width": {
+            "token": "avatarSize-xxxl"
+          },
+          "height": {
+            "token": "avatarSize-xxxl"
+          }
+        },
+        "Image": {
+          "width": {
+            "token": "avatarSize-xxxl"
+          },
+          "height": {
+            "token": "avatarSize-xxxl"
+          }
+        },
+        "Fallback": {
+          "width": {
+            "token": "avatarSize-xxxl"
+          },
+          "height": {
+            "token": "avatarSize-xxxl"
+          }
+        },
+        "Initial": {
+          "textStyle": {
+            "token": "title2"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "shape": "circle"
+      },
+      "set": {
+        "Shape": {
+          "radius": {
+            "raw": 100,
+            "level": "warning",
+            "reason": "border-radius: 100% (packages/web/src/media/Avatar.tsx L92-L94). Figma has no percentage radius; 100 is over half of every Avatar size, so Figma draws the circle"
+          }
+        },
+        "Image": {
+          "radius": {
+            "token": "borderRadius-1000"
+          }
+        },
+        "Fallback": {
+          "radius": {
+            "raw": 100,
+            "level": "warning",
+            "reason": "border-radius: 100% (packages/web/src/media/Avatar.tsx L92-L94). Figma has no percentage radius; 100 is over half of every Avatar size, so Figma draws the circle"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "shape": "square"
+      },
+      "set": {
+        "Shape": {
+          "radius": {
+            "token": "borderRadius-100"
+          }
+        },
+        "Image": {
+          "radius": {
+            "token": "borderRadius-100"
+          }
+        },
+        "Fallback": {
+          "radius": {
+            "token": "borderRadius-100"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "shape": "hexagon"
+      },
+      "set": {
+        "Shape": {
+          "radius": {
+            "token": "borderRadius-0"
+          },
+          "strokeWeight": {
+            "token": "borderWidth-0"
+          }
+        },
+        "Image": {
+          "radius": {
+            "token": "borderRadius-0"
+          }
+        },
+        "Fallback": {
+          "radius": {
+            "token": "borderRadius-0"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "shape": [
+          "circle",
+          "square"
+        ],
+        "size": "s"
+      },
+      "set": {
+        "Fallback": {
+          "width": {
+            "raw": 14,
+            "level": "info",
+            "reason": "derived: avatarSize-s 16 less 2px. The Shape's 1px border (packages/web/src/media/Avatar.tsx L71) narrows the content wrapper inside it (L103-L112), and the fallback, a flex item with no min-width, shrinks to that width; a hexagon has no border (L83)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "shape": [
+          "circle",
+          "square"
+        ],
+        "size": "m"
+      },
+      "set": {
+        "Fallback": {
+          "width": {
+            "raw": 22,
+            "level": "info",
+            "reason": "derived: avatarSize-m 24 less 2px. The Shape's 1px border (packages/web/src/media/Avatar.tsx L71) narrows the content wrapper inside it (L103-L112), and the fallback, a flex item with no min-width, shrinks to that width; a hexagon has no border (L83)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "shape": [
+          "circle",
+          "square"
+        ],
+        "size": "l"
+      },
+      "set": {
+        "Fallback": {
+          "width": {
+            "raw": 30,
+            "level": "info",
+            "reason": "derived: avatarSize-l 32 less 2px. The Shape's 1px border (packages/web/src/media/Avatar.tsx L71) narrows the content wrapper inside it (L103-L112), and the fallback, a flex item with no min-width, shrinks to that width; a hexagon has no border (L83)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "shape": [
+          "circle",
+          "square"
+        ],
+        "size": "xl"
+      },
+      "set": {
+        "Fallback": {
+          "width": {
+            "raw": 38,
+            "level": "info",
+            "reason": "derived: avatarSize-xl 40 less 2px. The Shape's 1px border (packages/web/src/media/Avatar.tsx L71) narrows the content wrapper inside it (L103-L112), and the fallback, a flex item with no min-width, shrinks to that width; a hexagon has no border (L83)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "shape": [
+          "circle",
+          "square"
+        ],
+        "size": "xxl"
+      },
+      "set": {
+        "Fallback": {
+          "width": {
+            "raw": 46,
+            "level": "info",
+            "reason": "derived: avatarSize-xxl 48 less 2px. The Shape's 1px border (packages/web/src/media/Avatar.tsx L71) narrows the content wrapper inside it (L103-L112), and the fallback, a flex item with no min-width, shrinks to that width; a hexagon has no border (L83)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "shape": [
+          "circle",
+          "square"
+        ],
+        "size": "xxxl"
+      },
+      "set": {
+        "Fallback": {
+          "width": {
+            "raw": 54,
+            "level": "info",
+            "reason": "derived: avatarSize-xxxl 56 less 2px. The Shape's 1px border (packages/web/src/media/Avatar.tsx L71) narrows the content wrapper inside it (L103-L112), and the fallback, a flex item with no min-width, shrinks to that width; a hexagon has no border (L83)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "content": "image"
+      },
+      "set": {
+        "Fallback": {
+          "visible": false
+        }
+      }
+    },
+    {
+      "match": {
+        "content": "initial"
+      },
+      "set": {
+        "Image": {
+          "visible": false
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Avatar": {
+          "fill": "none",
+          "stroke": "none"
+        },
+        "Shape": {
+          "fill": "none",
+          "stroke": "none",
+          "effects": []
+        },
+        "Image": {
+          "fill": {
+            "token": "bgSecondary"
+          }
+        },
+        "Fallback": {
+          "fill": {
+            "token": "avatar-blue-color"
+          }
+        },
+        "Initial": {
+          "fill": {
+            "token": "fgInverse"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "blue"
+      },
+      "set": {
+        "Fallback": {
+          "fill": {
+            "token": "avatar-blue-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "teal"
+      },
+      "set": {
+        "Fallback": {
+          "fill": {
+            "token": "avatar-teal-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "purple"
+      },
+      "set": {
+        "Fallback": {
+          "fill": {
+            "token": "avatar-purple-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "pink"
+      },
+      "set": {
+        "Fallback": {
+          "fill": {
+            "token": "avatar-pink-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "green"
+      },
+      "set": {
+        "Fallback": {
+          "fill": {
+            "token": "avatar-green-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "gray"
+      },
+      "set": {
+        "Fallback": {
+          "fill": {
+            "token": "avatar-gray-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "orange"
+      },
+      "set": {
+        "Fallback": {
+          "fill": {
+            "token": "avatar-orange-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "yellow"
+      },
+      "set": {
+        "Fallback": {
+          "fill": {
+            "token": "avatar-yellow-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "indigo"
+      },
+      "set": {
+        "Fallback": {
+          "fill": {
+            "token": "avatar-indigo-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "red"
+      },
+      "set": {
+        "Fallback": {
+          "fill": {
+            "token": "avatar-red-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "chartreuse"
+      },
+      "set": {
+        "Fallback": {
+          "fill": {
+            "token": "avatar-chartreuse-color"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "blue",
+        "selected": "on"
+      },
+      "set": {
+        "Shape": {
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "x": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "y": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "blur": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no blur"
+              },
+              "spread": {
+                "raw": 2,
+                "level": "warning",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), a 2px spread with no token"
+              },
+              "color": {
+                "token": "avatar-blue-color"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "teal",
+        "selected": "on"
+      },
+      "set": {
+        "Shape": {
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "x": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "y": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "blur": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no blur"
+              },
+              "spread": {
+                "raw": 2,
+                "level": "warning",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), a 2px spread with no token"
+              },
+              "color": {
+                "token": "avatar-teal-color"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "purple",
+        "selected": "on"
+      },
+      "set": {
+        "Shape": {
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "x": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "y": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "blur": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no blur"
+              },
+              "spread": {
+                "raw": 2,
+                "level": "warning",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), a 2px spread with no token"
+              },
+              "color": {
+                "token": "avatar-purple-color"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "pink",
+        "selected": "on"
+      },
+      "set": {
+        "Shape": {
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "x": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "y": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "blur": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no blur"
+              },
+              "spread": {
+                "raw": 2,
+                "level": "warning",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), a 2px spread with no token"
+              },
+              "color": {
+                "token": "avatar-pink-color"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "green",
+        "selected": "on"
+      },
+      "set": {
+        "Shape": {
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "x": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "y": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "blur": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no blur"
+              },
+              "spread": {
+                "raw": 2,
+                "level": "warning",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), a 2px spread with no token"
+              },
+              "color": {
+                "token": "avatar-green-color"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "gray",
+        "selected": "on"
+      },
+      "set": {
+        "Shape": {
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "x": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "y": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "blur": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no blur"
+              },
+              "spread": {
+                "raw": 2,
+                "level": "warning",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), a 2px spread with no token"
+              },
+              "color": {
+                "token": "avatar-gray-color"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "orange",
+        "selected": "on"
+      },
+      "set": {
+        "Shape": {
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "x": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "y": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "blur": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no blur"
+              },
+              "spread": {
+                "raw": 2,
+                "level": "warning",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), a 2px spread with no token"
+              },
+              "color": {
+                "token": "avatar-orange-color"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "yellow",
+        "selected": "on"
+      },
+      "set": {
+        "Shape": {
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "x": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "y": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "blur": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no blur"
+              },
+              "spread": {
+                "raw": 2,
+                "level": "warning",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), a 2px spread with no token"
+              },
+              "color": {
+                "token": "avatar-yellow-color"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "indigo",
+        "selected": "on"
+      },
+      "set": {
+        "Shape": {
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "x": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "y": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "blur": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no blur"
+              },
+              "spread": {
+                "raw": 2,
+                "level": "warning",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), a 2px spread with no token"
+              },
+              "color": {
+                "token": "avatar-indigo-color"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "red",
+        "selected": "on"
+      },
+      "set": {
+        "Shape": {
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "x": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "y": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "blur": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no blur"
+              },
+              "spread": {
+                "raw": 2,
+                "level": "warning",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), a 2px spread with no token"
+              },
+              "color": {
+                "token": "avatar-red-color"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "colorScheme": "chartreuse",
+        "selected": "on"
+      },
+      "set": {
+        "Shape": {
+          "effects": [
+            {
+              "type": "drop-shadow",
+              "x": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "y": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no offset"
+              },
+              "blur": {
+                "raw": 0,
+                "level": "info",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), no blur"
+              },
+              "spread": {
+                "raw": 2,
+                "level": "warning",
+                "reason": "box-shadow: 0 0 0 2px currentColor (packages/web/src/media/Avatar.tsx L79), a 2px spread with no token"
+              },
+              "color": {
+                "token": "avatar-chartreuse-color"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "shape": "hexagon"
+      },
+      "set": {
+        "Shape": {
+          "effects": []
+        }
+      }
+    }
+  ],
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": [
+      {
+        "family": "Inter",
+        "styles": [
+          "Regular"
+        ]
+      }
+    ]
+  },
+  "figma": {
+    "page": "Avatars",
+    "componentSetName": "Avatar",
+    "description": "CDS Web Avatar (@coinbase/cds-web 9.29.0). The image is a placeholder fill, and a hexagon is drawn square.",
+    "header": {
+      "type": "Component",
+      "title": "Avatar",
+      "namespace": "@coinbase/cds-web"
+    },
+    "grid": {
+      "columns": [
+        "size"
+      ],
+      "rows": [
+        "shape",
+        "content",
+        "colorScheme",
+        "selected"
+      ]
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@coinbase/cds-web",
+    "component": "Avatar",
+    "import": "import { Avatar } from '@coinbase/cds-web/media';",
+    "alwaysEmit": []
+  },
+  "notes": [
+    {
+      "level": "info",
+      "at": "axes.content",
+      "message": "Avatar.tsx draws the RemoteImage when src is set or name is not, else the fallback Box with the initial (L248-L249). Image's code sets name to null: with no name and no src, Avatar draws its own fallbackImageSrc picture (L253), and the Initial property's name would draw the initial instead. In use, an image Avatar sets src (L116), a URL the Contract holds no property for. AvatarFallback in AvatarBaseProps.ts names the same two kinds, image and text (L6)."
+    },
+    {
+      "level": "info",
+      "at": "paint.Image.fill",
+      "message": "The Image is a placeholder fill, bgSecondary: RemoteImage draws a picture from a URL (RemoteImage.tsx L87-L143), which a Figma fill can't hold, so the designer replaces it with an image fill. bgSecondary is the agent's choice, a neutral surface colour; paint has no drafted-value key yet, so this note records it. The render comparison doesn't compare an img's fill."
+    },
+    {
+      "level": "info",
+      "at": "layout[shape=hexagon].Shape",
+      "message": "CDS clips a hexagon Avatar to the hexagonShapePath (shape.ts L1-L2) with clip-path: url(#${hexagonAvatarClipId}) and drops its border and ring (Avatar.tsx L82-L88). The clip path is mounted once by the PortalProvider (Hexagon.tsx L20-L39). The Contract schema has no vector layer, so Shape=Hexagon draws a square with border-radius: 0 (Avatar.tsx L98-L100) and no stroke; replace it with the hexagon path in Figma. The preview renders without a PortalProvider, so its hexagon specimens are unclipped squares too."
+    },
+    {
+      "level": "info",
+      "at": "paint[selected=on].Shape.effects",
+      "message": "Selected draws box-shadow: 0 0 0 2px currentColor (Avatar.tsx L77-L80), a 2px ring outside the Shape in the colour scheme's colour, which wrapperCss sets as the wrapper's color (L21-L66). The Contract draws it as a drop shadow with spread 2 and no blur. A hexagon Avatar has box-shadow: none (L82-L85) and draws its ring with an offset HexagonBorder instead (L271-L273), a 2px hexagon stroke 2px outside it (Hexagon.tsx L65-L78), which the Contract doesn't draw: Shape=Hexagon with Selected=On has no ring."
+    },
+    {
+      "level": "info",
+      "at": "layout.Shape.strokeWeight",
+      "message": "avatarCss gives every Avatar but a hexagon a 1px solid border in --avatar-borderColor (Avatar.tsx L71), which is var(--color-transparent) unless borderColor is set and the picture shows (L207, L218-L220). The Contract draws it as a 1px inside stroke with no paint. In CSS the border also insets the overflow: hidden clip by 1px (L69), so the picture and the fallback show inside a 1px transparent ring; a Figma frame clips at its edge, so in Figma they reach the Shape's edge. The fallback also shrinks to the width inside the border, so its Contract width is 2px less than its height."
+    },
+    {
+      "level": "info",
+      "at": "family",
+      "message": "borderColor takes any Theme colour (Avatar.tsx L124) and draws a 2px border in it (L73-L75), or a HexagonBorder on a hexagon (L274-L276): an open colour, not a finite axis, so the Contract draws no border. dangerouslySetSize is @deprecated (L136-L142) and only scales the initial (L175-L189); a style width or height overrides the size (L165). alt is the image's alternative text (L135). None is an axis."
+    },
+    {
+      "level": "info",
+      "at": "axes.colorScheme",
+      "message": "A colour scheme paints only what uses currentColor: the fallback's background (Avatar.tsx L259) and the selected ring (L79). An image Avatar that is not selected draws alike in all eleven, so selection.omit leaves out the 180 that aren't Blue, the default. The eleven are wrapperCss's (L21-L66) and colorSchemeMap's (avatar.ts L4-L16); the docs examples show six (_webExamples.mdx L71-L84)."
+    },
+    {
+      "level": "info",
+      "at": "code",
+      "message": "CDS's own Code Connect file (Avatar.figma.ts) names the hexagon shape polygon (L10-L14), maps four Figma variants, image, initial, NFT and fallback (L26-L31), and seven colour schemes (L34-L42). The Contract follows Avatar.tsx: the three shapes of AvatarShape (AvatarBaseProps.ts L5), two contents (an NFT is an image with a src, and the fallback is the image with none), and the eleven colour schemes of wrapperCss."
+    },
+    {
+      "level": "info",
+      "at": "layout.Initial.textStyle",
+      "message": "The initial is name.charAt(0) (Avatar.tsx L169) in the body font, or title2 at the largeStandardSizes xxl and xxxl (L191-L198), in fgInverse, uppercased (L196-L200). A Text Style has no text case, so the Initial property holds the letter as it shows, and its code prop is name."
+    },
+    {
+      "level": "info",
+      "at": "layout.Shape.alignMain",
+      "message": "The content wrapper is absolute at inset 0 and centres the picture or fallback with display: flex (Avatar.tsx L103-L112). It draws nothing, so the Contract has no layer for it: the Shape centres its child."
+    }
+  ],
+  "drafted": {
+    "axes.content.label": {
+      "by": "agent",
+      "evidence": [
+        "Avatar.tsx:L248 the content: RemoteImage when src or no name, else the fallback",
+        "Avatar.figma.ts:L26-L31 CDS's Figma variant enum: image, initial, NFT, fallback"
+      ],
+      "fingerprint": "sha256:69af487ab87df48dda3b16c183f65f8f63ba0f9e57ff2dfa0f6c64a89e5a68c4"
+    },
+    "axes.content.values.image.label": {
+      "by": "agent",
+      "evidence": [
+        "Avatar.tsx:L248-L254 RemoteImage, source src or fallbackImageSrc",
+        "Avatar.figma.ts:L27 image"
+      ],
+      "fingerprint": "sha256:69af487ab87df48dda3b16c183f65f8f63ba0f9e57ff2dfa0f6c64a89e5a68c4"
+    },
+    "axes.content.values.initial.label": {
+      "by": "agent",
+      "evidence": [
+        "Avatar.tsx:L168-L169 placeholderLetter = name?.charAt(0)",
+        "Avatar.figma.ts:L28 initial"
+      ],
+      "fingerprint": "sha256:69af487ab87df48dda3b16c183f65f8f63ba0f9e57ff2dfa0f6c64a89e5a68c4"
+    },
+    "axes.selected.label": {
+      "by": "agent",
+      "evidence": [
+        "Avatar.tsx:L132-L133 selected?: boolean, the selected treatment"
+      ],
+      "fingerprint": "sha256:f5c8fca1bcc96de31d810d0d4876419a1bcf375d92ac50424c7ace82324ff08f"
+    },
+    "axes.selected.values.off.label": {
+      "by": "agent",
+      "evidence": [
+        "Avatar.tsx:L156 selected is undefined unless set"
+      ],
+      "fingerprint": "sha256:f5c8fca1bcc96de31d810d0d4876419a1bcf375d92ac50424c7ace82324ff08f"
+    },
+    "axes.selected.values.on.label": {
+      "by": "agent",
+      "evidence": [
+        "Avatar.tsx:L77-L80 data-selected='true' draws the box-shadow ring"
+      ],
+      "fingerprint": "sha256:f5c8fca1bcc96de31d810d0d4876419a1bcf375d92ac50424c7ace82324ff08f"
+    },
+    "anatomy.Shape": {
+      "by": "agent",
+      "evidence": [
+        "Avatar.tsx:L235-L245 the Box with avatarCss and borderRadiusCss[shape], sized by avatarInlineStyles"
+      ],
+      "fingerprint": "sha256:3dafd26250cbba899941fff5407105822d2caab456cb50c5647e7ac8a82272e2"
+    },
+    "anatomy.Image": {
+      "by": "agent",
+      "evidence": [
+        "Avatar.tsx:L249-L254 the RemoteImage, sized by dimensionProps"
+      ],
+      "fingerprint": "sha256:544ebc9c8eff30bed38ef2d9e4d29c04f71c1ccd97e4794baaa69e6499ecf458"
+    },
+    "anatomy.Fallback": {
+      "by": "agent",
+      "evidence": [
+        "Avatar.tsx:L256-L266 the Box with background currentColor and borderRadiusCss[shape]"
+      ],
+      "fingerprint": "sha256:ba087323d03e9e0e498bdc2aca9cbd4021e3893975e92a3208cfa91a835b05c3"
+    },
+    "anatomy.Initial": {
+      "by": "agent",
+      "evidence": [
+        "Avatar.tsx:L194-L203 the Text holding placeholderLetter, color fgInverse"
+      ],
+      "fingerprint": "sha256:ba087323d03e9e0e498bdc2aca9cbd4021e3893975e92a3208cfa91a835b05c3"
+    },
+    "properties.initial.label": {
+      "by": "agent",
+      "evidence": [
+        "Avatar.figma.ts:L8 getString('initial'), the Figma text CDS maps to name",
+        "Avatar.tsx:L169 placeholderLetter = name?.charAt(0)"
+      ],
+      "fingerprint": "sha256:e4a8f42e88bc9e7efea1173efe87c40b49267dc435e3b3ce42bac23aeade486b"
+    },
+    "properties.initial.default": {
+      "by": "agent",
+      "evidence": [
+        "Avatar.tsx:L130-L131 name?: string, no default",
+        "_webExamples.mdx:L34 name=\"Alice\", the first name example, whose initial is A"
+      ],
+      "fingerprint": "sha256:900e322cc5069a1ec08d68a85536a6e133f750d14773eeed291ea81a0699bc7e"
+    },
+    "layout.Shape.alignMain": {
+      "by": "agent",
+      "evidence": [
+        "Avatar.tsx:L103-L112 contentWrapperCss: absolute, inset 0, display flex, justify-content center"
+      ],
+      "fingerprint": "sha256:e47e3206d85725897c7c9ddde4dbdde347687191666e51f01bd1c32c737072f0"
+    },
+    "figma.grid": {
+      "by": "agent",
+      "evidence": [
+        "AvatarSize.ts:L1 AvatarSize, one column per size",
+        "AvatarBaseProps.ts:L5 AvatarShape circle, square and hexagon"
+      ],
+      "fingerprint": "sha256:7d75607e7b90d82770f071ff3b489941be265343bd8db40f039ae8c1b0ea1383"
+    },
+    "family.description": {
+      "by": "agent",
+      "evidence": [
+        "Avatar.tsx:L114-L143 the src, shape, size, colorScheme, name and selected props"
+      ],
+      "fingerprint": "sha256:7d75607e7b90d82770f071ff3b489941be265343bd8db40f039ae8c1b0ea1383"
+    }
+  }
+}

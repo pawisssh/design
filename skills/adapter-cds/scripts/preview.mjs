@@ -23,7 +23,7 @@
 // preview/package.json and its lockfile, installed with `npm ci --ignore-scripts` into gitignored scratch, so
 // nothing from a package runs at install. Downloads are untrusted data; only the bundle runs them, here, to render.
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -118,7 +118,9 @@ async function bundle(dir, specifier, component) {
       build.onLoad({ filter: /.*/, namespace: 'cds-css' }, () => ({ contents: '', loader: 'js' }));
     },
   };
-  const outfile = join(dir, '.bundle', `${specifier.replace(/[^\w]+/g, '_')}.cjs`);
+  // One file per component and process: Radio and Switch share `@coinbase/cds-web/controls`, and node --test renders
+  // them in parallel processes, so a file per subpath let one load the other's bundle (#478).
+  const outfile = join(dir, '.bundle', `${specifier.replace(/[^\w]+/g, '_')}-${component}-${process.pid}.cjs`);
   const { metafile } = await esbuild.build({
     stdin: { contents: entry, resolveDir: dir, sourcefile: 'cds-preview-entry.js' }, absWorkingDir: dir,
     bundle: true, platform: 'node', format: 'cjs', outfile, metafile: true, logLevel: 'silent',
@@ -139,7 +141,9 @@ async function bundle(dir, specifier, component) {
   };
   visit('cds-preview-entry.js');
   delete require.cache[outfile];
-  return { lib: require(outfile), css };
+  const lib = require(outfile);
+  rmSync(outfile);
+  return { lib, css };
 }
 
 /** The renderer for one CDS Contract. Rejects when the installed packages differ from the Contract's pins. */

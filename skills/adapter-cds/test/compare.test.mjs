@@ -75,6 +75,7 @@ class El {
   constructor(cls, opts = {}, kids = []) {
     Object.assign(this, { cls, tag: opts.tag, attrs: opts.attrs || {}, own: opts.style || {}, text: opts.text, kids, w: opts.w || 0, h: opts.h || 0 });
   }
+  get tagName() { return (this.tag || 'div').toUpperCase(); }
   getAttribute(n) { return n === 'class' ? this.cls : n in this.attrs ? this.attrs[n] : null; }
   setAttribute(n, v) { if (n === 'class') this.cls = v; }
   get classList() {
@@ -170,6 +171,29 @@ test('probe: a layer the Contract hides must have no element, and its children a
     'primary|xs light Spinner.visible: page true, Contract false', 'primary|xs dark Spinner.visible: page true, Contract false']);
   assert.deepEqual(probe(withSpinner(), ...Object.values(page())).mismatches, [
     'primary|xs light Spinner: no element spinnerContainerCss', 'primary|xs dark Spinner: no element spinnerContainerCss']);
+});
+
+// in (#478): Avatar's Fallback carries only a member of the Record borderRadiusCss, one per shape, and its Image is an
+// <img>, whose fill is its picture.
+test('probe: a Record entry is found by any of its members\' classes, and an <img>\'s fill is not compared', () => {
+  const avatar = (shape, img) => fakePage({ [shape]: () => new El(`cds-Avatar wrapperCss-w1`, {}, [
+    new El(`avatarCss-a1 ${shape}-r1`, { w: 32, h: 32 }, [new El('contentWrapperCss-c1', {}, [img
+      ? new El(`cds-RemoteImage ${shape}-r2`, { tag: 'img', w: 32, h: 32 })
+      : new El(`${shape}-r1`, { w: 32, h: 32, style: { backgroundColor: 'rgb(0, 82, 255)' } }, [new El('', { tag: 'p', text: 'A' })])])])]) });
+  const layers = [{ name: 'Avatar', type: 'COMPONENT', parent: null, entry: 'cds-Avatar', className: 'cds-Avatar' },
+    { name: 'Shape', type: 'FRAME', parent: 'Avatar', entry: 'avatarCss', className: 'avatarCss-a1', drawnInParent: false },
+    { name: 'Image', type: 'FRAME', parent: 'Shape', entry: 'cds-RemoteImage', className: 'cds-RemoteImage', drawnInParent: false },
+    { name: 'Fallback', type: 'FRAME', parent: 'Shape', entry: 'borderRadiusCss', className: ['circle-r1', 'square-r1'], drawnInParent: false }];
+  const want = img => ({ Shape: { width: 32 }, Image: img ? { fill: '#0052ff', width: 32 } : null, Fallback: img ? null : { fill: '#0052ff', width: 32 } });
+  const spec = (shape, img) => ({ collection: 'theme', modes: ['light', 'dark'], layers, expected: { [shape]: { light: want(img), dark: want(img) } } });
+  for (const shape of ['circle', 'square']) {
+    assert.deepEqual(probe(spec(shape, false), ...Object.values(avatar(shape, false))), { checked: 2, mismatches: [] }, shape);
+    assert.deepEqual(probe(spec(shape, true), ...Object.values(avatar(shape, true))), { checked: 2, mismatches: [] }, shape);
+  }
+  // a <div> in the Image's place is read by its background
+  const div = fakePage({ circle: () => new El('cds-Avatar', {}, [new El('avatarCss-a1', { w: 32, h: 32 }, [new El('cds-RemoteImage', { w: 32, h: 32 })])]) });
+  assert.deepEqual(probe(spec('circle', true), ...Object.values(div)).mismatches,
+    ['circle light Image.fill: page none, Contract #0052ff', 'circle dark Image.fill: page none, Contract #0052ff']);
 });
 
 test('probe: a filled <circle> with no stroke is 2r wide, its 1px default stroke-width unpainted (#475)', () => {

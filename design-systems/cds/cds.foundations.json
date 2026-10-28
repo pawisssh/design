@@ -38,6 +38,11 @@
   "closure": {
     "contracts": [
       {
+        "family": "avatar",
+        "path": "design-systems/cds/contracts/avatar.component.json",
+        "snapshotId": "sha256:3eaae0917ca5671e05971d566467e00546a11a091d7c2654131829fd097b1ef3"
+      },
+      {
         "family": "button",
         "path": "design-systems/cds/contracts/button.component.json",
         "snapshotId": "sha256:c50a72ac673639dbc18069b83cdbf7e6df76c979098a768075de2fc3703d3697"
@@ -64,14 +69,33 @@
       }
     ],
     "tokens": [
+      "avatar-blue-color",
+      "avatar-chartreuse-color",
+      "avatar-gray-color",
+      "avatar-green-color",
+      "avatar-indigo-color",
+      "avatar-orange-color",
+      "avatar-pink-color",
+      "avatar-purple-color",
+      "avatar-red-color",
+      "avatar-teal-color",
+      "avatar-yellow-color",
+      "avatarSize-l",
+      "avatarSize-m",
+      "avatarSize-s",
+      "avatarSize-xl",
+      "avatarSize-xxl",
+      "avatarSize-xxxl",
       "bg",
       "bgLine",
       "bgLineHeavy",
       "bgNegative",
       "bgPositive",
       "bgPrimary",
+      "bgSecondary",
       "bgTertiary",
       "body",
+      "borderRadius-0",
       "borderRadius-100",
       "borderRadius-1000",
       "borderRadius-700",
@@ -173,7 +197,8 @@
       "tag-low-red-background",
       "tag-low-red-color",
       "tag-low-yellow-background",
-      "tag-low-yellow-color"
+      "tag-low-yellow-color",
+      "title2"
     ]
   },
   "collections": [
@@ -4230,6 +4255,281 @@
       },
       "usedBy": []
     },
+    "avatar-blue-color": {
+      "collection": "theme",
+      "name": "Avatar/avatar-blue-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/avatar.ts#colorSchemeMap.blue",
+      "scopes": [
+        "FRAME_FILL",
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-blue60",
+          "resolved": "#0052ff"
+        },
+        "dark": {
+          "alias": "dark-blue60",
+          "resolved": "#3773f5"
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ],
+      "family": "avatar"
+    },
+    "avatar-chartreuse-color": {
+      "collection": "theme",
+      "name": "Avatar/avatar-chartreuse-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/avatar.ts#colorSchemeMap.chartreuse",
+      "scopes": [
+        "FRAME_FILL",
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-chartreuse60",
+          "resolved": "#359730"
+        },
+        "dark": {
+          "alias": "dark-chartreuse60",
+          "resolved": "#8cd188"
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ],
+      "family": "avatar"
+    },
+    "avatar-gray-color": {
+      "collection": "theme",
+      "name": "Avatar/avatar-gray-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/avatar.ts#colorSchemeMap.gray",
+      "scopes": [
+        "FRAME_FILL",
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-gray60",
+          "resolved": "#5b616e"
+        },
+        "dark": {
+          "alias": "dark-gray60",
+          "resolved": "#8a919e"
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ],
+      "family": "avatar"
+    },
+    "avatar-green-color": {
+      "collection": "theme",
+      "name": "Avatar/avatar-green-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/avatar.ts#colorSchemeMap.green",
+      "scopes": [
+        "FRAME_FILL",
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-green60",
+          "resolved": "#098551"
+        },
+        "dark": {
+          "alias": "dark-green60",
+          "resolved": "#27ad75"
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ],
+      "family": "avatar"
+    },
+    "avatar-indigo-color": {
+      "collection": "theme",
+      "name": "Avatar/avatar-indigo-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/avatar.ts#colorSchemeMap.indigo",
+      "scopes": [
+        "FRAME_FILL",
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-indigo60",
+          "resolved": "#425be9"
+        },
+        "dark": {
+          "alias": "dark-indigo60",
+          "resolved": "#798af5"
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ],
+      "family": "avatar"
+    },
+    "avatar-orange-color": {
+      "collection": "theme",
+      "name": "Avatar/avatar-orange-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/avatar.ts#colorSchemeMap.orange",
+      "scopes": [
+        "FRAME_FILL",
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-orange60",
+          "resolved": "#cf470e"
+        },
+        "dark": {
+          "alias": "dark-orange60",
+          "resolved": "#f07836"
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ],
+      "family": "avatar"
+    },
+    "avatar-pink-color": {
+      "collection": "theme",
+      "name": "Avatar/avatar-pink-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/avatar.ts#colorSchemeMap.pink",
+      "scopes": [
+        "FRAME_FILL",
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-pink60",
+          "resolved": "#b33aa2"
+        },
+        "dark": {
+          "alias": "dark-pink60",
+          "resolved": "#e175d6"
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ],
+      "family": "avatar"
+    },
+    "avatar-purple-color": {
+      "collection": "theme",
+      "name": "Avatar/avatar-purple-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/avatar.ts#colorSchemeMap.purple",
+      "scopes": [
+        "FRAME_FILL",
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-purple60",
+          "resolved": "#8a55e9"
+        },
+        "dark": {
+          "alias": "dark-purple60",
+          "resolved": "#cd99fd"
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ],
+      "family": "avatar"
+    },
+    "avatar-red-color": {
+      "collection": "theme",
+      "name": "Avatar/avatar-red-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/avatar.ts#colorSchemeMap.red",
+      "scopes": [
+        "FRAME_FILL",
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-red60",
+          "resolved": "#cf202f"
+        },
+        "dark": {
+          "alias": "dark-red60",
+          "resolved": "#f0616d"
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ],
+      "family": "avatar"
+    },
+    "avatar-teal-color": {
+      "collection": "theme",
+      "name": "Avatar/avatar-teal-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/avatar.ts#colorSchemeMap.teal",
+      "scopes": [
+        "FRAME_FILL",
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-teal60",
+          "resolved": "#007bb3"
+        },
+        "dark": {
+          "alias": "dark-teal60",
+          "resolved": "#00aadf"
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ],
+      "family": "avatar"
+    },
+    "avatar-yellow-color": {
+      "collection": "theme",
+      "name": "Avatar/avatar-yellow-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/avatar.ts#colorSchemeMap.yellow",
+      "scopes": [
+        "FRAME_FILL",
+        "EFFECT_COLOR"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-yellow60",
+          "resolved": "#ae7100"
+        },
+        "dark": {
+          "alias": "dark-yellow60",
+          "resolved": "#debd17"
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ],
+      "family": "avatar"
+    },
     "bg": {
       "collection": "theme",
       "name": "Background/bg",
@@ -4720,7 +5020,9 @@
           "resolved": "#282b31"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "avatar"
+      ]
     },
     "bgSecondaryWash": {
       "collection": "theme",
@@ -5843,6 +6145,7 @@
         }
       },
       "usedBy": [
+        "avatar",
         "checkbox"
       ]
     },
@@ -9952,6 +10255,126 @@
       ],
       "family": "switch"
     },
+    "avatarSize-l": {
+      "collection": "layout",
+      "name": "Avatar size/avatarSize-l",
+      "type": "FLOAT",
+      "source": "packages/web/src/themes/defaultTheme.ts#avatarSize.l",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--avatarSize-l)"
+      },
+      "values": {
+        "default": {
+          "value": 32
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ]
+    },
+    "avatarSize-m": {
+      "collection": "layout",
+      "name": "Avatar size/avatarSize-m",
+      "type": "FLOAT",
+      "source": "packages/web/src/themes/defaultTheme.ts#avatarSize.m",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--avatarSize-m)"
+      },
+      "values": {
+        "default": {
+          "value": 24
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ]
+    },
+    "avatarSize-s": {
+      "collection": "layout",
+      "name": "Avatar size/avatarSize-s",
+      "type": "FLOAT",
+      "source": "packages/web/src/themes/defaultTheme.ts#avatarSize.s",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--avatarSize-s)"
+      },
+      "values": {
+        "default": {
+          "value": 16
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ]
+    },
+    "avatarSize-xl": {
+      "collection": "layout",
+      "name": "Avatar size/avatarSize-xl",
+      "type": "FLOAT",
+      "source": "packages/web/src/themes/defaultTheme.ts#avatarSize.xl",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--avatarSize-xl)"
+      },
+      "values": {
+        "default": {
+          "value": 40
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ]
+    },
+    "avatarSize-xxl": {
+      "collection": "layout",
+      "name": "Avatar size/avatarSize-xxl",
+      "type": "FLOAT",
+      "source": "packages/web/src/themes/defaultTheme.ts#avatarSize.xxl",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--avatarSize-xxl)"
+      },
+      "values": {
+        "default": {
+          "value": 48
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ]
+    },
+    "avatarSize-xxxl": {
+      "collection": "layout",
+      "name": "Avatar size/avatarSize-xxxl",
+      "type": "FLOAT",
+      "source": "packages/web/src/themes/defaultTheme.ts#avatarSize.xxxl",
+      "scopes": [
+        "WIDTH_HEIGHT"
+      ],
+      "codeSyntax": {
+        "WEB": "var(--avatarSize-xxxl)"
+      },
+      "values": {
+        "default": {
+          "value": 56
+        }
+      },
+      "usedBy": [
+        "avatar"
+      ]
+    },
     "borderRadius-0": {
       "collection": "layout",
       "name": "Border radius/borderRadius-0",
@@ -9968,7 +10391,9 @@
           "value": 0
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "avatar"
+      ]
     },
     "borderRadius-100": {
       "collection": "layout",
@@ -9987,6 +10412,7 @@
         }
       },
       "usedBy": [
+        "avatar",
         "checkbox",
         "tag"
       ]
@@ -10008,6 +10434,7 @@
         }
       },
       "usedBy": [
+        "avatar",
         "radio",
         "switch",
         "tag"
@@ -10178,6 +10605,7 @@
         }
       },
       "usedBy": [
+        "avatar",
         "button"
       ]
     },
@@ -10198,6 +10626,7 @@
         }
       },
       "usedBy": [
+        "avatar",
         "checkbox",
         "radio",
         "switch"
@@ -10488,6 +10917,7 @@
         }
       },
       "usedBy": [
+        "avatar",
         "checkbox",
         "switch"
       ]
@@ -10782,6 +11212,7 @@
         }
       },
       "usedBy": [
+        "avatar",
         "checkbox",
         "radio",
         "switch"
@@ -10982,7 +11413,9 @@
           "from": "var(--defaultFont-sans), the first family of --defaultFont-sans in @coinbase/cds-web esm/styles/defaultFont.css"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "avatar"
+      ]
     },
     "fontFamily-title3": {
       "collection": "type",
@@ -11040,6 +11473,7 @@
         }
       },
       "usedBy": [
+        "avatar",
         "checkbox",
         "radio",
         "switch"
@@ -11240,7 +11674,9 @@
           "from": "1.75rem x 16"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "avatar"
+      ]
     },
     "fontSize-title3": {
       "collection": "type",
@@ -11297,6 +11733,7 @@
         }
       },
       "usedBy": [
+        "avatar",
         "checkbox",
         "radio",
         "switch"
@@ -11487,7 +11924,9 @@
           "value": 400
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "avatar"
+      ]
     },
     "fontWeight-title3": {
       "collection": "type",
@@ -11543,6 +11982,7 @@
         }
       },
       "usedBy": [
+        "avatar",
         "checkbox",
         "radio",
         "switch"
@@ -11743,7 +12183,9 @@
           "from": "2.25rem x 16"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "avatar"
+      ]
     },
     "lineHeight-title3": {
       "collection": "type",
@@ -11807,6 +12249,7 @@
         "lineHeight": "lineHeight-body"
       },
       "usedBy": [
+        "avatar",
         "checkbox",
         "radio",
         "switch"
@@ -12047,7 +12490,9 @@
         "fontWeight": "fontWeight-title2",
         "lineHeight": "lineHeight-title2"
       },
-      "usedBy": []
+      "usedBy": [
+        "avatar"
+      ]
     },
     "title3": {
       "name": "Title/title3",
@@ -12103,16 +12548,16 @@
         "@coinbase/cds-web/esm/themes/defaultTheme.js": "sha256:bcbd93757f09a3fb7be2491e8b00c296749e36299d32370849c2387e8a9b19b6",
         "@coinbase/cds-web/esm/core/createThemeCssVars.js": "sha256:d78db91592b99f8d53ce0a1dff419ba141c51f6107d7c3bb05ca819d3e2ee297",
         "@coinbase/cds-common/esm/color/getBlendedColor.js": "sha256:16cf385834c79cb1dd5b273098c26587a7f789d27648bf8aa50338c9cbbad9dc",
+        "@coinbase/cds-common/esm/tokens/avatar.js": "sha256:163348ea10e13ef86afabe79451815e1e58c78df688f881bf73eace6030bc382",
         "@coinbase/cds-common/esm/tokens/button.js": "sha256:d6fe0f4cd49b7b6431f4e1265a2a86f45d915335eca817c0f389387b264eec9c",
         "@coinbase/cds-common/esm/tokens/interactable.js": "sha256:cf9d0fd9a4731f1a3e015efdb7483de505fdcd67995388c6c336866a05fab4f3",
         "@coinbase/cds-common/esm/tokens/tags.js": "sha256:2b40d8275e1a1608c0f083236a9d1442b404f5a76e888bd264540e0bbc8c75b1"
       },
-      "matched": 844,
+      "matched": 878,
       "missing": [],
       "differs": [],
       "excluded": {
         "activeColorScheme": 1,
-        "avatarSize": 6,
         "currentColor": 1,
         "darkColor": 43,
         "fontFamilyMono": 13,
@@ -12129,7 +12574,7 @@
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
-      "contracts": 5,
+      "contracts": 6,
       "errors": 0
     }
   },
@@ -12153,6 +12598,11 @@
       "level": "info",
       "at": "variables.switch-*",
       "message": "switch has no component token map: @coinbase/cds-common@9.29.0 has no esm/tokens/switch.js, so the document carries no switch component tokens or state blends from one."
+    },
+    {
+      "level": "info",
+      "at": "variables.avatar-*",
+      "message": "avatar's token map (packages/common/src/tokens/avatar.ts) is colorSchemeMap: each colour scheme names the spectrum colour Avatar paints with, rgb(var(--<colour>)) in the active scheme. Each avatar-<scheme>-color aliases that colour's Light or Dark Primitive per Mode, scoped to the frame fills and effects that paint it as currentColor. CDS emits no custom property for it, so codeSyntax is empty."
     },
     {
       "level": "info",
@@ -12182,17 +12632,12 @@
     {
       "level": "info",
       "at": "variables.iconSize-*",
-      "message": "The schema has no Icon size or Control size group for CDS; they take the Size scope WIDTH_HEIGHT, as Carbon's Icon size does."
+      "message": "The schema has no Icon size, Control size or Avatar size group for CDS; they take the Size scope WIDTH_HEIGHT, as Carbon's Icon size does."
     },
     {
       "level": "info",
       "at": "variables",
       "message": "Shadow (elevation1, elevation2) is not carried: the Foundations document holds variables and Text Styles, not effect styles."
-    },
-    {
-      "level": "info",
-      "at": "variables",
-      "message": "avatarSize is not carried: Avatar is not a family this document serves."
     },
     {
       "level": "info",

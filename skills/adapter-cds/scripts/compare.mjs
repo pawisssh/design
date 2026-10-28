@@ -8,9 +8,9 @@
 // which returns {checked, mismatches: ['<tuple> <mode> <layer>.<field>: page <value>, Contract <value>']}.
 //
 // A layer's element is found by its node map entry inside its parent's element: a `cds-` entry is that static class,
-// any other a Linaria literal, found by its compiled class in the family's stylesheet. Compared, as the page computes
-// them:
-//   fill          background-color, or color on a TEXT layer;
+// any other a Linaria literal, found by its compiled class in the family's stylesheet (a Record of literals by any of
+// its members' classes). Compared, as the page computes them:
+//   fill          background-color, or color on a TEXT layer; not on an <img>, whose fill is its picture;
 //   opacity       opacity, 0 on a TEXT layer whose text is visibility: hidden (loading keeps the label's width);
 //   stroke        outline color and width when strokeAlign is outside (the focus ring), else border width, and the
 //                 border colour when the Contract strokes;
@@ -27,7 +27,7 @@ import { expand, resolve, tupleKey } from '../../contract/scripts/contract.mjs';
 import { convert } from '../../contract/scripts/color.mjs';
 import { foundationsPathFor, readJson } from '../../contract/scripts/io.mjs';
 import { valueAt } from '../../to-design/scripts/foundations-value.mjs';
-import { familyTsx } from './fingerprints.mjs';
+import { familyTsx, literalRecords, readContractSources } from './fingerprints.mjs';
 import { CDS, DEFAULT_DIR, readSources } from './sources.mjs';
 
 const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -61,19 +61,30 @@ export function literalClasses(css) {
   return out;
 }
 
-/** literalClasses of the family's compiled stylesheet, read from the fetched cds-web package with its hashes checked. */
+/**
+ * literalClasses of the family's compiled stylesheet, read from the fetched cds-web package with its hashes checked,
+ * and each Record of literals in the family's TSX as its members' classes (in #478: Avatar's `borderRadiusCss`, one
+ * of `circle-…`, `square-…`, `hexagon-…` per shape).
+ */
 export function compiledClasses(contract, dir = DEFAULT_DIR) {
   const path = `package/${compiledCssPath(contract)}`;
   const web = readSources(dir, { ...CDS, files: {}, packages: { [WEB]: CDS.packages[WEB] } }).packages[WEB];
   if (!web.members.includes(path)) throw new Error(`no ${path} in ${WEB}@${CDS.packages[WEB].version}`);
-  return literalClasses(readFileSync(join(web.dir, path), 'utf8'));
+  const out = literalClasses(readFileSync(join(web.dir, path), 'utf8'));
+  const tsx = readContractSources(contract, dir)[familyTsx(contract, Object.keys(contract.source.files))];
+  for (const [name, members] of Object.entries(literalRecords(tsx))) {
+    const missing = Object.keys(members).filter(m => !out[m]);
+    if (missing.length) throw new Error(`${name}: no compiled class for ${missing.join(', ')} in ${path}`);
+    out[name] = Object.keys(members).map(m => out[m]);
+  }
+  return out;
 }
 
 /**
  * expectations({contract, nodes, foundations, classes}) -> {collection, modes, layers, expected}: what the probe looks
- * for and what it should find. `classes` is {literal: class}, from compiledClasses. `layers` is
+ * for and what it should find. `classes` is {literal: class, or [class] for a Record}, from compiledClasses. `layers` is
  * [{name, type, parent, entry, className, drawnInParent, nth}] in anatomy order, `className` the class that finds the
- * element (the static class as written, a literal's compiled class), `nth` an ELLIPSE's index among its parent's
+ * element (the static class as written, a literal's compiled class, a Record's list of them), `nth` an ELLIPSE's index among its parent's
  * ELLIPSE children; `expected` is
  * {<tuple key>: {<mode>: {<layer>: {<field>: value} | null}}}, a colour as colorKey writes it, a length in px, and
  * null for a layer the tuple hides.
@@ -153,6 +164,7 @@ export function expectations({ contract, nodes, foundations, classes }) {
  */
 export function probe(spec, doc, style, color) {
   const classes = el => String(el.getAttribute('class') || '').split(/\s+/);
+  const hasClass = (el, className) => [].concat(className).some(c => classes(el).indexOf(c) >= 0);
   const inside = (el, test) => Array.prototype.find.call(el.querySelectorAll('*'), test);
   const hasText = el => Array.prototype.some.call(el.childNodes, n => n.nodeType === 3 && n.textContent.trim());
   const glyph = (el, name) => (el.getAttribute('data-icon-name') === name ? el : inside(el, e => e.getAttribute('data-icon-name') === name));
@@ -220,8 +232,8 @@ export function probe(spec, doc, style, color) {
         // layer's element (the glyph of Tag's Start icon, a font icon, is text too).
         const find = () => {
           // A fixed-icon INSTANCE is the glyph of its name inside its entry's element: the glyph carries its size and opacity.
-          if (layer.icon) { const host = inside(parent, e => classes(e).indexOf(layer.className) >= 0 && glyph(e, layer.icon)); return host && glyph(host, layer.icon); }
-          if (!layer.drawnInParent) return inside(parent, e => classes(e).indexOf(layer.className) >= 0 && taken.indexOf(e) < 0);
+          if (layer.icon) { const host = inside(parent, e => hasClass(e, layer.className) && glyph(e, layer.icon)); return host && glyph(host, layer.icon); }
+          if (!layer.drawnInParent) return inside(parent, e => hasClass(e, layer.className) && taken.indexOf(e) < 0);
           if (layer.type === 'TEXT') {
             const skip = siblingElements(layer, parent);
             return hasText(parent) ? parent : inside(parent, e => hasText(e) && skip.indexOf(e) < 0);
@@ -236,7 +248,8 @@ export function probe(spec, doc, style, color) {
         els[layer.name] = el;
         if (!want) return;
         const got = read(el, layer.type);
-        Object.keys(want).forEach(field => {
+        // An <img>'s picture is its fill, and no computed style holds it (Avatar's Image, #478).
+        Object.keys(want).filter(field => !(field === 'fill' && el.tagName === 'IMG')).forEach(field => {
           const a = got[field], b = want[field];
           const same = typeof b === 'number' ? Math.abs(a - b) < 0.01 : a === b;
           if (!same) mismatches.push(key + ' ' + mode + ' ' + layer.name + '.' + field + ': page ' + a + ', Contract ' + b);

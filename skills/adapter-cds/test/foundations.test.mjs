@@ -101,7 +101,7 @@ test('every Primitive, Theme, Layout and Type value equals createThemeCssVars in
     }
   }
   assert.equal(n, docOnce.checks.css.matched);
-  assert.equal(n, (286 + 42 + 42 + 52) * 2);
+  assert.equal(n, (286 + 42 + 48 + 52) * 2);
 });
 
 test('a value that differs from createThemeCssVars fails generation, naming the token and Mode', { skip }, async () => {
@@ -115,14 +115,14 @@ test('a value that differs from createThemeCssVars fails generation, naming the 
   for (const [edit, error] of cases) await assert.rejects(run({ modules: withVars(edit) }), error);
 });
 
-test('everything createThemeCssVars emits is carried or excluded by name: shadow, avatarSize, illustration colours and the rest', { skip }, async () => {
+test('everything createThemeCssVars emits is carried or excluded by name: shadow, illustration colours and the rest', { skip }, async () => {
   const names = Object.keys(docOnce.variables);
-  for (const prefix of ['shadow', 'avatarSize', 'illustration', 'textTransform', 'fontFamilyMono', 'lightColor', 'darkColor', 'currentColor'])
+  for (const prefix of ['shadow', 'illustration', 'textTransform', 'fontFamilyMono', 'lightColor', 'darkColor', 'currentColor'])
     assert.ok(!names.some(k => k.startsWith(prefix)), `no ${prefix} variable`);
   assert.deepEqual(Object.keys(docOnce.checks.css.excluded),
-    ['activeColorScheme', 'avatarSize', 'currentColor', 'darkColor', 'fontFamilyMono', 'illustrationColor', 'lightColor', 'shadow', 'spectrum', 'textTransform']);
+    ['activeColorScheme', 'currentColor', 'darkColor', 'fontFamilyMono', 'illustrationColor', 'lightColor', 'shadow', 'spectrum', 'textTransform']);
   const notes = docOnce.notes.map(n => n.message).join('\n');
-  for (const said of [/Shadow .* is not carried/, /avatarSize is not carried/, /Illustration colours are not carried/, /Only defaultTheme is carried\. CDS Web's other themes \(coinbaseDenseTheme, .*\) are not/])
+  for (const said of [/Shadow .* is not carried/, /Illustration colours are not carried/, /Only defaultTheme is carried\. CDS Web's other themes \(coinbaseDenseTheme, .*\) are not/])
     assert.match(notes, said);
   await assert.rejects(run({ modules: withVars(v => ({ ...v, '--elevation-1': '1px' })) }), /emits --elevation-1 in light, which the document neither carries nor excludes/);
 });
@@ -234,7 +234,7 @@ test('Layout and Type: px values, and Text Styles named by CDS\'s text keys in I
   const v = docOnce.variables;
   assert.deepEqual(v['space-0_25'], { collection: 'layout', name: 'Spacing/space-0_25', type: 'FLOAT', source: 'packages/web/src/themes/defaultTheme.ts#space.0.25',
     scopes: ['GAP'], codeSyntax: { WEB: 'var(--space-0_25)' }, values: { default: { value: 2 } }, usedBy: [] });
-  for (const [k, group] of [['borderRadius-1000', 'Border radius'], ['borderWidth-100', 'Border width'], ['iconSize-m', 'Icon size'], ['controlSize-checkboxSize', 'Control size']])
+  for (const [k, group] of [['borderRadius-1000', 'Border radius'], ['borderWidth-100', 'Border width'], ['iconSize-m', 'Icon size'], ['controlSize-checkboxSize', 'Control size'], ['avatarSize-xxxl', 'Avatar size']])
     assert.equal(v[k].name, `${group}/${k}`);
   assert.deepEqual(Object.keys(docOnce.textStyles), Object.keys(modules.defaultTheme.fontSize).sort());
   for (const [key, t] of Object.entries(docOnce.textStyles)) {
@@ -355,7 +355,28 @@ test('a family whose token map picks spectrum keys gets a token per Mode aliasin
 test('--family chip: a cds-common token module with no variants is no token map either', { skip }, async () => {
   const { doc } = await generate({ sources, families: ['chip'] });
   assert.ok(!Object.values(doc.variables).some(x => x.family));
-  assert.match(doc.notes.find(n => n.at === 'variables.chip-*').message, /^chip has no component token map: @coinbase\/cds-common@9\.29\.0 esm\/tokens\/chip\.js exports no variants, so/);
+  assert.match(doc.notes.find(n => n.at === 'variables.chip-*').message, /^chip has no component token map: @coinbase\/cds-common@9\.29\.0 esm\/tokens\/chip\.js exports neither variants nor colorSchemeMap, so/);
+});
+
+// in (#478): Avatar's token map is colorSchemeMap, a colour scheme -> the spectrum colour its wrapper paints.
+test('a colorSchemeMap gives one colour token per scheme, aliasing its Primitive in each Mode, and no Synthesized tokens: Avatar', { skip }, async () => {
+  const path = 'design-systems/cds/contracts/avatar.component.json';
+  const { doc } = await generate({ sources, contracts: [{ path, contract: contract({ family: 'avatar', fill: 'avatar-teal-color' }) }] });
+  const v = doc.variables;
+  const mods = await loadModules(sources, ['avatar']);
+  const { colorSchemeMap } = mods.tokens.avatar;
+  const avatar = Object.keys(v).filter(k => v[k].family === 'avatar');
+  assert.deepEqual(avatar, Object.keys(colorSchemeMap).sort().map(s => `avatar-${s}-color`));
+  assert.deepEqual(v['avatar-teal-color'], { collection: 'theme', name: 'Avatar/avatar-teal-color', type: 'COLOR',
+    source: 'packages/common/src/tokens/avatar.ts#colorSchemeMap.teal', scopes: ['FRAME_FILL', 'EFFECT_COLOR'], codeSyntax: {},
+    values: { light: { alias: 'light-teal60', resolved: v['light-teal60'].values.default.value }, dark: { alias: 'dark-teal60', resolved: v['dark-teal60'].values.default.value } },
+    usedBy: ['avatar'], family: 'avatar' });
+  // the wrapper writes rgb(var(--teal60)): the active scheme's spectrum copy, which each Mode's value must equal
+  for (const s of SCHEMES) assert.deepEqual(rgba(`rgb(${emitted[s]['--teal60']})`), valueColor(v['avatar-teal-color'].values[s]), s);
+  assert.match(doc.notes.find(n => n.at === 'variables.avatar-*').message, /^avatar's token map \(packages\/common\/src\/tokens\/avatar\.ts\) is colorSchemeMap/);
+  assert.equal(v['avatarSize-l'].values.default.value, 32);
+  await assert.rejects(generate({ sources, contracts: [{ path, contract: contract({ family: 'avatar', fill: 'avatar-teal-color' }) }],
+    modules: { ...mods, createThemeCssVars: t => ({ ...mods.createThemeCssVars(t), ...(t.activeColorScheme === 'dark' ? { '--teal60': '1,2,3' } : {}) }) } }), /avatar-teal-color\/dark: the document has #[0-9a-f]{6}, createThemeCssVars emits --teal60: 1,2,3/);
 });
 
 test('the @deprecated variants come from the props type the Contract pins under packages/common/src/types/', { skip }, async () => {

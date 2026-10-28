@@ -11,7 +11,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { asDraft } from '../../contract/scripts/contract.mjs';
 import { writeJson } from '../../contract/scripts/io.mjs';
-import { fingerprints, hasContractSources, readContractSources } from '../scripts/fingerprints.mjs';
+import { fingerprints, hasContractSources, literalRecords, readContractSources } from '../scripts/fingerprints.mjs';
 import { readContracts } from '../scripts/foundations.mjs';
 import { ANCHORS, anchorFamily } from './helpers.mjs';
 
@@ -126,6 +126,25 @@ test('a static class comes before the literals on its element: it is the identif
 });
 
 // ---------- families with no cds-<Family> class (#470), from test/fixtures/anchors ----------
+// in (#478): Avatar's fallback Box carries only `borderRadiusCss[shape]`, a member of a Record of literals.
+test('a Record of literals is one entry, named by the Record: its rule lists each member\'s, in source order', () => {
+  const tsx = [
+    "const borderRadiusCss: Record<AvatarShape, LinariaClassName> = {",
+    '  circle: css`',
+    '    border-radius: 100%; /* round */',
+    '  `,',
+    '  square: css`border-radius: 4px;`,',
+    '};',
+    'const sizes = { s: 16 };',
+  ].join('\n');
+  assert.deepEqual(literalRecords(tsx), { borderRadiusCss: { circle: '\n    border-radius: 100%; /* round */\n  ', square: 'border-radius: 4px;' } });
+  const withRecord = { ...files, 'packages/web/src/chips/ChipCard.tsx': `${files['packages/web/src/chips/ChipCard.tsx']}\n${tsx}` };
+  const facts = fingerprints({ contract, nodes: { ...nodes, Lead: 'borderRadiusCss' }, files: withRecord, keys: ['anatomy.Lead'] }).facts['anatomy.Lead'];
+  assert.deepEqual([facts.node, facts.element, facts.rules], ['borderRadiusCss', 'borderRadiusCss',
+    ['borderRadiusCss { circle { border-radius: 100%; } square { border-radius: 4px; } }']]);
+  assert.deepEqual(facts.parts, ['borderRadiusCss', ...PARTS]);
+});
+
 const anchored = key => {
   const { contract: c, nodes: n } = anchorFamily(key);
   return fingerprints({ contract: c, nodes: n, files: readContractSources(c, join(ANCHORS, 'sources')) }).facts;
