@@ -151,3 +151,21 @@ test("the preview lockfile installs the CDS packages the sources pin, at the sou
   }
   assert.deepEqual(Object.keys(lock).filter(k => /node_modules\/.+\/node_modules\/@coinbase\//.test(k)), [], 'no nested CDS copy');
 });
+
+// in (#478): Radio and Switch both import from @coinbase/cds-web/controls; rendered in parallel processes, as
+// node --test runs test files, each must load its own bundle, not the other's.
+test('two processes bundling components of one subpath each render their own', { skip }, async () => {
+  const { spawn } = await import('node:child_process');
+  const preview = new URL('../scripts/preview.mjs', import.meta.url).href;
+  const kind = family => new Promise((done, fail) => {
+    const script = `import { readFileSync } from 'node:fs'; import { previewRenderer } from ${JSON.stringify(preview)};
+const c = JSON.parse(readFileSync(new URL(${JSON.stringify(`../../../design-systems/cds/contracts/${family}.component.json`)}, ${JSON.stringify(import.meta.url)}), 'utf8'));
+const html = (await previewRenderer(c)).render({});
+console.log((html.match(/type="(radio|checkbox)"/) || [, 'none'])[1]);`;
+    let out = '';
+    const p = spawn(process.execPath, ['--input-type=module', '-e', script]);
+    p.stdout.on('data', d => { out += d; });
+    p.on('exit', code => (code ? fail(new Error(`${family} exited ${code}`)) : done(out.trim())));
+  });
+  for (let i = 0; i < 3; i++) assert.deepEqual(await Promise.all([kind('radio'), kind('switch')]), ['radio', 'checkbox']);
+});
