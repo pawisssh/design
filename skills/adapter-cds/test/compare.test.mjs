@@ -356,6 +356,20 @@ test('probe: a cds- entry finds the label whose for names the id CDS prefixes be
     ['foregroundMuted|outside light Label: no element cds-textinput-label']);
 });
 
+test('probe: the opacity of an ancestor layer with no anchor folds into its child on both sides, as the page dims its element', () => {
+  // A hovered field: Interactable dims the start node, an HStack with no anchor, and its glyph inherits it.
+  const dimmed = fakePage({ k: () => new El('flex-a', {}, [new El('cds-Interactable', {}, [
+    new El('row-g', { style: { opacity: '0.88' } }, [new El('_2-h', {}, [new El('cds-Icon', { w: 16, h: 16 })])])])]) });
+  const spec = { collection: 'theme', modes: ['light', 'dark'],
+    layers: [layer('TextInput', null, ''), layer('Field', 'TextInput', 'cds-Interactable'), layer('Start', 'Field', ''),
+      layer('Start glyph', 'Start', 'cds-Icon')],
+    expected: { k: both({ Start: { opacity: 0.88 }, 'Start glyph': { opacity: 1, width: 16 } }) } };
+  assert.deepEqual(probe(spec, ...Object.values(dimmed)), { checked: 2, mismatches: [] });
+  const undimmed = { ...spec, expected: { k: both({ Start: { opacity: 1 }, 'Start glyph': { opacity: 1, width: 16 } }) } };
+  assert.deepEqual(probe(undimmed, ...Object.values(dimmed)).mismatches,
+    ['k light Start glyph.opacity: page 0.88, Contract 1', 'k dark Start glyph.opacity: page 0.88, Contract 1']);
+});
+
 test('probe: an element answers one layer, so the second cds-Icon is the End glyph; an <input>\'s placeholder is its text', () => {
   assert.deepEqual(probe(textInputSpec, ...Object.values(textInputPage({ endWidth: 12, placeholder: 'rgb(10, 11, 13)' }))).mismatches, [
     'foregroundMuted|outside light Placeholder.color: page #0a0b0d, Contract #5b616e', 'foregroundMuted|outside light End glyph.width: page 12, Contract 16',

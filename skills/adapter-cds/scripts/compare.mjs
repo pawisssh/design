@@ -284,9 +284,17 @@ export function probe(spec, doc, style, color) {
         // opacity on to this layer, as Figma would draw it. IconButton's loading ProgressCircle sits in such an
         // element, its VisualizationContainer, which Interactable dims as the IconButton's child (> *).
         if (el !== parent) for (let e = el.parentElement; e && e !== parent; e = e.parentElement) got.opacity *= parseFloat(style(e).opacity);
+        // in (#477): those elements include each ancestor layer with no anchor of its own, found past (TextInput's Input
+        // stack, the VStack Interactable dims while hovered), so the Contract's opacity folds in that layer's too.
+        let opacity = want.opacity;
+        for (let up = layer.parent; opacity !== undefined && up !== null && byName[up].className === null && byName[up].parent !== null; up = byName[up].parent) {
+          const at = spec.expected[key][mode][up];
+          if (at && at.opacity !== undefined) opacity *= at.opacity;
+        }
+        const wanted = Object.assign({}, want, opacity === undefined ? {} : { opacity });
         // An <img>'s picture is its fill, and no computed style holds it (Avatar's Image, #478).
-        Object.keys(want).filter(field => !(field === 'fill' && el.tagName === 'IMG')).forEach(field => {
-          const a = got[field], b = want[field];
+        Object.keys(wanted).filter(field => !(field === 'fill' && el.tagName === 'IMG')).forEach(field => {
+          const a = got[field], b = wanted[field];
           const same = typeof b === 'number' ? Math.abs(a - b) < 0.01 : a === b;
           if (!same) mismatches.push(key + ' ' + mode + ' ' + layer.name + '.' + field + ': page ' + a + ', Contract ' + b);
         });
