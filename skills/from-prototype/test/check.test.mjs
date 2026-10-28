@@ -190,34 +190,49 @@ test('the CLI prints what was found, each verdict and what is still possible, an
   assert.doesNotMatch(missing.stdout + missing.stderr, /\n\s+at /);
 });
 
-test('every run leaves the Prototype and the tools folders as they were, and loads no fetched parser', () => {
-  // A child process, so its module cache holds only what the check loads; it lists before and after itself, so
-  // another test file writing elsewhere in .scratch at the same time doesn't count.
+test('a Carbon app with Tailwind utilities is still Carbon, and a file given that is not HTML is unknown', () => {
+  const dir = prototype({ 'package.json': { dependencies: { react: '19.2.4', '@carbon/react': '1.80.0' }, devDependencies: { vite: '7.0.0', tailwindcss: '4.2.2' } }, 'src/App.tsx': UTILITIES, 'src/app.scss': '.x { color: red; }' });
+  try {
+    assert.equal(check(dir).kind, 'React + CSS or SCSS classes');
+    const notHtml = check(join(dir, 'package.json'));
+    assert.equal(notHtml.kind, 'unknown');
+    assert.deepEqual(notHtml.evidence, ['a file that is not HTML']);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('every run writes nothing, runs and fetches nothing, leaves the Prototype as it was, and loads no fetched parser', () => {
+  // A child process whose fs writes, child processes and fetch are recorded before the check is imported, so the
+  // answer doesn't depend on what other test files write meanwhile; its module cache holds only what the check loads.
   const script = `
-    import { existsSync, readdirSync, statSync } from 'node:fs';
-    import { createRequire } from 'node:module';
-    import { join, sep } from 'node:path';
-    import { check } from ${JSON.stringify(new URL('../scripts/from-prototype.mjs', import.meta.url).href)};
-    import { REPO_ROOT } from ${JSON.stringify(new URL('../../to-handoff/scripts/system.mjs', import.meta.url).href)};
+    import { statSync } from 'node:fs';
+    import { createRequire, syncBuiltinESMExports } from 'node:module';
+    const require = createRequire(import.meta.url);
+    const calls = [];
+    const record = (mod, names) => { for (const n of names) { const real = mod[n]; if (real) mod[n] = (...a) => { calls.push(n + ' ' + a[0]); return real(...a); }; } };
+    const fs = require('node:fs');
+    const writes = ['writeFileSync', 'appendFileSync', 'mkdirSync', 'rmSync', 'rmdirSync', 'unlinkSync', 'renameSync', 'copyFileSync', 'cpSync', 'symlinkSync'];
+    record(fs, writes);
+    record(fs, writes.map(n => n.replace(/Sync$/, '')));
+    record(fs.promises, ['writeFile', 'appendFile', 'mkdir', 'rm', 'rmdir', 'unlink', 'rename', 'copyFile', 'cp', 'symlink']);
+    record(require('node:child_process'), ['spawn', 'spawnSync', 'exec', 'execSync', 'execFile', 'execFileSync', 'fork']);
+    globalThis.fetch = url => { calls.push('fetch ' + url); throw new Error('no fetch'); };
+    syncBuiltinESMExports();
+    const { check } = await import(${JSON.stringify(new URL('../scripts/from-prototype.mjs', import.meta.url).href)});
+    const { files } = await import(${JSON.stringify(new URL('../../vibe-to-figma/scripts/path.mjs', import.meta.url).href)});
     const prototypes = JSON.parse(process.argv[1]);
-    const scratch = join(REPO_ROOT, '.scratch');
-    const tools = () => existsSync(scratch) ? readdirSync(scratch).filter(n => /^(to-handoff|adapter-|vibe-to-figma)/.test(n)) : [];
-    // A Prototype in full, with each file's mtime; a tools folder two levels down, which a fetch would change.
-    const list = (dir, depth = Infinity) => !existsSync(dir) ? null : statSync(dir).isFile() ? [statSync(dir).mtimeMs]
-      : readdirSync(dir, { recursive: true }).filter(f => f.split(sep).length <= depth).sort().map(f => f + ' ' + statSync(join(dir, f)).mtimeMs);
-    const snapshot = () => Object.fromEntries([['.scratch', tools()], ...tools().map(n => [n, list(join(scratch, n), 2)]), ...prototypes.map(p => [p, list(p)])]);
-    const before = snapshot();
+    const list = p => statSync(p).isFile() ? [statSync(p).mtimeMs] : [...files(p)].map(f => f + ' ' + statSync(f).mtimeMs);
+    const before = prototypes.map(list);
     for (const p of prototypes) check(p);
-    const after = snapshot();
-    const loaded = Object.keys(createRequire(import.meta.url).cache).filter(k => k.includes('/.scratch/'));
-    const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter(k => JSON.stringify(before[k]) !== JSON.stringify(after[k]));
-    console.log(JSON.stringify({ changed, loaded }));
+    const changed = prototypes.filter((p, i) => JSON.stringify(list(p)) !== JSON.stringify(before[i]));
+    const loaded = Object.keys(require.cache).filter(k => k.includes('/.scratch/'));
+    console.log(JSON.stringify({ calls, changed, loaded }));
   `;
   const prototypes = [handoff('v0-app'), handoff('next-app'), handoff('vite-app'), handoff('tailwind-app'), handoff('conditions-app'),
     handoff('invite-teammates'), vibe('path-a-app'), vibe('tailwind-no-shadcn'), vibe('carbon-scss-app'), vibe('html-app'), join(vibe('html-app'), 'index.html')];
   const r = spawnSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify(prototypes)], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
-  const { changed, loaded } = JSON.parse(r.stdout);
-  assert.deepEqual(changed, [], 'the Prototypes and the tools folders are unchanged');
+  const { calls, changed, loaded } = JSON.parse(r.stdout);
+  assert.deepEqual(calls, [], 'nothing written, run or fetched');
+  assert.deepEqual(changed, [], 'every Prototype is as it was');
   assert.deepEqual(loaded, []);
 });

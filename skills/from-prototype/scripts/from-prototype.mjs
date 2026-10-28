@@ -39,11 +39,12 @@ const MIN_UTILITIES = 3;
 // What the check reads of a Prototype: file names, package.json and text, never a parser that has to be fetched.
 function reading(prototype) {
   const given = existsSync(prototype) ? statSync(prototype) : null;
-  const html = given?.isFile() ? prototype : null;
-  const root = html ? dirname(prototype) : prototype;
-  const all = given ? [...files(root)].map(f => relative(root, f)) : [];
+  const html = given?.isFile() && extname(prototype) === '.html' ? prototype : null;
+  const root = given?.isFile() ? dirname(prototype) : prototype;
+  const read = given?.isDirectory() || html; // a file given that is not HTML is read as nothing: unknown
+  const all = read ? [...files(root)].map(f => relative(root, f)) : [];
   let pkg = null;
-  try { pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')); } catch { /* no package.json, or not JSON */ }
+  if (read) try { pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')); } catch { /* none, or not JSON */ }
   const declared = new Set(Object.keys({ ...pkg?.dependencies, ...pkg?.devDependencies, ...pkg?.peerDependencies }));
   const text = f => readFileSync(join(root, f), 'utf8');
   const code = all.filter(f => CODE.has(extname(f)) && !f.endsWith('.d.ts'));
@@ -66,6 +67,7 @@ function codeLibraryFolder(p) {
 
 const tailwindDeclared = p => [...p.declared].some(d => d === 'tailwindcss' || d.startsWith('@tailwindcss/'));
 const declaredOf = (p, names) => names.filter(n => p.declared.has(n));
+const carbon = p => [...p.declared].filter(d => d.startsWith('@carbon/') || d.startsWith('carbon-components'));
 const htmlFiles = p => p.html ? [basename(p.html)] : p.all.filter(f => extname(f) === '.html');
 
 // The kind detector (spec #343 Kind detection): ordered rules, the first that finds evidence names the kind. It never
@@ -75,11 +77,12 @@ const KINDS = [
   { kind: OTHER, evidence: p => [...declaredOf(p, ['vue', 'nuxt', 'svelte', '@sveltejs/kit', '@angular/core']), ...p.all.filter(f => ['.vue', '.svelte'].includes(extname(f))).slice(0, 1)] },
   { kind: SHADCN, evidence: p => p.html ? [] : p.all.includes('components.json') ? ['components.json'] : [codeLibraryFolder(p)].filter(Boolean) },
   // The mixed kind keeps today's rule until #331: enough utilities make it path A, with a note (the `mixed` row).
-  { kind: PATH_A, evidence: p => p.declared.has('react') && tailwindDeclared(p)
+  // Carbon first, as choosePath has it: a Carbon app is styled by Carbon's SCSS, whatever else its classNames hold.
+  { kind: PATH_A, evidence: p => p.declared.has('react') && tailwindDeclared(p) && !carbon(p).length
     && new Set(p.code.flatMap(f => [...utilitiesIn(p.text(f))])).size >= MIN_UTILITIES ? ['tailwindcss', 'Tailwind utilities in className'] : [] },
   { kind: MODULES, evidence: p => !p.declared.has('react') ? [] : [...p.all.filter(f => /\.module\.s?css$/.test(f)),
     ...CSS_IN_JS.filter(pkg => p.code.some(f => p.imports(f).some(s => s === pkg || s.startsWith(pkg + '/'))))] },
-  { kind: CLASSES, evidence: p => !p.declared.has('react') ? [] : [...[...p.declared].filter(d => d.startsWith('@carbon/') || d.startsWith('carbon-components')),
+  { kind: CLASSES, evidence: p => !p.declared.has('react') ? [] : [...carbon(p),
     ...p.all.filter(f => STYLES.has(extname(f)))].concat(p.has(...STYLES) ? [] : ['classNames with no Tailwind utilities']) },
   { kind: HTML_UTILITIES, evidence: p => {
     const pages = htmlFiles(p);
@@ -92,7 +95,8 @@ const KINDS = [
   } },
   { kind: HTML, evidence: p => !htmlFiles(p).length || p.declared.has('react') ? [] : [...htmlFiles(p),
     ...p.all.filter(f => STYLES.has(extname(f))), ...(p.pkg ? ['package.json lists no React'] : [])] },
-  { kind: UNKNOWN, evidence: p => !p.given ? ['no such file or folder'] : !p.all.length ? ['an empty folder']
+  { kind: UNKNOWN, evidence: p => !p.given ? ['no such file or folder'] : p.given.isFile() && !p.html ? ['a file that is not HTML']
+    : !p.all.length ? ['an empty folder']
     : [p.pkg ? 'a package.json with no React, Vue, Svelte or Angular' : 'no package.json and no HTML file'] },
 ];
 
