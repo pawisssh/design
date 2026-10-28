@@ -6,14 +6,13 @@
 //
 // Each rule's comment sits beside the code that applies it. The library is a pure function of the Prototype and the
 // answers: each component file holds only its family's class strings and names.
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, extname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readJson } from '../../contract/scripts/io.mjs';
-import { sha256 } from '../../adapter-generic/scripts/sources.mjs';
+import { cssEntry, sha256, sourceFiles } from '../../adapter-generic/scripts/sources.mjs';
 import { loadTypescript } from '../../to-handoff/scripts/deps.mjs';
 
-const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', 'out']);
 const INTERACTIVE = new Set(['button', 'input', 'select', 'textarea', 'a']);
 const MAX_RENDERINGS = 64;
 const SNIPPET_MAX = 240;
@@ -363,23 +362,11 @@ function deriveAxes(sites) {
 
 // ---------- the Prototype ----------
 
-function* sourceFiles(dir) {
-  for (const name of readdirSync(dir).sort()) {
-    if (name.startsWith('.') || SKIP_DIRS.has(name)) continue;
-    const path = join(dir, name);
-    let isDir;
-    try { isDir = statSync(path).isDirectory(); } catch { continue; }
-    if (isDir) yield* sourceFiles(path);
-    else yield path;
-  }
-}
-
-/** The stylesheet that imports Tailwind (`@import "tailwindcss"`), the shallowest first. */
-function cssEntry(project) {
-  const found = [...sourceFiles(project)].filter(f => extname(f) === '.css' && /@import\s+(?:url\(\s*)?["']tailwindcss["']/.test(readFileSync(f, 'utf8')))
-    .map(f => relative(project, f)).sort((a, b) => a.split('/').length - b.split('/').length || byKey(a, b));
-  if (!found.length) throw new Error('no stylesheet of the project imports tailwindcss (@import "tailwindcss")');
-  return found[0];
+/** The stylesheet that imports Tailwind (sources.mjs cssEntry). */
+function tailwindEntry(project) {
+  const entry = cssEntry(project);
+  if (!entry) throw new Error('no stylesheet of the project imports tailwindcss (@import "tailwindcss")');
+  return entry;
 }
 
 /** The stylesheet and the relative stylesheets it imports, as {path: text}. */
@@ -609,7 +596,7 @@ export function extract({ project, answers = {}, map = null }) {
   for (const s of candidates) if (assigned.has(siteKey(s))) families.set(assigned.get(siteKey(s)), [...(families.get(assigned.get(siteKey(s))) || []), s]);
 
   // What the library needs is checked before any request is written, so the agent never answers for a run that cannot finish.
-  if (requests.length || families.size) { cssEntry(project); prototypeLock(project); }
+  if (requests.length || families.size) { tailwindEntry(project); prototypeLock(project); }
 
   const built = [];
   for (const key of sorted([...families.keys()])) {
@@ -646,7 +633,7 @@ export function extract({ project, answers = {}, map = null }) {
     familyList.push({ key: f.key, tag: f.tag, groups: f.members, description: f.merged.description, grid: f.merged.grid, text, answeredText: f.merged.text, names, record: f.record,
       sites: f.memberSites.map(s => ({ file: s.file, path: s.path, line: s.line, group: s.group, snippet: s.snippet })).sort((x, y) => byKey(siteKey(x), siteKey(y))), derived: f.derived });
   }
-  const entry = cssEntry(project);
+  const entry = tailwindEntry(project);
   const sheets = stylesheets(project, entry);
   const manifest = readJson(join(project, 'package.json'));
   library['components.json'] = `${JSON.stringify({ $schema: 'https://ui.shadcn.com/schema.json', tailwind: { css: entry }, aliases: { ui: '@/components/ui', utils: '@/lib/utils' } }, null, 2)}\n`;

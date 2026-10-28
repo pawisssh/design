@@ -1,10 +1,10 @@
 // Which path /vibe-to-figma takes, decided before it reads a component or fetches a tool (#252, spec #249):
 // a project with `components.json` takes the shadcn path; a React project with none, whose JSX/TSX carries Tailwind
 // utilities in className, takes path A (an Extracted Library, ADR 0016); anything else is refused in one message.
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { extname, join } from 'node:path';
+import { sourceFiles as files } from '../../adapter-generic/scripts/sources.mjs';
 
-const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', 'out']);
 const CODE = new Set(['.tsx', '.jsx', '.ts', '.js']);
 const STYLES = new Set(['.scss', '.sass', '.css']);
 const NEEDS = 'Vibe-to-Figma needs a React project with a components.json (shadcn), or Tailwind utilities in its JSX className';
@@ -21,16 +21,8 @@ const UTILITY = new RegExp(String.raw`^(?:[\w\[\]=.*&-]+:)*!?-?(?:`
   + String.raw`|flex-(?:row|col|wrap|1|auto|none)|overflow-[a-z]+|cursor-[a-z-]+|transition-[a-z]+)(?:/(?:\d+|\[[^\]]+\]))?$`);
 const MIN_UTILITIES = 3;
 
-export function* files(dir) {
-  for (const name of readdirSync(dir).sort()) {
-    if (name.startsWith('.') || SKIP_DIRS.has(name)) continue;
-    const path = join(dir, name);
-    let isDir;
-    try { isDir = statSync(path).isDirectory(); } catch { continue; } // a broken symlink is no file of the project
-    if (isDir) yield* files(path);
-    else yield path;
-  }
-}
+// Every file of the project, as the Adapter walks it (sources.mjs).
+export { files };
 
 // Every string and template literal of a source file is searched, not just the className attribute's, so a class
 // string held in a constant or a cva() call counts, as does a template with ${} parts.
