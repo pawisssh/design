@@ -107,6 +107,7 @@ async function bundle(dir, specifier, component) {
     "export { createThemeCssVars } from '@coinbase/cds-web/core/createThemeCssVars';",
     "export { defaultTheme } from '@coinbase/cds-web/themes/defaultTheme';",
     "export { glyphMap } from '@coinbase/cds-icons/glyphMap';",
+    "export { AnimatePresence } from 'framer-motion';",
     // The one export, so the bundle (and so the CSS) holds only what the component imports.
     `export { ${component} as Component } from ${JSON.stringify(specifier)};`,
   ].join('\n');
@@ -157,7 +158,8 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
     throw new Error(`the CDS preview renderer does not render code.required props (${contract.code.required.join(', ')})`);
   const specifier = importSpecifier(contract);
   const { lib, css } = await bundle(dir, specifier, contract.code.component);
-  const { React, renderToStaticMarkup, ThemeContext, ThemeProvider, MediaQueryProvider, createThemeCssVars, defaultTheme, glyphMap, Component } = lib;
+  const { React, renderToStaticMarkup, ThemeContext, ThemeProvider, MediaQueryProvider, createThemeCssVars, defaultTheme, glyphMap,
+    AnimatePresence, Component } = lib;
   if (!Component) throw new Error(`${specifier} has no export ${contract.code.component}`);
 
   // A CDS icon is a name (`startIcon="add"`), drawn from the CoinbaseIcons font.
@@ -194,9 +196,12 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
       const axis = codeProps(contract, tuple).props;
       const { props, children } = contentProps(contract, properties, iconFor);
       Object.assign(props, axis);
+      // In #475: the page never runs an animation, so a part CDS animates in on mount would stay at its first frame
+      // (Radio's dot: useMotionProps' initial 'exit', opacity 0). AnimatePresence initial={false} renders every motion
+      // element at its `animate` target instead, the state the animation ends in.
       const schemes = SCHEMES.map(scheme => h(ThemeContext.Provider, { key: scheme, value: themes[scheme] },
         h(ThemeProvider, { theme: defaultTheme, activeColorScheme: scheme, className: 'cds-preview-scheme' },
-          h(MediaQueryProvider, null, h(Component, props, children)))));
+          h(MediaQueryProvider, null, h(AnimatePresence, { initial: false }, h(Component, { key: 'specimen', ...props }, children))))));
       return renderToStaticMarkup(h('div', { className: 'cds-preview' }, schemes));
     },
   };
