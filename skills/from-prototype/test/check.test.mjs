@@ -27,6 +27,7 @@ function prototype(files, fixture) {
   }
   return dir;
 }
+const SHELL = '<div id="root"></div><script type="module" src="/src/main.tsx"></script>';
 const UTILITIES = 'export default () => <div className="flex items-center gap-2 p-4 rounded-md bg-slate-200">Hi</div>;\n';
 const reasons = verdict => verdict.reasons.map(r => r.message);
 const FIGMA = 'https://www.figma.com/design/AbCdEfGhIjKlMnOpQrStUv/Prototype';
@@ -36,22 +37,24 @@ test('the v0 fixture is React + Tailwind + shadcn on Next, and both outputs read
   assert.equal(r.kind, 'React + Tailwind + shadcn');
   assert.ok(r.evidence.includes('components.json') && r.evidence.includes('next'), r.evidence.join(', '));
   assert.equal(r.verdicts.componentSets.verdict, 'yes, by the shadcn path');
-  assert.equal(r.verdicts.handoff.verdict, 'yes');
+  assert.equal(r.verdicts.handoff.verdict, 'yes, against its own folder');
+  assert.deepEqual(r.verdicts.handoff.notes, []);
 });
 
 test("To-handoff's Next fixture is shadcn on Next, and both outputs read", () => {
   const r = check(handoff('next-app'));
   assert.equal(r.kind, 'React + Tailwind + shadcn');
   assert.equal(r.verdicts.componentSets.verdict, 'yes, by the shadcn path');
-  assert.equal(r.verdicts.handoff.verdict, 'yes');
+  assert.equal(r.verdicts.handoff.verdict, 'yes, against its own folder');
 });
 
-test('the path A fixtures take path A; a Handoff reads only on Next or Vite', () => {
+test('the path A fixtures take path A; a Handoff reads only on Next or Vite, and only against a Design System you name (#265)', () => {
   for (const dir of [vibe('path-a-app'), handoff('tailwind-app')]) {
     const r = check(dir);
     assert.equal(r.kind, 'React + Tailwind, no Code Library', dir);
     assert.ok(r.evidence.includes('vite'), r.evidence.join(', '));
-    assert.equal(r.verdicts.handoff.verdict, 'yes');
+    assert.equal(r.verdicts.handoff.verdict, 'only against a Design System you name');
+    assert.deepEqual(r.verdicts.handoff.reasons, [{ row: 'own-folder', message: "To-handoff can't yet recognise its sites through the Family map (#265)", ticket: '#265' }]);
   }
   assert.equal(check(vibe('path-a-app')).verdicts.componentSets.verdict, 'yes, by path A');
   // tailwind-app's stylesheet names no font (the text-style-font row, #367).
@@ -76,8 +79,11 @@ test('the Carbon + SCSS fixtures are React + CSS or SCSS classes: Component Sets
     assert.equal(r.verdicts.componentSets.verdict, 'no');
     assert.deepEqual(reasons(r.verdicts.componentSets), ['not yet: Component Sets for this kind are charted in map #310']);
   }
-  // The Vite app's Handoff reads; the Carbon + SCSS fixture declares neither Next nor Vite.
-  assert.equal(check(handoff('vite-app')).verdicts.handoff.verdict, 'yes');
+  // The Vite app's Handoff reads, with no own folder since it can't have Component Sets; the Carbon + SCSS fixture
+  // declares neither Next nor Vite.
+  const viteApp = check(handoff('vite-app')).verdicts.handoff;
+  assert.equal(viteApp.verdict, 'only against a Design System you name');
+  assert.deepEqual(viteApp.reasons, [{ row: 'own-folder', message: "it can't have Component Sets, so it has no own folder", ticket: undefined }]);
   assert.equal(check(vibe('carbon-scss-app')).verdicts.handoff.verdict, 'no');
   const plain = check(handoff('conditions-app'));
   assert.equal(plain.kind, 'React + CSS or SCSS classes');
@@ -93,7 +99,9 @@ test('the plain HTML fixtures, given as a folder or as their HTML file, are plai
       assert.ok(r.evidence.includes('index.html'), r.evidence.join(', '));
       assert.equal(r.verdicts.componentSets.verdict, 'no');
       assert.deepEqual(reasons(r.verdicts.componentSets), ['not yet: there is no reader for plain HTML + CSS classes (spec #339)']);
-      assert.equal(r.verdicts.handoff.verdict, 'yes');
+      assert.equal(r.verdicts.handoff.verdict, 'only against a Design System you name');
+      assert.deepEqual(r.verdicts.handoff.reasons.map(x => x.ticket), ['#265']);
+      assert.equal(r.verdicts.handoff.page, 'index.html', 'its one page, found without naming it');
     }
   }
 });
@@ -104,6 +112,7 @@ test('plain HTML with a package.json that lists no React is still plain HTML', (
     const r = check(dir);
     assert.equal(r.kind, 'plain HTML + CSS classes');
     assert.ok(r.evidence.includes('package.json lists no React'), r.evidence.join(', '));
+    assert.equal(r.verdicts.handoff.page, 'banner-app.html');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -115,7 +124,8 @@ test('plain HTML styled by Tailwind from the CDN, or only by style="", is named 
       const r = check(dir);
       assert.equal(r.kind, 'plain HTML styled by Tailwind or only style=""', dir);
       assert.deepEqual(reasons(r.verdicts.componentSets), ['not decided yet']);
-      assert.equal(r.verdicts.handoff.verdict, 'yes');
+      assert.equal(r.verdicts.handoff.verdict, 'only against a Design System you name');
+      assert.equal(r.verdicts.handoff.page, 'index.html');
     }
   } finally { for (const d of [cdn, inline]) rmSync(d, { recursive: true, force: true }); }
 });
@@ -123,8 +133,8 @@ test('plain HTML styled by Tailwind from the CDN, or only by style="", is named 
 test('a Vue package, a Svelte file and CSS modules or CSS-in-JS are refused as not supported, linking ADR 0019', () => {
   const vue = prototype({ 'package.json': { dependencies: { vue: '3.5.0' }, devDependencies: { vite: '7.0.0' } }, 'index.html': '<div id="app"></div>', 'src/App.vue': '<template><p class="x">Hi</p></template>' });
   const svelte = prototype({ 'package.json': { devDependencies: { vite: '7.0.0' } }, 'src/App.svelte': '<p>Hi</p>' });
-  const modules = prototype({ 'package.json': { dependencies: { react: '19.2.4' }, devDependencies: { vite: '7.0.0' } }, 'src/App.tsx': 'import s from "./App.module.css";\nexport default () => <p className={s.x}>Hi</p>;\n', 'src/App.module.css': '.x { color: red; }' });
-  const cssInJs = prototype({ 'package.json': { dependencies: { react: '19.2.4', 'styled-components': '6.1.0' }, devDependencies: { vite: '7.0.0' } }, 'src/App.tsx': 'import styled from "styled-components";\nconst P = styled.p`color: red;`;\nexport default () => <P>Hi</P>;\n' });
+  const modules = prototype({ 'package.json': { dependencies: { react: '19.2.4' }, devDependencies: { vite: '7.0.0' } }, 'index.html': SHELL, 'src/App.tsx': 'import s from "./App.module.css";\nexport default () => <p className={s.x}>Hi</p>;\n', 'src/App.module.css': '.x { color: red; }' });
+  const cssInJs = prototype({ 'package.json': { dependencies: { react: '19.2.4', 'styled-components': '6.1.0' }, devDependencies: { vite: '7.0.0' } }, 'index.html': SHELL, 'src/App.tsx': 'import styled from "styled-components";\nconst P = styled.p`color: red;`;\nexport default () => <P>Hi</P>;\n' });
   try {
     for (const dir of [vue, svelte]) {
       const r = check(dir);
@@ -135,7 +145,7 @@ test('a Vue package, a Svelte file and CSS modules or CSS-in-JS are refused as n
       const r = check(dir);
       assert.equal(r.kind, 'React + CSS modules or CSS-in-JS', dir);
       assert.deepEqual(reasons(r.verdicts.componentSets), ['not supported (ADR 0019)']);
-      assert.equal(r.verdicts.handoff.verdict, 'yes');
+      assert.equal(r.verdicts.handoff.verdict, 'only against a Design System you name');
     }
     assert.ok(check(modules).evidence.includes('src/App.module.css'));
     assert.ok(check(cssInJs).evidence.includes('styled-components'));
@@ -175,13 +185,73 @@ test('TanStack Start is named in the evidence', () => {
   finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+// The Handoff rows (#436), one temp-dir variant each, from a React + CSS classes app on Vite: its Handoff is only against a
+// Design System you name, since it can't have Component Sets. `reason` is the one refusal or closing reason; `note`
+// the one note, with its ticket in its text.
+const APP = 'export default () => <p className="title">Hi</p>;\n';
+const vite = (extra = {}) => ({ 'package.json': { dependencies: { react: '19.2.4', 'react-dom': '19.2.4', ...extra }, devDependencies: { vite: '7.0.0' } },
+  'package-lock.json': {}, 'index.html': SHELL, 'src/main.tsx': 'import { createRoot } from "react-dom/client";\nimport App from "./App";\ncreateRoot(document.getElementById("root")).render(<App />);\n', 'src/App.tsx': APP, 'src/app.css': '.title { color: red; }' });
+const ONLY_AGAINST = 'only against a Design System you name';
+const CLOSED = { row: 'own-folder', message: "it can't have Component Sets, so it has no own folder" };
+const ROUTES = 'export const router = createBrowserRouter([{ path: "/", element: <App /> }]);\n';
+const VARIANTS = [
+  { name: 'every row passing', files: vite(), verdict: ONLY_AGAINST, reason: CLOSED, exit: 0 },
+  { name: 'TanStack Start with src/routes/__root.tsx and no index.html', exit: 1, verdict: 'no',
+    files: { ...vite({ '@tanstack/react-start': '1.130.0' }), 'index.html': undefined, 'src/routes/__root.tsx': APP },
+    reason: { row: 'vite-shell', message: "not yet: a TanStack Start build is a Cloudflare Worker, which the run can't serve yet (#348)", ticket: '#348' } },
+  { name: 'Vite with no index.html', files: { ...vite(), 'index.html': undefined }, verdict: 'no', exit: 1,
+    reason: { row: 'vite-shell', message: 'no `index.html`: To-handoff reads a Vite app from its `index.html`' } },
+  { name: 'an index.html that loads no module script', files: { ...vite(), 'index.html': '<div id="root"></div>' }, verdict: 'no', exit: 1,
+    reason: { row: 'vite-shell', message: '`index.html` loads no module script: To-handoff reads a Vite app from it' } },
+  { name: 'React only in peerDependencies', verdict: 'no', exit: 1,
+    files: { ...vite(), 'package.json': { peerDependencies: { react: '18.3.1', 'react-dom': '18.3.1' }, devDependencies: { vite: '6.3.5' } } },
+    reason: { row: 'peer-react', message: 'not yet: React only in `peerDependencies` (#358)', ticket: '#358' } },
+  { name: 'a Next app with no app/', verdict: 'no', exit: 1,
+    files: { 'package.json': { dependencies: { react: '19.2.4', next: '16.0.0' } }, 'package-lock.json': {}, 'pages/index.tsx': APP, 'styles.css': '.title { color: red; }' },
+    reason: { row: 'next-app-router', message: 'no `app/` or `src/app/` with a root layout: To-handoff reads only the App Router' } },
+  { name: 'a Next app with src/app/ and its root layout', verdict: ONLY_AGAINST, exit: 0, reason: CLOSED,
+    files: { 'package.json': { dependencies: { react: '19.2.4', next: '16.0.0' } }, 'package-lock.json': {}, 'src/app/layout.tsx': APP, 'src/app/page.tsx': APP, 'src/app/globals.css': '.title { color: red; }' } },
+  { name: 'two HTML files', files: { 'index.html': '<p class="a">Hi</p>', 'about.html': '<p class="a">About</p>', 'style.css': '.a { color: red; }' }, verdict: 'no', exit: 1,
+    reason: { row: 'html-file', message: "name the page: run again with the HTML file's path, one of about.html, index.html. Several pages are not specified yet (the map's 'Plain HTML beyond one banner')" } },
+  { name: 'wouter', files: vite({ wouter: '3.7.0' }), verdict: ONLY_AGAINST, reason: CLOSED, exit: 0, note: ['reads as one screen, `index`', '#350'] },
+  { name: 'a data router defined in another file', verdict: ONLY_AGAINST, reason: CLOSED, exit: 0, note: ['reads as one screen, `index`', '#361'],
+    files: { ...vite({ 'react-router': '7.9.0' }), 'src/router.tsx': ROUTES, 'src/App.tsx': 'import { router } from "./router";\nexport default () => <RouterProvider router={router} />;\n' } },
+  { name: '`Component:` routes', verdict: ONLY_AGAINST, reason: CLOSED, exit: 0, note: ['reads as one screen, `index`', '#361'],
+    files: { ...vite({ 'react-router': '7.9.0' }), 'src/App.tsx': 'const router = createBrowserRouter([{ path: "/", Component: Home }]);\nexport default () => <RouterProvider router={router} />;\n' } },
+  { name: 'a data router read where it is rendered', verdict: ONLY_AGAINST, reason: CLOSED, exit: 0,
+    files: { ...vite({ 'react-router': '7.9.0' }), 'src/App.tsx': `${ROUTES}export default () => <RouterProvider router={router} />;\n` } },
+  { name: 'no package-lock.json', files: { ...vite(), 'package-lock.json': undefined }, verdict: ONLY_AGAINST, reason: CLOSED, exit: 0,
+    note: ['without a `package-lock.json` the Handoff is likely static-only, with a `q-runtime` question', 'npm install --package-lock-only --ignore-scripts', '#354'] },
+];
+const variant = v => prototype(Object.fromEntries(Object.entries(v.files).filter(([, text]) => text !== undefined)));
+
+test('each Handoff row refuses, closes the own folder, or notes, with its reason, its ticket and the exit code', () => {
+  for (const v of VARIANTS) {
+    const dir = variant(v);
+    try {
+      const { handoff: h } = check(dir).verdicts;
+      assert.equal(h.verdict, v.verdict, v.name);
+      assert.deepEqual(h.reasons, [{ ticket: undefined, ...v.reason }], v.name);
+      assert.equal(h.notes.length, v.note ? 1 : 0, `${v.name}: ${h.notes.join('\n')}`);
+      for (const part of v.note || []) assert.ok(h.notes[0].includes(part), `${v.name}: ${h.notes[0]}`);
+      assert.equal(run(dir, '--handoff', '--ds', 'shadcn').status, v.exit, v.name);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  }
+});
+
+test('a refused Figma link alone leaves the own folder open', () => {
+  const r = check(handoff('v0-app'), { figma: 'https://example.com/not-figma', handoff: true });
+  assert.equal(r.verdicts.componentSets.verdict, 'no');
+  assert.equal(r.verdicts.handoff.verdict, 'yes, against its own folder');
+});
+
 test('the CLI prints what was found, each verdict and what is still possible, and exits 1 when an asked output is refused', () => {
   const asked = run(vibe('html-app'), '--figma', FIGMA);
   assert.equal(asked.status, 1, asked.stderr);
   const lines = asked.stdout.trim().split('\n');
   assert.match(lines[0], /^.*html-app: plain HTML \+ CSS classes \(.*index\.html.*\)\.$/);
   assert.match(asked.stdout, /- Component Sets: no\. Not yet: there is no reader for plain HTML \+ CSS classes \(spec #339\)\./);
-  assert.match(asked.stdout, /- Handoff: yes\./);
+  assert.match(asked.stdout, /- Handoff: only against a Design System you name\. To-handoff can't yet recognise its sites through the Family map \(#265\)\./);
   assert.match(asked.stdout, /Handoff against a Design System your developers already build with.*carbon/s);
   assert.equal(lines.at(-1), 'Nothing was fetched or written.');
   assert.doesNotMatch(asked.stdout + asked.stderr, /\n\s+at /);
@@ -208,7 +278,7 @@ test('a Carbon app with Tailwind utilities is still Carbon, and a file given tha
 test('no output asked: exit 2 with one question offering only the outputs whose verdict is not "no", and the Design System question beside a Handoff', () => {
   const both = run(handoff('v0-app'));
   assert.equal(both.status, 2, both.stderr);
-  assert.match(both.stdout, /Owner question: Which outputs should this run make: Component Sets, a Handoff, or both\?\n- Component Sets \(yes, by the shadcn path\): run again with `--figma <url>`\n- a Handoff \(yes\): run again with `--handoff`\nOwner question: Which Design System is the Handoff against\?\n/);
+  assert.match(both.stdout, /Owner question: Which outputs should this run make: Component Sets, a Handoff, or both\?\n- Component Sets \(yes, by the shadcn path\): run again with `--figma <url>`\n- a Handoff \(yes, against its own folder\): run again with `--handoff`\nOwner question: Which Design System is the Handoff against\?\n/);
   assert.equal(both.stdout.trim().split('\n').at(-1), 'Nothing was fetched or written.');
 
   const html = check(vibe('html-app'));
@@ -219,7 +289,7 @@ test('no output asked: exit 2 with one question offering only the outputs whose 
   assert.equal(html.plan, null);
   const out = run(vibe('html-app'));
   assert.equal(out.status, 2);
-  assert.match(out.stdout, /Owner question: Should this run make a Handoff\? It is the only output possible\.\n- a Handoff \(yes\): run again with `--handoff`/);
+  assert.match(out.stdout, /Owner question: Should this run make a Handoff\? It is the only output possible\.\n- a Handoff \(only against a Design System you name\): run again with `--handoff`/);
   assert.doesNotMatch(out.stdout, /run again with `--figma/);
 
   // Nothing possible: no question to ask, a refusal.
@@ -337,8 +407,8 @@ const MAKE_PKG = { name: 'make-app', private: true, type: 'module', peerDependen
 const [V0_HEAD, V0_TOKENS] = [V0_CSS.slice(0, V0_CSS.indexOf('\n:root {')), V0_CSS.slice(V0_CSS.indexOf('\n:root {') + 1)];
 const USES_BUTTON = { 'src/app/components/ui/button.tsx': UTILITIES, 'src/App.tsx': 'import { Button } from "@/app/components/ui/button";\nexport default () => <Button>Hi</Button>;\n' };
 const V0_ROUTER_PKG = { ...V0_PKG, dependencies: { ...V0_PKG.dependencies, 'react-router': '7.9.0' } };
-const ROUTES = 'import { createBrowserRouter } from "react-router";\nimport Page from "./page";\nexport const router = createBrowserRouter([{ path: "/", element: <Page /> }]);\n';
-const VARIANTS = {
+const SETS_ROUTES = 'import { createBrowserRouter } from "react-router";\nimport Page from "./page";\nexport const router = createBrowserRouter([{ path: "/", element: <Page /> }]);\n';
+const SETS_VARIANTS = {
   makeUsed: () => prototype({ 'package.json': MAKE_PKG, ...USES_BUTTON }, vibe('path-a-app')),
   // A found folder with no components.json, React in dependencies.
   foundFolder: () => prototype(USES_BUTTON, vibe('path-a-app')),
@@ -349,7 +419,7 @@ const VARIANTS = {
   fontUnfollowed: () => prototype({ 'app/globals.css': V0_CSS.replace('var(--font-geist-mono)', 'var(--font-code)') }, handoff('v0-app')),
   wouter: () => prototype({ 'package.json': { ...V0_PKG, dependencies: { ...V0_PKG.dependencies, wouter: '3.7.1' } } }, handoff('v0-app')),
   routerElsewhere: () => prototype({ 'package.json': V0_ROUTER_PKG,
-    'app/routes.tsx': ROUTES, 'app/router.tsx': 'import { RouterProvider } from "react-router/dom";\nimport { router } from "./routes";\nexport default () => <RouterProvider router={router} />;\n' }, handoff('v0-app')),
+    'app/routes.tsx': SETS_ROUTES, 'app/router.tsx': 'import { RouterProvider } from "react-router/dom";\nimport { router } from "./routes";\nexport default () => <RouterProvider router={router} />;\n' }, handoff('v0-app')),
   componentRoutes: () => prototype({ 'package.json': V0_ROUTER_PKG,
     'app/router.tsx': 'import { createBrowserRouter, RouterProvider } from "react-router";\nimport Page from "./page";\nconst router = createBrowserRouter([{ path: "/", Component: Page }]);\nexport default () => <RouterProvider router={router} />;\n' }, handoff('v0-app')),
 };
@@ -366,7 +436,7 @@ function refusedBy(dir, row, ticket, ...says) {
   assert.ok(out.stdout.includes(reason.message.slice(1)), out.stdout);
 }
 const withVariants = (names, body) => {
-  const dirs = names.map(n => VARIANTS[n]());
+  const dirs = names.map(n => SETS_VARIANTS[n]());
   try { body(...dirs); } finally { for (const d of dirs) rmSync(d, { recursive: true, force: true }); }
 };
 
@@ -405,8 +475,8 @@ test('wouter gets a note until #350; a data router defined in another file, or C
     const out = run(wouter, '--figma', FIGMA);
     assert.equal(out.status, 0, out.stdout);
     assert.match(out.stdout, /Note: with wouter the default family list comes from one screen/);
-    refusedBy(elsewhere, 'screens', '#361', "only with `--all`: the screens can't be read until #361", 'app/router.tsx renders a data router defined in another file');
-    refusedBy(component, 'screens', '#361', 'app/router.tsx gives `Component:` routes');
+    for (const dir of [elsewhere, component])
+      refusedBy(dir, 'screens', '#361', "only with `--all`: the screens can't be read until #361 (a data router built in another file, or `Component:` routes)");
   });
 });
 
@@ -452,8 +522,8 @@ test('every run writes nothing, runs and fetches nothing, leaves the Prototype a
   `;
   const fixtures = [handoff('v0-app'), handoff('next-app'), handoff('vite-app'), handoff('tailwind-app'), handoff('conditions-app'),
     handoff('invite-teammates'), vibe('path-a-app'), vibe('tailwind-no-shadcn'), vibe('carbon-scss-app'), vibe('html-app'), join(vibe('html-app'), 'index.html')];
-  // The variants of #435's rows, and the tools folders the readers fetch into.
-  const variants = Object.values(VARIANTS).map(make => make());
+  // Each Handoff row's variant, each Component Sets row's (#435), and the tools folders the readers fetch into.
+  const variants = [...VARIANTS.map(variant), ...Object.values(SETS_VARIANTS).map(make => make())];
   const repo = fileURLToPath(new URL('../../../', import.meta.url));
   const tools = ['.scratch/adapter-generic/tools', '.scratch/to-handoff'].map(d => join(repo, d));
   let r;

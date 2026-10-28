@@ -107,12 +107,32 @@ const KINDS = [
 ];
 
 // The framework, named beside the kind's own evidence.
-const frameworks = p => [...declaredOf(p, ['next', 'vite']),
-  ...(p.declared.has('@tanstack/react-start') && p.all.some(f => f.startsWith(`src${sep}routes${sep}__root.`)) ? ['TanStack Start'] : [])];
+const tanstackStart = p => p.declared.has('@tanstack/react-start') && p.all.some(f => f.startsWith(`src${sep}routes${sep}__root.`));
+const frameworks = p => [...declaredOf(p, ['next', 'vite']), ...(tanstackStart(p) ? ['TanStack Start'] : [])];
+
+// What To-handoff's React reader takes, as its reactKind and readers find it, with no parser: Next before Vite, React
+// outside peerDependencies, the script index.html loads (readVite's regex) and the App Router's root layout. Whether
+// that module script renders JSX is left to the reader stage, after the fetch.
+const built = (p, name) => !!(p.pkg?.dependencies?.[name] || p.pkg?.devDependencies?.[name]);
+const onNext = p => built(p, 'next');
+const onVite = p => !onNext(p) && built(p, 'vite');
+const peerOnlyReact = p => !!p.pkg?.peerDependencies?.react && !built(p, 'react');
+const viteShell = p => p.all.includes('index.html') && /<script\b[^>]*\bsrc=["']\/?[^"']+\.[jt]sx?["']/.test(p.text('index.html'));
+const appRouter = p => {
+  const app = ['app', `src${sep}app`].find(d => p.all.some(f => f.startsWith(d + sep)));
+  return !!app && ['.tsx', '.ts', '.jsx', '.js'].some(e => p.all.includes(join(app, 'layout' + e)));
+};
+// The routes To-handoff's Vite reader can't read yet: wouter (#350), and a data router it can't follow (#361): one
+// built in a file other than the one that renders its RouterProvider, or routes that name a `Component:`.
+const wouter = p => p.declared.has('wouter');
+const DATA_ROUTER = /\bcreate(?:Browser|Hash|Memory)Router\s*\(/;
+const unreadDataRouter = p => p.code.some(f => /<RouterProvider\b/.test(p.text(f)) && !DATA_ROUTER.test(p.text(f)))
+  || p.code.some(f => DATA_ROUTER.test(p.text(f)) && /\bComponent\s*:/.test(p.text(f)));
 
 // Each output's gate rows, in order (spec #343 The gate table): name, the kinds it applies to, its test (passes when
-// true; a row with none fails for every kind it names), its effect when it fails (a refusal unless `note`), its
-// message, and the ticket it waits on. A gate ticket lands by adding or changing its own rows.
+// true; a row with none fails for every kind it names), its effect when it fails (a refusal unless `note` or
+// `closes`, see verdictOf), its message, and the ticket it waits on. A gate ticket lands by adding or changing its
+// own rows.
 const COMPONENT_SETS = [
   { name: 'reader', kinds: [CLASSES], message: 'not yet: Component Sets for this kind are charted in map #310', ticket: '#310' },
   { name: 'reader', kinds: [HTML], message: 'not yet: there is no reader for plain HTML + CSS classes (spec #339)', ticket: '#339' },
@@ -129,10 +149,10 @@ const COMPONENT_SETS = [
     message: p => `not yet (#360): the Adapter reads shadcn's nova theme; this Prototype has the older form (${olderTheme(p).join('; ')})` },
   { name: 'text-style-font', kinds: [SHADCN, PATH_A], ticket: '#367', test: p => !unreadFont(p).length,
     message: p => `not yet (#367): the Adapter can't read the Prototype's font for its Text Styles (${unreadFont(p).join('; ')})` },
-  { name: 'screens', kinds: [SHADCN], effect: 'note', ticket: '#350', test: p => !p.declared.has('wouter'),
+  { name: 'screens', kinds: [SHADCN], effect: 'note', ticket: '#350', test: p => !wouter(p),
     message: 'with wouter the default family list comes from one screen, and `--all` takes every file, until #350' },
-  { name: 'screens', kinds: [SHADCN], ticket: '#361', test: p => !unreadRoutes(p).length,
-    message: p => `only with \`--all\`: the screens can't be read until #361 (${unreadRoutes(p).join('; ')})` },
+  { name: 'screens', kinds: [SHADCN], ticket: '#361', test: p => !unreadDataRouter(p),
+    message: "only with `--all`: the screens can't be read until #361 (a data router built in another file, or `Component:` routes)" },
   { name: 'screens', kinds: REACT, effect: 'note', ticket: '#349', message: "a form's controls inside a render prop are not counted yet (#349)" },
   // Only when Component Sets are asked (#437). The agent's one read of the file through the owner's Figma connection is the
   // SKILL.md's step after the check: the check fetches nothing.
@@ -144,6 +164,29 @@ const HANDOFF = [
   { name: 'reader', kinds: REACT, test: p => p.declared.has('next') || p.declared.has('vite'),
     message: 'no reader for this React setup: To-handoff reads Next.js App Router or Vite' },
   { name: 'reader', kinds: [UNKNOWN], message: 'no reader for what was found' },
+  { name: 'peer-react', kinds: REACT, test: p => !peerOnlyReact(p), message: 'not yet: React only in `peerDependencies` (#358)', ticket: '#358' },
+  { name: 'vite-shell', kinds: REACT, test: p => !onVite(p) || !tanstackStart(p), ticket: '#348',
+    message: "not yet: a TanStack Start build is a Cloudflare Worker, which the run can't serve yet (#348)" },
+  { name: 'vite-shell', kinds: REACT, test: p => !onVite(p) || tanstackStart(p) || viteShell(p),
+    message: p => p.all.includes('index.html') ? '`index.html` loads no module script: To-handoff reads a Vite app from it'
+      : 'no `index.html`: To-handoff reads a Vite app from its `index.html`' },
+  { name: 'next-app-router', kinds: REACT, test: p => !onNext(p) || appRouter(p),
+    message: 'no `app/` or `src/app/` with a root layout: To-handoff reads only the App Router' },
+  { name: 'html-file', kinds: [HTML, HTML_UTILITIES], test: p => htmlFiles(p).length === 1,
+    message: p => `name the page: run again with the HTML file's path, one of ${htmlFiles(p).join(', ')}. Several pages are not specified yet (the map's 'Plain HTML beyond one banner')` },
+  { name: 'routes', kinds: REACT, effect: 'note', test: p => !onVite(p) || !wouter(p), ticket: '#350',
+    message: "reads as one screen, `index`: To-handoff's Vite reader reads react-router routes, and wouter waits on #350" },
+  { name: 'routes', kinds: REACT, effect: 'note', test: p => !onVite(p) || !unreadDataRouter(p), ticket: '#361',
+    message: 'reads as one screen, `index`: a data router built in another file, or `Component:` routes, wait on #361' },
+  { name: 'runtime-lockfile', kinds: [...REACT, HTML, HTML_UTILITIES], effect: 'note', ticket: '#354',
+    test: p => !p.all.includes('package.json') || p.all.includes('package-lock.json'),
+    message: 'the runtime read runs `npm ci`; without a `package-lock.json` the Handoff is likely static-only, with a `q-runtime` question: run `npm install --package-lock-only --ignore-scripts` in your project (#354)' },
+  // The own-folder route (#265): closed for path A and plain HTML, and for a Prototype that can't have Component Sets
+  // (a refused Figma link alone leaves it able to).
+  { name: 'own-folder', kinds: [PATH_A, HTML], effect: 'closes', ticket: '#265',
+    message: "To-handoff can't yet recognise its sites through the Family map (#265)" },
+  { name: 'own-folder', kinds: [SHADCN, CLASSES, MODULES, HTML_UTILITIES], effect: 'closes', test: p => p.componentSets.reasons.every(r => r.row === 'figma'),
+    message: "it can't have Component Sets, so it has no own folder" },
 ];
 
 function figmaRefusal(p) {
@@ -154,9 +197,6 @@ function figmaRefusal(p) {
 // A stylesheet of the Prototype's own, with class rules and no Tailwind import.
 const classStyled = p => p.all.filter(f => STYLES.has(extname(f)) && !/\.module\.s?css$/.test(f))
   .filter(f => { const css = p.text(f); return !/tailwindcss/.test(css) && /(?:^|[\s,}])\.[A-Za-z_][\w-]*[^{};]*\{/m.test(css); });
-
-// React declared only in peerDependencies, as a Figma Make bundle declares it (#358).
-const peerOnlyReact = p => !!p.pkg?.peerDependencies?.react && !p.pkg?.dependencies?.react && !p.pkg?.devDependencies?.react;
 
 // The CSS entry the Adapter's Foundations read takes today: components.json's tailwind.css, else on path A the
 // stylesheet extract.mjs takes. With it, the stylesheets it imports by relative path. None when there is no entry.
@@ -194,19 +234,15 @@ function unreadFont(p) {
     ...Object.keys(theme).filter(k => /^--font-(?!weight-)[\w-]+$/.test(k)).map(unread).filter(Boolean)];
 }
 
-// The data routers the screens reader can't read yet (#361): a router a file renders but another file defines, and
-// route objects that give `Component:`.
-function unreadRoutes(p) {
-  const routed = p.code.filter(f => p.imports(f).some(s => /^react-router(-dom|\/dom)?$/.test(s)));
-  return [...routed.filter(f => /<RouterProvider\b/.test(p.text(f)) && !/\bcreate\w*Router\s*\(/.test(p.text(f))).map(f => `${f} renders a data router defined in another file`),
-    ...routed.filter(f => /\bComponent\s*:\s*[A-Z]/.test(p.text(f))).map(f => `${f} gives \`Component:\` routes`)];
-}
-
+// A failing row refuses, unless its effect is `note`, or `closes`: that closes the own-folder route, so the output is
+// only against a Design System the owner names.
 function verdictOf(table, p, yes) {
   const failing = table.filter(row => row.kinds.includes(p.kind) && !row.test?.(p))
-    .map(row => ({ row: row.name, message: typeof row.message === 'function' ? row.message(p) : row.message, ticket: row.ticket, note: row.effect === 'note' }));
-  const reasons = failing.filter(f => !f.note).map(({ note, ...r }) => r);
-  return { verdict: reasons.length ? 'no' : yes, reasons, notes: failing.filter(f => f.note).map(f => f.message) };
+    .map(row => ({ row: row.name, message: typeof row.message === 'function' ? row.message(p) : row.message, ticket: row.ticket, effect: row.effect }));
+  const withEffect = wanted => failing.filter(f => f.effect === wanted).map(({ effect, ...r }) => r);
+  const refusals = withEffect(undefined), closes = withEffect('closes');
+  return { verdict: refusals.length ? 'no' : closes.length ? 'only against a Design System you name' : yes,
+    reasons: refusals.length ? refusals : closes, notes: withEffect('note').map(f => f.message) };
 }
 
 const OUTPUTS = { componentSets: 'Component Sets', handoff: 'a Handoff' };
@@ -215,7 +251,7 @@ const SCRATCH_ROOT = '.scratch/design-systems';
 /**
  * check(prototype, {figma, handoff, ds, name, all}) -> {kind, evidence, verdicts: {componentSets, handoff}, questions,
  * plan}: the Prototype's kind and the files that show it, each output's verdict ({verdict, reasons: [{row, message,
- * ticket}], notes}) from its gate rows, the owner's open questions ({id, question, options?}), and the plan, settled
+ * ticket}], notes}) from its gate rows, a plain HTML Handoff's with the `page` it reads, the owner's open questions ({id, question, options?}), and the plan, settled
  * only when no question is open and nothing asked is refused (spec #343 The check; Owner questions; The stages).
  * `prototype` is a folder, or for plain HTML one HTML file; `figma` (a link) asks for Component Sets and `handoff` for
  * a Handoff against the Design System `ds`. It reads file names, package.json and text; it writes nothing, fetches
@@ -228,10 +264,10 @@ export function check(prototype, options = {}) {
     const found = evidence(p);
     if (found.length) { p.kind = kind; p.evidence = [...found, ...frameworks(p)]; break; }
   }
-  const verdicts = {
-    componentSets: verdictOf(COMPONENT_SETS, p, p.kind === SHADCN ? 'yes, by the shadcn path' : 'yes, by path A'),
-    handoff: verdictOf(HANDOFF, p, 'yes'),
-  };
+  p.componentSets = verdictOf(COMPONENT_SETS, p, p.kind === SHADCN ? 'yes, by the shadcn path' : 'yes, by path A');
+  const verdicts = { componentSets: p.componentSets, handoff: verdictOf(HANDOFF, p, 'yes, against its own folder') };
+  // Plain HTML reaches To-handoff as one HTML file: the folder's one page, found without naming it.
+  if ([HTML, HTML_UTILITIES].includes(p.kind) && verdicts.handoff.verdict !== 'no') verdicts.handoff.page = htmlFiles(p)[0];
   const asked = [options.figma !== undefined && 'componentSets', options.handoff && 'handoff'].filter(Boolean);
   const refused = asked.some(o => verdicts[o].verdict === 'no');
   const questions = refused ? [] : questionsOf(p, asked, verdicts);

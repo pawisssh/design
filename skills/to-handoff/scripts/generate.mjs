@@ -18,6 +18,7 @@ import { fileHash, handoffContentHash, prototypeFiles, snapshotIdOf, usedHash } 
 import { COLOR_ROLES, collectionOf, colorText, followCustom, matchDeclaration, matchText, roleOf, sameHex, valueIn } from './match.mjs';
 import { loadDesignSystem, stateAxisOf } from './system.mjs';
 import { hasRuntime } from './deps.mjs';
+import { featureOf, kebab } from './feature-key.mjs';
 import { readHtml, walk } from './reader.mjs';
 import { readReact } from './react.mjs';
 import { STEP_KINDS, run } from './runtime.mjs';
@@ -36,7 +37,6 @@ const DEFAULT_BREAKPOINTS = [{ key: 'desktop', width: 1280 }];
 const MAX_SCREENS = 6;
 
 export { fileHash, handoffContentHash, snapshotIdOf };
-const kebab = s => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
 // ---------- decisions ----------
 
@@ -162,9 +162,10 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   const { foundations, adapter } = system;
   // A Design System package import is recognised by import (#62): the packages its Contracts name.
   const packages = [...new Set(Object.values(system.contracts).map(c => c.code && c.code.package).filter(Boolean))].sort();
-  const doc = readPrototype(prototype, { depsDir, packages });
-  const { at, rules, title } = doc;
-  const featureKey = kebab(title);
+  // The feature key is To-handoff's and the check's one function (#431), so the two can't name a Handoff apart.
+  const { name: title, key: featureKey } = featureOf(prototype);
+  const doc = readPrototype(prototype, { depsDir, packages, title });
+  const { at, rules } = doc;
   const screenIds = doc.screens.map(s => s.id);
   const multi = doc.screens.length > 1;
   const dir = join(designSystem, 'handoffs', featureKey);
@@ -854,17 +855,16 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
 }
 
 /**
- * The Prototype as one shape for either reader: {kind, title, files, at, rules, standIns, fonts, ignored,
- * screens: [{id, name, route, offset, root, mount}]}. A single HTML file is one screen named by its title.
+ * The Prototype as one shape for either reader: {kind, files, at, rules, standIns, fonts, ignored,
+ * screens: [{id, name, route, offset, root, mount}]}. A single HTML file is one screen named by its feature's `title`.
  */
-function readPrototype(prototype, { depsDir, packages }) {
+function readPrototype(prototype, { depsDir, packages, title }) {
   if (!/\.html?$/i.test(prototype)) return readReact(prototype, { depsDir, packages });
   const rel = basename(prototype);
   const doc = readHtml(prototype, rel, { depsDir });
-  const title = doc.title || rel.replace(/\.html?$/, '');
   const mount = doc.mounts[0] || findTag(doc.root, 'body');
   return {
-    kind: 'html-file', title, files: [rel], at: doc.at, rules: doc.rules, standIns: standIns(doc.scripts), fonts: [], ignored: [],
+    kind: 'html-file', files: [rel], at: doc.at, rules: doc.rules, standIns: standIns(doc.scripts), fonts: [], ignored: [],
     screens: [{ id: kebab(title), name: title, route: '/', offset: mount.offset, root: doc.root, mount }],
   };
 }
