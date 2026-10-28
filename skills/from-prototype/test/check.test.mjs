@@ -1,6 +1,7 @@
-// The check (#433, spec #343 The check; Kind detection; the `reader` rows): the Prototype's kind and the files that
-// show it, and each output's verdict from its gate table, through the check's entry and its CLI. Temp-dir Prototypes
-// are written as the path tests write theirs; the committed fixtures are read where they are.
+// The check (#433, #437, spec #343 The check; Kind detection; the gate rows; Owner questions; The stages): the
+// Prototype's kind and the files that show it, each output's verdict from its gate table, the owner's questions and the
+// plan, through the check's entry and its CLI. Temp-dir Prototypes are written as the path tests write theirs; the
+// committed fixtures are read where they are.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -26,6 +27,7 @@ function prototype(files) {
 }
 const UTILITIES = 'export default () => <div className="flex items-center gap-2 p-4 rounded-md bg-slate-200">Hi</div>;\n';
 const reasons = verdict => verdict.reasons.map(r => r.message);
+const FIGMA = 'https://www.figma.com/design/AbCdEfGhIjKlMnOpQrStUv/Prototype';
 
 test('the v0 fixture is React + Tailwind + shadcn on Next, and both outputs read', () => {
   const r = check(handoff('v0-app'));
@@ -133,7 +135,7 @@ test('a Vue package, a Svelte file and CSS modules or CSS-in-JS are refused as n
     }
     assert.ok(check(modules).evidence.includes('src/App.module.css'));
     assert.ok(check(cssInJs).evidence.includes('styled-components'));
-    const out = run(vue, '--figma', 'https://www.figma.com/design/abc/x').stdout;
+    const out = run(vue, '--figma', FIGMA).stdout;
     assert.match(out, /docs\/adr\/0019-/);
   } finally { for (const d of [vue, svelte, modules, cssInJs]) rmSync(d, { recursive: true, force: true }); }
 });
@@ -169,8 +171,8 @@ test('TanStack Start is named in the evidence', () => {
   finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('the CLI prints what was found, each verdict and what is still possible, and exits 1 only when an asked output is refused', () => {
-  const asked = run(vibe('html-app'), '--figma', 'https://www.figma.com/design/abc/x');
+test('the CLI prints what was found, each verdict and what is still possible, and exits 1 when an asked output is refused', () => {
+  const asked = run(vibe('html-app'), '--figma', FIGMA);
   assert.equal(asked.status, 1, asked.stderr);
   const lines = asked.stdout.trim().split('\n');
   assert.match(lines[0], /^.*html-app: plain HTML \+ CSS classes \(.*index\.html.*\)\.$/);
@@ -180,9 +182,8 @@ test('the CLI prints what was found, each verdict and what is still possible, an
   assert.equal(lines.at(-1), 'Nothing was fetched or written.');
   assert.doesNotMatch(asked.stdout + asked.stderr, /\n\s+at /);
 
-  assert.equal(run(vibe('html-app')).status, 0, 'no output asked: the verdicts alone');
-  assert.equal(run(vibe('html-app'), '--handoff').status, 0);
-  assert.equal(run(handoff('v0-app'), '--figma', 'https://www.figma.com/design/abc/x', '--handoff').status, 0);
+  assert.equal(run(vibe('html-app'), '--handoff', '--ds', 'carbon').status, 0);
+  assert.equal(run(handoff('v0-app'), '--figma', FIGMA, '--handoff', '--ds', 'carbon').status, 0);
 
   const missing = run(join(tmpdir(), 'from-prototype-no-such-prototype'), '--handoff');
   assert.equal(missing.status, 1);
@@ -199,6 +200,126 @@ test('a Carbon app with Tailwind utilities is still Carbon, and a file given tha
     assert.deepEqual(notHtml.evidence, ['a file that is not HTML']);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+test('no output asked: exit 2 with one question offering only the outputs whose verdict is not "no", and the Design System question beside a Handoff', () => {
+  const both = run(handoff('v0-app'));
+  assert.equal(both.status, 2, both.stderr);
+  assert.match(both.stdout, /Owner question: Which outputs should this run make: Component Sets, a Handoff, or both\?\n- Component Sets \(yes, by the shadcn path\): run again with `--figma <url>`\n- a Handoff \(yes\): run again with `--handoff`\nOwner question: Which Design System is the Handoff against\?\n/);
+  assert.equal(both.stdout.trim().split('\n').at(-1), 'Nothing was fetched or written.');
+
+  const html = check(vibe('html-app'));
+  assert.deepEqual(html.questions.map(q => q.id), ['outputs', 'designSystem']);
+  assert.deepEqual(html.questions[0].options.map(o => o.output), ['handoff']);
+  // Component Sets alone possible: no Design System question.
+  assert.deepEqual(check(vibe('tailwind-no-shadcn')).questions.map(q => q.id), ['outputs']);
+  assert.equal(html.plan, null);
+  const out = run(vibe('html-app'));
+  assert.equal(out.status, 2);
+  assert.match(out.stdout, /Owner question: Should this run make a Handoff\? It is the only output possible\.\n- a Handoff \(yes\): run again with `--handoff`/);
+  assert.doesNotMatch(out.stdout, /run again with `--figma/);
+
+  // Nothing possible: no question to ask, a refusal.
+  const vue = prototype({ 'package.json': { dependencies: { vue: '3.5.0' } }, 'src/App.vue': '<template><p>Hi</p></template>' });
+  try {
+    assert.deepEqual(check(vue).questions, []);
+    const r = run(vue);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /Nothing else is possible for this Prototype today\./);
+    assert.doesNotMatch(r.stdout, /Owner question/);
+  } finally { rmSync(vue, { recursive: true, force: true }); }
+});
+
+test('both asked with one refused: exit 1, no plan, and the message names the command for the other', () => {
+  const html = run(vibe('html-app'), '--figma', FIGMA, '--handoff', '--ds', 'carbon');
+  assert.equal(html.status, 1, html.stderr);
+  assert.ok(html.stdout.includes(`Run \`node skills/from-prototype/scripts/from-prototype.mjs check ${vibe('html-app')} --handoff --ds carbon\` if one of them is it.`), html.stdout);
+  assert.doesNotMatch(html.stdout, /Plan:/);
+  assert.equal(check(vibe('html-app'), { figma: FIGMA, handoff: true, ds: 'carbon' }).plan, null);
+
+  const bare = run(vibe('tailwind-no-shadcn'), '--figma', FIGMA, '--handoff', '--ds', 'carbon');
+  assert.equal(bare.status, 1);
+  assert.ok(bare.stdout.includes(`Component Sets alone are still possible: \`node skills/from-prototype/scripts/from-prototype.mjs check ${vibe('tailwind-no-shadcn')} --figma ${FIGMA}\`.`), bare.stdout);
+});
+
+test('a Figma link that is not a Design file link is refused before anything is fetched, and only when Component Sets are asked', () => {
+  for (const link of ['https://www.figma.com/design/abc/x', 'https://www.figma.com/board/AbCdEfGhIjKlMnOpQrStUv/x', `${FIGMA.replace('/Prototype', '')}/branch/XyZ/x`, 'figma']) {
+    const r = check(handoff('v0-app'), { figma: link });
+    assert.equal(r.verdicts.componentSets.verdict, 'no', link);
+    assert.deepEqual(r.verdicts.componentSets.reasons.map(x => x.row), ['figma']);
+    assert.match(reasons(r.verdicts.componentSets)[0], /^the Figma link is refused: .*(not a Figma Design file link|a branch of a file)/);
+    assert.equal(r.plan, null);
+  }
+  assert.equal(check(handoff('v0-app'), { handoff: true, ds: 'carbon' }).verdicts.componentSets.verdict, 'yes, by the shadcn path');
+  assert.equal(check(handoff('v0-app'), { figma: FIGMA.replace('/design/', '/file/') }).verdicts.componentSets.verdict, 'yes, by the shadcn path');
+
+  const bad = run(handoff('v0-app'), '--figma', 'https://www.figma.com/design/abc/x', '--handoff', '--ds', 'carbon');
+  assert.equal(bad.status, 1);
+  assert.match(bad.stdout, /- Component Sets: no\. The Figma link is refused: https:\/\/www\.figma\.com\/design\/abc\/x is not a Figma Design file link/);
+  assert.ok(bad.stdout.includes(`A Handoff can run alone: \`node skills/from-prototype/scripts/from-prototype.mjs check ${handoff('v0-app')} --handoff --ds carbon\`.`), bad.stdout);
+  assert.doesNotMatch(bad.stdout + bad.stderr, /\n\s+at /);
+});
+
+const stagesOf = r => r.plan.stages.map(s => [s.stage, s.designSystem].filter(Boolean).join(' '));
+
+test('a settled run exits 0 with the stages, each with its folder and Design System', () => {
+  const sets = check(handoff('v0-app'), { figma: FIGMA });
+  assert.deepEqual(sets.questions, []);
+  assert.deepEqual(stagesOf(sets), ['folder v0-app', 'review-page v0-app', 'approve v0-app', 'figma-build v0-app', 'hand-over']);
+  assert.equal(sets.plan.stages[0].folder, '.scratch/design-systems/v0-app');
+  assert.deepEqual(sets.plan.stages.filter(s => s.owner).map(s => s.stage), ['approve']);
+  assert.equal(sets.plan.stages[3].figma, FIGMA);
+
+  const named = check(handoff('vite-app'), { handoff: true, ds: 'carbon' });
+  assert.deepEqual(stagesOf(named), ['scratch-copy carbon', 'generate carbon', 'review carbon', 'sign-off carbon', 'hand-over']);
+  assert.ok(named.plan.stages.slice(0, -1).every(s => s.folder === '.scratch/design-systems/carbon'));
+
+  // The own folder named with --ds: the folder step and its approve, with no Figma link, then To-handoff against it.
+  assert.deepEqual(stagesOf(check(handoff('v0-app'), { handoff: true, ds: 'v0-app' })),
+    ['folder v0-app', 'review-page v0-app', 'approve v0-app', 'generate v0-app', 'review v0-app', 'sign-off v0-app', 'hand-over']);
+
+  // Both: the folder step and its approve once, the Figma build, then the Handoff against the settled Design System.
+  const both = check(handoff('v0-app'), { figma: FIGMA, handoff: true, ds: 'carbon' });
+  assert.deepEqual(stagesOf(both), ['folder v0-app', 'review-page v0-app', 'approve v0-app', 'figma-build v0-app',
+    'scratch-copy carbon', 'generate carbon', 'review carbon', 'sign-off carbon', 'hand-over']);
+  assert.deepEqual(both.plan.stages.at(-1).outputs, ['componentSets', 'handoff']);
+
+  // --name and --all pass to the folder step.
+  const renamed = check(handoff('v0-app'), { figma: FIGMA, name: 'mine', all: true });
+  assert.deepEqual(renamed.plan.stages[0], { stage: 'folder', folder: '.scratch/design-systems/mine', designSystem: 'mine', all: true });
+  const refusedHandoff = run(vibe('tailwind-no-shadcn'), '--figma', FIGMA, '--name', 'mine', '--all', '--handoff', '--ds', 'carbon');
+  assert.ok(refusedHandoff.stdout.includes(`--figma ${FIGMA} --name mine --all\``), refusedHandoff.stdout);
+
+  const out = run(handoff('v0-app'), '--figma', FIGMA, '--handoff', '--ds', 'carbon');
+  assert.equal(out.status, 0, out.stderr);
+  assert.match(out.stdout, /Plan:\n1\. Vibe-to-Figma's folder step: \.scratch\/design-systems\/v0-app \(Design System `v0-app`\)\n/);
+  assert.ok(out.stdout.includes(`4. the Figma build: .scratch/design-systems/v0-app (Design System \`v0-app\`) into ${FIGMA}\n`), out.stdout);
+  assert.match(out.stdout, /5\. the Design System's scratch copy: \.scratch\/design-systems\/carbon \(Design System `carbon`\)\n/);
+  assert.match(out.stdout, /9\. the hand-over of Component Sets and a Handoff\n\nNothing was fetched or written\.\n$/);
+});
+
+test('a Handoff asked with no --ds, or Component Sets with no folder name, is an owner question: exit 2, no plan', () => {
+  const r = run(handoff('vite-app'), '--handoff');
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stdout, /Owner question: Which Design System is the Handoff against\?\n- here: .*`carbon`.*\. Run again with `--ds <design-system>`\./);
+  assert.equal(check(handoff('vite-app'), { handoff: true }).plan, null);
+
+  const unnamed = prototype({ 'package.json': { dependencies: { react: '19.2.4' }, devDependencies: { vite: '7.0.0', tailwindcss: '4.2.2' } }, 'src/App.tsx': UTILITIES });
+  try {
+    const u = check(unnamed, { figma: FIGMA });
+    assert.deepEqual(u.questions.map(q => q.id), ['name']);
+    assert.match(u.questions[0].question, /pass --name/);
+    assert.equal(run(unnamed, '--figma', FIGMA).status, 2);
+    assert.equal(run(unnamed, '--figma', FIGMA, '--name', 'unnamed').status, 0);
+  } finally { rmSync(unnamed, { recursive: true, force: true }); }
+
+  // The own folder named for a Prototype that can't have Component Sets: Vibe-to-Figma's folder step would refuse it.
+  const scss = check(handoff('vite-app'), { handoff: true, ds: 'project-members' });
+  assert.deepEqual(scss.questions.map(q => q.id), ['designSystem']);
+  assert.match(scss.questions[0].question, /Not `project-members`, this Prototype's own folder: it can't have Component Sets/);
+  assert.equal(scss.plan, null);
+});
+
+const OPTION_SETS = [{}, { figma: FIGMA }, { figma: 'https://www.figma.com/design/abc/x', handoff: true, ds: 'carbon' }, { figma: FIGMA, handoff: true, ds: 'carbon' }, { handoff: true }];
 
 test('every run writes nothing, runs and fetches nothing, leaves the Prototype as it was, and loads no fetched parser', () => {
   // A child process whose fs writes, child processes and fetch are recorded before the check is imported, so the
@@ -222,7 +343,7 @@ test('every run writes nothing, runs and fetches nothing, leaves the Prototype a
     const prototypes = JSON.parse(process.argv[1]);
     const list = p => statSync(p).isFile() ? [statSync(p).mtimeMs] : [...files(p)].map(f => f + ' ' + statSync(f).mtimeMs);
     const before = prototypes.map(list);
-    for (const p of prototypes) check(p);
+    for (const p of prototypes) for (const options of ${JSON.stringify(OPTION_SETS)}) check(p, options);
     const changed = prototypes.filter((p, i) => JSON.stringify(list(p)) !== JSON.stringify(before[i]));
     const loaded = Object.keys(require.cache).filter(k => k.includes('/.scratch/'));
     console.log(JSON.stringify({ calls, changed, loaded }));
