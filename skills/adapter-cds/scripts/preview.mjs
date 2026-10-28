@@ -67,6 +67,11 @@ const importSpecifier = contract => {
   return m[1];
 };
 
+// in (#477): a CDS input takes its start and end content as a React node, not an icon name, and its docs put an
+// InputIcon there (TextInput's `start={<InputIcon name="pencil" />}`). For a component listed here, an icon property
+// renders as that element holding the icon name, and the bundle exports the element's component too.
+const ICON_NODES = { TextInput: ['InputIcon', '@coinbase/cds-web/controls'] };
+
 const dataUri = (file, type) => `url(data:${type};base64,${readFileSync(file).toString('base64')})`;
 
 // Inter, the font defaultTheme names (`--defaultFont-sans: 'Inter'`), from the pinned variable font: its Latin and
@@ -95,7 +100,7 @@ function cdsCss(dir, componentCss) {
  * stubbed. Returns the loaded bundle and the stubbed `.css` files in import order (a post-order walk of the
  * metafile, whose imports are in source order, so a module's dependencies' CSS comes before its own).
  */
-async function bundle(dir, specifier, component) {
+async function bundle(dir, specifier, component, iconNode) {
   if (!/^[A-Za-z_$][\w$]*$/.test(component)) throw new Error(`code.component ${component} is not an export name`);
   const require = createRequire(join(dir, 'package.json'));
   const esbuild = require('esbuild');
@@ -110,6 +115,7 @@ async function bundle(dir, specifier, component) {
     "export { AnimatePresence } from 'framer-motion';",
     // The one export, so the bundle (and so the CSS) holds only what the component imports.
     `export { ${component} as Component } from ${JSON.stringify(specifier)};`,
+    ...(iconNode ? [`export { ${iconNode[0]} as IconNode } from ${JSON.stringify(iconNode[1])};`] : []),
   ].join('\n');
   const stubCss = {
     name: 'stub-css',
@@ -161,16 +167,17 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
   if (contract.code.required && contract.code.required.length)
     throw new Error(`the CDS preview renderer does not render code.required props (${contract.code.required.join(', ')})`);
   const specifier = importSpecifier(contract);
-  const { lib, css } = await bundle(dir, specifier, contract.code.component);
+  const iconNode = ICON_NODES[contract.code.component];
+  const { lib, css } = await bundle(dir, specifier, contract.code.component, iconNode);
   const { React, renderToStaticMarkup, ThemeContext, ThemeProvider, MediaQueryProvider, createThemeCssVars, defaultTheme, glyphMap,
-    AnimatePresence, Component } = lib;
+    AnimatePresence, Component, IconNode } = lib;
   if (!Component) throw new Error(`${specifier} has no export ${contract.code.component}`);
 
   // A CDS icon is a name (`startIcon="add"`), drawn from the CoinbaseIcons font.
   const iconFor = value => {
     const key = value === 'icon:default' ? contract.icons.default : String(value).replace(/^icon:/, '');
     if (!glyphMap[`${key}-16-inactive`] && !glyphMap[`${key}-24-inactive`]) throw new Error(`@coinbase/cds-icons has no icon ${key}`);
-    return key;
+    return iconNode ? h(IconNode, { name: key }) : key;
   };
   const h = React.createElement;
   // Each scheme's theme as ThemeProvider builds it (read back from ThemeContext), and the theme variables it would
@@ -197,8 +204,15 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
     },
     render(tuple, properties) {
       // Content props from the properties (contract.mjs's contentProps), then each axis value's code props over them.
-      const axis = codeProps(contract, tuple).props;
+      const { tuple: full, props: axis } = codeProps(contract, tuple);
       const { props, children } = contentProps(contract, properties, iconFor);
+      // in (#477): a swap a Slot axis shows (`visibleWhen: {axis}`, ADR 0011) is passed only where the tuple fills the
+      // slot: TextInput's start icon moves the input's padding, so the start slot is an axis, not a BOOLEAN.
+      for (const p of contract.properties) {
+        const slot = p.code && p.code.visibleWhen && p.code.visibleWhen.axis;
+        const value = slot && contract.axes.find(a => a.key === slot).values.find(v => v.key === full[slot]);
+        if (value && !value.filled) delete props[p.code.prop];
+      }
       Object.assign(props, axis);
       // In #475: the page never runs an animation, so a part CDS animates in on mount would stay at its first frame
       // (Radio's dot: useMotionProps' initial 'exit', opacity 0). AnimatePresence initial={false} renders every motion

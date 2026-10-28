@@ -115,6 +115,30 @@ test('refuses a code.import outside code.package, and an icon CDS does not have'
   assert.throws(() => render({}, { startIcon: true, swapStartIcon: 'icon:notAnIcon' }), /@coinbase\/cds-icons has no icon notAnIcon/);
 });
 
+// A TextInput with its start icon on a Slot axis and its end icon behind a BOOLEAN, as its Contract has them (#477).
+const textInput = {
+  source: { packages: button.source.packages },
+  code: { package: '@coinbase/cds-web', component: 'TextInput', import: "import { TextInput } from '@coinbase/cds-web/controls';" },
+  axes: [{ key: 'start', default: 'none', slot: 'Start glyph', values: [{ key: 'none', filled: false, code: {} }, { key: 'start', filled: true, code: {} }] }],
+  properties: [
+    { key: 'swapStartIcon', type: 'INSTANCE_SWAP', default: 'icon:default', code: { prop: 'start', valueFrom: 'icon', visibleWhen: { axis: 'start' } } },
+    { key: 'endIcon', type: 'BOOLEAN', default: false, code: { prop: 'end', whenFalse: 'omit' } },
+    { key: 'swapEndIcon', type: 'INSTANCE_SWAP', default: 'icon:default', code: { prop: 'end', valueFrom: 'icon', visibleWhen: 'endIcon' } },
+  ],
+  icons: { default: 'search' },
+};
+
+test("TextInput's start and end take an icon as the InputIcon its docs put there, and a Slot axis gates its swap", { skip }, async () => {
+  const { render } = await previewRenderer(textInput);
+  const icons = html => [...scheme(html, 'light').matchAll(/<div class="[^"]*\b_2-[^"]*"><div class="[^"]*cds-Icon"><span [^>]*data-icon-name="(\w+)"/g)].map(m => m[1]);
+  assert.deepEqual(icons(render({ start: 'start' })), ['search', 'search'], 'an InputIcon pads its Icon with paddingX 2');
+  assert.match(render({ start: 'start' }), /data-start="true"/);
+  assert.deepEqual(icons(render({})), ['search'], 'no start icon while the slot is empty');
+  assert.match(render({}), /data-start="false"/);
+  assert.deepEqual(icons(render({ start: 'start' }, { swapStartIcon: 'icon:pencil', endIcon: false })), ['pencil']);
+  assert.ok(!scheme(render({}), 'light').includes('>search<'), 'never the icon name as text');
+});
+
 test('a usage renders its own label and icon; missing properties take their Contract defaults', { skip }, async () => {
   const { render } = await previewRenderer(button);
   const plain = render({ variant: 'secondary' }, { label: 'Save' });

@@ -84,6 +84,7 @@ class El {
     return { add: c => set([...this.cls.split(' ').filter(x => x && x !== c), c]), remove: c => set(this.cls.split(' ').filter(x => x && x !== c)) };
   }
   get childNodes() { return [...(this.text ? [{ nodeType: 3, textContent: this.text }] : []), ...this.kids]; }
+  get firstElementChild() { return this.kids[0] || null; }
   querySelectorAll(sel) {
     const all = [];
     const walk = e => e.kids.forEach(k => { all.push(k); walk(k); });
@@ -300,6 +301,65 @@ test('probe: a fixed-icon INSTANCE is the glyph of its name, and the label skips
   assert.deepEqual(probe(glyphSpec, ...Object.values(glyphPage('minus'))).mismatches, [
     'on light Checkmark: no element cds-Icon', 'on light Minus.visible: page true, Contract false',
     'on dark Checkmark: no element cds-Icon', 'on dark Minus.visible: page true, Contract false']);
+});
+
+// ---------- elements with no class of their own, prefixed ids and an <input>'s placeholder (#477) ----------
+class Input extends El {
+  get tagName() { return 'INPUT'; }
+  get value() { return ''; }
+}
+// A TextInput: its root VStack and start node carry only atomic classes, its label and helper text the ids CDS prefixes,
+// and its two icons cds-Icon. `pseudo` is what getComputedStyle(el, '::placeholder') reads.
+const textInputPage = ({ endWidth = 16, placeholder = 'rgb(91, 97, 110)', id = 'cds-textinput-label-:R1:' } = {}) => {
+  const page = fakePage({ 'foregroundMuted|outside': () => new El('flex-a column-b', { style: { opacity: '0.5' } }, [
+    new El('block-c', { attrs: { for: id }, text: 'Label', style: { paddingTop: '4px' } }),
+    new El('row-d', {}, [new El('inputAreaContainerCss-e', {}, [new El('cds-Interactable baseCss-f', {}, [
+      new El('row-g', {}, [new El('_2-h', {}, [new El('cds-Icon', { w: 16, h: 16 })])]),
+      new Input('nativeInputContainerCss-n1', { attrs: { id, placeholder: 'Placeholder' }, style: { paddingLeft: '4px', color: 'rgb(10, 11, 13)' } }),
+      new El('row-g', {}, [new El('_2-h', {}, [new El('cds-Icon', { w: endWidth, h: 16 })])])])])]),
+    new El('block-c', { attrs: { id: 'cds-textinput-description-:R1:' }, text: 'Helper text', style: { color: 'rgb(91, 97, 110)' } })]) });
+  return { ...page, style: (el, pseudo) => ({ ...page.style(el), ...(pseudo === '::placeholder' && el instanceof Input ? { color: placeholder } : {}) }) };
+};
+const layer = (name, parent, entry, more = {}) => ({ name, type: 'FRAME', parent, entry, className: entry || null, drawnInParent: false, ...more });
+const textInputSpec = {
+  collection: 'theme', modes: ['light', 'dark'],
+  layers: [layer('TextInput', null, ''), layer('Label', 'TextInput', 'cds-textinput-label'), layer('Field', 'TextInput', 'cds-Interactable'),
+    layer('Start', 'Field', ''), layer('Inline label', 'Start', 'cds-textinput-label', { type: 'TEXT' }), layer('Start icon', 'Start', ''),
+    layer('Start glyph', 'Start icon', 'cds-Icon'), layer('Input', 'Field', 'nativeInputContainerCss', { className: 'nativeInputContainerCss-n1' }),
+    layer('Placeholder', 'Input', 'nativeInputContainerCss', { type: 'TEXT', className: 'nativeInputContainerCss-n1', drawnInParent: true }),
+    layer('End glyph', 'Field', 'cds-Icon'), layer('Helper text', 'TextInput', 'cds-textinput-description', { type: 'TEXT' })],
+};
+const both = want => ({ light: want, dark: want });
+textInputSpec.expected = { 'foregroundMuted|outside': both({ TextInput: { opacity: 0.5, paddingLeft: 0 }, Label: { paddingTop: 4 }, Start: { opacity: 1 },
+  'Inline label': null, 'Start glyph': { width: 16 }, Input: { paddingLeft: 4 }, Placeholder: { color: '#5b616e' }, 'End glyph': { width: 16 },
+  'Helper text': { color: '#5b616e' } }) };
+
+test('expectations: an empty entry is an element with no anchor, and its children are not drawn in it', () => {
+  const c = { ...contract, anatomy: { name: 'Button', type: 'COMPONENT', children: [{ name: 'Start icon', type: 'FRAME', children: [{ name: 'Start glyph', type: 'INSTANCE' }] }] } };
+  const spec = expectations({ contract: c, nodes: { Button: '', 'Start icon': '', 'Start glyph': 'cds-Icon' }, foundations, classes });
+  assert.deepEqual(spec.layers.map(l => [l.name, l.entry, l.className, l.drawnInParent]),
+    [['Button', '', null, false], ['Start icon', '', null, false], ['Start glyph', 'cds-Icon', 'cds-Icon', false]]);
+});
+
+test('probe: the root with no anchor is its Mode subtree\'s top element; a layer with none is skipped and its children found past it', () => {
+  assert.deepEqual(probe(textInputSpec, ...Object.values(textInputPage())), { checked: 2, mismatches: [] });
+});
+
+test('probe: a cds- entry finds the label whose for names the id CDS prefixes before the element with that id', () => {
+  // The <input> with the id comes first; the Label still takes the <label> whose for names it.
+  const inputFirst = fakePage({ k: () => new El('flex-a', {}, [new Input('n1', { attrs: { id: 'cds-textinput-label-:R1:' } }),
+    new El('block-c', { attrs: { for: 'cds-textinput-label-:R1:' }, text: 'Label', style: { paddingTop: '4px' } })]) });
+  const labelOnly = { collection: 'theme', modes: ['light', 'dark'], layers: [layer('TextInput', null, ''), layer('Label', 'TextInput', 'cds-textinput-label')],
+    expected: { k: both({ Label: { paddingTop: 4 } }) } };
+  assert.deepEqual(probe(labelOnly, ...Object.values(inputFirst)), { checked: 2, mismatches: [] });
+  assert.deepEqual(probe(textInputSpec, ...Object.values(textInputPage({ id: 'other-:R1:' }))).mismatches.slice(0, 1),
+    ['foregroundMuted|outside light Label: no element cds-textinput-label']);
+});
+
+test('probe: an element answers one layer, so the second cds-Icon is the End glyph; an <input>\'s placeholder is its text', () => {
+  assert.deepEqual(probe(textInputSpec, ...Object.values(textInputPage({ endWidth: 12, placeholder: 'rgb(10, 11, 13)' }))).mismatches, [
+    'foregroundMuted|outside light Placeholder.color: page #0a0b0d, Contract #5b616e', 'foregroundMuted|outside light End glyph.width: page 12, Contract 16',
+    'foregroundMuted|outside dark Placeholder.color: page #0a0b0d, Contract #5b616e', 'foregroundMuted|outside dark End glyph.width: page 12, Contract 16']);
 });
 
 test('compare.js runs the probe from its own text, on the page\'s document', async () => {
