@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import vm from 'node:vm';
 import * as contract from '../scripts/contract.mjs';
-import { withSpinner } from './spinner.mjs';
+import { withSpinner, px } from './spinner.mjs';
 
 const root = new URL('../../../', import.meta.url);
 const load = rel => JSON.parse(readFileSync(new URL(rel, root), 'utf8'));
@@ -133,6 +133,19 @@ test('rejects a raw value without level and reason', () => {
   const c = button();
   delete c.layout[0].set.Button.maxWidth.reason;
   rejects(c, 6, 'layout[0].Button.maxWidth', '`level`', '`reason`');
+});
+
+test('rejects a raw size that is not a number, on every size field (rule 6, #458)', () => {
+  for (const field of ['width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight', 'paddingTop', 'paddingRight',
+    'paddingBottom', 'paddingLeft', 'gap', 'radius', 'strokeWeight']) {
+    const c = button();
+    c.layout[0].set.Button[field] = { raw: 'hug', level: 'info', reason: 'test size' };
+    rejects(c, 6, `the raw value at layout[0].Button.${field} is "hug", not a number`);
+  }
+  // a colour stays a string
+  const c = button();
+  c.paint[0].set.Button.fill = { raw: '#0f62fe', level: 'warning', reason: 'test colour' };
+  assert.ok(!contract.validate(c, foundations).errors.some(e => e.rule === 6), 'a raw colour is not a size');
 });
 
 test('was is ignored for raw-value checks: the owner-edited Contract is valid', () => {
@@ -621,6 +634,28 @@ test('rejects an absolute node whose parent has no Auto Layout in a selected var
 test('rejects an absolute node without a fixed width and height (rule 5)', () => {
   rejects(spinner(L => { L.Spinner.width = 'hug'; }), 5, 'absolute Spinner needs a fixed width and height');
   rejects(spinner(L => { L.Spinner.height = 'fixed'; }), 5, 'absolute Spinner needs a fixed width and height');
+});
+
+// Asserts validate's rule 5 error for a non-fixed size names the node and the field, at and in its message.
+const rejectsSize = (c, who, field) => {
+  rejects(c, 5, `${who} needs a fixed width and height (a token or a number); its ${field} is not`);
+  const { errors } = contract.validate(c, foundations);
+  assert.ok(errors.some(e => e.rule === 5 && e.at === `layout ${who.split(' ').pop()}.${field}`), JSON.stringify(errors));
+};
+// A fixed size of an absolute node or an ELLIPSE whose `raw` is not a number reaches the builder as no size (#458).
+for (const v of ['hug', 'fill', '12px'])
+  test(`rejects an absolute node or an ELLIPSE sized {raw: ${JSON.stringify(v)}} (rule 5, #458)`, () => {
+    rejectsSize(spinner(L => { L.Spinner.width = px(v); }), 'absolute Spinner', 'width');
+    rejectsSize(spinner(L => { L.Spinner.height = px(v); }), 'absolute Spinner', 'height');
+    rejectsSize(spinner(L => { L.Track.width = px(v); }), 'the ELLIPSE Track', 'width');
+    rejectsSize(spinner(L => { L.Track.height = px(v); }), 'the ELLIPSE Track', 'height');
+  });
+
+test('an absolute node and an ELLIPSE sized by a token or {raw: 24} are valid (rule 5, #458)', () => {
+  // spinner() sizes every node {raw: 24}; size-xs is a WIDTH_HEIGHT variable
+  assert.deepEqual(contract.validate(spinner(), foundations), { ok: true, errors: [] });
+  const token = spinner(L => { for (const n of ['Spinner', 'Track', 'Arc']) Object.assign(L[n], { width: { token: 'size-xs' }, height: { token: 'size-xs' } }); });
+  assert.deepEqual(contract.validate(token, foundations), { ok: true, errors: [] });
 });
 
 test('rejects a constraint other than center (rule 3), and constraints without position or position without constraints (rule 5)', () => {
