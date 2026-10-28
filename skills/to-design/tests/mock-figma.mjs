@@ -402,6 +402,8 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
   }
   // A vector's box follows its path (probed live in #442): setting vectorPaths moves x and y to the path's top left
   // and sizes the node to it (here the bounds of its points), and stores the path from there, in float32.
+  // Setting vectorPaths replaces the vector network, and its new vertices take cap NONE (#455). The cap is the one
+  // per-vertex field the core writes; strokeWeight and strokeAlign stay, as the live rerun in #455 read them.
   class Vector extends SceneNode {
     constructor() { super('VECTOR', 'Vector'); this._p.strokeAlign = 'CENTER'; this._paths = []; }
     get vectorPaths() { return clone(this._paths); }
@@ -415,6 +417,7 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
         let k = 0;
         return { windingRule: p.windingRule, data: p.data.split(' ').map(t => (isNaN(t) ? t : String(f32(+t - (k++ % 2 ? y0 : x0))))).join(' ') };
       });
+      this._p.strokeCap = 'NONE';
     }
   }
   // A TEXT node starts in Inter Regular; changing its characters or typography needs the font loaded,
