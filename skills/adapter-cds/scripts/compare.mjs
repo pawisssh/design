@@ -98,11 +98,14 @@ export function expectations({ contract, nodes, foundations, classes }) {
   const walk = (node, parent, nth) => {
     if (nodes[node.name] === undefined) throw new Error(`no node for layer "${node.name}" in the node map`);
     const entry = nodes[node.name].split(' ')[0];
-    const className = entry.startsWith('cds-') ? entry : classes[entry];
-    if (!className) throw new Error(`layer "${node.name}": no compiled class for ${entry}`);
+    // in (#477): an empty entry is an element CDS gives no class, id or literal (TextInput's root VStack, its start
+    // and end HStacks). The probe finds the root as the top of its Mode subtree; any other such layer is not compared,
+    // and its children are found inside its parent's element.
+    const className = entry === '' ? null : entry.startsWith('cds-') ? entry : classes[entry];
+    if (!className && entry !== '') throw new Error(`layer "${node.name}": no compiled class for ${entry}`);
     // A layer with its parent's entry has no element of its own: it is drawn inside the parent's (Button's Label in
     // Middle, Track and Arc in Spinner).
-    const drawnInParent = parent !== null && entry === layers.find(l => l.name === parent).entry;
+    const drawnInParent = entry !== '' && parent !== null && entry === layers.find(l => l.name === parent).entry;
     // In #474: CDS draws one Icon and names its glyph per state (Checkbox's checkmark or minus), so a fixed-icon
     // INSTANCE (`icon:checkmark`, not the swappable `icon:default`) is that Icon's glyph of that name.
     const icon = node.type === 'INSTANCE' && /^icon:/.test(node.instanceOf || '') && !['icon:default', 'icon:preferred'].includes(node.instanceOf)
@@ -166,8 +169,16 @@ export function probe(spec, doc, style, color) {
   const classes = el => String(el.getAttribute('class') || '').split(/\s+/);
   const hasClass = (el, className) => [].concat(className).some(c => classes(el).indexOf(c) >= 0);
   const inside = (el, test) => Array.prototype.find.call(el.querySelectorAll('*'), test);
-  const hasText = el => Array.prototype.some.call(el.childNodes, n => n.nodeType === 3 && n.textContent.trim());
+  // in (#477): an <input> showing its placeholder holds that text, coloured by its ::placeholder (TextInput's field).
+  const placeholder = el => el.tagName === 'INPUT' && !el.value && !!el.getAttribute('placeholder');
+  const hasText = el => placeholder(el) || Array.prototype.some.call(el.childNodes, n => n.nodeType === 3 && n.textContent.trim());
   const glyph = (el, name) => (el.getAttribute('data-icon-name') === name ? el : inside(el, e => e.getAttribute('data-icon-name') === name));
+  // in (#477): a `cds-` entry is the element's static class, else the stem of the id its `for` names (TextInput's
+  // <label for="cds-textinput-label-:R1:">), else of the id CDS gives it with usePrefixedId
+  // (`cds-textinput-description-:R1:`). The label comes before the <input> its `for` names, which has that id.
+  const prefixed = (attr, stem) => el => String(el.getAttribute(attr) || '').indexOf(stem + '-') === 0;
+  const anchors = className => [el => hasClass(el, className)]
+    .concat(typeof className === 'string' && className.indexOf('cds-') === 0 ? [prefixed('for', className), prefixed('id', className)] : []);
   const paintOf = v => (!v || v === 'none' ? 'none' : color(v));
   // in (#472): the elements of the layers beside `layer` in its parent, with everything inside them.
   const siblingElements = (layer, parent) => {
@@ -196,7 +207,7 @@ export function probe(spec, doc, style, color) {
     const outlined = cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0;
     const text = hasText(el) ? el : inside(el, hasText);
     return {
-      fill: color(cs.backgroundColor), color: color(cs.color),
+      fill: color(cs.backgroundColor), color: color((placeholder(el) ? style(el, '::placeholder') : cs).color),
       opacity: type === 'TEXT' && text && style(text).visibility === 'hidden' ? 0 : parseFloat(cs.opacity),
       paddingLeft: parseFloat(cs.paddingLeft), paddingRight: parseFloat(cs.paddingRight),
       paddingTop: parseFloat(cs.paddingTop), paddingBottom: parseFloat(cs.paddingBottom),
@@ -223,41 +234,74 @@ export function probe(spec, doc, style, color) {
       const scope = inside(pages[key], el => classes(el).indexOf('cds-preview-scheme') >= 0 && classes(el).indexOf(mode) >= 0);
       if (!scope) return mismatches.push(key + ' ' + mode + ': no ' + mode + ' subtree');
       const els = {};
+      // in (#477): an element answers one layer, so two layers with one anchor (TextInput's start and end glyphs, both
+      // cds-Icon in the field; Tag's Start icon and End icon, both nodeCss, #472) take the first and the next. A hidden
+      // layer is checked after every shown one has taken its element: TextInput's outside label is hidden when the
+      // inside one, with the same anchor, is shown.
       const taken = [];
-      spec.layers.forEach(layer => {
-        const parent = layer.parent === null ? scope : els[layer.parent];
+      const byName = {};
+      spec.layers.forEach(layer => { byName[layer.name] = layer; });
+      // The element a layer is found in: its parent's, or, past a parent with no element of its own, the nearest one's.
+      const within = layer => {
+        let up = layer.parent;
+        while (up !== null && byName[up].className === null && byName[up].parent !== null) up = byName[up].parent;
+        return up === null ? scope : els[up];
+      };
+      const find = (layer, parent) => {
+        if (layer.className === null) return layer.parent === null ? scope.firstElementChild : undefined;
         // A layer drawn in its parent's element is found by type: a TEXT the element holding the text, an ELLIPSE
-        // the parent's n-th <circle>. In #472: two layers can carry one entry (Tag's Start icon and End icon, both
-        // nodeCss), so a layer takes the first element no other layer took; and a TEXT skips the text inside a sibling
-        // layer's element (the glyph of Tag's Start icon, a font icon, is text too).
-        const find = () => {
-          // A fixed-icon INSTANCE is the glyph of its name inside its entry's element: the glyph carries its size and opacity.
-          if (layer.icon) { const host = inside(parent, e => hasClass(e, layer.className) && glyph(e, layer.icon)); return host && glyph(host, layer.icon); }
-          if (!layer.drawnInParent) return inside(parent, e => hasClass(e, layer.className) && taken.indexOf(e) < 0);
-          if (layer.type === 'TEXT') {
-            const skip = siblingElements(layer, parent);
-            return hasText(parent) ? parent : inside(parent, e => hasText(e) && skip.indexOf(e) < 0);
+        // the parent's n-th <circle>. In #472: a TEXT skips the text inside a sibling layer's element (the glyph of
+        // Tag's Start icon, a font icon, is text too).
+        // A fixed-icon INSTANCE is the glyph of its name inside its entry's element: the glyph carries its size and opacity.
+        if (layer.icon) { const host = inside(parent, e => hasClass(e, layer.className) && glyph(e, layer.icon)); return host && glyph(host, layer.icon); }
+        if (!layer.drawnInParent) {
+          const tests = anchors(layer.className);
+          for (let i = 0; i < tests.length; i++) {
+            const el = inside(parent, e => taken.indexOf(e) < 0 && tests[i](e));
+            if (el) return el;
           }
-          if (layer.type === 'ELLIPSE') return parent.querySelectorAll('circle')[layer.nth];
-        };
-        const el = parent && find();
-        if (el) taken.push(el);
+          return undefined;
+        }
+        if (layer.type === 'TEXT') {
+          const skip = siblingElements(layer, parent);
+          return hasText(parent) ? parent : inside(parent, e => hasText(e) && skip.indexOf(e) < 0);
+        }
+        if (layer.type === 'ELLIPSE') return parent.querySelectorAll('circle')[layer.nth];
+      };
+      const hidden = [];
+      spec.layers.forEach(layer => {
         const want = spec.expected[key][mode][layer.name];
-        if (want === null) { if (el) mismatches.push(key + ' ' + mode + ' ' + layer.name + '.visible: page true, Contract false'); return; }
+        if (want === null) return hidden.push(layer);
+        const parent = within(layer);
+        const el = parent && find(layer, parent);
+        if (layer.className === null && layer.parent !== null) return;
         if (!el) { if (parent) mismatches.push(key + ' ' + mode + ' ' + layer.name + ': no element ' + layer.entry); return; }
         els[layer.name] = el;
+        taken.push(el);
         if (!want) return;
         const got = read(el, layer.type);
         // In (#471): an element between this layer's and its parent layer's, with no layer of its own, passes its
         // opacity on to this layer, as Figma would draw it. IconButton's loading ProgressCircle sits in such an
         // element, its VisualizationContainer, which Interactable dims as the IconButton's child (> *).
         if (el !== parent) for (let e = el.parentElement; e && e !== parent; e = e.parentElement) got.opacity *= parseFloat(style(e).opacity);
+        // in (#477): those elements include each ancestor layer with no anchor of its own, found past (TextInput's Input
+        // stack, the VStack Interactable dims while hovered), so the Contract's opacity folds in that layer's too.
+        let opacity = want.opacity;
+        for (let up = layer.parent; opacity !== undefined && up !== null && byName[up].className === null && byName[up].parent !== null; up = byName[up].parent) {
+          const at = spec.expected[key][mode][up];
+          if (at && at.opacity !== undefined) opacity *= at.opacity;
+        }
+        const wanted = Object.assign({}, want, opacity === undefined ? {} : { opacity });
         // An <img>'s picture is its fill, and no computed style holds it (Avatar's Image, #478).
-        Object.keys(want).filter(field => !(field === 'fill' && el.tagName === 'IMG')).forEach(field => {
-          const a = got[field], b = want[field];
+        Object.keys(wanted).filter(field => !(field === 'fill' && el.tagName === 'IMG')).forEach(field => {
+          const a = got[field], b = wanted[field];
           const same = typeof b === 'number' ? Math.abs(a - b) < 0.01 : a === b;
           if (!same) mismatches.push(key + ' ' + mode + ' ' + layer.name + '.' + field + ': page ' + a + ', Contract ' + b);
         });
+      });
+      hidden.forEach(layer => {
+        const parent = within(layer);
+        if (parent && find(layer, parent)) mismatches.push(key + ' ' + mode + ' ' + layer.name + '.visible: page true, Contract false');
       });
       checked++;
     });
@@ -271,7 +315,7 @@ export const compareModule = spec =>
   `// Written by skills/adapter-cds/scripts/compare.mjs.\nconst spec = ${JSON.stringify(spec)};\n` +
   `${readFileSync(new URL('../../contract/scripts/color.mjs', import.meta.url), 'utf8').replace(/^export /gm, '')}\n` +
   `const colorKey = ${colorKey.toString()};\n` +
-  `export function compare() {\n  return (${probe.toString()})(spec, document, el => getComputedStyle(el), text => colorKey(convert(text)));\n}\n`;
+  `export function compare() {\n  return (${probe.toString()})(spec, document, (el, pseudo) => getComputedStyle(el, pseudo), text => colorKey(convert(text)));\n}\n`;
 
 const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 

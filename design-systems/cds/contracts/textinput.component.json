@@ -1,0 +1,1461 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "textinput",
+    "name": "TextInput",
+    "description": "Text inputs take a line of text. A bordered field with a placeholder, a label outside or inside it, helper text, and an optional start and end icon, in six variants and three sizes."
+  },
+  "source": {
+    "codeLibrary": "CDS Web",
+    "adapter": "cds",
+    "repository": "https://github.com/coinbase/cds",
+    "tag": "",
+    "commit": "135dc3c64218299bd26f0ce2ccdad628551d63d5",
+    "packages": {
+      "@coinbase/cds-web": "9.29.0",
+      "@coinbase/cds-common": "9.29.0",
+      "@coinbase/cds-icons": "5.26.0"
+    },
+    "files": {
+      "apps/docs/docs/components/inputs/TextInput/_webExamples.mdx": "sha256:69f6a934651356ad85d91a8b4ec5676916105b315425cbc63837b458af93342e",
+      "packages/common/src/tokens/input.ts": "sha256:5e1daaeeeed43d766e86eb06ca6f352ced8d799ef1bedef66f3918052b7f4cec",
+      "packages/common/src/tokens/interactable.ts": "sha256:590f7e7a4d688cf4171256b4149b296baa66c591fd1cf587ac84027cdd2ecaf8",
+      "packages/common/src/types/InputBaseProps.ts": "sha256:92b0e8342876bfd9568e1deade4f76e47e0618a42ad074afcd16093a7860890f",
+      "packages/web/package.json": "sha256:ca0ecd076b55efe0aee663a5b0ac2cf296119192d4f86cfdf1181f19efb84650",
+      "packages/web/src/controls/HelperText.tsx": "sha256:73f319024538a48fa7f69e4e8e7e11719799f4331b3b754bb3b20b0967e3bd46",
+      "packages/web/src/controls/InputIcon.tsx": "sha256:55dabb52d0b679fa98bcfd7c8e383c572138df9a417fca5056fd591edcaa266d",
+      "packages/web/src/controls/InputLabel.tsx": "sha256:1d72f04a3bad2f641fa8b9d9f5ae59cc49e275f1771bbfed42401a53a1971139",
+      "packages/web/src/controls/InputStack.tsx": "sha256:28b2bf0fa5321cdcbc1b6137ec7b00c0a1113caaa114226ddba16bd535f626ec",
+      "packages/web/src/controls/NativeInput.tsx": "sha256:758a2aa418f3c844fcfdee6eabac61f8057a1d4b65983bdc56f5a121afa87587",
+      "packages/web/src/controls/TextInput.tsx": "sha256:2d37eb9435b1514cd6af7c7f693545d229d4614b162590163f21f54706ee1fab",
+      "packages/web/src/controls/__figma__/TextInput.figma.ts": "sha256:e757bb26e65a302eb29102ef6323d3fe3c2e46008623aa3f472991e76a7a9eaa",
+      "packages/web/src/system/Interactable.tsx": "sha256:c5088de3daa71967bfd4e957b6f8c35e823dec614a6f90aefebbd305aaf0558f"
+    },
+    "snapshotId": "sha256:bde5354c76338dffc10bf9ed7429752dea8cd5f0092d5de98ca03fd411a6c6d5"
+  },
+  "axes": [
+    {
+      "key": "variant",
+      "label": "Variant",
+      "default": "foregroundMuted",
+      "defaultSource": "packages/web/src/controls/TextInput.tsx L192 destructured default variant = 'foregroundMuted'",
+      "values": [
+        {
+          "key": "positive",
+          "label": "Positive",
+          "code": {
+            "variant": "positive"
+          }
+        },
+        {
+          "key": "negative",
+          "label": "Negative",
+          "code": {
+            "variant": "negative"
+          }
+        },
+        {
+          "key": "foreground",
+          "label": "Foreground",
+          "code": {
+            "variant": "foreground"
+          }
+        },
+        {
+          "key": "primary",
+          "label": "Primary",
+          "code": {
+            "variant": "primary"
+          }
+        },
+        {
+          "key": "foregroundMuted",
+          "label": "Foreground Muted",
+          "code": {
+            "variant": "foregroundMuted"
+          }
+        },
+        {
+          "key": "secondary",
+          "label": "Secondary",
+          "code": {
+            "variant": "secondary"
+          }
+        }
+      ]
+    },
+    {
+      "key": "size",
+      "label": "Size",
+      "default": "l",
+      "defaultSource": "packages/web/src/controls/TextInput.tsx L83 defaultTextInputSize: TextInputSize = 'l'",
+      "values": [
+        {
+          "key": "s",
+          "label": "S",
+          "code": {
+            "size": "s"
+          }
+        },
+        {
+          "key": "m",
+          "label": "M",
+          "code": {
+            "size": "m"
+          }
+        },
+        {
+          "key": "l",
+          "label": "L",
+          "code": {
+            "size": "l"
+          }
+        }
+      ],
+      "dropped": [
+        {
+          "key": "compact",
+          "reason": "Deprecated boolean alias of size s (\"Unset and use `size=\"s\"` instead\"); size wins when both are set. Set without size, it also puts the label inside, inline.",
+          "evidence": [
+            "packages/web/src/controls/TextInput.tsx L117-L123 @deprecated compact",
+            "packages/web/src/controls/TextInput.tsx L273 resolvedSize = size ?? (compact ? 's' : defaultTextInputSize)",
+            "packages/web/src/controls/TextInput.tsx L276 isCompactLabel = Boolean(compact) && size === undefined"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "labelVariant",
+      "label": "Label variant",
+      "default": "outside",
+      "defaultSource": "packages/web/src/controls/TextInput.tsx L213 destructured default labelVariant = 'outside'",
+      "values": [
+        {
+          "key": "outside",
+          "label": "Outside",
+          "code": {}
+        },
+        {
+          "key": "inside",
+          "label": "Inside",
+          "code": {
+            "labelVariant": "inside"
+          }
+        }
+      ]
+    },
+    {
+      "key": "start",
+      "label": "Start icon",
+      "slot": "Start glyph",
+      "default": "none",
+      "defaultSource": "packages/web/src/controls/TextInput.tsx L195 start is undefined unless set, so the input's data-start is false (L322)",
+      "values": [
+        {
+          "key": "none",
+          "label": "False",
+          "filled": false,
+          "code": {},
+          "css": ":not(:has([data-start='true']))"
+        },
+        {
+          "key": "start",
+          "label": "True",
+          "filled": true,
+          "code": {},
+          "css": ":has([data-start='true'])"
+        }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        {
+          "key": "enabled",
+          "label": "Enabled",
+          "code": {}
+        },
+        {
+          "key": "hover",
+          "label": "Hover",
+          "code": null,
+          "css": ":hover"
+        },
+        {
+          "key": "active",
+          "label": "Active",
+          "code": null,
+          "css": ":active, [aria-pressed='true']"
+        },
+        {
+          "key": "focus",
+          "label": "Focus",
+          "code": null,
+          "css": ":focus-within"
+        },
+        {
+          "key": "disabled",
+          "label": "Disabled",
+          "code": {
+            "disabled": true
+          },
+          "css": ":disabled, [aria-disabled='true']"
+        }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 360,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "TextInput",
+    "type": "COMPONENT",
+    "children": [
+      {
+        "name": "Label",
+        "type": "FRAME",
+        "children": [
+          {
+            "name": "Label text",
+            "type": "TEXT",
+            "role": "label"
+          }
+        ]
+      },
+      {
+        "name": "Field",
+        "type": "FRAME",
+        "role": "input",
+        "children": [
+          {
+            "name": "Start",
+            "type": "FRAME",
+            "children": [
+              {
+                "name": "Inline label",
+                "type": "TEXT",
+                "role": "label"
+              },
+              {
+                "name": "Start icon",
+                "type": "FRAME",
+                "role": "icon-slot",
+                "children": [
+                  {
+                    "name": "Start glyph",
+                    "type": "INSTANCE",
+                    "role": "icon",
+                    "instanceOf": "icon:default"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Input stack",
+            "type": "FRAME",
+            "children": [
+              {
+                "name": "Stacked label",
+                "type": "FRAME",
+                "children": [
+                  {
+                    "name": "Stacked label text",
+                    "type": "TEXT",
+                    "role": "label"
+                  }
+                ]
+              },
+              {
+                "name": "Input",
+                "type": "FRAME",
+                "children": [
+                  {
+                    "name": "Placeholder",
+                    "type": "TEXT",
+                    "role": "value"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "End icon",
+            "type": "FRAME",
+            "role": "icon-slot",
+            "children": [
+              {
+                "name": "End glyph",
+                "type": "INSTANCE",
+                "role": "icon",
+                "instanceOf": "icon:default"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Helper",
+        "type": "FRAME",
+        "children": [
+          {
+            "name": "Error icon",
+            "type": "INSTANCE",
+            "role": "icon",
+            "instanceOf": "icon:info"
+          },
+          {
+            "name": "Helper text",
+            "type": "TEXT",
+            "role": "helper-text"
+          }
+        ]
+      }
+    ]
+  },
+  "properties": [
+    {
+      "key": "label",
+      "label": "Label",
+      "type": "TEXT",
+      "default": "Label",
+      "binds": [
+        {
+          "match": {
+            "labelVariant": "outside"
+          },
+          "node": "Label text",
+          "field": "characters"
+        },
+        {
+          "match": {
+            "labelVariant": "inside",
+            "size": [
+              "s",
+              "m"
+            ]
+          },
+          "node": "Inline label",
+          "field": "characters"
+        },
+        {
+          "match": {
+            "labelVariant": "inside",
+            "size": "l"
+          },
+          "node": "Stacked label text",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "label"
+      }
+    },
+    {
+      "key": "placeholder",
+      "label": "Placeholder",
+      "type": "TEXT",
+      "default": "Placeholder",
+      "binds": [
+        {
+          "node": "Placeholder",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "placeholder"
+      }
+    },
+    {
+      "key": "helperText",
+      "label": "Helper text",
+      "type": "TEXT",
+      "default": "Helper text",
+      "binds": [
+        {
+          "node": "Helper text",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "helperText"
+      }
+    },
+    {
+      "key": "swapStartIcon",
+      "label": "Swap start icon",
+      "type": "INSTANCE_SWAP",
+      "default": "icon:default",
+      "preferred": "icon:preferred",
+      "binds": [
+        {
+          "node": "Start glyph",
+          "field": "mainComponent"
+        }
+      ],
+      "code": {
+        "prop": "start",
+        "valueFrom": "icon",
+        "visibleWhen": {
+          "axis": "start"
+        }
+      }
+    },
+    {
+      "key": "endIcon",
+      "label": "End icon",
+      "type": "BOOLEAN",
+      "default": false,
+      "binds": [
+        {
+          "node": "End icon",
+          "field": "visible"
+        }
+      ],
+      "code": {
+        "prop": "end",
+        "whenFalse": "omit"
+      }
+    },
+    {
+      "key": "swapEndIcon",
+      "label": "Swap end icon",
+      "type": "INSTANCE_SWAP",
+      "default": "icon:default",
+      "preferred": "icon:preferred",
+      "binds": [
+        {
+          "node": "End glyph",
+          "field": "mainComponent"
+        }
+      ],
+      "code": {
+        "prop": "end",
+        "valueFrom": "icon",
+        "visibleWhen": "endIcon"
+      }
+    }
+  ],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "TextInput": {
+          "direction": "column",
+          "width": "fill",
+          "height": "hug",
+          "alignMain": "start",
+          "alignCross": "start",
+          "gap": {
+            "token": "space-0_5"
+          },
+          "paddingTop": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the root VStack has no padding (packages/web/src/controls/InputStack.tsx L261-L269)"
+          },
+          "paddingRight": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the root VStack has no padding (packages/web/src/controls/InputStack.tsx L261-L269)"
+          },
+          "paddingBottom": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the root VStack has no padding (packages/web/src/controls/InputStack.tsx L261-L269)"
+          },
+          "paddingLeft": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the root VStack has no padding (packages/web/src/controls/InputStack.tsx L261-L269)"
+          }
+        },
+        "Label": {
+          "visible": true,
+          "direction": "row",
+          "width": "fill",
+          "height": "hug",
+          "paddingTop": {
+            "token": "space-0_5"
+          },
+          "paddingBottom": {
+            "token": "space-0_5"
+          }
+        },
+        "Label text": {
+          "textStyle": {
+            "token": "label2"
+          },
+          "width": "fill",
+          "textResize": "height"
+        },
+        "Field": {
+          "direction": "row",
+          "width": "fill",
+          "height": "hug",
+          "radius": {
+            "token": "borderRadius-200"
+          },
+          "strokeWeight": {
+            "token": "borderWidth-100"
+          },
+          "strokeAlign": "inside"
+        },
+        "Start": {
+          "direction": "row",
+          "width": "hug",
+          "height": "fill",
+          "alignCross": "center",
+          "gap": {
+            "token": "space-2"
+          },
+          "visible": false,
+          "paddingLeft": {
+            "raw": 0,
+            "level": "info",
+            "reason": "the start node has no padding unless an inline label opens it (paddingStart, packages/web/src/controls/TextInput.tsx L449)"
+          }
+        },
+        "Inline label": {
+          "textStyle": {
+            "token": "label2"
+          },
+          "textResize": "width-and-height",
+          "visible": false
+        },
+        "Start icon": {
+          "direction": "row",
+          "width": "hug",
+          "height": "hug",
+          "paddingLeft": {
+            "token": "space-2"
+          },
+          "paddingRight": {
+            "token": "space-2"
+          },
+          "visible": false
+        },
+        "Start glyph": {
+          "width": {
+            "token": "iconSize-s"
+          },
+          "height": {
+            "token": "iconSize-s"
+          },
+          "visible": false
+        },
+        "Input stack": {
+          "direction": "column",
+          "width": "fill",
+          "height": "hug"
+        },
+        "Stacked label": {
+          "direction": "row",
+          "width": "fill",
+          "height": "hug",
+          "paddingTop": {
+            "token": "space-0_75"
+          },
+          "paddingBottom": {
+            "raw": 0,
+            "level": "info",
+            "reason": "insideLabelCss sets padding-bottom: 0 (packages/web/src/controls/TextInput.tsx L70-L75)"
+          },
+          "paddingLeft": {
+            "token": "space-2"
+          },
+          "paddingRight": {
+            "token": "space-2"
+          },
+          "visible": false
+        },
+        "Stacked label text": {
+          "textStyle": {
+            "token": "label2"
+          },
+          "width": "fill",
+          "textResize": "height"
+        },
+        "Input": {
+          "direction": "row",
+          "width": "fill",
+          "height": "hug",
+          "paddingTop": {
+            "token": "space-2"
+          },
+          "paddingBottom": {
+            "token": "space-2"
+          },
+          "paddingLeft": {
+            "token": "space-2"
+          },
+          "paddingRight": {
+            "token": "space-2"
+          }
+        },
+        "Placeholder": {
+          "textStyle": {
+            "token": "body"
+          },
+          "width": "fill",
+          "textResize": "height"
+        },
+        "End icon": {
+          "direction": "row",
+          "width": "hug",
+          "height": "fill",
+          "alignCross": "center",
+          "paddingLeft": {
+            "token": "space-2"
+          },
+          "paddingRight": {
+            "token": "space-2"
+          }
+        },
+        "End glyph": {
+          "width": {
+            "token": "iconSize-s"
+          },
+          "height": {
+            "token": "iconSize-s"
+          }
+        },
+        "Helper": {
+          "direction": "row",
+          "width": "fill",
+          "height": "hug",
+          "alignCross": "center",
+          "gap": {
+            "token": "space-0_5"
+          }
+        },
+        "Error icon": {
+          "width": {
+            "token": "iconSize-xs"
+          },
+          "height": {
+            "token": "iconSize-xs"
+          },
+          "visible": false
+        },
+        "Helper text": {
+          "textStyle": {
+            "token": "label2"
+          },
+          "width": "fill",
+          "textResize": "height"
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "m"
+      },
+      "set": {
+        "Input": {
+          "paddingTop": {
+            "token": "space-1_5"
+          },
+          "paddingBottom": {
+            "token": "space-1_5"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "s"
+      },
+      "set": {
+        "Input": {
+          "paddingTop": {
+            "token": "space-1"
+          },
+          "paddingBottom": {
+            "token": "space-1"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "labelVariant": "inside",
+        "size": "l"
+      },
+      "set": {
+        "Label": {
+          "visible": false
+        },
+        "Stacked label": {
+          "visible": true
+        },
+        "Input": {
+          "paddingTop": {
+            "raw": 0,
+            "level": "info",
+            "reason": "an inside label at size l stacks above the input, which yields its top padding to it: padding-top: 0 (packages/web/src/controls/TextInput.tsx L55-L58)"
+          },
+          "paddingBottom": {
+            "token": "space-0_75"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "labelVariant": "inside",
+        "size": [
+          "s",
+          "m"
+        ]
+      },
+      "set": {
+        "Label": {
+          "visible": false
+        },
+        "Start": {
+          "visible": true,
+          "paddingLeft": {
+            "token": "space-2"
+          }
+        },
+        "Inline label": {
+          "visible": true
+        },
+        "Input": {
+          "paddingLeft": {
+            "token": "space-1"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "start": "start"
+      },
+      "set": {
+        "Start": {
+          "visible": true
+        },
+        "Start icon": {
+          "visible": true
+        },
+        "Start glyph": {
+          "visible": true
+        },
+        "Stacked label": {
+          "paddingLeft": {
+            "token": "space-0_5"
+          }
+        },
+        "Input": {
+          "paddingLeft": {
+            "token": "space-0_5"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "negative"
+      },
+      "set": {
+        "Error icon": {
+          "visible": true
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus"
+      },
+      "set": {
+        "Field": {
+          "strokeWeight": {
+            "raw": 2,
+            "level": "warning",
+            "reason": "border-width 1px (borderWidth={100}, packages/web/src/controls/InputStack.tsx L186) and a box-shadow spread of --border-width-focused, the same 1px, in the focus colour on :focus-within (InputStack.tsx L43-L46, L253): 1px inside the box and 1px outside it, a centred 2px stroke"
+          },
+          "strokeAlign": "center"
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "TextInput": {
+          "fill": "none",
+          "stroke": "none",
+          "effects": [],
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opaque unless disabled"
+          }
+        },
+        "Label text": {
+          "fill": {
+            "token": "fgMuted"
+          }
+        },
+        "Field": {
+          "fill": {
+            "token": "bg"
+          },
+          "stroke": {
+            "token": "bgLineHeavy"
+          },
+          "effects": [],
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opacity: 1 on the field when hovered or disabled (packages/web/src/controls/InputStack.tsx L35-L41); the root dims it instead"
+          }
+        },
+        "Start": {
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opaque unless the field is hovered or pressed"
+          }
+        },
+        "Inline label": {
+          "fill": {
+            "token": "fgMuted"
+          }
+        },
+        "Start glyph/Vector": {
+          "fill": {
+            "token": "fg"
+          }
+        },
+        "Input stack": {
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opaque unless the field is hovered or pressed"
+          }
+        },
+        "Stacked label text": {
+          "fill": {
+            "token": "fgMuted"
+          }
+        },
+        "Input": {
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opaque unless the field is hovered or pressed"
+          }
+        },
+        "Placeholder": {
+          "fill": {
+            "token": "fgMuted"
+          }
+        },
+        "End icon": {
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "opaque unless the field is hovered or pressed"
+          }
+        },
+        "End glyph/Vector": {
+          "fill": {
+            "token": "fg"
+          }
+        },
+        "Error icon/Vector": {
+          "fill": {
+            "token": "fgNegative"
+          }
+        },
+        "Helper text": {
+          "fill": {
+            "token": "fgMuted"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "positive"
+      },
+      "set": {
+        "Field": {
+          "stroke": {
+            "token": "bgPositive"
+          }
+        },
+        "Helper text": {
+          "fill": {
+            "token": "fgPositive"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "negative"
+      },
+      "set": {
+        "Field": {
+          "stroke": {
+            "token": "bgNegative"
+          }
+        },
+        "Helper text": {
+          "fill": {
+            "token": "fgNegative"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "foreground"
+      },
+      "set": {
+        "Field": {
+          "stroke": {
+            "token": "bgInverse"
+          }
+        },
+        "Helper text": {
+          "fill": {
+            "token": "fg"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "primary"
+      },
+      "set": {
+        "Field": {
+          "stroke": {
+            "token": "bgPrimary"
+          }
+        },
+        "Helper text": {
+          "fill": {
+            "token": "fgPrimary"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "variant": "secondary"
+      },
+      "set": {
+        "Field": {
+          "fill": {
+            "token": "bgSecondary"
+          },
+          "stroke": "none"
+        },
+        "Helper text": {
+          "fill": {
+            "token": "fg"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "hover"
+      },
+      "set": {
+        "Start": {
+          "opacity": {
+            "raw": 0.88,
+            "level": "info",
+            "reason": "opacityHovered (packages/common/src/tokens/interactable.ts L1): Interactable sets --inter-hover-opacity on the field's children (packages/web/src/system/Interactable.tsx L49-L55)"
+          }
+        },
+        "Input": {
+          "opacity": {
+            "raw": 0.88,
+            "level": "info",
+            "reason": "opacityHovered (packages/common/src/tokens/interactable.ts L1): Interactable sets --inter-hover-opacity on the field's children (packages/web/src/system/Interactable.tsx L49-L55)"
+          }
+        },
+        "End icon": {
+          "opacity": {
+            "raw": 0.88,
+            "level": "info",
+            "reason": "opacityHovered (packages/common/src/tokens/interactable.ts L1): Interactable sets --inter-hover-opacity on the field's children (packages/web/src/system/Interactable.tsx L49-L55)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "hover",
+        "labelVariant": "inside",
+        "size": "l"
+      },
+      "set": {
+        "Input stack": {
+          "opacity": {
+            "raw": 0.88,
+            "level": "info",
+            "reason": "opacityHovered (packages/common/src/tokens/interactable.ts L1): Interactable sets --inter-hover-opacity on the field's children (packages/web/src/system/Interactable.tsx L49-L55); at size l an inside label stacks with the input in a VStack, which is that child (packages/web/src/controls/InputStack.tsx L297-L301)"
+          }
+        },
+        "Input": {
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "its VStack takes the hover opacity (packages/web/src/controls/InputStack.tsx L297-L301)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "active"
+      },
+      "set": {
+        "Start": {
+          "opacity": {
+            "raw": 0.82,
+            "level": "info",
+            "reason": "opacityPressed (packages/common/src/tokens/interactable.ts L2): Interactable sets --inter-press-opacity on the field's children (packages/web/src/system/Interactable.tsx L57-L64)"
+          }
+        },
+        "Input": {
+          "opacity": {
+            "raw": 0.82,
+            "level": "info",
+            "reason": "opacityPressed (packages/common/src/tokens/interactable.ts L2): Interactable sets --inter-press-opacity on the field's children (packages/web/src/system/Interactable.tsx L57-L64)"
+          }
+        },
+        "End icon": {
+          "opacity": {
+            "raw": 0.82,
+            "level": "info",
+            "reason": "opacityPressed (packages/common/src/tokens/interactable.ts L2): Interactable sets --inter-press-opacity on the field's children (packages/web/src/system/Interactable.tsx L57-L64)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "active",
+        "labelVariant": "inside",
+        "size": "l"
+      },
+      "set": {
+        "Input stack": {
+          "opacity": {
+            "raw": 0.82,
+            "level": "info",
+            "reason": "opacityPressed (packages/common/src/tokens/interactable.ts L2): Interactable sets --inter-press-opacity on the field's children (packages/web/src/system/Interactable.tsx L57-L64); at size l an inside label stacks with the input in a VStack, which is that child (packages/web/src/controls/InputStack.tsx L297-L301)"
+          }
+        },
+        "Input": {
+          "opacity": {
+            "raw": 1,
+            "level": "info",
+            "reason": "its VStack takes the pressed opacity (packages/web/src/controls/InputStack.tsx L297-L301)"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus"
+      },
+      "set": {
+        "Field": {
+          "stroke": {
+            "token": "bgPrimary"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus",
+        "variant": "positive"
+      },
+      "set": {
+        "Field": {
+          "stroke": {
+            "token": "bgPositive"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "focus",
+        "variant": "negative"
+      },
+      "set": {
+        "Field": {
+          "stroke": {
+            "token": "bgNegative"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "state": "disabled"
+      },
+      "set": {
+        "TextInput": {
+          "opacity": {
+            "raw": 0.5,
+            "level": "info",
+            "reason": "accessibleOpacityDisabled (packages/common/src/tokens/interactable.ts L3) on the root VStack while disabled (packages/web/src/controls/InputStack.tsx L264)"
+          }
+        }
+      }
+    }
+  ],
+  "icons": {
+    "source": {
+      "package": "@coinbase/cds-icons",
+      "version": "5.26.0",
+      "path": "esm/svgs/{key}-16-inactive.svg",
+      "fallback": "esm/svgs/{key}-24-inactive.svg"
+    },
+    "default": "search",
+    "preferred": [
+      "search",
+      "pencil",
+      "cashUSD",
+      "visible",
+      "checkmark"
+    ]
+  },
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": [
+      {
+        "family": "Inter",
+        "styles": [
+          "Regular"
+        ]
+      }
+    ]
+  },
+  "figma": {
+    "page": "Inputs",
+    "componentSetName": "TextInput",
+    "description": "CDS Web TextInput (@coinbase/cds-web 9.29.0). Start and end hold an InputIcon; a pressable icon (InputIconButton), a suffix or custom content is placed by hand.",
+    "header": {
+      "type": "Component",
+      "title": "TextInput",
+      "namespace": "@coinbase/cds-web"
+    },
+    "grid": {
+      "columns": [
+        "size"
+      ],
+      "rows": [
+        "variant",
+        "labelVariant",
+        "start",
+        "state"
+      ]
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@coinbase/cds-web",
+    "component": "TextInput",
+    "import": "import { TextInput } from '@coinbase/cds-web/controls';",
+    "alwaysEmit": []
+  },
+  "notes": [
+    {
+      "level": "info",
+      "at": "axes.state",
+      "message": "Focus takes the field's :focus-within rule (InputStack.tsx L43-L46): the field shows focus while its input has it. Interactable's :focus-visible outline (Interactable.tsx L80-L85) never draws, since the field is a span that takes no focus. While focused, TextInput also sets focusedVariant (TextInput.tsx L218-L219), which tints an icon in the start and end slots through TextInputFocusVariantContext (InputIcon.tsx L36-L43) and the caret; a forced :focus-within sets no React state, so the Focus variants keep the icons in fg."
+    },
+    {
+      "level": "info",
+      "at": "axes.state",
+      "message": "Active takes Interactable's :active rule (Interactable.tsx L57-L64), the pressed background and child opacity. In use, pressing the field also focuses its input, so Active is drawn without the focus border, as the State is forced on its own."
+    },
+    {
+      "level": "warning",
+      "at": "paint.Field.fill",
+      "message": "Interactable blends the field's background for each state with getBlendedColor (Interactable.tsx L289, L301 and L313), at opacityHovered, opacityPressed and opacityDisabled (interactable.ts L1-L4). Those colours are Synthesized tokens (ADR 0009), which the Foundations document makes only from a family's cds-common token map (#396), and cds-common has no tokens/textinput.js. So the Hover, Active and Disabled fields keep the enabled fill, bg or bgSecondary, and the render comparison lists the difference: in Light, a hovered field is rgb(247, 247, 247) on the page and #ffffff in the Contract."
+    },
+    {
+      "level": "info",
+      "at": "layout[state=focus].Field.strokeWeight",
+      "message": "A focused field has a 1px border and a 1px box-shadow ring outside it, both in the focus colour (InputStack.tsx L43-L46, with --border-width-focused at L253). The Contract draws them as one 2px centred stroke, which covers the same pixels. The render comparison reads the border alone, so it lists each Focus field as borderWidth page 1, Contract 2."
+    },
+    {
+      "level": "info",
+      "at": "layout.Field.strokeAlign",
+      "message": "CSS lays the field's children inside its 1px border (borderWidth, InputStack.tsx L285). A Figma inside stroke takes no layout space, so in Figma the field is 2px shorter than CDS's and its children reach under the border by 1px."
+    },
+    {
+      "level": "info",
+      "at": "axes.start",
+      "message": "A start node moves the input's start padding to space-0_5 (data-start, TextInput.tsx L64-L67), and the stacked label's too (insideLabelCssStartCss, L77-L79). So the start icon is a Slot axis (ADR 0011), not a BOOLEAN. The end node moves nothing else, so the end icon keeps its BOOLEAN."
+    },
+    {
+      "level": "info",
+      "at": "anatomy.Start",
+      "message": "An inside label sits inline at sizes s and m, in the start node before the start content (insideHorizontalLabel, TextInput.tsx L441-L467), so Start holds the Inline label and the Start icon. At size l it stacks above the input inside the field (insideVerticalLabel, L281-L283; InputStack.tsx L297-L301), so Input stack holds the Stacked label and the Input."
+    },
+    {
+      "level": "info",
+      "at": "properties.swapStartIcon",
+      "message": "start and end take any React node (TextInput.tsx L146-L149). The Contract models an InputIcon holding an icon name, as the docs place one (_webExamples.mdx L333, L369 and L418), and the preview renders that. A pressable InputIconButton (L250 and L263), a suffix (TextInput.tsx L375-L379) or other content goes in by hand."
+    },
+    {
+      "level": "info",
+      "at": "anatomy.Error icon",
+      "message": "A negative helper text starts with an info icon (HelperText.tsx L59-L72), the active (filled) glyph. The icon source has the inactive glyphs only, so the Error icon shows info's outline glyph. Its marginTop lowers it to the middle of the first line (L51); the Helper row centres it, which places it the same for one line."
+    },
+    {
+      "level": "info",
+      "at": "family",
+      "message": "readOnly is not an axis: it fills the input and the start and end nodes with bgSecondary inside the variant's border (TextInput.tsx L262-L267; NativeInput.tsx L40-L42), and as an axis it would double the set to 720 variants. The owner can add it if read-only fields are drawn often. bordered={false} (TextInput.tsx L209 and L361), focusedBorderWidth, enableColorSurge, align, width, height, borderRadius, inputBackground, labelFont and labelColor customise one input, so they are not axes either. compact is the deprecated alias of size s (dropped from size)."
+    },
+    {
+      "level": "info",
+      "at": "code",
+      "message": "CDS's own Code Connect file (TextInput.figma.ts) maps one state enum to variant positive or negative, readOnly or disabled (L13-L25), and leaves the other variants out. The Contract follows TextInput.tsx: the six variants of InputBaseProps.ts and the canonical State axis."
+    }
+  ],
+  "drafted": {
+    "axes.start.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L146-L147 start?: React.ReactNode, the content at the start of the inner input",
+        "_webExamples.mdx:L333 start={<InputIcon name=\"pencil\" />}, an icon in that slot"
+      ],
+      "fingerprint": "sha256:855c1ab1ff419d455f4342c0ba3fa2e8cb156f56ffc3cc2777f74a90d6f43dbe"
+    },
+    "anatomy.Label": {
+      "by": "agent",
+      "evidence": [
+        "InputStack.tsx:L270-L272 labelNode above the field while labelVariant is outside",
+        "TextInput.tsx:L423-L436 the InputLabel holding label"
+      ],
+      "fingerprint": "sha256:07520f5ac2b07a2aeacfe25759fe89168b4412aaf00d4e854b6beb91a54a5cd3"
+    },
+    "anatomy.Label text": {
+      "by": "agent",
+      "evidence": [
+        "InputLabel.tsx:L14-L22 Text as=\"label\", display block, paddingY 0.5"
+      ],
+      "fingerprint": "sha256:fcd5b127251ba163e88b85966d44f41a622819021b92c91ca9c06bec9a47ef89"
+    },
+    "anatomy.Field": {
+      "by": "agent",
+      "evidence": [
+        "InputStack.tsx:L279-L291 the Interactable span with its background, borderRadius and borderWidth"
+      ],
+      "fingerprint": "sha256:621cf8d036560eb86aaa1c782b6e6d520e54253c6ba90e340acf8f253a6574b9"
+    },
+    "anatomy.Start": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L441-L451 startNode, an HStack with gap 2 for the inline label and the start content"
+      ],
+      "fingerprint": "sha256:aa289d38cd1509a1e6b4f4cf684c7e1bd8c2547eeb4e9618544e42718f5643d0"
+    },
+    "anatomy.Inline label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L452-L463 the InputLabel in the start node while insideHorizontalLabel"
+      ],
+      "fingerprint": "sha256:2b085eb22cd6a61e7956a9f6b5d7b8af2a0d88fc3287a42f20078d57b5cb1cd0"
+    },
+    "anatomy.Start icon": {
+      "by": "agent",
+      "evidence": [
+        "InputIcon.tsx:L40 Box paddingX={2} around the Icon",
+        "_webExamples.mdx:L333 start={<InputIcon name=\"pencil\" />}"
+      ],
+      "fingerprint": "sha256:60f8507b56d452d598dcd5318f2f4dbb4715786163e763c823c5f495f8698a9f"
+    },
+    "anatomy.Start glyph": {
+      "by": "agent",
+      "evidence": [
+        "InputIcon.tsx:L41-L46 the Icon, size s, in color unless focused"
+      ],
+      "fingerprint": "sha256:fd9494b016a863c99945af103d6cd9e480392e8bb7e6775707fc66986985f02a"
+    },
+    "anatomy.Input stack": {
+      "by": "agent",
+      "evidence": [
+        "InputStack.tsx:L297-L301 a VStack holding labelNode and inputNode while labelVariant is inside"
+      ],
+      "fingerprint": "sha256:3051191a24a66bf0f059d7c0199fcd48d02f4f28e98d0969dc26b01d337747ce"
+    },
+    "anatomy.Stacked label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L424-L429 the InputLabel with insideLabelCss while insideVerticalLabel"
+      ],
+      "fingerprint": "sha256:ef5dbc0135f9ac8a4285ff96e4d00c1ca6afc74f975333e352295c79796372ca"
+    },
+    "anatomy.Stacked label text": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L435 {label}, the text of that InputLabel"
+      ],
+      "fingerprint": "sha256:ef5dbc0135f9ac8a4285ff96e4d00c1ca6afc74f975333e352295c79796372ca"
+    },
+    "anatomy.Input": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L309-L317 NativeInput with containerSpacing={nativeInputContainerCss}"
+      ],
+      "fingerprint": "sha256:5ff55085a8ee5e5de9ca49988f2a8b08690d18149d41e89a2e829e86fd7319a0"
+    },
+    "anatomy.Placeholder": {
+      "by": "agent",
+      "evidence": [
+        "NativeInput.tsx:L31-L34 the ::placeholder text in fgMuted",
+        "TextInput.tsx:L88 placeholder, one of the SharedInputProps"
+      ],
+      "fingerprint": "sha256:81b3b64bb6baa7b8b16dc819d7e0c5a74d7dfb368b9c58313fc680cc50ed0585"
+    },
+    "anatomy.End icon": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L365-L382 endNode, an HStack holding the end content",
+        "InputIcon.tsx:L40 Box paddingX={2} around the Icon"
+      ],
+      "fingerprint": "sha256:b083eed3fd36bbcac95d7b3e11d3449e602311c8f58c01db77d888445ae2fa93"
+    },
+    "anatomy.End glyph": {
+      "by": "agent",
+      "evidence": [
+        "InputIcon.tsx:L41-L46 the Icon, size s, in color unless focused"
+      ],
+      "fingerprint": "sha256:fd9494b016a863c99945af103d6cd9e480392e8bb7e6775707fc66986985f02a"
+    },
+    "anatomy.Helper": {
+      "by": "agent",
+      "evidence": [
+        "HelperText.tsx:L59-L61 an HStack with gap 0.5 while color is fgNegative"
+      ],
+      "fingerprint": "sha256:982e52ab5ab67ad1361f382c70c8e7a8c24de17a08a5b59d65aec23b2a68b102"
+    },
+    "anatomy.Error icon": {
+      "by": "agent",
+      "evidence": [
+        "HelperText.tsx:L62-L72 the Icon name=\"info\" size=\"xs\" in fgNegative"
+      ],
+      "fingerprint": "sha256:b538cf5454d6dceb0da6e9bfd327b4c00c844bb82e7989b1c370ef433fba5f1c"
+    },
+    "anatomy.Helper text": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L387-L400 HelperText holding helperText in the variantColorMap colour"
+      ],
+      "fingerprint": "sha256:d8850c14b8393381fe1ea633bfddcfc5e7cedf786f3227878afa3b2b8dc0cbad"
+    },
+    "properties.label.default": {
+      "by": "agent",
+      "evidence": [
+        "_webExamples.mdx:L89 label=\"Label\" placeholder=\"Placeholder\""
+      ],
+      "fingerprint": "sha256:7fb233a317109ce271523cdad9f72df0ece56a5bd0cbac69b21c0b1fdb0f751a"
+    },
+    "properties.placeholder.default": {
+      "by": "agent",
+      "evidence": [
+        "_webExamples.mdx:L89 label=\"Label\" placeholder=\"Placeholder\""
+      ],
+      "fingerprint": "sha256:5b15f4f4e41821c8e434997bf2d50a8eedb7841f82f87fd6d5ab9a6a6dcc0a2e"
+    },
+    "properties.helperText.default": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L191 helperText = '', none unless set",
+        "_webExamples.mdx:L129 helperText=\"This won't be displayed to user\", a short sentence under the field"
+      ],
+      "fingerprint": "sha256:d9d2c66f38b63589e438afa18a36c2b113169b4b8bfd2f61c605e6b3fc5583a0"
+    },
+    "properties.swapStartIcon.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L146-L147 start?: React.ReactNode, which the swap fills with an icon"
+      ],
+      "fingerprint": "sha256:c8bb094a3e323bb9d46bf8a4b2ae99f39f7775d69733076ff48619ed784a40b6"
+    },
+    "properties.endIcon.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L148-L149 end?: React.ReactNode, the content at the end of the inner input"
+      ],
+      "fingerprint": "sha256:9099351dc24f6d10a3b35118f048318058ebb08faa2d125d65a663bd786689ee"
+    },
+    "properties.swapEndIcon.label": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L148-L149 end?: React.ReactNode, which the swap fills with an icon"
+      ],
+      "fingerprint": "sha256:0ce7736ab8ac22e118d3dd0f0203acee958ab6d1202f9d16c41bcc96177ac389"
+    },
+    "icons.default": {
+      "by": "agent",
+      "evidence": [
+        "_webExamples.mdx:L250 start={<InputIconButton name=\"search\" />}, the start icon the docs use most (L379, L400)"
+      ],
+      "fingerprint": "sha256:840b41b4592e452c294bd8a6b7c71636602a417040343f4239c1b1d38a98856e"
+    },
+    "icons.preferred": {
+      "by": "agent",
+      "evidence": [
+        "_webExamples.mdx:L250 name=\"search\"",
+        "_webExamples.mdx:L333 name=\"pencil\"",
+        "_webExamples.mdx:L369 name=\"cashUSD\"",
+        "_webExamples.mdx:L142 name=\"visible\"",
+        "_webExamples.mdx:L418 name=\"checkmark\""
+      ],
+      "fingerprint": "sha256:840b41b4592e452c294bd8a6b7c71636602a417040343f4239c1b1d38a98856e"
+    },
+    "figma.grid": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L81 TextInputSize, one column per size",
+        "InputBaseProps.ts:L3-L9 InputVariant, one row group per variant"
+      ],
+      "fingerprint": "sha256:840b41b4592e452c294bd8a6b7c71636602a417040343f4239c1b1d38a98856e"
+    },
+    "family.description": {
+      "by": "agent",
+      "evidence": [
+        "TextInput.tsx:L85-L169 the label, placeholder, helperText, variant, size, labelVariant, start and end props"
+      ],
+      "fingerprint": "sha256:840b41b4592e452c294bd8a6b7c71636602a417040343f4239c1b1d38a98856e"
+    },
+    "layout.Helper.alignCross": {
+      "by": "agent",
+      "evidence": [
+        "HelperText.tsx:L61 alignItems=\"flex-start\"",
+        "HelperText.tsx:L51 marginTop lowers the icon to the middle of the first line of label2"
+      ],
+      "fingerprint": "sha256:c16ce774de2a42fdd1fe5d0d7922c471094d1766630ff0c208b50230e32cfc7b"
+    }
+  }
+}
