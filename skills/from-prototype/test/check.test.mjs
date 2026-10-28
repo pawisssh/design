@@ -2,10 +2,10 @@
 // Prototype's kind and the files that show it, each output's verdict from its gate table, the owner's questions and the
 // plan, through the check's entry and its CLI. Temp-dir Prototypes are written as the path tests write theirs; the
 // committed fixtures are read where they are.
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,9 +16,11 @@ const vibe = name => fileURLToPath(new URL(`../../vibe-to-figma/test/fixtures/${
 const handoff = name => fileURLToPath(new URL(`../../to-handoff/test/fixtures/${name}`, import.meta.url));
 const run = (...args) => spawnSync(process.execPath, [CLI, 'check', ...args], { encoding: 'utf8' });
 
-// A Prototype in a temp folder: path -> text, a package.json given as an object.
-function prototype(files) {
+// A Prototype in a temp folder: path -> text, a package.json given as an object. A variant passes a committed fixture,
+// copied there first, with those files written over it.
+function prototype(files, fixture) {
   const dir = mkdtempSync(join(tmpdir(), 'from-prototype-check-'));
+  if (fixture) cpSync(fixture, dir, { recursive: true });
   for (const [path, text] of Object.entries(files)) {
     mkdirSync(dirname(join(dir, path)), { recursive: true });
     writeFileSync(join(dir, path), typeof text === 'string' ? text : JSON.stringify(text));
@@ -28,6 +30,21 @@ function prototype(files) {
 const UTILITIES = 'export default () => <div className="flex items-center gap-2 p-4 rounded-md bg-slate-200">Hi</div>;\n';
 const reasons = verdict => verdict.reasons.map(r => r.message);
 const FIGMA = 'https://www.figma.com/design/AbCdEfGhIjKlMnOpQrStUv/Prototype';
+const read = path => readFileSync(path, 'utf8');
+const PATH_A_PKG = JSON.parse(read(join(vibe('path-a-app'), 'package.json')));
+
+// Temp variants that live for the whole file: a fixture copied, with `gone` files removed from the copy.
+const temps = [];
+after(() => { for (const d of temps) rmSync(d, { recursive: true, force: true }); });
+function variant(files, fixture, gone = []) {
+  const dir = prototype(files, fixture);
+  temps.push(dir);
+  for (const f of gone) rmSync(join(dir, f));
+  return dir;
+}
+// path-a-app with no Vite: Component Sets read, a Handoff doesn't.
+const { vite, ...NO_VITE } = PATH_A_PKG.devDependencies;
+const BARE = variant({ 'package.json': { ...PATH_A_PKG, scripts: undefined, devDependencies: NO_VITE } }, vibe('path-a-app'));
 
 test('the v0 fixture is React + Tailwind + shadcn on Next, and both outputs read', () => {
   const r = check(handoff('v0-app'));
@@ -37,10 +54,10 @@ test('the v0 fixture is React + Tailwind + shadcn on Next, and both outputs read
   assert.equal(r.verdicts.handoff.verdict, 'yes');
 });
 
-test("To-handoff's Next fixture is shadcn on Next, and both outputs read", () => {
+test("To-handoff's Next fixture is shadcn on Next: its Handoff reads, and its lockfile resolves no tailwindcss", () => {
   const r = check(handoff('next-app'));
   assert.equal(r.kind, 'React + Tailwind + shadcn');
-  assert.equal(r.verdicts.componentSets.verdict, 'yes, by the shadcn path');
+  assert.deepEqual(r.verdicts.componentSets.reasons, [{ row: 'tailwind-version', message: 'package-lock.json resolves no tailwindcss', ticket: '#364' }]);
   assert.equal(r.verdicts.handoff.verdict, 'yes');
 });
 
@@ -49,10 +66,10 @@ test('the path A fixtures take path A; a Handoff reads only on Next or Vite', ()
     const r = check(dir);
     assert.equal(r.kind, 'React + Tailwind, no Code Library', dir);
     assert.ok(r.evidence.includes('vite'), r.evidence.join(', '));
-    assert.equal(r.verdicts.componentSets.verdict, 'yes, by path A');
     assert.equal(r.verdicts.handoff.verdict, 'yes');
   }
-  const bare = check(vibe('tailwind-no-shadcn'));
+  assert.equal(check(vibe('path-a-app')).verdicts.componentSets.verdict, 'yes, by path A');
+  const bare = check(BARE);
   assert.equal(bare.verdicts.componentSets.verdict, 'yes, by path A');
   assert.equal(bare.verdicts.handoff.verdict, 'no');
   assert.deepEqual(reasons(bare.verdicts.handoff), ['no reader for this React setup: To-handoff reads Next.js App Router or Vite']);
@@ -211,7 +228,7 @@ test('no output asked: exit 2 with one question offering only the outputs whose 
   assert.deepEqual(html.questions.map(q => q.id), ['outputs', 'designSystem']);
   assert.deepEqual(html.questions[0].options.map(o => o.output), ['handoff']);
   // Component Sets alone possible: no Design System question.
-  assert.deepEqual(check(vibe('tailwind-no-shadcn')).questions.map(q => q.id), ['outputs']);
+  assert.deepEqual(check(BARE).questions.map(q => q.id), ['outputs']);
   assert.equal(html.plan, null);
   const out = run(vibe('html-app'));
   assert.equal(out.status, 2);
@@ -236,9 +253,9 @@ test('both asked with one refused: exit 1, no plan, and the message names the co
   assert.doesNotMatch(html.stdout, /Plan:/);
   assert.equal(check(vibe('html-app'), { figma: FIGMA, handoff: true, ds: 'carbon' }).plan, null);
 
-  const bare = run(vibe('tailwind-no-shadcn'), '--figma', FIGMA, '--handoff', '--ds', 'carbon');
+  const bare = run(BARE, '--figma', FIGMA, '--handoff', '--ds', 'carbon');
   assert.equal(bare.status, 1);
-  assert.ok(bare.stdout.includes(`Component Sets alone are still possible: \`node skills/from-prototype/scripts/from-prototype.mjs check ${vibe('tailwind-no-shadcn')} --figma ${FIGMA}\`.`), bare.stdout);
+  assert.ok(bare.stdout.includes(`Component Sets alone are still possible: \`node skills/from-prototype/scripts/from-prototype.mjs check ${BARE} --figma ${FIGMA}\`.`), bare.stdout);
 });
 
 test('a Figma link that is not a Design file link is refused before anything is fetched, and only when Component Sets are asked', () => {
@@ -286,7 +303,7 @@ test('a settled run exits 0 with the stages, each with its folder and Design Sys
   // --name and --all pass to the folder step.
   const renamed = check(handoff('v0-app'), { figma: FIGMA, name: 'mine', all: true });
   assert.deepEqual(renamed.plan.stages[0], { stage: 'folder', folder: '.scratch/design-systems/mine', designSystem: 'mine', all: true });
-  const refusedHandoff = run(vibe('tailwind-no-shadcn'), '--figma', FIGMA, '--name', 'mine', '--all', '--handoff', '--ds', 'carbon');
+  const refusedHandoff = run(BARE, '--figma', FIGMA, '--name', 'mine', '--all', '--handoff', '--ds', 'carbon');
   assert.ok(refusedHandoff.stdout.includes(`--figma ${FIGMA} --name mine --all\``), refusedHandoff.stdout);
 
   const out = run(handoff('v0-app'), '--figma', FIGMA, '--handoff', '--ds', 'carbon');
@@ -303,7 +320,7 @@ test('a Handoff asked with no --ds, or Component Sets with no folder name, is an
   assert.match(r.stdout, /Owner question: Which Design System is the Handoff against\?\n- here: .*`carbon`.*\. Run again with `--ds <design-system>`\./);
   assert.equal(check(handoff('vite-app'), { handoff: true }).plan, null);
 
-  const unnamed = prototype({ 'package.json': { dependencies: { react: '19.2.4' }, devDependencies: { vite: '7.0.0', tailwindcss: '4.2.2' } }, 'src/App.tsx': UTILITIES });
+  const unnamed = prototype({ 'package.json': { ...PATH_A_PKG, name: undefined } }, vibe('path-a-app'));
   try {
     const u = check(unnamed, { figma: FIGMA });
     assert.deepEqual(u.questions.map(q => q.id), ['name']);
@@ -319,13 +336,74 @@ test('a Handoff asked with no --ds, or Component Sets with no folder name, is an
   assert.equal(scss.plan, null);
 });
 
+// The lockfile and Tailwind rows (#434, spec #343 The gate table): one variant per row, a committed fixture copied and
+// changed, with every row it fails as {row, message, ticket}, in the table's order.
+const NO_LOCKFILE = { row: 'lockfile', message: 'this Prototype has no lockfile: run `npm install --package-lock-only --ignore-scripts` in your project', ticket: '#354' };
+const NO_STYLESHEET = { row: 'tailwind-stylesheet', message: 'no stylesheet imports `tailwindcss`', ticket: '#364' };
+const NOT_YET_LOCK = { row: 'lockfile', message: 'not yet: the reader needs a `package-lock.json`', ticket: '#354' };
+const lockWith = (fixture, name, change) => {
+  const lock = JSON.parse(read(join(fixture, 'package-lock.json')));
+  Object.assign(lock.packages[`node_modules/${name}`], change);
+  return lock;
+};
+// A pnpm workspace whose lockfile sits at its root, two folders above the app.
+const workspaceApp = () => {
+  const root = variant({ 'pnpm-lock.yaml': "lockfileVersion: '9.0'\n", 'pnpm-workspace.yaml': "packages:\n  - 'apps/*'\n" });
+  cpSync(vibe('path-a-app'), join(root, 'apps/web'), { recursive: true });
+  rmSync(join(root, 'apps/web/package-lock.json'));
+  return join(root, 'apps/web');
+};
+const MAKE_BUNDLE = { 'package.json': { name: 'make-app', private: true, type: 'module', peerDependencies: { react: '19.2.4', 'react-dom': '19.2.4' }, devDependencies: PATH_A_PKG.devDependencies },
+  'src/app/components/ui/button.tsx': UTILITIES, 'src/App.tsx': 'import { Button } from "@/app/components/ui/button";\nexport default () => <Button>Hi</Button>;\n' };
+const LOCK_VARIANTS = {
+  'only a bun.lock': [variant({ 'bun.lock': '{ "lockfileVersion": 1 }\n' }, vibe('path-a-app'), ['package-lock.json']), [NOT_YET_LOCK]],
+  'a pnpm-lock.yaml at a workspace root above the app': [workspaceApp(), [NOT_YET_LOCK]],
+  'only a yarn.lock': [variant({ 'yarn.lock': '# yarn lockfile v1\n' }, vibe('path-a-app'), ['package-lock.json']),
+    [{ row: 'lockfile', message: 'not supported: no tool writes yarn by default (ADR 0019)', ticket: '#354' }]],
+  'no lockfile': [variant({}, vibe('path-a-app'), ['package-lock.json']), [NO_LOCKFILE]],
+  // Tailwind 3 is written with @tailwind directives: both rows fail, and both are listed.
+  'tailwindcss 3.x': [variant({ 'package-lock.json': lockWith(vibe('path-a-app'), 'tailwindcss', { version: '3.4.17' }),
+    'src/index.css': '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n' }, vibe('path-a-app')),
+  [{ row: 'tailwind-version', message: 'not yet: the reader compiles Tailwind 4; this project resolves tailwindcss@3.4.17', ticket: '#364' }, NO_STYLESHEET]],
+  'no sha512 integrity': [variant({ 'package-lock.json': lockWith(vibe('path-a-app'), 'tailwindcss', { integrity: 'sha1-K3tQ6lJm9nK1ZQ0x4P2y7r8sT1o=' }) }, vibe('path-a-app')),
+    [{ row: 'tailwind-integrity', message: 'package-lock.json gives tailwindcss@4.2.2 no sha512 integrity (sha1-K3tQ6lJm9nK1ZQ0x4P2y7r8sT1o=), the only one the tools step checks', ticket: undefined }]],
+  'no stylesheet that imports tailwindcss': [variant({ 'src/index.css': 'body { margin: 0; }\n' }, vibe('path-a-app')), [NO_STYLESHEET]],
+  'a shadcn pin mismatch': [variant({ 'package-lock.json': lockWith(handoff('v0-app'), 'shadcn', { version: '4.21.0' }) }, handoff('v0-app')),
+    [{ row: 'code-library-pins', message: 'the project resolves shadcn@4.21.0, but the Adapter pins shadcn@4.22.0', ticket: '#359' }]],
+  'a Figma Make bundle with no lockfile': [variant(MAKE_BUNDLE, vibe('path-a-app'), ['package-lock.json']), [NO_LOCKFILE]],
+};
+// The CLI's sentence for a reason, as the message prints it.
+const printed = m => m[0].toUpperCase() + m.slice(1).replace('(ADR 0019)', '(ADR 0019: docs/adr/0019-a-prototype-reaches-component-sets-or-a-handoff-by-its-kind.md)') + '.';
+
+test('each lockfile and Tailwind row refuses Component Sets with its reason and ticket, and the CLI exits 1', () => {
+  for (const [name, [dir, reasons]] of Object.entries(LOCK_VARIANTS)) {
+    const r = check(dir, { figma: FIGMA });
+    assert.equal(r.verdicts.componentSets.verdict, 'no', name);
+    assert.deepEqual(r.verdicts.componentSets.reasons, reasons, name);
+    const out = run(dir, '--figma', FIGMA);
+    assert.equal(out.status, 1, `${name}: ${out.stderr}`);
+    for (const { message } of reasons) assert.ok(out.stdout.includes(printed(message)), `${name}: ${out.stdout}`);
+  }
+  assert.equal(check(LOCK_VARIANTS['a Figma Make bundle with no lockfile'][0]).kind, 'React + Tailwind + shadcn');
+  // The stylesheet row is path A's: the shadcn path names its stylesheet in components.json.
+  assert.equal(check(handoff('v0-app')).verdicts.componentSets.verdict, 'yes, by the shadcn path');
+});
+
+test('every failing row is listed, not only the first, and a Handoff is not refused by them', () => {
+  const bare = check(vibe('tailwind-no-shadcn'));
+  assert.deepEqual(bare.verdicts.componentSets.reasons, [NO_LOCKFILE, NO_STYLESHEET]);
+  const app = check(handoff('tailwind-app'));
+  assert.deepEqual(app.verdicts.componentSets.reasons, [NO_LOCKFILE]);
+  assert.equal(app.verdicts.handoff.verdict, 'yes');
+});
+
 const OPTION_SETS = [{}, { figma: FIGMA }, { figma: 'https://www.figma.com/design/abc/x', handoff: true, ds: 'carbon' }, { figma: FIGMA, handoff: true, ds: 'carbon' }, { handoff: true }];
 
 test('every run writes nothing, runs and fetches nothing, leaves the Prototype as it was, and loads no fetched parser', () => {
   // A child process whose fs writes, child processes and fetch are recorded before the check is imported, so the
   // answer doesn't depend on what other test files write meanwhile; its module cache holds only what the check loads.
   const script = `
-    import { statSync } from 'node:fs';
+    import { existsSync, readdirSync, statSync } from 'node:fs';
     import { createRequire, syncBuiltinESMExports } from 'node:module';
     const require = createRequire(import.meta.url);
     const calls = [];
@@ -340,20 +418,26 @@ test('every run writes nothing, runs and fetches nothing, leaves the Prototype a
     syncBuiltinESMExports();
     const { check } = await import(${JSON.stringify(new URL('../scripts/from-prototype.mjs', import.meta.url).href)});
     const { files } = await import(${JSON.stringify(new URL('../../vibe-to-figma/scripts/path.mjs', import.meta.url).href)});
-    const prototypes = JSON.parse(process.argv[1]);
+    const [prototypes, tools] = JSON.parse(process.argv[1]);
     const list = p => statSync(p).isFile() ? [statSync(p).mtimeMs] : [...files(p)].map(f => f + ' ' + statSync(f).mtimeMs);
-    const before = prototypes.map(list);
+    const listTools = p => existsSync(p) ? readdirSync(p).map(n => n + ' ' + statSync(p + '/' + n).mtimeMs) : [];
+    const listed = [...prototypes.map(p => [p, list]), ...tools.map(p => [p, listTools])];
+    const before = listed.map(([p, of]) => JSON.stringify(of(p)));
     for (const p of prototypes) for (const options of ${JSON.stringify(OPTION_SETS)}) check(p, options);
-    const changed = prototypes.filter((p, i) => JSON.stringify(list(p)) !== JSON.stringify(before[i]));
+    const changed = listed.filter(([p, of], i) => JSON.stringify(of(p)) !== before[i]).map(([p]) => p);
     const loaded = Object.keys(require.cache).filter(k => k.includes('/.scratch/'));
     console.log(JSON.stringify({ calls, changed, loaded }));
   `;
-  const prototypes = [handoff('v0-app'), handoff('next-app'), handoff('vite-app'), handoff('tailwind-app'), handoff('conditions-app'),
+  const fixtures = [handoff('v0-app'), handoff('next-app'), handoff('vite-app'), handoff('tailwind-app'), handoff('conditions-app'),
     handoff('invite-teammates'), vibe('path-a-app'), vibe('tailwind-no-shadcn'), vibe('carbon-scss-app'), vibe('html-app'), join(vibe('html-app'), 'index.html')];
-  const r = spawnSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify(prototypes)], { encoding: 'utf8' });
+  // The lockfile and Tailwind rows' variants (#434), and the tools folders the readers fetch into.
+  const variants = [BARE, ...Object.values(LOCK_VARIANTS).map(([dir]) => dir)];
+  const repo = fileURLToPath(new URL('../../../', import.meta.url));
+  const tools = ['.scratch/adapter-generic/tools', '.scratch/to-handoff'].map(d => join(repo, d));
+  const r = spawnSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify([[...fixtures, ...variants], tools])], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
   const { calls, changed, loaded } = JSON.parse(r.stdout);
   assert.deepEqual(calls, [], 'nothing written, run or fetched');
-  assert.deepEqual(changed, [], 'every Prototype is as it was');
+  assert.deepEqual(changed, [], 'every Prototype and tools folder is as it was');
   assert.deepEqual(loaded, []);
 });

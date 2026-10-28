@@ -12,6 +12,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, wri
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
+import { lockfileRules } from '../../adapter-generic/scripts/sources.mjs';
 import { handoffContentHash } from '../../to-handoff/scripts/hash.mjs';
 import { stampOf } from '../../to-handoff/scripts/render-html.mjs';
 import { REPO_ROOT, inScratch } from '../../to-handoff/scripts/system.mjs';
@@ -107,6 +108,24 @@ const KINDS = [
 const frameworks = p => [...declaredOf(p, ['next', 'vite']),
   ...(p.declared.has('@tanstack/react-start') && p.all.some(f => f.startsWith(`src${sep}routes${sep}__root.`)) ? ['TanStack Start'] : [])];
 
+// The Generic Adapter's lockfile and Tailwind rules (#432), applied once per check: each row below reads its own
+// failures from them rather than copying them (spec #343).
+const adapterRules = p => (p.adapterRules ??= lockfileRules(p.root));
+const adapterFailures = (p, rule) => adapterRules(p).failures.filter(f => f.rule === rule);
+// A row for one of the Adapter's rules, on both React + Tailwind paths: it fails with each of the rule's failures,
+// worded by `wording`, the Adapter's own message by default.
+function adapterRule(name, ticket, wording = f => f.message) {
+  return { name, kinds: [SHADCN, PATH_A], ticket, test: p => !adapterFailures(p, name).length,
+    message: p => adapterFailures(p, name).map(f => wording(f, p)).join('; ') };
+}
+// The lockfile row's wording, by the lockfiles the Adapter found: it reads only package-lock.json today (#354).
+function lockfileMessage(failure, lockfiles) {
+  if (lockfiles.includes('package-lock.json')) return failure.message;
+  if (lockfiles.some(f => f.startsWith('bun.') || basename(f) === 'pnpm-lock.yaml')) return 'not yet: the reader needs a `package-lock.json`';
+  if (lockfiles.includes('yarn.lock')) return 'not supported: no tool writes yarn by default (ADR 0019)';
+  return 'this Prototype has no lockfile: run `npm install --package-lock-only --ignore-scripts` in your project';
+}
+
 // Each output's gate rows, in order (spec #343 The gate table): name, the kinds it applies to, its test (passes when
 // true; a row with none fails for every kind it names), its effect when it fails (a refusal unless `note`), its
 // message, and the ticket it waits on. A gate ticket lands by adding or changing its own rows.
@@ -119,6 +138,12 @@ const COMPONENT_SETS = [
   { name: 'reader', kinds: [UNKNOWN], message: 'no reader for what was found' },
   { name: 'mixed', kinds: [PATH_A], effect: 'note', ticket: '#331', test: p => !classStyled(p).length,
     message: p => `its own class-styled stylesheets (${classStyled(p).join(', ')}) are read as path A until #331 decides a React app that mixes them with Tailwind utilities` },
+  adapterRule('lockfile', '#354', (f, p) => lockfileMessage(f, adapterRules(p).lockfiles)),
+  adapterRule('tailwind-version', '#364', f => f.version ? `not yet: the reader compiles Tailwind 4; this project resolves tailwindcss@${f.version}` : f.message),
+  adapterRule('tailwind-integrity'),
+  // The Adapter found no stylesheet that imports tailwindcss (its cssEntry); path A has no components.json to name one.
+  { name: 'tailwind-stylesheet', kinds: [PATH_A], ticket: '#364', test: p => adapterRules(p).css !== null, message: 'no stylesheet imports `tailwindcss`' },
+  adapterRule('code-library-pins', '#359'),
   // Only when Component Sets are asked (#437). The agent's one read of the file through the owner's Figma connection is the
   // SKILL.md's step after the check: the check fetches nothing.
   { name: 'figma', kinds: KINDS.map(k => k.kind), test: p => !figmaRefusal(p), message: p => `the Figma link is refused: ${figmaRefusal(p)}` },
