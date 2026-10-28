@@ -370,7 +370,7 @@ function tailwindEntry(project) {
 }
 
 /** The stylesheet and the relative stylesheets it imports, as {path: text}. */
-function stylesheets(project, entry) {
+export function stylesheets(project, entry) {
   const out = {};
   (function add(rel) {
     if (out[rel] !== undefined) return;
