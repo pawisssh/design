@@ -2,7 +2,7 @@
 // Prototype's kind and the files that show it, each output's verdict from its gate table, the owner's questions and the
 // plan, through the check's entry and its CLI. Temp-dir Prototypes are written as the path tests write theirs; the
 // committed fixtures are read where they are.
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -10,6 +10,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { check } from '../scripts/from-prototype.mjs';
+import { TOOLS } from '../../adapter-generic/scripts/sources.mjs';
 import { fileHash } from '../../to-handoff/scripts/hash.mjs';
 import { REPO_ROOT as REPO } from '../../to-handoff/scripts/system.mjs';
 
@@ -43,10 +44,25 @@ function withRoot(files, body, copies) {
   const root = repoRoot(files, copies);
   try { body(root); } finally { rmSync(root, { recursive: true, force: true }); }
 }
+const BUTTON_APP = 'import { Button } from "@/app/components/ui/button";\nexport default () => <Button>Hi</Button>;\n';
 const SHELL = '<div id="root"></div><script type="module" src="/src/main.tsx"></script>';
 const UTILITIES = 'export default () => <div className="flex items-center gap-2 p-4 rounded-md bg-slate-200">Hi</div>;\n';
 const reasons = verdict => verdict.reasons.map(r => r.message);
 const FIGMA = 'https://www.figma.com/design/AbCdEfGhIjKlMnOpQrStUv/Prototype';
+const read = path => readFileSync(path, 'utf8');
+const PATH_A_PKG = JSON.parse(read(join(vibe('path-a-app'), 'package.json')));
+
+// Temp variants that live for the whole file: a fixture copied, with `gone` files removed from the copy.
+const temps = [];
+after(() => { for (const d of temps) rmSync(d, { recursive: true, force: true }); });
+function copied(files, fixture, gone = []) {
+  const dir = prototype(files, fixture);
+  temps.push(dir);
+  for (const f of gone) rmSync(join(dir, f));
+  return dir;
+}
+// path-a-app with no Vite: Component Sets read, a Handoff doesn't.
+const BARE = copied({ 'package.json': { ...PATH_A_PKG, scripts: undefined, devDependencies: { ...PATH_A_PKG.devDependencies, vite: undefined } } }, vibe('path-a-app'));
 
 test('the v0 fixture is React + Tailwind + shadcn on Next, and both outputs read', () => {
   const r = check(handoff('v0-app'));
@@ -57,11 +73,11 @@ test('the v0 fixture is React + Tailwind + shadcn on Next, and both outputs read
   assert.deepEqual(r.verdicts.handoff.notes, []);
 });
 
-test("To-handoff's Next fixture is shadcn on Next, and both outputs read", () => {
+test("To-handoff's Next fixture is shadcn on Next: its lockfile resolves no tailwindcss, which closes the own-folder Handoff", () => {
   const r = check(handoff('next-app'));
   assert.equal(r.kind, 'React + Tailwind + shadcn');
-  assert.equal(r.verdicts.componentSets.verdict, 'yes, by the shadcn path');
-  assert.equal(r.verdicts.handoff.verdict, 'yes, against its own folder');
+  assert.deepEqual(r.verdicts.componentSets.reasons, [{ row: 'tailwind-version', message: 'package-lock.json resolves no tailwindcss', ticket: undefined }]);
+  assert.equal(r.verdicts.handoff.verdict, 'only against a Design System you name');
 });
 
 test('the path A fixtures take path A; a Handoff reads only on Next or Vite, and only against a Design System you name (#265)', () => {
@@ -73,9 +89,9 @@ test('the path A fixtures take path A; a Handoff reads only on Next or Vite, and
     assert.deepEqual(r.verdicts.handoff.reasons, [{ row: 'own-folder', message: "To-handoff can't yet recognise its sites through the Family map (#265)", ticket: '#265' }]);
   }
   assert.equal(check(vibe('path-a-app')).verdicts.componentSets.verdict, 'yes, by path A');
-  // tailwind-app's stylesheet names no font (the text-style-font row, #367).
-  assert.deepEqual(check(handoff('tailwind-app')).verdicts.componentSets.reasons.map(r => r.row), ['text-style-font']);
-  const bare = check(vibe('tailwind-no-shadcn'));
+  // tailwind-app has no lockfile, and its stylesheet names no font (the text-style-font row, #367): both are listed.
+  assert.deepEqual(check(handoff('tailwind-app')).verdicts.componentSets.reasons.map(r => r.row), ['lockfile', 'text-style-font']);
+  const bare = check(BARE);
   assert.equal(bare.verdicts.componentSets.verdict, 'yes, by path A');
   assert.equal(bare.verdicts.handoff.verdict, 'no');
   assert.deepEqual(reasons(bare.verdicts.handoff), ['no reader for this React setup: To-handoff reads Next.js App Router or Vite']);
@@ -172,7 +188,7 @@ test('a Vue package, a Svelte file and CSS modules or CSS-in-JS are refused as n
 
 test('a Figma Make bundle is never plain HTML: React only in peerDependencies still counts', () => {
   const make = { 'package.json': { peerDependencies: { react: '18.3.1', 'react-dom': '18.3.1' }, devDependencies: { vite: '6.3.5', tailwindcss: '4.1.12', '@tailwindcss/vite': '4.1.12' } }, 'index.html': '<div id="root"></div><script type="module" src="/src/main.tsx"></script>', 'vite.config.ts': "export default { resolve: { alias: { '@': './src' } } };\n" };
-  const used = prototype({ ...make, 'src/app/App.tsx': 'import { Button } from "@/app/components/ui/button";\nexport default () => <Button>Hi</Button>;\n', 'src/app/components/ui/button.tsx': UTILITIES });
+  const used = prototype({ ...make, 'src/app/App.tsx': BUTTON_APP, 'src/app/components/ui/button.tsx': UTILITIES });
   const unused = prototype({ ...make, 'src/app/App.tsx': UTILITIES, 'src/app/components/ui/button.tsx': 'export const Button = () => null;\n' });
   try {
     const u = check(used);
@@ -303,7 +319,7 @@ test('no output asked: exit 2 with one question offering only the outputs whose 
   assert.deepEqual(html.questions.map(q => q.id), ['outputs', 'designSystem']);
   assert.deepEqual(html.questions[0].options.map(o => o.output), ['handoff']);
   // Component Sets alone possible: no Design System question.
-  assert.deepEqual(check(vibe('tailwind-no-shadcn')).questions.map(q => q.id), ['outputs']);
+  assert.deepEqual(check(BARE).questions.map(q => q.id), ['outputs']);
   assert.equal(html.plan, null);
   const out = run(vibe('html-app'));
   assert.equal(out.status, 2);
@@ -328,9 +344,9 @@ test('both asked with one refused: exit 1, no plan, and the message names the co
   assert.doesNotMatch(html.stdout, /Plan:/);
   assert.equal(check(vibe('html-app'), { figma: FIGMA, handoff: true, ds: 'carbon' }).plan, null);
 
-  const bare = run(vibe('tailwind-no-shadcn'), '--figma', FIGMA, '--handoff', '--ds', 'carbon');
+  const bare = run(BARE, '--figma', FIGMA, '--handoff', '--ds', 'carbon');
   assert.equal(bare.status, 1);
-  assert.ok(bare.stdout.includes(`Component Sets alone are still possible: \`node skills/from-prototype/scripts/from-prototype.mjs check ${vibe('tailwind-no-shadcn')} --figma ${FIGMA}\`.`), bare.stdout);
+  assert.ok(bare.stdout.includes(`Component Sets alone are still possible: \`node skills/from-prototype/scripts/from-prototype.mjs check ${BARE} --figma ${FIGMA}\`.`), bare.stdout);
 });
 
 test('a Figma link that is not a Design file link is refused before anything is fetched, and only when Component Sets are asked', () => {
@@ -382,7 +398,7 @@ test('a settled run exits 0 with the stages, each with its folder and Design Sys
   // --name and --all pass to the folder step.
   const renamed = check(handoff('v0-app'), { figma: FIGMA, name: 'mine', all: true });
   assert.deepEqual(renamed.plan.stages[0], { stage: 'folder', folder: '.scratch/design-systems/mine', designSystem: 'mine', all: true });
-  const refusedHandoff = run(vibe('tailwind-no-shadcn'), '--figma', FIGMA, '--name', 'mine', '--all', '--handoff', '--ds', 'carbon');
+  const refusedHandoff = run(BARE, '--figma', FIGMA, '--name', 'mine', '--all', '--handoff', '--ds', 'carbon');
   assert.ok(refusedHandoff.stdout.includes(`--figma ${FIGMA} --name mine --all\``), refusedHandoff.stdout);
 
   const out = run(handoff('v0-app'), '--figma', FIGMA, '--handoff', '--ds', 'carbon');
@@ -399,7 +415,7 @@ test('a Handoff asked with no --ds, or Component Sets with no folder name, is an
   assert.match(r.stdout, /Owner question: Which Design System is the Handoff against\?\n- if your developers build with one of these: .*`carbon`.*\. Run again with `--ds <design-system>`\./);
   assert.equal(check(handoff('vite-app'), { handoff: true }).plan, null);
 
-  const unnamed = prototype({ 'package.json': { dependencies: { react: '19.2.4' }, devDependencies: { vite: '7.0.0', tailwindcss: '4.2.2' } }, 'src/App.tsx': UTILITIES });
+  const unnamed = prototype({ 'package.json': { ...PATH_A_PKG, name: undefined } }, vibe('path-a-app'));
   try {
     const u = check(unnamed, { figma: FIGMA });
     assert.deepEqual(u.questions.map(q => q.id), ['name']);
@@ -419,15 +435,13 @@ const OPTION_SETS = [{}, { figma: FIGMA }, { figma: 'https://www.figma.com/desig
 
 // Component Sets rows #435 adds (spec #343 The gate table). Each variant is a committed fixture with a lockfile,
 // changed in one way; the owner sees the verdict, the failing row's reason and ticket, and the CLI's exit code.
-const read = path => readFileSync(path, 'utf8');
 const V0_CSS = read(join(handoff('v0-app'), 'app/globals.css'));
 const V0_PKG = JSON.parse(read(join(handoff('v0-app'), 'package.json')));
-const PATH_A_PKG = JSON.parse(read(join(vibe('path-a-app'), 'package.json')));
 // Figma Make's package.json: React only as an optional peer.
 const MAKE_PKG = { name: 'make-app', private: true, type: 'module', peerDependencies: { react: '19.2.4', 'react-dom': '19.2.4' },
   peerDependenciesMeta: { react: { optional: true }, 'react-dom': { optional: true } }, devDependencies: PATH_A_PKG.devDependencies };
 const [V0_HEAD, V0_TOKENS] = [V0_CSS.slice(0, V0_CSS.indexOf('\n:root {')), V0_CSS.slice(V0_CSS.indexOf('\n:root {') + 1)];
-const USES_BUTTON = { 'src/app/components/ui/button.tsx': UTILITIES, 'src/App.tsx': 'import { Button } from "@/app/components/ui/button";\nexport default () => <Button>Hi</Button>;\n' };
+const USES_BUTTON = { 'src/app/components/ui/button.tsx': UTILITIES, 'src/App.tsx': BUTTON_APP };
 const V0_ROUTER_PKG = { ...V0_PKG, dependencies: { ...V0_PKG.dependencies, 'react-router': '7.9.0' } };
 const SETS_ROUTES = 'import { createBrowserRouter } from "react-router";\nimport Page from "./page";\nexport const router = createBrowserRouter([{ path: "/", element: <Page /> }]);\n';
 const SETS_VARIANTS = {
@@ -511,6 +525,80 @@ test("every React kind's Component Sets verdict notes that a form's controls ins
     }
     assert.deepEqual(check(vibe('html-app')).verdicts.componentSets.notes, []);
   } finally { rmSync(modules, { recursive: true, force: true }); }
+});
+
+// The lockfile and Tailwind rows (#434, spec #343 Component Sets rows): one variant per row, a committed fixture copied
+// and changed, with every row it fails as {row, message, ticket}, in the table's order. A ticket is named only where
+// it lifts the refusal.
+const NO_LOCKFILE = { row: 'lockfile', message: 'this Prototype has no lockfile: run `npm install --package-lock-only --ignore-scripts` in your project', ticket: undefined };
+const NO_STYLESHEET = { row: 'tailwind-stylesheet', message: 'no stylesheet imports `tailwindcss`', ticket: '#364' };
+const NOT_YET_LOCK = { row: 'lockfile', message: 'not yet: the reader needs a `package-lock.json`', ticket: '#354' };
+const lockWith = (fixture, name, change) => {
+  const lock = JSON.parse(read(join(fixture, 'package-lock.json')));
+  Object.assign(lock.packages[`node_modules/${name}`], change);
+  return lock;
+};
+// A pnpm workspace whose lockfile sits at its root, two folders above the app.
+const workspaceApp = () => {
+  const root = copied({ 'pnpm-lock.yaml': "lockfileVersion: '9.0'\n", 'pnpm-workspace.yaml': "packages:\n  - 'apps/*'\n" });
+  cpSync(vibe('path-a-app'), join(root, 'apps/web'), { recursive: true });
+  rmSync(join(root, 'apps/web/package-lock.json'));
+  return join(root, 'apps/web');
+};
+const { version: SHADCN_PIN } = TOOLS.shadcn;
+const { version: TAILWIND_PIN, integrity: TAILWIND_INTEGRITY } = TOOLS.tailwindcss;
+const OTHER_SHA512 = 'sha512-' + 'A'.repeat(86) + '==';
+const LOCK_VARIANTS = {
+  'only a bun.lock': [copied({ 'bun.lock': '{ "lockfileVersion": 1 }\n' }, vibe('path-a-app'), ['package-lock.json']), [NOT_YET_LOCK]],
+  'only a bun.lockb': [copied({ 'bun.lockb': 'bun binary' }, vibe('path-a-app'), ['package-lock.json']),
+    [{ row: 'lockfile', message: "not supported: the reader takes `bun.lock`, not bun's binary `bun.lockb`", ticket: undefined }]],
+  'a pnpm-lock.yaml at a workspace root above the app': [workspaceApp(), [NOT_YET_LOCK]],
+  'only a yarn.lock': [copied({ 'yarn.lock': '# yarn lockfile v1\n' }, vibe('path-a-app'), ['package-lock.json']),
+    [{ row: 'lockfile', message: 'not supported: no tool writes yarn by default (ADR 0019)', ticket: undefined }]],
+  'no lockfile': [copied({}, vibe('path-a-app'), ['package-lock.json']), [NO_LOCKFILE]],
+  // Tailwind 3 is written with @tailwind directives: both rows fail, and both are listed.
+  'tailwindcss 3.x': [copied({ 'package-lock.json': lockWith(vibe('path-a-app'), 'tailwindcss', { version: '3.4.17' }),
+    'src/index.css': '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n' }, vibe('path-a-app')),
+  [{ row: 'tailwind-version', message: 'not yet: the reader compiles Tailwind 4; this project resolves tailwindcss@3.4.17', ticket: '#364' }, NO_STYLESHEET]],
+  'no sha512 integrity': [copied({ 'package-lock.json': lockWith(vibe('path-a-app'), 'tailwindcss', { integrity: 'sha1-K3tQ6lJm9nK1ZQ0x4P2y7r8sT1o=' }) }, vibe('path-a-app')),
+    [{ row: 'tailwind-integrity', message: 'package-lock.json gives tailwindcss@4.2.2 no sha512 integrity (sha1-K3tQ6lJm9nK1ZQ0x4P2y7r8sT1o=), the only one the tools step checks', ticket: undefined }]],
+  'an integrity that contradicts the pin': [copied({ 'package-lock.json': lockWith(handoff('v0-app'), 'tailwindcss', { integrity: OTHER_SHA512 }) }, handoff('v0-app')),
+    [{ row: 'tailwind-integrity', message: `tailwindcss@${TAILWIND_PIN}: the lockfile's integrity ${OTHER_SHA512} does not match the Adapter's pin ${TAILWIND_INTEGRITY}`, ticket: undefined }]],
+  'no stylesheet that imports tailwindcss': [copied({ 'src/index.css': 'body { margin: 0; }\n' }, vibe('path-a-app')), [NO_STYLESHEET]],
+  'a shadcn pin mismatch': [copied({ 'package-lock.json': lockWith(handoff('v0-app'), 'shadcn', { version: '4.21.0' }) }, handoff('v0-app')),
+    [{ row: 'code-library-pins', message: `the project resolves shadcn@4.21.0, but the Adapter pins shadcn@${SHADCN_PIN}`, ticket: '#359' }]],
+  'a Figma Make bundle with no lockfile': [copied({ 'package.json': MAKE_PKG, ...USES_BUTTON }, vibe('path-a-app'), ['package-lock.json']),
+    [{ row: 'peer-react-or-found-library', message: 'not yet: the readers need React outside `peerDependencies` and a `components.json` (#358)', ticket: '#358' }, NO_LOCKFILE]],
+};
+
+test('each lockfile and Tailwind row refuses Component Sets with its reason and ticket, and the CLI exits 1', () => {
+  for (const [name, [dir, reasons]] of Object.entries(LOCK_VARIANTS)) {
+    const r = check(dir, { figma: FIGMA });
+    assert.equal(r.verdicts.componentSets.verdict, 'no', name);
+    assert.deepEqual(r.verdicts.componentSets.reasons, reasons, name);
+    const out = run(dir, '--figma', FIGMA);
+    assert.equal(out.status, 1, `${name}: ${out.stderr}`);
+    // The CLI prints each reason as a sentence, ADR 0019 with its path.
+    for (const { message } of reasons) assert.ok(out.stdout.includes(message.slice(1).replace(/ \(ADR 0019\)$/, '')), `${name}: ${out.stdout}`);
+  }
+  assert.equal(check(LOCK_VARIANTS['a Figma Make bundle with no lockfile'][0]).kind, 'React + Tailwind + shadcn');
+});
+
+test("the shadcn path's pins are checked in the stylesheet components.json names, as the Adapter reads it", () => {
+  // A shallower stylesheet imports shadcn at a version the Adapter doesn't pin; components.json names one that doesn't.
+  const v0 = handoff('v0-app');
+  const dir = copied({ 'package-lock.json': lockWith(v0, 'shadcn', { version: '4.21.0' }), 'extra.css': '@import "tailwindcss";\n@import "shadcn/tailwind.css";\n',
+    'app/globals.css': read(join(v0, 'app/globals.css')).replace('@import "shadcn/tailwind.css";\n', '') }, v0);
+  assert.equal(check(dir).verdicts.componentSets.verdict, 'yes, by the shadcn path');
+  assert.equal(check(v0).verdicts.componentSets.verdict, 'yes, by the shadcn path');
+});
+
+test('every failing row is listed, not only the first, and a Handoff against a named Design System is not refused by them', () => {
+  const bare = check(vibe('tailwind-no-shadcn'));
+  assert.deepEqual(bare.verdicts.componentSets.reasons, [NO_LOCKFILE, NO_STYLESHEET]);
+  const app = check(handoff('tailwind-app'));
+  assert.deepEqual(app.verdicts.componentSets.reasons[0], NO_LOCKFILE);
+  assert.equal(app.verdicts.handoff.verdict, 'only against a Design System you name');
 });
 
 // The Handoff's Design System (#438, spec #343 The Handoff's Design System; Scratch roots).
@@ -657,8 +745,10 @@ test('a name collision with a committed Design System or another scratch folder 
 test('every run writes nothing, runs and fetches nothing, leaves the Prototype as it was, and loads no fetched parser', () => {
   // A child process whose fs writes, child processes and fetch are recorded before the check is imported, so the
   // answer doesn't depend on what other test files write meanwhile; its module cache holds only what the check loads.
+  // The shared tools folders other suites fetch and render into are covered by that record alone (#517); each
+  // Prototype is also listed before and after.
   const script = `
-    import { existsSync, readdirSync, statSync } from 'node:fs';
+    import { statSync } from 'node:fs';
     import { createRequire, syncBuiltinESMExports } from 'node:module';
     const require = createRequire(import.meta.url);
     const calls = [];
@@ -673,27 +763,25 @@ test('every run writes nothing, runs and fetches nothing, leaves the Prototype a
     syncBuiltinESMExports();
     const { check } = await import(${JSON.stringify(new URL('../scripts/from-prototype.mjs', import.meta.url).href)});
     const { files } = await import(${JSON.stringify(new URL('../../vibe-to-figma/scripts/path.mjs', import.meta.url).href)});
-    const [prototypes, tools] = JSON.parse(process.argv[1]);
+    const prototypes = JSON.parse(process.argv[1]);
     const list = p => statSync(p).isFile() ? [statSync(p).mtimeMs] : [...files(p)].map(f => f + ' ' + statSync(f).mtimeMs);
-    const listTools = p => existsSync(p) ? readdirSync(p).map(n => n + ' ' + statSync(p + '/' + n).mtimeMs) : [];
-    const listed = [...prototypes.map(p => [p, list]), ...tools.map(p => [p, listTools])];
-    const before = listed.map(([p, of]) => JSON.stringify(of(p)));
+    const before = prototypes.map(p => JSON.stringify(list(p)));
     for (const p of prototypes) for (const options of ${JSON.stringify(OPTION_SETS)}) check(p, options);
-    const changed = listed.filter(([p, of], i) => JSON.stringify(of(p)) !== before[i]).map(([p]) => p);
+    const changed = prototypes.filter((p, i) => JSON.stringify(list(p)) !== before[i]);
     const loaded = Object.keys(require.cache).filter(k => k.includes('/.scratch/'));
     console.log(JSON.stringify({ calls, changed, loaded }));
   `;
   const fixtures = [handoff('v0-app'), handoff('next-app'), handoff('vite-app'), handoff('tailwind-app'), handoff('conditions-app'),
     handoff('invite-teammates'), vibe('path-a-app'), vibe('tailwind-no-shadcn'), vibe('carbon-scss-app'), vibe('html-app'), join(vibe('html-app'), 'index.html')];
-  // Each Handoff row's variant, each Component Sets row's (#435), and the tools folders the readers fetch into.
-  const variants = [...VARIANTS.map(variant), ...Object.values(SETS_VARIANTS).map(make => make())];
-  const tools = ['.scratch/adapter-generic/tools', '.scratch/to-handoff'].map(d => join(REPO, d));
+  // Each Handoff row's variant, each Component Sets row's (#435), and the lockfile and Tailwind rows' (#434).
+  const made = [...VARIANTS.map(variant), ...Object.values(SETS_VARIANTS).map(make => make())];
+  const variants = [BARE, ...Object.values(LOCK_VARIANTS).map(([dir]) => dir)];
   let r;
-  try { r = spawnSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify([[...fixtures, ...variants], tools])], { encoding: 'utf8' }); }
-  finally { for (const d of variants) rmSync(d, { recursive: true, force: true }); }
+  try { r = spawnSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify([...fixtures, ...made, ...variants])], { encoding: 'utf8' }); }
+  finally { for (const d of made) rmSync(d, { recursive: true, force: true }); }
   assert.equal(r.status, 0, r.stderr);
   const { calls, changed, loaded } = JSON.parse(r.stdout);
   assert.deepEqual(calls, [], 'nothing written, run or fetched');
-  assert.deepEqual(changed, [], 'every Prototype and tools folder is as it was');
+  assert.deepEqual(changed, [], `every Prototype is as it was; changed: ${changed.join(', ')}`);
   assert.deepEqual(loaded, []);
 });
