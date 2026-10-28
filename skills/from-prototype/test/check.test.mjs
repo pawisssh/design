@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,9 +16,11 @@ const vibe = name => fileURLToPath(new URL(`../../vibe-to-figma/test/fixtures/${
 const handoff = name => fileURLToPath(new URL(`../../to-handoff/test/fixtures/${name}`, import.meta.url));
 const run = (...args) => spawnSync(process.execPath, [CLI, 'check', ...args], { encoding: 'utf8' });
 
-// A Prototype in a temp folder: path -> text, a package.json given as an object.
-function prototype(files) {
+// A Prototype in a temp folder: path -> text, a package.json given as an object. A variant passes a committed fixture,
+// copied there first, with those files written over it.
+function prototype(files, fixture) {
   const dir = mkdtempSync(join(tmpdir(), 'from-prototype-check-'));
+  if (fixture) cpSync(fixture, dir, { recursive: true });
   for (const [path, text] of Object.entries(files)) {
     mkdirSync(dirname(join(dir, path)), { recursive: true });
     writeFileSync(join(dir, path), typeof text === 'string' ? text : JSON.stringify(text));
@@ -49,9 +51,11 @@ test('the path A fixtures take path A; a Handoff reads only on Next or Vite', ()
     const r = check(dir);
     assert.equal(r.kind, 'React + Tailwind, no Code Library', dir);
     assert.ok(r.evidence.includes('vite'), r.evidence.join(', '));
-    assert.equal(r.verdicts.componentSets.verdict, 'yes, by path A');
     assert.equal(r.verdicts.handoff.verdict, 'yes');
   }
+  assert.equal(check(vibe('path-a-app')).verdicts.componentSets.verdict, 'yes, by path A');
+  // tailwind-app's stylesheet names no font (the text-style-font row, #367).
+  assert.deepEqual(check(handoff('tailwind-app')).verdicts.componentSets.reasons.map(r => r.row), ['text-style-font']);
   const bare = check(vibe('tailwind-no-shadcn'));
   assert.equal(bare.verdicts.componentSets.verdict, 'yes, by path A');
   assert.equal(bare.verdicts.handoff.verdict, 'no');
@@ -61,7 +65,7 @@ test('the path A fixtures take path A; a Handoff reads only on Next or Vite', ()
 test('a path A app with its own class-styled stylesheets gets a note naming them, linking #331', () => {
   const r = check(handoff('tailwind-app'));
   assert.ok(r.verdicts.componentSets.notes.some(n => n.includes('src/summary.css') && n.includes('#331')), r.verdicts.componentSets.notes.join('\n'));
-  assert.deepEqual(check(vibe('path-a-app')).verdicts.componentSets.notes, []);
+  assert.ok(!check(vibe('path-a-app')).verdicts.componentSets.notes.some(n => n.includes('#331')));
 });
 
 test('the Carbon + SCSS fixtures are React + CSS or SCSS classes: Component Sets not yet (#310)', () => {
@@ -321,11 +325,107 @@ test('a Handoff asked with no --ds, or Component Sets with no folder name, is an
 
 const OPTION_SETS = [{}, { figma: FIGMA }, { figma: 'https://www.figma.com/design/abc/x', handoff: true, ds: 'carbon' }, { figma: FIGMA, handoff: true, ds: 'carbon' }, { handoff: true }];
 
+// Component Sets rows #435 adds (spec #343 The gate table). Each variant is a committed fixture with a lockfile,
+// changed in one way; the owner sees the verdict, the failing row's reason and ticket, and the CLI's exit code.
+const read = path => readFileSync(path, 'utf8');
+const V0_CSS = read(join(handoff('v0-app'), 'app/globals.css'));
+const V0_PKG = JSON.parse(read(join(handoff('v0-app'), 'package.json')));
+const PATH_A_PKG = JSON.parse(read(join(vibe('path-a-app'), 'package.json')));
+// Figma Make's package.json: React only as an optional peer.
+const MAKE_PKG = { name: 'make-app', private: true, type: 'module', peerDependencies: { react: '19.2.4', 'react-dom': '19.2.4' },
+  peerDependenciesMeta: { react: { optional: true }, 'react-dom': { optional: true } }, devDependencies: PATH_A_PKG.devDependencies };
+const [V0_HEAD, V0_TOKENS] = [V0_CSS.slice(0, V0_CSS.indexOf('\n:root {')), V0_CSS.slice(V0_CSS.indexOf('\n:root {') + 1)];
+const USES_BUTTON = { 'src/app/components/ui/button.tsx': UTILITIES, 'src/App.tsx': 'import { Button } from "@/app/components/ui/button";\nexport default () => <Button>Hi</Button>;\n' };
+const V0_ROUTER_PKG = { ...V0_PKG, dependencies: { ...V0_PKG.dependencies, 'react-router': '7.9.0' } };
+const ROUTES = 'import { createBrowserRouter } from "react-router";\nimport Page from "./page";\nexport const router = createBrowserRouter([{ path: "/", element: <Page /> }]);\n';
+const VARIANTS = {
+  makeUsed: () => prototype({ 'package.json': MAKE_PKG, ...USES_BUTTON }, vibe('path-a-app')),
+  // A found folder with no components.json, React in dependencies.
+  foundFolder: () => prototype(USES_BUTTON, vibe('path-a-app')),
+  makeUnused: () => prototype({ 'package.json': MAKE_PKG, 'src/app/components/ui/button.tsx': 'export const Button = () => null;\n' }, vibe('path-a-app')),
+  tokensImported: () => prototype({ 'app/globals.css': V0_HEAD.replace('@import "shadcn/tailwind.css";\n', '$&@import "./theme.css";\n'), 'app/theme.css': V0_TOKENS }, handoff('v0-app')),
+  radiusMinus: () => prototype({ 'app/globals.css': V0_CSS.replace('calc(var(--radius) * 0.8)', 'calc(var(--radius) - 2px)') }, handoff('v0-app')),
+  noFont: () => prototype({ 'src/index.css': '@import "tailwindcss";\n' }, vibe('path-a-app')),
+  fontUnfollowed: () => prototype({ 'app/globals.css': V0_CSS.replace('var(--font-geist-mono)', 'var(--font-code)') }, handoff('v0-app')),
+  wouter: () => prototype({ 'package.json': { ...V0_PKG, dependencies: { ...V0_PKG.dependencies, wouter: '3.7.1' } } }, handoff('v0-app')),
+  routerElsewhere: () => prototype({ 'package.json': V0_ROUTER_PKG,
+    'app/routes.tsx': ROUTES, 'app/router.tsx': 'import { RouterProvider } from "react-router/dom";\nimport { router } from "./routes";\nexport default () => <RouterProvider router={router} />;\n' }, handoff('v0-app')),
+  componentRoutes: () => prototype({ 'package.json': V0_ROUTER_PKG,
+    'app/router.tsx': 'import { createBrowserRouter, RouterProvider } from "react-router";\nimport Page from "./page";\nconst router = createBrowserRouter([{ path: "/", Component: Page }]);\nexport default () => <RouterProvider router={router} />;\n' }, handoff('v0-app')),
+};
+// Each variant's one refusal: its row, its ticket, the message, and the CLI's exit 1 with the reason printed.
+function refusedBy(dir, row, ticket, ...says) {
+  const sets = check(dir).verdicts.componentSets;
+  assert.equal(sets.verdict, 'no', dir);
+  const reason = sets.reasons.find(r => r.row === row);
+  assert.ok(reason, `${dir}: no ${row} reason in ${JSON.stringify(sets.reasons)}`);
+  assert.equal(reason.ticket, ticket);
+  for (const text of says) assert.ok(reason.message.includes(text), `${reason.message} names ${text}`);
+  const out = run(dir, '--figma', FIGMA);
+  assert.equal(out.status, 1, out.stderr);
+  assert.ok(out.stdout.includes(reason.message.slice(1)), out.stdout);
+}
+const withVariants = (names, body) => {
+  const dirs = names.map(n => VARIANTS[n]());
+  try { body(...dirs); } finally { for (const d of dirs) rmSync(d, { recursive: true, force: true }); }
+};
+
+test('two Figma Make shapes, React only as an optional peer and no components.json, are refused until #358', () => {
+  withVariants(['makeUsed', 'makeUnused', 'foundFolder'], (used, unused, found) => {
+    assert.equal(check(used).kind, 'React + Tailwind + shadcn');
+    assert.equal(check(unused).kind, 'React + Tailwind, no Code Library');
+    for (const dir of [used, unused])
+      refusedBy(dir, 'peer-react-or-found-library', '#358', 'not yet: the readers need React outside `peerDependencies` and a `components.json` (#358)');
+    // A found folder with no components.json is refused with React in dependencies too.
+    refusedBy(found, 'peer-react-or-found-library', '#358');
+  });
+});
+
+test("the older shadcn theme is refused until #360, naming which form it has", () => {
+  withVariants(['tokensImported', 'radiusMinus'], (tokens, radius) => {
+    refusedBy(tokens, 'shadcn-theme', '#360', "not yet (#360): the Adapter reads shadcn's nova theme; this Prototype has the older form",
+      'tokens in app/theme.css, which app/globals.css imports');
+    refusedBy(radius, 'shadcn-theme', '#360', '`calc(var(--radius) - 2px)` in app/globals.css');
+  });
+});
+
+test("a stylesheet with no @theme --font-sans, or a font var() the Adapter can't follow, is refused until #367", () => {
+  withVariants(['noFont', 'fontUnfollowed'], (none, unfollowed) => {
+    refusedBy(none, 'text-style-font', '#367', "not yet (#367): the Adapter can't read the Prototype's font for its Text Styles",
+      'src/index.css declares no @theme --font-sans');
+    refusedBy(unfollowed, 'text-style-font', '#367', '--font-mono refers to --font-code, which no next/font loader in app/layout.tsx sets');
+  });
+});
+
+test('wouter gets a note until #350; a data router defined in another file, or Component: routes, need --all until #361', () => {
+  withVariants(['wouter', 'routerElsewhere', 'componentRoutes'], (wouter, elsewhere, component) => {
+    const sets = check(wouter).verdicts.componentSets;
+    assert.equal(sets.verdict, 'yes, by the shadcn path');
+    assert.ok(sets.notes.some(n => n.includes('wouter') && n.includes('`--all`') && n.includes('#350')), sets.notes.join('\n'));
+    const out = run(wouter, '--figma', FIGMA);
+    assert.equal(out.status, 0, out.stdout);
+    assert.match(out.stdout, /Note: with wouter the default family list comes from one screen/);
+    refusedBy(elsewhere, 'screens', '#361', "only with `--all`: the screens can't be read until #361", 'app/router.tsx renders a data router defined in another file');
+    refusedBy(component, 'screens', '#361', 'app/router.tsx gives `Component:` routes');
+  });
+});
+
+test("every React kind's Component Sets verdict notes that a form's controls inside a render prop are not counted (#349)", () => {
+  const modules = prototype({ 'package.json': { dependencies: { react: '19.2.4' }, devDependencies: { vite: '7.0.0' } }, 'src/App.tsx': 'import s from "./App.module.css";\nexport default () => <p className={s.x}>Hi</p>;\n', 'src/App.module.css': '.x { color: red; }' });
+  try {
+    for (const dir of [handoff('v0-app'), vibe('path-a-app'), handoff('vite-app'), modules]) {
+      const notes = check(dir).verdicts.componentSets.notes;
+      assert.ok(notes.includes("a form's controls inside a render prop are not counted yet (#349)"), `${dir}: ${notes.join('\n')}`);
+    }
+    assert.deepEqual(check(vibe('html-app')).verdicts.componentSets.notes, []);
+  } finally { rmSync(modules, { recursive: true, force: true }); }
+});
+
 test('every run writes nothing, runs and fetches nothing, leaves the Prototype as it was, and loads no fetched parser', () => {
   // A child process whose fs writes, child processes and fetch are recorded before the check is imported, so the
   // answer doesn't depend on what other test files write meanwhile; its module cache holds only what the check loads.
   const script = `
-    import { statSync } from 'node:fs';
+    import { existsSync, readdirSync, statSync } from 'node:fs';
     import { createRequire, syncBuiltinESMExports } from 'node:module';
     const require = createRequire(import.meta.url);
     const calls = [];
@@ -340,20 +440,28 @@ test('every run writes nothing, runs and fetches nothing, leaves the Prototype a
     syncBuiltinESMExports();
     const { check } = await import(${JSON.stringify(new URL('../scripts/from-prototype.mjs', import.meta.url).href)});
     const { files } = await import(${JSON.stringify(new URL('../../vibe-to-figma/scripts/path.mjs', import.meta.url).href)});
-    const prototypes = JSON.parse(process.argv[1]);
+    const [prototypes, tools] = JSON.parse(process.argv[1]);
     const list = p => statSync(p).isFile() ? [statSync(p).mtimeMs] : [...files(p)].map(f => f + ' ' + statSync(f).mtimeMs);
-    const before = prototypes.map(list);
+    const listTools = p => existsSync(p) ? readdirSync(p).map(n => n + ' ' + statSync(p + '/' + n).mtimeMs) : [];
+    const listed = [...prototypes.map(p => [p, list]), ...tools.map(p => [p, listTools])];
+    const before = listed.map(([p, of]) => JSON.stringify(of(p)));
     for (const p of prototypes) for (const options of ${JSON.stringify(OPTION_SETS)}) check(p, options);
-    const changed = prototypes.filter((p, i) => JSON.stringify(list(p)) !== JSON.stringify(before[i]));
+    const changed = listed.filter(([p, of], i) => JSON.stringify(of(p)) !== before[i]).map(([p]) => p);
     const loaded = Object.keys(require.cache).filter(k => k.includes('/.scratch/'));
     console.log(JSON.stringify({ calls, changed, loaded }));
   `;
-  const prototypes = [handoff('v0-app'), handoff('next-app'), handoff('vite-app'), handoff('tailwind-app'), handoff('conditions-app'),
+  const fixtures = [handoff('v0-app'), handoff('next-app'), handoff('vite-app'), handoff('tailwind-app'), handoff('conditions-app'),
     handoff('invite-teammates'), vibe('path-a-app'), vibe('tailwind-no-shadcn'), vibe('carbon-scss-app'), vibe('html-app'), join(vibe('html-app'), 'index.html')];
-  const r = spawnSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify(prototypes)], { encoding: 'utf8' });
+  // The variants of #435's rows, and the tools folders the readers fetch into.
+  const variants = Object.values(VARIANTS).map(make => make());
+  const repo = fileURLToPath(new URL('../../../', import.meta.url));
+  const tools = ['.scratch/adapter-generic/tools', '.scratch/to-handoff'].map(d => join(repo, d));
+  let r;
+  try { r = spawnSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify([[...fixtures, ...variants], tools])], { encoding: 'utf8' }); }
+  finally { for (const d of variants) rmSync(d, { recursive: true, force: true }); }
   assert.equal(r.status, 0, r.stderr);
   const { calls, changed, loaded } = JSON.parse(r.stdout);
   assert.deepEqual(calls, [], 'nothing written, run or fetched');
-  assert.deepEqual(changed, [], 'every Prototype is as it was');
+  assert.deepEqual(changed, [], 'every Prototype and tools folder is as it was');
   assert.deepEqual(loaded, []);
 });
