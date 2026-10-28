@@ -1,0 +1,20 @@
+{
+  "TextInput": "",
+  "Label": "cds-textinput-label",
+  "Label text": "cds-textinput-label",
+  "Field": "cds-Interactable",
+  "Start": "",
+  "Inline label": "cds-textinput-label",
+  "Start icon": "",
+  "Start glyph": "cds-Icon",
+  "Input stack": "",
+  "Stacked label": "cds-textinput-label insideLabelCss insideLabelCssStartCss",
+  "Stacked label text": "cds-textinput-label insideLabelCss insideLabelCssStartCss",
+  "Input": "nativeInputContainerCss",
+  "Placeholder": "nativeInputContainerCss",
+  "End icon": "",
+  "End glyph": "cds-Icon",
+  "Helper": "",
+  "Error icon": "cds-Icon",
+  "Helper text": "cds-textinput-description"
+}
