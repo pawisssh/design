@@ -3,7 +3,7 @@
 // check over the committed Button Contract, and a small CDS Prototype taken through To-handoff to a Rendering.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { hasDeps } from '../../to-handoff/scripts/deps.mjs';
@@ -22,7 +22,9 @@ const themeOf = foundations => Object.values(foundations.collections).find(c => 
 test('To-handoff loads the CDS Design System with this module as its Adapter', async () => {
   const system = await loadDesignSystem(CDS_DS);
   assert.equal(system.adapter.contractProcedure, adapter.contractProcedure);
-  assert.deepEqual(Object.keys(system.contracts), ['button']);
+  // Every committed Contract, read from the folder: each family ticket of #469 adds one.
+  const committed = readdirSync(CONTRACTS_DIR).filter(f => f.endsWith('.component.json')).map(f => f.replace('.component.json', ''));
+  assert.deepEqual(Object.keys(system.contracts).sort(), committed.sort());
   for (const name of ['roleGroups', 'surfaces', 'themeWrapper', 'breakpoints', 'contractProcedure', 'checkContract', 'available', 'renderer'])
     assert.ok(system.adapter[name], name);
 });
