@@ -1,7 +1,7 @@
 // The check (#433, #437, spec #343 The check; Kind detection; the gate rows; Owner questions; The stages): the
 // Prototype's kind and the files that show it, each output's verdict from its gate table, the owner's questions and the
-// plan, through the check's entry and its CLI. Temp-dir Prototypes
-// are written as the path tests write theirs; the committed fixtures are read where they are.
+// plan, through the check's entry and its CLI. Temp-dir Prototypes are written as the path tests write theirs; the
+// committed fixtures are read where they are.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -201,14 +201,17 @@ test('a Carbon app with Tailwind utilities is still Carbon, and a file given tha
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('no output asked: exit 2 with one question offering only the outputs whose verdict is not "no"', () => {
+test('no output asked: exit 2 with one question offering only the outputs whose verdict is not "no", and the Design System question beside a Handoff', () => {
   const both = run(handoff('v0-app'));
   assert.equal(both.status, 2, both.stderr);
-  assert.match(both.stdout, /Owner question: Which outputs should this run make: Component Sets, a Handoff, or both\?\n- Component Sets \(yes, by the shadcn path\): run again with `--figma <url>`\n- a Handoff \(yes\): run again with `--handoff`\n/);
+  assert.match(both.stdout, /Owner question: Which outputs should this run make: Component Sets, a Handoff, or both\?\n- Component Sets \(yes, by the shadcn path\): run again with `--figma <url>`\n- a Handoff \(yes\): run again with `--handoff`\nOwner question: Which Design System is the Handoff against\?\n/);
   assert.equal(both.stdout.trim().split('\n').at(-1), 'Nothing was fetched or written.');
 
   const html = check(vibe('html-app'));
-  assert.deepEqual(html.questions.map(q => q.options.map(o => o.output)), [['handoff']]);
+  assert.deepEqual(html.questions.map(q => q.id), ['outputs', 'designSystem']);
+  assert.deepEqual(html.questions[0].options.map(o => o.output), ['handoff']);
+  // Component Sets alone possible: no Design System question.
+  assert.deepEqual(check(vibe('tailwind-no-shadcn')).questions.map(q => q.id), ['outputs']);
   assert.equal(html.plan, null);
   const out = run(vibe('html-app'));
   assert.equal(out.status, 2);
@@ -283,6 +286,8 @@ test('a settled run exits 0 with the stages, each with its folder and Design Sys
   // --name and --all pass to the folder step.
   const renamed = check(handoff('v0-app'), { figma: FIGMA, name: 'mine', all: true });
   assert.deepEqual(renamed.plan.stages[0], { stage: 'folder', folder: '.scratch/design-systems/mine', designSystem: 'mine', all: true });
+  const refusedHandoff = run(vibe('tailwind-no-shadcn'), '--figma', FIGMA, '--name', 'mine', '--all', '--handoff', '--ds', 'carbon');
+  assert.ok(refusedHandoff.stdout.includes(`--figma ${FIGMA} --name mine --all\``), refusedHandoff.stdout);
 
   const out = run(handoff('v0-app'), '--figma', FIGMA, '--handoff', '--ds', 'carbon');
   assert.equal(out.status, 0, out.stderr);
@@ -306,6 +311,12 @@ test('a Handoff asked with no --ds, or Component Sets with no folder name, is an
     assert.equal(run(unnamed, '--figma', FIGMA).status, 2);
     assert.equal(run(unnamed, '--figma', FIGMA, '--name', 'unnamed').status, 0);
   } finally { rmSync(unnamed, { recursive: true, force: true }); }
+
+  // The own folder named for a Prototype that can't have Component Sets: Vibe-to-Figma's folder step would refuse it.
+  const scss = check(handoff('vite-app'), { handoff: true, ds: 'project-members' });
+  assert.deepEqual(scss.questions.map(q => q.id), ['designSystem']);
+  assert.match(scss.questions[0].question, /Not `project-members`, this Prototype's own folder: it can't have Component Sets/);
+  assert.equal(scss.plan, null);
 });
 
 const OPTION_SETS = [{}, { figma: FIGMA }, { figma: 'https://www.figma.com/design/abc/x', handoff: true, ds: 'carbon' }, { figma: FIGMA, handoff: true, ds: 'carbon' }, { handoff: true }];

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // From-Prototype (spec #343): one entry from a Prototype to Component Sets or a Handoff. Its check names the
-// Prototype's kind, gives each output's verdict, asks the owner's questions and plans the stages; its hand-over entry
-// writes the publish copy of a signed-off Handoff's Rendering, which the agent publishes as a private Artifact.
+// Prototype's kind and gives each output's verdict; its hand-over entry writes the publish copy of a signed-off
+// Handoff's Rendering, which the agent publishes as a private Artifact.
 //   node skills/from-prototype/scripts/from-prototype.mjs check <prototype> [--figma <url>] [--handoff] [--ds <ds>]
 //        [--name <name>] [--all]
 //   node skills/from-prototype/scripts/from-prototype.mjs hand-over <handoff.json> [--out <dir under .scratch/>]
@@ -119,7 +119,7 @@ const COMPONENT_SETS = [
   { name: 'reader', kinds: [UNKNOWN], message: 'no reader for what was found' },
   { name: 'mixed', kinds: [PATH_A], effect: 'note', ticket: '#331', test: p => !classStyled(p).length,
     message: p => `its own class-styled stylesheets (${classStyled(p).join(', ')}) are read as path A until #331 decides a React app that mixes them with Tailwind utilities` },
-  // Only when Component Sets are asked. The agent's one read of the file through the owner's Figma connection is the
+  // Only when Component Sets are asked (#437). The agent's one read of the file through the owner's Figma connection is the
   // SKILL.md's step after the check: the check fetches nothing.
   { name: 'figma', kinds: KINDS.map(k => k.kind), test: p => !figmaRefusal(p), message: p => `the Figma link is refused: ${figmaRefusal(p)}` },
 ];
@@ -171,25 +171,32 @@ export function check(prototype, options = {}) {
     handoff: verdictOf(HANDOFF, p, 'yes'),
   };
   const asked = [options.figma !== undefined && 'componentSets', options.handoff && 'handoff'].filter(Boolean);
-  const questions = asked.some(o => verdicts[o].verdict === 'no') ? [] : questionsOf(p, asked, verdicts);
-  const plan = asked.length && !questions.length && !asked.some(o => verdicts[o].verdict === 'no') ? planOf(p, asked) : null;
+  const refused = asked.some(o => verdicts[o].verdict === 'no');
+  const questions = refused ? [] : questionsOf(p, asked, verdicts);
+  const plan = asked.length && !questions.length && !refused ? planOf(p, asked) : null;
   return { kind: p.kind, evidence: p.evidence, verdicts, questions, plan };
 }
 
 // The owner's questions (spec #343 Owner questions): with no output asked, one question offering only the outputs
-// whose verdict is not "no"; a Handoff asked with no --ds asks its Design System. The Design System's default, the
-// own-folder answer and the rerun rule are #438's.
+// whose verdict is not "no", and the Design System question beside it when a Handoff is among them; a Handoff asked
+// with no --ds asks its Design System. The Design System's default, the own-folder answer and the rerun rule are #438's.
 function questionsOf(p, asked, verdicts) {
+  const designSystem = { id: 'designSystem', question: 'Which Design System is the Handoff against?', options: designSystems() };
   if (!asked.length) {
     const possible = Object.keys(OUTPUTS).filter(o => verdicts[o].verdict !== 'no');
     const question = possible.length === 2 ? 'Which outputs should this run make: Component Sets, a Handoff, or both?'
       : `Should this run make ${OUTPUTS[possible[0]]}? It is the only output possible.`;
     return possible.length ? [{ id: 'outputs', question,
-      options: possible.map(o => ({ output: o, verdict: verdicts[o].verdict, flag: o === 'handoff' ? '--handoff' : '--figma <url>' })) }] : [];
+      options: possible.map(o => ({ output: o, verdict: verdicts[o].verdict, flag: o === 'handoff' ? '--handoff' : '--figma <url>' })) },
+    ...(possible.includes('handoff') ? [designSystem] : [])] : [];
   }
   const questions = [];
-  if (asked.includes('handoff') && !p.options.ds) questions.push({ id: 'designSystem', question: 'Which Design System is the Handoff against?', options: designSystems() });
   const own = ownFolder(p);
+  if (asked.includes('handoff') && !p.options.ds) questions.push(designSystem);
+  // The own folder named while Component Sets are "no": Vibe-to-Figma's folder step would refuse it (the own-folder row).
+  if (asked.includes('handoff') && p.options.ds === own.name && verdicts.componentSets.verdict === 'no') {
+    questions.push({ ...designSystem, question: `Which Design System is the Handoff against? Not \`${own.name}\`, this Prototype's own folder: it can't have Component Sets, so its own folder can't be made.` });
+  }
   if (own.refused && asked.includes('componentSets')) questions.push({ id: 'name', question: `What is this Prototype's own folder called? ${own.refused}` });
   return questions;
 }
@@ -204,12 +211,12 @@ function ownFolder(p) {
 function planOf(p, asked) {
   const { name: own } = ownFolder(p);
   const ds = p.options.ds;
-  const at = (stage, designSystem, extra) => ({ stage, folder: `${SCRATCH_ROOT}/${designSystem}`, designSystem, ...extra });
+  const stageAt = (stage, designSystem, extra) => ({ stage, folder: `${SCRATCH_ROOT}/${designSystem}`, designSystem, ...extra });
   const folderStep = asked.includes('componentSets') || ds === own;
   const stages = [
-    ...(folderStep ? [at('folder', own, p.options.all ? { all: true } : {}), at('review-page', own), at('approve', own, { owner: true })] : []),
-    ...(asked.includes('componentSets') ? [at('figma-build', own, { figma: p.options.figma })] : []),
-    ...(asked.includes('handoff') ? [...(ds === own ? [] : [at('scratch-copy', ds)]), at('generate', ds), at('review', ds), at('sign-off', ds, { owner: true })] : []),
+    ...(folderStep ? [stageAt('folder', own, p.options.all ? { all: true } : {}), stageAt('review-page', own), stageAt('approve', own, { owner: true })] : []),
+    ...(asked.includes('componentSets') ? [stageAt('figma-build', own, { figma: p.options.figma })] : []),
+    ...(asked.includes('handoff') ? [...(ds === own ? [] : [stageAt('scratch-copy', ds)]), stageAt('generate', ds), stageAt('review', ds), stageAt('sign-off', ds, { owner: true })] : []),
   ];
   return { outputs: asked, stages: [...stages, { stage: 'hand-over', outputs: asked }] };
 }
@@ -226,13 +233,14 @@ const STAGES = { folder: "Vibe-to-Figma's folder step", 'review-page': "Vibe-to-
 // questions or the plan, and that nothing was fetched or written.
 function message(prototype, r, options = {}) {
   const command = o => `\`node skills/from-prototype/scripts/from-prototype.mjs check ${prototype} ${o === 'handoff'
-    ? `--handoff${options.ds ? ` --ds ${options.ds}` : ''}` : `--figma ${options.figma ?? '<url>'}`}\``;
+    ? `--handoff${options.ds ? ` --ds ${options.ds}` : ''}`
+    : `--figma ${options.figma ?? '<url>'}${options.name ? ` --name ${options.name}` : ''}${options.all ? ' --all' : ''}`}\``;
   const sentence = s => s[0].toUpperCase() + s.slice(1).replace('ADR 0019', `ADR 0019: ${ADR}`) + '.';
   const line = (name, v) => `- ${name}: ${v.verdict}.${[...v.reasons.map(x => x.message), ...v.notes.map(n => `note: ${n}`)].map(s => ' ' + sentence(s)).join('')}`;
   const { componentSets: sets, handoff } = r.verdicts;
-  // Component Sets refused only for their link: the Prototype can still have them, and a Handoff can run alone.
+  // Component Sets refused only for their link (#437): the Prototype can still have them, and a Handoff can run alone.
   const linkOnly = sets.reasons.every(x => x.row === 'figma');
-  const possible = sets.verdict === 'no' && handoff.verdict !== 'no'
+  const possible = r.plan ? null : sets.verdict === 'no' && handoff.verdict !== 'no'
     ? linkOnly ? `A Handoff can run alone: ${command('handoff')}.`
       : `A Handoff against a Design System your developers already build with is still possible. Here: ${designSystems().map(d => `\`${d}\``).join(', ')}. Run ${command('handoff')} if one of them is it.`
     : sets.verdict !== 'no' && handoff.verdict === 'no' ? `Component Sets alone are still possible: ${command('componentSets')}.`
@@ -241,7 +249,7 @@ function message(prototype, r, options = {}) {
     ? q.options.map(o => `- ${OUTPUTS[o.output]} (${o.verdict}): run again with \`${o.flag}\``)
     : q.id === 'designSystem' ? [`- here: ${q.options.map(d => `\`${d}\``).join(', ')}. Run again with \`--ds <design-system>\`.`] : []]);
   const plan = r.plan ? ['Plan:', ...r.plan.stages.map((s, i) => `${i + 1}. ${STAGES[s.stage]}${s.stage === 'hand-over'
-    ? ` of ${s.outputs.map(o => OUTPUTS[o]).join(' and ')}` : `: ${s.folder} (Design System \`${s.designSystem}\`)${s.figma ? ` into ${s.figma}` : ''}`}`)] : [];
+    ? ` of ${s.outputs.map(o => OUTPUTS[o]).join(' and ')}` : `: ${s.folder} (Design System \`${s.designSystem}\`)${s.figma ? ` into ${s.figma}` : ''}${s.all ? ', `--all`' : ''}`}`)] : [];
   return [`${prototype}: ${r.kind} (${r.evidence.join(', ')}).`, line('Component Sets', sets), line('Handoff', handoff),
     ...(possible ? [possible] : []), ...questions, ...plan, '', 'Nothing was fetched or written.'].join('\n');
 }
@@ -327,8 +335,9 @@ function main(argv) {
   if (!['check', 'hand-over'].includes(command) || !input) { console.error(USAGE); return 1; }
   if (command === 'check') {
     const { figma, handoff, ds, name, all } = values;
-    const r = check(input, { figma, handoff, ds, name, all });
-    console.log(message(input, r, values));
+    const options = { figma, handoff, ds, name, all };
+    const r = check(input, options);
+    console.log(message(input, r, options));
     // 0 with the plan, 2 with the owner's questions, 1 when an asked output is refused or none is possible (#324 D7).
     return r.plan ? 0 : r.questions.length ? 2 : 1;
   }

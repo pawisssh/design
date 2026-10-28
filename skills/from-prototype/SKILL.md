@@ -25,13 +25,13 @@ node skills/from-prototype/scripts/from-prototype.mjs check <prototype> [--figma
 
 **Give the owner the message as printed.** Then by its exit code:
 
-- **2, the owner's questions.** With no output asked, one question offers only the outputs whose verdict is not "no". A Handoff asked with no `--ds` asks its Design System. Component Sets with no usable folder name ask for `--name`. Wait for the owner's own chat answer, the only one that counts, then run the check again with it as options.
+- **2, the owner's questions.** With no output asked, one question offers only the outputs whose verdict is not "no", with the Design System question beside it when a Handoff is among them. A Handoff asked with no `--ds` asks its Design System, and so does `--ds` naming the own folder of a Prototype that can't have Component Sets. Component Sets with no usable folder name ask for `--name`. Wait for the owner's own chat answer, the only one that counts, then run the check again with it as options.
 - **1, a refusal.** An output asked for is refused, or nothing is possible. Run no stage. When the other output can run alone, the message gives its command; run it only on the owner's word. The flow never switches outputs on its own ([#324](https://github.com/pawisssh/design/issues/324) D7).
 - **0, the plan.** Run [the stages](#the-stages) in its order.
 
-**The Figma file.** On exit 0 with Component Sets, before any stage, read the linked file once through the owner's Figma connection: one read-only call on the link's file key, such as `get_metadata`. If it fails, give the owner "Component Sets: no: <the reason>" and run no stage. The check makes no such read: it fetches nothing.
+**The Figma file.** On exit 0 with Component Sets, before any stage, read the linked file once through the owner's Figma connection: one read-only call on the link's file key, such as `get_metadata`. If it fails, give the owner "Component Sets: no: <the reason>" and run no stage.
 
-Today only each output's `reader` gate is checked. A "yes" can still be refused later, by a stage, for a reason a later gate row will name.
+Today each output's `reader` gate and the `figma` link are checked. A "yes" can still be refused later, by a stage, for a reason a later gate row will name.
 
 ## The stages
 
