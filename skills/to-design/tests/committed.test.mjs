@@ -21,7 +21,7 @@ const AT = '2026-10-26T00:00:00.000Z';
 // fix lands and the entry is due for removal.
 const ISSUE_407 = { issue: '#407', error: /FILL needs an auto layout parent/ };
 const KNOWN = {
-  'carbon/select.component.json': ISSUE_407, 'carbon/text-input.component.json': ISSUE_407,
+  'carbon/select.component.json': ISSUE_407, 'carbon/text-input.component.json': ISSUE_407, 'cds/textinput.component.json': ISSUE_407,
   'shadcn/alert.component.json': ISSUE_407, 'shadcn/card.component.json': ISSUE_407, 'shadcn/input.component.json': ISSUE_407,
   'shadcn/label.component.json': ISSUE_407, 'shadcn/textarea.component.json': ISSUE_407,
 };

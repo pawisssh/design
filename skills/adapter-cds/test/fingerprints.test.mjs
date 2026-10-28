@@ -125,6 +125,11 @@ test('a static class comes before the literals on its element: it is the identif
     /layer "Root": its static class cds-ChipCard is the identifying entry, so it comes first/);
 });
 
+test('an empty entry is an element with no class, id or literal: no node and no rules, only the parts (#477)', () => {
+  assert.deepEqual(fingerprints({ contract, files, nodes: { ...nodes, Lead: '' }, keys: ['anatomy.Lead'] }).facts['anatomy.Lead'],
+    { kind: 'node', node: '', element: '', rules: [], parts: PARTS });
+});
+
 // ---------- families with no cds-<Family> class (#470), from test/fixtures/anchors ----------
 // in (#478): Avatar's fallback Box carries only `borderRadiusCss[shape]`, a member of a Record of literals.
 test('a Record of literals is one entry, named by the Record: its rule lists each member\'s, in source order', () => {

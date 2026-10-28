@@ -57,13 +57,15 @@ export function fingerprints({ contract, nodes, files, keys }) {
   // (`cds-tag`, `cds-Control`), else by the element's first literal (`checkboxCss`), so a static class comes first.
   const nodeFacts = layer => {
     if (nodes[layer] === undefined) throw new Error(`no node for layer "${layer}" in the node map`);
-    const entries = nodes[layer].split(' ');
+    // In #477: an empty entry is an element CDS gives no class, id or literal (TextInput's root VStack). It has no node
+    // and no rules, so a key on it rests on the parts and on the other files its evidence cites.
+    const entries = nodes[layer].split(' ').filter(Boolean);
     for (const e of entries) if (!e.startsWith('cds-') && !literals[e])
       throw new Error(`layer "${layer}": ${e} is neither a cds- class nor a css literal of ${tsx}`);
     const fixed = entries.find(e => e.startsWith('cds-'));
     if (fixed && fixed !== entries[0])
       throw new Error(`layer "${layer}": its static class ${fixed} is the identifying entry, so it comes first`);
-    return { node: entries[0].replace(/^cds-/, ''), element: entries.join(' '),
+    return { node: (entries[0] || '').replace(/^cds-/, ''), element: entries.join(' '),
       rules: entries.filter(e => literals[e]).map(e => literals[e]).sort() };
   };
   // A layer drafted from another component's file (Track and Arc from ProgressCircle.tsx) also holds that file's pin:

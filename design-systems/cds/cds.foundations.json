@@ -76,6 +76,11 @@
         "family": "tag",
         "path": "design-systems/cds/contracts/tag.component.json",
         "snapshotId": "sha256:8c7c845116b45b193bb55dac8c64068f972e9f01ef5174d02b83d64a38ae40a9"
+      },
+      {
+        "family": "textinput",
+        "path": "design-systems/cds/contracts/textinput.component.json",
+        "snapshotId": "sha256:bde5354c76338dffc10bf9ed7429752dea8cd5f0092d5de98ca03fd411a6c6d5"
       }
     ],
     "tokens": [
@@ -97,6 +102,7 @@
       "avatarSize-xxl",
       "avatarSize-xxxl",
       "bg",
+      "bgInverse",
       "bgLine",
       "bgLineHeavy",
       "bgNegative",
@@ -108,6 +114,7 @@
       "borderRadius-0",
       "borderRadius-100",
       "borderRadius-1000",
+      "borderRadius-200",
       "borderRadius-700",
       "borderRadius-900",
       "borderWidth-0",
@@ -172,12 +179,15 @@
       "fg",
       "fgInverse",
       "fgMuted",
+      "fgNegative",
+      "fgPositive",
       "fgPrimary",
       "headline",
       "iconSize-m",
       "iconSize-s",
       "iconSize-xs",
       "label1",
+      "label2",
       "space-0",
       "space-0_25",
       "space-0_5",
@@ -4568,7 +4578,8 @@
       },
       "usedBy": [
         "checkbox",
-        "radio"
+        "radio",
+        "textinput"
       ]
     },
     "bgAlternate": {
@@ -4665,7 +4676,9 @@
           "resolved": "#ffffff"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "textinput"
+      ]
     },
     "bgLine": {
       "collection": "theme",
@@ -4747,7 +4760,8 @@
       },
       "usedBy": [
         "checkbox",
-        "radio"
+        "radio",
+        "textinput"
       ]
     },
     "bgLineInverse": {
@@ -4845,7 +4859,8 @@
         }
       },
       "usedBy": [
-        "switch"
+        "switch",
+        "textinput"
       ]
     },
     "bgNegativeWash": {
@@ -4933,7 +4948,8 @@
         }
       },
       "usedBy": [
-        "switch"
+        "switch",
+        "textinput"
       ]
     },
     "bgPositiveWash": {
@@ -4988,7 +5004,8 @@
         "chip",
         "iconbutton",
         "radio",
-        "switch"
+        "switch",
+        "textinput"
       ]
     },
     "bgPrimaryWash": {
@@ -5039,7 +5056,8 @@
       },
       "usedBy": [
         "avatar",
-        "chip"
+        "chip",
+        "textinput"
       ]
     },
     "bgSecondaryWash": {
@@ -6156,7 +6174,8 @@
         "checkbox",
         "chip",
         "radio",
-        "switch"
+        "switch",
+        "textinput"
       ]
     },
     "fgInverse": {
@@ -6211,7 +6230,8 @@
       "usedBy": [
         "checkbox",
         "radio",
-        "switch"
+        "switch",
+        "textinput"
       ]
     },
     "fgNegative": {
@@ -6236,7 +6256,9 @@
           "resolved": "#f0616d"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "textinput"
+      ]
     },
     "fgPositive": {
       "collection": "theme",
@@ -6260,7 +6282,9 @@
           "resolved": "#27ad75"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "textinput"
+      ]
     },
     "fgPrimary": {
       "collection": "theme",
@@ -6285,7 +6309,8 @@
         }
       },
       "usedBy": [
-        "chip"
+        "chip",
+        "textinput"
       ]
     },
     "fgWarning": {
@@ -10535,7 +10560,9 @@
           "value": 8
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "textinput"
+      ]
     },
     "borderRadius-300": {
       "collection": "layout",
@@ -10711,7 +10738,8 @@
         "checkbox",
         "chip",
         "radio",
-        "switch"
+        "switch",
+        "textinput"
       ]
     },
     "borderWidth-200": {
@@ -10962,7 +10990,8 @@
       },
       "usedBy": [
         "button",
-        "iconbutton"
+        "iconbutton",
+        "textinput"
       ]
     },
     "iconSize-xs": {
@@ -10982,7 +11011,8 @@
         }
       },
       "usedBy": [
-        "tag"
+        "tag",
+        "textinput"
       ]
     },
     "space-0": {
@@ -11045,7 +11075,8 @@
         }
       },
       "usedBy": [
-        "tag"
+        "tag",
+        "textinput"
       ]
     },
     "space-0_75": {
@@ -11066,7 +11097,8 @@
       },
       "usedBy": [
         "button",
-        "chip"
+        "chip",
+        "textinput"
       ]
     },
     "space-1": {
@@ -11092,7 +11124,8 @@
         "iconbutton",
         "radio",
         "switch",
-        "tag"
+        "tag",
+        "textinput"
       ]
     },
     "space-10": {
@@ -11132,7 +11165,8 @@
       "usedBy": [
         "button",
         "chip",
-        "iconbutton"
+        "iconbutton",
+        "textinput"
       ]
     },
     "space-2": {
@@ -11154,7 +11188,8 @@
       "usedBy": [
         "button",
         "chip",
-        "iconbutton"
+        "iconbutton",
+        "textinput"
       ]
     },
     "space-3": {
@@ -11308,7 +11343,8 @@
         "avatar",
         "checkbox",
         "radio",
-        "switch"
+        "switch",
+        "textinput"
       ]
     },
     "fontFamily-caption": {
@@ -11451,7 +11487,9 @@
           "from": "var(--defaultFont-sans), the first family of --defaultFont-sans in @coinbase/cds-web esm/styles/defaultFont.css"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "textinput"
+      ]
     },
     "fontFamily-legal": {
       "collection": "type",
@@ -11571,7 +11609,8 @@
         "avatar",
         "checkbox",
         "radio",
-        "switch"
+        "switch",
+        "textinput"
       ]
     },
     "fontSize-caption": {
@@ -11714,7 +11753,9 @@
           "from": "0.875rem x 16"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "textinput"
+      ]
     },
     "fontSize-legal": {
       "collection": "type",
@@ -11833,7 +11874,8 @@
         "avatar",
         "checkbox",
         "radio",
-        "switch"
+        "switch",
+        "textinput"
       ]
     },
     "fontWeight-caption": {
@@ -11969,7 +12011,9 @@
           "value": 400
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "textinput"
+      ]
     },
     "fontWeight-legal": {
       "collection": "type",
@@ -12084,7 +12128,8 @@
         "avatar",
         "checkbox",
         "radio",
-        "switch"
+        "switch",
+        "textinput"
       ]
     },
     "lineHeight-caption": {
@@ -12227,7 +12272,9 @@
           "from": "1.25rem x 16"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "textinput"
+      ]
     },
     "lineHeight-legal": {
       "collection": "type",
@@ -12353,7 +12400,8 @@
         "avatar",
         "checkbox",
         "radio",
-        "switch"
+        "switch",
+        "textinput"
       ]
     },
     "caption": {
@@ -12524,7 +12572,9 @@
         "fontWeight": "fontWeight-label2",
         "lineHeight": "lineHeight-label2"
       },
-      "usedBy": []
+      "usedBy": [
+        "textinput"
+      ]
     },
     "legal": {
       "name": "Legal/legal",
@@ -12678,7 +12728,7 @@
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
-      "contracts": 8,
+      "contracts": 9,
       "errors": 0
     }
   },
@@ -12712,6 +12762,11 @@
       "level": "info",
       "at": "variables.switch-*",
       "message": "switch has no component token map: @coinbase/cds-common@9.29.0 has no esm/tokens/switch.js, so the document carries no switch component tokens or state blends from one."
+    },
+    {
+      "level": "info",
+      "at": "variables.textinput-*",
+      "message": "textinput has no component token map: @coinbase/cds-common@9.29.0 has no esm/tokens/textinput.js, so the document carries no textinput component tokens or state blends from one."
     },
     {
       "level": "info",
