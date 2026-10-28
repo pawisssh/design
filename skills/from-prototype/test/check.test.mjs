@@ -5,12 +5,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { check } from '../scripts/from-prototype.mjs';
+import { fileHash } from '../../to-handoff/scripts/hash.mjs';
+import { REPO_ROOT as REPO } from '../../to-handoff/scripts/system.mjs';
 
 const CLI = fileURLToPath(new URL('../scripts/from-prototype.mjs', import.meta.url));
 const vibe = name => fileURLToPath(new URL(`../../vibe-to-figma/test/fixtures/${name}`, import.meta.url));
@@ -31,7 +32,6 @@ function prototype(files, fixture) {
 // A repo root in a temp folder (#438): the committed carbon and shadcn folders' Foundations documents and Contracts,
 // a scratch copy of each Design System in `copies`, and the files given, so a test never touches the real
 // design-systems/ or .scratch/.
-const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 function repoRoot(files = {}, copies = []) {
   const dir = prototype(files);
   const copy = (ds, to) => { for (const f of [`${ds}.foundations.json`, 'contracts']) cpSync(join(REPO, 'design-systems', ds, f), join(dir, to, ds, f), { recursive: true }); };
@@ -586,6 +586,8 @@ test('an unknown --ds is refused, listing the Design Systems here', () => {
     assert.deepEqual(r.questions, []);
     assert.equal(r.plan, null);
   });
+  // With no output asked too: a bad --ds never stands in for the owner's answer.
+  withRoot({}, root => assert.equal(check(handoff('vite-app'), { ds: 'nope', root }).refusals.length, 1));
   const out = run(handoff('vite-app'), '--handoff', '--ds', 'nope');
   assert.equal(out.status, 1, out.stderr);
   assert.match(out.stdout, /\n- `--ds nope` names no Design System here: .*`carbon`.*\.\n/);
@@ -601,13 +603,14 @@ test('a scratch copy is used in place: the plan names the committed files that m
     assert.deepEqual(check(handoff('vite-app'), { handoff: true, ds: 'carbon', root }).plan.notes, []);
     const copy = join(root, '.scratch/design-systems/carbon');
     writeFileSync(join(copy, 'carbon.foundations.json'), '{}');
-    rmSync(join(copy, 'contracts/select.component.json'));
+    const gone = `contracts/${readdirSync(join(copy, 'contracts')).sort()[0]}`;
+    rmSync(join(copy, gone));
     writeFileSync(join(copy, 'contracts/written-mid-run.component.json'), '{}');
     const r = check(handoff('vite-app'), { handoff: true, ds: 'carbon', root });
     assert.deepEqual(stagesOf(r), ['generate carbon', 'review carbon', 'sign-off carbon', 'hand-over']);
-    assert.deepEqual(r.plan.moved, { designSystem: 'carbon', files: ['carbon.foundations.json', 'contracts/select.component.json'] });
+    assert.deepEqual(r.plan.moved, { designSystem: 'carbon', files: ['carbon.foundations.json', gone] });
     assert.equal(r.plan.notes.length, 1);
-    for (const part of ['the committed Design System `carbon` has moved since its scratch copy was made: carbon.foundations.json, contracts/select.component.json',
+    for (const part of [`the committed Design System \`carbon\` has moved since its scratch copy was made: carbon.foundations.json, ${gone}`,
       "puts the copy's signed Handoffs into Drift", 'only when the owner says so in chat', '`handoffs/`'])
       assert.ok(r.plan.notes[0].includes(part), r.plan.notes[0]);
   }, ['carbon']);
@@ -626,18 +629,25 @@ test('a name collision with a committed Design System or another scratch folder 
         assert.deepEqual(r.questions, []);
         assert.deepEqual(check(dir, { figma: FIGMA, name: 'mine', root }).refusals, []);
       }
-      // Its own folder is not taken: no collision when the Handoff is against another Design System.
+      // Its own folder is not in play: no collision when the Handoff is against another Design System, or against the
+      // committed one its name collides with.
       assert.ok(check(carbonApp, { handoff: true, ds: 'shadcn', root }).plan);
+      const carbonVite = prototype({ 'package.json': { ...JSON.parse(read(join(handoff('vite-app'), 'package.json'))), name: 'carbon' } }, handoff('vite-app'));
+      try { assert.deepEqual(stagesOf(check(carbonVite, { handoff: true, ds: 'carbon', root })), ['scratch-copy carbon', 'generate carbon', 'review carbon', 'sign-off carbon', 'hand-over']); }
+      finally { rmSync(carbonVite, { recursive: true, force: true }); }
     });
     // A scratch folder is this Prototype's own when its Family map's sites are this Prototype's files, or its Foundations
     // document read this Prototype's components.json.
     const map = JSON.stringify({ families: { card: { by: 'agent', sites: [{ file: 'src/App.tsx', path: 'App>div' }] } } });
-    const v0Hash = `sha256:${createHash('sha256').update(readFileSync(join(handoff('v0-app'), 'components.json'))).digest('hex')}`;
-    withRoot({ '.scratch/design-systems/path-a-app/path-a-app.family-map.json': map,
-      '.scratch/design-systems/v0-app/v0-app.foundations.json': JSON.stringify({ source: { files: { 'components.json': v0Hash } } }) }, root => {
+    const v0Read = Object.fromEntries(['components.json', 'app/globals.css'].map(f => [f, fileHash(readFileSync(join(handoff('v0-app'), f)))]));
+    const v0Foundations = files => ({ '.scratch/design-systems/v0-app/v0-app.foundations.json': JSON.stringify({ source: { files } }) });
+    withRoot({ '.scratch/design-systems/path-a-app/path-a-app.family-map.json': map, ...v0Foundations(v0Read) }, root => {
       assert.deepEqual(check(vibe('path-a-app'), { figma: FIGMA, root }).refusals, []);
       assert.deepEqual(stagesOf(check(handoff('v0-app'), { figma: FIGMA, root })), ['folder v0-app', 'review-page v0-app', 'approve v0-app', 'figma-build v0-app', 'hand-over']);
     });
+    // Another project's stylesheet beside the same components.json: not this Prototype's own.
+    withRoot(v0Foundations({ ...v0Read, 'app/globals.css': fileHash('.other {}') }), root =>
+      assert.equal(check(handoff('v0-app'), { figma: FIGMA, root }).refusals.length, 1));
     const out = run(carbonApp, '--figma', FIGMA);
     assert.equal(out.status, 1, out.stderr);
     assert.match(out.stdout, /pass `--name`/);
@@ -677,8 +687,7 @@ test('every run writes nothing, runs and fetches nothing, leaves the Prototype a
     handoff('invite-teammates'), vibe('path-a-app'), vibe('tailwind-no-shadcn'), vibe('carbon-scss-app'), vibe('html-app'), join(vibe('html-app'), 'index.html')];
   // Each Handoff row's variant, each Component Sets row's (#435), and the tools folders the readers fetch into.
   const variants = [...VARIANTS.map(variant), ...Object.values(SETS_VARIANTS).map(make => make())];
-  const repo = fileURLToPath(new URL('../../../', import.meta.url));
-  const tools = ['.scratch/adapter-generic/tools', '.scratch/to-handoff'].map(d => join(repo, d));
+  const tools = ['.scratch/adapter-generic/tools', '.scratch/to-handoff'].map(d => join(REPO, d));
   let r;
   try { r = spawnSync(process.execPath, ['--input-type=module', '-e', script, JSON.stringify([[...fixtures, ...variants], tools])], { encoding: 'utf8' }); }
   finally { for (const d of variants) rmSync(d, { recursive: true, force: true }); }
