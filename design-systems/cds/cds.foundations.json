@@ -51,6 +51,11 @@
         "family": "switch",
         "path": "design-systems/cds/contracts/switch.component.json",
         "snapshotId": "sha256:5e68b3c3fdc661471da66a5aea526dcde44061ff56ce8f37372aa044f99b2a4b"
+      },
+      {
+        "family": "tag",
+        "path": "design-systems/cds/contracts/tag.component.json",
+        "snapshotId": "sha256:8c7c845116b45b193bb55dac8c64068f972e9f01ef5174d02b83d64a38ae40a9"
       }
     ],
     "tokens": [
@@ -62,6 +67,7 @@
       "bgPrimary",
       "bgTertiary",
       "body",
+      "borderRadius-100",
       "borderRadius-1000",
       "borderRadius-700",
       "borderRadius-900",
@@ -115,6 +121,7 @@
       "button-tertiary-transparent-color",
       "button-tertiary-transparent-hover-background",
       "button-tertiary-transparent-pressed-background",
+      "caption",
       "controlSize-radioSize",
       "controlSize-switchHeight",
       "controlSize-switchThumbSize",
@@ -124,15 +131,42 @@
       "headline",
       "iconSize-m",
       "iconSize-s",
+      "iconSize-xs",
       "label1",
       "space-0",
+      "space-0_25",
+      "space-0_5",
       "space-0_75",
       "space-1",
       "space-1_5",
       "space-2",
       "space-3",
       "space-4",
-      "switch-thumb-background"
+      "switch-thumb-background",
+      "tag-high-blue-background",
+      "tag-high-blue-color",
+      "tag-high-gray-background",
+      "tag-high-gray-color",
+      "tag-high-green-background",
+      "tag-high-green-color",
+      "tag-high-purple-background",
+      "tag-high-purple-color",
+      "tag-high-red-background",
+      "tag-high-red-color",
+      "tag-high-yellow-background",
+      "tag-high-yellow-color",
+      "tag-low-blue-background",
+      "tag-low-blue-color",
+      "tag-low-gray-background",
+      "tag-low-gray-color",
+      "tag-low-green-background",
+      "tag-low-green-color",
+      "tag-low-purple-background",
+      "tag-low-purple-color",
+      "tag-low-red-background",
+      "tag-low-red-color",
+      "tag-low-yellow-background",
+      "tag-low-yellow-color"
     ]
   },
   "collections": [
@@ -5922,6 +5956,594 @@
       },
       "usedBy": []
     },
+    "tag-high-blue-background": {
+      "collection": "theme",
+      "name": "Tag/tag-high-blue-background",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.high.blue.background",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-blue60",
+          "resolved": "#0052ff"
+        },
+        "dark": {
+          "alias": "dark-blue60",
+          "resolved": "#3773f5"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-high-blue-color": {
+      "collection": "theme",
+      "name": "Tag/tag-high-blue-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.high.blue.foreground",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-blue0",
+          "resolved": "#f5f8ff"
+        },
+        "dark": {
+          "alias": "dark-blue0",
+          "resolved": "#001033"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-high-gray-background": {
+      "collection": "theme",
+      "name": "Tag/tag-high-gray-background",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.high.gray.background",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-gray80",
+          "resolved": "#32353d"
+        },
+        "dark": {
+          "alias": "dark-gray80",
+          "resolved": "#c1c6cf"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-high-gray-color": {
+      "collection": "theme",
+      "name": "Tag/tag-high-gray-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.high.gray.foreground",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-gray10",
+          "resolved": "#eef0f3"
+        },
+        "dark": {
+          "alias": "dark-gray10",
+          "resolved": "#1e2025"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-high-green-background": {
+      "collection": "theme",
+      "name": "Tag/tag-high-green-background",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.high.green.background",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-green60",
+          "resolved": "#098551"
+        },
+        "dark": {
+          "alias": "dark-green60",
+          "resolved": "#27ad75"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-high-green-color": {
+      "collection": "theme",
+      "name": "Tag/tag-high-green-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.high.green.foreground",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-green0",
+          "resolved": "#f5fffb"
+        },
+        "dark": {
+          "alias": "dark-green0",
+          "resolved": "#001f12"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-high-purple-background": {
+      "collection": "theme",
+      "name": "Tag/tag-high-purple-background",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.high.purple.background",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-purple80",
+          "resolved": "#5a30ad"
+        },
+        "dark": {
+          "alias": "dark-purple80",
+          "resolved": "#e6c9ff"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-high-purple-color": {
+      "collection": "theme",
+      "name": "Tag/tag-high-purple-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.high.purple.foreground",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-purple0",
+          "resolved": "#fbf7ff"
+        },
+        "dark": {
+          "alias": "dark-purple0",
+          "resolved": "#190d33"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-high-red-background": {
+      "collection": "theme",
+      "name": "Tag/tag-high-red-background",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.high.red.background",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-red60",
+          "resolved": "#cf202f"
+        },
+        "dark": {
+          "alias": "dark-red60",
+          "resolved": "#f0616d"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-high-red-color": {
+      "collection": "theme",
+      "name": "Tag/tag-high-red-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.high.red.foreground",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-red0",
+          "resolved": "#fff5f6"
+        },
+        "dark": {
+          "alias": "dark-red0",
+          "resolved": "#330004"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-high-yellow-background": {
+      "collection": "theme",
+      "name": "Tag/tag-high-yellow-background",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.high.yellow.background",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-yellow30",
+          "resolved": "#f7d21a"
+        },
+        "dark": {
+          "alias": "dark-yellow30",
+          "resolved": "#936000"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-high-yellow-color": {
+      "collection": "theme",
+      "name": "Tag/tag-high-yellow-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.high.yellow.foreground",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-yellow70",
+          "resolved": "#884c00"
+        },
+        "dark": {
+          "alias": "dark-yellow70",
+          "resolved": "#e5cd30"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-low-blue-background": {
+      "collection": "theme",
+      "name": "Tag/tag-low-blue-background",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.low.blue.background",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-blue0",
+          "resolved": "#f5f8ff"
+        },
+        "dark": {
+          "alias": "dark-blue0",
+          "resolved": "#001033"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-low-blue-color": {
+      "collection": "theme",
+      "name": "Tag/tag-low-blue-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.low.blue.foreground",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-blue60",
+          "resolved": "#0052ff"
+        },
+        "dark": {
+          "alias": "dark-blue60",
+          "resolved": "#3773f5"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-low-gray-background": {
+      "collection": "theme",
+      "name": "Tag/tag-low-gray-background",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.low.gray.background",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-gray10",
+          "resolved": "#eef0f3"
+        },
+        "dark": {
+          "alias": "dark-gray10",
+          "resolved": "#1e2025"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-low-gray-color": {
+      "collection": "theme",
+      "name": "Tag/tag-low-gray-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.low.gray.foreground",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-gray80",
+          "resolved": "#32353d"
+        },
+        "dark": {
+          "alias": "dark-gray80",
+          "resolved": "#c1c6cf"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-low-green-background": {
+      "collection": "theme",
+      "name": "Tag/tag-low-green-background",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.low.green.background",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-green0",
+          "resolved": "#f5fffb"
+        },
+        "dark": {
+          "alias": "dark-green0",
+          "resolved": "#001f12"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-low-green-color": {
+      "collection": "theme",
+      "name": "Tag/tag-low-green-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.low.green.foreground",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-green60",
+          "resolved": "#098551"
+        },
+        "dark": {
+          "alias": "dark-green60",
+          "resolved": "#27ad75"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-low-purple-background": {
+      "collection": "theme",
+      "name": "Tag/tag-low-purple-background",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.low.purple.background",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-purple0",
+          "resolved": "#fbf7ff"
+        },
+        "dark": {
+          "alias": "dark-purple0",
+          "resolved": "#190d33"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-low-purple-color": {
+      "collection": "theme",
+      "name": "Tag/tag-low-purple-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.low.purple.foreground",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-purple80",
+          "resolved": "#5a30ad"
+        },
+        "dark": {
+          "alias": "dark-purple80",
+          "resolved": "#e6c9ff"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-low-red-background": {
+      "collection": "theme",
+      "name": "Tag/tag-low-red-background",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.low.red.background",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-red0",
+          "resolved": "#fff5f6"
+        },
+        "dark": {
+          "alias": "dark-red0",
+          "resolved": "#330004"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-low-red-color": {
+      "collection": "theme",
+      "name": "Tag/tag-low-red-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.low.red.foreground",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-red60",
+          "resolved": "#cf202f"
+        },
+        "dark": {
+          "alias": "dark-red60",
+          "resolved": "#f0616d"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-low-yellow-background": {
+      "collection": "theme",
+      "name": "Tag/tag-low-yellow-background",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.low.yellow.background",
+      "scopes": [
+        "FRAME_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-yellow0",
+          "resolved": "#fffcf1"
+        },
+        "dark": {
+          "alias": "dark-yellow0",
+          "resolved": "#1b0600"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
+    "tag-low-yellow-color": {
+      "collection": "theme",
+      "name": "Tag/tag-low-yellow-color",
+      "type": "COLOR",
+      "source": "packages/common/src/tokens/tags.ts#tagEmphasisColorMap.low.yellow.foreground",
+      "scopes": [
+        "SHAPE_FILL",
+        "TEXT_FILL"
+      ],
+      "codeSyntax": {},
+      "values": {
+        "light": {
+          "alias": "light-yellow70",
+          "resolved": "#884c00"
+        },
+        "dark": {
+          "alias": "dark-yellow70",
+          "resolved": "#e5cd30"
+        }
+      },
+      "usedBy": [
+        "tag"
+      ],
+      "family": "tag"
+    },
     "transparent": {
       "collection": "theme",
       "name": "Transparent/transparent",
@@ -9350,7 +9972,9 @@
           "value": 4
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "tag"
+      ]
     },
     "borderRadius-1000": {
       "collection": "layout",
@@ -9370,7 +9994,8 @@
       },
       "usedBy": [
         "radio",
-        "switch"
+        "switch",
+        "tag"
       ]
     },
     "borderRadius-200": {
@@ -9824,7 +10449,9 @@
           "value": 12
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "tag"
+      ]
     },
     "space-0": {
       "collection": "layout",
@@ -9862,7 +10489,9 @@
           "value": 2
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "tag"
+      ]
     },
     "space-0_5": {
       "collection": "layout",
@@ -9880,7 +10509,9 @@
           "value": 4
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "tag"
+      ]
     },
     "space-0_75": {
       "collection": "layout",
@@ -9921,7 +10552,8 @@
       "usedBy": [
         "button",
         "radio",
-        "switch"
+        "switch",
+        "tag"
       ]
     },
     "space-10": {
@@ -10151,7 +10783,9 @@
           "from": "var(--defaultFont-sans), the first family of --defaultFont-sans in @coinbase/cds-web esm/styles/defaultFont.css"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "tag"
+      ]
     },
     "fontFamily-display1": {
       "collection": "type",
@@ -10249,7 +10883,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "tag"
       ]
     },
     "fontFamily-label2": {
@@ -10405,7 +11040,9 @@
           "from": "0.8125rem x 16"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "tag"
+      ]
     },
     "fontSize-display1": {
       "collection": "type",
@@ -10503,7 +11140,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "tag"
       ]
     },
     "fontSize-label2": {
@@ -10657,7 +11295,9 @@
           "value": 600
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "tag"
+      ]
     },
     "fontWeight-display1": {
       "collection": "type",
@@ -10750,7 +11390,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "tag"
       ]
     },
     "fontWeight-label2": {
@@ -10900,7 +11541,9 @@
           "from": "1rem x 16"
         }
       },
-      "usedBy": []
+      "usedBy": [
+        "tag"
+      ]
     },
     "lineHeight-display1": {
       "collection": "type",
@@ -10998,7 +11641,8 @@
         }
       },
       "usedBy": [
-        "button"
+        "button",
+        "tag"
       ]
     },
     "lineHeight-label2": {
@@ -11164,7 +11808,9 @@
         "fontWeight": "fontWeight-caption",
         "lineHeight": "lineHeight-caption"
       },
-      "usedBy": []
+      "usedBy": [
+        "tag"
+      ]
     },
     "display1": {
       "name": "Display/display1",
@@ -11282,7 +11928,8 @@
         "lineHeight": "lineHeight-label1"
       },
       "usedBy": [
-        "button"
+        "button",
+        "tag"
       ]
     },
     "label2": {
@@ -11432,7 +12079,8 @@
         "@coinbase/cds-web/esm/core/createThemeCssVars.js": "sha256:d78db91592b99f8d53ce0a1dff419ba141c51f6107d7c3bb05ca819d3e2ee297",
         "@coinbase/cds-common/esm/color/getBlendedColor.js": "sha256:16cf385834c79cb1dd5b273098c26587a7f789d27648bf8aa50338c9cbbad9dc",
         "@coinbase/cds-common/esm/tokens/button.js": "sha256:d6fe0f4cd49b7b6431f4e1265a2a86f45d915335eca817c0f389387b264eec9c",
-        "@coinbase/cds-common/esm/tokens/interactable.js": "sha256:cf9d0fd9a4731f1a3e015efdb7483de505fdcd67995388c6c336866a05fab4f3"
+        "@coinbase/cds-common/esm/tokens/interactable.js": "sha256:cf9d0fd9a4731f1a3e015efdb7483de505fdcd67995388c6c336866a05fab4f3",
+        "@coinbase/cds-common/esm/tokens/tags.js": "sha256:2b40d8275e1a1608c0f083236a9d1442b404f5a76e888bd264540e0bbc8c75b1"
       },
       "matched": 844,
       "missing": [],
@@ -11456,7 +12104,7 @@
     },
     "scopes": {
       "by": "skills/contract/scripts/contract.mjs validate, rule 6",
-      "contracts": 3,
+      "contracts": 4,
       "errors": 0
     }
   },
@@ -11490,6 +12138,11 @@
       "level": "info",
       "at": "variables.button-*-{hover,pressed,disabled}-*",
       "message": "Synthesized tokens (ADR 0009): Interactable computes each state's colour per element with getBlendedColor and sets it inline as --inter-hover-bg, --inter-hover-borderColor, --inter-press-bg, --inter-press-borderColor, --inter-disable-bg, --inter-disable-borderColor. Those properties hold a different colour on every element, so codeSyntax is empty. Disabled also sets opacity 0.5 on the whole element (accessibleOpacityDisabled), which no colour token carries."
+    },
+    {
+      "level": "info",
+      "at": "variables.tag-*",
+      "message": "Tag paints rgb(theme.spectrum[<key>]) inline, the key from packages/common/src/tokens/tags.ts's tagEmphasisColorMap; the active scheme's spectrum is that scheme's Primitives, so each tag token aliases light-<key> in Light and dark-<key> in Dark. CDS emits no custom property for it, so codeSyntax is empty. Tag renders no Interactable, so it has no Synthesized tokens."
     },
     {
       "level": "info",

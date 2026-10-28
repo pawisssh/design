@@ -60,6 +60,15 @@ const DEFAULT_FONT_CSS = 'package/esm/styles/defaultFont.css';
 // A family's tokens are emitted only when the family is asked for (--family) or has a Contract.
 const tokenModule = name => `package/esm/tokens/${name}.js`;
 const tokenSource = name => `packages/common/src/tokens/${name}.ts`;
+// in (#472): a family whose token map picks spectrum keys, not Theme colours, named here with its module and export.
+// Tag paints rgb(theme.spectrum[key]) inline, the key from tags.ts's tagEmphasisColorMap[emphasis][colorScheme]
+// (Tag.tsx L107-L111), and the active scheme's spectrum is that scheme's Primitives. So each component token is
+// `<family>-<emphasis>-<colorScheme>-<part>`, aliasing `light-<key>` in Light and `dark-<key>` in Dark. Tag renders
+// no Interactable, so it has no Synthesized tokens.
+const SPECTRUM_MAPS = {
+  tag: { module: 'tags', map: 'tagEmphasisColorMap', roles: { background: ['background', ['FRAME_FILL']], foreground: ['color', ['SHAPE_FILL', 'TEXT_FILL']] } },
+};
+const moduleOf = family => SPECTRUM_MAPS[family]?.module ?? family;
 const TYPES = 'packages/common/src/types/';
 // A component token's role in the map -> its name suffix and scopes.
 const ROLE = { color: ['color', ['SHAPE_FILL', 'TEXT_FILL']], background: ['background', ['FRAME_FILL']], borderColor: ['border', ['STROKE_COLOR']] };
@@ -170,11 +179,11 @@ export async function loadModules(sources, families = [], depsDir = FOUNDATIONS_
   }
   // The token modules in name order, interactable's (the state opacities) among the families' maps, as `hashes` lists them.
   const extracted = new Set(sources.packages[COMMON].members);
-  const names = [...new Set(['interactable', ...families])].filter(n => extracted.has(tokenModule(n))).sort(byKey);
+  const names = [...new Set(['interactable', ...families.map(moduleOf)])].filter(n => extracted.has(tokenModule(n))).sort(byKey);
   const loaded = {};
   for (const name of names) loaded[name] = await load(COMMON, tokenModule(name));
   out.interactable = loaded.interactable || fail(`${COMMON}: ${tokenModule('interactable')} is not extracted; run: node skills/adapter-cds/scripts/sources.mjs`);
-  out.tokens = Object.fromEntries(families.map(f => [f, loaded[f] || null]));
+  out.tokens = Object.fromEntries(families.map(f => [f, loaded[moduleOf(f)] || null]));
   return out;
 }
 
@@ -382,17 +391,43 @@ export async function generate({ sources, contracts = [], families = [], modules
   // 4. Each family's component tokens, aliasing the Theme colour its token map names, then its Synthesized tokens.
   // in (#396): a family with no token map gets neither, only the closure, and a note says so; the run goes on.
   const synthesized = {};
+  // A SPECTRUM_MAPS family's component tokens: one per group, key and role of its map, each Mode aliasing that
+  // scheme's Primitive of the spectrum key.
+  const spectrumTokens = family => {
+    const { module, map: exported, roles } = SPECTRUM_MAPS[family];
+    const map = mods.tokens[family][exported];
+    for (const group of Object.keys(map).sort(byKey)) {
+      for (const key of Object.keys(map[group]).sort(byKey)) {
+        for (const [role, [part, scopes]] of Object.entries(roles)) {
+          const name = `${family}-${group}-${key}-${part}`;
+          const target = map[group][key][role];
+          const values = {};
+          for (const [s] of SCHEMES) {
+            const primitive = `${s}-${target}`;
+            if (!variables[primitive]) fail(`${name}/${s}: ${target} is not a ${s}Spectrum key`);
+            values[s] = { alias: primitive, resolved: variables[primitive].values.default.value };
+          }
+          variables[name] = { collection: 'theme', name: `${cap(family)}/${name}`, type: 'COLOR',
+            source: `${tokenSource(module)}#${exported}.${group}.${key}.${role}`, scopes: withStroke(name, scopes), codeSyntax: {},
+            values, usedBy: users(name), family };
+        }
+      }
+    }
+    notes.push({ level: 'info', at: `variables.${family}-*`, message: `${cap(family)} paints rgb(theme.spectrum[<key>]) inline, the key from ${tokenSource(module)}'s ${exported}; the active scheme's spectrum is that scheme's Primitives, so each ${family} token aliases light-<key> in Light and dark-<key> in Dark. CDS emits no custom property for it, so codeSyntax is empty. ${cap(family)} renders no Interactable, so it has no Synthesized tokens.` });
+  };
   const mapped = emitFamilies.filter(family => {
     if (!(family in mods.tokens)) fail(`the modules were loaded without family ${family}'s token map`);
-    if (mods.tokens[family]?.variants) return true;
-    const member = tokenModule(family).replace(/^package\//, '');
-    const why = mods.tokens[family] ? `${member} exports no variants` : `has no ${member}`;
+    const spectrumMap = SPECTRUM_MAPS[family];
+    if (spectrumMap ? mods.tokens[family]?.[spectrumMap.map] : mods.tokens[family]?.variants) return true;
+    const member = tokenModule(moduleOf(family)).replace(/^package\//, '');
+    const why = mods.tokens[family] ? `${member} exports no ${spectrumMap ? spectrumMap.map : 'variants'}` : `has no ${member}`;
     notes.push({ level: 'info', at: `variables.${family}-*`, message: `${family} has no component token map: ${COMMON}@${CDS.packages[COMMON].version} ${why}, so the document carries no ${family} component tokens or state blends from one.` });
     return false;
   });
   if (mapped.length) {
     const blends = interactableBlends(files, mods.interactable);
     for (const family of mapped) {
+      if (SPECTRUM_MAPS[family]) { spectrumTokens(family); continue; }
       const map = mods.tokens[family];
       const source = tokenSource(family);
       const deprecated = deprecatedVariants(contracts, family, dir);

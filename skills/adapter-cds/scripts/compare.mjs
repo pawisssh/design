@@ -152,6 +152,17 @@ export function probe(spec, doc, style, color) {
   const inside = (el, test) => Array.prototype.find.call(el.querySelectorAll('*'), test);
   const hasText = el => Array.prototype.some.call(el.childNodes, n => n.nodeType === 3 && n.textContent.trim());
   const paintOf = v => (!v || v === 'none' ? 'none' : color(v));
+  // in (#472): the elements of the layers beside `layer` in its parent, with everything inside them.
+  const siblingElements = (layer, parent) => {
+    const out = [];
+    spec.layers.forEach(l => {
+      if (l === layer || l.parent !== layer.parent || l.drawnInParent) return;
+      Array.prototype.forEach.call(parent.querySelectorAll('*'), e => {
+        if (classes(e).indexOf(l.className) >= 0) out.push(e, ...Array.prototype.slice.call(e.querySelectorAll('*')));
+      });
+    });
+    return out;
+  };
   const read = (el, type) => {
     const cs = style(el);
     // A <circle>'s box is 2r + stroke-width (its stroke inside the box), its sweep the visible share of the path
@@ -195,16 +206,23 @@ export function probe(spec, doc, style, color) {
       const scope = inside(pages[key], el => classes(el).indexOf('cds-preview-scheme') >= 0 && classes(el).indexOf(mode) >= 0);
       if (!scope) return mismatches.push(key + ' ' + mode + ': no ' + mode + ' subtree');
       const els = {};
+      const taken = [];
       spec.layers.forEach(layer => {
         const parent = layer.parent === null ? scope : els[layer.parent];
         // A layer drawn in its parent's element is found by type: a TEXT the element holding the text, an ELLIPSE
-        // the parent's n-th <circle>.
+        // the parent's n-th <circle>. In #472: two layers can carry one entry (Tag's Start icon and End icon, both
+        // nodeCss), so a layer takes the first element no other layer took; and a TEXT skips the text inside a sibling
+        // layer's element (the glyph of Tag's Start icon, a font icon, is text too).
         const find = () => {
-          if (!layer.drawnInParent) return inside(parent, e => classes(e).indexOf(layer.className) >= 0);
-          if (layer.type === 'TEXT') return hasText(parent) ? parent : inside(parent, hasText);
+          if (!layer.drawnInParent) return inside(parent, e => classes(e).indexOf(layer.className) >= 0 && taken.indexOf(e) < 0);
+          if (layer.type === 'TEXT') {
+            const skip = siblingElements(layer, parent);
+            return hasText(parent) ? parent : inside(parent, e => hasText(e) && skip.indexOf(e) < 0);
+          }
           if (layer.type === 'ELLIPSE') return parent.querySelectorAll('circle')[layer.nth];
         };
         const el = parent && find();
+        if (el) taken.push(el);
         const want = spec.expected[key][mode][layer.name];
         if (want === null) { if (el) mismatches.push(key + ' ' + mode + ' ' + layer.name + '.visible: page true, Contract false'); return; }
         if (!el) { if (parent) mismatches.push(key + ' ' + mode + ' ' + layer.name + ': no element ' + layer.entry); return; }
