@@ -18,10 +18,10 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { parseCss } from './css.mjs';
+import { EXTS, packageOf } from './feature-key.mjs';
 import { loadTypescript } from './deps.mjs';
 import { lineOf, lineStarts, readHtml, walk } from './reader.mjs';
 
-const EXTS = ['.tsx', '.ts', '.jsx', '.js'];
 // Props that read as boolean attributes when bound to an expression.
 const BOOLEAN_PROPS = new Set(['disabled', 'checked', 'hidden', 'readOnly', 'required', 'selected', 'open', 'multiple', 'autoFocus', 'invalid']);
 const ATTR_NAMES = { className: 'class', htmlFor: 'for' };
@@ -53,7 +53,7 @@ export function codeLibraryDir(root, ts, kind = reactKind(root), paths = compile
 }
 
 /**
- * readReact(root, {depsDir, packages}) -> {kind, title, files, at, rules, standIns, fonts, screens, uiDir, ignored, tailwind}.
+ * readReact(root, {depsDir, packages}) -> {kind, files, at, rules, standIns, fonts, screens, uiDir, ignored, tailwind}.
  * `packages` are the Design System's code packages (each Contract's `code.package`): their components are
  * leaves, and a package that resolves to a project file is that file under any import of it. `screens` is
  * [{id, name, route, offset, root, mount}], `files` the files read (relative paths), `fonts` the next/font and
@@ -514,7 +514,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
       mount.children = leaf.element || chain.length > 1 ? nodes(render.arguments[0], { ...base, parent: mount, chain, level: 0 }) : nodes(render.arguments[0], { ...base, parent: mount });
       return { id: screenIdOf(leaf.path), name: leaf.path, route: leaf.path, offset: leaf.offset, root: doc.root, mount };
     });
-    return { title: firstShell.title, screens };
+    return { screens };
   };
 
   // ---------- Next.js App Router ----------
@@ -587,7 +587,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
       if (!rootEl) throw new Error(`${rootLayout} renders no <html>`);
       return { id: screenIdOf(route), name: metadataTitle(page) || route, route, offset: pageAt, root: rootEl, mount: mount || findEl(rootEl, e => e.tag === 'body') };
     });
-    return { title: metadataTitle(rootLayout), screens, routes };
+    return { screens, routes };
   };
 
   const read = kind === 'react-vite' ? readVite() : readNext();
@@ -601,7 +601,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
   standIns.mocks.push(...standInsOf(ts, [...sources.values()].slice(scanned), []).mocks);
   const fetched = new Set(standIns.stubs.map(f => `${f.file} (API route)`));
   return {
-    kind, title: read.title || packageOf(root).name || posix.basename(root), files: space.files.map(f => f.rel).sort(), at: space.at, rules,
+    kind, files: space.files.map(f => f.rel).sort(), at: space.at, rules,
     standIns, fonts, screens: read.screens, uiDir, ignored: [...new Set(ignored)].filter(x => !fetched.has(x)).sort(),
     tailwind: usesTailwind(root),
   };
@@ -765,11 +765,6 @@ function staticClasses(parts) {
 function usesTailwind(root) {
   const pkg = packageOf(root);
   return Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }).some(n => n === 'tailwindcss' || n.startsWith('@tailwindcss/'));
-}
-
-function packageOf(root) {
-  const file = join(root, 'package.json');
-  return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
 }
 
 // tsconfig.json (or jsconfig.json) `paths` as [{pattern, targets}], targets relative to the root.

@@ -39,7 +39,6 @@ const NEXT_DECISIONS = JSON.parse(readFileSync(join(NEXT, 'decisions.json'), 'ut
 test('Vite: a @carbon/react Button is a Design System leaf with its props and its own at', { skip: noTs }, () => {
   const doc = readReact(VITE, { packages: PACKAGES });
   assert.equal(doc.kind, 'react-vite');
-  assert.equal(doc.title, 'Project members');
   const members = doc.screens.find(s => s.route === '/');
   const buttons = elements(members.root, el => el.component);
   assert.deepEqual(buttons.map(b => ({ component: b.component, props: { kind: b.attrs.kind, size: b.attrs.size, href: b.attrs.href }, at: doc.at(b.offset) })), [
@@ -214,7 +213,6 @@ test('generate: every Stand-in keeps its own data id and question: a stub gains 
 test('Next: one screen per app/**/page.tsx inside its layouts; loading.tsx is a framework state; a fetched API route is a Stand-in', { skip: noTs }, () => {
   const doc = readReact(NEXT, { packages: PACKAGES });
   assert.equal(doc.kind, 'react-next');
-  assert.equal(doc.title, 'Release notes');
   assert.deepEqual(doc.screens.map(s => ({ id: s.id, route: s.route, at: doc.at(s.offset), root: s.root.tag, mount: s.mount.tag })), [
     { id: 'index', route: '/', at: 'app/page.tsx:8:5', root: 'html', mount: 'body' },
     { id: 'subscribe', route: '/subscribe', at: 'app/subscribe/page.tsx:5:5', root: 'html', mount: 'body' },
