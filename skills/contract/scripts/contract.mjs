@@ -407,6 +407,10 @@ function checkPatterns(c, err) {
           err(3, at, FIELDS[other].has(field) ? `"${node}": \`${field}\` is a ${other} field, not a ${section} field`
             : `"${node}": \`${field}\` is not a ${section} field`);
         }
+        // `direction` (#448): the Contract's own vocabulary, never Figma's HORIZONTAL or VERTICAL, which the builder
+        // would read as no Auto Layout.
+        if (section === 'layout' && 'direction' in fields && !['row', 'column', 'none'].includes(fields.direction))
+          err(3, at, `"${node}": \`direction\` is "row", "column" or "none", not ${JSON.stringify(fields.direction)}`);
         // `visible` (#93): a layout field that shows or hides an anatomy node below the root.
         if (section !== 'layout' || !('visible' in fields)) continue;
         if (typeof fields.visible !== 'boolean') err(3, at, `"${node}": \`visible\` is true or false, not ${JSON.stringify(fields.visible)}`);

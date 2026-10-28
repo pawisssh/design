@@ -114,6 +114,12 @@ test('the Contract rules 1, 2, 3, 6 and 7 apply; rule 5 does not', () => {
   wrongScope.layout[0].set.Banner.gap = { token: 'size-md' };
   assert.deepEqual(rules(contract.validateProposal(wrongScope, foundations(), known())), [6]);
 
+  for (const direction of ['HORIZONTAL', 'VERTICAL', 'row', 'column', 'none']) { // Figma's names fail (#448)
+    const p = proposal();
+    p.layout[0].set.Banner.direction = direction;
+    assert.deepEqual(rules(contract.validateProposal(p, foundations(), known())), /^[A-Z]/.test(direction) ? [3] : [], direction);
+  }
+
   const undeclared = proposal();
   undeclared.dependencies.families = [];
   assert.deepEqual(rules(contract.validateProposal(undeclared, foundations(), known())), [7]);

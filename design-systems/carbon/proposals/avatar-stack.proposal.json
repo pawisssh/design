@@ -22,7 +22,7 @@
   ],
   "layout": [
     { "match": {}, "set": {
-      "Stack": { "direction": "HORIZONTAL" },
+      "Stack": { "direction": "row" },
       "Avatar": { "width": 24, "height": 24 },
       "Initials": { "textStyle": { "token": "label-01" } }
     } }
@@ -37,6 +37,6 @@
     { "level": "info", "at": "index.html:31", "text": "The Prototype sets the initials at 10px, which no Carbon Type style has. The owner chose label-01 (12px), the smallest Carbon Type style." },
     { "level": "info", "at": "index.html:31", "text": "Each avatar after the first overlaps the one before by 6px (margin-left: -6px) with a 2px ring in the card's colour; the Proposal records the ring as a layer-01 stroke and leaves the overlap to the app component." }
   ],
-  "status": "approved",
-  "approval": { "by": "owner", "at": "2026-10-17T00:00:00Z", "contentHash": "sha256:28f70d094a1cc06d5b3cb7eb2d0d2e3335993227eb4816606f2f2a525389462e" }
+  "status": "pending",
+  "approval": null
 }

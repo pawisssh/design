@@ -27,7 +27,7 @@
   ],
   "layout": [
     { "match": {}, "set": {
-      "Stack": { "direction": "HORIZONTAL" },
+      "Stack": { "direction": "row" },
       "Initials": { "textStyle": { "token": "label-01" } }
     } },
     { "match": { "size": "sm" }, "set": { "Avatar": { "width": 24, "height": 24 } } },

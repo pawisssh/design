@@ -28,7 +28,7 @@
   ],
   "layout": [
     { "match": {}, "set": {
-      "Banner": { "direction": "HORIZONTAL", "paddingTop": { "token": "spacing-05" }, "paddingRight": { "token": "spacing-05" }, "paddingBottom": { "token": "spacing-05" }, "paddingLeft": { "token": "spacing-05" }, "gap": { "token": "spacing-07" } },
+      "Banner": { "direction": "row", "paddingTop": { "token": "spacing-05" }, "paddingRight": { "token": "spacing-05" }, "paddingBottom": { "token": "spacing-05" }, "paddingLeft": { "token": "spacing-05" }, "gap": { "token": "spacing-07" } },
       "Title": { "textStyle": { "token": "body-compact-02" } }
     } }
   ],
