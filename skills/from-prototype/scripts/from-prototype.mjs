@@ -531,8 +531,8 @@ const unescape = s => s.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&
  * its links rewritten from ../screens/ to screens/. `files` lists the copy's paths, the page first; `title` is the
  * Artifact's.
  * Refuses (throws, writing nothing) a Handoff not signed off, one whose signed.json doesn't match handoff.json, a
- * Rendering whose stamp isn't the signed Handoff's, a link that leaves the copy, and a copy over an Artifact's
- * limits. A copy already at `out` is replaced: its index.html and screens/ go, nothing else there.
+ * Rendering whose stamp isn't the signed Handoff's, a link or CSS url() that leaves the copy, and a copy over an
+ * Artifact's limits. A copy already at `out` is replaced: its index.html and screens/ go, nothing else there.
  */
 export function handOver({ handoffPath, out }) {
   const dir = dirname(handoffPath);
@@ -560,6 +560,9 @@ export function handOver({ handoffPath, out }) {
   const copy = page.replace(/((?:src|href)=")\.\.\/screens\//g, '$1screens/').replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`);
   const leaving = [...copy.matchAll(/(?:src|href)="([^"]*\.\.\/[^"]*)"/g)].map(m => m[1]);
   if (leaving.length) refuse(`its Rendering links outside the copy: ${[...new Set(leaving)].join(', ')}`);
+  // An Artifact loads nothing from another host (#521), so a url() in the page's CSS stays in the copy too.
+  const remote = [...new Set([...copy.matchAll(/url\(\s*['"]?\s*((?:https?:|\/\/)[^'")\s]*)/gi)].map(m => m[1]))];
+  if (remote.length) refuse(`its Rendering loads from outside the copy: ${remote.slice(0, 5).join(', ')}${remote.length > 5 ? ` and ${remote.length - 5} more` : ''}: render it again`);
   const shots = [...new Set([...copy.matchAll(/(?:src|href)="(screens\/[^"]+)"/g)].map(m => unescape(m[1])))].sort();
   const absent = shots.filter(s => !existsSync(join(dir, s)));
   if (absent.length) refuse(`its Rendering refers to screenshots that aren't there: ${absent.join(', ')}`);

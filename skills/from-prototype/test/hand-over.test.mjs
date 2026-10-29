@@ -30,6 +30,7 @@ async function rendered({ sign = true } = {}) {
 
 const listing = dir => readdirSync(dir, { recursive: true }).sort();
 const refs = html => [...html.matchAll(/(?:src|href)="([^"#][^"]*)"/g)].map(m => m[1]);
+const REMOTE = /url\(\s*['"]?\s*(?:https?:|\/\/)/i;
 
 test('a signed-off Handoff: the copy holds the stamped page and every screenshot it refers to, with no ../ left', { skip }, async () => {
   const { handoffPath, out } = await rendered();
@@ -50,6 +51,24 @@ test('a signed-off Handoff: the copy holds the stamped page and every screenshot
   }
   assert.deepEqual(r.files, ['index.html', ...images]);
   assert.deepEqual(listing(out), ['index.html', 'screens', ...images]);
+  // Carbon's IBM Plex faces are in the page (#521): an Artifact blocks fonts from IBM's CDN.
+  assert.doesNotMatch(html, REMOTE);
+  assert.match(html, /@font-face \{[^}]*font-family: "IBM Plex Sans";[^}]*src: url\("data:font\/woff2;base64,/);
+});
+
+test('a Rendering that loads a url() from outside the copy is refused, naming each once; data: URIs pass (#521)', { skip }, async () => {
+  const { handoffPath, out } = await rendered();
+  const pagePath = join(dirname(handoffPath), 'renderings/index.html');
+  const css = '<style>.a{background:url(https://cdn.example/a.png)} .b{background:url( "HTTP://cdn.example/b.png" )}'
+    + ' .c{background:url(https://cdn.example/a.png)} .d{background:url(data:image/png;base64,AAAA)}</style>';
+  writeFileSync(pagePath, readFileSync(pagePath, 'utf8').replace('</head>', `${css}</head>`)
+    .replace('<body', `<body style="background-image: url('//cdn.example/c.png')"`));
+  assert.throws(() => handOver({ handoffPath, out }), e => {
+    assert.match(e.message, /its Rendering loads from outside the copy: https:\/\/cdn\.example\/a\.png, HTTP:\/\/cdn\.example\/b\.png, \/\/cdn\.example\/c\.png: render it again/);
+    assert.ok(!e.message.includes('data:'));
+    return true;
+  });
+  assert.ok(!existsSync(out));
 });
 
 test('a pending Handoff is refused, and nothing is written', { skip }, async () => {
