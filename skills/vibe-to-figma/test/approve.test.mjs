@@ -9,12 +9,13 @@ import { cpSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import * as contractModule from '../../contract/scripts/contract.mjs';
+import { generate as foundationsOf } from '../../adapter-generic/scripts/foundations.mjs';
 import { generate } from '../../to-handoff/scripts/generate.mjs';
 import { TEST_APPROVER } from '../../to-handoff/scripts/system.mjs';
 import { approveFolder, parseApproval } from '../scripts/approve.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
 import { reviewModel } from '../scripts/review.mjs';
-import { READABLE, V0, contractPath, read, selections, skip, snapshot, v0Folder } from './helpers.mjs';
+import { PATH_A_FAMILIES, READABLE, V0, contractPath, pathAFolder, read, selections, skip, snapshot, v0Folder } from './helpers.mjs';
 
 const { reviewExport } = createRequire(import.meta.url)('../assets/review-export.js');
 const AT = '2026-10-18T00:00:00Z';
@@ -73,13 +74,23 @@ test('"approve" applies every family\'s omit, approves every Contract and narrow
   assert.deepEqual(snapshot(dir), approvedFolder);
 });
 
-test('"approve except select" leaves select a draft, byte-unchanged, and approves the rest', { skip }, async () => {
-  const { dir } = await v0Folder();
+// The folders approve runs on alike: the v0 Prototype's, read from its Code Library, and path A's, whose Contracts and
+// Foundations (palette tokens included) are read from its Extracted Library (#263). Each names a family to except, with
+// an untick, and families with ticks to drop, to make stale and to break.
+const FOLDERS = [
+  { name: 'v0', folder: async () => ({ ...(await v0Folder()), project: V0 }), families: READABLE,
+    except: ['select', { state: 'disabled' }], missing: 'select', stale: 'card', wrong: 'button' },
+  { name: 'path A', folder: async () => { const { dir, library } = await pathAFolder({ palette: true }); return { dir, project: library }; }, families: PATH_A_FAMILIES,
+    except: ['segment', { selected: 'off' }], missing: 'segment', stale: 'card', wrong: 'icon-button' },
+];
+
+for (const { name, folder, families, except: [excepted, untick] } of FOLDERS) test(`${name}: "approve except ${excepted}" leaves ${excepted} a draft, byte-unchanged, and approves the rest`, { skip }, async () => {
+  const { dir, project } = await folder();
   const before = snapshot(dir);
-  const r = await approveFolder({ dir, project: V0, exported: exported(dir, { select: m => m.selectMatching({ state: 'disabled' }, false) }), said: 'approve except select', at: AT, test: true });
-  assert.deepEqual(r.approved, READABLE.filter(f => f !== 'select'));
-  assert.deepEqual(r.drafts, ['select']);
-  assert.equal(readFileSync(contractPath(dir, 'select'), 'utf8'), before['contracts/select.component.json']);
+  const r = await approveFolder({ dir, project, exported: exported(dir, { [excepted]: m => m.selectMatching(untick, false) }), said: `approve except ${excepted}`, at: AT, test: true });
+  assert.deepEqual(r.approved, families.filter(f => f !== excepted));
+  assert.deepEqual(r.drafts, [excepted]);
+  assert.equal(readFileSync(contractPath(dir, excepted), 'utf8'), before[`contracts/${excepted}.component.json`]);
   for (const family of r.approved) assert.equal(read(contractPath(dir, family)).selection.status, 'approved', family);
 });
 
@@ -109,29 +120,60 @@ test('approving again: the same ticks leave every approval as it was; the next p
   assert.deepEqual(snapshot(dir), once);
 });
 
-test('a refusal writes nothing: no owner message, a test outside .scratch/, another folder, a moved Foundations, missing or stale ticks', { skip }, async () => {
-  const { dir } = await v0Folder();
+for (const { name, folder, missing, stale: staled, wrong: broken } of FOLDERS) test(`${name}: a refusal writes nothing: no owner message, a test outside .scratch/, another folder, a moved Foundations, missing or stale ticks`, { skip }, async () => {
+  const { dir, project } = await folder();
   const review = exported(dir);
+  const key = review.designSystem;
   const before = snapshot(dir);
   const refuses = async (args, pattern) => {
-    await assert.rejects(approveFolder({ dir, project: V0, exported: review, said: 'approve', at: AT, test: true, ...args }), pattern);
+    await assert.rejects(approveFolder({ dir, project, exported: review, said: 'approve', at: AT, test: true, ...args }), pattern);
     assert.deepEqual(snapshot(args.dir || dir), args.dir ? args.before : before);
   };
   await refuses({ said: 'ship it' }, /is not "approve" or "approve except <family>"/);
-  const outside = join(mkdtempSync(join(tmpdir(), 'vibe-to-figma-')), 'v0-app');
+  const outside = join(mkdtempSync(join(tmpdir(), 'vibe-to-figma-')), key);
   cpSync(dir, outside, { recursive: true });
-  await refuses({ dir: outside, before: snapshot(outside) }, /a test approval is written only under .*\.scratch/);
-  await refuses({ exported: { ...review, designSystem: 'shadcn' } }, /the review is of shadcn, not v0-app/);
+  await refuses({ dir: outside, before: snapshot(outside), ...(project.startsWith(dir) ? { project: join(outside, 'library') } : {}) }, /a test approval is written only under .*\.scratch/);
+  await refuses({ exported: { ...review, designSystem: 'shadcn' } }, new RegExp(`the review is of shadcn, not ${key}`));
   await refuses({ exported: { ...review, documentHash: 'sha256:0' } }, /the Foundations document moved since the review/);
-  const { select, ...rest } = review.families;
-  await refuses({ exported: { ...review, families: rest } }, /no ticks for select/);
+  const { [missing]: _, ...rest } = review.families;
+  await refuses({ exported: { ...review, families: rest } }, new RegExp(`no ticks for ${missing}`));
   const stale = structuredClone(review);
-  stale.families.card.patch.snapshotId = stale.families.card.checked.snapshotId = 'sha256:old';
-  await refuses({ exported: stale }, /card: .*snapshotId/);
+  stale.families[staled].patch.snapshotId = stale.families[staled].checked.snapshotId = 'sha256:old';
+  await refuses({ exported: stale }, new RegExp(`${staled}: .*snapshotId`));
   // All or nothing: one family's ticks that do not reproduce its checked tuples stop every family.
   const wrong = structuredClone(review);
-  wrong.families.button.checked.checked.pop();
-  await refuses({ exported: wrong }, /button: the expansion differs from the checked tuples/);
+  wrong.families[broken].checked.checked.pop();
+  await refuses({ exported: wrong }, new RegExp(`${broken}: the expansion differs from the checked tuples`));
+});
+
+test('path A: "approve" generates the Foundations again from the Extracted Library, so an untick drops its palette token', { skip }, async () => {
+  const { proto, root, dir, library } = await pathAFolder({ palette: true });
+  const file = join(dir, 'path-a-app.foundations.json');
+  const was = read(file);
+  assert.deepEqual(['color-green-600', 'color-slate-500'].map(k => [was.variables[k].usedBy, was.closure.tokens.includes(k)]), [[['pill-button'], true], [['segment'], true]]);
+  // Segment's off is the one value that reads slate-500.
+  const r = await approveFolder({ dir, project: library, exported: exported(dir, { segment: m => m.selectMatching({ selected: 'off' }, false) }), said: 'approve', at: AT, test: true });
+  assert.deepEqual(r.approved, PATH_A_FAMILIES);
+  assert.equal(r.foundations.written, true);
+  const text = readFileSync(file, 'utf8'), doc = JSON.parse(text);
+  assert.ok(doc.closure.tokens.includes('color-green-600') && !doc.closure.tokens.includes('color-slate-500'));
+  assert.deepEqual(doc.variables['color-slate-500'].usedBy, []);
+  // Byte for byte what the Generic Adapter generates from the library and the approved Contracts.
+  const contracts = Object.fromEntries(PATH_A_FAMILIES.map(f => [f, read(contractPath(dir, f))]));
+  assert.equal((await foundationsOf({ project: library, families: PATH_A_FAMILIES, designSystem: was.designSystem, contracts })).text, text);
+  // folder.mjs again over the approved folder: its Contracts give the closure, so nothing moves.
+  const approved = snapshot(dir);
+  const again = await buildFolder({ project: proto, root });
+  assert.deepEqual([again.foundations.written, again.unchanged], [false, PATH_A_FAMILIES]);
+  assert.deepEqual(snapshot(dir), approved);
+});
+
+test('path A: the Prototype as the project is refused, naming the Extracted Library', { skip }, async () => {
+  const { proto, dir } = await pathAFolder();
+  const before = snapshot(dir);
+  await assert.rejects(approveFolder({ dir, project: proto, exported: exported(dir), said: 'approve', at: AT, test: true }),
+    new RegExp(`the Foundations of a path A folder are generated from its Extracted Library: pass ${join(dir, 'library')} as the project, not ${proto}`));
+  assert.deepEqual(snapshot(dir), before);
 });
 
 test('a Contract the Foundations document does not list, or lists at another snapshot, is refused', { skip }, async () => {

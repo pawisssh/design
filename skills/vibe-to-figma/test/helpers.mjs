@@ -2,7 +2,7 @@
 // (a test approval is written only under .scratch/), with the Adapter's committed fixtures/drafts as the agent's
 // answers. Each test takes its own copy; after() removes them all.
 import { after } from 'node:test';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -55,7 +55,8 @@ const Selection = createRequire(import.meta.url)('../../to-preview/assets/select
  * the owner's edits ({family: model => ...}). -> {family: {patch, checked}}.
  */
 export function selections(dir, edits = {}) {
-  return Object.fromEntries(READABLE.filter(family => existsSync(contractPath(dir, family))).map(family => {
+  const families = readdirSync(join(dir, 'contracts')).filter(f => f.endsWith('.component.json')).map(f => f.slice(0, -'.component.json'.length)).sort();
+  return Object.fromEntries(families.map(family => {
     const model = new Selection(read(join(dir, 'contracts', `${family}.component.json`)), contractModule);
     for (const id of model.specimens.keys()) model.verify(id);
     if (edits[family]) edits[family](model);
@@ -81,18 +82,31 @@ export const PATH_A = fileURLToPath(new URL('./fixtures/path-a-app', import.meta
 export const PATH_A_ANSWERS = fileURLToPath(new URL('./fixtures/path-a-app.answers.json', import.meta.url));
 export const PATH_A_FAMILIES = ['action-button', 'card', 'icon-button', 'pill-button', 'segment'];
 
-let builtA;
-/** A fresh copy of the path A fixture's Prototype and its Design System folder, built from the committed answers: {proto, root, dir, library}. */
-export async function pathAFolder() {
-  if (!builtA) {
-    const root = scratch();
-    await buildFolder({ project: PATH_A, root, answers: read(PATH_A_ANSWERS) });
-    builtA = root;
-  }
-  const base = scratch(), proto = join(base, 'proto'), root = join(base, 'out');
-  cpSync(PATH_A, proto, { recursive: true });
-  cpSync(builtA, root, { recursive: true });
-  const dir = join(root, 'path-a-app');
+// Two of the fixture's classes as Tailwind palette colours, so its Foundations hold palette tokens (#254): pill-button's
+// background when on, segment's text when off.
+const PALETTE = [['bg-[#16a34a] text-[#ffffff]', 'bg-green-600 text-[#ffffff]'], ['"text-[#64748b]"', '"text-slate-500"']];
+const builtA = {};
+/**
+ * A fresh copy of the path A fixture's Prototype and its Design System folder, built from the committed answers:
+ * {proto, root, dir, library}. With `palette`, the Prototype's copy has PALETTE's edits and the folder is built again
+ * from it, the Family map carrying the answers.
+ */
+export async function pathAFolder({ palette = false } = {}) {
+  const at = base => ({ proto: join(base, 'proto'), root: join(base, 'out') });
+  builtA[palette] ??= (async () => {
+    const base = scratch(), { proto, root } = at(base);
+    cpSync(PATH_A, proto, { recursive: true });
+    await buildFolder({ project: proto, root, answers: read(PATH_A_ANSWERS) });
+    if (palette) {
+      const app = join(proto, 'src/App.tsx');
+      writeFileSync(app, PALETTE.reduce((text, [from, to]) => text.replace(from, to), readFileSync(app, 'utf8')));
+      await buildFolder({ project: proto, root });
+    }
+    return base;
+  })();
+  const base = scratch();
+  cpSync(await builtA[palette], base, { recursive: true });
+  const { proto, root } = at(base), dir = join(root, 'path-a-app');
   return { proto, root, dir, library: join(dir, 'library') };
 }
 

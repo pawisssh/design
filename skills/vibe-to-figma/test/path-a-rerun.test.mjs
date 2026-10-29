@@ -9,7 +9,11 @@ import { cpSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeJson } from '../../contract/scripts/io.mjs';
+import { mockFigma } from '../../to-design/tests/mock-figma.mjs';
+import { approveFolder } from '../scripts/approve.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
+import { reviewModel } from '../scripts/review.mjs';
+import { AT, FILE_KEY, drive, exported } from './drive.mjs';
 import { PATH_A as FIXTURE, PATH_A_ANSWERS as ANSWERS, PATH_A_FAMILIES as FAMILIES, read, scratch, skip, tree } from './helpers.mjs';
 
 const FOLDER = fileURLToPath(new URL('../scripts/folder.mjs', import.meta.url));
@@ -65,6 +69,34 @@ test('a class edit in one family redrafts only that family', { skip }, async () 
   assert.deepEqual(again.unchanged, FAMILIES.filter(f => f !== 'icon-button'));
   assert.deepEqual(again.library.written.filter(f => f.startsWith('components/')), ['components/ui/icon-button.tsx']);
   assert.match(readFileSync(join(w.dir, 'library/components/ui/icon-button.tsx'), 'utf8'), /p-1\.5/);
+});
+
+test('built into Figma, a class edit in one family is reviewed, approved and sent as one update call, into its set alone', { skip }, async () => {
+  const w = await world();
+  const library = join(w.dir, 'library');
+  const approve = () => approveFolder({ dir: w.dir, project: library, exported: exported(w.dir), said: 'approve', at: AT, test: true });
+  await approve();
+  const mock = mockFigma({ fileKey: FILE_KEY, pages: ['Page 1'] });
+  const first = await drive({ dir: w.dir, mock });
+  assert.equal(first.n.status, 'built', JSON.stringify(first.n));
+
+  w.edit(ICON_BASE, 'justify-center rounded p-1.5 text-[#');
+  assert.deepEqual((await w.rerun()).written, ['icon-button']);
+  assert.deepEqual(reviewModel(w.dir).families.map(f => f.family), ['icon-button']);
+  const a = await approve();
+  assert.deepEqual([a.approved, a.kept], [['icon-button'], FAMILIES.filter(f => f !== 'icon-button')]);
+
+  // A Foundations call that writes nothing, a read-only edit check, then the one call into icon-button's set and its coverage.
+  const { n, ledger, record, steps } = await drive({ dir: w.dir, mock, ledger: first.ledger, record: first.record });
+  assert.equal(n.status, 'built', JSON.stringify(n));
+  assert.deepEqual(n.held, []);
+  const sets = steps.filter(s => s.step === 'sets');
+  assert.deepEqual(sets.map(s => [s.family, s.options.mode, s.options.picked]), [['icon-button', 'build', 3]]);
+  assert.ok(steps.every(s => s.family === 'icon-button' || (s.step === 'foundations' && !s.writes.length)), steps.map(s => `${s.step} ${s.family}`).join());
+  assert.equal(record.coverage['icon-button'].ok, true);
+  assert.equal(ledger.sets['icon-button'].set.id, first.ledger.sets['icon-button'].set.id);
+  for (const f of FAMILIES.filter(f => f !== 'icon-button')) assert.deepEqual(ledger.sets[f], first.ledger.sets[f], f);
+  assert.deepEqual((await drive({ dir: w.dir, mock, ledger, record })).steps, []);
 });
 
 test('an edited axis value keeps the names the agent gave it', { skip }, async () => {
