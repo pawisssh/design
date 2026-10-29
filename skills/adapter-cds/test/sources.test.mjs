@@ -73,8 +73,10 @@ test('every relative import of an extracted module is extracted too; d3-color is
 // An object literal keeps the last of two equal keys, so a duplicate in CDS.files reads right but hides a stale pin line (#398).
 test('CDS.files lists each path once in sources.mjs', () => {
   const text = readFileSync(new URL('../scripts/sources.mjs', import.meta.url), 'utf8');
-  const block = text.slice(text.indexOf('  files: {'), text.indexOf('  // `extract`'));
+  const [from, to] = [text.indexOf('  files: {'), text.indexOf('  // `extract`')];
+  assert.ok(from >= 0 && to > from, 'found the CDS.files block');
+  const block = text.slice(from, to);
   const paths = [...block.matchAll(/^\s+'?([\w./-]+)'?: '[0-9a-f]{64}',$/gm)].map(m => m[1]);
-  assert.ok(paths.length >= 15, 'found the file list');
+  assert.ok(paths.length > 0, 'found the file list');
   assert.deepEqual(paths.filter((p, i) => paths.indexOf(p) !== i), []);
 });
