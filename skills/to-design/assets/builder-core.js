@@ -355,7 +355,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const updated = {};
     const restored = [];
     let unchanged = 0;
-    // A recorded or adopted page keeps its name whatever plan.page says; the report names the page used.
+    // plan.page only names a page this slice creates; a recorded or adopted page keeps its name.
     if (!page) { page = figma.createPage(); page.name = plan.page; created.page = true; }
     // createNodeFromSvg adds to the current page.
     await figma.setCurrentPageAsync(page);

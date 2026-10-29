@@ -258,7 +258,7 @@ test('a different --page never renames the recorded Icons page: the build lands 
   assert.equal(result.ledger.icons.page, recorded);
   assert.deepEqual(result.page, { id: recorded, name: 'Icons' });
   assert.deepEqual(result.summary, { created: 0, updated: 0, unchanged: 9, orphaned: 0, restored: 0, conflicts: 0 });
-  assert.deepEqual(mock.log.filter(([op]) => op !== 'setCurrentPage'), []);
+  assert.deepEqual(writes(mock), []);
 });
 
 test('an unrecorded Icons page is a conflict and nothing changes; adopt builds on it', async () => {
