@@ -162,9 +162,10 @@ test('plain HTML with a package.json that lists no React is still plain HTML', (
 test('a plain HTML Handoff names its page, and its generate stage takes the page\'s path (#520)', () => {
   const banner = prototype({ 'banner-app.html': '<link rel="stylesheet" href="styles.css"><div class="banner">Hi</div>', 'styles.css': '.banner { color: red; }' });
   const cdn = prototype({ 'index.html': '<script src="https://cdn.tailwindcss.com"></script><div class="p-4 bg-white">Hi</div>' });
+  const twoPages = prototype({ 'index.html': '<p class="a">Hi</p>', 'about.html': '<p class="a">About</p>' });
   try {
     for (const [dir, page] of [[banner, 'banner-app.html'], [cdn, 'index.html']]) {
-      const line = new RegExp(`- Handoff: only against a Design System you name; page \`${page.replace('.', '\\.')}\`\\. `);
+      const line = new RegExp(`- Handoff: only against a Design System you name; page \`${page.replaceAll('.', '\\.')}\`\\. `);
       // No output asked, and --handoff with no --ds: the Design System question, no plan, the page on the verdict line.
       for (const args of [[], ['--handoff']]) {
         const r = run(dir, ...args);
@@ -184,12 +185,17 @@ test('a plain HTML Handoff names its page, and its generate stage takes the page
         }
       });
     }
+    // Two pages: refused, so no page and no plan.
+    const two = run(twoPages, '--handoff', '--ds', 'carbon');
+    assert.equal(two.status, 1, two.stdout);
+    assert.match(two.stdout, /- Handoff: no\. Name the page/);
+    assert.doesNotMatch(two.stdout, /page `|Plan:/);
     // No page: generate takes the Prototype as the check was given it.
     withRoot({}, root => {
       const generate = check(handoff('vite-app'), { handoff: true, ds: 'carbon', root }).plan.stages.find(s => s.stage === 'generate');
       assert.equal(generate.prototype, undefined);
     });
-  } finally { for (const d of [banner, cdn]) rmSync(d, { recursive: true, force: true }); }
+  } finally { for (const d of [banner, cdn, twoPages]) rmSync(d, { recursive: true, force: true }); }
 });
 
 test('plain HTML styled by Tailwind from the CDN, or only by style="", is named apart: not decided yet', () => {

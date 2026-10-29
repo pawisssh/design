@@ -313,10 +313,9 @@ const SCRATCH_ROOT = '.scratch/design-systems';
  * output's verdict ({verdict, reasons: [{row, message, ticket}], notes}) from its gate rows, a plain HTML Handoff's with
  * the `page` it reads, the owner's open questions ({id, question, options?}), what refuses the run beside the verdicts
  * (an unknown `ds`, a name collision), the Handoff's Design System once settled ({name, existing}: `existing` names the
- * Design Systems already holding a Handoff of its feature key), the Design Systems here, and the plan (a plain HTML
- * Handoff's generate stage takes the page's path as its `prototype`), settled only when no question is open and
- * nothing asked is refused (spec #343 The check; Owner questions; The Handoff's Design System; The stages).
- * `prototype` is a folder, or for plain HTML one HTML file; `figma` (a link) asks for Component
+ * Design Systems already holding a Handoff of its feature key), the Design Systems here, and the plan, settled only
+ * when no question is open and nothing asked is refused (spec #343 The check; Owner questions; The Handoff's Design
+ * System; The stages). `prototype` is a folder, or for plain HTML one HTML file; `figma` (a link) asks for Component
  * Sets, as `componentSets` does with the link left to the build (Vibe-to-Figma run alone, #439), and `handoff` for a
  * Handoff against the Design System `ds`. `root` is the repo whose design-systems/ and
  * .scratch/design-systems/ are read (this checkout by default). It reads file names, package.json and text; it writes
@@ -380,7 +379,7 @@ function ownFolder(p) {
 // is the own folder when --ds names it. A committed Design System is used through its scratch copy: the Handoff stage
 // makes it when it is absent, and one already there is used in place. `notes` are what the owner is told: a --ds that
 // makes a new Handoff, and a committed Design System that moved since its copy was made (`moved`). A plain HTML
-// Handoff's generate stage takes its `prototype`, the page's path, as To-handoff's generate takes one HTML file.
+// Handoff's generate stage takes its `prototype`, the page's path, as To-handoff's generate takes one HTML file (#520).
 function planOf(p, asked, { answer: ds, ownAnswer, here, existing, key }, page) {
   const { name: own } = ownFolder(p);
   const stageAt = (stage, designSystem, extra) => ({ stage, folder: `${SCRATCH_ROOT}/${designSystem}`, designSystem, ...extra });

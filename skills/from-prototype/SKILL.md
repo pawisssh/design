@@ -18,7 +18,7 @@ node skills/from-prototype/scripts/from-prototype.mjs check <prototype> [--figma
 `--figma` asks for Component Sets, built into that Figma file. `--handoff` asks for a Handoff against the Design System `--ds` names by its folder name; naming the Prototype's own folder makes the Handoff against it. `--name` and `--all` pass to Vibe-to-Figma's folder step. Run alone, that folder step runs this check first, Component Sets asked with no link (`check(prototype, {componentSets: true, all})`), and stops with its message when they are refused ([#439](https://github.com/pawisssh/design/issues/439)). The check reads file names, `package.json` and source text. It writes nothing, fetches nothing and loads no fetched parser. It prints:
 
 1. the Prototype's kind ([ADR 0019](../../docs/adr/0019-a-prototype-reaches-component-sets-or-a-handoff-by-its-kind.md)'s) and the files that show it;
-2. each output's verdict, with each refusing gate's reason and the ticket it waits on; for plain HTML the Handoff's names the one page it reads;
+2. each output's verdict, with each refusing gate's reason and the ticket it waits on; for plain HTML the Handoff's verdict names the one page it reads;
 3. what is still possible;
 4. the owner's questions, or the plan;
 5. "Nothing was fetched or written."
