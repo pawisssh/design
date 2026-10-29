@@ -97,8 +97,10 @@ export async function approveFolder({ dir, project, exported, said, at = new Dat
   const key = foundations.designSystem.key;
   const documentHash = `sha256:${sha256(text)}`;
   const reasons = [];
+  // A path A folder, the one with a Family map, has its Foundations generated from its Extracted Library, never from
+  // the Prototype, which has no Code Library to read (#263).
   const library = resolve(dir, 'library');
-  if (existsSync(library) && resolve(project) !== library)
+  if (existsSync(files.foundations.replace(/\.foundations\.json$/, '.family-map.json')) && resolve(project) !== library)
     reasons.push(`the Foundations of a path A folder are generated from its Extracted Library: pass ${library} as the project, not ${project}`);
   if (test && !inScratch(dir)) reasons.push(`a test approval is written only under ${join(REPO_ROOT, '.scratch')}/`);
   if (exported.designSystem !== key) reasons.push(`the review is of ${exported.designSystem}, not ${key}`);

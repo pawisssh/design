@@ -17,7 +17,7 @@ import { REPO_ROOT } from '../../to-handoff/scripts/system.mjs';
 import { approveFolder } from '../scripts/approve.mjs';
 import { fileKeyOf, gate, namespaced, nextStep, recordStep } from '../scripts/build.mjs';
 import { reviewModel } from '../scripts/review.mjs';
-import { AT, FILE_KEY, NARROW, URL_, drive, smokeDraft } from './drive.mjs';
+import { AT, FILE_KEY, NARROW, URL_, drive, exported, smokeDraft } from './drive.mjs';
 import { PATH_A_FAMILIES, READABLE, V0, packageSkip, pathAFolder, read, scratch, selections, skip, v0Folder } from './helpers.mjs';
 
 const { reviewExport } = createRequire(import.meta.url)('../assets/review-export.js');
@@ -94,7 +94,7 @@ test('after "approve", Foundations then every Component Set by B′, each passin
 
 test('path A: after "approve", Foundations with its palette colours, then every set by B′, each passing its coverage check', { skip }, async () => {
   const { dir, library } = await pathAFolder({ palette: true });
-  await approveFolder({ dir, project: library, exported: reviewExport(reviewModel(dir), selections(dir)), said: 'approve', at: AT, test: true });
+  await approveFolder({ dir, project: library, exported: exported(dir), said: 'approve', at: AT, test: true });
   const mock = mockFigma({ fileKey: FILE_KEY, pages: ['Page 1'] });
   const { n, ledger, record, steps } = await drive({ dir, mock, coveragePerCall: 2 });
   assert.equal(n.status, 'built', JSON.stringify(n));

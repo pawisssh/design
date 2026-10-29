@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { cpSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import * as contractModule from '../../contract/scripts/contract.mjs';
 import { generate as foundationsOf } from '../../adapter-generic/scripts/foundations.mjs';
 import { generate } from '../../to-handoff/scripts/generate.mjs';
@@ -120,7 +120,7 @@ test('approving again: the same ticks leave every approval as it was; the next p
   assert.deepEqual(snapshot(dir), once);
 });
 
-for (const { name, folder, missing, stale: staled, wrong: broken } of FOLDERS) test(`${name}: a refusal writes nothing: no owner message, a test outside .scratch/, another folder, a moved Foundations, missing or stale ticks`, { skip }, async () => {
+for (const { name, folder, missing, stale, wrong } of FOLDERS) test(`${name}: a refusal writes nothing: no owner message, a test outside .scratch/, another folder, a moved Foundations, missing or stale ticks`, { skip }, async () => {
   const { dir, project } = await folder();
   const review = exported(dir);
   const key = review.designSystem;
@@ -132,18 +132,21 @@ for (const { name, folder, missing, stale: staled, wrong: broken } of FOLDERS) t
   await refuses({ said: 'ship it' }, /is not "approve" or "approve except <family>"/);
   const outside = join(mkdtempSync(join(tmpdir(), 'vibe-to-figma-')), key);
   cpSync(dir, outside, { recursive: true });
-  await refuses({ dir: outside, before: snapshot(outside), ...(project.startsWith(dir) ? { project: join(outside, 'library') } : {}) }, /a test approval is written only under .*\.scratch/);
+  // A project inside the folder, path A's Extracted Library, moves with it.
+  const moved = project.startsWith(dir) ? join(outside, relative(dir, project)) : project;
+  await refuses({ dir: outside, before: snapshot(outside), project: moved }, /a test approval is written only under .*\.scratch/);
   await refuses({ exported: { ...review, designSystem: 'shadcn' } }, new RegExp(`the review is of shadcn, not ${key}`));
   await refuses({ exported: { ...review, documentHash: 'sha256:0' } }, /the Foundations document moved since the review/);
-  const { [missing]: _, ...rest } = review.families;
+  const rest = { ...review.families };
+  delete rest[missing];
   await refuses({ exported: { ...review, families: rest } }, new RegExp(`no ticks for ${missing}`));
-  const stale = structuredClone(review);
-  stale.families[staled].patch.snapshotId = stale.families[staled].checked.snapshotId = 'sha256:old';
-  await refuses({ exported: stale }, new RegExp(`${staled}: .*snapshotId`));
+  const old = structuredClone(review);
+  old.families[stale].patch.snapshotId = old.families[stale].checked.snapshotId = 'sha256:old';
+  await refuses({ exported: old }, new RegExp(`${stale}: .*snapshotId`));
   // All or nothing: one family's ticks that do not reproduce its checked tuples stop every family.
-  const wrong = structuredClone(review);
-  wrong.families[broken].checked.checked.pop();
-  await refuses({ exported: wrong }, new RegExp(`${broken}: the expansion differs from the checked tuples`));
+  const short = structuredClone(review);
+  short.families[wrong].checked.checked.pop();
+  await refuses({ exported: short }, new RegExp(`${wrong}: the expansion differs from the checked tuples`));
 });
 
 test('path A: "approve" generates the Foundations again from the Extracted Library, so an untick drops its palette token', { skip }, async () => {

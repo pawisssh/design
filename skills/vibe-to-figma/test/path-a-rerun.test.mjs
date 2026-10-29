@@ -13,7 +13,7 @@ import { mockFigma } from '../../to-design/tests/mock-figma.mjs';
 import { approveFolder } from '../scripts/approve.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
 import { reviewModel } from '../scripts/review.mjs';
-import { AT, FILE_KEY, drive, exported } from './drive.mjs';
+import { AT, FILE_KEY, RED, drive, exported } from './drive.mjs';
 import { PATH_A as FIXTURE, PATH_A_ANSWERS as ANSWERS, PATH_A_FAMILIES as FAMILIES, read, scratch, skip, tree } from './helpers.mjs';
 
 const FOLDER = fileURLToPath(new URL('../scripts/folder.mjs', import.meta.url));
@@ -71,14 +71,22 @@ test('a class edit in one family redrafts only that family', { skip }, async () 
   assert.match(readFileSync(join(w.dir, 'library/components/ui/icon-button.tsx'), 'utf8'), /p-1\.5/);
 });
 
-test('built into Figma, a class edit in one family is reviewed, approved and sent as one update call, into its set alone', { skip }, async () => {
+/** world() with its folder approved and built on the mock: {w, approve(), mock, ledger, record}. */
+async function built() {
   const w = await world();
-  const library = join(w.dir, 'library');
-  const approve = () => approveFolder({ dir: w.dir, project: library, exported: exported(w.dir), said: 'approve', at: AT, test: true });
+  const approve = () => approveFolder({ dir: w.dir, project: join(w.dir, 'library'), exported: exported(w.dir), said: 'approve', at: AT, test: true });
   await approve();
   const mock = mockFigma({ fileKey: FILE_KEY, pages: ['Page 1'] });
-  const first = await drive({ dir: w.dir, mock });
-  assert.equal(first.n.status, 'built', JSON.stringify(first.n));
+  const { n, ledger, record } = await drive({ dir: w.dir, mock });
+  assert.equal(n.status, 'built', JSON.stringify(n));
+  return { w, approve, mock, ledger, record };
+}
+
+test('built into Figma, a class edit in one family is reviewed, approved and sent as one update call, into its set alone', { skip }, async () => {
+  const { w, approve, mock, ledger: first, record: was } = await built();
+  // The owner's own edit in Figma to one of icon-button's variants: it is held, not written over (#181).
+  const ids = first.sets['icon-button'].variants;
+  (await mock.figma.getNodeByIdAsync(ids[0])).fills = RED;
 
   w.edit(ICON_BASE, 'justify-center rounded p-1.5 text-[#');
   assert.deepEqual((await w.rerun()).written, ['icon-button']);
@@ -86,17 +94,33 @@ test('built into Figma, a class edit in one family is reviewed, approved and sen
   const a = await approve();
   assert.deepEqual([a.approved, a.kept], [['icon-button'], FAMILIES.filter(f => f !== 'icon-button')]);
 
-  // A Foundations call that writes nothing, a read-only edit check, then the one call into icon-button's set and its coverage.
-  const { n, ledger, record, steps } = await drive({ dir: w.dir, mock, ledger: first.ledger, record: first.record });
+  // A Foundations call that writes nothing, a read-only edit check, then the one call into icon-button's set, with
+  // the variants Figma did not edit, and its coverage.
+  const { n, ledger, record, steps } = await drive({ dir: w.dir, mock, ledger: first, record: was });
   assert.equal(n.status, 'built', JSON.stringify(n));
-  assert.deepEqual(n.held, []);
-  const sets = steps.filter(s => s.step === 'sets');
-  assert.deepEqual(sets.map(s => [s.family, s.options.mode, s.options.picked]), [['icon-button', 'build', 3]]);
+  assert.deepEqual(n.held.map(h => [h.family, h.reason]), [['icon-button', 'edited']]);
+  assert.deepEqual(steps.filter(s => s.step === 'sets').map(s => [s.family, s.plan.selection.entries.map(e => e[0])]), [['icon-button', [1, 2]]]);
   assert.ok(steps.every(s => s.family === 'icon-button' || (s.step === 'foundations' && !s.writes.length)), steps.map(s => `${s.step} ${s.family}`).join());
   assert.equal(record.coverage['icon-button'].ok, true);
-  assert.equal(ledger.sets['icon-button'].set.id, first.ledger.sets['icon-button'].set.id);
-  for (const f of FAMILIES.filter(f => f !== 'icon-button')) assert.deepEqual(ledger.sets[f], first.ledger.sets[f], f);
-  assert.deepEqual((await drive({ dir: w.dir, mock, ledger, record })).steps, []);
+  assert.deepEqual(ledger.sets['icon-button'].variants, ids);
+  assert.deepEqual((await mock.figma.getNodeByIdAsync(ids[0])).fills, RED);
+  for (const f of FAMILIES.filter(f => f !== 'icon-button')) assert.deepEqual(ledger.sets[f], first.sets[f], f);
+  assert.deepEqual((await drive({ dir: w.dir, mock, ledger, record })).steps.filter(s => s.step === 'sets'), []);
+});
+
+test('built into Figma, a family whose sites all go is set aside, and the build names its set orphaned', { skip }, async () => {
+  const { w, approve, mock, ledger: first, record: was } = await built();
+  const app = w.app();
+  const start = app.indexOf('      <div className={CARD}>'), end = app.indexOf('    </div>\n  );\n}');
+  writeFileSync(join(w.proto, 'src/App.tsx'), app.slice(0, start) + app.slice(end));
+  assert.deepEqual((await w.rerun()).setAside.map(s => s.family), ['card']);
+  const a = await approve();
+  assert.deepEqual([a.approved, a.kept], [[], FAMILIES.filter(f => f !== 'card')]);
+  const { n, steps } = await drive({ dir: w.dir, mock, ledger: first, record: was });
+  assert.equal(n.status, 'built', JSON.stringify(n));
+  assert.deepEqual(n.orphaned, [{ family: 'card', set: first.sets.card.set.id, variants: first.sets.card.variants.length }]);
+  assert.deepEqual(steps.filter(s => s.step !== 'foundations'), [], 'no call into any set');
+  assert.ok(await mock.figma.getNodeByIdAsync(first.sets.card.set.id), 'nothing in Figma is deleted');
 });
 
 test('an edited axis value keeps the names the agent gave it', { skip }, async () => {
