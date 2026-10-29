@@ -339,7 +339,7 @@ export function check(prototype, options = {}) {
   const refused = asked.some(o => verdicts[o].verdict === 'no');
   const refusals = refused ? [] : refusalsOf(p, asked, ds);
   const questions = refused || refusals.length ? [] : questionsOf(p, asked, verdicts, ds);
-  const plan = asked.length && !questions.length && !refused && !refusals.length ? planOf(p, asked, ds) : null;
+  const plan = asked.length && !questions.length && !refused && !refusals.length ? planOf(p, asked, ds, verdicts.handoff.page) : null;
   return { kind: p.kind, evidence: p.evidence, verdicts, questions, refusals, designSystem: ds.settled, designSystems: ds.here.names, plan };
 }
 
@@ -378,8 +378,9 @@ function ownFolder(p) {
 // Component Sets always come from the Prototype's own folder; a Handoff runs against the settled Design System, which
 // is the own folder when --ds names it. A committed Design System is used through its scratch copy: the Handoff stage
 // makes it when it is absent, and one already there is used in place. `notes` are what the owner is told: a --ds that
-// makes a new Handoff, and a committed Design System that moved since its copy was made (`moved`).
-function planOf(p, asked, { answer: ds, ownAnswer, here, existing, key }) {
+// makes a new Handoff, and a committed Design System that moved since its copy was made (`moved`). A plain HTML
+// Handoff's generate stage takes its `prototype`, the page's path, as To-handoff's generate takes one HTML file (#520).
+function planOf(p, asked, { answer: ds, ownAnswer, here, existing, key }, page) {
   const { name: own } = ownFolder(p);
   const stageAt = (stage, designSystem, extra) => ({ stage, folder: `${SCRATCH_ROOT}/${designSystem}`, designSystem, ...extra });
   const folderStep = asked.includes('componentSets') || ownAnswer;
@@ -388,7 +389,7 @@ function planOf(p, asked, { answer: ds, ownAnswer, here, existing, key }) {
   const stages = [
     ...(folderStep ? [stageAt('folder', own, p.options.all ? { all: true } : {}), stageAt('review-page', own), stageAt('approve', own, { owner: true })] : []),
     ...(asked.includes('componentSets') ? [stageAt('figma-build', own, { figma: p.options.figma })] : []),
-    ...(handoff ? [...(throughCopy && !here.scratch.has(ds) ? [stageAt('scratch-copy', ds)] : []), stageAt('generate', ds), stageAt('review', ds), stageAt('sign-off', ds, { owner: true })] : []),
+    ...(handoff ? [...(throughCopy && !here.scratch.has(ds) ? [stageAt('scratch-copy', ds)] : []), stageAt('generate', ds, page ? { prototype: join(p.root, page) } : {}), stageAt('review', ds), stageAt('sign-off', ds, { owner: true })] : []),
   ];
   const files = throughCopy && here.scratch.has(ds) ? movedFiles(p.repo, ds) : [];
   const notes = [
@@ -484,7 +485,7 @@ export function message(prototype, r, options = {}) {
     ? `--handoff${options.ds ? ` --ds ${options.ds}` : ''}`
     : `--figma ${options.figma ?? '<url>'}${options.name ? ` --name ${options.name}` : ''}${options.all ? ' --all' : ''}`}\``;
   const sentence = s => s[0].toUpperCase() + s.slice(1).replace('ADR 0019', `ADR 0019: ${ADR}`) + '.';
-  const line = (name, v) => `- ${name}: ${v.verdict}.${[...v.reasons.map(x => x.message), ...v.notes.map(n => `note: ${n}`)].map(s => ' ' + sentence(s)).join('')}`;
+  const line = (name, v) => `- ${name}: ${v.verdict}${v.page ? `; page \`${v.page}\`` : ''}.${[...v.reasons.map(x => x.message), ...v.notes.map(n => `note: ${n}`)].map(s => ' ' + sentence(s)).join('')}`;
   const { componentSets: sets, handoff } = r.verdicts;
   // Component Sets refused only for their link (#437): the Prototype can still have them, and a Handoff can run alone.
   const linkOnly = sets.reasons.every(x => x.row === 'figma');
@@ -499,7 +500,7 @@ export function message(prototype, r, options = {}) {
   const settled = r.designSystem && !options.ds && r.designSystem.existing.includes(r.designSystem.name)
     ? [`The Handoff's Design System: \`${r.designSystem.name}\`, where this Prototype's Handoff \`${r.designSystem.key}\` already is.`] : [];
   const plan = r.plan ? ['Plan:', ...r.plan.stages.map((s, i) => `${i + 1}. ${STAGES[s.stage]}${s.stage === 'hand-over'
-    ? ` of ${s.outputs.map(o => OUTPUTS[o]).join(' and ')}` : `: ${s.folder} (Design System \`${s.designSystem}\`)${s.figma ? ` into ${s.figma}` : ''}${s.all ? ', `--all`' : ''}`}`)] : [];
+    ? ` of ${s.outputs.map(o => OUTPUTS[o]).join(' and ')}` : `: ${s.folder} (Design System \`${s.designSystem}\`)${s.figma ? ` into ${s.figma}` : ''}${s.all ? ', `--all`' : ''}${s.prototype ? `, page ${s.prototype}` : ''}`}`)] : [];
   return [`${prototype}: ${r.kind} (${r.evidence.join(', ')}).`, line('Component Sets', sets), line('Handoff', handoff),
     ...r.refusals.map(x => `- ${x}.`), ...(possible ? [possible] : []), ...questions, ...settled, ...plan,
     ...(r.plan?.notes ?? []).map(n => `Note: ${n}.`), '', 'Nothing was fetched or written.'].join('\n');
