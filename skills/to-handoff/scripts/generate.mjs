@@ -167,11 +167,15 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   const { name: title, key: featureKey } = featureOf(prototype);
   const doc = readPrototype(prototype, { depsDir, packages, title });
   const { at, rules } = doc;
-  // An Extracted Library's Family map (#265, ADR 0016): read when every file its sites name is this Prototype's, and then
-  // each site, found where it is in the code now, is a Usage of its family's Contract. Another Prototype's map is not read.
+  // An Extracted Library's Family map (#265, ADR 0016): read when the files its sites name are this Prototype's, and then
+  // each site, found where it is in the code now, is a Usage of its family's Contract. A map naming none of them is
+  // another Prototype's and is not read; one naming some is refused, as a map the code no longer gives.
   const mapped = system.familyMap && !/\.html?$/i.test(prototype) ? Object.values(system.familyMap.map.families || {}).flatMap(f => f.sites || []) : [];
-  const ownMap = mapped.length > 0 && mapped.every(s => existsSync(join(prototype, s.file)));
-  const sites = new Map(ownMap ? familySites({ project: prototype, map: system.familyMap.map }).map(s => [`${s.file}:${s.line}:${s.col}`, s]) : []);
+  const mapFiles = [...new Set(mapped.map(s => s.file))];
+  const missing = mapFiles.filter(f => !existsSync(join(prototype, f)));
+  const readsMap = missing.length < mapFiles.length;
+  if (readsMap && missing.length) throw new Error(`the Family map names ${missing.join(', ')}, which ${prototype} does not have: run Vibe-to-Figma's folder step again (node skills/vibe-to-figma/scripts/folder.mjs ${prototype}), or name a Design System that is not another Prototype's own folder`);
+  const sites = new Map(readsMap ? familySites({ project: prototype, map: system.familyMap.map }).map(s => [`${s.file}:${s.line}:${s.col}`, s]) : []);
   const siteOf = el => sites.get(at(el.offset));
   const screenIds = doc.screens.map(s => s.id);
   const multi = doc.screens.length > 1;
@@ -847,7 +851,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       contracts,
       proposals,
       foundations: { documentHash: fileHash(system.foundationsText), usedHash: null },
-      ...(ownMap ? { familyMap: fileHash(system.familyMap.text) } : {}),
+      ...(readsMap ? { familyMap: fileHash(system.familyMap.text) } : {}),
       modes: { [PROTOTYPE_MODE]: mode },
       notes,
       ...(doc.ignored.length ? { ignored: doc.ignored } : {}),

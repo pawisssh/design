@@ -1,8 +1,7 @@
 // Usage recognition (#379): which elements of one screen are Usages, and of what. It walks the screen, tells a
-// leaf from a Container and collects a Container's parts, finds a Contract by import or through the Family map (#265),
-// or asks for one by signature, builds the import tuple and Slot axes, resolves mid-run drafts and sets `in`. Building
-// each Usage from its record (copy, off-axis values, states and questions) stays in generate.mjs. The part rules stay
-// here, not in the Adapter (ADR 0020).
+// leaf from a Container and collects a Container's parts, finds a Contract by import or asks for one by signature,
+// builds the import tuple and Slot axes, resolves mid-run drafts and sets `in`. Building each Usage from its record
+// (copy, off-axis values, states and questions) stays in generate.mjs. The part rules stay here, not in the Adapter (ADR 0020).
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { contentHash } from '../../contract/scripts/contract.mjs';
@@ -160,8 +159,8 @@ export function recogniseUsages({ root, system, rules, decider: d, describe, dra
   // one it is a wrapper whose look stays in the region, and a note names it (#125).
   const wrappers = new Set();
   const parts = new Set();
-  const holdsOtherComponent = el => { let found = false; walk(el, x => { if (x !== el && x.component && !isPart(el, x)) found = true; }); return found; };
-  const holdsMapped = el => { let found = false; walk(el, x => { if (x !== el && x.type === 'element' && siteOf(x)) found = true; }); return found; };
+  const holds = (el, test) => { let found = false; walk(el, x => { if (x !== el && test(x)) found = true; }); return found; };
+  const holdsOtherComponent = el => holds(el, x => x.component && !isPart(el, x));
   const visit = (el, through = [], within = null) => {
     if (el.type !== 'element' || consumed.has(el)) return;
     // A site the Family map records (#265, ADR 0016): a Usage of its family's Contract, never a decision. Its tuple is
@@ -180,7 +179,7 @@ export function recogniseUsages({ root, system, rules, decider: d, describe, dra
       if (problem) throw new Error(`the Family map's ${site.family} site at ${describe(el).at}: ${problem}`);
       recognised.push({ el, cand: { kind: 'element', sig: el.tag }, answer: { contract: site.family, tuple }, key: null, byMap: { switches }, within });
       usageEls.add(el);
-      const leaf = !holdsMapped(el) && (def.properties || []).some(p => p.type === 'TEXT' && p.code && p.code.prop === 'children');
+      const leaf = !holds(el, x => x.type === 'element' && siteOf(x)) && (def.properties || []).some(p => p.type === 'TEXT' && p.code && p.code.prop === 'children');
       if (leaf) walk(el, x => { if (x !== el) consume(x, 'usage'); });
       else for (const c of el.children) visit(c, through, el);
       return;

@@ -10,7 +10,7 @@ import { loadDesignSystem, stateAxisOf } from './system.mjs';
 
 const OPTIONAL = ['flow', 'interactions', 'data', 'a11y', 'tokensToAdd'];
 const FLAGS = {
-  exact: ['=', 'exact'], import: ['✓', 'import'], na: ['–', 'n/a'],
+  exact: ['=', 'exact'], import: ['✓', 'import'], map: ['✓', 'Family map'], na: ['–', 'n/a'],
   off: ['≠', 'Off-system'], near: ['≈', 'near match'], pick: ['◇', 'agent pick'], proposal: ['+', 'Proposal'],
   raw: ['∅', 'no Contract'], axis: ['↯', 'off-axis'], missing: ['!', 'missing state'], mock: ['◌', 'mock'],
   simulated: ['◌', 'simulated'], placeholder: ['◌', 'placeholder copy'], draft: ['◐', 'Contract draft, not approved'],
@@ -103,7 +103,10 @@ export async function renderHtml(handoff, system) {
   };
   const cards = [];
   for (const u of usages) {
-    const flags = [u.contract && flag('import'), u.contract && isDraft(u.contract) && flag('draft'), u.proposal && flag('proposal'), u.raw && flag('raw'), u.match && u.match.by === 'agent' && flag('pick'), (u.offAxis || []).length && flag('axis')].filter(Boolean).join(' ');
+    // A Family map Usage (#265) is flagged as one, its switched axes beside its tuple.
+    const byMap = u.match && u.match.by === 'family-map';
+    const switched = byMap && u.match.switches ? Object.entries(u.match.switches).map(([k, v]) => ` ${k}=${v.join('|')}`).join('') : '';
+    const flags = [u.contract && flag(byMap ? 'map' : 'import'), u.contract && isDraft(u.contract) && flag('draft'), u.proposal && flag('proposal'), u.raw && flag('raw'), u.match && u.match.by === 'agent' && flag('pick'), (u.offAxis || []).length && flag('axis')].filter(Boolean).join(' ');
     let specimen = '', snippet = '';
     const perState = [];
     const nested = nestedIn(u.id);
@@ -126,7 +129,7 @@ export async function renderHtml(handoff, system) {
       specimen = `<div class="raw-box">${code(u.raw.element)} ${esc(text((u.properties || {}).text || ''))}</div>`;
     }
     cards.push(`<article class="card" id="usage-${esc(u.id)}">
-<header><h3>${esc(u.id)}</h3><p>${u.contract ? `${code(u.contract)} ${esc(Object.entries(u.tuple).map(([k, v]) => `${k}=${v}`).join(' '))}` : u.proposal ? `Proposal ${code(u.proposal)} ${esc(Object.entries(u.tuple || {}).map(([k, v]) => `${k}=${v}`).join(' '))}` : 'raw element'} · ${esc(u.region)} · ${esc(u.at)}${u.states ? ` · shows in ${esc(u.states.join(', '))}` : ''}</p><p>${flags}</p></header>
+<header><h3>${esc(u.id)}</h3><p>${u.contract ? `${code(u.contract)} ${esc(Object.entries(u.tuple).map(([k, v]) => `${k}=${v}`).join(' ') + switched)}` : u.proposal ? `Proposal ${code(u.proposal)} ${esc(Object.entries(u.tuple || {}).map(([k, v]) => `${k}=${v}`).join(' '))}` : 'raw element'} · ${esc(u.region)} · ${esc(u.at)}${u.states ? ` · shows in ${esc(u.states.join(', '))}` : ''}</p><p>${flags}</p></header>
 <div class="specimen mode-root ${esc(modeClass(mapped))}" data-mode-root>${specimen}</div>
 ${perState.length ? `<div class="states-row mode-root ${esc(modeClass(mapped))}" data-mode-root>${perState.join('')}</div>` : ''}
 ${snippet ? `<textarea class="snippet" readonly wrap="off" rows="${snippet.split('\n').length}">${snippet.replace(/&/g, '&amp;').replace(/<\/textarea/gi, '&lt;/textarea')}</textarea>` : ''}

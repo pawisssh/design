@@ -4,10 +4,11 @@
 // committed answers into .scratch; nothing is written under design-systems/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { generate } from '../scripts/generate.mjs';
+import { renderHtml } from '../scripts/render-html.mjs';
+import { fileHash } from '../scripts/hash.mjs';
 import { driftOf, review } from '../scripts/signoff.mjs';
 import { loadDesignSystem } from '../scripts/system.mjs';
 import { validateHandoff } from '../scripts/validate.mjs';
@@ -45,15 +46,22 @@ test('each mapped site is a Usage of its family\'s Contract by the Family map, w
   assert.deepEqual(validateHandoff(r.handoff, await loadDesignSystem(dir)).errors, []);
 });
 
-test('the review lists the Usages the Family map gave and pins the map; a rerun writes nothing', { skip }, async () => {
+test('the review and the Rendering show the Usages the Family map gave, and the map is pinned; a rerun writes nothing', { skip }, async () => {
   const { proto, dir } = await pathAFolder();
   const first = await generate({ prototype: proto, designSystem: dir, decisions: DECISIONS });
-  assert.equal(first.handoff.source.familyMap, `sha256:${createHash('sha256').update(readFileSync(join(dir, 'path-a-app.family-map.json'))).digest('hex')}`);
+  assert.equal(first.handoff.source.familyMap, fileHash(readFileSync(join(dir, 'path-a-app.family-map.json'), 'utf8')));
   const { text } = await review({ handoffPath: first.path, designSystem: dir });
   assert.match(text, /^ {2}family map sha256:/m);
   assert.match(text, /\nRecognised through the Family map \(8\)\n/);
   assert.match(text, /\n {2}[\w-]+: segment \{\} switching selected on\/off at src\/App\.tsx:32:11\n/);
   assert.match(text, /\n {2}[\w-]+: icon-button \{"tone":"danger"\} at src\/App\.tsx:23:9\n/);
+  // The Rendering flags each as the Family map's, its switched axes beside its tuple. The Generic Adapter's renderer reads
+  // its own fixture, not this folder's library (#529), so a stand-in renders the specimens.
+  const system = await loadDesignSystem(dir);
+  const standIn = { ...system, adapter: { ...system.adapter, renderer: async () => ({ stylesheet: '', modeClass: k => `mode-${k}`, render: () => '<i></i>' }) } };
+  const html = await renderHtml(first.handoff, standIn);
+  assert.equal((html.match(/✓ Family map<\/span>/g) || []).length, 8);
+  assert.match(html, /<code>segment<\/code>  selected=on\|off · /);
   const again = await generate({ prototype: proto, designSystem: dir, decisions: DECISIONS });
   assert.equal(again.wrote, false);
 });
@@ -86,4 +94,16 @@ test('validate refuses a switched axis that is not one of the Contract\'s, or is
   assert.match(validateHandoff(handoff, system).errors.map(e => e.message).join('\n'), /match\.switches selected is also in the tuple/);
   delete segment.tuple.selected;
   assert.match(validateHandoff(handoff, system).errors.map(e => e.message).join('\n'), /match\.switches selected "maybe" is not a/);
+});
+
+test('a Family map naming none of the Prototype\'s files is another Prototype\'s and is not read; one naming some is refused', { skip }, async () => {
+  const { proto, dir } = await pathAFolder();
+  const file = join(dir, 'path-a-app.family-map.json');
+  const map = JSON.parse(readFileSync(file, 'utf8'));
+  const moved = (n) => { const m = structuredClone(map); Object.values(m.families).flatMap(f => f.sites).slice(0, n).forEach(s => (s.file = 'src/Other.tsx')); return m; };
+  writeFileSync(file, JSON.stringify(moved(8)));
+  const other = await generate({ prototype: proto, designSystem: dir, decisions: DECISIONS });
+  assert.ok(other.requests.some(q => q.key.startsWith('recognise:')), 'its sites are asked by signature, as before');
+  writeFileSync(file, JSON.stringify(moved(1)));
+  await assert.rejects(generate({ prototype: proto, designSystem: dir, decisions: DECISIONS }), /the Family map names src\/Other\.tsx, which .* does not have/);
 });

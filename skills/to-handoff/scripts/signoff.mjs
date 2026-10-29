@@ -188,10 +188,10 @@ export async function review({ handoffPath, designSystem }) {
   if (missing.length) { L.push('', 'Missing'); for (const m of missing) L.push(`  ${m}`); }
   L.push('', 'Contracts used');
   for (const k of Object.keys(h.source.contracts)) L.push(`  ${k}: ${system.contracts[k] ? system.contracts[k].selection.status : 'gone'}`);
-  const byMap = h.screens.flatMap(s => (s.regions || []).flatMap(r => r.usages || [])).filter(u => u.match && u.match.by === 'family-map');
-  if (byMap.length) {
-    L.push('', `Recognised through the Family map (${byMap.length})`);
-    for (const u of byMap) L.push(`  ${u.id}: ${u.contract} ${JSON.stringify(u.tuple || {})}${u.match.switches ? ` switching ${Object.entries(u.match.switches).map(([k, v]) => `${k} ${v.join('/')}`).join(', ')}` : ''} at ${u.at}`);
+  const mapUsages = h.screens.flatMap(s => (s.regions || []).flatMap(r => r.usages || [])).filter(u => u.match && u.match.by === 'family-map');
+  if (mapUsages.length) {
+    L.push('', `Recognised through the Family map (${mapUsages.length})`);
+    for (const u of mapUsages) L.push(`  ${u.id}: ${u.contract} ${JSON.stringify(u.tuple || {})}${u.match.switches ? ` switching ${Object.entries(u.match.switches).map(([k, v]) => `${k} ${v.join('/')}`).join(', ')}` : ''} at ${u.at}`);
   }
   const nesting = nestingOf(h);
   if (nesting.length) L.push('', 'Nesting', ...nesting);

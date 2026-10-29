@@ -679,7 +679,7 @@ export function extract({ project, answers = {}, map = null }) {
 export function familySites({ project, map }) {
   const found = extract({ project, map });
   if (!found.map || JSON.stringify(found.map) !== JSON.stringify(map))
-    throw new Error(`the Family map is not what ${project}'s code gives now: run Vibe-to-Figma's folder step again (node skills/vibe-to-figma/scripts/folder.mjs ${project})`);
+    throw new Error(`the Family map is not what ${project}'s code gives now: run Vibe-to-Figma's folder step again (node skills/vibe-to-figma/scripts/folder.mjs ${project}), or, if the folder is another Prototype's own, name another Design System`);
   return found.families.flatMap(f => f.sites.map(s => {
     const given = f.derived.bySite.get(siteKey(s));
     return { file: s.file, line: s.line, col: s.col, family: f.key,

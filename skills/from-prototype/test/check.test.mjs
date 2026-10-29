@@ -90,9 +90,9 @@ test('the path A fixtures take path A; a Handoff reads on Next or Vite, against 
   // To-handoff reads its sites through the Family map of its own folder (#265).
   assert.equal(check(vibe('path-a-app')).verdicts.componentSets.verdict, 'yes, by path A');
   assert.equal(check(vibe('path-a-app')).verdicts.handoff.verdict, 'yes, against its own folder');
-  const noSets = check(handoff('tailwind-app')).verdicts.handoff;
-  assert.equal(noSets.verdict, 'only against a Design System you name');
-  assert.deepEqual(noSets.reasons, [{ row: 'own-folder', message: "it can't have Component Sets, so it has no own folder", ticket: undefined }]);
+  const withoutSets = check(handoff('tailwind-app')).verdicts.handoff;
+  assert.equal(withoutSets.verdict, 'only against a Design System you name');
+  assert.deepEqual(withoutSets.reasons, [{ row: 'own-folder', message: "it can't have Component Sets, so it has no own folder", ticket: undefined }]);
   // tailwind-app has no lockfile, and its stylesheet names no font (the text-style-font row, #367): both are listed.
   assert.deepEqual(check(handoff('tailwind-app')).verdicts.componentSets.reasons.map(r => r.row), ['lockfile', 'text-style-font']);
   const bare = check(BARE);
