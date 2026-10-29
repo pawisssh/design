@@ -9,7 +9,7 @@
 //                      To-preview specimen (TEXT defaults, the default icon shown); with them it is a usage
 //                      (To-handoff): Contract property keys give the content, each missing key takes its
 //                      Contract default, and `code.required` props come from `properties[prop]` or a placeholder;
-//   stylesheet         the compiled @carbon/styles CSS, its IBM Plex faces embedded (plexCss);
+//   stylesheet         the compiled @carbon/styles CSS;
 //   modeClass(modeKey) the Carbon theme class for a foundations Theme mode (white -> cds--white).
 // A State whose Contract `code` is null (Hover, Active, Focus) renders like Enabled: To-preview forces it
 // through the State's CSS pseudo-class.
@@ -44,22 +44,28 @@ export function fetchPreviewPackages(dir = PREVIEW_DIR) {
   return dir;
 }
 
-// @carbon/styles loads IBM Plex from IBM's CDN, which an Artifact's content security policy blocks (#521). The faces
-// of the families Carbon's components set, IBM Plex Sans and Mono, in the Latin1 and Pi subsets (Pi has the arrows,
-// ≈ and ✓ a Rendering shows) are embedded from the pinned @ibm/plex-* packages; every other CDN face goes, and its
-// text falls back to the system font.
-const PLEX_FACES = 24;
+// @carbon/styles loads IBM Plex from IBM's CDN, which an Artifact's content security policy blocks (#521). The
+// hand-over's copy embeds the faces of the families Carbon's components set, IBM Plex Sans and Mono, in the Latin1 and
+// Pi subsets (Pi has the arrows, ≈ and ✓ a Rendering shows), from the pinned @ibm/plex-* packages: 2 families × 3
+// weights × 2 styles × 2 subsets. Every other CDN face goes, and its text falls back to the system font.
+const CDN_FACE = /@font-face \{[^}]*https:\/\/1\.www\.s81c\.com\/[^}]*\}\n?/g;
 const KEPT_FACE = /url\("https:\/\/1\.www\.s81c\.com\/common\/carbon\/plex\/fonts\/IBM-Plex-(Sans|Mono)\/fonts\/split\/woff2\/([\w-]+-(?:Latin1|Pi)\.woff2)"\)/;
-function plexCss(css, dir) {
+const KEPT_FACES = 24;
+
+/** `html` with Carbon's CDN @font-face rules embedded or dropped; a page without them is returned as it is. */
+export function embedPlex(html, dir = PREVIEW_DIR) {
+  if (!html.match(CDN_FACE)) return html;
+  if (!existsSync(join(dir, 'node_modules/@ibm/plex-sans')))
+    throw new Error(`IBM Plex packages missing in ${dir}; run: node skills/adapter-carbon/scripts/preview.mjs`);
   let kept = 0;
-  const out = css.replace(/@font-face \{[^}]*s81c\.com[^}]*\}\n?/g, face => {
+  const out = html.replace(CDN_FACE, face => {
     const m = KEPT_FACE.exec(face);
     if (!m) return '';
     kept++;
     const font = readFileSync(join(dir, 'node_modules/@ibm', `plex-${m[1].toLowerCase()}`, 'fonts/split/woff2', m[2]));
     return face.replace(m[0], `url("data:font/woff2;base64,${font.toString('base64')}")`);
   });
-  if (kept !== PLEX_FACES) throw new Error(`@carbon/styles: expected ${PLEX_FACES} IBM Plex Sans and Mono Latin1 and Pi faces, found ${kept}`);
+  if (kept !== KEPT_FACES) throw new Error(`expected ${KEPT_FACES} IBM Plex Sans and Mono Latin1 and Pi faces from @carbon/styles, found ${kept}`);
   return out;
 }
 
@@ -113,7 +119,7 @@ export async function previewRenderer(contract, { dir = PREVIEW_DIR } = {}) {
   };
 
   return {
-    stylesheet: plexCss(readFileSync(join(dir, 'node_modules/@carbon/styles/css/styles.css'), 'utf8'), dir),
+    stylesheet: readFileSync(join(dir, 'node_modules/@carbon/styles/css/styles.css'), 'utf8'),
     modeClass: mode => `cds--${mode}`,
     // The catalog chrome's colours (#392), the tokens it always used: the page is --cds-layer-01 (gray in White) and a
     // card the surface Carbon designs components on, which follows the Layer Mode. A Theme class sets each token.

@@ -86,13 +86,13 @@ It writes `.scratch/from-prototype/<key>/` (gitignored). The folder holds:
 - `index.html`, the stamped page, titled `<key> handoff`;
 - `screens/`, every screenshot the page refers to.
 
-The page's links are rewritten from `../screens/` to `screens/`, so the copy refers to nothing outside itself. A copy already there is replaced. The command refuses, exits 1 and writes nothing when:
+The page's links are rewritten from `../screens/` to `screens/`, and Carbon's IBM Plex faces, which its CSS loads from IBM's CDN, are embedded: IBM Plex Sans and Mono in the Latin1 and Pi subsets. Other CDN faces are dropped, and their text falls back to the system font. So the copy refers to nothing outside itself. A copy already there is replaced. The command refuses, exits 1 and writes nothing when:
 
 - the Handoff is not signed off;
 - `signed.json` doesn't match `handoff.json`, or the content changed after Sign-off;
 - the Rendering's stamp isn't the signed Handoff's: render it again;
 - the page links outside the copy, or refers to a screenshot that isn't there;
-- the page's CSS loads a `url()` from another host (`http:`, `https:` or `//`), which an Artifact blocks: render it again. A Rendering from before #521 loads Carbon's IBM Plex fonts from IBM's CDN; one rendered now has them embedded;
+- the page's CSS loads a `url()` from another host (`http:`, `https:` or `//`), which an Artifact blocks;
 - the copy is over an Artifact's limits. The message names each size over a limit: the page over 16 MB, a screenshot over 15 MB, more than 511 files, or more than 256 MB in all.
 
 **Publish the copy as a private Artifact** with the Artifact tool:

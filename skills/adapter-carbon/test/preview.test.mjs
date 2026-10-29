@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { hasPreviewPackages, previewRenderer } from '../scripts/preview.mjs';
+import { embedPlex, hasPreviewPackages, previewRenderer } from '../scripts/preview.mjs';
 
 const button = JSON.parse(readFileSync(new URL('../../../design-systems/carbon/contracts/button.component.json', import.meta.url)));
 const skip = hasPreviewPackages() ? false : 'Carbon preview packages missing: run node skills/adapter-carbon/scripts/sources.mjs';
@@ -29,16 +29,18 @@ test('the stylesheet is the compiled Carbon CSS and each Theme mode has its them
   for (const cls of ['.cds--btn--primary', '.cds--g100', '.cds--white']) assert.ok(stylesheet.includes(cls), cls);
 });
 
-test("the stylesheet embeds IBM Plex Sans and Mono's Latin1 and Pi faces Carbon declares, and loads nothing from IBM's CDN (#521)", { skip }, async () => {
+test("embedPlex: Carbon's CSS keeps IBM Plex Sans and Mono's Latin1 and Pi faces, embedded, and loads nothing from IBM's CDN (#521)", { skip }, async () => {
   const { stylesheet } = await previewRenderer(button);
-  assert.doesNotMatch(stylesheet, /url\(\s*['"]?\s*(?:https?:|\/\/)/i);
-  const faces = [...stylesheet.matchAll(/@font-face \{([^}]*)\}/g)].map(m => m[1]);
-  const named = faces.map(f => [/font-family: "([^"]+)"/, /font-weight: (\d+)/, /font-style: (\w+)/].map(re => f.match(re)[1]).join(' '));
-  // Each family, weight and style once per subset, Latin1 and Pi.
+  const css = embedPlex(stylesheet);
+  assert.doesNotMatch(css, /url\(\s*['"]?\s*(?:https?:|\/\/)/i);
+  const faces = [...css.matchAll(/@font-face \{([^}]*)\}/g)].map(m => m[1]);
+  const subset = f => (/U\+0020-007E/.test(f) ? 'Latin1' : /U\+2190-2199/.test(f) ? 'Pi' : 'other');
+  const named = faces.map(f => [/font-family: "([^"]+)"/, /font-weight: (\d+)/, /font-style: (\w+)/].map(re => f.match(re)[1]).concat(subset(f)).join(' '));
   const want = ['IBM Plex Mono', 'IBM Plex Sans'].flatMap(family => ['300', '400', '600'].flatMap(weight => ['normal', 'italic']
-    .flatMap(style => ['Latin1', 'Pi'].map(() => `${family} ${weight} ${style}`))));
+    .flatMap(style => ['Latin1', 'Pi'].map(sub => `${family} ${weight} ${style} ${sub}`))));
   assert.deepEqual(named.sort(), want.sort());
   for (const f of faces) assert.match(f, /src: url\("data:font\/woff2;base64,[A-Za-z0-9+/=]+"\) format\("woff2"\);/);
+  assert.equal(embedPlex('<style>body{color:red}</style>'), '<style>body{color:red}</style>');
 });
 
 test("the catalog chrome is Carbon's tokens, each one every Theme class sets (#392)", { skip }, async () => {

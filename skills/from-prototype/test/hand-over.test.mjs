@@ -62,9 +62,9 @@ test('a Rendering that loads a url() from outside the copy is refused, naming ea
   const css = '<style>.a{background:url(https://cdn.example/a.png)} .b{background:url( "HTTP://cdn.example/b.png" )}'
     + ' .c{background:url(https://cdn.example/a.png)} .d{background:url(data:image/png;base64,AAAA)}</style>';
   writeFileSync(pagePath, readFileSync(pagePath, 'utf8').replace('</head>', `${css}</head>`)
-    .replace('<body', `<body style="background-image: url('//cdn.example/c.png')"`));
+    .replace('<body', '<body style="background-image: url(&quot;//cdn.example/c.png&quot;)"'));
   assert.throws(() => handOver({ handoffPath, out }), e => {
-    assert.match(e.message, /its Rendering loads from outside the copy: https:\/\/cdn\.example\/a\.png, HTTP:\/\/cdn\.example\/b\.png, \/\/cdn\.example\/c\.png: render it again/);
+    assert.match(e.message, /its Rendering loads from outside the copy: https:\/\/cdn\.example\/a\.png, HTTP:\/\/cdn\.example\/b\.png, \/\/cdn\.example\/c\.png$/);
     assert.ok(!e.message.includes('data:'));
     return true;
   });
