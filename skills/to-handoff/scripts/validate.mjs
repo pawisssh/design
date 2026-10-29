@@ -102,6 +102,13 @@ export function validateHandoff(handoff, system) {
           else if (axis === stateAxisOf(def)) err('tuple', at, `${at}: tuple axis ${k} is the State axis; use usage.state`);
           else if (!axis.values.some(x => x.key === v)) err('tuple', at, `${at}: tuple ${k} "${v}" is not a ${axis.label} value of \`${def.family.key}\``);
         }
+        // A Family map site's switched axes (#265): each an axis of the Contract, out of the tuple, switching between its values.
+        if (def && u.match && u.match.switches) for (const [k, values] of Object.entries(u.match.switches)) {
+          const axis = def.axes.find(a => a.key === k);
+          if (!axis || axis === stateAxisOf(def)) err('tuple', at, `${at}: match.switches ${k} is not a variant axis of \`${def.family.key}\``);
+          else if (u.tuple && k in u.tuple) err('tuple', at, `${at}: match.switches ${k} is also in the tuple`);
+          else for (const v of values) if (!axis.values.some(x => x.key === v)) err('tuple', at, `${at}: match.switches ${k} "${v}" is not a ${axis.label} value of \`${def.family.key}\``);
+        }
         const stateValue = s => {
           const axis = def && stateAxisOf(def);
           const value = axis && axis.values.find(x => x.key === s);

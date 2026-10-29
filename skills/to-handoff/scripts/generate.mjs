@@ -26,6 +26,7 @@ import {
   STANDARD_STATES, atomIn, evaluate, isPlaceholderText, ownDeclarations, parseCondition, standIns, stateOfAtom,
 } from './recognise.mjs';
 import { procedureFor, recogniseUsages } from './usages.mjs';
+import { familySites } from '../../vibe-to-figma/scripts/extract.mjs';
 
 const PROTOTYPE_MODE = 'light';
 const LANDMARKS = { header: 'banner', nav: 'navigation', main: 'main', aside: 'complementary', footer: 'contentinfo' };
@@ -166,6 +167,12 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   const { name: title, key: featureKey } = featureOf(prototype);
   const doc = readPrototype(prototype, { depsDir, packages, title });
   const { at, rules } = doc;
+  // An Extracted Library's Family map (#265, ADR 0016): read when every file its sites name is this Prototype's, and then
+  // each site, found where it is in the code now, is a Usage of its family's Contract. Another Prototype's map is not read.
+  const mapped = system.familyMap && !/\.html?$/i.test(prototype) ? Object.values(system.familyMap.map.families || {}).flatMap(f => f.sites || []) : [];
+  const ownMap = mapped.length > 0 && mapped.every(s => existsSync(join(prototype, s.file)));
+  const sites = new Map(ownMap ? familySites({ project: prototype, map: system.familyMap.map }).map(s => [`${s.file}:${s.line}:${s.col}`, s]) : []);
+  const siteOf = el => sites.get(at(el.offset));
   const screenIds = doc.screens.map(s => s.id);
   const multi = doc.screens.length > 1;
   const dir = join(designSystem, 'handoffs', featureKey);
@@ -192,13 +199,17 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   let container = null;
   walk(mount, el => { if (!container && el !== mount && el.children.filter(c => c.type === 'element').length >= 2 && bg(el)) container = el; });
   const pageHex = bg(body) || bg(mount) || '#ffffff';
+  // A surface token the Foundations document lacks is not compared: an Extracted Library's colours may all stay raws (#265).
+  const surfaceTokens = Object.values(adapter.surfaces).filter(k => foundations.variables[k]);
   const scores = theme.modes.map(m => {
-    const tokenHex = k => convert(valueIn(foundations.variables[k], m.key)).hex;
-    const score = deltaE(pageHex, tokenHex(adapter.surfaces.page)) + (container ? deltaE(bg(container), tokenHex(adapter.surfaces.layer)) : 0);
+    const against = (hex, k) => (hex && foundations.variables[k] ? deltaE(hex, convert(valueIn(foundations.variables[k], m.key)).hex) : 0);
+    const score = against(pageHex, adapter.surfaces.page) + (container ? against(bg(container), adapter.surfaces.layer) : 0);
     return { mode: m, score: Math.round(score * 10000) / 10000 };
   });
   const surfaceBest = scores.slice().sort((a, b) => a.score - b.score || theme.modes.indexOf(a.mode) - theme.modes.indexOf(b.mode))[0].mode;
-  const surfaceNote = `Single-mode Prototype: its page surface (${pageHex})${container ? ` and first container (${firstClass(container)} ${bg(container)})` : ''} map best to ${surfaceBest.label} `
+  const surfaceNote = !surfaceTokens.length
+    ? `Single-mode Prototype: ${system.key} has none of the surface tokens (${Object.values(adapter.surfaces).join(', ')}) to compare its page with, so it reads as ${surfaceBest.label}. The other ${theme.name} modes render unverified.`
+    : `Single-mode Prototype: its page surface (${pageHex})${container ? ` and first container (${firstClass(container)} ${bg(container)})` : ''} map best to ${surfaceBest.label} `
     + `(${scores.map(s => `${s.mode.label} ΔE ${s.score}`).join(', ')}). The other ${theme.name} modes render unverified.`;
   // A Code Library's theme wrapper that names a mode is the mode (#228); the surfaces above are the fallback. The first wrapper in
   // reading order decides: a Prototype has one mode, so a nested or later wrapper is not read.
@@ -320,7 +331,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
 
     // ---- recognition (usages.mjs): one record per Usage, and what each element is to its region ----
     const describe = el => ({ text: elementText(el, atomsIn('default')), at: at(el.offset), ...(live(el) ? { rendered: `${live(el).rect.width}x${live(el).rect.height}px` } : {}) });
-    const { recognised, claimOf, drafts: now } = recogniseUsages({ root: screen.root, system, rules, decider: d, describe, drafts });
+    const { recognised, claimOf, drafts: now } = recogniseUsages({ root: screen.root, system, rules, decider: d, describe, drafts, siteOf });
     for (const [family, r] of now) {
       if (drafts.has(family) || !r || !r.contract || r.contract.selection.status !== 'draft') continue;
       notes.push({
@@ -333,7 +344,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
 
     const labelFor = id => { let found = null; walk(screen.root, x => { if (!found && x.tag === 'label' && x.attrs.for === id) found = x; }); return found; };
     const usages = new Map();
-    for (const { el, cand, answer, key, byImport, unmapped = [], stray = [], within, parts } of recognised) {
+    for (const { el, cand, answer, key, byImport, byMap, unmapped = [], stray = [], within, parts } of recognised) {
       const id = uniqueId(usageIds, kebab(nameOf(el) || el.tag));
       const u = { id };
       const states = shownIn(el);
@@ -344,7 +355,9 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
         else { u.proposal = answer.proposal; usedProposals.add(answer.proposal); }
         u.tuple = { ...answer.tuple };
         Object.assign(u, contentOf(def, el, cand, id, parts));
+        // A Family map site's switched axes are the values its className ternary picks between (#265).
         u.match = byImport ? { by: 'import' }
+          : byMap ? { by: 'family-map', ...(Object.keys(byMap.switches).length ? { switches: byMap.switches } : {}) }
           : d.mark({ by: undefined, via: answer.via || (cand.library ? 'library' : 'element'), ...(answer.candidates ? { candidates: answer.candidates } : {}) }, key);
         if (answer.contract) {
           const off = offAxis(def, u.tuple, el, id);
@@ -834,6 +847,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       contracts,
       proposals,
       foundations: { documentHash: fileHash(system.foundationsText), usedHash: null },
+      ...(ownMap ? { familyMap: fileHash(system.familyMap.text) } : {}),
       modes: { [PROTOTYPE_MODE]: mode },
       notes,
       ...(doc.ignored.length ? { ignored: doc.ignored } : {}),

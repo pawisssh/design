@@ -81,15 +81,18 @@ test("To-handoff's Next fixture is shadcn on Next: its lockfile resolves no tail
   assert.equal(r.verdicts.handoff.verdict, 'only against a Design System you name');
 });
 
-test('the path A fixtures take path A; a Handoff reads only on Next or Vite, and only against a Design System you name (#265)', () => {
+test('the path A fixtures take path A; a Handoff reads on Next or Vite, against its own folder when it can have Component Sets (#265)', () => {
   for (const dir of [vibe('path-a-app'), handoff('tailwind-app')]) {
     const r = check(dir);
     assert.equal(r.kind, 'React + Tailwind, no Code Library', dir);
     assert.ok(r.evidence.includes('vite'), r.evidence.join(', '));
-    assert.equal(r.verdicts.handoff.verdict, 'only against a Design System you name');
-    assert.deepEqual(r.verdicts.handoff.reasons, [{ row: 'own-folder', message: "To-handoff can't yet recognise its sites through the Family map (#265)", ticket: '#265' }]);
   }
+  // To-handoff reads its sites through the Family map of its own folder (#265).
   assert.equal(check(vibe('path-a-app')).verdicts.componentSets.verdict, 'yes, by path A');
+  assert.equal(check(vibe('path-a-app')).verdicts.handoff.verdict, 'yes, against its own folder');
+  const noSets = check(handoff('tailwind-app')).verdicts.handoff;
+  assert.equal(noSets.verdict, 'only against a Design System you name');
+  assert.deepEqual(noSets.reasons, [{ row: 'own-folder', message: "it can't have Component Sets, so it has no own folder", ticket: undefined }]);
   // tailwind-app has no lockfile, and its stylesheet names no font (the text-style-font row, #367): both are listed.
   assert.deepEqual(check(handoff('tailwind-app')).verdicts.componentSets.reasons.map(r => r.row), ['lockfile', 'text-style-font']);
   const bare = check(BARE);
@@ -144,7 +147,7 @@ test('the plain HTML fixtures, given as a folder or as their HTML file, are plai
       assert.equal(r.verdicts.componentSets.verdict, 'no');
       assert.deepEqual(reasons(r.verdicts.componentSets), ['not yet: there is no reader for plain HTML + CSS classes (spec #339)']);
       assert.equal(r.verdicts.handoff.verdict, 'only against a Design System you name');
-      assert.deepEqual(r.verdicts.handoff.reasons.map(x => x.ticket), ['#265']);
+      assert.deepEqual(r.verdicts.handoff.reasons.map(x => x.ticket), ['#528']);
       assert.equal(r.verdicts.handoff.page, 'index.html', 'its one page, found without naming it');
     }
   }
@@ -334,7 +337,7 @@ test('the CLI prints what was found, each verdict and what is still possible, an
   const lines = asked.stdout.trim().split('\n');
   assert.match(lines[0], /^.*html-app: plain HTML \+ CSS classes \(.*index\.html.*\)\.$/);
   assert.match(asked.stdout, /- Component Sets: no\. Not yet: there is no reader for plain HTML \+ CSS classes \(spec #339\)\./);
-  assert.match(asked.stdout, /- Handoff: only against a Design System you name; page `index\.html`\. To-handoff can't yet recognise its sites through the Family map \(#265\)\./);
+  assert.match(asked.stdout, /- Handoff: only against a Design System you name; page `index\.html`\. To-handoff can't yet recognise a plain HTML page's sites through the Family map \(#528\)\./);
   assert.match(asked.stdout, /Handoff against a Design System your developers already build with.*carbon/s);
   assert.equal(lines.at(-1), 'Nothing was fetched or written.');
   assert.doesNotMatch(asked.stdout + asked.stderr, /\n\s+at /);
@@ -448,6 +451,9 @@ test('a settled run exits 0 with the stages, each with its folder and Design Sys
   // The own folder named with --ds: the folder step and its approve, with no Figma link, then To-handoff against it.
   assert.deepEqual(stagesOf(check(handoff('v0-app'), { handoff: true, ds: 'v0-app' })),
     ['folder v0-app', 'review-page v0-app', 'approve v0-app', 'generate v0-app', 'review v0-app', 'sign-off v0-app', 'hand-over']);
+  // Path A's the same: To-handoff reads its sites through the Family map the folder step writes (#265).
+  assert.deepEqual(stagesOf(check(vibe('path-a-app'), { handoff: true, ds: 'path-a-app' })),
+    ['folder path-a-app', 'review-page path-a-app', 'approve path-a-app', 'generate path-a-app', 'review path-a-app', 'sign-off path-a-app', 'hand-over']);
 
   // Both: the folder step and its approve once, the Figma build, then the Handoff against the settled Design System.
   withRoot({}, root => {
@@ -696,8 +702,9 @@ test("the list shows a scratch copy and its committed folder as one, and the own
     const v0 = dsQuestion(check(handoff('v0-app'), { handoff: true, root }));
     assert.deepEqual(v0.options, ['carbon', 'mine', 'shadcn']);
     assert.equal(v0.own, 'v0-app');
-    // Path A's own-folder route is closed until #265, and the Carbon app can't have Component Sets.
-    for (const dir of [vibe('path-a-app'), handoff('vite-app'), vibe('html-app')]) {
+    // Path A's own folder is listed (#265); plain HTML's route is closed until #528, and the Carbon app can't have Component Sets.
+    assert.equal(dsQuestion(check(vibe('path-a-app'), { handoff: true, root })).own, 'path-a-app');
+    for (const dir of [handoff('vite-app'), vibe('html-app')]) {
       const q = dsQuestion(check(dir, { handoff: true, root }));
       assert.deepEqual(q.options, ['carbon', 'mine', 'shadcn'], dir);
       assert.equal(q.own, undefined, dir);
@@ -717,7 +724,8 @@ test('the default: a Design System whose Contracts\' package the Prototype depen
       const both = check(carbonV0, { handoff: true, root });
       assert.equal(dsQuestion(both).default, null);
       assert.equal(both.verdicts.handoff.verdict, 'yes, against its own folder');
-      for (const dir of [vibe('path-a-app'), vibe('html-app')]) assert.equal(dsQuestion(check(dir, { handoff: true, root })).default, null, dir);
+      assert.equal(dsQuestion(check(vibe('path-a-app'), { handoff: true, root })).default, 'path-a-app');
+      assert.equal(dsQuestion(check(vibe('html-app'), { handoff: true, root })).default, null);
     });
   } finally { rmSync(carbonV0, { recursive: true, force: true }); }
 });

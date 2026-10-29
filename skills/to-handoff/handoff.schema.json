@@ -55,6 +55,7 @@
         "proposals": { "type": "object", "additionalProperties": { "$ref": "#/$defs/sha256" } },
         "foundations": { "type": "object", "required": ["documentHash", "usedHash"], "properties": {
           "documentHash": { "$ref": "#/$defs/sha256" }, "usedHash": { "$ref": "#/$defs/sha256" } } },
+        "familyMap": { "$ref": "#/$defs/sha256", "description": "The Family map whose sites were read as Usages (#265), when one was." },
         "modes": { "type": "object", "description": "Prototype mode -> Foundations mode key (#61), e.g. {\"light\": \"white\"}.", "additionalProperties": { "type": "string" } },
         "notes": { "type": "array", "items": { "$ref": "#/$defs/note" } },
         "ignored": { "type": "array", "items": { "type": "string" } }
@@ -151,7 +152,9 @@
         "items": { "type": "array", "description": "A Repeated child per item (#93), mirroring code.itemProp.", "items": { "type": "object", "required": ["properties", "at"], "properties": {
           "properties": { "type": "object", "additionalProperties": { "type": "string" } }, "at": { "$ref": "#/$defs/at" } } } },
         "match": { "type": "object", "required": ["by"], "properties": {
-          "by": { "enum": ["import", "agent", "owner", "retired"] }, "via": { "enum": ["library", "element"] },
+          "by": { "enum": ["import", "agent", "owner", "retired", "family-map"] }, "via": { "enum": ["library", "element"] },
+          "switches": { "type": "object", "description": "A Family map site's axes that its className ternary switches between values (#265); the tuple leaves them out.",
+            "additionalProperties": { "type": "array", "minItems": 2, "items": { "type": "string" } } },
           "candidates": { "type": "array", "items": { "$ref": "#/$defs/tuple" } }, "proposal": { "type": "string" } } },
         "offAxis": { "type": "array", "items": { "type": "object", "required": ["property", "raw", "reason", "question"], "properties": {
           "property": { "type": "string" }, "raw": { "type": "string" }, "reason": { "type": "string" }, "question": { "type": "string" } } } },

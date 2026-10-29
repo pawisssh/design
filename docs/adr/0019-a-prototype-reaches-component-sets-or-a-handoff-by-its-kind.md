@@ -26,7 +26,7 @@ Two caveats on the table:
 
 **A Handoff is supported wherever To-handoff's reader takes the framework:** one HTML file, a Next.js App Router app, or a Vite app with an `index.html`.
 - **Its Design System** is chosen by [#321](https://github.com/pawisssh/design/issues/321)'s order. Against a Design System that already exists, the owner's own or a packaged Code Library's, it needs nothing from Vibe-to-Figma.
-- **Against the Prototype's own Design System folder,** it follows Component Sets support. Where the Prototype doesn't import its families, it also needs [#265](https://github.com/pawisssh/design/issues/265), which recognises sites as Usages through the Family map.
+- **Against the Prototype's own Design System folder,** it follows Component Sets support. Where the Prototype doesn't import its families, it also needs [#265](https://github.com/pawisssh/design/issues/265), which recognises sites as Usages through the Family map. Amended 2026-10-30: #265 reads path A's JSX sites ([ADR 0022](0022-a-family-map-site-is-a-usage-by-the-family-map.md)); plain HTML's markup sites wait on [#528](https://github.com/pawisssh/design/issues/528).
 
 **Not supported:**
 - **Vue, Svelte and Angular.** No tool defaults to them, none of the owner's Prototypes uses them, and no reader takes their templates.
