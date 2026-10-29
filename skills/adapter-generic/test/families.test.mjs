@@ -10,7 +10,7 @@ import { generate, readFamily } from '../scripts/components.mjs';
 import { generate as library } from '../scripts/foundations.mjs';
 import { FIXTURE, hasTools } from '../scripts/sources.mjs';
 import { contentHash, expand, resolve as resolveContract, validate } from '../../contract/scripts/contract.mjs';
-import { chipProject } from './chip-project.mjs';
+import { chipFamily, chipProject } from './chip-project.mjs';
 
 const skip = hasTools() ? false : 'Generic Adapter tools missing: run node skills/adapter-generic/scripts/sources.mjs';
 const foundations = skip ? null : (await library({ project: FIXTURE })).doc;
@@ -287,15 +287,8 @@ test('Select reaches the Drafted values, evidenced by the provider and its Trigg
 
 // ---------- cva compoundVariants (#255) ----------
 
-let chipRun;
-const chip = () => (chipRun = chipRun || (async () => {
-  const project = chipProject();
-  const doc = (await library({ project, families: ['chip'] })).doc;
-  return { project, doc, f: await readFamily({ project, family: 'chip', foundations: doc }) };
-})());
-
 test('a compound\'s classes apply where all its matches hold: Chip is Tone x Selected, each variant painted as the code paints it', { skip }, async () => {
-  const { f } = await chip();
+  const { f } = await chipFamily();
   assert.deepEqual(f.axes.map(a => [a.key, a.default, a.values.map(v => [v.key, v.code])]), [
     ['tone', 'neutral', [['neutral', { tone: 'neutral' }], ['primary', { tone: 'primary' }]]],
     ['selected', 'false', [['false', { selected: false }], ['true', { selected: true }]]],
@@ -313,12 +306,22 @@ test('a compound\'s classes apply where all its matches hold: Chip is Tone x Sel
   }
 });
 
-test('a compound cva cannot match as the code would fails, naming its line: a key no axis has, a value no axis value, a boolean axis matched by a string', { skip }, async () => {
+test('a compound\'s class and className both apply, class first, as cva adds them', { skip }, async () => {
+  const project = chipProject(text => text.replace('className: "bg-secondary px-3"', 'class: "bg-secondary", className: "px-3"'));
+  const doc = (await library({ project, families: ['chip'] })).doc;
+  const r = resolve(await readFamily({ project, family: 'chip', foundations: doc }), { tone: 'neutral', selected: 'true', state: 'enabled' });
+  assert.deepEqual([r.paint.Chip.fill, r.layout.Chip.paddingLeft.raw], [tok('secondary'), 13]);
+});
+
+test('a compound cva cannot match as the code would fails, naming its line', { skip }, async () => {
   const fails = async (from, to, message) => {
     const project = chipProject(text => text.replace(from, to));
     await assert.rejects(library({ project, families: ['chip'] }), message);
   };
-  await fails('{ tone: "neutral", selected: true,', '{ tone: "neutral", size: "sm",', /chip\.tsx:19 chipVariants compoundVariants: size is no variant axis of chipVariants/);
-  await fails('{ tone: "neutral", selected: true,', '{ tone: "loud", selected: true,', /chip\.tsx:19 .*tone "loud" is no value of the axis \(neutral, primary\)/);
-  await fails('{ tone: "neutral", selected: true,', '{ tone: "neutral", selected: "true",', /chip\.tsx:19 .*selected "true": cva matches it only where the prop is given as that string, but a true\/false axis is a boolean prop/);
+  const first = '{ tone: "neutral", selected: true,';
+  await fails(first, '{ tone: "neutral", size: "sm",', /chip\.tsx:19 chipVariants compoundVariants: size is no variant axis of chipVariants/);
+  await fails(first, '{ tone: "loud", selected: true,', /chip\.tsx:19 .*tone "loud" is no value of the axis \(neutral, primary\)/);
+  await fails(first, '{ tone: "neutral", selected: "true",', /chip\.tsx:19 .*selected "true": cva matches it only where the prop is given as that string, but the axis's prop is a boolean/);
+  await fails(first, '{ ...extra, selected: true,', /chip\.tsx:19 .*a spread or shorthand member hides what the compound matches/);
+  await fails('selected: false,\n    },', 'selected: "false",\n    },', /axis selected's default "false" is a string, so no compound on selected matches it as cva does/);
 });

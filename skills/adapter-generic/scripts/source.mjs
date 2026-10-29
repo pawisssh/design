@@ -63,10 +63,14 @@ export function readSource(text, file, { tools = DEFAULT_DIR } = {}) {
         const compound = c.compoundVariants && ts.isArrayLiteralExpression(c.compoundVariants)
           ? c.compoundVariants.elements.map(el => {
             const m = members(el);
-            const cls = m.className || m.class;
-            const one = v => (ts.isArrayLiteralExpression(v) ? v.elements.map(valueOf) : valueOf(v));
-            return { match: Object.fromEntries(Object.entries(m).filter(([k]) => k !== 'className' && k !== 'class').map(([k, v]) => [k, one(v)])),
-              classes: literal(cls), line: line(cls) };
+            // cva adds both, `class` first; a class list that is no string literal is left undefined.
+            const lists = [m.class, m.className].filter(Boolean);
+            const classes = lists.length && lists.every(n => literal(n) !== undefined) ? lists.map(literal).join(' ') : undefined;
+            const matchValue = v => (ts.isArrayLiteralExpression(v) ? v.elements.map(valueOf) : valueOf(v));
+            // A spread or shorthand member hides what it matches.
+            const unread = !ts.isObjectLiteralExpression(el) || el.properties.some(p => !ts.isPropertyAssignment(p));
+            return { match: Object.fromEntries(Object.entries(m).filter(([k]) => k !== 'className' && k !== 'class').map(([k, v]) => [k, matchValue(v)])),
+              classes, line: line(lists[0] || el), ...(unread && { unread }) };
           })
           : [];
         cvas[d.name.text] = { base: classList(base), variants, keys, defaults, compound };

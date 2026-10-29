@@ -11,11 +11,10 @@ import { join } from 'node:path';
 import * as contractModule from '../../contract/scripts/contract.mjs';
 import { buildCatalog } from '../../to-preview/scripts/catalog.mjs';
 import { hasRuntime, loadChromium } from '../../to-handoff/scripts/deps.mjs';
-import { contractFor, readFamily } from '../scripts/components.mjs';
-import { generate as library } from '../scripts/foundations.mjs';
+import { contractFor } from '../scripts/components.mjs';
 import { hasPreviewPackages, previewRenderer } from '../scripts/preview.mjs';
 import { FIXTURE, hasTools } from '../scripts/sources.mjs';
-import { chipProject } from './chip-project.mjs';
+import { chipFamily } from './chip-project.mjs';
 
 const SHADCN = new URL('../../../design-systems/shadcn/', import.meta.url);
 const json = url => JSON.parse(readFileSync(url, 'utf8'));
@@ -198,9 +197,8 @@ test('the Card and Alert catalogs build, each specimen showing its anatomy, and 
 
 let chipRun;
 const chip = () => (chipRun = chipRun || (async () => {
-  const project = chipProject();
-  const doc = (await library({ project, families: ['chip'] })).doc;
-  const c = contractFor(await readFamily({ project, family: 'chip', foundations: doc }), 'chip', doc);
+  const { project, doc, f } = await chipFamily();
+  const c = contractFor(f, 'chip', doc);
   return { contract: c, foundations: doc, renderer: await previewRenderer(c, { project }) };
 })());
 
