@@ -32,7 +32,7 @@ node skills/from-prototype/scripts/from-prototype.mjs check <prototype> [--figma
 
 **The Figma file.** On exit 0 with Component Sets, before any stage, read the linked file once through the owner's Figma connection: one read-only call on the link's file key, such as `get_metadata`. If it fails, give the owner "Component Sets: no: <the reason>" and run no stage.
 
-The gate rows are spec #343's tables, plus `shadcn-stylesheet` ([#514](https://github.com/pawisssh/design/issues/514)) on the shadcn path. That row refuses Component Sets when `components.json` names a stylesheet that isn't there, or names none and no stylesheet imports `tailwindcss`. It waits on no ticket: the owner points `components.json`'s `tailwind.css` at the stylesheet that imports `tailwindcss`. A "yes" can still be refused later, by a stage, for a reason a later gate row will name.
+The gate rows are spec #343's tables, plus `shadcn-stylesheet` ([#514](https://github.com/pawisssh/design/issues/514)) on the shadcn path. That row refuses Component Sets when `components.json`'s `tailwind.css` names a stylesheet that isn't there, or names none: the Adapter reads only the stylesheet it names. It waits on no ticket: the owner points `tailwind.css` at the stylesheet that imports `tailwindcss`. A "yes" can still be refused later, by a stage, for a reason a later gate row will name.
 
 ## The stages
 
