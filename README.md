@@ -14,7 +14,7 @@ Prototype ─► check ─┤                           (optional)
 
 - **The check** ([From-Prototype](skills/from-prototype/SKILL.md)) reads the Prototype without writing or fetching anything. It names the Prototype's kind, says which outputs it can have, and plans the stages.
 - **Component Sets.** An **Adapter** reads the Code Library and writes one **Contract** per Component Family: a library-neutral description of its Property Axes, anatomy, layout and tokens. The owner narrows the variants in **To-preview**, approves the Contract, and **To-design** builds the Component Set in a Figma Design Library through the Figma MCP server.
-- **A Handoff.** **To-handoff** reads the Prototype, statically and by rendering it, and writes a validated `handoff.json` against the Design System's Foundations, Contracts and Proposals. It also writes a static HTML Rendering where each Contract usage renders as the real Code Library. After the owner's Sign-off, the hand-over publishes the Rendering as a private Artifact.
+- **A Handoff.** **To-handoff** reads the Prototype, statically and by rendering it, and writes a validated `handoff.json` against the Design System's Foundations, Contracts and Proposals. It also writes a static HTML Rendering where each Usage of a Contract renders as the real Code Library. After the owner's Sign-off, the hand-over publishes the Rendering as a private Artifact.
 
 Approving a Contract and signing off a Handoff are always the owner's own steps. The agent waits for them in chat.
 
@@ -38,9 +38,11 @@ Some tools' defaults still fail a gate inside a supported kind (a lockfile, a ro
 - **Claude Code**, to run the skills.
 - **The Figma MCP server**, connected to your Figma account, for Component Sets.
 - **Google Chrome**, for To-handoff's runtime reader. Without it, the reader fetches Playwright's headless Chromium.
-- **Python 3**, to serve the To-preview page locally.
+- **Python 3**, to package To-design's Figma build and to serve the To-preview page locally.
 
 ### Setup
+
+The repository is private, so cloning it needs access granted by its owner.
 
 ```bash
 git clone https://github.com/pawisssh/design.git
@@ -88,7 +90,7 @@ Every stage writes under `.scratch/`. Nothing a run makes lands in `design-syste
 | [`adapter-carbon`](skills/adapter-carbon/SKILL.md) | Carbon React Adapter: pinned Carbon source to draft Contracts and the Carbon Foundations document |
 | [`adapter-cds`](skills/adapter-cds/SKILL.md) | CDS Web Adapter for the Coinbase Design System (`@coinbase/cds-web`) |
 | [`adapter-generic`](skills/adapter-generic/SKILL.md) | Generic Adapter for shadcn/ui-style Code Libraries, read from a consumer's installed project |
-| [`to-preview`](skills/to-preview/SKILL.md) | An HTML catalog of a Contract's variants, rendered with the real Code Library, where the owner unchecks the combinations they don't want |
+| [`to-preview`](skills/to-preview/SKILL.md) | Shows every combination a Contract allows, rendered with the real Code Library, so the owner can leave out the ones they don't want |
 | [`to-design`](skills/to-design/SKILL.md) | Builds a Design Library in Figma from Contracts with fixed builder cores: foundations, icons, the Base Component loop, the batch build and its checks |
 | [`to-handoff`](skills/to-handoff/SKILL.md) | Turns a Prototype into a validated Handoff and its Rendering, then reviews, signs off and checks it for Drift |
 
@@ -104,7 +106,7 @@ design-systems/<ds>/    committed Design Systems: carbon, cds, shadcn
 docs/adr/               decisions, one file each, with a revisit list
 docs/research/          research notes behind the decisions
 docs/agents/            how agents use the issue tracker, triage labels and domain docs
-scripts/                repo tooling: fetch, per-skill tests, merge, ADRs, research
+scripts/                repo tooling: fetch, per-skill tests, merge, ADRs, research, the issue map
 .github/                CI workflow and the scripts it runs
 .scratch/               gitignored: fetched tools and every run's output
 ```
@@ -112,14 +114,10 @@ scripts/                repo tooling: fetch, per-skill tests, merge, ADRs, resea
 ## Development
 
 ```bash
-node scripts/fetch.mjs
-```
-
-```bash
 npm test
 ```
 
-`npm test` runs every skill's suite and the CI scripts' (`.github/test`). Without `node scripts/fetch.mjs` first, the tests that need fetched tools skip, each naming the command to run. To run only some skills' suites:
+`npm test` runs every skill's suite and the CI scripts' (`.github/test`). Without `node scripts/fetch.mjs` (see [Setup](#setup)) first, the tests that need fetched tools skip, each naming the command to run. To run only some skills' suites:
 
 ```bash
 npm run test:skills -- contract to-design
@@ -133,7 +131,7 @@ git fetch origin && npm run check
 
 For a pull request stacked on another branch, set `BASE=origin/<branch>`.
 
-CI ([`.github/workflows/test.yml`](.github/workflows/test.yml)) runs the fetch, `npm test` and `npm run check` on each pull request and on each push to `main`, on a self-hosted runner.
+CI ([`.github/workflows/test.yml`](.github/workflows/test.yml)) runs the fetch and `npm test` on each pull request and on each push to `main`, and `npm run check` on pull requests only. It runs on a self-hosted runner.
 
 ## Contributing
 
@@ -151,4 +149,4 @@ This repository has no licence file. Files derived from third-party Code Librari
 - [`design-systems/cds/NOTICE`](design-systems/cds/NOTICE): Coinbase Design System, Copyright Coinbase, Apache License 2.0
 - [`design-systems/shadcn/NOTICE`](design-systems/shadcn/NOTICE): shadcn/ui, Copyright shadcn, MIT License
 
-Test fixtures that copy a third party's files carry a `NOTICE` of their own.
+Some test fixtures that copy a third party's files carry a `NOTICE` of their own, under `skills/`. A design system's `NOTICE` names any fixture it covers.
