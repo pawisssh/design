@@ -11,8 +11,11 @@ import { join } from 'node:path';
 import * as contractModule from '../../contract/scripts/contract.mjs';
 import { buildCatalog } from '../../to-preview/scripts/catalog.mjs';
 import { hasRuntime, loadChromium } from '../../to-handoff/scripts/deps.mjs';
+import { contractFor, readFamily } from '../scripts/components.mjs';
+import { generate as library } from '../scripts/foundations.mjs';
 import { hasPreviewPackages, previewRenderer } from '../scripts/preview.mjs';
 import { FIXTURE, hasTools } from '../scripts/sources.mjs';
+import { chipProject } from './chip-project.mjs';
 
 const SHADCN = new URL('../../../design-systems/shadcn/', import.meta.url);
 const json = url => JSON.parse(readFileSync(url, 'utf8'));
@@ -114,10 +117,12 @@ const px = value => {
   return Object.values(v.values)[0].value;
 };
 
-// The page with every specimen rendered, then `measure` evaluated in it.
-async function inCatalog(family, measure, arg) {
-  const c = contract(family);
-  const page = buildCatalog({ contract: c, foundations, renderer: await rendererOf(family) });
+// The page with every specimen of a committed family rendered, then `measure` evaluated in it.
+const inCatalog = async (family, measure, arg) => inPage({ contract: contract(family), foundations, renderer: await rendererOf(family) }, measure, arg);
+
+// As inCatalog, for any Contract with its Foundations document and renderer.
+async function inPage({ contract: c, foundations, renderer }, measure, arg) {
+  const page = buildCatalog({ contract: c, foundations, renderer });
   const { chromium, launchOptions } = loadChromium();
   const browser = await chromium.launch(launchOptions);
   try {
@@ -187,4 +192,37 @@ test('the Card and Alert catalogs build, each specimen showing its anatomy, and 
   }));
   assert.deepEqual(alert.parts, [['alert-title', 'alert-description'], ['alert-title', 'alert-description']]);
   assert.ok(alert.drafted.includes('Destructive'), 'the agent-drafted value label is flagged');
+});
+
+// ---------- cva compoundVariants (#255) ----------
+
+let chipRun;
+const chip = () => (chipRun = chipRun || (async () => {
+  const project = chipProject();
+  const doc = (await library({ project, families: ['chip'] })).doc;
+  const c = contractFor(await readFamily({ project, family: 'chip', foundations: doc }), 'chip', doc);
+  return { contract: c, foundations: doc, renderer: await previewRenderer(c, { project }) };
+})());
+
+test('a compound variant renders as the code does: each axis value\'s code props, a boolean axis as a boolean', { skip }, async () => {
+  const { render } = (await chip()).renderer;
+  assert.match(render({ tone: 'primary', selected: 'true' }), /class="[^"]*\bbg-primary px-3 text-primary-foreground"/);
+  assert.doesNotMatch(render({ tone: 'primary', selected: 'false' }), /px-3|bg-primary\b/);
+});
+
+test('every Chip specimen\'s computed fill, border colour, padding and label colour equal resolve()', { skip: noBrowser, timeout: 60000 }, async () => {
+  const { contract: c, foundations: doc, renderer } = await chip();
+  const tuples = Object.fromEntries([...new Selection(c, contractModule).specimens.values()].map(s => [s.id, s.tuple]));
+  const measured = await inPage({ contract: c, foundations: doc, renderer }, () => [...document.querySelectorAll('.tp-specimen')].map(host => {
+    const cs = getComputedStyle(host.firstElementChild);
+    return { id: host.dataset.key, fill: cs.backgroundColor, stroke: cs.borderTopColor, ink: cs.color,
+      paddingLeft: parseFloat(cs.paddingLeft) + parseFloat(cs.borderLeftWidth) };
+  }));
+  assert.equal(measured.length, 4);
+  const css = value => doc.variables[value.token].values.light.from.css;
+  for (const m of measured) {
+    const { layout, paint } = contractModule.resolve(c, tuples[m.id]);
+    assert.deepEqual(m, { id: m.id, fill: css(paint.Chip.fill), stroke: css(paint.Chip.stroke), ink: css(paint.Label.fill),
+      paddingLeft: layout.Chip.paddingLeft.raw }, m.id);
+  }
 });

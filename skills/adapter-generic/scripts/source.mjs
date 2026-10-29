@@ -64,7 +64,8 @@ export function readSource(text, file, { tools = DEFAULT_DIR } = {}) {
           ? c.compoundVariants.elements.map(el => {
             const m = members(el);
             const cls = m.className || m.class;
-            return { match: Object.fromEntries(Object.entries(m).filter(([k]) => k !== 'className' && k !== 'class').map(([k, v]) => [k, valueOf(v)])),
+            const one = v => (ts.isArrayLiteralExpression(v) ? v.elements.map(valueOf) : valueOf(v));
+            return { match: Object.fromEntries(Object.entries(m).filter(([k]) => k !== 'className' && k !== 'class').map(([k, v]) => [k, one(v)])),
               classes: literal(cls), line: line(cls) };
           })
           : [];

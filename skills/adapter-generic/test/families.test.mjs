@@ -10,6 +10,7 @@ import { generate, readFamily } from '../scripts/components.mjs';
 import { generate as library } from '../scripts/foundations.mjs';
 import { FIXTURE, hasTools } from '../scripts/sources.mjs';
 import { contentHash, expand, resolve as resolveContract, validate } from '../../contract/scripts/contract.mjs';
+import { chipProject } from './chip-project.mjs';
 
 const skip = hasTools() ? false : 'Generic Adapter tools missing: run node skills/adapter-generic/scripts/sources.mjs';
 const foundations = skip ? null : (await library({ project: FIXTURE })).doc;
@@ -282,4 +283,42 @@ test('Select reaches the Drafted values, evidenced by the provider and its Trigg
   const drafted = (await generate({ project: FIXTURE, family: 'select', foundations: doc, drafts: draftsOf('select') })).contract;
   assert.deepEqual(validate(drafted, doc).errors, []);
   assert.deepEqual([drafted.code.component, drafted.selection.status, drafted.selection.approval, drafted.selection.expectedCount], ['Select', 'draft', null, 8]);
+});
+
+// ---------- cva compoundVariants (#255) ----------
+
+let chipRun;
+const chip = () => (chipRun = chipRun || (async () => {
+  const project = chipProject();
+  const doc = (await library({ project, families: ['chip'] })).doc;
+  return { project, doc, f: await readFamily({ project, family: 'chip', foundations: doc }) };
+})());
+
+test('a compound\'s classes apply where all its matches hold: Chip is Tone x Selected, each variant painted as the code paints it', { skip }, async () => {
+  const { f } = await chip();
+  assert.deepEqual(f.axes.map(a => [a.key, a.default, a.values.map(v => [v.key, v.code])]), [
+    ['tone', 'neutral', [['neutral', { tone: 'neutral' }], ['primary', { tone: 'primary' }]]],
+    ['selected', 'false', [['false', { selected: false }], ['true', { selected: true }]]],
+    ['state', 'enabled', [['enabled', {}]]]]);
+  // [tone, selected]: fill, stroke, the left padding with its 1px border, the label's colour.
+  const want = [
+    ['neutral', 'false', 'muted', 'border', 11, 'foreground'],
+    ['neutral', 'true', 'secondary', 'ring', 13, 'foreground'],
+    ['primary', 'false', 'background', 'border', 11, 'primary'],
+    ['primary', 'true', 'primary', 'ring', 13, 'primary-foreground']];
+  for (const [tone, selected, fill, stroke, padding, ink] of want) {
+    const r = resolve(f, { tone, selected, state: 'enabled' });
+    assert.deepEqual([r.paint.Chip.fill, r.paint.Chip.stroke, r.layout.Chip.paddingLeft.raw, r.layout.Chip.paddingRight.raw, r.paint.Label.fill],
+      [tok(fill), tok(stroke), padding, padding, tok(ink)], `${tone} ${selected}`);
+  }
+});
+
+test('a compound cva cannot match as the code would fails, naming its line: a key no axis has, a value no axis value, a boolean axis matched by a string', { skip }, async () => {
+  const fails = async (from, to, message) => {
+    const project = chipProject(text => text.replace(from, to));
+    await assert.rejects(library({ project, families: ['chip'] }), message);
+  };
+  await fails('{ tone: "neutral", selected: true,', '{ tone: "neutral", size: "sm",', /chip\.tsx:19 chipVariants compoundVariants: size is no variant axis of chipVariants/);
+  await fails('{ tone: "neutral", selected: true,', '{ tone: "loud", selected: true,', /chip\.tsx:19 .*tone "loud" is no value of the axis \(neutral, primary\)/);
+  await fails('{ tone: "neutral", selected: true,', '{ tone: "neutral", selected: "true",', /chip\.tsx:19 .*selected "true": cva matches it only where the prop is given as that string, but a true\/false axis is a boolean prop/);
 });

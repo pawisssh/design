@@ -45,8 +45,11 @@
 //   rules; the default text is a Drafted value.
 // What it leaves to later tickets, each in a note: the icon each slot frame stands for, each part's own layout and
 // paint (later agent-tier keys), any other `:has(…)` condition, and styling set by an ancestor (ADR 0012).
-// Generation throws (the CLI exits 1 and writes nothing) on anything it cannot read exactly: compound variants, an
-// attribute state with no known state words, layout other than flex, a one-column grid or a plain box, an opacity or an effect's
+// - compound variants (#255): a compound's classes join every variant where all its matches hold, after the variants'
+//   classes as cva emits them, so the merge, the cascade and the rule search read them like any other. A boolean axis
+//   (value keys true and false) is set in code as a boolean, since cva matches a compound's values as given.
+// Generation throws (the CLI exits 1 and writes nothing) on anything it cannot read exactly: a compound matching a
+// key that is no variant axis, a value the axis lacks, or a boolean axis by a string; an attribute state with no known state words, layout other than flex, a one-column grid or a plain box, an opacity or an effect's
 // shape that differs by Mode, relative colour syntax, a Synthesized name a Code Library token already has, or a
 // Foundations document from another snapshot or without the family's Synthesized tokens.
 import { existsSync, readFileSync } from 'node:fs';
@@ -200,7 +203,21 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const { named, provider, root } = familyRoot(components, pascal(family), file);
   const Name = named.name;
   const cv = root.cva ? cvas[root.cva] : { base: { classes: '', line: root.line }, variants: {}, keys: {}, defaults: {}, compound: [] };
-  if (cv.compound.length) fail(`${file}:${cv.compound[0].line} ${root.cva}: compoundVariants are not read yet`);
+  // A compound (#255) matches cva axes only, each on a value or a list of values. cva compares them as given, so a
+  // boolean axis (value keys true and false, `selected: {true: …, false: …}`) is set in code, and matched, as a boolean.
+  const boolean = axis => Object.keys(cv.variants[axis]).every(k => k === 'true' || k === 'false');
+  for (const c of cv.compound) {
+    const where = `${file}:${c.line} ${root.cva} compoundVariants`;
+    if (c.classes === undefined) fail(`${where}: a compound with no className or class string is not read`);
+    for (const [axis, v] of Object.entries(c.match)) {
+      if (!cv.variants[axis]) fail(`${where}: ${axis} is no variant axis of ${root.cva}; only a variant axis is read`);
+      const known = Object.keys(cv.variants[axis]);
+      for (const one of [].concat(v)) {
+        if (!known.includes(String(one))) fail(`${where}: ${axis} ${JSON.stringify(one)} is no value of the axis (${known.join(', ')})`);
+        if (boolean(axis) !== (typeof one === 'boolean')) fail(`${where}: ${axis} ${JSON.stringify(one)}: cva matches it only where the prop is given as ${boolean(axis) ? 'that string, but a true/false axis is a boolean prop' : 'a boolean, but the axis is not true/false'}`);
+      }
+    }
+  }
   // A prop the root sets an attribute from that no axis reads (Card's `data-size={size}`) keeps its default.
   const fixed = Object.fromEntries(Object.values(root.attrs).filter(a => a.prop && !cv.variants[a.prop]).map(a => [a.prop, root.defaults[a.prop]]));
   // The other exported components are the parts (CardHeader), each a FRAME under the root, named by rule (#103): the
@@ -212,6 +229,8 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   add(cv.base, {});
   for (const [axis, values] of Object.entries(cv.variants))
     for (const [value, list] of Object.entries(values)) add(list, { axis, value });
+  // cva emits each compound's classes after the variants', in source order, so `cn()` lets one drop a variant's.
+  cv.compound.forEach(c => add(c, { match: Object.fromEntries(Object.entries(c.match).map(([axis, v]) => [axis, [].concat(v).map(String)])) }));
   root.classes.forEach(list => add(list, {}));
 
   // 2. Compile every utility and sort its rules by condition.
@@ -351,11 +370,12 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   }
   const axes = Object.keys(cv.variants).map(axis => {
     const fromCva = axis in cv.defaults;
-    const def = fromCva ? cv.defaults[axis] : root.defaults[axis];
-    if (def === undefined) fail(`${file} ${root.cva}: axis ${axis} has no default`);
+    const given = fromCva ? cv.defaults[axis] : root.defaults[axis];
+    if (given === undefined) fail(`${file} ${root.cva}: axis ${axis} has no default`);
+    const def = String(given);
     return { key: axis, label: title(axis), default: def,
       defaultSource: fromCva ? `${file} defaultVariants.${axis}` : `${file} ${Name} destructured default ${axis}`,
-      values: Object.keys(cv.variants[axis]).map(k => ({ key: k, label: title(k), code: { [axis]: k } })) };
+      values: Object.keys(cv.variants[axis]).map(k => ({ key: k, label: title(k), code: { [axis]: boolean(axis) ? k === 'true' : k } })) };
   });
   for (const [attr, ax] of Object.entries(ATTR_AXES))
     if (attrsUsed.has(attr))
@@ -402,7 +422,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   const survivors = t => {
     const key = Object.keys(cv.variants).map(a => t[a]).join('\0');
     if (!merged.has(key)) {
-      const list = entries.filter(e => !e.axis || t[e.axis] === e.value);
+      const list = entries.filter(e => (e.axis ? t[e.axis] === e.value : !e.match || Object.entries(e.match).every(([a, vs]) => vs.includes(t[a]))));
       const keep = new Set(list);
       for (let i = list.length - 1; i >= 0; i--)
         for (let j = 0; j < i; j++) {
