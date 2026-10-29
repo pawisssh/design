@@ -153,6 +153,34 @@ test('a layer the node map lacks, or a key with no fingerprint kind, is refused'
   assert.throws(() => run(['paint.Box.fill']), /no fingerprint kind for "paint.Box.fill"/);
 });
 
+// A Box value whose evidence cites the TSX, which Carbon's SCSS facts never read (#463).
+const pin = c => `sha256:${c.repeat(64)}`;
+const citing = (status, fingerprint) => ({ ...contract, selection: { status },
+  source: { files: { [TSX]: pin('a'), [SCSS]: pin('b') } },
+  drafted: { 'anatomy.Box': { by: 'agent', evidence: ['TextInput.tsx:L3 and _text-input.scss:L2 the input'], fingerprint } } });
+const moveTsx = c => ({ ...c, source: { files: { ...c.source.files, [TSX]: pin('c') } } });
+const box = c => fingerprints({ contract: c, nodes, files }).fingerprints['anatomy.Box'];
+
+test('a draft\'s fingerprints hold the pin of each file its evidence cites, other than the SCSS the facts read', () => {
+  const c = citing('draft');
+  assert.deepEqual(fingerprints({ contract: c, nodes, files }).facts['anatomy.Box'].cited, { [TSX]: pin('a') });
+  assert.notEqual(box(moveTsx(c)), box(c), 'a change in the cited TSX reopens the value');
+});
+
+test('an approval given before the opt-in keeps its fingerprints until the Contract is drafted again', () => {
+  const before = fingerprints({ contract: { ...contract, drafted: { 'anatomy.Box': { by: 'agent' } } }, nodes, files }).fingerprints['anatomy.Box'];
+  const c = citing('approved', before);
+  assert.equal(box(c), before);
+  assert.equal(box(moveTsx(c)), before, 'the cited TSX waits for the next draft');
+  assert.notEqual(box(citing('draft', before)), before, 'drafted again, it takes the cited pins');
+});
+
+test('an approval given after the opt-in keeps the cited pins: a change in the cited TSX reopens it', () => {
+  const c = citing('approved', box(citing('draft')));
+  assert.equal(box(c), c.drafted['anatomy.Box'].fingerprint);
+  assert.notEqual(box(moveTsx(c)), c.drafted['anatomy.Box'].fingerprint);
+});
+
 // ---------- the committed TextInput drafts, against the pinned sources ----------
 const NODES = new URL('../nodes/text-input.nodes.json', import.meta.url).pathname;
 const LIVE = new URL('../../../design-systems/carbon/contracts/text-input.component.json', import.meta.url).pathname;
@@ -160,10 +188,15 @@ const FIXTURE = new URL('../../to-handoff/test/fixtures/invite-teammates/drafts/
 const load = p => JSON.parse(readFileSync(p, 'utf8'));
 const skip = !hasContractSources(load(LIVE)) && 'run: node skills/adapter-carbon/scripts/sources.mjs';
 
-for (const [name, path] of [['live', LIVE], ['#115 fixture', FIXTURE]]) {
-  test(`the ${name} TextInput draft carries the fingerprints the script computes`, { skip }, () => {
+// Each committed Contract, the Select and ToastNotification ones too: opting in to cited files (#463) moves no
+// approved fingerprint, since only the owner re-approves.
+const committed = family => [new URL(`../../../design-systems/carbon/contracts/${family}.component.json`, import.meta.url).pathname,
+  new URL(`../nodes/${family}.nodes.json`, import.meta.url).pathname];
+for (const [name, [path, map]] of [['live TextInput', [LIVE, NODES]], ['#115 fixture TextInput', [FIXTURE, NODES]],
+  ['live Select', committed('select')], ['live ToastNotification', committed('toast-notification')]]) {
+  test(`the ${name} Contract carries the fingerprints the script computes`, { skip }, () => {
     const c = load(path);
-    const { fingerprints: fp } = fingerprints({ contract: c, nodes: load(NODES), files: readContractSources(c) });
+    const { fingerprints: fp } = fingerprints({ contract: c, nodes: load(map), files: readContractSources(c) });
     for (const [key, entry] of Object.entries(c.drafted)) if (entry.by === 'agent') assert.equal(entry.fingerprint, fp[key], key);
   });
 }

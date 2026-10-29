@@ -77,6 +77,8 @@ Write `design-systems/carbon/contracts/<family>.component.json` by hand, followi
     - a layout field: `{kind: "layout", ...the node's facts}`;
     - a family-wide value (`family.*`, `icons.*`, `figma.*`, `code.*`): `{kind: "family", axes: {<axis>: [value keys]}, defaults: {<axis>: <default>}, parts}`.
 
+    A node, property or layout entry also holds `cited`: the pin of each file other than an `.scss` that its evidence cites (`Select.tsx`, #459), so a change there reopens it. An approved entry whose recorded fingerprint is the one without `cited` was approved before this rule (#463). It keeps that fingerprint until the Contract is next drafted, so the rule never voids an approval.
+
     Write the entries with `fingerprint` left out, run the script with `--write` to record them, then `--check`; the shared command line ([`fingerprints-cli.mjs`](../contract/scripts/fingerprints-cli.mjs)) says what each prints, the citation check included. The script reads the pinned sources that `scripts/sources.mjs` fetches:
 
     ```

@@ -106,7 +106,18 @@ export function fingerprints({ contract, nodes, files, keys }) {
     return { node: version ? `${key}:${version}` : key, element: [cls, ...more].map(c => `${PREFIX}--${c}`).join(' '),
       rules: [...counts].filter(b => !b.ancestors.some(a => counts.has(a))).map(b => b.text).sort() };
   };
-  return draftedFingerprints(contract, { nodeFacts, parts, keys });
+  // A value's facts also hold the pin of each other file its evidence cites (#459, #463), as the TSX a Select note
+  // leans on: the SCSS blocks are all nodeFacts reads. An approved value whose recorded fingerprint is the one without
+  // cited pins was approved before this opt-in, and keeps it until the Contract is next drafted: only the owner
+  // re-approves.
+  const out = draftedFingerprints(contract, { nodeFacts, parts, keys, cited: p => !p.endsWith('.scss') });
+  if (contract.selection?.status !== 'approved') return out;
+  const plain = draftedFingerprints(contract, { nodeFacts, parts, keys });
+  for (const [k, f] of Object.entries(plain.fingerprints)) if (contract.drafted?.[k]?.fingerprint === f) {
+    out.facts[k] = plain.facts[k];
+    out.fingerprints[k] = f;
+  }
+  return out;
 }
 
 /** True when every file the Contract pins is in the sources dir (readContractSources checks their hashes). */
