@@ -18,7 +18,7 @@ node skills/from-prototype/scripts/from-prototype.mjs check <prototype> [--figma
 `--figma` asks for Component Sets, built into that Figma file. `--handoff` asks for a Handoff against the Design System `--ds` names by its folder name; naming the Prototype's own folder makes the Handoff against it. `--name` and `--all` pass to Vibe-to-Figma's folder step. Run alone, that folder step runs this check first, Component Sets asked with no link (`check(prototype, {componentSets: true, all})`), and stops with its message when they are refused ([#439](https://github.com/pawisssh/design/issues/439)). The check reads file names, `package.json` and source text. It writes nothing, fetches nothing and loads no fetched parser. It prints:
 
 1. the Prototype's kind ([ADR 0019](../../docs/adr/0019-a-prototype-reaches-component-sets-or-a-handoff-by-its-kind.md)'s) and the files that show it;
-2. each output's verdict, with each refusing gate's reason and the ticket it waits on;
+2. each output's verdict, with each refusing gate's reason and the ticket it waits on; for plain HTML the Handoff's names the one page it reads;
 3. what is still possible;
 4. the owner's questions, or the plan;
 5. "Nothing was fetched or written."
@@ -50,7 +50,7 @@ Run each stage by its own section, with its own questions: the folder step's req
 | `approve` | [the owner's approve](../vibe-to-figma/SKILL.md#3-approve): wait for it, as that section says |
 | `figma-build` | [the Figma build](../vibe-to-figma/SKILL.md#4-figma-build) into the plan's link, the file read above |
 | `scratch-copy` | copy `design-systems/<ds>/` to `.scratch/design-systems/<ds>/`. The plan has it only when the copy is absent; a copy already there is used in place |
-| `generate` | [To-handoff's generate](../to-handoff/SKILL.md#2-generate-ask-answer-re-run) with `--ds` the stage's folder |
+| `generate` | [To-handoff's generate](../to-handoff/SKILL.md#2-generate-ask-answer-re-run) with `--ds` the stage's folder, on the stage's page when it names one (plain HTML), else on the Prototype |
 | `review` | [To-handoff's `review`](../to-handoff/SKILL.md#5-sign-off-review-approve-check), and give the owner the package |
 | `sign-off` | the owner's Sign-off, by To-handoff's `approve`: wait for it, as that section says |
 | `hand-over` | [the hand-over](#the-hand-over) of each output the plan names |

@@ -159,6 +159,39 @@ test('plain HTML with a package.json that lists no React is still plain HTML', (
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('a plain HTML Handoff names its page, and its generate stage takes the page\'s path (#520)', () => {
+  const banner = prototype({ 'banner-app.html': '<link rel="stylesheet" href="styles.css"><div class="banner">Hi</div>', 'styles.css': '.banner { color: red; }' });
+  const cdn = prototype({ 'index.html': '<script src="https://cdn.tailwindcss.com"></script><div class="p-4 bg-white">Hi</div>' });
+  try {
+    for (const [dir, page] of [[banner, 'banner-app.html'], [cdn, 'index.html']]) {
+      const line = new RegExp(`- Handoff: only against a Design System you name; page \`${page.replace('.', '\\.')}\`\\. `);
+      // No output asked, and --handoff with no --ds: the Design System question, no plan, the page on the verdict line.
+      for (const args of [[], ['--handoff']]) {
+        const r = run(dir, ...args);
+        assert.equal(r.status, 2, r.stdout);
+        assert.match(r.stdout, line);
+        assert.doesNotMatch(r.stdout, /Plan:/);
+      }
+      const r = run(dir, '--handoff', '--ds', 'carbon');
+      assert.equal(r.status, 0, r.stdout);
+      assert.match(r.stdout, line);
+      assert.ok(r.stdout.includes(`To-handoff's generate: .scratch/design-systems/carbon (Design System \`carbon\`), page ${join(dir, page)}\n`), r.stdout);
+      // Given the HTML file itself, the stage takes that file.
+      withRoot({}, root => {
+        for (const given of [dir, join(dir, page)]) {
+          const generate = check(given, { handoff: true, ds: 'carbon', root }).plan.stages.find(s => s.stage === 'generate');
+          assert.equal(generate.prototype, join(dir, page), given);
+        }
+      });
+    }
+    // No page: generate takes the Prototype as the check was given it.
+    withRoot({}, root => {
+      const generate = check(handoff('vite-app'), { handoff: true, ds: 'carbon', root }).plan.stages.find(s => s.stage === 'generate');
+      assert.equal(generate.prototype, undefined);
+    });
+  } finally { for (const d of [banner, cdn]) rmSync(d, { recursive: true, force: true }); }
+});
+
 test('plain HTML styled by Tailwind from the CDN, or only by style="", is named apart: not decided yet', () => {
   const cdn = prototype({ 'index.html': '<script src="https://cdn.tailwindcss.com"></script><div class="p-4 bg-white">Hi</div>' });
   const inline = prototype({ 'index.html': '<div style="padding: 16px">Hi</div>' });
@@ -294,7 +327,7 @@ test('the CLI prints what was found, each verdict and what is still possible, an
   const lines = asked.stdout.trim().split('\n');
   assert.match(lines[0], /^.*html-app: plain HTML \+ CSS classes \(.*index\.html.*\)\.$/);
   assert.match(asked.stdout, /- Component Sets: no\. Not yet: there is no reader for plain HTML \+ CSS classes \(spec #339\)\./);
-  assert.match(asked.stdout, /- Handoff: only against a Design System you name\. To-handoff can't yet recognise its sites through the Family map \(#265\)\./);
+  assert.match(asked.stdout, /- Handoff: only against a Design System you name; page `index\.html`\. To-handoff can't yet recognise its sites through the Family map \(#265\)\./);
   assert.match(asked.stdout, /Handoff against a Design System your developers already build with.*carbon/s);
   assert.equal(lines.at(-1), 'Nothing was fetched or written.');
   assert.doesNotMatch(asked.stdout + asked.stderr, /\n\s+at /);
