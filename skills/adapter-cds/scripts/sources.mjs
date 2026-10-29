@@ -45,7 +45,6 @@ export const CDS = {
     'packages/common/src/color/getLuminance.ts': '6cc4f3e2fda2efc3ee14cec0fe519751f1c9239f33ba328d8a1603e28c736e4b',
     'packages/common/src/tokens/button.ts': 'cfb9065030d1719e078ab634ea049eb03212a375c6009ac5b7425e8dae63f4b3',
     'packages/common/src/tokens/interactable.ts': '590f7e7a4d688cf4171256b4149b296baa66c591fd1cf587ac84027cdd2ecaf8',
-    'packages/common/src/tokens/interactable.ts': '590f7e7a4d688cf4171256b4149b296baa66c591fd1cf587ac84027cdd2ecaf8',
     'packages/common/src/types/ButtonBaseProps.ts': 'f9c843f9f3eb9a8da6b03db85f7f0ec6958de8d1e2c7acf3035f8d4448a02473',
     'packages/icons/package.json': 'f63134b50859dace69cded070957b41aa55f5bd44dbc1781388e39b46d4accc2',
     'packages/web/package.json': 'ca0ecd076b55efe0aee663a5b0ac2cf296119192d4f86cfdf1181f19efb84650',
