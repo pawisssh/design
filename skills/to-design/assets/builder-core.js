@@ -354,10 +354,9 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const created = { page: false, icons: [] };
     const updated = {};
     const restored = [];
-    let pageRenamed = false;
     let unchanged = 0;
+    // A recorded or adopted page keeps its name whatever plan.page says; the report names the page used.
     if (!page) { page = figma.createPage(); page.name = plan.page; created.page = true; }
-    else if (page.name !== plan.page) { page.name = plan.page; pageRenamed = true; }
     // createNodeFromSvg adds to the current page.
     await figma.setCurrentPageAsync(page);
 
@@ -422,10 +421,10 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
 
     return Object.assign(report, {
       summary: {
-        created: created.icons.length + (created.page ? 1 : 0), updated: Object.keys(updated).length + (pageRenamed ? 1 : 0),
+        created: created.icons.length + (created.page ? 1 : 0), updated: Object.keys(updated).length,
         unchanged, orphaned: orphaned.length, restored: restored.length, conflicts: 0,
       },
-      created, updated, orphaned, restored, conflicts,
+      page: { id: page.id, name: page.name }, created, updated, orphaned, restored, conflicts,
       ledger: { icons: { source: plan.source, page: page.id, components, orphans } },
     });
   }
