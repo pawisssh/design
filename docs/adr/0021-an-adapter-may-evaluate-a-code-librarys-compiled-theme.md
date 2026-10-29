@@ -4,7 +4,7 @@ The Coinbase Design System's web library (CDS Web, `@coinbase/cds-web`) ships no
 
 Running a Code Library's code is allowed only under these limits:
 - **The fetch runs nothing.** It checks each tarball against its registry `integrity` and extracts named members with `tar`; no install script runs.
-- **Only named compiled modules are evaluated, by the Foundations step.** Those are the theme modules, `createThemeCssVars` and `getBlendedColor`, with the modules they import. They come from the tarballs the fetch verified, never from an install.
+- **Only named compiled modules are evaluated, by the Foundations step.** Those are the theme modules, `createThemeCssVars` and `getBlendedColor`, with the modules they import. They come from the tarballs the fetch verified, never from an install of the Code Library. The one package outside those tarballs is `d3-color`, which `getBlendedColor` imports: the fetch installs it with `npm ci --ignore-scripts` from a lockfile committed in `skills/adapter-cds/foundations/`, which checks it against the lockfile's integrity, and the loader maps the import to that copy.
 - **The values are checked against the Code Library's own CSS-variable output.** For each Mode, every value must equal the custom property that CDS's `createThemeCssVars` emits for that theme and colour scheme, or generation fails. This stands in for Carbon's check against its compiled CSS.
 - **The TypeScript sources are the evidence.** The theme's `.ts` files at the pinned commit are hashed into `source.files`, so each value can be traced to a source line.
 

@@ -14,5 +14,5 @@ Decided by the agent standing in for the owner in [How does a Contract carry mod
 
 ## Consequences
 
-- The Foundations document now holds names the Code Library does not define. Each one says it is synthesized in `source`, and its `codeSyntax` gives the utilities that produce it.
+- The Foundations document now holds names the Code Library does not define. Each one says it is synthesized in `source`. Its `codeSyntax` gives the utilities that produce it where the Code Library has utilities (shadcn's Tailwind classes), and is empty where it has none (CDS, whose blends are computed by `getBlendedColor` and emit no custom property).
 - A Synthesized token aliases the Code Library's Theme tokens within the same collection. So the document orders Synthesized tokens after Code Library tokens, and To-design's subset rule must pull those alias targets in.
