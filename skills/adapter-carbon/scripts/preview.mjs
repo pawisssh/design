@@ -44,6 +44,31 @@ export function fetchPreviewPackages(dir = PREVIEW_DIR) {
   return dir;
 }
 
+// @carbon/styles loads IBM Plex from IBM's CDN, which an Artifact's content security policy blocks (#521). The
+// hand-over's copy embeds the faces of the families Carbon's components set, IBM Plex Sans and Mono, in the Latin1 and
+// Pi subsets (Pi has the arrows, ≈ and ✓ a Rendering shows), from the pinned @ibm/plex-* packages: 2 families × 3
+// weights × 2 styles × 2 subsets. Every other CDN face goes, and its text falls back to the system font.
+const CDN_FACE = /@font-face \{[^}]*https:\/\/1\.www\.s81c\.com\/[^}]*\}\n?/g;
+const KEPT_FACE = /url\("https:\/\/1\.www\.s81c\.com\/common\/carbon\/plex\/fonts\/IBM-Plex-(Sans|Mono)\/fonts\/split\/woff2\/([\w-]+-(?:Latin1|Pi)\.woff2)"\)/;
+const KEPT_FACES = 24;
+
+/** `html` with Carbon's CDN @font-face rules embedded or dropped; a page without them is returned as it is. */
+export function embedPlex(html, dir = PREVIEW_DIR) {
+  if (!html.match(CDN_FACE)) return html;
+  if (!existsSync(join(dir, 'node_modules/@ibm/plex-sans')))
+    throw new Error(`IBM Plex packages missing in ${dir}; run: node skills/adapter-carbon/scripts/preview.mjs`);
+  let kept = 0;
+  const out = html.replace(CDN_FACE, face => {
+    const m = KEPT_FACE.exec(face);
+    if (!m) return '';
+    kept++;
+    const font = readFileSync(join(dir, 'node_modules/@ibm', `plex-${m[1].toLowerCase()}`, 'fonts/split/woff2', m[2]));
+    return face.replace(m[0], `url("data:font/woff2;base64,${font.toString('base64')}")`);
+  });
+  if (kept !== KEPT_FACES) throw new Error(`expected ${KEPT_FACES} IBM Plex Sans and Mono Latin1 and Pi faces from @carbon/styles, found ${kept}`);
+  return out;
+}
+
 // Carbon icon key to its @carbon/icons-react export: arrow--right -> ArrowRight.
 const iconExport = key => key.split(/-+/).map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('');
 

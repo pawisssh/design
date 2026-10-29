@@ -12,6 +12,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, wri
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
+import { embedPlex } from '../../adapter-carbon/scripts/preview.mjs';
 import { LAYOUTS, blocks, fontOf } from '../../adapter-generic/scripts/foundations.mjs';
 import { cssEntry, lockfileRules, sourceFiles as files } from '../../adapter-generic/scripts/sources.mjs';
 import { featureOf } from '../../to-handoff/scripts/feature-key.mjs';
@@ -529,11 +530,11 @@ const unescape = s => s.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&
  * handOver({handoffPath, out}) -> {dir, title, files, bytes}: the publish copy of a signed-off Handoff's Rendering
  * (#440, spec #343 The hand-over), written to `out` (default .scratch/from-prototype/<feature-key>/): the stamped
  * page as index.html, titled `<feature-key> handoff`, every screenshot it refers to beside it under screens/, and
- * its links rewritten from ../screens/ to screens/. `files` lists the copy's paths, the page first; `title` is the
- * Artifact's.
+ * its links rewritten from ../screens/ to screens/, Carbon's IBM Plex faces embedded. `files` lists the copy's paths,
+ * the page first; `title` is the Artifact's.
  * Refuses (throws, writing nothing) a Handoff not signed off, one whose signed.json doesn't match handoff.json, a
- * Rendering whose stamp isn't the signed Handoff's, a link that leaves the copy, and a copy over an Artifact's
- * limits. A copy already at `out` is replaced: its index.html and screens/ go, nothing else there.
+ * Rendering whose stamp isn't the signed Handoff's, a link or CSS url() that leaves the copy, and a copy over an
+ * Artifact's limits. A copy already at `out` is replaced: its index.html and screens/ go, nothing else there.
  */
 export function handOver({ handoffPath, out }) {
   const dir = dirname(handoffPath);
@@ -558,9 +559,13 @@ export function handOver({ handoffPath, out }) {
   // folder (render-html.mjs); the copy puts the page beside screens/. An Artifact takes its title from the page's
   // first <title>, so the copy's names the feature key and a later Sign-off finds the same Artifact by it.
   const title = `${h.feature.key} handoff`;
-  const copy = page.replace(/((?:src|href)=")\.\.\/screens\//g, '$1screens/').replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`);
+  // Carbon's IBM Plex faces load from IBM's CDN (#521); the copy embeds them, and the Rendering stays as it is.
+  const copy = embedPlex(page.replace(/((?:src|href)=")\.\.\/screens\//g, '$1screens/').replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`));
   const leaving = [...copy.matchAll(/(?:src|href)="([^"]*\.\.\/[^"]*)"/g)].map(m => m[1]);
   if (leaving.length) refuse(`its Rendering links outside the copy: ${[...new Set(leaving)].join(', ')}`);
+  // An Artifact loads nothing from another host (#521), so a url() in the page's CSS stays in the copy too.
+  const remote = [...new Set([...unescape(copy).matchAll(/url\(\s*['"]?\s*((?:https?:|\/\/)[^'")\s]*)/gi)].map(m => m[1]))];
+  if (remote.length) refuse(`its Rendering loads from outside the copy: ${remote.slice(0, 5).join(', ')}${remote.length > 5 ? ` and ${remote.length - 5} more` : ''}`);
   const shots = [...new Set([...copy.matchAll(/(?:src|href)="(screens\/[^"]+)"/g)].map(m => unescape(m[1])))].sort();
   const absent = shots.filter(s => !existsSync(join(dir, s)));
   if (absent.length) refuse(`its Rendering refers to screenshots that aren't there: ${absent.join(', ')}`);
