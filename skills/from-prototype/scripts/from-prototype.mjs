@@ -159,6 +159,12 @@ const adapterFailures = (p, rule) => adapterRules(p).failures.filter(f => f.rule
 function namedStylesheet(p) {
   try { return JSON.parse(p.text('components.json')).tailwind?.css || undefined; } catch { return undefined; }
 }
+// Why the shadcn path has no stylesheet, or null when it has one.
+function missingStylesheet(p) {
+  const named = namedStylesheet(p);
+  if (named) return p.all.includes(relative(p.root, join(p.root, named))) ? null : `\`components.json\`'s \`tailwind.css\` names \`${named}\`, which isn't there`;
+  return adapterRules(p).css === null ? '`components.json` names no `tailwind.css`, and no stylesheet imports `tailwindcss`' : null;
+}
 // A row for one of the Adapter's rules, on both React + Tailwind paths: it fails with each of the rule's failures,
 // worded by `wording` as {message, ticket}, the Adapter's own message and no ticket by default.
 function adapterRow(name, wording = f => ({ message: f.message })) {
@@ -199,6 +205,9 @@ const COMPONENT_SETS = [
   adapterRow('tailwind-integrity'),
   // The Adapter found no stylesheet that imports tailwindcss (its cssEntry); path A has no components.json to name one.
   { name: 'tailwind-stylesheet', kinds: [PATH_A], ticket: '#364', test: p => adapterRules(p).css !== null, message: 'no stylesheet imports `tailwindcss`' },
+  // The shadcn path's stylesheet (#514): the one components.json names, else the one cssEntry finds. The owner fixes it.
+  { name: 'shadcn-stylesheet', kinds: [SHADCN], test: p => !missingStylesheet(p),
+    message: p => `${missingStylesheet(p)}: point \`components.json\`'s \`tailwind.css\` at the stylesheet that imports \`tailwindcss\`` },
   { name: 'shadcn-theme', kinds: [SHADCN, PATH_A], ticket: '#360', test: p => !olderTheme(p).length,
     message: p => `not yet (#360): the Adapter reads shadcn's nova theme; this Prototype has the older form (${olderTheme(p).join('; ')})` },
   { name: 'text-style-font', kinds: [SHADCN, PATH_A], ticket: '#367', test: p => !unreadFont(p).length,

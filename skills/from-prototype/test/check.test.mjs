@@ -73,10 +73,11 @@ test('the v0 fixture is React + Tailwind + shadcn on Next, and both outputs read
   assert.deepEqual(r.verdicts.handoff.notes, []);
 });
 
-test("To-handoff's Next fixture is shadcn on Next: its lockfile resolves no tailwindcss, which closes the own-folder Handoff", () => {
+test("To-handoff's Next fixture is shadcn on Next: its lockfile resolves no tailwindcss and it has no stylesheet, which closes the own-folder Handoff", () => {
   const r = check(handoff('next-app'));
   assert.equal(r.kind, 'React + Tailwind + shadcn');
-  assert.deepEqual(r.verdicts.componentSets.reasons, [{ row: 'tailwind-version', message: 'package-lock.json resolves no tailwindcss', ticket: undefined }]);
+  assert.deepEqual(r.verdicts.componentSets.reasons.map(x => x.row), ['tailwind-version', 'shadcn-stylesheet']);
+  assert.deepEqual(r.verdicts.componentSets.reasons[0], { row: 'tailwind-version', message: 'package-lock.json resolves no tailwindcss', ticket: undefined });
   assert.equal(r.verdicts.handoff.verdict, 'only against a Design System you name');
 });
 
@@ -596,6 +597,10 @@ test("every React kind's Component Sets verdict notes that a form's controls ins
 const NO_LOCKFILE = { row: 'lockfile', message: 'this Prototype has no lockfile: run `npm install --package-lock-only --ignore-scripts` in your project', ticket: undefined };
 const NO_STYLESHEET = { row: 'tailwind-stylesheet', message: 'no stylesheet imports `tailwindcss`', ticket: '#364' };
 const NOT_YET_LOCK = { row: 'lockfile', message: 'not yet: the reader needs a `package-lock.json`', ticket: '#354' };
+// The shadcn path's stylesheet (#514): components.json's `tailwind.css` changed, `undefined` to name none.
+const V0_COMPONENTS = JSON.parse(read(join(handoff('v0-app'), 'components.json')));
+const namingCss = css => ({ 'components.json': { ...V0_COMPONENTS, tailwind: { ...V0_COMPONENTS.tailwind, css } } });
+const POINT_IT = "point `components.json`'s `tailwind.css` at the stylesheet that imports `tailwindcss`";
 const lockWith = (fixture, name, change) => {
   const lock = JSON.parse(read(join(fixture, 'package-lock.json')));
   Object.assign(lock.packages[`node_modules/${name}`], change);
@@ -628,6 +633,11 @@ const LOCK_VARIANTS = {
   'an integrity that contradicts the pin': [copied({ 'package-lock.json': lockWith(handoff('v0-app'), 'tailwindcss', { integrity: OTHER_SHA512 }) }, handoff('v0-app')),
     [{ row: 'tailwind-integrity', message: `tailwindcss@${TAILWIND_PIN}: the lockfile's integrity ${OTHER_SHA512} does not match the Adapter's pin ${TAILWIND_INTEGRITY}`, ticket: undefined }]],
   'no stylesheet that imports tailwindcss': [copied({ 'src/index.css': 'body { margin: 0; }\n' }, vibe('path-a-app')), [NO_STYLESHEET]],
+  'a components.json that names a missing stylesheet': [copied(namingCss('app/missing.css'), handoff('v0-app')),
+    [{ row: 'shadcn-stylesheet', message: `\`components.json\`'s \`tailwind.css\` names \`app/missing.css\`, which isn't there: ${POINT_IT}`, ticket: undefined }]],
+  'a components.json that names no stylesheet, and none imports tailwindcss': [copied({ ...namingCss(undefined),
+    'app/globals.css': V0_CSS.replace('@import "tailwindcss";\n', '') }, handoff('v0-app')),
+  [{ row: 'shadcn-stylesheet', message: `\`components.json\` names no \`tailwind.css\`, and no stylesheet imports \`tailwindcss\`: ${POINT_IT}`, ticket: undefined }]],
   'a shadcn pin mismatch': [copied({ 'package-lock.json': lockWith(handoff('v0-app'), 'shadcn', { version: '4.21.0' }) }, handoff('v0-app')),
     [{ row: 'code-library-pins', message: `the project resolves shadcn@4.21.0, but the Adapter pins shadcn@${SHADCN_PIN}`, ticket: '#359' }]],
   'a Figma Make bundle with no lockfile': [copied({ 'package.json': MAKE_PKG, ...USES_BUTTON }, vibe('path-a-app'), ['package-lock.json']),
@@ -654,6 +664,8 @@ test("the shadcn path's pins are checked in the stylesheet components.json names
     'app/globals.css': read(join(v0, 'app/globals.css')).replace('@import "shadcn/tailwind.css";\n', '') }, v0);
   assert.equal(check(dir).verdicts.componentSets.verdict, 'yes, by the shadcn path');
   assert.equal(check(v0).verdicts.componentSets.verdict, 'yes, by the shadcn path');
+  // With none named, the stylesheet that imports tailwindcss is found, as the Adapter's cssEntry finds it (#514).
+  assert.equal(check(copied(namingCss(undefined), v0)).verdicts.componentSets.verdict, 'yes, by the shadcn path');
 });
 
 test('every failing row is listed, not only the first, and a Handoff against a named Design System is not refused by them', () => {
