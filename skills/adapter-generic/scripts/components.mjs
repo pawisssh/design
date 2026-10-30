@@ -528,7 +528,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   let strokeFromBase = false;
   const boxes = new Set(); // what gives each variant read as a plain box its display
   // Layout and paint of one variant in one Mode: {layout, paint, by: {field: winning rule}, frames: {node: {field}},
-  // texts, from: {node: {field: [rule]}}}: `from` gives the rules behind each frame's and text layer's fields.
+  // texts, behind: {node: {field: [rule]}}}: `behind` gives the rules behind each frame's and text layer's fields.
   function render(t, mode) {
     const keep = survivors(t);
     const here = live.filter(r => applies(r, t, mode, keep));
@@ -539,7 +539,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     });
     // `width: 100%` fills the parent, `fit-content` (SelectTrigger's `w-fit`) hugs; any other width is a length.
     const size = (field, r) => (r.decls[field] === '100%' ? 'fill' : r.decls[field] === 'fit-content' ? 'hug' : length(field, r, [field], sub).value);
-    const layout = {}, paint = {}, by = {}, from = {};
+    const layout = {}, paint = {}, by = {}, behind = {};
     const display = win(['display']);
     const shown = display ? display.decls.display : 'not set';
     // A plain box (#153): no display utility, or block or inline-block, stacks its children as a column with no gap
@@ -549,7 +549,6 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       fail(`${Name} (${variantName({ axes }, t)}) is not a flex or grid container or a plain box (display: ${shown}${display ? '' : `, element ${root.element}`}); only Auto Layout is read`);
     // A grid with no columns stacks its children: a column, its row gap the gap, its justify-items the cross alignment.
     const grid = /grid$/.test(shown);
-    if (display) by.direction = display;
     if (box) { layout.direction = 'column'; boxes.add(display ? `${display.candidate}: ${box}` : `<${root.element}>: ${box}`); }
     else if (grid) {
       const cols = win(['grid-template-columns']);
@@ -562,7 +561,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     } else {
       const dir = win(['flex-direction']);
       layout.direction = dir && /^column/.test(dir.decls['flex-direction']) ? 'column' : 'row';
-      if (dir) by.direction = dir;
+      if (dir) by.direction = dir; // the field provenance's (#291), as the alignments' and strokeWeight's below
     }
     // With no width, a block-level container (flex, grid) fills its parent and an inline one hugs its content.
     for (const field of SIZE_FIELDS) {
@@ -640,11 +639,11 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     const sizes = content.filter(r => applies(r, t, mode, keep));
     for (const s of icons) {
       const f = frames[s.node] = {};
-      from[s.node] = {};
+      behind[s.node] = {};
       for (const field of SIZE_FIELDS) {
         const r = winner(sizes, [field]);
         f[field] = r ? length(field, r, [field]).value : fail(`${Name} (${variantName({ axes }, t)}): no svg size utility sizes the ${s.node} slot`);
-        from[s.node][field] = [r];
+        behind[s.node][field] = [r];
       }
       f.visible = t[s.key] !== 'none';
     }
@@ -657,7 +656,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       const flex = display && /flex$/.test(display.decls.display);
       const dir = flex && winner(p.rules, ['flex-direction']);
       const f = frames[p.node] = { direction: flex && !(dir && /^column/.test(dir.decls['flex-direction'])) ? 'row' : 'column' };
-      from[p.node] = { direction: [dir || display] };
+      behind[p.node] = { direction: [dir] };
       const self = !box && winner(p.rules, [grid ? 'justify-self' : 'align-self']);
       const selfValue = self ? self.decls[grid ? 'justify-self' : 'align-self'] : 'auto';
       const across = selfValue === 'stretch' || (['auto', 'normal'].includes(selfValue) && stretches) ? 'fill' : 'hug';
@@ -667,7 +666,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       for (const [field, fallback] of [['width', w], ['height', h]]) {
         const r = winner(p.rules, [field]);
         f[field] = r ? size(field, r) : fallback;
-        from[p.node][field] = [r];
+        behind[p.node][field] = [r];
       }
       const slot = slots.find(s => s.part === p);
       if (slot) f.visible = t[slot.key] !== 'none';
@@ -713,13 +712,14 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       f.textStyle = why === null ? { token: key } : { raw: { fontSize: size.px, lineHeight, fontWeight: weight }, level: 'warning',
         reason: `${said.join('; ')}; no Text Style: ${why}` };
       f.textResize = f.width === 'fill' ? 'height' : 'width-and-height';
-      from[n.node] = { ...from[n.node], textStyle: [sizeRule, lineRule, weightRule] };
+      behind[n.node] = { ...behind[n.node], textStyle: [sizeRule, lineRule, weightRule] };
       if (n.kind === 'children') f.visible = !isObj(layout.width);
       const r = winner(own, ['color']) || winner(up, ['color']) || bodyText
         || fail(`${Name} (${variantName({ axes }, t)}): no colour for the ${n.node} text, and no color on body in ${cssFile}'s base layer`);
       inks[n.node] = { fill: colour(r.decls.color, r), by: r };
+      behind[n.node].fill = [r];
     }
-    return { layout, paint, by, frames, texts: inks, from };
+    return { layout, paint, by, frames, texts: inks, behind };
   }
 
   // One Mode's value of a Synthesized token, as a Foundations value form: what the winning rule `r` sets there.
@@ -798,16 +798,17 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     return own.get(r.candidate);
   };
   const perMode = (rendered, rules) => Object.fromEntries(modes.map((m, i) => [m.key, [...new Set(rules(rendered[i]).filter(Boolean).map(record))]]));
-  const rootRules = (x, field) => (field === 'effects' ? [x.by.ring, x.by.effects] : [x.by[field]]);
+  const rulesBehind = (x, node, field) => (node !== Name ? (x.behind[node] && x.behind[node][field]) || []
+    : field === 'effects' ? [x.by.ring, x.by.effects] : [x.by[field]]);
+  // One section's provenance: [node, fields] pairs, the root's first.
+  const section = (rendered, nodes) => Object.fromEntries(nodes.map(([node, fields]) =>
+    [node, Object.fromEntries(fields.map(f => [f, perMode(rendered, x => rulesBehind(x, node, f))]))]));
   for (const t of tuples) {
     const rendered = modes.map(m => render(t, m.key));
     const [light] = rendered;
-    const from = (x, node, field) => (x.from[node] && x.from[node][field]) || [];
     provenance[variantName({ axes }, t)] = { variant: t,
-      layout: { [Name]: Object.fromEntries(LAYOUT_FIELDS.map(f => [f, perMode(rendered, x => rootRules(x, f))])),
-        ...Object.fromEntries(Object.entries(frameFields).map(([n, fs]) => [n, Object.fromEntries(fs.map(f => [f, perMode(rendered, x => from(x, n, f))]))])) },
-      paint: { [Name]: Object.fromEntries(PAINT_FIELDS.map(f => [f, perMode(rendered, x => rootRules(x, f))])),
-        ...Object.fromEntries(texts.map(n => [n.node, { fill: perMode(rendered, x => [x.texts[n.node].by]) }])) } };
+      layout: section(rendered, [[Name, LAYOUT_FIELDS], ...Object.entries(frameFields)]),
+      paint: section(rendered, [[Name, PAINT_FIELDS], ...texts.map(n => [n.node, ['fill']])]) };
     rendered.forEach((o, i) => {
       for (const f of LAYOUT_FIELDS)
         if (json(o.layout[f]) !== json(light.layout[f])) {

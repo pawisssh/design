@@ -12,7 +12,7 @@ import { generate, readFamily } from '../scripts/components.mjs';
 import { generate as library } from '../scripts/foundations.mjs';
 import { FIXTURE, hasTools } from '../scripts/sources.mjs';
 import { expand, resolve, validate, variantName } from '../../contract/scripts/contract.mjs';
-import { compiledRules } from '../scripts/cascade.mjs';
+import { compiledRules, escapeClass } from '../scripts/cascade.mjs';
 import { build } from '../scripts/tailwind.mjs';
 import { draftText } from './button-draft.mjs';
 
@@ -213,7 +213,7 @@ test('provenance names, per variant, field and Mode, the class that wins, its cv
   assert.deepEqual(at(buttonAt('default', 'enabled')).layout.Label.visible, both([]));
 });
 
-test('every selected variant\'s fields name classes that set that field in the compiled CSS, as the variant applies them', { skip }, async () => {
+test('every selected variant\'s fields name classes that set that field in the compiled CSS, as the variant applies them, a colour\'s to its token', { skip }, async () => {
   const f = await button();
   const contract = { axes: f.axes, excluded: [], selection: { omit: f.omit }, layout: f.layout, paint: f.paint, properties: [] };
   const lines = readFileSync(join(FIXTURE, BUTTON), 'utf8').split('\n');
@@ -225,6 +225,10 @@ test('every selected variant\'s fields name classes that set that field in the c
   const props = (node, field) => (field === 'fill' ? [node === 'Button' ? 'background-color' : 'color'] : PROPS[field]);
   const STATE = { hover: 'hover', 'focus-visible': 'focus', disabled: 'disabled' };
   const used = new Map(); // class -> the CSS properties some field needs it to set
+  const colours = new Map(); // class -> {CSS property: the var() a variant's colour token needs it to set there}
+  const COLOUR = { fill: 'background-color', stroke: 'border-color', effects: '--tw-ring-color' };
+  // The variable a colour value names in a Mode: a Code Library token, or the alias a Synthesized token takes there.
+  const named = (v, mode) => (v && v.token ? (f.synthesized[v.token] ? f.synthesized[v.token].values[mode].alias : v.token) : undefined);
   const selected = expand(contract);
   assert.equal(selected.length, f.expectedCount);
   for (const t of selected) {
@@ -256,15 +260,28 @@ test('every selected variant\'s fields name classes that set that field in the c
               if (!used.has(c.class)) used.set(c.class, new Set());
               props(node, field).forEach(q => used.get(c.class).add(q));
             }
+            // The class that colours the value (an effect's last, after its ring width) compiles to that value's token.
+            const colour = field === 'effects' ? v.length === 1 && named(v[0].color, mode) : section === 'paint' && field !== 'opacity' && named(v, mode);
+            const c = list.length && list[list.length - 1].class; // null for the base layer's body colour
+            if (colour && c) {
+              const prop = node === 'Button' ? COLOUR[field] : 'color';
+              if (!colours.has(c)) colours.set(c, {});
+              assert.equal(colours.get(c)[prop] ?? `var(--${colour})`, `var(--${colour})`, `${where}: ${c}`);
+              colours.get(c)[prop] = `var(--${colour})`;
+            }
           }
         }
   }
   const compiled = compiledRules(await build(readFileSync(join(FIXTURE, 'app/globals.css'), 'utf8'), [...used.keys()], { base: join(FIXTURE, 'app') }));
+  const rulesOf = c => compiled.filter(r => r.selector.includes(escapeClass(c)));
   for (const [c, want] of used) {
-    const selector = '.' + c.replace(/[^a-zA-Z0-9_-]/g, ch => '\\' + ch);
-    const set = compiled.filter(r => r.selector.includes(selector)).flatMap(r => Object.keys(r.decls));
+    const set = rulesOf(c).flatMap(r => Object.keys(r.decls));
     assert.ok(set.some(q => want.has(q)), `${c} sets one of ${[...want].join(', ')} (it sets ${set.join(', ')})`);
   }
+  assert.ok(colours.size > 10, 'the colour classes were checked');
+  for (const [c, want] of colours)
+    for (const [prop, text] of Object.entries(want))
+      assert.ok(rulesOf(c).some(r => r.decls[prop] === text), `${c} sets ${prop}: ${text}`);
 });
 
 test('generate writes the draft Contract against the Foundations document of the same run: it validates', { skip }, async () => {
