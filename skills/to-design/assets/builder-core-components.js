@@ -826,7 +826,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
           summary: { variants: rows.length, children: set.children.length, conflicts: 0 },
           set: { id: set.id, name: set.name, description: set.description, layoutMode: set.layoutMode, grid: [set.gridRowCount, set.gridColumnCount],
             gap: [set.gridRowGap, set.gridColumnGap], padding: set.paddingTop, dash: set.dashPattern, radius: set.topLeftRadius, stroke: paintOf(set.strokes),
-            defaultVariant: set.defaultVariant ? set.defaultVariant.name : null, page: pageOf(set).name, parents: [set.parent.name, set.parent.parent && set.parent.parent.name] },
+            defaultVariant: set.defaultVariant ? set.defaultVariant.name : null, page: pageOf(set).name, pageId: pageOf(set).id, parents: [set.parent.name, set.parent.parent && set.parent.parent.name] },
           section: section && { name: section.name, minWidth: section.minWidth, minHeight: section.minHeight, layoutMode: section.layoutMode, children: section.children.map(x => x.name) },
           header: Object.keys(hp).reduce((m, k) => { m[k.split('#')[0]] = hp[k].value; return m; }, {}),
           content: content && { padding: [content.paddingTop, content.paddingRight, content.paddingBottom, content.paddingLeft], gap: content.itemSpacing },
