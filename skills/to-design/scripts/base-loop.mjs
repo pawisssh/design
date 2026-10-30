@@ -3,8 +3,8 @@
 // The pure functions sit on the shared Contract module (expansion, rule matching, the closure and the hash
 // live only there); this file adds the readback diff, the blast radius and the edit write-back.
 //
-//   node skills/to-design/scripts/base-loop.mjs readback <result.json> --out <readback.json> [--ledger <path>]
-//   node skills/to-design/scripts/base-loop.mjs diff     <component.json> <readback.json>
+//   node skills/to-design/scripts/base-loop.mjs readback <result.json> --out <readback.json> [--ledger <path>] [--full]
+//   node skills/to-design/scripts/base-loop.mjs diff     <component.json> <readback.json> [--full]
 //   node skills/to-design/scripts/base-loop.mjs apply    <component.json> <readback.json> [--confirm Node.field,...|all] [--by <who>] [--out <path>]
 //   node skills/to-design/scripts/base-loop.mjs discard  <component.json> <readback.json> --note <at> [--out <path>]
 //   node skills/to-design/scripts/base-loop.mjs review   <component.json> <readback.json> --file-key <key>
@@ -348,6 +348,63 @@ export function formatDiff(contract, readback, result) {
   return lines.join('\n') + '\n';
 }
 
+// How much of a diff its summary lists before counting the rest.
+const SUMMARY_CHANGES = 20;
+const SUMMARY_UNREAD = 8;
+const SUMMARY_UNCARRIED = 8;
+
+/**
+ * The diff as the CLI prints it by default (#239): the header, the differences by kind and the first of them, the
+ * fields not read, and the proposals counted with the ones that cannot be carried. Its blast radii, shields and token
+ * candidates are what `--full` adds (formatDiff). A diff that fits is returned whole.
+ */
+export function formatDiffSummary(contract, readback, result) {
+  const full = formatDiff(contract, readback, result);
+  const { changes, unread, proposals } = result;
+  if (!proposals.length && changes.length <= SUMMARY_CHANGES && unread.length <= SUMMARY_UNREAD) return full;
+  const lines = full.split('\n').slice(0, 1);
+  const kinds = {};
+  for (const x of changes) kinds[x.kind] = (kinds[x.kind] || 0) + 1;
+  if (changes.length) lines.push(`  by kind: ${Object.entries(kinds).map(([k, n]) => `${k} ${n}`).join(', ')}`);
+  for (const x of changes.slice(0, SUMMARY_CHANGES)) lines.push(`  [${x.kind}] ${x.section}.${x.node}.${x.field}: ${show(x.from)} -> ${show(x.to)}`);
+  if (changes.length > SUMMARY_CHANGES) lines.push(`  ... ${changes.length - SUMMARY_CHANGES} more difference(s)`);
+  if (unread.length) lines.push(`  not in this readback: ${unread.length} field(s): ${unread.slice(0, SUMMARY_UNREAD).join(', ')}${unread.length > SUMMARY_UNREAD ? ', ...' : ''}`);
+  if (proposals.length) {
+    const lost = proposals.filter(p => !p.expressible);
+    lines.push(`  proposed Contract edits: ${proposals.length - lost.length}, on a shared rule: ${proposals.filter(p => p.expressible && p.shared).length}, not carried: ${lost.length}`);
+    const stale = proposals.filter(q => q.stale && q.stale.length).length;
+    if (stale) lines.push(`    ${stale} edit(s) may leave a derived value stale (verify)`);
+    for (const p of proposals.filter(q => q.problem || !q.expressible).slice(0, SUMMARY_UNCARRIED))
+      lines.push(`    ${p.change.node}.${p.change.field}: ${p.problem ? `cannot carry: ${p.problem}` : `NOT carried (${p.note})`}`);
+  }
+  lines.push('  the blast radius, shields and token candidates of each edit, and every difference: rerun with --full');
+  return lines.join('\n') + '\n';
+}
+
+/**
+ * A normalized readback in a few lines (#239): what it names, the fields it holds per section, and the problems the
+ * ledger could not resolve (a variable or style id it does not know, an icon it does not know).
+ */
+function summarizeReadback(rb) {
+  const nodeCount = n => 1 + (n.children || []).reduce((a, c) => a + nodeCount(c), 0);
+  const sections = ['layout', 'paint', 'visible', 'text', 'swap', 'extras'].filter(k => rb[k]);
+  const fields = k => Object.values(rb[k]).reduce((a, v) => a + (isObj(v) ? Object.keys(v).length : 1), 0);
+  const unknown = [];
+  (function walk(v) {
+    if (Array.isArray(v)) return v.forEach(walk);
+    if (!isObj(v)) return;
+    if (isToken(v) && v.token === null) unknown.push(v.id);
+    else Object.values(v).forEach(walk);
+  })([rb.layout, rb.paint]);
+  const icons = Object.entries(rb.swap || {}).filter(([, k]) => /^unknown:/.test(k)).map(([n]) => n);
+  return [
+    `${rb.name}  (${rb.id})  ${rb.tree ? `${nodeCount(rb.tree)} node(s)` : 'no tree'}, ${sections.map(k => `${k} ${fields(k)}`).join(', ')}`,
+    unknown.length ? `  ${unknown.length} variable or style id(s) the ledger does not know: ${[...new Set(unknown)].slice(0, 8).join(', ')}` : '  every variable and style id is known to the ledger',
+    ...(icons.length ? [`  icon(s) the ledger does not know: ${icons.slice(0, 8).join(', ')}`] : []),
+    '',
+  ].join('\n');
+}
+
 // The Drafted values section of the review package; none for a Contract without a `drafted` table.
 function draftedLines(contract) {
   const all = Object.values(contract.drafted || {});
@@ -481,7 +538,7 @@ function main() {
     options: {
       foundations: { type: 'string' }, ledger: { type: 'string' }, out: { type: 'string' }, confirm: { type: 'string', default: '' },
       by: { type: 'string', default: 'owner' }, note: { type: 'string' }, 'file-key': { type: 'string' },
-      'snapshot-id': { type: 'string' }, 'content-hash': { type: 'string' }, at: { type: 'string' }, prototype: { type: 'boolean', default: false },
+      'snapshot-id': { type: 'string' }, 'content-hash': { type: 'string' }, at: { type: 'string' }, prototype: { type: 'boolean', default: false }, full: { type: 'boolean', default: false },
     },
   });
   const [cmd, a, b] = positionals;
@@ -490,8 +547,9 @@ function main() {
     const result = readJson(a);
     if (result.error || !result.readback) throw new Error(`no readback in ${a}: ${result.error || 'missing'}`);
     const ledger = readLedger(values.ledger || defaultLedgerPath(result.fileKey));
-    writeOutput(values.out, normalizeBaseResult(result, ledger));
-    return print(`wrote ${values.out}\n`);
+    const normalized = normalizeBaseResult(result, ledger);
+    writeOutput(values.out, normalized);
+    return print(`wrote ${values.out}\n${values.full ? JSON.stringify(normalized, null, 2) + '\n' : `${summarizeReadback(normalized)}every field: rerun with --full, or read ${values.out}\n`}`);
   }
   if (cmd === 'regen' && a && b) {
     const contract = readJson(join(a, 'button.component.json'));
@@ -504,7 +562,7 @@ function main() {
   const foundations = readJson(foundationsPathFor(a, values.foundations));
   const readback = readReadback(b);
   const outPath = values.out || a;
-  if (cmd === 'diff') return print(formatDiff(contract, readback, review(contract, readback, foundations)));
+  if (cmd === 'diff') return print((values.full ? formatDiff : formatDiffSummary)(contract, readback, review(contract, readback, foundations)));
   if (cmd === 'apply') {
     const r = review(contract, readback, foundations, { by: values.by });
     const confirm = values.confirm === 'all' ? 'all' : values.confirm.split(',').map(s => s.trim()).filter(Boolean);
