@@ -1,9 +1,10 @@
 // validateHandoff (#56, #64): handoff.schema.json (the JSON Schema keyword subset it uses), then the
-// cross-field rules a schema cannot say: tuples against the Contract or Proposal axes, every token a theme
+// cross-field rules a schema cannot say: tuples against the Contract or Proposal axes and a Contract's selection.omit, every token a theme
 // token (never a Primitive or a component token), copy, value and question references, the five standard
 // states, no usage of a retired Proposal, every usage's `in` a Contract usage on its screen with no cycle,
 // and an approval that matches the content (a test approval only under .scratch/).
 import { readFileSync } from 'node:fs';
+import { matches } from '../../contract/scripts/contract.mjs';
 import { handoffContentHash } from './hash.mjs';
 import { STANDARD_STATES } from './recognise.mjs';
 import { TEST_APPROVER, inScratch, stateAxisOf } from './system.mjs';
@@ -101,6 +102,18 @@ export function validateHandoff(handoff, system) {
           if (!axis) err('tuple', at, `${at}: tuple axis ${k} is not an axis of \`${def.family.key}\``);
           else if (axis === stateAxisOf(def)) err('tuple', at, `${at}: tuple axis ${k} is the State axis; use usage.state`);
           else if (!axis.values.some(x => x.key === v)) err('tuple', at, `${at}: tuple ${k} "${v}" is not a ${axis.label} value of \`${def.family.key}\``);
+        }
+        // A tuple the Contract's selection leaves out has no variant in the Figma set (#245). An axis the usage leaves
+        // out is its default, as the matcher completes it; State is expanded: the usage's own state, else every State.
+        if (def && def.selection && !errors.some(e => e.at === at && e.rule === 'tuple')) {
+          const stateAxis = stateAxisOf(def);
+          const tuple = Object.fromEntries(def.axes.filter(a => a !== stateAxis).map(a => [a.key, (u.tuple || {})[a.key] === undefined ? a.default : u.tuple[a.key]]));
+          const states = u.state !== undefined ? [u.state] : stateAxis ? stateAxis.values.map(v => v.key) : [undefined];
+          const rules = states.map(st => def.selection.omit.findIndex(o => matches(o.match, stateAxis ? { ...tuple, [stateAxis.key]: st } : tuple)));
+          if (rules.every(i => i >= 0)) {
+            const rule = def.selection.omit[rules[0]];
+            err('tuple', at, `${at}: tuple {${Object.entries(tuple).map(([k, v]) => `${k}: ${v}`).join(', ')}}${u.state !== undefined ? ` in state ${u.state}` : ''} is left out by selection.omit[${rules[0]}] of \`${def.family.key}\` ${JSON.stringify(rule.match)}${rule.reason ? ` (${rule.reason})` : ''}: it has no variant in the Figma set`);
+          }
         }
         // A Family map site's switched axes (#265): each an axis of the Contract, out of the tuple, switching between its values.
         if (u.match && u.match.switches && u.match.by !== 'family-map') err('tuple', at, `${at}: match.switches is a Family map site's, but match.by is ${u.match.by}`);
