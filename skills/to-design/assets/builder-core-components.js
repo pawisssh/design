@@ -305,20 +305,21 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const B = plan.base;
     const opts = plan.options || {};
     const all = state.bases || {};
-    const prev = all[plan.family] || null;
+    // adoptVariant: the recorded variant of the family's set stands as the Base Component, on the set's page
+    const prev = opts.adoptVariant || all[plan.family] || null;
     const conflicts = [];
     const conflict = (kind, name, reason, id) => conflicts.push(id ? { kind, name, reason, id } : { kind, name, reason });
     const report = { slice: 'base', fileKey: plan.fileKey, family: plan.family };
 
     // -- preflight: read only --
     let page = prev && prev.page ? figma.root.children.find(p => p.id === prev.page) || null : null;
+    let comp = prev && prev.id ? await figma.getNodeByIdAsync(prev.id) : null;
     if (!page) {
       const same = figma.root.children.find(p => p.name === plan.page);
       if (same && !opts.adopt) conflict('page', plan.page, 'unowned', same.id);
       else page = same || null;
     }
     if (page) await page.loadAsync();
-    let comp = prev && prev.id ? await figma.getNodeByIdAsync(prev.id) : null;
     if (comp && comp.type !== 'COMPONENT') { conflict('base', B.name, 'type-change', comp.id); comp = null; }
     if (!comp && page) {
       const same = page.children.find(n => n.type === 'COMPONENT' && n.name === B.name);

@@ -150,9 +150,10 @@ export function iconsPlan(contracts, iconsDir, ledger, { fileKey, adopt = false,
  * number). The Contract must validate against the foundations document, and that document must be the one
  * the file's foundations were last built from (ledger documentHash), so every token has a variable. State
  * carries only the ids this plan uses, plus the ledger's `bases` section.
- * Options: fileKey (required), adopt, readOnly, page (default the Contract's figma.page), at.
+ * Options: fileKey (required), adopt, adoptVariant (take the variant of the family's recorded Component Set at the
+ * base index as the Base Component, #235), readOnly, page (default the Contract's figma.page), at.
  */
-export function basePlan(contract, docText, ledger, { fileKey, adopt = false, readOnly = false, page = null, at = new Date().toISOString() } = {}) {
+export function basePlan(contract, docText, ledger, { fileKey, adopt = false, adoptVariant = false, readOnly = false, page = null, at = new Date().toISOString() } = {}) {
   if (!fileKey) throw new Error('fileKey is required');
   if (!ledger || ledger.fileKey !== fileKey) throw new Error(`no ledger for ${fileKey}: build foundations and icons first`);
   const doc = JSON.parse(docText);
@@ -161,6 +162,18 @@ export function basePlan(contract, docText, ledger, { fileKey, adopt = false, re
   const f = ledger.foundations;
   if (!f) throw new Error('the ledger has no foundations: build them first');
   if (f.documentHash !== documentHash(docText)) throw new Error(`the foundations document changed since the last foundations build (${f.documentHash}); rebuild foundations first`);
+  let adopted = null;
+  if (adoptVariant) {
+    if (readOnly) throw new Error('adoptVariant writes the ledger\'s Base Component: it takes no read-only');
+    const rec = ledger.sets && ledger.sets[contract.family.key];
+    if (!rec || !rec.set) throw new Error(`no Component Set of ${contract.family.key} in the ledger: build the set first, or build the Base Component alone`);
+    if (rec.contentHash !== contentHash(contract)) throw new Error(`the ${contract.family.key} set was built from another Contract (${rec.contentHash}): rehash or rebuild it first`);
+    const tuples = expand(contract);
+    const at = tuples.findIndex(t => contract.axes.every(a => t[a.key] === baseTuple(contract)[a.key]));
+    const variantId = (rec.variants || [])[at];
+    if (!variantId) throw new Error(`the ${contract.family.key} set has no variant at the base index ${at} (${variantName(contract, tuples[at])}): build the set's variants first`);
+    adopted = { id: variantId, page: rec.page };
+  }
   // the review specimen while the base stands alone; the property defaults once the family's set holds it
   const exp = expectedBase(contract, baseProps(contract, !!(ledger.sets && ledger.sets[contract.family.key])), doc);
   const strip = sec => Object.fromEntries(Object.entries(sec).map(([n, fields]) => [n, Object.fromEntries(Object.entries(fields).map(([k, x]) => [k, norm(x)]))]));
@@ -190,7 +203,7 @@ export function basePlan(contract, docText, ledger, { fileKey, adopt = false, re
     fileKey,
     page: page || contract.figma.page,
     at,
-    options: { adopt: !!adopt, readOnly: !!readOnly },
+    options: { adopt: !!adopt, readOnly: !!readOnly, ...(adopted ? { adoptVariant: adopted } : {}) },
     family: contract.family.key,
     designSystem: doc.designSystem.key,
     snapshotId: contract.source.snapshotId,
@@ -677,7 +690,7 @@ export function rehashSets(from, contract, docText, ledger, { fileKey }) {
 const USAGE = [
   'usage: build-plan.mjs foundations --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--prune a,b] [--page <name>] [--chunk N] [--ledger <path>]',
   '       build-plan.mjs icons --contract <component.json> [--contract ...] --icons-dir <package dir> --file-key <key> --out <dir> [--adopt] [--page <name>] [--ledger <path>]',
-  '       build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--read-only] [--page <name>] [--ledger <path>]',
+  '       build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--adopt | --adopt-variant] [--read-only] [--page <name>] [--ledger <path>]',
   '       build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir>',
   '                      [--next | --mode build|combine|place|reconcile|coverage|sample|theme|prune-preview|prune] [--batch N] [--per-call N] [--budget ms (mode place)]',
   '                      [--sample i,j (modes sample and theme; --batch N when it takes several calls)] [--prune-list <prune.json> (mode prune)] [--adopt] [--prototype (a Contract under .scratch only)] [--page <name>] [--ledger <path>]',
@@ -689,7 +702,7 @@ function main() {
     allowPositionals: true,
     options: {
       doc: { type: 'string' }, 'file-key': { type: 'string' }, out: { type: 'string' }, ledger: { type: 'string' },
-      adopt: { type: 'boolean', default: false }, prune: { type: 'string', default: '' }, page: { type: 'string' },
+      adopt: { type: 'boolean', default: false }, 'adopt-variant': { type: 'boolean', default: false }, prune: { type: 'string', default: '' }, page: { type: 'string' },
       contract: { type: 'string', multiple: true }, 'icons-dir': { type: 'string' }, 'read-only': { type: 'boolean', default: false },
       mode: { type: 'string', default: 'build' }, batch: { type: 'string' }, 'per-call': { type: 'string' }, sample: { type: 'string', default: '' },
       next: { type: 'boolean', default: false }, budget: { type: 'string' },
@@ -738,7 +751,7 @@ function main() {
     })
     : slice === 'base'
     ? basePlan(JSON.parse(readFileSync(values.contract[0], 'utf8')), readFileSync(values.doc, 'utf8'), readLedger(path), {
-      fileKey, adopt: values.adopt, readOnly: values['read-only'], ...(values.page ? { page: values.page } : {}),
+      fileKey, adopt: values.adopt, adoptVariant: values['adopt-variant'], readOnly: values['read-only'], ...(values.page ? { page: values.page } : {}),
     })
     : slice === 'foundations'
     ? foundationsPlan(readFileSync(values.doc, 'utf8'), readLedger(path), {

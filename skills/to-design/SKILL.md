@@ -95,13 +95,15 @@ Core: `builder-core.js`. It takes the union of the Contracts' icon lists (`icons
 The Base Component (every axis at its default) is built alone on the Contract's page, so the owner can tweak it in Figma. Each tweak is read back and written into the Contract, and the base is rebuilt from the Contract until it reads back clean. Then the owner approves.
 
 ```
-node skills/to-design/scripts/build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out .scratch/to-design/<run> [--read-only] [--page <name>] [--adopt]
+node skills/to-design/scripts/build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out .scratch/to-design/<run> [--read-only] [--page <name>] [--adopt | --adopt-variant]
 # package with builder-core-components.js, use_figma (its hook saves result.json), ledger.mjs record (not after --read-only)
 node skills/to-design/scripts/base-loop.mjs readback .scratch/to-design/<run>/result.json --out .scratch/to-design/<run>/readback.json
 node skills/to-design/scripts/base-loop.mjs diff <component.json> .scratch/to-design/<run>/readback.json
 ```
 
 The base plan resolves everything in node, so the core never matches rules. It refuses a Contract that fails validation, and a foundations document whose `documentHash` is not the one the ledger built. The core builds the anatomy inside one COMPONENT, binds tokens through the ledger's ids, writes a field only when the read value differs, and rebuilds the layers inside the same component when the tree differs (the id and key stay). Standing alone, the base is the review specimen: every BOOLEAN on, TEXT and INSTANCE_SWAP at their defaults. The ledger's `bases[family]` holds `{page, id, key, name, snapshotId, contentHash, documentHash, builtAt}`. The readback sets `figma.skipInvisibleInstanceChildren = false` and reads effects in order.
+
+`--adopt-variant` is for a family whose Component Set is already built (#235): it records the set's variant at the base index as the Base Component (`bases[family].id` is that variant's id), on the set's page, and creates nothing. It needs the set in the ledger from the same Contract and a recorded variant at that index, and refuses otherwise with a message; it takes no `--read-only`. `--adopt` is unchanged: it takes an unowned component of the base's name on the page. It is also the way out of an `unusedBase`: run `base --adopt-variant`, and the ledger's base is the set's variant. The loose component is left for the owner to remove by hand.
 
 The loop:
 
@@ -139,7 +141,7 @@ Core: `builder-core-components.js`. `sets` takes an approved Contract only: it r
   - **Place.** A place call always resumes from the file.
   - **Append.** Before retrying an append, run `--mode reconcile` (read only: it finds the set's variants by name, and reports the ones the selection dropped). A family too large for one reconcile call needs `--batch`; the derive says how many. Record its result, and only then re-derive and retry the batch.
 - **After a Contract edit** (a new omit, a re-approval), rebuild every batch, then see [Dropped variants](#dropped-variants-orphans-and-prune) below.
-  The plan carries no variant ids for another Contract, so the core finds each variant by name in the set: a re-approval that leaves the variants as they were keeps every id, and so every instance. A Base Component that a Base loop built on the page outside the set is not pulled in beside the variant of its name: that variant takes the approved values, and each append call and `ledger.mjs record` report the base as `unusedBase` (`{id, name}`). Nothing deletes it; tell the owner, who can remove it by hand.
+  The plan carries no variant ids for another Contract, so the core finds each variant by name in the set: a re-approval that leaves the variants as they were keeps every id, and so every instance. A Base Component that a Base loop built on the page outside the set is not pulled in beside the variant of its name: that variant takes the approved values, and each append call and `ledger.mjs record` report the base as `unusedBase` (`{id, name}`). Nothing deletes it; tell the owner, who can remove it by hand. To make the set's own variant the Base Component instead, run `base --adopt-variant` (Base Component, above).
   An edit the builder never reads (a drafted value's evidence, a `defaultSource`) still moves the contentHash. Before rebuilding, try `build-plan.mjs rehash --from <the Contract the set was built from> --contract <component.json> --doc <foundations.json> --file-key <key>`, with `--from` taken by `git show <commit>:<path>` into `.scratch/`. It moves the ledger's set and Base records to the new hash when both Contracts derive the same plan for every build batch and the place call, offline. It refuses otherwise, and then the batches are rebuilt.
 
 **The Figma structure** (checked by `coverage.mjs`):

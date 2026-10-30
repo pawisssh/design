@@ -229,6 +229,43 @@ test('after a contentHash change with a Base Component outside the set, the rebu
   assert.equal(base.parent.type, 'PAGE');
 });
 
+// #235: --adopt-variant takes the recorded variant at the base index as the Base Component.
+test('adoptVariant records the set\'s variant at the base index as the Base Component and creates nothing', async () => {
+  const env = await setup({ withBase: false });
+  await buildAll(env);
+  const at = expand(BUTTON).findIndex(t => variantName(BUTTON, t) === 'Kind=Primary, Size=Large, State=Enabled');
+  const id = env.ledger.sets.button.variants[at];
+  const set = await setNode(env);
+  const page = set.parent.parent.parent;
+  const [pages, kids, all] = [env.mock.figma.root.children.length, set.children.length, page.findAll(() => true).length];
+  const { plan, state } = basePlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: LATER, adoptVariant: true });
+  assert.deepEqual(plan.options.adoptVariant, { id, page: env.ledger.sets.button.page });
+  const built = await runPackage(pack(plan, state, COMPONENTS_CORE).code, env.mock.figma);
+  assert.equal(built.summary.conflicts, 0, JSON.stringify(built.conflicts));
+  assert.deepEqual(built.created, []);
+  env.ledger = recordResult(env.ledger, built);
+  assert.equal(env.ledger.bases.button.id, id);
+  assert.deepEqual([env.mock.figma.root.children.length, set.children.length], [pages, kids], 'no page, no variant made');
+  assert.equal(page.findAll(() => true).length, all, 'no node made anywhere on the page');
+  assert.deepEqual(page.children.filter(n => n.type === 'COMPONENT'), [], 'no loose component beside the set');
+  const runs = await buildAll(env, BUTTON, { at: LATER });
+  for (const { result } of runs) assert.equal(result.unusedBase, undefined, 'the base is a variant of the set, not an unused one');
+});
+
+test('adoptVariant is refused when the family has no set, or its set has no variant at the base index, or the Contract changed', async () => {
+  const none = await setup({ withBase: false });
+  assert.throws(() => basePlan(BUTTON, DOC_TEXT, none.ledger, { fileKey: FILE_KEY, adoptVariant: true }), /no Component Set of button in the ledger/);
+  const env = await setup({ withBase: false });
+  await buildAll(env);
+  const at = expand(BUTTON).findIndex(t => variantName(BUTTON, t) === 'Kind=Primary, Size=Large, State=Enabled');
+  const variants = env.ledger.sets.button.variants.slice();
+  delete variants[at];
+  const gap = { ...env.ledger, sets: { button: { ...env.ledger.sets.button, variants } } };
+  assert.throws(() => basePlan(BUTTON, DOC_TEXT, gap, { fileKey: FILE_KEY, adoptVariant: true }), new RegExp(`no variant at the base index ${at}`));
+  assert.throws(() => basePlan(reapproved(), DOC_TEXT, env.ledger, { fileKey: FILE_KEY, adoptVariant: true }), /built from another Contract/);
+  assert.throws(() => basePlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, adoptVariant: true, readOnly: true }), /writes/);
+});
+
 // selection.member, the bitset of the whole selection: build-plan writes it, the core decodes it to tell the
 // variants dropped. Kind and Size have 7 values; tuples 3|4 and 39|40 sit either side of a hex digit, 244 in the
 // last, partial one.
