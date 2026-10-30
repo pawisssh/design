@@ -86,7 +86,7 @@ node skills/to-handoff/scripts/handoff.mjs render design-systems/<ds>/handoffs/<
 
 `validate` checks [handoff.schema.json](handoff.schema.json), then the cross-field rules:
 
-- tuples against the Contract or Proposal axes;
+- tuples against the Contract or Proposal axes, and against a Contract's `selection.omit`: a tuple a rule leaves out has no variant in the Figma set. An axis the tuple leaves out is its default, and State is expanded (the usage's own state, else every State). The error names the rule;
 - tokens exist and are theme tokens;
 - copy, value and question references resolve;
 - all five standard states are present;

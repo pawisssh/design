@@ -307,6 +307,30 @@ test('validateHandoff refuses a bad tuple, an unknown or non-theme token, a miss
   assert.match(validateHandoff(handoff, retired).errors.map(e => e.message).join('\n'), /`avatar-stack` retired into `button`: migrate/);
 });
 
+test('validateHandoff refuses a usage tuple that a Contract\'s selection.omit leaves out, naming the rule (#245)', { skip: noDeps }, async () => {
+  const { handoff, system } = await run();
+  // The committed Carbon Button omits nothing, so each case gives it the omit list it needs.
+  const withOmit = omit => {
+    const button = system.contracts.button;
+    return editor(handoff, { ...system, contracts: { ...system.contracts, button: { ...button, selection: { ...button.selection, omit } } } });
+  };
+  // send is {kind: primary, size: md}.
+  assert.match(withOmit([{ match: { kind: 'primary', size: 'md' } }])(() => {}), /send.*{kind: primary, size: md}.*selection\.omit\[0\] of `button`.*"kind":"primary"/);
+  assert.equal(withOmit([{ match: { kind: 'danger', size: 'md' } }])(() => {}), '');
+  // An axis the tuple leaves out is its default (size lg), as the matcher completes it.
+  const noSize = h => { delete usage(h, 'link-danger').tuple.size; };
+  assert.equal(withOmit([{ match: { kind: 'danger--ghost', size: 'lg' } }])(() => {}), '');
+  assert.match(withOmit([{ match: { kind: 'secondary' } }, { match: { kind: 'danger--ghost', size: 'lg' } }])(noSize), /link-danger.*selection\.omit\[1\]/);
+  // State is expanded: a usage with no state is refused only when every State is omitted, one with a state when that one is.
+  assert.equal(withOmit([{ match: { kind: 'primary', state: 'disabled' } }])(() => {}), '');
+  assert.match(withOmit([{ match: { kind: 'primary', state: 'disabled' } }])(h => { usage(h, 'send').state = 'disabled'; }), /send.*selection\.omit\[0\]/);
+  assert.match(withOmit([{ match: { kind: 'primary' } }])(() => {}), /send.*selection\.omit\[0\]/);
+  // A Family map site switching an axis (size, default lg) is refused only when every value it switches between is left out.
+  const switching = switches => h => { const u = usage(h, 'send'); delete u.tuple.size; u.match = { by: 'family-map', switches }; };
+  assert.doesNotMatch(withOmit([{ match: { kind: 'primary', size: 'lg' } }])(switching({ size: ['md', 'sm'] })), /usage `send`/);
+  assert.match(withOmit([{ match: { kind: 'primary', size: ['md', 'sm'] } }])(switching({ size: ['md', 'sm'] })), /send.*selection\.omit\[0\]/);
+});
+
 test('validateHandoff refuses a duplicate data id and a duplicate question id (#370)', { skip: noDeps }, async () => {
   const { handoff, system } = await run();
   const edit = editor(handoff, system);
