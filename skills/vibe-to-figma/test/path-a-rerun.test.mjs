@@ -71,6 +71,39 @@ test('a class edit in one family redrafts only that family', { skip }, async () 
   assert.match(readFileSync(join(w.dir, 'library/components/ui/icon-button.tsx'), 'utf8'), /p-1\.5/);
 });
 
+// Combinations no site renders (#260): the Adapter's own omits, so they start unticked on the review page. Only the
+// warning icon button has `disabled`, so no site shows the positive or danger one disabled; hover is never omitted.
+const UNRENDERED = 'no site renders it';
+const contractOf = (w, family) => read(join(w.dir, 'contracts', `${family}.component.json`));
+const approveWith = (w, edits) => approveFolder({ dir: w.dir, project: join(w.dir, 'library'), exported: exported(w.dir, edits), said: 'approve', at: AT, test: true });
+
+test('a combination no site renders starts unticked, and approved as the page has it keeps its reason', { skip }, async () => {
+  const w = await world();
+  assert.deepEqual(contractOf(w, 'icon-button').selection.omit, [
+    { match: { tone: 'positive', state: 'disabled' }, reason: UNRENDERED },
+    { match: { tone: 'danger', state: 'disabled' }, reason: UNRENDERED },
+  ]);
+  assert.equal(contractOf(w, 'icon-button').selection.expectedCount, 7);
+  for (const f of FAMILIES.filter(f => f !== 'icon-button')) assert.deepEqual(contractOf(w, f).selection.omit, [], f);
+  await approveWith(w);
+  const icon = contractOf(w, 'icon-button');
+  assert.equal(icon.selection.status, 'approved');
+  assert.deepEqual(icon.selection.omit.map(o => [o.match.tone, o.reason]), [['positive', UNRENDERED], ['danger', UNRENDERED]]);
+});
+
+test('the owner ticks one back: approve accepts it, and a rerun keeps the tick, a redraft included', { skip }, async () => {
+  const w = await world();
+  const a = await approveWith(w, { 'icon-button': m => m.selectMatching({ tone: 'positive', state: 'disabled' }, true) });
+  assert.ok(a.approved.includes('icon-button'), JSON.stringify(a));
+  const ticked = [{ match: { tone: 'danger', state: 'disabled' }, reason: UNRENDERED }];
+  assert.deepEqual([contractOf(w, 'icon-button').selection.omit, contractOf(w, 'icon-button').selection.expectedCount], [ticked, 8]);
+  assert.deepEqual((await w.rerun()).written, []);
+  // A class edit redrafts icon-button: the variant the owner ticked stays ticked, the other keeps its reason.
+  w.edit(ICON_BASE, 'justify-center rounded p-1.5 text-[#');
+  assert.deepEqual((await w.rerun()).written, ['icon-button']);
+  assert.deepEqual([contractOf(w, 'icon-button').selection.omit, contractOf(w, 'icon-button').selection.expectedCount], [ticked, 8]);
+});
+
 /** world() with its folder approved and built on the mock: {w, approve(), mock, ledger, record}. */
 async function built() {
   const w = await world();
@@ -99,7 +132,7 @@ test('built into Figma, a class edit in one family is reviewed, approved and sen
   const { n, ledger, record, steps } = await drive({ dir: w.dir, mock, ledger: first, record: was });
   assert.equal(n.status, 'built', JSON.stringify(n));
   assert.deepEqual(n.held.map(h => [h.family, h.reason]), [['icon-button', 'edited']]);
-  assert.deepEqual(steps.filter(s => s.step === 'sets').map(s => [s.family, s.plan.selection.entries.map(e => e[0])]), [['icon-button', [1, 2, 3, 4, 5, 6, 7, 8]]]);
+  assert.deepEqual(steps.filter(s => s.step === 'sets').map(s => [s.family, s.plan.selection.entries.map(e => e[0])]), [['icon-button', [1, 2, 3, 4, 5, 6]]]);
   assert.ok(steps.every(s => s.family === 'icon-button' || (s.step === 'foundations' && !s.writes.length)), steps.map(s => `${s.step} ${s.family}`).join());
   assert.equal(record.coverage['icon-button'].ok, true);
   assert.deepEqual(ledger.sets['icon-button'].variants, ids);

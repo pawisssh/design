@@ -25,7 +25,7 @@ import { createRequire } from 'node:module';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as contractModule from '../../contract/scripts/contract.mjs';
-import { applyOmit, asDraft, matches, validate } from '../../contract/scripts/contract.mjs';
+import { applyOmit, asDraft, expand, matches, validate } from '../../contract/scripts/contract.mjs';
 import { readJson, writeJson } from '../../contract/scripts/io.mjs';
 import { generate as contractOf, readFamily } from '../../adapter-generic/scripts/components.mjs';
 import { generate as foundationsOf } from '../../adapter-generic/scripts/foundations.mjs';
@@ -114,7 +114,7 @@ export async function buildFolder({ project: prototype, name, root = DESIGN_SYST
   const contracts = {};
   const skipped = [];
   const skip = (family, e) => skipped.push({ family, reason: e.message });
-  let project = prototype, used, library = null, extraction = null;
+  let project = prototype, used, library = null, extraction = null, sitesOf = {};
   if (route.path === 'A') {
     const mapPath = join(dir, `${key}.family-map.json`);
     const found = extract({ project: prototype, answers, map: existsSync(mapPath) ? readJson(mapPath) : null });
@@ -129,6 +129,7 @@ export async function buildFolder({ project: prototype, name, root = DESIGN_SYST
     const ui = join(project, 'components/ui');
     for (const f of existsSync(ui) ? readdirSync(ui) : []) if (!(`components/ui/${f}` in files)) rmSync(join(ui, f), { force: true });
     used = found.used;
+    sitesOf = Object.fromEntries(found.families.map(f => [f.key, f.sites]));
     drafts = { ...draftsOf(found), ...drafts };
   } else used = usedFamilies(prototype, { all, depsDir }).families;
 
@@ -164,13 +165,15 @@ export async function buildFolder({ project: prototype, name, root = DESIGN_SYST
     }
     if (refused) { readable.splice(readable.indexOf(refused), 1); delete contracts[refused]; continue; }
 
-    // A redraft comes with the Adapter's default ticks: carry the owner's omits over from its prior. The narrowed
-    // Contract then gives the Foundations closure, as approve generates it from the Contracts on disk.
+    // A redraft comes with the Adapter's default ticks: carry the owner's omits over from its prior. On path A, a
+    // draft then omits what no site renders (#260). The narrowed Contract gives the Foundations closure, as approve
+    // generates it from the Contracts on disk.
     const carried = {};
     for (const family of readable) {
       const r = results[family];
-      if (!r.contract || r.unchanged || !priors[family]) continue;
-      const narrowed = carryOmits(priors[family], r.contract);
+      if (!r.contract || r.unchanged) continue;
+      let narrowed = priors[family] ? carryOmits(priors[family], r.contract) : r.contract;
+      if (sitesOf[family]) narrowed = omitUnrendered(narrowed, sitesOf[family], priors[family] || null);
       if (narrowed !== r.contract) carried[family] = r.contract = narrowed;
     }
     if (Object.keys(carried).length) {
@@ -234,6 +237,47 @@ export function carryOmits(prior, contract) {
     if (p && s.id !== model.baseId && model.selected.has(s.id) && owners.some(m => matches(m, p))) { model.select(s.id, false); carried++; }
   }
   return carried ? applyOmit(contract, model.omitPatch()) : contract;
+}
+
+const UNRENDERED = 'no site renders it';
+
+/**
+ * omitUnrendered(contract, sites, prior) -> `contract`, a path A family's draft, with each variant no site of the
+ * Prototype renders omitted by an omit of the Adapter's own, reason "no site renders it" (#260), so the review page
+ * shows it unticked and the owner may tick it back. A site renders the tuples of its axis values (`sites` are
+ * extract's, a missing axis at its default) in every State but disabled, which it renders only with a `disabled`
+ * attribute: the other States (hover, focus) are interactions any site has. One omit per tuple of non-state values
+ * when it is gone in every State, else one per variant. The Base Component stays, and so does a variant `prior`
+ * selected: the owner ticked it back, or a site rendered it then. Returns `contract` itself when nothing is omitted.
+ */
+function omitUnrendered(contract, sites, prior) {
+  const free = contract.axes.filter(a => !a.canonical), state = contract.axes.find(a => a.canonical);
+  const of = (axes, t) => JSON.stringify(axes.map(a => t[a.key]));
+  const shown = new Map(); // tuple of non-state values -> whether a site renders it disabled
+  for (const s of sites) {
+    let tuples = [{}];
+    for (const a of free) tuples = tuples.flatMap(t => (s.values[a.key] || [a.default]).map(v => ({ ...t, [a.key]: v })));
+    for (const t of tuples) shown.set(of(free, t), shown.get(of(free, t)) || s.disables);
+  }
+  const kept = new Set(prior ? expand(prior).map(t => of(contract.axes, t)) : []);
+  const base = of(contract.axes, Object.fromEntries(contract.axes.map(a => [a.key, a.default])));
+  const all = expand(contract);
+  const gone = all.filter(t => {
+    const k = of(free, t);
+    const rendered = shown.has(k) && (!state || t[state.key] !== 'disabled' || shown.get(k));
+    return !rendered && of(contract.axes, t) !== base && !kept.has(of(contract.axes, t));
+  });
+  if (!gone.length) return contract;
+  const omit = [];
+  for (const k of new Set(gone.map(t => of(free, t)))) {
+    const every = all.filter(t => of(free, t) === k), lost = gone.filter(t => of(free, t) === k);
+    if (lost.length === every.length) omit.push(Object.fromEntries(free.map(a => [a.key, lost[0][a.key]])));
+    else omit.push(...lost);
+  }
+  const c = asDraft(contract);
+  c.selection.omit = [...c.selection.omit, ...omit.map(match => ({ match, reason: UNRENDERED }))];
+  c.selection.expectedCount = expand(c).length;
+  return c;
 }
 
 /** One drafts file: {"drafts": {family: {key: value}}}, or the Adapter's {"family", "drafts": {key: value}}. */
