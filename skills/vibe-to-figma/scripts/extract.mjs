@@ -232,11 +232,14 @@ function readFile(ts, file, source) {
         const init = className.initializer;
         const expr = ts.isStringLiteral(init) ? init : ts.isJsxExpression(init) ? init.expression : null;
         const disabledAttr = opening.attributes.properties.find(p => ts.isJsxAttribute(p) && p.name.getText() === 'disabled');
-        const ctx = { disabled: disabledAttr && disabledAttr.initializer && ts.isJsxExpression(disabledAttr.initializer) && disabledAttr.initializer.expression ? disabledAttr.initializer.expression.getText() : null, mirrored: false };
+        const disabledExpr = disabledAttr && disabledAttr.initializer && ts.isJsxExpression(disabledAttr.initializer) ? disabledAttr.initializer.expression : null;
+        // #260: a site with a `disabled` attribute (but not `disabled={false}`) renders its State's disabled value
+        const rendersDisabled = !!disabledAttr && !(disabledExpr && disabledExpr.kind === ts.SyntaxKind.FalseKeyword);
+        const ctx = { disabled: disabledExpr ? disabledExpr.getText() : null, mirrored: false };
         try {
           if (!expr) throw new Unresolved('`className` has no value');
           const tree = resolve(expr, scopesOf(node), ctx);
-          sites.push({ file, line: line(node), col: col(node), tag, path: pathOf(node), node: tree, ternary: ctx.mirrored || hasPick(tree), text: textOf(node), icon: iconOf(node), at, snippet: snippetOf(opening) });
+          sites.push({ file, line: line(node), col: col(node), tag, path: pathOf(node), node: tree, ternary: ctx.mirrored || hasPick(tree), text: textOf(node), icon: iconOf(node), rendersDisabled, at, snippet: snippetOf(opening) });
         } catch (e) {
           if (!(e instanceof Unresolved)) throw e;
           skipped.push({ site: at, tag, reason: e.message, snippet: snippetOf(opening) });
@@ -610,7 +613,9 @@ function componentFile(key, tag, derived, names) {
 /**
  * extract({project, answers}) -> {library, families, requests, skipped, map, used}:
  * - `library` {path: text} is the Extracted Library (empty while a request is open);
- * - `families` [{key, tag, groups, description, grid, text, names, derived, sites: [{file, path, line}]}], `used` their keys;
+ * - `families` [{key, tag, groups, description, grid, text, names, derived, sites: [{file, path, line, values, rendersDisabled}]}],
+ *   `used` their keys; a site's `values` are the axis values its classes give ({<axis key>: [<value key>]}, two or more
+ *   on an axis a className ternary at the site picks), `rendersDisabled` whether it has a `disabled` attribute;
  * - `requests` the groups with a judgement still open (each with the `open` keys it still needs; nothing is built until none is open); `skipped` [{site, tag, reason}] the className
  *   expressions the script could not resolve;
  * - `map` the Family map: each family's member sites, by file and JSX path.
@@ -705,7 +710,8 @@ export function extract({ project, answers = {}, map = null }) {
     const texts = f.memberSites.map(s => s.text).filter(Boolean);
     const text = texts.length ? mostFrequent(texts) : f.merged.text;
     familyList.push({ key: f.key, tag: f.tag, groups: f.members, description: f.merged.description, grid: f.merged.grid, text, answeredText: f.merged.text, names, record: f.record,
-      sites: f.memberSites.map(s => ({ file: s.file, path: s.path, line: s.line, col: s.col, group: s.group, snippet: s.snippet })).sort((x, y) => byKey(siteKey(x), siteKey(y))), derived: f.derived });
+      sites: f.memberSites.map(s => ({ file: s.file, path: s.path, line: s.line, col: s.col, group: s.group, snippet: s.snippet, values: valuesAt(f.derived, names, s), rendersDisabled: s.rendersDisabled }))
+        .sort((x, y) => byKey(siteKey(x), siteKey(y))), derived: f.derived });
   }
   const entry = tailwindEntry(project);
   const sheets = stylesheets(project, entry);
@@ -744,13 +750,15 @@ export function familySites({ project, map }) {
   const found = extract({ project, map });
   if (!found.map || JSON.stringify(found.map) !== JSON.stringify(map))
     throw new Error(`the Family map is not what ${project}'s code gives now: run Vibe-to-Figma's folder step again (node skills/vibe-to-figma/scripts/folder.mjs ${project}), or, if the folder is another Prototype's own, name another Design System`);
-  return found.families.flatMap(f => f.sites.map(s => {
-    const given = f.derived.bySite.get(siteKey(s));
-    return { file: s.file, line: s.line, col: s.col, family: f.key,
-      values: Object.fromEntries([...f.derived.axes.map(a => [f.names[a.id].key, given[a.id].map(id => f.names[a.id].values[id].key)]),
-        // An icon Slot axis (#259): filled where the site has the icon child.
-        ...f.derived.slots.map(sl => [sl.key, [sl.keys.has(siteKey(s)) ? sl.key : 'none']])]) };
-  }));
+  return found.families.flatMap(f => f.sites.map(s => ({ file: s.file, line: s.line, col: s.col, family: f.key, values: s.values })));
+}
+
+/** The axis values a site's classes give, by the family's answered names: {<axis key>: [<value key>]}. */
+function valuesAt(derived, names, s) {
+  const given = derived.bySite.get(siteKey(s));
+  return Object.fromEntries([...derived.axes.map(a => [names[a.id].key, given[a.id].map(id => names[a.id].values[id].key)]),
+    // An icon Slot axis (#259): filled where the site has the icon child.
+    ...derived.slots.map(sl => [sl.key, [sl.keys.has(siteKey(s)) ? sl.key : 'none']])]);
 }
 
 /**

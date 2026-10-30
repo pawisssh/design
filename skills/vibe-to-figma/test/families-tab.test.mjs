@@ -125,7 +125,8 @@ test('after an owner merge the rebuilt page shows the merged family, and the unt
     return [family, { patch, checked: { family, snapshotId: patch.snapshotId, checked: model.checkedTuples() } }];
   }));
   const stored = storedTicks(reviewExport(before, picked));
-  assert.equal(picked['icon-button'].patch.omit.length, 1);
+  // danger unticked whole, beside the positive Disabled no site renders (#260)
+  assert.deepEqual(picked['icon-button'].patch.omit, [{ tone: 'positive', state: 'disabled' }, { tone: 'danger' }]);
 
   // The owner: "merge pill-button into action-button" (references/path-a.md records it in the Family map, then reruns).
   const mapPath = join(dir, 'path-a-app.family-map.json');
