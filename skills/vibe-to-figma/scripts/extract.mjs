@@ -233,7 +233,7 @@ function readFile(ts, file, source) {
         const expr = ts.isStringLiteral(init) ? init : ts.isJsxExpression(init) ? init.expression : null;
         const disabledAttr = opening.attributes.properties.find(p => ts.isJsxAttribute(p) && p.name.getText() === 'disabled');
         const disabledExpr = disabledAttr && disabledAttr.initializer && ts.isJsxExpression(disabledAttr.initializer) ? disabledAttr.initializer.expression : null;
-        // in (#260): a site with a `disabled` attribute (but `disabled={false}`) renders its State's disabled value
+        // #260: a site with a `disabled` attribute (but not `disabled={false}`) renders its State's disabled value
         const rendersDisabled = !!disabledAttr && !(disabledExpr && disabledExpr.kind === ts.SyntaxKind.FalseKeyword);
         const ctx = { disabled: disabledExpr ? disabledExpr.getText() : null, mirrored: false };
         try {
