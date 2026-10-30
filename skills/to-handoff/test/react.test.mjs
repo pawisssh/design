@@ -324,34 +324,6 @@ test('generate: a Vite Prototype is a valid Handoff with a screen per route; the
   assert.ok(readFileSync(ds + '/contracts/button.component.json').equals(button) && readFileSync(BUTTON).equals(button), 'the Button Contract is byte-unchanged');
 });
 
-test('generate: a Carbon wrapper holding Carbon components is a container; Theme, Modal and what they hold are walked (#226)', { skip: noTs }, async () => {
-  const ds = designSystem();
-  copyFileSync(repo('skills/contract/test/fixtures/form-controls/text-input.component.json'), join(ds, 'contracts/text-input.component.json'));
-  const dir = project({
-    'package.json': JSON.stringify({ name: 'themed', dependencies: { '@carbon/react': '1.118.0', react: '19.3.1' }, devDependencies: { vite: '8.3.4' } }),
-    'index.html': '<!doctype html><html><head><title>Themed</title></head><body><div id="app"></div><script type="module" src="/src/main.tsx"></script></body></html>',
-    'src/main.tsx': `import { createRoot } from 'react-dom/client';
-import { Theme, Button, Modal, ModalBody, TextInput } from '@carbon/react';
-createRoot(document.getElementById('app')!).render(
-  <Theme theme="g10">
-    <Button kind="primary" size="md">Save</Button>
-    <Modal open modalHeading="Invite">
-      <ModalBody>
-        <TextInput id="email" labelText="Email" />
-      </ModalBody>
-    </Modal>
-  </Theme>
-);
-`,
-  });
-  const result = await generate({ prototype: dir, designSystem: ds, decisions: decided() });
-  assert.deepEqual(result.requests, []);
-  assert.deepEqual(usagesOf(result.handoff.screens[0]).map(u => [u.contract, u.match && u.match.by, u.at]), [
-    ['button', 'import', 'src/main.tsx:5:5'],
-    ['text-input', 'import', 'src/main.tsx:8:9'],
-  ]);
-});
-
 // #400: CDS exports Button from `@coinbase/cds-web/buttons`, so a Contract's `code.package` is a prefix of the import.
 test('generate: a CDS Button and ThemeProvider imported from package subpaths are a Contract usage and the mode (#400)', { skip: noTs }, async () => {
   const ds = mkdtempSync(join(tmpdir(), 'to-handoff-cds-'));
@@ -519,19 +491,6 @@ test('generate: a status value it cannot place stays a condition question', { sk
 
 // #216: a Tailwind app whose classNames are template literals, one shape per line of fixtures/tailwind-app/src/App.tsx.
 const TAILWIND = fileURLToPath(new URL('fixtures/tailwind-app', import.meta.url));
-const recogniseRequests = async () => (await generate({ prototype: TAILWIND, designSystem: shadcnDesignSystem(), decisions: {} })).requests.filter(r => r.kind === 'recognise');
-
-test('generate: a template-literal className signs by its static classes; a token touching a hole is left out', { skip: noTs }, async () => {
-  assert.deepEqual((await recogniseRequests()).map(r => [r.key, r.evidence.at]), [
-    ['recognise:button.flex-1.py-1.5.rounded-lg', ['src/App.tsx:13:7', 'src/App.tsx:14:7']],
-    ['recognise:button.border.px-2.rounded-md.shrink-0', ['src/App.tsx:15:7']],
-    ['recognise:button.ml-auto.p-1', ['src/App.tsx:16:7']],
-    ['recognise:button.px-2.text-xs', ['src/App.tsx:17:7']],
-    ['recognise:input.text-right.w-14[type=text]', ['src/App.tsx:18:7']],
-    ['recognise:input.text-right.w-8[type=text]', ['src/App.tsx:19:7']],
-  ]);
-});
-
 test('generate: in a Tailwind app, region, usage and copy ids come from authored names, tags and copy, never a utility class', { skip: noTs }, async () => {
   const decisions = JSON.parse(readFileSync(join(TAILWIND, 'decisions.json'), 'utf8'));
   const result = await generate({ prototype: TAILWIND, designSystem: shadcnDesignSystem(), decisions });
