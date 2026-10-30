@@ -5,10 +5,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { cpSync, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { validate } from '../../contract/scripts/contract.mjs';
+import { expand, resolve, validate } from '../../contract/scripts/contract.mjs';
 import { sha256 } from '../../adapter-generic/scripts/sources.mjs';
 import { buildFolder } from '../scripts/folder.mjs';
 import { PATH_A as PROTOTYPE, PATH_A_ANSWERS as ANSWERS, PATH_A_FAMILIES as FAMILIES, read, scratch, skip, tree } from './helpers.mjs';
@@ -21,12 +21,12 @@ test('the first run writes one requests file and exits 2; nothing else is writte
   const root = scratch(), requests = join(root, 'requests.json');
   const r = cli('--root', join(root, 'out'), '--requests', requests);
   assert.equal(r.status, 2, r.stderr);
-  assert.match(r.stdout, /6 groups of the Prototype await the agent's judgement/);
+  assert.match(r.stdout, /7 groups of the Prototype await the agent's judgement/);
   assert.match(r.stdout, /skipped src\/App\.tsx:\d+: `buttonClass\("solid"\)` is a function call/);
   assert.equal(existsSync(join(root, 'out')), false);
   const { path, groups, skipped } = read(requests);
   assert.equal(path, 'A');
-  assert.equal(groups.length, 6);
+  assert.equal(groups.length, 7);
   assert.deepEqual(skipped.map(s => s.site.replace(/:\d+$/, '')), ['src/App.tsx']);
   assert.deepEqual(groups.map(g => g.id), Object.keys(answers().groups).sort(), 'the committed answers name every group');
   assert.ok(groups.every(g => g.open.includes('family') && g.open.includes('description')));
@@ -37,7 +37,7 @@ test('with the committed answers the run prints OK and writes the folder; layout
   const root = scratch(), out = join(root, 'out');
   const r = cli('--root', out, '--drafts', ANSWERS);
   assert.equal(r.status, 0, r.stderr + r.stdout);
-  assert.match(r.stdout, /path-a-app: 6 Component Families extracted from the Prototype \(action-button, card, chip, icon-button, pill-button, segment\)/);
+  assert.match(r.stdout, /path-a-app: 7 Component Families extracted from the Prototype \(action-button, card, chip, icon-button, pill-button, segment, trend-chip\)/);
   assert.match(r.stdout, /OK\s*$/);
   const dir = join(out, 'path-a-app');
   assert.deepEqual(Object.keys(tree(dir)).filter(f => f.startsWith('contracts/')), FAMILIES.map(f => `contracts/${f}.component.json`));
@@ -48,12 +48,12 @@ test('with the committed answers the run prints OK and writes the folder; layout
   // svg icons are in none.
   const map = read(join(dir, 'path-a-app.family-map.json'));
   assert.deepEqual(Object.keys(map.families), FAMILIES);
-  assert.deepEqual(Object.fromEntries(Object.entries(map.families).map(([k, f]) => [k, f.sites.length])), { 'action-button': 1, card: 2, chip: 3, 'icon-button': 3, 'pill-button': 1, segment: 1 });
+  assert.deepEqual(Object.fromEntries(Object.entries(map.families).map(([k, f]) => [k, f.sites.length])), { 'action-button': 1, card: 2, chip: 3, 'icon-button': 3, 'pill-button': 1, segment: 1, 'trend-chip': 3 });
   const sites = Object.values(map.families).flatMap(f => f.sites);
   assert.ok(sites.every(s => s.file === 'src/App.tsx' && /^App:/.test(s.path) && Object.keys(s).join() === 'file,path'));
   assert.ok(!sites.some(s => /\/svg|\/path/.test(s.path)));
   assert.equal(new Set(sites.map(s => s.path)).size, sites.length, 'a site belongs to one family');
-  assert.equal(sites.length, 11, 'eleven elements make the six families; the other divs are layout wrappers');
+  assert.equal(sites.length, 14, 'fourteen elements make the seven families; the other divs are layout wrappers');
   assert.ok(Object.values(map.families).every(f => f.by === 'agent' && /^sha256:/.test(f.fingerprint) && f.evidence.length));
 });
 
@@ -108,6 +108,44 @@ test('the chips with and without an icon child are one family with a Slot axis: 
   const [always, filled] = chip.layout;
   assert.deepEqual([always.match, always.set.Chip.gap, always.set['Icon Inline Start']], [{}, { token: 'spacing-0' }, { width: { token: 'spacing-3' }, height: { token: 'spacing-3' }, visible: false }]);
   assert.deepEqual(filled, { match: { 'icon-inline-start': 'icon-inline-start' }, set: { Chip: { gap: { token: 'spacing-1' } }, 'Icon Inline Start': { visible: true } } });
+});
+
+// The trend chips (#258): each site is one tone, and its className ternary picks the solid or the tinted colours, which
+// differ per tone. So the family is Tone x Selected, and what is neither the tone's own nor the ternary's own is a compound.
+const CHIP = /\$\{trend === "(\w+)" \? "bg-\[(#\w+)\] text-\[(#\w+)\]" : "bg-\[(#\w+)\] text-\[(#\w+)\]"\}/g;
+
+test('chips whose selected colours change per tone are Tone x Selected, written as cva compoundVariants (#258)', { skip }, async () => {
+  const root = scratch();
+  await buildFolder({ project: PROTOTYPE, root, answers: answers() });
+  const dir = join(root, 'path-a-app');
+  const chip = read(join(dir, 'contracts/trend-chip.component.json'));
+  assert.deepEqual(chip.axes.map(a => [a.key, a.values.map(v => v.key)]), [['tone', ['gain', 'loss', 'flat']], ['selected', ['true', 'false']], ['state', ['enabled']]]);
+  assert.deepEqual(chip.figma.grid, { columns: ['tone'], rows: ['selected', 'state'] });
+  assert.equal(expand(chip).length, 6);
+  // Every variant is painted as its site renders it: the ternary's first option is Selected True.
+  const sites = [...readFileSync(join(PROTOTYPE, 'src/App.tsx'), 'utf8').matchAll(CHIP)];
+  assert.equal(sites.length, 3);
+  for (const [, label, solid, ink, tint, tinted] of sites)
+    for (const [selected, fill, text] of [['true', solid, ink], ['false', tint, tinted]]) {
+      const r = resolve(chip, { tone: label.toLowerCase(), selected, state: 'enabled' });
+      assert.deepEqual([r.paint.TrendChip.fill.raw, r.paint.Label.fill.raw], [fill, text], `${label} ${selected}`);
+    }
+  const tsx = readFileSync(join(dir, 'library/components/ui/trend-chip.tsx'), 'utf8');
+  assert.match(tsx, /compoundVariants: \[\n {6}\{ tone: "gain", selected: true, className: "bg-\[#16a34a\]" \},/);
+  assert.match(tsx, /selected: \{\n {8}true: "text-\[#ffffff\]",\n {8}false: "",/, 'the classes every selected chip has are Selected True\'s own');
+  assert.match(tsx, /defaultVariants: \{ tone: "gain", selected: true \}/, 'a true/false axis is a boolean, as cva matches a compound');
+});
+
+test('the compound family\'s component is a function of its classes alone: labels and conditions do not change it', { skip }, async () => {
+  const built = async edit => {
+    const root = scratch(), proto = join(root, 'proto');
+    cpSync(PROTOTYPE, proto, { recursive: true });
+    writeFileSync(join(proto, 'src/App.tsx'), edit(readFileSync(join(proto, 'src/App.tsx'), 'utf8')));
+    await buildFolder({ project: proto, root: join(root, 'out'), answers: answers() });
+    return readFileSync(join(root, 'out/path-a-app/library/components/ui/trend-chip.tsx'), 'utf8');
+  };
+  const swapped = text => text.replaceAll('trend === "Gain"', 'trend === "Up"').replace(/>Loss</, '>Down<');
+  assert.equal(await built(swapped), await built(text => text));
 });
 
 test('a second run with the same answers writes nothing, byte for byte', { skip }, async () => {

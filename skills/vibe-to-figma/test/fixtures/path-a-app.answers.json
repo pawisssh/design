@@ -97,6 +97,52 @@
       "family": "chip",
       "description": "A small rounded status chip; an icon before its label adds a gap.",
       "axes": {}
+    },
+    "button-5bf8160d": {
+      "family": "trend-chip",
+      "description": "A rounded chip that picks a trend; its tone sets the colours, solid while selected and tinted while not.",
+      "axes": {
+        "bg-color+text-color": {
+          "key": "tone",
+          "label": "Tone",
+          "values": {
+            "v-31702961": {
+              "key": "gain",
+              "label": "Gain"
+            },
+            "v-fbcc79ed": {
+              "key": "loss",
+              "label": "Loss"
+            },
+            "v-f50efa09": {
+              "key": "flat",
+              "label": "Flat"
+            }
+          }
+        },
+        "ternary:bg-color+text-color": {
+          "key": "selected",
+          "label": "Selected",
+          "values": {
+            "v-then": {
+              "key": "true",
+              "label": "True"
+            },
+            "v-else": {
+              "key": "false",
+              "label": "False"
+            }
+          }
+        }
+      },
+      "grid": {
+        "columns": [
+          "tone"
+        ],
+        "rows": [
+          "selected"
+        ]
+      }
     }
   }
 }

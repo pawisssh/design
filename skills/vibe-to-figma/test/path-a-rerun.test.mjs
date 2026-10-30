@@ -73,6 +73,12 @@ test('a class edit in one family redrafts only that family', { skip }, async () 
 
 // Combinations no site renders (#260): the Adapter's own omits, so they start unticked on the review page. Only the
 // warning icon button has `disabled`, so no site shows the positive or danger one disabled; hover is never omitted.
+// Cuts both cards, two plain elements in their place, so the trend chips after them keep their JSX paths.
+const removeCards = w => {
+  const app = w.app();
+  const start = app.indexOf('      <div className={CARD}>'), end = app.indexOf('      <div className="rounded-[4px] bg-[#fef9c3]');
+  writeFileSync(join(w.proto, 'src/App.tsx'), `${app.slice(0, start)}      <hr />\n      <hr />\n${app.slice(end)}`);
+};
 const contractOf = (w, family) => read(join(w.dir, 'contracts', `${family}.component.json`));
 const approveWith = (w, edits) => approveFolder({ dir: w.dir, project: join(w.dir, 'library'), exported: exported(w.dir, edits), said: 'approve', at: AT, test: true });
 
@@ -142,9 +148,7 @@ test('built into Figma, a class edit in one family is reviewed, approved and sen
 
 test('built into Figma, a family whose sites all go is set aside, and the build names its set orphaned', { skip }, async () => {
   const { w, approve, mock, ledger: first, record: was } = await built();
-  const app = w.app();
-  const start = app.indexOf('      <div className={CARD}>'), end = app.indexOf('    </div>\n  );\n}');
-  writeFileSync(join(w.proto, 'src/App.tsx'), app.slice(0, start) + app.slice(end));
+  removeCards(w);
   assert.deepEqual((await w.rerun()).setAside.map(s => s.family), ['card']);
   const a = await approve();
   assert.deepEqual([a.approved, a.kept], [[], FAMILIES.filter(f => f !== 'card')]);
@@ -157,7 +161,7 @@ test('built into Figma, a family whose sites all go is set aside, and the build 
 
 test('an edited axis value keeps the names the agent gave it', { skip }, async () => {
   const w = await world();
-  w.edit('text-[#16a34a]', 'text-[#15803d]');
+  w.edit('text-[#16a34a] hover', 'text-[#15803d] hover');
   const again = await w.rerun();
   assert.equal(again.extraction, null, 'no answer is asked');
   assert.deepEqual(again.written, ['icon-button']);
@@ -239,7 +243,7 @@ test('an owner merge in the Family map survives reruns, with and without the ori
   const answered = { groups: { [request.id]: { family: 'action-button', axes, grid: { columns: request.axes.map((a, i) => `axis-${i}`), rows: [] } } } };
   const built = await w.rerun(answered);
   assert.equal(built.extraction, null);
-  assert.deepEqual(built.families, ['action-button', 'card', 'chip', 'icon-button', 'segment']);
+  assert.deepEqual(built.families, ['action-button', 'card', 'chip', 'icon-button', 'segment', 'trend-chip']);
   assert.deepEqual(built.setAside.map(s => s.family), ['pill-button']);
   assert.ok(existsSync(join(w.dir, 'removed/pill-button.component.json')));
 
@@ -266,7 +270,7 @@ test('an owner rename and an owner drop in the Family map are kept', { skip }, a
   writeJson(w.mapPath(), map);
   const again = await w.rerun();
   assert.equal(again.extraction, null, 'the renamed family is built from its recorded answers; the dropped site is not asked');
-  assert.deepEqual(again.families, ['action-button', 'chip', 'icon-button', 'panel', 'pill-button']);
+  assert.deepEqual(again.families, ['action-button', 'chip', 'icon-button', 'panel', 'pill-button', 'trend-chip']);
   assert.ok(existsSync(join(w.dir, 'library/components/ui/panel.tsx')) && !existsSync(join(w.dir, 'library/components/ui/card.tsx')));
   const settled = tree(w.root);
   const third = await w.rerun(read(ANSWERS));
@@ -280,12 +284,10 @@ test('an owner rename and an owner drop in the Family map are kept', { skip }, a
 
 test('removing every site of a family sets it aside', { skip }, async () => {
   const w = await world();
-  const app = w.app();
-  const start = app.indexOf('      <div className={CARD}>'), end = app.indexOf('    </div>\n  );\n}');
-  writeFileSync(join(w.proto, 'src/App.tsx'), app.slice(0, start) + app.slice(end));
+  removeCards(w);
   const again = await w.rerun();
   assert.equal(again.extraction, null);
-  assert.deepEqual(again.families, ['action-button', 'chip', 'icon-button', 'pill-button', 'segment']);
+  assert.deepEqual(again.families, ['action-button', 'chip', 'icon-button', 'pill-button', 'segment', 'trend-chip']);
   assert.deepEqual(again.setAside.map(s => [s.family, s.reason]), [['card', 'not used by the screens']]);
   assert.ok(existsSync(join(w.dir, 'removed/card.component.json')) && !existsSync(join(w.dir, 'contracts/card.component.json')));
   assert.ok(!existsSync(join(w.dir, 'library/components/ui/card.tsx')));
