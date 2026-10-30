@@ -325,13 +325,15 @@ test('coverage takes the set\'s page from the ledger or --page: a set built with
   const env = await setup({ withBase: false });
   await buildAll(env, BUTTON, { page: 'Text inputs' });
   const readback = (await sets(env, { mode: 'coverage', page: 'Text inputs' })).result;
+  const moved0 = ledger => ({ ...ledger, sets: { button: { ...ledger.sets.button, page: '0:99' } } });
   const pageProblems = (ledger, opts) => checkCoverage(BUTTON, readback, ledger, opts).problems.filter(p => p.what === 'set' && p.field === 'page');
   assert.deepEqual(pageProblems(env.ledger), [], 'the ledger records the page the set is on');
   assert.deepEqual(pageProblems(null, { page: 'Text inputs' }), [], '--page names it without a ledger');
   assert.deepEqual(pageProblems(null).map(p => [p.want, p.got]), [[BUTTON.figma.page, 'Text inputs']], 'no ledger and no --page: the Contract\'s page');
   assert.equal(pageProblems(null, { page: 'Elsewhere' }).length, 1, '--page names another page than the set is on');
-  const moved = { ...env.ledger, sets: { button: { ...env.ledger.sets.button, page: '0:99' } } };
-  assert.equal(pageProblems(moved).length, 1, 'a set on another page than the recorded one');
+  assert.equal(pageProblems(env.ledger, { page: 'Elsewhere' }).length, 1, '--page names another page than the set is on, whatever the ledger says');
+  assert.equal(pageProblems(moved0(env.ledger), { page: 'Text inputs' }).length, 1, '--page P still fails a set that is not on its recorded page');
+  assert.equal(pageProblems(moved0(env.ledger)).length, 1, 'a set on another page than the recorded one');
   assert.deepEqual(checkCoverage(BUTTON, readback, env.ledger).problems, []);
 });
 
