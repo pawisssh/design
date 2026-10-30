@@ -80,7 +80,8 @@ export function compiledRules(css, layer = 'utilities') {
   return [...byKey.values()];
 }
 
-const escapeClass = cand => '.' + cand.replace(/[^a-zA-Z0-9_-]/g, ch => '\\' + ch);
+/** A class's CSS selector, `.` and the class with every character outside [a-zA-Z0-9_-] escaped. */
+export const escapeClass = cand => '.' + cand.replace(/[^a-zA-Z0-9_-]/g, ch => '\\' + ch);
 
 // Read one balanced `(…)` starting at s[i] === '('; returns the index after the closing paren.
 function balanced(s, i) {

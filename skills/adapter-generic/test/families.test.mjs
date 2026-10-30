@@ -306,6 +306,16 @@ test('a compound\'s classes apply where all its matches hold: Chip is Tone x Sel
   }
 });
 
+test('a compound\'s class names its compound as its place: the match, as cva tests it, and its line (#291)', { skip }, async () => {
+  const { f } = await chipFamily();
+  const p = f.provenance['Tone=Neutral, Selected=True, State=Enabled'];
+  const compound = { kind: 'compound', match: { tone: ['neutral'], selected: ['true'] } };
+  const one = c => ({ light: [c], dark: [c] });
+  assert.deepEqual(p.paint.Chip.fill, one({ class: 'bg-secondary', place: compound, file: 'components/ui/chip.tsx', line: 19, prefixes: [] }));
+  assert.deepEqual(p.layout.Chip.paddingLeft, one({ class: 'px-3', place: compound, file: 'components/ui/chip.tsx', line: 19, prefixes: [] }));
+  assert.deepEqual(p.paint.Chip.stroke, one({ class: 'border-ring', place: { kind: 'variant', axis: 'selected', value: 'true' }, file: 'components/ui/chip.tsx', line: 15, prefixes: [] }));
+});
+
 test('a compound\'s class and className both apply, class first, as cva adds them', { skip }, async () => {
   const project = chipProject(text => text.replace('className: "bg-secondary px-3"', 'class: "bg-secondary", className: "px-3"'));
   const doc = (await library({ project, families: ['chip'] })).doc;
