@@ -5,7 +5,7 @@
 //   sample    full values of a few variants, diffed like the Base Component (base-loop.mjs diff)
 //   theme     each bound colour resolved per Theme mode, against the foundations document
 //
-//   node skills/to-design/scripts/coverage.mjs <coverage|sample|theme> <contract.json> <result.json> [--ledger <path>] [--foundations <path>]
+//   node skills/to-design/scripts/coverage.mjs <coverage|sample|theme> <contract.json> <result.json> [--ledger <path>] [--foundations <path>] [--page <name>]
 //   node skills/to-design/scripts/coverage.mjs coverage <contract.json> <page-0 result.json> <page-1 result.json> ... (a paged read, --batch)
 // Prints {ok, problems, ...}; exits 1 when a problem is found.
 import { readFileSync } from 'node:fs';
@@ -82,9 +82,10 @@ export function mergeCoverage(pages) {
  * Every expanded variant against a `coverage` readback: names (every `Prop=Value` label is a Contract axis and
  * value label), no missing, extra or duplicate variant, every one a component in its grid cell with the
  * default variant top-left, its property wiring, every absolute node centred in its parent (#442), the set's
- * properties, and the set's page, frame and header.
+ * properties, and the set's page, frame and header. The page is `page` (the name `--page` built it on), else
+ * the page the ledger records for the set (matched by id, so a rename is no problem), else the Contract's.
  */
-export function checkCoverage(contract, readback, ledger = null) {
+export function checkCoverage(contract, readback, ledger = null, { page = null } = {}) {
   const problems = [];
   // a variant the selection dropped, which the ledger keeps as an orphan until a prune (#67), is listed under the
   // name the ledger keeps, not a problem. It is matched by its id (the readback's row ends with it), and by name
@@ -126,10 +127,14 @@ export function checkCoverage(contract, readback, ledger = null) {
   const s = readback.set || {};
   const def = variantName(contract, baseTuple(contract));
   const cells = keys => keys.reduce((m, k) => m * contract.axes.find(a => a.key === k).values.length, 1);
+  const recorded = ((ledger && ledger.sets && ledger.sets[contract.family.key]) || {}).page;
+  const byLedger = !page && recorded && s.pageId;
   const expectSet = { name: contract.figma.componentSetName, description: contract.figma.description, layoutMode: 'GRID',
-    grid: [cells(contract.figma.grid.rows), cells(contract.figma.grid.columns)], defaultVariant: def, page: contract.figma.page,
+    grid: [cells(contract.figma.grid.rows), cells(contract.figma.grid.columns)], defaultVariant: def, page: page || contract.figma.page,
     parents: ['Content', 'Components'], ...PAGE_TEMPLATE.set };
+  if (byLedger) delete expectSet.page;
   for (const [k, v] of Object.entries(expectSet)) if (!eqJ(s[k], v)) bad('set', { field: k, want: v, got: s[k] });
+  if (byLedger && s.pageId !== recorded) bad('set', { field: 'page', want: `the recorded page ${recorded}`, got: `${s.page} (${s.pageId})` });
   const sec = readback.section || {};
   for (const [k, v] of Object.entries(PAGE_TEMPLATE.section)) if (!eqJ(sec[k], v)) bad('section', { field: k, want: v, got: sec[k] });
   for (const [k, v] of Object.entries(PAGE_TEMPLATE.content)) if (!eqJ((readback.content || {})[k], v)) bad('content', { field: k, want: v, got: (readback.content || {})[k] });
@@ -224,9 +229,10 @@ function main() {
   const opt = name => { const i = args.indexOf(name); return i === -1 ? null : args.splice(i, 2)[1]; };
   const ledgerArg = opt('--ledger');
   const foundationsArg = opt('--foundations');
+  const pageArg = opt('--page');
   const [what, contractPath, resultPath, ...pages] = args;
   if (!['coverage', 'sample', 'theme'].includes(what) || !contractPath || !resultPath || (pages.length && what !== 'coverage')) {
-    console.error('usage: coverage.mjs <coverage|sample|theme> <contract.json> <result.json> [<result.json> ... (coverage pages)] [--ledger <path>] [--foundations <path>]');
+    console.error('usage: coverage.mjs <coverage|sample|theme> <contract.json> <result.json> [<result.json> ... (coverage pages)] [--ledger <path>] [--foundations <path>] [--page <name>]');
     process.exit(2);
   }
   const contract = JSON.parse(readFileSync(contractPath, 'utf8'));
@@ -234,7 +240,7 @@ function main() {
   const root = fileURLToPath(new URL('../../../', import.meta.url));
   const foundations = JSON.parse(readFileSync(foundationsArg || join(root, 'design-systems', contract.source.adapter, `${contract.source.adapter}.foundations.json`), 'utf8'));
   let report;
-  if (what === 'coverage') report = checkCoverage(contract, result, readLedger(ledgerArg || defaultLedgerPath(result.fileKey)));
+  if (what === 'coverage') report = checkCoverage(contract, result, readLedger(ledgerArg || defaultLedgerPath(result.fileKey)), { page: pageArg });
   else if (what === 'theme') report = checkTheme(contract, result, foundations);
   else report = checkSample(contract, result, readLedger(ledgerArg || defaultLedgerPath(result.fileKey)), foundations);
   console.log(JSON.stringify(report, null, 2));
