@@ -89,6 +89,64 @@ test('a variant edited in Figma whose code changed is left as it is and reported
   assert.deepEqual((await node(ids[0])).fills, RED);
 });
 
+test('a variant edited in Figma to what its code then says is not sent nor held, and its baseline takes the new Contract (ADR 0017)', { skip }, async () => {
+  const p = await builtProject();
+  const { dir, mock, ledger, record } = p;
+  const node = nodeOf(mock);
+  const ids = ledger.sets.input.variants;
+  // The owner fades index 2 to 40 in Figma; the code then says 40 too.
+  (await node(ids[2])).opacity = 0.4;
+  await inputFaded(p, 50, 40);
+  const r = await drive({ dir, mock, ledger, record, namespace: 'v0-app' });
+  assert.equal(r.n.status, 'built', JSON.stringify(r.n));
+  assert.deepEqual(readOf(r.steps), [[2, 5]]);
+  assert.deepEqual(sentOf(r.steps), [[5]]);
+  assert.deepEqual(r.n.held, []);
+  assert.deepEqual(r.steps.flatMap(s => s.writes).filter(([, id]) => id === ids[2]), []);
+  near((await node(ids[2])).opacity, 0.4);
+  near((await node(ids[5])).opacity, 0.4);
+  assert.equal(r.record.coverage.input.ok, true, JSON.stringify(r.record.coverage.input.problems));
+  const now = gate({ dir, fileKey: FILE_KEY, ledger: r.ledger }).contracts.input;
+  const built = r.record.built.input;
+  assert.equal(built.contract, contentHash(now));
+  assert.deepEqual(built.variants[variantFingerprints(now)[2].name], [variantFingerprints(now)[2].fingerprint, ids[2]]);
+  assert.ok(!('held' in built));
+  // A rerun reads and sends nothing.
+  const again = await drive({ dir, mock, ledger: r.ledger, record: r.record, namespace: 'v0-app' });
+  assert.deepEqual([again.n.status, again.steps, again.n.held], ['built', [], []]);
+});
+
+test('a held variant whose code then changes to what Figma has is released; one that matches neither Contract stays held', { skip }, async () => {
+  const p = await builtProject();
+  const { dir, mock, ledger, record } = p;
+  const node = nodeOf(mock);
+  const ids = ledger.sets.input.variants;
+  const names = variantFingerprints(gate({ dir, fileKey: FILE_KEY, ledger }).contracts.input).map(v => v.name);
+  // The owner fades index 2 to 30; the code says 40, which is neither what it was built from nor what Figma has.
+  (await node(ids[2])).opacity = 0.3;
+  await inputFaded(p, 50, 40);
+  const r = await drive({ dir, mock, ledger, record, namespace: 'v0-app' });
+  assert.equal(r.n.status, 'built', JSON.stringify(r.n));
+  assert.deepEqual(sentOf(r.steps), [[5]]);
+  assert.deepEqual(r.n.held.map(c => [c.variant, c.reason]), [[names[2], 'edited']]);
+  near((await node(ids[2])).opacity, 0.3);
+
+  // The code goes to 30: the held variant is read against the Contract it was built from, differs, and matches today's.
+  await inputFaded(p, 40, 30);
+  const back = await drive({ dir, mock, ledger: r.ledger, record: r.record, namespace: 'v0-app' });
+  assert.equal(back.n.status, 'built', JSON.stringify(back.n));
+  assert.deepEqual(readOf(back.steps), [[2], [5]]);
+  assert.deepEqual(sentOf(back.steps), [[5]]);
+  assert.deepEqual(back.n.held, []);
+  near((await node(ids[2])).opacity, 0.3);
+  near((await node(ids[5])).opacity, 0.3);
+  const now = gate({ dir, fileKey: FILE_KEY, ledger: back.ledger }).contracts.input;
+  const built = back.record.built.input;
+  assert.equal(built.contract, contentHash(now));
+  assert.deepEqual(built.variants[names[2]], [variantFingerprints(now)[2].fingerprint, ids[2]]);
+  assert.ok(!('held' in built));
+});
+
 test('--keep-figma keeps the edit and builds the code change elsewhere; a variant removed in Figma is held too', { skip }, async () => {
   const p = await builtProject();
   const { dir, mock, ledger, record } = p;
