@@ -559,6 +559,9 @@ test('the coverage check matches every Prop=Value label, cell and wiring; a samp
   const s = checkSample(BUTTON, sample.result, env.ledger, DOC);
   assert.deepEqual(s.problems, []);
   assert.equal(s.sampled, 4);
+  // the core reports each text's size beside its typography (#236), which textProblems reads
+  const label = Object.values(sample.result.sample)[0].extras.Label;
+  assert.ok(label.w > 1 && label.h > 0, JSON.stringify(label));
   env.mock.log.length = 0;
   const theme = await sets(env, { mode: 'theme', sample: [0, 120] });
   const t = checkTheme(BUTTON, theme.result, DOC);

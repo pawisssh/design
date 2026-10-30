@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { baseTuple, expand, resolve, variantName } from '../../contract/scripts/contract.mjs';
 import { diff } from './base-loop.mjs';
 import { valueAt } from './foundations-value.mjs';
-import { defaultProps, iconRef, normalizeReadback } from './readback.mjs';
+import { defaultProps, iconRef, normalizeReadback, rootFillProblems } from './readback.mjs';
 import { defaultLedgerPath, readLedger } from './ledger.mjs';
 
 // The grid cell [row, column] a tuple sits in: figma.grid lists the axes that make the rows and the columns;
@@ -97,6 +97,7 @@ export function checkCoverage(contract, readback, ledger = null, { page = null }
   const orphaned = [];
   const bad = (what, detail) => problems.push({ what, ...detail });
   const tuples = expand(contract);
+  for (const p of rootFillProblems(contract, tuples)) bad('contract', p);
   const want = new Map(tuples.map(t => [variantName(contract, t), t]));
   const labels = new Map(contract.axes.map(a => [a.label, new Set(a.values.map(v => v.label))]));
   const seen = new Map();
@@ -164,8 +165,8 @@ export function checkSample(contract, readback, ledger, foundations) {
     const raw = readback.sample[name];
     const t = byName.get(name);
     if (!raw || !t) { problems.push({ what: raw ? 'extra' : 'missing', name }); continue; }
-    const d = diff(contract, normalizeReadback(raw, ledger), foundations, defaultProps(contract), t);
-    if (d.changes.length || d.unread.length) problems.push({ what: 'diff', name, changes: d.changes, unread: d.unread });
+    const d = diff(contract, { ...normalizeReadback(raw, ledger), specimen: 'set' }, foundations, defaultProps(contract), t);
+    if (d.changes.length || d.unread.length || d.problems.length) problems.push({ what: 'diff', name, changes: d.changes, unread: d.unread, problems: d.problems });
     d.unbuilt.forEach(f => unbuilt.add(f));
     const wantRefs = refsOf(contract, t);
     if (!eqJ(raw.refs || {}, wantRefs)) problems.push({ what: 'wiring', name, want: wantRefs, got: raw.refs });

@@ -76,7 +76,8 @@ for (const [c, count] of [[TEXT_INPUT, 36], [SELECT, 52]])
     const { ledger, coverage } = await built;
     assert.equal(expand(c).length, count);
     assert.equal(ledger.sets[c.family.key].variants.filter(Boolean).length, count);
-    assert.deepEqual(checkCoverage(c, coverage[c.family.key], ledger).problems, []);
+    // the root is width: fill, which a hug grid set has nothing to fill (#236): the one problem it carries
+    assert.deepEqual(checkCoverage(c, coverage[c.family.key], ledger).problems.map(p => [p.what, p.node, p.field]), [['contract', c.anatomy.name, 'width']]);
   });
 
 for (const c of [TEXT_INPUT, SELECT])

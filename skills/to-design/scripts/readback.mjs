@@ -1,7 +1,7 @@
 // What a built variant should read back as, and a readback in Contract vocabulary (#31, #32).
 // Shared by the base-first loop (base-loop.mjs), the build-plan deriver and the coverage check. Rule
 // matching, expansion and the closure live only in the shared Contract module.
-import { baseTuple, resolve, variantName } from '../../contract/scripts/contract.mjs';
+import { baseTuple, expand, resolve, variantName } from '../../contract/scripts/contract.mjs';
 import { valueAt } from './foundations-value.mjs';
 
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -179,6 +179,56 @@ export function normalizeReadback(raw, ledger) {
   const out = { ...raw, layout: map(raw.layout), paint: map(raw.paint) };
   if (raw.swap) out.swap = Object.fromEntries(Object.entries(raw.swap).map(([n, id]) => [n, icons[id] || (id ? `unknown:${id}` : null)]));
   return out;
+}
+
+// ---------- problems no Contract difference shows (#236) ----------
+
+const round2 = n => Math.round(n * 100) / 100;
+
+/**
+ * What a readback shows in its visible texts that the Contract cannot say: a text one line of text is too tall for
+ * (`text-wrapped`: it wrapped, because its box is narrower than its words), a text under 1 px wide (`text-narrow`),
+ * and a variant narrower than its widest text (`variant-narrow`). Each is {what, node, reason}. Hidden layers and
+ * the layers under them are exempt, and a readback whose texts report no size (`extras[node].w` and `.h`, which a
+ * core before #236 does not write) has none. A text meant to wrap over several lines is flagged too.
+ */
+export function textProblems(readback) {
+  const extras = readback.extras || {};
+  const hidden = new Set(Object.entries(readback.visible || {}).filter(([, v]) => v === false).map(([n]) => n));
+  const shown = [];
+  (function walk(n, off) {
+    off = off || hidden.has(n.name);
+    if (!off && extras[n.name]) shown.push(n.name);
+    (n.children || []).forEach(c => walk(c, off));
+  })(readback.tree || { name: '', children: Object.keys(extras).map(name => ({ name })) }, false);
+  const out = [];
+  let widest = null;
+  for (const node of shown) {
+    const { w, h, fontSize, lineHeight } = extras[node];
+    if (typeof w !== 'number' || typeof h !== 'number') continue;
+    if (!widest || w > extras[widest].w) widest = node;
+    if (w < 1) { out.push({ what: 'text-narrow', node, reason: `${round2(w)} px wide` }); continue; }
+    const line = typeof lineHeight === 'number' ? lineHeight : typeof fontSize !== 'number' ? 0
+      : /%$/.test(lineHeight) ? fontSize * parseFloat(lineHeight) / 100 : fontSize * 1.2;
+    const want = String((readback.text || {})[node] ?? '').split('\n').length;
+    const lines = line > 0 ? Math.round(h / line) : 0;
+    if (lines > want) out.push({ what: 'text-wrapped', node, reason: `${round2(w)} px wide and ${round2(h)} px high: ${lines} lines of ${round2(line)} px for ${want} line${want === 1 ? '' : 's'} of text` });
+  }
+  const size = readback.size;
+  if (widest && size && typeof size.w === 'number' && size.w + 0.5 < extras[widest].w)
+    out.push({ what: 'variant-narrow', node: widest, reason: `${round2(size.w)} px wide, narrower than its text ${widest} (${round2(extras[widest].w)} px)` });
+  return out;
+}
+
+/**
+ * The Contract's own problem with a set: a root width of "fill" in a variant has nothing to fill (the grid hugs, so
+ * the root reads back as its content). One {what: 'contract', node, field: 'width', reason} when any of `tuples`
+ * resolves the root to fill, else none.
+ */
+export function rootFillProblems(contract, tuples) {
+  const root = contract.anatomy.name;
+  const n = tuples.filter(t => (resolve(contract, t).layout[root] || {}).width === 'fill').length;
+  return n ? [{ what: 'contract', node: root, field: 'width', reason: `width "fill" has nothing to fill in a hug grid set (${n} of ${tuples.length} variant${tuples.length === 1 ? '' : 's'}): use hug or a fixed width` }] : [];
 }
 
 // ---------- comparing values ----------

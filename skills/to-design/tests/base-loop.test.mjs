@@ -12,7 +12,7 @@ import { approve, contentHash, PROTOTYPE_APPROVER, validate } from '../../contra
 import {
   applyEdits, approveReviewed, diff, discardNote, draftedByKind, formatDiff, formatDiffSummary, formatReview, mainChanged, ownerEdits, regenerate, review, RAW_REASON,
 } from '../scripts/base-loop.mjs';
-import { expectedBase, normalizeReadback } from '../scripts/readback.mjs';
+import { expectedBase, normalizeReadback, textProblems } from '../scripts/readback.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const FIX = join(ROOT, 'skills/to-design/tests/fixtures/base-loop');
@@ -335,6 +335,66 @@ test('the readback command prints what it holds and the problems, not every fiel
   const full = run('--full');
   assert.ok(full.stdout.length > 4096);
   assert.deepEqual(JSON.parse(full.stdout.slice(full.stdout.indexOf('\n') + 1)), JSON.parse(readFileSync(join(dir, 'readback.json'), 'utf8')));
+});
+
+// The Button's Label as the core reads it (#236): 14 px text on an 18 px line, in a 116 px wide variant.
+const withText = (text, { size = { w: 116, h: 48 }, characters = 'Button', visible = {} } = {}) => {
+  const r = rb('v1');
+  return { ...r, size, text: { Label: characters }, visible: { ...r.visible, ...visible }, extras: { Label: { ...r.extras.Label, ...text } } };
+};
+
+test('a visible text narrower than one line of its text, or under 1 px, is a problem; a text on one line is not (#236)', () => {
+  assert.deepEqual(textProblems(withText({ w: 52, h: 18 })), []);
+  assert.deepEqual(textProblems(withText({ w: 52, h: 36 }, { characters: 'Two\nlines' })), [], 'a line break is not a wrap');
+  const wrapped = textProblems(withText({ w: 9, h: 108 }));
+  assert.deepEqual(wrapped.map(p => [p.what, p.node]), [['text-wrapped', 'Label']]);
+  assert.match(wrapped[0].reason, /9 px wide and 108 px high: 6 lines of 18 px for 1 line of text/);
+  assert.deepEqual(textProblems(withText({ w: 0.5, h: 18 })).map(p => p.what), ['text-narrow'], 'under 1 px');
+  assert.deepEqual(textProblems(withText({ w: 0, h: 0 })).map(p => p.what), ['text-narrow']);
+});
+
+test('a line height in percent, or auto, sets the line a text is measured against (#236)', () => {
+  assert.deepEqual(textProblems(withText({ w: 52, h: 18, lineHeight: '150%', fontSize: 12 })), []);
+  assert.deepEqual(textProblems(withText({ w: 52, h: 45, lineHeight: '150%', fontSize: 12 })).map(p => p.what), ['text-wrapped'], '3 lines of 18 px');
+  assert.deepEqual(textProblems(withText({ w: 52, h: 17, lineHeight: 'AUTO', fontSize: 14 })), []);
+  assert.deepEqual(textProblems(withText({ w: 52, h: 70, lineHeight: 'AUTO', fontSize: 14 })).map(p => p.what), ['text-wrapped']);
+});
+
+test('a variant narrower than its widest visible text is a problem (#236)', () => {
+  assert.deepEqual(textProblems(withText({ w: 80, h: 18 }, { size: { w: 116, h: 48 } })), []);
+  const narrow = textProblems(withText({ w: 80, h: 18 }, { size: { w: 31, h: 48 } }));
+  assert.deepEqual(narrow.map(p => [p.what, p.node]), [['variant-narrow', 'Label']]);
+  assert.match(narrow[0].reason, /31 px wide, narrower than its text Label \(80 px\)/);
+});
+
+test('hidden layers, and a readback with no measured size, are exempt (#236)', () => {
+  assert.deepEqual(textProblems(withText({ w: 9, h: 108 }, { visible: { Label: false } })), [], 'a hidden text');
+  const underHidden = withText({ w: 9, h: 108 });
+  underHidden.tree = { name: 'Button', type: 'COMPONENT', children: [{ name: 'Icon', type: 'FRAME', children: [{ name: 'Label', type: 'TEXT' }] }] };
+  underHidden.visible = { Icon: false, Label: true };
+  assert.deepEqual(textProblems(underHidden), [], 'a text under a hidden layer');
+  assert.deepEqual(textProblems(rb('v1')), [], 'a readback from a core before #236 reports no size');
+});
+
+test('diff names the problems beside the differences, and a readback with one is not clean (#236)', () => {
+  const read = withText({ w: 9, h: 108 }, { size: { w: 31, h: 48 } });
+  const d = diff(CONTRACT, read, FOUNDATIONS);
+  assert.deepEqual(d.problems.map(p => p.what).sort(), ['text-wrapped']);
+  assert.deepEqual(diff(CONTRACT, rb('v0'), FOUNDATIONS).problems, []);
+  const text = formatDiff(CONTRACT, read, review(CONTRACT, read, FOUNDATIONS));
+  assert.match(text, /\[problem\] text-wrapped Label: 9 px wide and 108 px high/);
+  assert.match(formatDiffSummary(CONTRACT, read, review(CONTRACT, read, FOUNDATIONS)), /\[problem\] text-wrapped Label/);
+  assert.throws(() => approveReviewed(CONTRACT, read, FOUNDATIONS, { snapshotId: CONTRACT.source.snapshotId, contentHash: contentHash(CONTRACT), at: AT }), /1 problem/);
+});
+
+test('a root width of fill is a Contract problem in a set, and not on a Base Component standing alone (#236)', () => {
+  const filled = { ...CONTRACT, layout: CONTRACT.layout.map((r, i) => (i ? r : { ...r, set: { ...r.set, Button: { ...r.set.Button, width: 'fill' } } })) };
+  const inSet = { ...rb('v1'), specimen: 'set' };
+  const found = diff(filled, inSet, FOUNDATIONS).problems;
+  assert.deepEqual(found.map(p => [p.what, p.node, p.field]), [['contract', 'Button', 'width']]);
+  assert.match(found[0].reason, /width "fill" has nothing to fill in a hug grid set/);
+  assert.deepEqual(diff(filled, { ...rb('v1'), specimen: 'review' }, FOUNDATIONS).problems, [], 'standing alone it has a page to fill');
+  assert.deepEqual(diff(CONTRACT, inSet, FOUNDATIONS).problems, [], 'the Button root has a fixed width');
 });
 
 test('regenerating from the saved readbacks reproduces the committed outputs byte for byte', () => {
