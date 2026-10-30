@@ -6,7 +6,7 @@
 // - each cva axis's label and its values' labels (fingerprint: the axis's value keys);
 // - each attribute axis's label (fingerprint: its utilities' variant prefixes); its value labels are state words;
 // - `figma.grid` and `family.description` (fingerprint, family-wide: every axis's key, value keys and default, and
-//   the family's exported parts; compound variants fail the exact tier, so there are none to pin);
+//   the family's exported parts; a compound variant adds no axis or value, so it is not pinned);
 // - each TEXT property's default text (#166; fingerprint: the layer, the property key and its code mapping, not the
 //   text's style, so a class change does not reopen the copy).
 // Slot and State axis labels are made by rule (#121, #6), so they are not drafted.

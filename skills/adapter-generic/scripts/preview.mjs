@@ -223,6 +223,7 @@ export async function previewRenderer(contract, { project = FIXTURE, dir: base =
     for (const cv of Object.values(cvas)) {
       add(cv.base);
       for (const values of Object.values(cv.variants)) Object.values(values).forEach(add);
+      cv.compound.filter(c => c.classes !== undefined).forEach(add);
     }
     for (const c of components) c.classes.forEach(add);
   }

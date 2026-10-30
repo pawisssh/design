@@ -57,6 +57,13 @@ const v = cva("p-1", { variants: { tone: { a: "bg-primary", b: "bg-secondary" } 
   assert.deepEqual(read('x.tsx', text).cvas.v.compound, [{ match: { tone: 'a' }, classes: 'p-2', line: 3 }]);
 });
 
+test('a compound matches a list of values, and a boolean as a boolean (#255)', { skip }, () => {
+  const text = `import { cva } from "class-variance-authority"
+const v = cva("p-1", { variants: { tone: { a: "", b: "" }, on: { true: "", false: "" } },
+  compoundVariants: [{ tone: ["a", "b"], on: true, class: "p-2" }] })`;
+  assert.deepEqual(read('x.tsx', text).cvas.v.compound, [{ match: { tone: ['a', 'b'], on: true }, classes: 'p-2', line: 3 }]);
+});
+
 test('Sonner: a component bound to a const (`const Toaster = (…) => …`) is read, exported through `export { Toaster }` (#154)', { skip }, () => {
   const { components } = read('components/ui/sonner.tsx');
   assert.deepEqual(components.map(c => [c.name, c.line, c.exported, c.element]), [['Toaster', 7, true, 'Sonner']]);
