@@ -144,7 +144,9 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
     const host = HOSTS[imp.module] && HOSTS[imp.module][exp];
     if (host) return { host, link: true };
     if (ROUTERS.has(imp.module) && ROUTER_PARTS.has(exp)) return { router: exp };
-    if (packages.includes(imp.module)) return { leaf: { module: imp.module, export: exp, kind: 'ds' } };
+    // A Contract's package or one of its subpaths (CDS's `@coinbase/cds-web/buttons`, #400) is that package; the leaf names the package.
+    const pkg = packages.filter(p => imp.module === p || imp.module.startsWith(`${p}/`)).sort((a, b) => b.length - a.length)[0];
+    if (pkg) return { leaf: { module: pkg, export: exp, kind: 'ds' } };
     return { transparent: true };
   };
 
