@@ -142,8 +142,8 @@ function spaced(text) {
   return out;
 }
 
-// A utility's variants (`dark:hover:bg-x` -> "dark:hover"), sorted, outside brackets.
-function variantsOf(candidate) {
+// A utility's variant prefixes in source order (`dark:hover:bg-x` -> dark, hover), split outside brackets.
+function prefixesOf(candidate) {
   const segs = [];
   let depth = 0, start = 0;
   for (let i = 0; i < candidate.length; i++) {
@@ -152,14 +152,20 @@ function variantsOf(candidate) {
     else if (ch === ']' || ch === ')') depth--;
     else if (ch === ':' && depth === 0) { segs.push(candidate.slice(start, i)); start = i + 1; }
   }
-  return segs.sort(byKey).join(':');
+  return segs;
 }
+
+// A utility's variants (`dark:hover:bg-x` -> "dark:hover"), sorted.
+const variantsOf = candidate => prefixesOf(candidate).sort(byKey).join(':');
 
 /**
  * Read one family at the exact tier. Returns {name, file, files, axes, anatomy, layout, paint, synthesized, palette, notes,
- * omit, expectedCount}: `synthesized` maps each Synthesized token's flat name to its Foundations variable, by name, and
+ * omit, expectedCount, provenance}: `synthesized` maps each Synthesized token's flat name to its Foundations variable, by name, and
  * `paint` binds it as {token}; `palette` does the same for the Tailwind default-palette colours the family's rules
- * read (#254), which `foundations` need not hold. `foundations` need only hold the Code Library tokens. Throws on anything it cannot
+ * read (#254), which `foundations` need not hold. `provenance` (#291) maps every variant's name, omitted ones too, to
+ * {variant: tuple, layout, paint}, each {node: {field: {mode: [{class, place, file, line, prefixes}]}}}: the classes
+ * behind that value in that Mode, a place being {kind: base | variant (axis, value) | compound (match) | className |
+ * part (part) | stylesheet (selector, class null)}. `foundations` need only hold the Code Library tokens. Throws on anything it cannot
  * read exactly (see the header).
  */
 export async function readFamily({ project, family, foundations, tools = DEFAULT_DIR }) {
@@ -226,15 +232,18 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   // The other exported components are the parts (CardHeader), each a FRAME under the root, named by rule (#103): the
   // Title Case of its data-slot without the family prefix (card-header -> Header).
   const parts = components.filter(c => c.exported && !provider && c !== root).map(c => ({ name: c.name, line: c.line, slot: c.slot || kebab(c.name),
-    node: title((c.slot || kebab(c.name)).replace(new RegExp(`^${family}-`), '')), entries: c.classes.flatMap(l => l.classes.split(/\s+/).filter(Boolean).map(candidate => ({ candidate, line: l.line }))) }));
-  const entries = []; // every class occurrence: {candidate, line, axis?, value?}, in the order cva emits them
+    node: title((c.slot || kebab(c.name)).replace(new RegExp(`^${family}-`), '')),
+    entries: c.classes.flatMap(l => l.classes.split(/\s+/).filter(Boolean).map(candidate => ({ candidate, line: l.line, place: { kind: 'part', part: c.name } }))) }));
+  // Every class occurrence: {candidate, line, axis?, value?, match?, place}, in the order cva emits them. Its place is
+  // the class string it is written in: cva's base, an axis value, a compound, or the root's own className.
+  const entries = [];
   const add = (list, origin) => list.classes.split(/\s+/).filter(Boolean).forEach(c => entries.push({ candidate: c, line: list.line, ...origin }));
-  add(cv.base, {});
+  add(cv.base, { place: { kind: 'base' } });
   for (const [axis, values] of Object.entries(cv.variants))
-    for (const [value, list] of Object.entries(values)) add(list, { axis, value });
+    for (const [value, list] of Object.entries(values)) add(list, { axis, value, place: { kind: 'variant', axis, value } });
   // cva emits each compound's classes after the variants', in source order, so `cn()` lets one drop a variant's.
-  compounds.forEach(c => add(c, { match: c.match }));
-  root.classes.forEach(list => add(list, {}));
+  compounds.forEach(c => add(c, { match: c.match, place: { kind: 'compound', match: c.match } }));
+  root.classes.forEach(list => add(list, { place: { kind: 'className' } }));
 
   // 2. Compile every utility and sort its rules by condition.
   const candidates = [...new Set(entries.map(e => e.candidate))].sort(byKey);
@@ -514,11 +523,12 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
 
   const usesBorder = live.some(r => 'border-width' in r.decls);
   const usesRadius = live.some(r => 'border-radius' in r.decls);
-  const baseStroke = baseBorder && { candidate: '* (border-color)', decls: baseBorder.decls, entry: { base: true } };
-  const bodyText = bodyColour && { candidate: 'body (color)', decls: bodyColour.decls, entry: { base: true } };
+  const baseStroke = baseBorder && { candidate: '* (border-color)', decls: baseBorder.decls, entry: { base: true, place: { kind: 'stylesheet', selector: baseBorder.selector } } };
+  const bodyText = bodyColour && { candidate: 'body (color)', decls: bodyColour.decls, entry: { base: true, place: { kind: 'stylesheet', selector: bodyColour.selector } } };
   let strokeFromBase = false;
   const boxes = new Set(); // what gives each variant read as a plain box its display
-  // Layout and paint of one variant in one Mode: {layout, paint, by: {field: winning rule}, frames: {node: {field}}}.
+  // Layout and paint of one variant in one Mode: {layout, paint, by: {field: winning rule}, frames: {node: {field}},
+  // texts, from: {node: {field: [rule]}}}: `from` gives the rules behind each frame's and text layer's fields.
   function render(t, mode) {
     const keep = survivors(t);
     const here = live.filter(r => applies(r, t, mode, keep));
@@ -529,7 +539,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     });
     // `width: 100%` fills the parent, `fit-content` (SelectTrigger's `w-fit`) hugs; any other width is a length.
     const size = (field, r) => (r.decls[field] === '100%' ? 'fill' : r.decls[field] === 'fit-content' ? 'hug' : length(field, r, [field], sub).value);
-    const layout = {}, paint = {}, by = {};
+    const layout = {}, paint = {}, by = {}, from = {};
     const display = win(['display']);
     const shown = display ? display.decls.display : 'not set';
     // A plain box (#153): no display utility, or block or inline-block, stacks its children as a column with no gap
@@ -539,6 +549,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       fail(`${Name} (${variantName({ axes }, t)}) is not a flex or grid container or a plain box (display: ${shown}${display ? '' : `, element ${root.element}`}); only Auto Layout is read`);
     // A grid with no columns stacks its children: a column, its row gap the gap, its justify-items the cross alignment.
     const grid = /grid$/.test(shown);
+    if (display) by.direction = display;
     if (box) { layout.direction = 'column'; boxes.add(display ? `${display.candidate}: ${box}` : `<${root.element}>: ${box}`); }
     else if (grid) {
       const cols = win(['grid-template-columns']);
@@ -551,6 +562,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     } else {
       const dir = win(['flex-direction']);
       layout.direction = dir && /^column/.test(dir.decls['flex-direction']) ? 'column' : 'row';
+      if (dir) by.direction = dir;
     }
     // With no width, a block-level container (flex, grid) fills its parent and an inline one hugs its content.
     for (const field of SIZE_FIELDS) {
@@ -565,6 +577,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       const r = !box && win([prop]);
       const v = r ? r.decls[prop] : 'normal';
       layout[field] = ALIGN[v] || fail(`${r.candidate} (${at(r.entry)}): ${prop}: ${v} has no Auto Layout alignment`);
+      if (r) by[field] = r;
     }
     const cross = !box && win([crossProp]);
     const stretches = !cross || ['normal', 'stretch'].includes(cross.decls[crossProp]);
@@ -592,6 +605,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       layout.strokeWeight = { raw: bw, level: 'info', reason: border
         ? `${border.candidate}: border-width ${border.decls['border-width']}; the Foundations document has no stroke-width variable` : 'no border' };
       layout.strokeAlign = 'inside';
+      if (border) by.strokeWeight = border;
     }
 
     const fill = win(['background-color']);
@@ -626,9 +640,11 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     const sizes = content.filter(r => applies(r, t, mode, keep));
     for (const s of icons) {
       const f = frames[s.node] = {};
+      from[s.node] = {};
       for (const field of SIZE_FIELDS) {
         const r = winner(sizes, [field]);
         f[field] = r ? length(field, r, [field]).value : fail(`${Name} (${variantName({ axes }, t)}): no svg size utility sizes the ${s.node} slot`);
+        from[s.node][field] = [r];
       }
       f.visible = t[s.key] !== 'none';
     }
@@ -641,6 +657,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       const flex = display && /flex$/.test(display.decls.display);
       const dir = flex && winner(p.rules, ['flex-direction']);
       const f = frames[p.node] = { direction: flex && !(dir && /^column/.test(dir.decls['flex-direction'])) ? 'row' : 'column' };
+      from[p.node] = { direction: [dir || display] };
       const self = !box && winner(p.rules, [grid ? 'justify-self' : 'align-self']);
       const selfValue = self ? self.decls[grid ? 'justify-self' : 'align-self'] : 'auto';
       const across = selfValue === 'stretch' || (['auto', 'normal'].includes(selfValue) && stretches) ? 'fill' : 'hug';
@@ -650,6 +667,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       for (const [field, fallback] of [['width', w], ['height', h]]) {
         const r = winner(p.rules, [field]);
         f[field] = r ? size(field, r) : fallback;
+        from[p.node][field] = [r];
       }
       const slot = slots.find(s => s.part === p);
       if (slot) f.visible = t[slot.key] !== 'none';
@@ -695,12 +713,13 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
       f.textStyle = why === null ? { token: key } : { raw: { fontSize: size.px, lineHeight, fontWeight: weight }, level: 'warning',
         reason: `${said.join('; ')}; no Text Style: ${why}` };
       f.textResize = f.width === 'fill' ? 'height' : 'width-and-height';
+      from[n.node] = { ...from[n.node], textStyle: [sizeRule, lineRule, weightRule] };
       if (n.kind === 'children') f.visible = !isObj(layout.width);
       const r = winner(own, ['color']) || winner(up, ['color']) || bodyText
         || fail(`${Name} (${variantName({ axes }, t)}): no colour for the ${n.node} text, and no color on body in ${cssFile}'s base layer`);
       inks[n.node] = { fill: colour(r.decls.color, r), by: r };
     }
-    return { layout, paint, by, frames, texts: inks };
+    return { layout, paint, by, frames, texts: inks, from };
   }
 
   // One Mode's value of a Synthesized token, as a Foundations value form: what the winning rule `r` sets there.
@@ -765,9 +784,30 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
     rendered.forEach(x => { if (by(x)) uses.get(key).add(by(x)); });
     return { synth };
   };
+  // Field provenance (#291): per variant, node, field and Mode, the classes behind the value: the winner (a ring's
+  // width class, then its colour class; a text style's size, line-height and weight classes), each with its place.
+  // A field no class sets (a hug, a default) has none.
+  const provenance = {};
+  const records = new Map(); // entry -> candidate -> its record, so a class written once is one record
+  const record = r => {
+    if (!records.has(r.entry)) records.set(r.entry, new Map());
+    const own = records.get(r.entry);
+    if (!own.has(r.candidate))
+      own.set(r.candidate, r.entry.base ? { class: null, place: r.entry.place, file: cssFile, line: null, prefixes: [] }
+        : { class: r.candidate, place: r.entry.place, file, line: r.entry.line, prefixes: prefixesOf(r.candidate) });
+    return own.get(r.candidate);
+  };
+  const perMode = (rendered, rules) => Object.fromEntries(modes.map((m, i) => [m.key, [...new Set(rules(rendered[i]).filter(Boolean).map(record))]]));
+  const rootRules = (x, field) => (field === 'effects' ? [x.by.ring, x.by.effects] : [x.by[field]]);
   for (const t of tuples) {
     const rendered = modes.map(m => render(t, m.key));
     const [light] = rendered;
+    const from = (x, node, field) => (x.from[node] && x.from[node][field]) || [];
+    provenance[variantName({ axes }, t)] = { variant: t,
+      layout: { [Name]: Object.fromEntries(LAYOUT_FIELDS.map(f => [f, perMode(rendered, x => rootRules(x, f))])),
+        ...Object.fromEntries(Object.entries(frameFields).map(([n, fs]) => [n, Object.fromEntries(fs.map(f => [f, perMode(rendered, x => from(x, n, f))]))])) },
+      paint: { [Name]: Object.fromEntries(PAINT_FIELDS.map(f => [f, perMode(rendered, x => rootRules(x, f))])),
+        ...Object.fromEntries(texts.map(n => [n.node, { fill: perMode(rendered, x => [x.texts[n.node].by]) }])) } };
     rendered.forEach((o, i) => {
       for (const f of LAYOUT_FIELDS)
         if (json(o.layout[f]) !== json(light.layout[f])) {
@@ -791,9 +831,14 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   // A text layer every variant shows has no visibility.
   for (const n of texts) if (frameValues[n.node].visible && frameValues[n.node].visible.every(v => v === true || v === undefined)) delete frameValues[n.node].visible;
   for (const f of LAYOUT_FIELDS) if (values.layout[f].every(v => v === undefined)) delete values.layout[f];
+  // The provenance holds the fields the Contract does.
+  const byNode = { layout: { [Name]: values.layout, ...frameValues }, paint: { [Name]: values.paint, ...textPaint } };
+  for (const p of Object.values(provenance))
+    for (const section of ['layout', 'paint'])
+      for (const [node, fields] of Object.entries(p[section]))
+        for (const f of Object.keys(fields)) if (!(f in byNode[section][node])) delete fields[f];
 
   // 7. Rules: per field, the fewest axes it depends on; the commonest value in `{}`, the rest as exceptions.
-  const byNode = { layout: { [Name]: values.layout, ...frameValues }, paint: { [Name]: values.paint, ...textPaint } };
   const layout = compress(axes, tuples, byNode.layout);
   const paint = compress(axes, tuples, byNode.paint);
   const check = { axes, layout, paint, properties: [] };
@@ -910,7 +955,7 @@ export async function readFamily({ project, family, foundations, tools = DEFAULT
   return { name: Name, file, files: sortedFiles, element: root.element, axes, anatomy, properties, layout, paint,
     synthesized: Object.fromEntries(Object.keys(synthesized).sort(byKey).map(k => [k, synthesized[k]])),
     palette: Object.fromEntries(Object.keys(palette).sort(byKey).map(k => [k, palette[k]])),
-    notes, omit, expectedCount, alias: `${ui}/${family}`, renderer, facts };
+    notes, omit, expectedCount, alias: `${ui}/${family}`, renderer, facts, provenance };
 }
 
 /**
@@ -1063,7 +1108,8 @@ export function contractFor(f, family, foundations) {
  * null) while their fingerprints hold, otherwise taken from `drafts` ({key: value}) or requested.
  * Throws when the document does not match, on a drafted value of the wrong shape, or when the Contract does not
  * validate.
- * @returns {contract, unchanged, report, requests, summary}: `contract` is null while a request is open, and is
+ * @returns {contract, unchanged, report, requests, summary, provenance}: `provenance` is readFamily's, beside the
+ * Contract and never written; `contract` is null while a request is open, and is
  * `prior` itself (`unchanged`) when it holds the same content, or when its snapshot is this one and no Drafted value
  * reopened, went missing or vanished (ADR 0010: an unchanged snapshot writes nothing, so the owner's omit patch, a
  * tweak and the approval stand). `rewrite` drops the second case, to apply a change of the Adapter's own rules.
@@ -1089,13 +1135,13 @@ export async function generate({ project, family, foundations, prior = null, dra
     `rules layout ${f.layout.length}, paint ${f.paint.length}; Synthesized tokens ${Object.keys(f.synthesized).length}; notes ${f.notes.length}`,
     `Drafted values: ${counts}`,
   ];
-  if (!contract) return { contract, unchanged: false, report, requests, summary };
+  if (!contract) return { contract, unchanged: false, report, requests, summary, provenance: f.provenance };
   const { errors } = validate(contract, foundations);
   if (errors.length) fail(`the Contract does not validate:\n${errors.map(e => `  rule ${e.rule} ${e.at}: ${e.message}`).join('\n')}`);
   const settled = !rewrite && prior !== null && prior.source.snapshotId === contract.source.snapshotId
     && !report.reopened.length && !report.missing.length && !report.vanished.length;
   const unchanged = settled || (prior !== null && contentHash(contract) === contentHash(prior));
-  return { contract: unchanged ? prior : contract, unchanged, report, requests, summary };
+  return { contract: unchanged ? prior : contract, unchanged, report, requests, summary, provenance: f.provenance };
 }
 
 // ---------- CLI ----------

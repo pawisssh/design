@@ -11,7 +11,9 @@ import { join } from 'node:path';
 import { generate, readFamily } from '../scripts/components.mjs';
 import { generate as library } from '../scripts/foundations.mjs';
 import { FIXTURE, hasTools } from '../scripts/sources.mjs';
-import { expand, resolve, validate } from '../../contract/scripts/contract.mjs';
+import { expand, resolve, validate, variantName } from '../../contract/scripts/contract.mjs';
+import { compiledRules } from '../scripts/cascade.mjs';
+import { build } from '../scripts/tailwind.mjs';
 import { draftText } from './button-draft.mjs';
 
 const root = new URL('../../../', import.meta.url);
@@ -174,9 +176,101 @@ test('layout is the same in every State, attribute and variant value: the rules 
   assert.ok(layout.every(r => Object.keys(r.match).every(k => ['size', 'icon-inline-start', 'icon-inline-end'].includes(k))), JSON.stringify(layout.map(r => r.match)));
 });
 
+// ---------- Field provenance (#291) ----------
+
+// A Button variant at size default with no icon, valid and collapsed unless given.
+const buttonAt = (variantKey, state, more = {}) =>
+  ({ variant: variantKey, size: 'default', invalid: 'valid', expanded: 'collapsed', 'icon-inline-start': 'none', 'icon-inline-end': 'none', state, ...more });
+const cls = (name, place, line, prefixes = []) => ({ class: name, place, file: BUTTON, line, prefixes });
+const base = { kind: 'base' };
+const value = (axis, v) => ({ kind: 'variant', axis, value: v });
+
+test('provenance names, per variant, field and Mode, the class that wins, its cva place, line and prefixes', { skip }, async () => {
+  const f = await button();
+  const at = t => f.provenance[variantName(f, t)];
+  const both = list => ({ light: list, dark: list });
+  assert.deepEqual(at(buttonAt('outline', 'enabled')).variant, buttonAt('outline', 'enabled'));
+  // A Synthesized token's field: its light class and its dark: class (button-outline-fill).
+  assert.deepEqual(at(buttonAt('outline', 'enabled')).paint.Button.fill, {
+    light: [cls('bg-background', value('variant', 'outline'), 13)], dark: [cls('dark:bg-input/30', value('variant', 'outline'), 13, ['dark'])] });
+  // A derived raw (padding plus the border): the padding class it was derived from.
+  assert.deepEqual(at(buttonAt('default', 'enabled')).layout.Button.paddingLeft, both([cls('px-2.5', value('size', 'default'), 24)]));
+  assert.deepEqual(at(buttonAt('default', 'enabled')).layout.Button.strokeWeight, both([cls('border', base, 7)]));
+  assert.deepEqual(at(buttonAt('default', 'disabled')).paint.Button.opacity, both([cls('disabled:opacity-50', base, 7, ['disabled'])]));
+  assert.deepEqual(at(buttonAt('default', 'enabled', { invalid: 'invalid' })).paint.Button.stroke, {
+    light: [cls('aria-invalid:border-destructive', base, 7, ['aria-invalid'])],
+    dark: [cls('dark:aria-invalid:border-destructive/50', base, 7, ['dark', 'aria-invalid'])] });
+  // An effect: the ring's width class, then its colour class.
+  assert.deepEqual(at(buttonAt('destructive', 'focus')).paint.Button.effects, {
+    light: [cls('focus-visible:ring-3', base, 7, ['focus-visible']), cls('focus-visible:ring-destructive/20', value('variant', 'destructive'), 19, ['focus-visible'])],
+    dark: [cls('focus-visible:ring-3', base, 7, ['focus-visible']), cls('dark:focus-visible:ring-destructive/40', value('variant', 'destructive'), 19, ['dark', 'focus-visible'])] });
+  assert.deepEqual(at(buttonAt('outline', 'hover')).paint.Label.fill, both([cls('hover:text-foreground', value('variant', 'outline'), 13, ['hover'])]));
+  // A prefix holding a colon inside brackets stays one prefix.
+  assert.deepEqual(at(buttonAt('default', 'enabled', { 'icon-inline-start': 'icon-inline-start' })).layout['Icon Inline Start'].width,
+    both([cls("[&_svg:not([class*='size-'])]:size-4", base, 7, ["[&_svg:not([class*='size-'])]"])]));
+  // No class sets a default: the width hugs, the Label shows.
+  assert.deepEqual(at(buttonAt('default', 'enabled')).layout.Button.width, both([]));
+  assert.deepEqual(at(buttonAt('default', 'enabled')).layout.Label.visible, both([]));
+});
+
+test('every selected variant\'s fields name classes that set that field in the compiled CSS, as the variant applies them', { skip }, async () => {
+  const f = await button();
+  const contract = { axes: f.axes, excluded: [], selection: { omit: f.omit }, layout: f.layout, paint: f.paint, properties: [] };
+  const lines = readFileSync(join(FIXTURE, BUTTON), 'utf8').split('\n');
+  const PROPS = { direction: ['flex-direction', 'display'], width: ['width'], height: ['height'], alignMain: ['justify-content', 'align-content'],
+    alignCross: ['align-items', 'justify-items'], paddingTop: ['padding-top', 'padding-block', 'padding'], paddingRight: ['padding-right', 'padding-inline', 'padding'],
+    paddingBottom: ['padding-bottom', 'padding-block', 'padding'], paddingLeft: ['padding-left', 'padding-inline', 'padding'], gap: ['gap', 'row-gap', 'column-gap'],
+    radius: ['border-radius'], strokeWeight: ['border-width'], stroke: ['border-color'], opacity: ['opacity'], effects: ['--tw-ring-shadow', '--tw-ring-color'],
+    textStyle: ['font-size', 'line-height', 'font-weight'] };
+  const props = (node, field) => (field === 'fill' ? [node === 'Button' ? 'background-color' : 'color'] : PROPS[field]);
+  const STATE = { hover: 'hover', 'focus-visible': 'focus', disabled: 'disabled' };
+  const used = new Map(); // class -> the CSS properties some field needs it to set
+  const selected = expand(contract);
+  assert.equal(selected.length, f.expectedCount);
+  for (const t of selected) {
+    const p = f.provenance[variantName(f, t)];
+    const r = resolve(contract, t);
+    for (const section of ['layout', 'paint'])
+      for (const [node, fields] of Object.entries(r[section]))
+        for (const [field, v] of Object.entries(fields)) {
+          const modes = p[section][node][field];
+          assert.deepEqual(Object.keys(modes), ['light', 'dark'], `${node}.${field}`);
+          for (const [mode, list] of Object.entries(modes)) {
+            const where = `${variantName(f, t)} ${node}.${field} ${mode}`;
+            const painted = field === 'effects' ? v.length > 0 : field === 'opacity' ? v.raw !== 1 : ['fill', 'stroke'].includes(field) && v !== 'none';
+            if (painted) assert.ok(list.length, `${where}: a painted value names its class`);
+            for (const c of list) {
+              // No text class colours the link's Label: the base layer's body colour does.
+              if (c.place.kind === 'stylesheet') {
+                assert.deepEqual([c.class, c.place.selector, c.file], [null, 'body', 'app/globals.css'], where);
+                continue;
+              }
+              assert.ok(lines[c.line - 1].includes(c.class), `${where}: ${c.class} is on line ${c.line}`);
+              if (c.place.kind === 'variant') assert.equal(t[c.place.axis], c.place.value, `${where}: ${c.class}'s place applies`);
+              for (const pre of c.prefixes) {
+                if (pre === 'dark') assert.equal(mode, 'dark', where);
+                if (STATE[pre]) assert.equal(t.state, STATE[pre], where);
+                if (pre === 'aria-invalid') assert.equal(t.invalid, 'invalid', where);
+                if (pre === 'aria-expanded') assert.equal(t.expanded, 'expanded', where);
+              }
+              if (!used.has(c.class)) used.set(c.class, new Set());
+              props(node, field).forEach(q => used.get(c.class).add(q));
+            }
+          }
+        }
+  }
+  const compiled = compiledRules(await build(readFileSync(join(FIXTURE, 'app/globals.css'), 'utf8'), [...used.keys()], { base: join(FIXTURE, 'app') }));
+  for (const [c, want] of used) {
+    const selector = '.' + c.replace(/[^a-zA-Z0-9_-]/g, ch => '\\' + ch);
+    const set = compiled.filter(r => r.selector.includes(selector)).flatMap(r => Object.keys(r.decls));
+    assert.ok(set.some(q => want.has(q)), `${c} sets one of ${[...want].join(', ')} (it sets ${set.join(', ')})`);
+  }
+});
+
 test('generate writes the draft Contract against the Foundations document of the same run: it validates', { skip }, async () => {
-  const { contract } = await generate({ project: FIXTURE, family: 'button', foundations: committed, drafts: JSON.parse(readFileSync(DRAFTS, 'utf8')).drafts });
+  const { contract, provenance } = await generate({ project: FIXTURE, family: 'button', foundations: committed, drafts: JSON.parse(readFileSync(DRAFTS, 'utf8')).drafts });
   assert.deepEqual(validate(contract, committed).errors, []);
+  assert.equal(Object.keys(provenance).length, expand({ ...contract, selection: { omit: [] } }).length, 'the provenance beside it covers every variant the code renders, omitted ones too');
   assert.deepEqual([contract.selection.status, contract.selection.approval], ['draft', null]);
   assert.equal(expand(contract).length, contract.selection.expectedCount);
   assert.deepEqual(contract.anatomy.children.map(n => [n.name, n.type]), [['Icon Inline Start', 'FRAME'], ['Label', 'TEXT'], ['Icon Inline End', 'FRAME']]);
