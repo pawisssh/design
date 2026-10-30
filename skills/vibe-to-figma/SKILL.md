@@ -86,6 +86,7 @@ In one act, it applies each family's omit with To-preview's `omitApplied` (the c
 - a message that is not `approve` or `approve except` with families on the page (an approved family is no except);
 - ticks for an approved Contract that would change its approval, which the page never showed;
 - an export or saved ticks of another folder;
+- on path A, a `--project` other than the folder's Extracted Library, `design-systems/<name>/library` (the Prototype itself has no Code Library to generate the Foundations from);
 - a Foundations document that moved since the page was built, or that the project no longer generates (the page published after a rerun saves its own ticks under the new document, so approve reads those; ticks still held under the old one are refused);
 - a Contract the Foundations closure does not list at its snapshot;
 - a family with no ticks, ticks from another snapshot, ticks whose omit does not reproduce the checked tuples;

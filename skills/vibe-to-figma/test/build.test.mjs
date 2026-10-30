@@ -17,8 +17,8 @@ import { REPO_ROOT } from '../../to-handoff/scripts/system.mjs';
 import { approveFolder } from '../scripts/approve.mjs';
 import { fileKeyOf, gate, namespaced, nextStep, recordStep } from '../scripts/build.mjs';
 import { reviewModel } from '../scripts/review.mjs';
-import { AT, FILE_KEY, NARROW, URL_, drive, smokeDraft } from './drive.mjs';
-import { READABLE, V0, packageSkip, read, scratch, selections, skip, v0Folder } from './helpers.mjs';
+import { AT, FILE_KEY, NARROW, URL_, drive, exported, smokeDraft } from './drive.mjs';
+import { PATH_A_FAMILIES, READABLE, V0, packageSkip, pathAFolder, read, scratch, selections, skip, v0Folder } from './helpers.mjs';
 
 const { reviewExport } = createRequire(import.meta.url)('../assets/review-export.js');
 const BUILD = fileURLToPath(new URL('../scripts/build.mjs', import.meta.url));
@@ -26,6 +26,23 @@ async function approvedFolder(said = 'approve') {
   const { dir } = await v0Folder();
   await approveFolder({ dir, project: V0, exported: reviewExport(reviewModel(dir), selections(dir, NARROW)), said, at: AT, test: true });
   return dir;
+}
+
+/** Foundations first, then each family's loose batches, combine and place calls, then its paged coverage check, passed. */
+function everySetBuilt({ dir, steps, ledger, record, families, perCall }) {
+  const kinds = steps.map(s => s.step);
+  assert.equal(kinds[0], 'foundations');
+  assert.ok(kinds.lastIndexOf('foundations') < kinds.indexOf('sets') && kinds.lastIndexOf('sets') < kinds.indexOf('coverage'));
+  for (const f of families) {
+    const c = read(join(dir, 'contracts', `${f}.component.json`));
+    const total = expand(c).length;
+    const phases = steps.filter(s => s.step === 'sets' && s.family === f).map(s => s.options.mode === 'build' ? s.options.phase : s.options.mode);
+    assert.deepEqual([...new Set(phases)], ['loose', 'combine', 'place'], f);
+    assert.equal(steps.filter(s => s.step === 'coverage' && s.family === f).length, Math.ceil(total / perCall), f);
+    assert.equal(record.coverage[f].ok, true, `${f}: ${JSON.stringify(record.coverage[f].problems)}`);
+    assert.equal(record.coverage[f].read, total, f);
+    assert.equal(ledger.sets[f].variants.filter(Boolean).length, total, f);
+  }
 }
 
 test('only a Figma Design file link is a build target', () => {
@@ -67,25 +84,27 @@ test('after "approve", Foundations then every Component Set by B′, each passin
   const names = (await mock.figma.variables.getLocalVariableCollectionsAsync()).map(c => c.name).sort();
   assert.deepEqual(names, ['Layout', 'Theme', 'v0-app Layout', 'v0-app Theme']);
   assert.ok(mock.figma.root.children.some(p => p.name === 'v0-app Templates'));
-  // The order: Foundations, then each family's loose batches, combine and place calls, then the coverage pages.
-  const kinds = steps.map(s => s.step);
-  assert.equal(kinds[0], 'foundations');
-  assert.ok(kinds.lastIndexOf('foundations') < kinds.indexOf('sets') && kinds.lastIndexOf('sets') < kinds.indexOf('coverage'));
-  for (const f of READABLE) {
-    const c = read(join(dir, 'contracts', `${f}.component.json`));
-    const total = expand(c).length;
-    const phases = steps.filter(s => s.step === 'sets' && s.family === f).map(s => s.options.mode === 'build' ? s.options.phase : s.options.mode);
-    assert.deepEqual([...new Set(phases)], ['loose', 'combine', 'place'], f);
-    assert.equal(steps.filter(s => s.step === 'coverage' && s.family === f).length, Math.ceil(total / 4), f);
-    assert.equal(record.coverage[f].ok, true, `${f}: ${JSON.stringify(record.coverage[f].problems)}`);
-    assert.equal(record.coverage[f].read, total, f);
-    assert.equal(ledger.sets[f].variants.filter(Boolean).length, total, f);
-  }
+  everySetBuilt({ dir, steps, ledger, record, families: READABLE, perCall: 4 });
   assert.equal(expand(read(join(dir, 'contracts/button.component.json'))).length, 48);
   // A rerun derives nothing: the build is done, and Figma is not called again.
   assert.equal(nextStep({ dir, fileKey: FILE_KEY, ledger, record, namespace: 'v0-app', at: AT }).status, 'built');
   assert.throws(() => nextStep({ dir, fileKey: FILE_KEY, ledger, record, namespace: null, at: AT }), /built with --namespace "v0-app"/);
   assert.throws(() => recordStep({ dir, fileKey: FILE_KEY, ledger, record, result: steps.at(-1).result, at: AT }), /built with --namespace "v0-app"/);
+});
+
+test('path A: after "approve", Foundations with its palette colours, then every set by B′, each passing its coverage check', { skip }, async () => {
+  const { dir, library } = await pathAFolder({ palette: true });
+  await approveFolder({ dir, project: library, exported: exported(dir), said: 'approve', at: AT, test: true });
+  const mock = mockFigma({ fileKey: FILE_KEY, pages: ['Page 1'] });
+  const { n, ledger, record, steps } = await drive({ dir, mock, coveragePerCall: 2 });
+  assert.equal(n.status, 'built', JSON.stringify(n));
+  assert.deepEqual(n.families.map(f => f.family), PATH_A_FAMILIES);
+  assert.equal(ledger.foundations.designSystem, 'path-a-app');
+  assert.equal(record.foundations, readFileSync(join(dir, 'path-a-app.foundations.json'), 'utf8'));
+  everySetBuilt({ dir, steps, ledger, record, families: PATH_A_FAMILIES, perCall: 2 });
+  const names = (await mock.figma.variables.getLocalVariablesAsync()).map(v => v.name);
+  assert.ok(['Color/green-600', 'Color/slate-500'].every(v => names.includes(v)), names.join());
+  assert.equal(nextStep({ dir, fileKey: FILE_KEY, ledger, record, at: AT }).status, 'built');
 });
 
 test('a set that fails its coverage check stops the run until --rebuild builds it again in place', { skip }, async () => {
