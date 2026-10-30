@@ -62,6 +62,7 @@ export const defaultLedger = (fileKey, designSystem) => ledgerPath(fileKey, main
 /** The build's own record beside the ledger: {namespace, coverage: {family: verdict}, pages: {family: {batch: result}}}. */
 export const buildRecordPath = ledger => ledger.replace(/\.ledger\.json$/, '.build.json');
 // The record's Contracts (`contracts`, by contentHash) are kept as files beside it, one per Contract, not in it.
+const isRootFill = p => p.what === 'contract' && p.field === 'width';
 const contractsDir = recordFile => recordFile.replace(/\.json$/, '.contracts');
 const contractFile = (recordFile, hash) => join(contractsDir(recordFile), `${hash.replace(/^sha256:/, '')}.json`);
 // The record's Foundations document (`foundations`, its text) is kept as a file beside it too, its documentHash in it.
@@ -516,6 +517,9 @@ function recorded({ dir, fileKey, ledger, record, result, skip, at }) {
     // a held variant is in the set as Figma has it, not as the Contract does: its problems are not the set's
     const held = ((record.built || {})[family] || {}).held || {};
     report.problems = report.problems.filter(p => !(p.name && held[p.name]));
+    // A root width fill in a hug set (#236) is a warning here until path A stops emitting it (#560); any other problem stops the build.
+    for (const p of report.problems.filter(isRootFill)) console.error(`WARNING: the ${family} set: ${p.reason}`);
+    report.problems = report.problems.filter(p => !isRootFill(p));
     report.ok = !report.problems.length;
     const verdict = { ok: report.ok, expected: report.expected, read: report.read, problems: report.problems.slice(0, 20), orphaned: report.orphaned,
       contentHash: contentHash(contract), documentHash: g.documentHash, set: merged.set.id, at };

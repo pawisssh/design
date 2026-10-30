@@ -201,7 +201,7 @@ node skills/to-design/scripts/coverage.mjs theme <component.json> .scratch/to-de
 - `text-wrapped`: a visible text one line of text is too tall for, because its box is narrower than its words.
 - `text-narrow`: a visible text under 1 px wide.
 - `variant-narrow`: a variant narrower than its widest visible text.
-- `contract`: a root with `width: "fill"` in a set (a hug grid has nothing to fill, so the root reads back as its content): the Contract should say hug or a fixed width. `coverage` reports it over every variant, and the diff of a readback marked `specimen: "set"`; a Base Component standing alone has a page to fill and is not flagged.
+- `contract`: a root with `width: "fill"` in a set (a hug grid has nothing to fill, so the root reads back as its content): the Contract should say hug or a fixed width. `coverage` reports it over every variant, and the diff of a readback marked `specimen: "set"`; a Base Component standing alone has a page to fill and is not flagged. The Vibe-to-Figma build prints it as a `WARNING` on stderr and goes on, until path A stops emitting a root fill (#560).
 
 Hidden layers are exempt, and so is a readback from a core that reports no size. A text meant to wrap over several lines is flagged too: the check cannot tell it. Text sizes are read only on the base and the sampled variants, so a bad variant outside the sample is found by the sample, not by `coverage`.
 
