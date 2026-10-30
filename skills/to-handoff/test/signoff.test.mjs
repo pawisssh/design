@@ -179,6 +179,45 @@ test('review prints the revision, hash, pins, agent marks, questions by addresse
   assert.ok((await review({ handoffPath: open.handoffPath, designSystem: open.ds })).blocks.some(b => /q-font/.test(b)));
 });
 
+test('review lists every Off-system value with its nearest tokens; they do not block, and approve covers them (#283)', { skip: noDeps }, async () => {
+  const { ds, handoffPath } = await generated();
+  assert.equal(read(handoffPath).values.length, 3);
+  const { text, blocks } = await review({ handoffPath, designSystem: ds });
+  const section = text.slice(text.indexOf('\nOff-system values'), text.indexOf('\nOpen questions'));
+  assert.ok(section.startsWith('\nOff-system values (3)\n'), section);
+  assert.ok(text.indexOf('\nAgent marks') < text.indexOf('\nOff-system values'));
+  assert.equal(section, [
+    '',
+    'Off-system values (3)',
+    '  background-color-edf5ff: background-color light #edf5ff, 1 site',
+    '    reason: No Background, Layer, Field, Support token is within ΔE 0.02 of #edf5ff in White; the chroma guard dropped 5 grey candidates for a tinted colour',
+    '    nearest: field-01 (ΔE 0.0159), field-03 (ΔE 0.0159), layer-01 (ΔE 0.0159)',
+    '    primitive: blue.10',
+    '  color-002d9c: color light #002d9c, 1 site',
+    '    reason: No Text, Link, Icon token is within ΔE 0.02 of #002d9c in White',
+    '    nearest: link-primary-hover (ΔE 0.0983), link-secondary (ΔE 0.0983), icon-secondary (ΔE 0.1989)',
+    '    primitive: blue.80',
+    '  gap-10px: gap light 10px, 1 site',
+    '    reason: 10px is between spacing-03 (8) and spacing-04 (12); no Spacing step within 1px',
+    '    nearest: spacing-03 (8), spacing-04 (12)',
+    '  These do not block Sign-off; approving covers them.',
+    '',
+  ].join('\n'));
+  assert.deepEqual(blocks, []);
+  assert.ok(!/Blocks sign-off/.test(text));
+  await approve({ handoffPath, designSystem: ds, ...shown(ds, handoffPath), at: AT, test: true });
+  assert.equal(read(handoffPath).status, 'approved');
+});
+
+test('review of a Handoff with no Off-system values prints the section as none (#283)', { skip: noDeps }, async () => {
+  const { ds, handoffPath } = await generated();
+  const h = read(handoffPath);
+  h.values = [];
+  writeFileSync(handoffPath, JSON.stringify(h, null, 2) + '\n');
+  const { text } = await review({ handoffPath, designSystem: ds });
+  assert.match(text, /\nOff-system values \(0\)\n  none\n\nOpen questions/);
+});
+
 test('review shows each container Usage with the Usages nested in it indented under it, deeper nesting chained (#195)', { skip: noTs }, async () => {
   const ds = shadcnDesignSystem();
   const decisions = read(join(V0, 'decisions.json'));

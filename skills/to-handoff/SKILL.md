@@ -114,6 +114,7 @@ node skills/to-handoff/scripts/handoff.mjs review design-systems/<ds>/handoffs/<
 - the revision, the content hash and every pin;
 - the diff against `signed.json`, or "First sign-off". When only `source` changed it says "only pins moved";
 - agent marks by kind, with their candidates;
+- every Off-system value (or "none"): its id, role and raw value per mode, how many sites use it, its reason, its nearest tokens with their deltas and the Primitive it equals. They don't block Sign-off; approving covers them;
 - open questions by addressee, missing states and missing screenshots;
 - the Contracts used, with their status, then the Usages recognised through the Family map (each with its tuple, its switched axes and where it is), then, when a usage records `in`, each container usage with the usages nested in it indented under it;
 - each pending Proposal in full, with its hash;

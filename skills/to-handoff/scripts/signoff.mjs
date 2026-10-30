@@ -112,6 +112,24 @@ function agentMarks(handoff) {
 }
 
 /**
+ * Every Off-system value (#283): its role and raw value per mode, how many sites use it, its reason, its
+ * nearest tokens and the Primitive it equals. None block Sign-off; approving covers them.
+ */
+function offSystemLines(handoff) {
+  const values = handoff.values || [];
+  const lines = [`Off-system values (${values.length})`];
+  if (!values.length) return [...lines, '  none'];
+  for (const v of values) {
+    const raw = Object.entries(v.raw).map(([mode, x]) => `${mode} ${x}`).join(', ');
+    const near = n => `${n.token} (${n.delta !== undefined ? `ΔE ${n.delta}` : n.value})`;
+    lines.push(`  ${v.id}: ${v.role} ${raw}, ${v.at.length} site${v.at.length === 1 ? '' : 's'}`, `    reason: ${v.reason}`);
+    if (v.nearest.length) lines.push(`    nearest: ${v.nearest.map(near).join(', ')}`);
+    if (v.primitive) lines.push(`    primitive: ${v.primitive}`);
+  }
+  return [...lines, '  These do not block Sign-off; approving covers them.'];
+}
+
+/**
  * Each container Usage of each screen, with the Usages whose `in` names it indented under it, deeper nesting
  * chained (#195): one line per Usage, none when nothing records `in`.
  */
@@ -175,6 +193,7 @@ export async function review({ handoffPath, designSystem }) {
   }
   L.push('', 'Agent marks');
   for (const [kind, lines] of Object.entries(agentMarks(h))) { L.push(`  ${kind} (${lines.length})`); for (const x of lines) L.push(`    ${x}`); }
+  L.push('', ...offSystemLines(h));
   L.push('', 'Open questions');
   for (const to of ['owner', 'developer']) {
     L.push(`  To the ${to}`);
