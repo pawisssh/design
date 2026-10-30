@@ -416,12 +416,13 @@ function iconSlots(sites) {
   for (const side of SIDES) {
     const iconed = sites.filter(s => s.icon && s.icon.side === side), plain = sites.filter(s => !s.icon);
     if (!iconed.length || !plain.length) continue;
-    const only = every(iconed).filter(c => !any(plain).has(c));
+    const inPlain = any(plain), inIconed = any(iconed);
+    const only = every(iconed).filter(c => !inPlain.has(c));
     const sizes = unique(iconed.map(s => s.icon.size.join(' ')));
     if (!only.length || sizes.length !== 1 || !sizes[0]) continue;
     // A class only the plain sites have joins the icon sites when a has-data utility overrides it (`px-2` under `pr-1.5`);
     // one none overrides (`underline`) would style the icon sites, so the difference stays an axis.
-    const plainOnly = every(plain).filter(c => !any(iconed).has(c));
+    const plainOnly = every(plain).filter(c => !inIconed.has(c));
     if (plainOnly.some(c => !only.some(o => box(o) === box(c)))) continue;
     sites = sites.map(s => (iconed.includes(s) ? { ...s, lists: s.lists.map(l => [...l.filter(c => !only.includes(c)), ...plainOnly]) } : s));
     const classes = [...only.map(c => `has-data-[icon=${side}]:${c}`), ...sizes[0].split(' ').map(c => `[&_svg:not([class*='size-'])]:${c}`)];
