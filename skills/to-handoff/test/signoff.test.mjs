@@ -179,6 +179,42 @@ test('review prints the revision, hash, pins, agent marks, questions by addresse
   assert.ok((await review({ handoffPath: open.handoffPath, designSystem: open.ds })).blocks.some(b => /q-font/.test(b)));
 });
 
+test('review lists every Off-system value with its nearest tokens; they do not block, and approve covers them (#283)', { skip: noDeps }, async () => {
+  const { ds, handoffPath } = await generated();
+  // The values come from the generated Handoff, not Carbon's numbers today; the line format is the literal.
+  const values = read(handoffPath).values;
+  assert.ok(values.length > 0 && values.every(v => v.at.length === 1));
+  const { text, blocks } = await review({ handoffPath, designSystem: ds });
+  const section = text.slice(text.indexOf('\nOff-system values'), text.indexOf('\nOpen questions'));
+  assert.ok(text.indexOf('\nAgent marks') < text.indexOf('\nOff-system values'));
+  const near = n => `${n.token} (${n.delta === undefined ? n.value : `ΔE ${n.delta}`})`;
+  assert.equal(section, [
+    '',
+    `Off-system values (${values.length})`,
+    ...values.flatMap(v => [
+      `  ${v.id}: ${v.role} light ${v.raw.light}, 1 site`,
+      `    reason: ${v.reason}`,
+      `    nearest: ${v.nearest.map(near).join(', ')}`,
+      ...(v.primitive ? [`    primitive: ${v.primitive}`] : []),
+    ]),
+    '  These do not block Sign-off; approving covers them.',
+    '',
+  ].join('\n'));
+  assert.deepEqual(blocks, []);
+  assert.ok(!/Blocks sign-off/.test(text));
+  await approve({ handoffPath, designSystem: ds, ...shown(ds, handoffPath), at: AT, test: true });
+  assert.equal(read(handoffPath).status, 'approved');
+});
+
+test('review of a Handoff with no Off-system values prints the section as none (#283)', { skip: noDeps }, async () => {
+  const { ds, handoffPath } = await generated();
+  const h = read(handoffPath);
+  h.values = [];
+  writeFileSync(handoffPath, JSON.stringify(h, null, 2) + '\n');
+  const { text } = await review({ handoffPath, designSystem: ds });
+  assert.match(text, /\nOff-system values \(0\)\n  none\n\nOpen questions/);
+});
+
 test('review shows each container Usage with the Usages nested in it indented under it, deeper nesting chained (#195)', { skip: noTs }, async () => {
   const ds = shadcnDesignSystem();
   const decisions = read(join(V0, 'decisions.json'));
