@@ -3,12 +3,14 @@
 // tests also need a browser (the system Chrome, or the Chromium deps.mjs fetches) and skip without one.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { DEPS_DIR, hasDeps, hasRuntime, loadTypescript } from '../scripts/deps.mjs';
-import { generate, loadDesignSystem, render, validateHandoff } from '../scripts/handoff.mjs';
+import { generate, loadDesignSystem, render, screenshotRendering, validateHandoff } from '../scripts/handoff.mjs';
 import { readHtml, walk } from '../scripts/reader.mjs';
 import { tagHtml, tagJsx } from '../scripts/tag.mjs';
 import { DECISIONS, PROTOTYPE, designSystem } from './helpers.mjs';
@@ -208,6 +210,32 @@ test('render: the states x breakpoints matrix and the state tabs show the screen
   assert.match(matrix, /<tr><th>error<\/th><td class="hatch" colspan="5">/);
   const panel = /data-panel="success"[\s\S]*?<\/div><\/div>/.exec(html)[0];
   for (const bp of Object.keys(CARBON_BREAKPOINTS)) assert.ok(panel.includes(`<img src="../screens/invite-teammates.success.${bp}.png"`), `the success tab shows ${bp}`);
+});
+
+test('render --screenshot writes a PNG of the Rendering beside index.html; plain render writes none (#243)', { skip: await noRender() }, async () => {
+  const ds = designSystem();
+  const { path } = await generate({ prototype: PROTOTYPE, designSystem: ds, decisions: DECISIONS, runtime: false });
+  const png = join(dirname(path), 'renderings/index.png');
+  const cli = args => spawnSync(process.execPath, [fileURLToPath(new URL('../scripts/handoff.mjs', import.meta.url)), 'render', path, '--ds', ds, ...args], { encoding: 'utf8' });
+  const plain = cli([]);
+  assert.equal(plain.status, 0, plain.stderr);
+  assert.ok(!existsSync(png));
+  const shot = cli(['--screenshot']);
+  assert.equal(shot.status, 0, shot.stderr);
+  const bytes = readFileSync(png);
+  assert.deepEqual([...bytes.subarray(0, 8)], [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  // IHDR: width, height. A full-page shot of the long Rendering is taller than the 800px viewport.
+  assert.equal(bytes.readUInt32BE(16), 1280);
+  assert.ok(bytes.readUInt32BE(20) > 800);
+  assert.ok(existsSync(join(dirname(path), 'renderings/index.html')));
+});
+
+test('screenshotRendering without a browser gives a note and no PNG (#243)', { skip: noDeps }, async () => {
+  const html = join(mkdtempSync(join(tmpdir(), 'rendering-')), 'index.html');
+  writeFileSync(html, '<p>x</p>');
+  const r = await screenshotRendering(html, mkdtempSync(join(tmpdir(), 'no-deps-')));
+  assert.match(r.note, /missing/);
+  assert.ok(!existsSync(html.replace(/html$/, 'png')));
 });
 
 test('runtime: a package.json with neither Next nor Vite is installed, built and its files served', { skip: noRuntime }, async () => {

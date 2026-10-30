@@ -101,6 +101,8 @@ node skills/to-handoff/scripts/handoff.mjs render design-systems/<ds>/handoffs/<
 - Tokens & values;
 - Copy & questions.
 
+`render --screenshot` also writes `renderings/index.png`, a full-page PNG of the page, with the browser the runtime reader uses. Without a browser it prints a note on stderr and the HTML is still written. Plain `render` writes no PNG.
+
 A mode toggle covers every Theme mode, each applied as the one class its Mode `selector` names (the Adapter renderer's mode class when a Mode has none), and the stamp reads `r<revision> · <contentHash> · pending sign-off` (`signed off` once approve has run: approve renders the page again).
 
 ## 5. Sign-off: review, approve, check
