@@ -51,19 +51,20 @@ function candidateOf(el, rules) {
 // ---------- one screen's Usages ----------
 
 /**
- * recogniseUsages({root, system, rules, decider, describe, drafts}) -> {recognised, claimOf, drafts}.
+ * recogniseUsages({root, system, rules, decider, describe, drafts, siteOf}) -> {recognised, claimOf, drafts}.
  * `root` is one screen's tree; `decider` asks keyed decisions (`ask`); `describe(el)` is what generate knows of an
  * element for the `recognise:` question, {text, at, rendered}: its default-state text, its source location and its
  * runtime size when the runtime reader ran. `drafts` carries the earlier screens' mid-run drafts, by family.
+ * `siteOf(el)` is the Family map's site at the element, {family, values: {<axis>: [<value>]}}, or undefined.
  *
- * `recognised` is one record per Usage, in reading order: {el, cand, answer, key, byImport, unmapped, stray, within,
- * parts}. `answer` is the recognise answer (a draft resolved to the Contract or raw usage it stands for), undefined
- * while its decision is open; `within` is the Container element the Usage sits in (`in`, #194); `parts` are a
- * Container's own parts. `claimOf(el)` is what one element is to its region. `drafts` is every draft so far, by
+ * `recognised` is one record per Usage, in reading order: {el, cand, answer, key, byImport, byMap, unmapped, stray,
+ * within, parts}. `byMap` is {switches} for a Usage the Family map recognised. `answer` is the recognise answer (a draft
+ * resolved to the Contract or raw usage it stands for), undefined while its decision is open; `within` is the Container
+ * element the Usage sits in (`in`, #194); `parts` are a Container's own parts. `claimOf(el)` is what one element is to its region. `drafts` is every draft so far, by
  * family: {contract, text, write} for one that passed, {failed} for one that fell back, null while open.
  * `system.contracts` is never changed: a Contract drafted mid-run is in `drafts`.
  */
-export function recogniseUsages({ root, system, rules, decider: d, describe, drafts: earlier = new Map() }) {
+export function recogniseUsages({ root, system, rules, decider: d, describe, drafts: earlier = new Map(), siteOf = () => undefined }) {
   const { adapter, foundations } = system;
   const drafts = new Map(earlier);
   // The Contracts this run reads: the Design System's, and each one drafted mid-run so far.
@@ -158,9 +159,31 @@ export function recogniseUsages({ root, system, rules, decider: d, describe, dra
   // one it is a wrapper whose look stays in the region, and a note names it (#125).
   const wrappers = new Set();
   const parts = new Set();
-  const holdsOtherComponent = el => { let found = false; walk(el, x => { if (x !== el && x.component && !isPart(el, x)) found = true; }); return found; };
+  const holds = (el, test) => { let found = false; walk(el, x => { if (x !== el && test(x)) found = true; }); return found; };
+  const holdsOtherComponent = el => holds(el, x => x.component && !isPart(el, x));
   const visit = (el, through = [], within = null) => {
     if (el.type !== 'element' || consumed.has(el)) return;
+    // A site the Family map records (#265, ADR 0016): a Usage of its family's Contract, never a decision. Its tuple is
+    // each axis's one value at the site; an axis a className ternary there switches between values stays out of it.
+    // It is a leaf when its Contract takes its children as text and no other site sits inside it, else a Container
+    // walked like a Card: the Usages inside it name it in `in`, and the rest of its subtree stays the region's.
+    const site = siteOf(el);
+    if (site && contracts[site.family]) {
+      const def = contracts[site.family];
+      const tuple = {}, switches = {};
+      const order = axis => ((def.axes || []).find(a => a.key === axis) || { values: [] }).values.map(v => v.key);
+      for (const [axis, values] of Object.entries(site.values))
+        if (values.length === 1) tuple[axis] = values[0];
+        else switches[axis] = values.slice().sort((a, b) => order(axis).indexOf(a) - order(axis).indexOf(b));
+      const problem = tupleProblem(def, tuple, `\`${site.family}\``);
+      if (problem) throw new Error(`the Family map's ${site.family} site at ${describe(el).at}: ${problem}`);
+      recognised.push({ el, cand: { kind: 'element', sig: el.tag }, answer: { contract: site.family, tuple }, key: null, byMap: { switches }, within });
+      usageEls.add(el);
+      const leaf = !holds(el, x => x.type === 'element' && siteOf(x)) && (def.properties || []).some(p => p.type === 'TEXT' && p.code && p.code.prop === 'children');
+      if (leaf) walk(el, x => { if (x !== el) consume(x, 'usage'); });
+      else for (const c of el.children) visit(c, through, el);
+      return;
+    }
     const isPartOfOuter = el.component && through.some(outer => isPart(outer, el));
     if (el.component && (isPartOfOuter || holdsOtherComponent(el))) {
       let inner = within;

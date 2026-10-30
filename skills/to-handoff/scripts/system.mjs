@@ -27,7 +27,8 @@ const jsonIn = (dir, suffix) => (existsSync(dir) ? readdirSync(dir).filter(f => 
 
 /**
  * Load `dir` (design-systems/<ds>): {dir, key, foundations, foundationsText, contracts: {key: Contract},
- * proposals: {key: Proposal}, adapter}. Exactly one `*.foundations.json` sits at its root.
+ * proposals: {key: Proposal}, adapter, familyMap}. Exactly one `*.foundations.json` sits at its root. `familyMap` is
+ * {text, map} for the Family map an Extracted Library's folder has at its root (#265, ADR 0016), else null.
  */
 export async function loadDesignSystem(dir) {
   const found = readdirSync(dir).filter(f => f.endsWith('.foundations.json')).sort();
@@ -39,5 +40,8 @@ export async function loadDesignSystem(dir) {
   const adapterPath = join(REPO_ROOT, 'skills', `adapter-${foundations.source.adapter}`, 'scripts', 'handoff-adapter.mjs');
   if (!existsSync(adapterPath)) throw new Error(`No handoff module for Adapter "${foundations.source.adapter}" at ${adapterPath}`);
   const adapter = await import(pathToFileURL(adapterPath).href);
-  return { dir, key: foundations.designSystem.key, foundations, foundationsText, contracts, proposals, adapter };
+  const mapFile = readdirSync(dir).find(f => f.endsWith('.family-map.json'));
+  const mapText = mapFile && readFileSync(join(dir, mapFile), 'utf8');
+  const familyMap = mapText ? { text: mapText, map: JSON.parse(mapText) } : null;
+  return { dir, key: foundations.designSystem.key, foundations, foundationsText, contracts, proposals, adapter, familyMap };
 }

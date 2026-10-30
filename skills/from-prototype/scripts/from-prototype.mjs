@@ -248,11 +248,12 @@ const HANDOFF = [
   { name: 'runtime-lockfile', kinds: [...REACT, HTML, HTML_UTILITIES], effect: 'note', ticket: '#354',
     test: p => !p.all.includes('package.json') || p.all.includes('package-lock.json'),
     message: 'the runtime read runs `npm ci`; without a `package-lock.json` the Handoff is likely static-only, with a `q-runtime` question: run `npm install --package-lock-only --ignore-scripts` in your project (#354)' },
-  // The own-folder route (#265): closed for path A and plain HTML, and for a Prototype that can't have Component Sets
-  // (a refused Figma link alone leaves it able to).
-  { name: 'own-folder', kinds: [PATH_A, HTML], effect: 'closes', ticket: '#265',
-    message: "To-handoff can't yet recognise its sites through the Family map (#265)" },
-  { name: 'own-folder', kinds: [SHADCN, CLASSES, MODULES, HTML_UTILITIES], effect: 'closes', test: p => p.componentSets.reasons.every(r => r.row === 'figma'),
+  // The own-folder route: closed for plain HTML, whose markup sites To-handoff can't read through a Family map yet (#528;
+  // path A's JSX sites it reads, #265), and for a Prototype that can't have Component Sets (a refused Figma link alone
+  // leaves it able to).
+  { name: 'own-folder', kinds: [HTML], effect: 'closes', ticket: '#528',
+    message: "To-handoff can't yet recognise a plain HTML page's sites through the Family map (#528)" },
+  { name: 'own-folder', kinds: [SHADCN, CLASSES, MODULES, HTML_UTILITIES, PATH_A], effect: 'closes', test: p => p.componentSets.reasons.every(r => r.row === 'figma'),
     message: "it can't have Component Sets, so it has no own folder" },
 ];
 

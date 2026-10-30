@@ -3,6 +3,7 @@
 // The JSX is read statically with TypeScript; the Prototype is never run.
 //
 //   extract({project, answers, map}) -> {library, families, requests, skipped, map, used}
+//   familySites({project, map}) -> the Family map's sites as they are in the code now, with their axis values (#265)
 //
 // Each rule's comment sits beside the code that applies it. The library is a pure function of the Prototype and the
 // answers: each component file holds only its family's class strings and names.
@@ -100,10 +101,11 @@ const KIND = {
 const tokens = text => text.split(/\s+/).filter(Boolean);
 const normal = text => text.replace(/\s+/g, '').replace(/^\((.*)\)$/, '$1');
 
-/** The JSX of one source file: [{file, line, tag, path, node, text, ternary, at}] and the className expressions it cannot read. */
+/** The JSX of one source file: [{file, line, col, tag, path, node, text, ternary, at}] and the className expressions it cannot read. */
 function readFile(ts, file, source) {
   const sf = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, extname(file) === '.jsx' ? ts.ScriptKind.JSX : ts.ScriptKind.TSX);
   const line = n => sf.getLineAndCharacterOfPosition(n.getStart()).line + 1;
+  const col = n => sf.getLineAndCharacterOfPosition(n.getStart()).character + 1;
   const sites = [], skipped = [];
   // The element's opening tag as written, on one line: what the review page shows of a site (#262).
   const snippetOf = opening => {
@@ -234,7 +236,7 @@ function readFile(ts, file, source) {
         try {
           if (!expr) throw new Unresolved('`className` has no value');
           const tree = resolve(expr, scopesOf(node), ctx);
-          sites.push({ file, line: line(node), tag, path: pathOf(node), node: tree, ternary: ctx.mirrored || hasPick(tree), text: textOf(node), icon: iconOf(node), at, snippet: snippetOf(opening) });
+          sites.push({ file, line: line(node), col: col(node), tag, path: pathOf(node), node: tree, ternary: ctx.mirrored || hasPick(tree), text: textOf(node), icon: iconOf(node), at, snippet: snippetOf(opening) });
         } catch (e) {
           if (!(e instanceof Unresolved)) throw e;
           skipped.push({ site: at, tag, reason: e.message, snippet: snippetOf(opening) });
@@ -339,7 +341,7 @@ function groupId(site) {
  * each axis {id, categories, values: [{id, classes, sites}], default}. A ternary is one axis (a nested one an N-value
  * axis); the categories that one ternary changes, and those that change together across renderings, are one axis; any
  * other independent difference is one axis each. The default is the value most sites use. Ids derive from content
- * (the categories, the canonical class set), so an answer survives a merge.
+ * (the categories, the canonical class set), so an answer survives a merge. `bySite` holds each site's value ids per axis.
  */
 function deriveAxes(members) {
   const { sites, slotted, slots } = iconSlots(members);
@@ -365,6 +367,8 @@ function deriveAxes(members) {
   const components = new Map();
   for (const c of cats) { const root = find(c); components.set(root, [...(components.get(root) || []), c]); }
 
+  // Each site's value ids per axis, by its file and JSX path (#265): two or more where a className ternary picks.
+  const given = new Map();
   const axes = [...components.values()].map(group => {
     const categories = sorted(group);
     const values = new Map();
@@ -374,13 +378,19 @@ function deriveAxes(members) {
       if (!values.has(id)) values.set(id, { id, classes, sites: [], keys: new Set() });
       const v = values.get(id);
       const s = all[i].site;
-      if (!v.keys.has(`${s.file}|${s.path}`)) { v.keys.add(`${s.file}|${s.path}`); v.sites.push(s.at); }
+      if (!v.keys.has(siteKey(s))) { v.keys.add(siteKey(s)); v.sites.push(s.at); }
     });
     const list = [...values.values()].map(({ id, classes, sites: where }) => ({ id, classes, sites: where }));
     const usual = list.reduce((best, v) => (v.sites.length > best.sites.length ? v : best), list[0]);
-    return { id: categories.join('+'), categories, values: list, default: usual.id };
+    const id = categories.join('+');
+    for (const v of values.values()) for (const k of v.keys) {
+      const per = given.get(k) || {};
+      (per[id] = per[id] || []).push(v.id);
+      given.set(k, per);
+    }
+    return { id, categories, values: list, default: usual.id };
   }).sort((a, b) => byKey(a.id, b.id));
-  return { base: sorted([...base, ...slotted, ...sites.flatMap(s => s.disabled)].filter((c, i, l) => l.indexOf(c) === i)), axes, slots };
+  return { base: sorted([...base, ...slotted, ...sites.flatMap(s => s.disabled)].filter((c, i, l) => l.indexOf(c) === i)), axes, slots, bySite: given };
 }
 
 /**
@@ -390,8 +400,9 @@ function deriveAxes(members) {
  * which the Adapter reads as the slot frame's size. The classes only the plain sites have join the with-icon sites, so
  * they are base, which the `has-data` utilities override. An icon with no size class, or icons of different sizes, make
  * no slot: the Adapter cannot size its frame. Returns the sites as deriveAxes reads them, the `slotted` utilities and
- * the `slots`, each {key, classes, filled, empty}: the key of the Slot axis the Adapter reads (`icon-inline-start`), its
- * utilities, and the sites that fill it and those that do not, for the review page.
+ * the `slots`, each {key, classes, filled, empty, keys}: the key of the Slot axis the Adapter reads (`icon-inline-start`),
+ * its utilities, the sites that fill it and those that do not, for the review page, and the filled sites' keys, for
+ * familySites.
  */
 function iconSlots(sites) {
   const slotted = [], slots = [];
@@ -408,7 +419,7 @@ function iconSlots(sites) {
     const classes = [...only.map(c => `has-data-[icon=${side}]:${c}`), ...sizes[0].split(' ').map(c => `[&_svg:not([class*='size-'])]:${c}`)];
     const at = list => unique(list.map(s => s.at));
     slotted.push(...classes);
-    slots.push({ key: `icon-${side}`, classes, filled: at(iconed), empty: at(plain) });
+    slots.push({ key: `icon-${side}`, classes, filled: at(iconed), empty: at(plain), keys: new Set(iconed.map(siteKey)) });
   }
   return { sites, slotted, slots };
 }
@@ -684,7 +695,7 @@ export function extract({ project, answers = {}, map = null }) {
     const texts = f.memberSites.map(s => s.text).filter(Boolean);
     const text = texts.length ? mostFrequent(texts) : f.merged.text;
     familyList.push({ key: f.key, tag: f.tag, groups: f.members, description: f.merged.description, grid: f.merged.grid, text, answeredText: f.merged.text, names, record: f.record,
-      sites: f.memberSites.map(s => ({ file: s.file, path: s.path, line: s.line, group: s.group, snippet: s.snippet })).sort((x, y) => byKey(siteKey(x), siteKey(y))), derived: f.derived });
+      sites: f.memberSites.map(s => ({ file: s.file, path: s.path, line: s.line, col: s.col, group: s.group, snippet: s.snippet })).sort((x, y) => byKey(siteKey(x), siteKey(y))), derived: f.derived });
   }
   const entry = tailwindEntry(project);
   const sheets = stylesheets(project, entry);
@@ -710,6 +721,26 @@ export function extract({ project, answers = {}, map = null }) {
   })), ...(dropped.length && { dropped }) };
   const report = reportOf({ families: familyList, map: next, sites, assigned, prior, drops, skipped });
   return { library, families: familyList, used: familyList.map(f => f.key), requests: [], skipped, map: next, report };
+}
+
+/**
+ * familySites({project, map}) -> [{file, line, col, family, values: {<axis key>: [<value key>]}}] (#265): each site the
+ * committed Family map records, where it is in the Prototype's code now and the axis values its classes give, by the
+ * family's answered names (two or more on an axis a className ternary at the site picks). To-handoff recognises Usages
+ * through it. A map that this code no longer gives back byte for byte (a class edit, a new group, an owner's correction
+ * not yet run) is refused: the Contracts were drafted from the map as it was.
+ */
+export function familySites({ project, map }) {
+  const found = extract({ project, map });
+  if (!found.map || JSON.stringify(found.map) !== JSON.stringify(map))
+    throw new Error(`the Family map is not what ${project}'s code gives now: run Vibe-to-Figma's folder step again (node skills/vibe-to-figma/scripts/folder.mjs ${project}), or, if the folder is another Prototype's own, name another Design System`);
+  return found.families.flatMap(f => f.sites.map(s => {
+    const given = f.derived.bySite.get(siteKey(s));
+    return { file: s.file, line: s.line, col: s.col, family: f.key,
+      values: Object.fromEntries([...f.derived.axes.map(a => [f.names[a.id].key, given[a.id].map(id => f.names[a.id].values[id].key)]),
+        // An icon Slot axis (#259): filled where the site has the icon child.
+        ...f.derived.slots.map(sl => [sl.key, [sl.keys.has(siteKey(s)) ? sl.key : 'none']])]) };
+  }));
 }
 
 /**

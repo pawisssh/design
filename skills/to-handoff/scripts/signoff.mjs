@@ -8,7 +8,7 @@ import { copyFileSync, existsSync, readdirSync, readFileSync, writeFileSync } fr
 import { dirname, join } from 'node:path';
 import { contentHash as contractHash, proposalContentHash } from '../../contract/scripts/contract.mjs';
 import { writeJson } from '../../contract/scripts/io.mjs';
-import { contentOf, handoffContentHash, prototypeFiles, usedHash } from './hash.mjs';
+import { contentOf, fileHash, handoffContentHash, prototypeFiles, usedHash } from './hash.mjs';
 import { REPO_ROOT, TEST_APPROVER, inScratch, loadDesignSystem } from './system.mjs';
 import { validateHandoff } from './validate.mjs';
 
@@ -40,7 +40,7 @@ export function diffJson(a, b, path = '') {
 
 /**
  * Drift (#64 §9) of a Handoff against the current Prototype (when its path is given) and Design System:
- * [{kind: "prototype" | "contract" | "proposal" | "foundations", key, change}].
+ * [{kind: "prototype" | "contract" | "proposal" | "foundations" | "family-map", key, change}].
  */
 export function driftOf(handoff, system, prototype) {
   const drift = [];
@@ -66,6 +66,9 @@ export function driftOf(handoff, system, prototype) {
     else if (handoff.status === 'approved' && p.status === 'pending') drift.push({ kind: 'proposal', key, change: 'back to pending' });
   }
   if (src.foundations && usedHash(handoff, system.foundations) !== src.foundations.usedHash) drift.push({ kind: 'foundations', key: 'usedHash', change: 'changed' });
+  // The Family map whose sites the Usages are (#265): a folder step that moved them moves the Usages.
+  if (src.familyMap && (!system.familyMap || fileHash(system.familyMap.text) !== src.familyMap))
+    drift.push({ kind: 'family-map', key: 'familyMap', change: system.familyMap ? 'changed' : 'gone' });
   return drift;
 }
 
@@ -79,7 +82,8 @@ function blocksOf(handoff, system) {
   for (const q of handoff.openQuestions || []) if (q.to === 'owner' && !q.answer) blocks.push(`open question to the owner: ${q.id}`);
   for (const k of Object.keys((handoff.source && handoff.source.contracts) || {}))
     if (system.contracts[k] && system.contracts[k].selection.status !== 'approved') blocks.push(`draft Contract ${k}: the owner approves it before Sign-off`);
-  for (const d of driftOf(handoff, system)) blocks.push(`pinned ${d.kind === 'contract' ? 'Contract' : d.kind === 'proposal' ? 'Proposal' : 'Foundations'} ${d.key} moved: re-run To-handoff`);
+  const PINNED = { contract: 'Contract', proposal: 'Proposal', foundations: 'Foundations', 'family-map': 'Family map' };
+  for (const d of driftOf(handoff, system)) blocks.push(`pinned ${PINNED[d.kind]} ${d.key} moved: re-run To-handoff`);
   return blocks;
 }
 
@@ -160,6 +164,7 @@ export async function review({ handoffPath, designSystem }) {
   for (const [k, x] of Object.entries(h.source.contracts)) L.push(`  contract ${k} ${x.contentHash} (snapshot ${x.snapshotId})`);
   for (const [k, x] of Object.entries(h.source.proposals)) L.push(`  proposal ${k} ${x}`);
   L.push(`  foundations usedHash ${h.source.foundations.usedHash} (document ${h.source.foundations.documentHash})`);
+  if (h.source.familyMap) L.push(`  family map ${h.source.familyMap}`);
   L.push(`  modes ${Object.entries(h.source.modes).map(([p, f]) => `${p} → ${f}`).join(', ')}`, '');
   if (!signed) L.push('First sign-off: everything below is new.');
   else {
@@ -183,6 +188,11 @@ export async function review({ handoffPath, designSystem }) {
   if (missing.length) { L.push('', 'Missing'); for (const m of missing) L.push(`  ${m}`); }
   L.push('', 'Contracts used');
   for (const k of Object.keys(h.source.contracts)) L.push(`  ${k}: ${system.contracts[k] ? system.contracts[k].selection.status : 'gone'}`);
+  const mapUsages = h.screens.flatMap(s => (s.regions || []).flatMap(r => r.usages || [])).filter(u => u.match && u.match.by === 'family-map');
+  if (mapUsages.length) {
+    L.push('', `Recognised through the Family map (${mapUsages.length})`);
+    for (const u of mapUsages) L.push(`  ${u.id}: ${u.contract} ${JSON.stringify(u.tuple || {})}${u.match.switches ? ` switching ${Object.entries(u.match.switches).map(([k, v]) => `${k} ${v.join('/')}`).join(', ')}` : ''} at ${u.at}`);
+  }
   const nesting = nestingOf(h);
   if (nesting.length) L.push('', 'Nesting', ...nesting);
   L.push('', 'Pending Proposals (one approve approves each)');
