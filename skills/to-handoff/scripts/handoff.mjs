@@ -2,7 +2,7 @@
 // To-handoff (#102): a Prototype (one HTML file or a React app folder, #114) -> a validated Handoff -> its HTML Rendering, and its Sign-off.
 //   node skills/to-handoff/scripts/handoff.mjs generate <index.html | app folder> --ds <design-systems/ds> --decisions <decisions.json> [--static]
 //   node skills/to-handoff/scripts/handoff.mjs validate <handoff.json> --ds <design-systems/ds>
-//   node skills/to-handoff/scripts/handoff.mjs render <handoff.json> --ds <design-systems/ds>
+//   node skills/to-handoff/scripts/handoff.mjs render <handoff.json> --ds <design-systems/ds> [--screenshot]
 //   node skills/to-handoff/scripts/handoff.mjs review <handoff.json> --ds <design-systems/ds>
 //   node skills/to-handoff/scripts/handoff.mjs answer <handoff.json> --decisions <decisions.json> --question <id> --answer "<text>"
 //   node skills/to-handoff/scripts/handoff.mjs approve <handoff.json> --ds <design-systems/ds> --content-hash <h> [--proposal <key>=<hash> …]
@@ -22,12 +22,12 @@ export { handoffContentHash, snapshotIdOf } from './hash.mjs';
 export { TEST_APPROVER, loadDesignSystem } from './system.mjs';
 export { answerQuestion, approve, check, diffJson, driftOf, review } from './signoff.mjs';
 export { validateHandoff } from './validate.mjs';
-export { render, renderHtml } from './render-html.mjs';
+export { render, renderHtml, screenshotRendering } from './render-html.mjs';
 
 import { generate } from './generate.mjs';
 import { loadDesignSystem } from './system.mjs';
 import { validateHandoff } from './validate.mjs';
-import { render } from './render-html.mjs';
+import { render, screenshotRendering } from './render-html.mjs';
 import { answerQuestion, approve, check, review } from './signoff.mjs';
 
 // generate's requests counted by kind for stderr (#219), most first, a tie in the order asked:
@@ -42,13 +42,13 @@ const printDropped = dropped => { for (const x of dropped || []) console.error(`
 
 async function main(argv) {
   const { positionals, values } = parseArgs({ args: argv, allowPositionals: true, options: {
-    ds: { type: 'string' }, decisions: { type: 'string' }, static: { type: 'boolean' },
+    ds: { type: 'string' }, decisions: { type: 'string' }, static: { type: 'boolean' }, screenshot: { type: 'boolean' },
     'content-hash': { type: 'string' }, proposal: { type: 'string', multiple: true }, prototype: { type: 'string' },
     question: { type: 'string' }, answer: { type: 'string' },
   } });
   const [command, input] = positionals;
   if (!command || !input || (!values.ds && command !== 'answer')) {
-    console.error('usage: handoff.mjs generate <index.html | app folder> --ds <dir> --decisions <file> [--static] | validate|render|review <handoff.json> --ds <dir>'
+    console.error('usage: handoff.mjs generate <index.html | app folder> --ds <dir> --decisions <file> [--static] | validate|render [--screenshot]|review <handoff.json> --ds <dir>'
       + ' | answer <handoff.json> --decisions <file> --question <id> --answer <text>'
       + ' | approve <handoff.json> --ds <dir> --content-hash <h> [--proposal <key>=<hash> …] | check <handoff.json> --ds <dir> --prototype <index.html | app folder>');
     return 1;
@@ -71,7 +71,13 @@ async function main(argv) {
     return check.ok ? 0 : 1;
   }
   if (command === 'render') {
-    console.log(await render({ handoffPath: input, designSystem: values.ds }));
+    const out = await render({ handoffPath: input, designSystem: values.ds });
+    console.log(out);
+    if (values.screenshot) {
+      const shot = await screenshotRendering(out);
+      if (shot.path) console.log(shot.path);
+      else console.error(`no screenshot of the Rendering: ${shot.note}`);
+    }
     return 0;
   }
   if (command === 'review') {
