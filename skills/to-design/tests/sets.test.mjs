@@ -264,6 +264,22 @@ test('adoptVariant is refused when the family has no set, or its set has no vari
   assert.throws(() => basePlan(BUTTON, DOC_TEXT, gap, { fileKey: FILE_KEY, adoptVariant: true }), new RegExp(`no variant at the base index ${at}`));
   assert.throws(() => basePlan(reapproved(), DOC_TEXT, env.ledger, { fileKey: FILE_KEY, adoptVariant: true }), /built from another Contract/);
   assert.throws(() => basePlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, adoptVariant: true, readOnly: true }), /writes/);
+  assert.throws(() => basePlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, adoptVariant: true, adopt: true }), /alternatives/);
+  assert.throws(() => basePlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, adoptVariant: true, page: 'Other' }), /takes no page/);
+});
+
+test('adoptVariant is a conflict, and builds nothing, when the recorded variant is gone from the file', async () => {
+  const env = await setup({ withBase: false });
+  await buildAll(env);
+  const id = env.ledger.sets.button.variants[expand(BUTTON).findIndex(t => variantName(BUTTON, t) === 'Kind=Primary, Size=Large, State=Enabled')];
+  const set = await setNode(env);
+  const page = set.parent.parent.parent;
+  (await env.mock.figma.getNodeByIdAsync(id)).remove();
+  const all = page.findAll(() => true).length;
+  const { plan, state } = basePlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: LATER, adoptVariant: true });
+  const built = await runPackage(pack(plan, state, COMPONENTS_CORE).code, env.mock.figma);
+  assert.deepEqual(built.conflicts, [{ kind: 'base', name: plan.base.name, reason: 'no-variant', id }]);
+  assert.equal(page.findAll(() => true).length, all, 'nothing was made');
 });
 
 // selection.member, the bitset of the whole selection: build-plan writes it, the core decodes it to tell the

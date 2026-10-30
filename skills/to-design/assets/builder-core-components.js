@@ -314,6 +314,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     // -- preflight: read only --
     let page = prev && prev.page ? figma.root.children.find(p => p.id === prev.page) || null : null;
     let comp = prev && prev.id ? await figma.getNodeByIdAsync(prev.id) : null;
+    if (opts.adoptVariant && !comp) conflict('base', B.name, 'no-variant', prev.id);
     if (!page) {
       const same = figma.root.children.find(p => p.name === plan.page);
       if (same && !opts.adopt) conflict('page', plan.page, 'unowned', same.id);

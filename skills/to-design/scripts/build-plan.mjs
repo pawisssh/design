@@ -164,14 +164,17 @@ export function basePlan(contract, docText, ledger, { fileKey, adopt = false, ad
   if (f.documentHash !== documentHash(docText)) throw new Error(`the foundations document changed since the last foundations build (${f.documentHash}); rebuild foundations first`);
   let adopted = null;
   if (adoptVariant) {
+    if (adopt) throw new Error('adopt and adoptVariant are alternatives: pass one');
+    if (page) throw new Error('adoptVariant builds on the set\'s page: it takes no page');
     if (readOnly) throw new Error('adoptVariant writes the ledger\'s Base Component: it takes no read-only');
     const rec = ledger.sets && ledger.sets[contract.family.key];
     if (!rec || !rec.set) throw new Error(`no Component Set of ${contract.family.key} in the ledger: build the set first, or build the Base Component alone`);
     if (rec.contentHash !== contentHash(contract)) throw new Error(`the ${contract.family.key} set was built from another Contract (${rec.contentHash}): rehash or rebuild it first`);
     const tuples = expand(contract);
-    const at = tuples.findIndex(t => contract.axes.every(a => t[a.key] === baseTuple(contract)[a.key]));
-    const variantId = (rec.variants || [])[at];
-    if (!variantId) throw new Error(`the ${contract.family.key} set has no variant at the base index ${at} (${variantName(contract, tuples[at])}): build the set's variants first`);
+    const bt = baseTuple(contract);
+    const baseIndex = tuples.findIndex(t => contract.axes.every(a => t[a.key] === bt[a.key]));
+    const variantId = (rec.variants || [])[baseIndex];
+    if (!variantId) throw new Error(`the ${contract.family.key} set has no variant at the base index ${baseIndex} (${variantName(contract, tuples[baseIndex])}): build the set's variants first`);
     adopted = { id: variantId, page: rec.page };
   }
   // the review specimen while the base stands alone; the property defaults once the family's set holds it
@@ -237,7 +240,7 @@ export const PLACE_BUDGET = 45000;
  * A sets call's plan + state JSON, at most (chars): use_figma's 50,000 less the packaged components core and
  * its wrapper (tests/bprime.test.mjs measures them).
  */
-export const SETS_BUDGET = 12100;
+export const SETS_BUDGET = 12050;
 // a reconcile window, at most: its entries carry no fragments
 const RECONCILE_PER_CALL = 500;
 /**
