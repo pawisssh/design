@@ -63,8 +63,10 @@ export function compiledRules(css, layer = 'utilities') {
       }
       const isAt = n.prelude.startsWith('@');
       const nextAt = isAt && !SUPPORTS.test(n.prelude) ? [...at, n.prelude] : at;
-      const sel = isAt ? selector : n.prelude;
-      if (sel) {
+      // Tailwind 4.2 nests a variant's selector under the utility's (`.x { &:hover { … } }`); 4.3 writes it flat (#259).
+      const sel = isAt ? selector : selector && n.prelude.includes('&') ? n.prelude.replaceAll('&', selector) : n.prelude;
+      // A rule that only nests others declares nothing of its own.
+      if (sel && n.decls.length) {
         const key = `${nextAt.join('\n')}\n${sel}`;
         if (!byKey.has(key)) byKey.set(key, { selector: sel, at: nextAt, decls: {}, order: byKey.size });
         const rule = byKey.get(key);
