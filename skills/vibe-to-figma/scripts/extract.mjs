@@ -263,7 +263,9 @@ function readFile(ts, file, source) {
     const children = node.children.filter(c => !(ts.isJsxText(c) && !c.text.trim()) && !(ts.isJsxExpression(c) && !c.expression));
     // An icon is an `<svg>`, or a package's element with no children of its own (`<Check />`, not `<Badge>2</Badge>`).
     const isIcon = c => c && (ts.isJsxElement(c) && tagNameOf(c) === 'svg' || ts.isJsxSelfClosingElement(c) && (tagNameOf(c) === 'svg' || packaged.has(tagNameOf(c))));
+    // An icon beside a label: an icon alone, or icons at both ends, fill no one side.
     const first = children[0], last = children[children.length - 1];
+    if (children.length < 2 || isIcon(first) && isIcon(last)) return null;
     const [side, icon] = isIcon(first) ? ['inline-start', first] : isIcon(last) ? ['inline-end', last] : [];
     if (!side) return null;
     const cls = (ts.isJsxElement(icon) ? icon.openingElement : icon).attributes.properties.find(p => ts.isJsxAttribute(p) && p.name.getText() === 'className');
@@ -405,6 +407,8 @@ function deriveAxes(members) {
  * its utilities, the sites that fill it and those that do not, for the review page, and the filled sites' keys, for
  * familySites.
  */
+// The box a spacing utility sets, its sides as one (`px-2`, `pr-1.5`: padding), so one side overrides the whole.
+const box = cls => category(cls).replace(/^(.*:)?([pm])[xytblrse]?$/, '$1$2').replace(/^(.*:)?gap-[xy]$/, '$1gap');
 function iconSlots(sites) {
   const slotted = [], slots = [];
   const every = list => list.flatMap(s => s.lists).reduce((a, l) => a.filter(c => l.includes(c)));
@@ -415,7 +419,10 @@ function iconSlots(sites) {
     const only = every(iconed).filter(c => !any(plain).has(c));
     const sizes = unique(iconed.map(s => s.icon.size.join(' ')));
     if (!only.length || sizes.length !== 1 || !sizes[0]) continue;
+    // A class only the plain sites have joins the icon sites when a has-data utility overrides it (`px-2` under `pr-1.5`);
+    // one none overrides (`underline`) would style the icon sites, so the difference stays an axis.
     const plainOnly = every(plain).filter(c => !any(iconed).has(c));
+    if (plainOnly.some(c => !only.some(o => box(o) === box(c)))) continue;
     sites = sites.map(s => (iconed.includes(s) ? { ...s, lists: s.lists.map(l => [...l.filter(c => !only.includes(c)), ...plainOnly]) } : s));
     const classes = [...only.map(c => `has-data-[icon=${side}]:${c}`), ...sizes[0].split(' ').map(c => `[&_svg:not([class*='size-'])]:${c}`)];
     const at = list => unique(list.map(s => s.at));

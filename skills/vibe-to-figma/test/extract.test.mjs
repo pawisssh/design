@@ -241,3 +241,14 @@ test('an icon with no size class, a family whose every site has the icon, or a p
   const badged = chips(`<span className="${CHIP}">Paid</span>`, `<span className="${CHIP} gap-1"><Badge className="size-3">2</Badge>Due</span>`);
   assert.deepEqual(requestsOf(badged)[0].axes.map(a => a.id), ['gap']);
 });
+
+test('a class the plain sites have that no icon class overrides, an icon with no label, or icons at both ends make no Slot axis (#259)', { skip }, () => {
+  // The icon site has no underline: a base `underline` would give it one, so the difference stays an axis.
+  const underlined = chips(`<span className="${CHIP} underline">Paid</span>`, `<span className="${CHIP} underline">Due</span>`,
+    `<span className="${CHIP} gap-1">${ICON}Sent</span>`);
+  assert.ok(!requestsOf(underlined)[0].common.some(c => c.startsWith('has-data-')));
+  const alone = chips(`<span className="${CHIP} h-5">Paid</span>`, `<span className="${CHIP} size-5">${ICON}</span>`);
+  assert.ok(!requestsOf(alone)[0].common.some(c => c.startsWith('has-data-')));
+  const both = chips(`<span className="${CHIP}">Paid</span>`, `<span className="${CHIP} gap-1">${ICON}Sent${ICON}</span>`);
+  assert.ok(!requestsOf(both)[0].common.some(c => c.startsWith('has-data-')));
+});
