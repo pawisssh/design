@@ -270,8 +270,8 @@ def main():
     parser.add_argument("--state", type=Path)
     args = parser.parse_args()
     try:
-        if args.output.suffix == ".js":
-            raise ValueError(f"output is a directory, and the package goes in {args.output}/build-components.mcp.js: got a .js path")
+        if args.output.suffix.lower() == ".js":
+            raise ValueError(f"Output must be a directory, the package goes in build-components.mcp.js inside it, not a .js path: {args.output}")
         core = args.core.read_text()
         plan = json.loads(args.plan.read_text())
         state = json.loads(args.state.read_text()) if args.state else {}

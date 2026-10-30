@@ -58,8 +58,9 @@ test('a .js output path is refused with a message that wants a directory, and no
   const run = pack(root, '.scratch/to-design/pkg/build-components.mcp.js');
   assert.equal(run.status, 2, run.stdout + run.stderr);
   assert.equal(run.json.status, 'invalid-input');
-  assert.match(run.json.error, /output is a directory.*build-components\.mcp\.js.*\.js path/);
+  assert.match(run.json.error, /^Output must be a directory.*not a \.js path: \.scratch\/to-design\/pkg\/build-components\.mcp\.js$/);
   assert.equal(existsSync(join(root, '.scratch')), false);
+  assert.equal(pack(root, '.scratch/to-design/PKG.JS').status, 2, 'any case of .js');
 });
 
 test('re-packaging the same input gives the same sha256', () => {
