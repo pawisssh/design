@@ -250,6 +250,17 @@ async function built() {
 }
 const node = (mock, id) => mock.figma.getNodeByIdAsync(id);
 
+test('a different --page never renames the recorded Icons page: the build lands on it and the result names it (#232)', async () => {
+  const { mock, ledger } = await built();
+  const recorded = ledger.icons.page;
+  const result = await call(mock, { ledger, options: { page: 'health-check-management' } });
+  assert.deepEqual(mock.figma.root.children.map(p => p.name), ['Page 1', 'Icons']);
+  assert.equal(result.ledger.icons.page, recorded);
+  assert.deepEqual(result.page, { id: recorded, name: 'Icons' });
+  assert.deepEqual(result.summary, { created: 0, updated: 0, unchanged: 9, orphaned: 0, restored: 0, conflicts: 0 });
+  assert.deepEqual(writes(mock), []);
+});
+
 test('an unrecorded Icons page is a conflict and nothing changes; adopt builds on it', async () => {
   const mock = mockFigma({ fileKey: FILE_KEY, pages: ['Page 1', 'Icons'] });
   const theirs = mock.figma.root.children[1];
