@@ -19,7 +19,7 @@
 // approval, <name>.foundations-approval.json, which the build requires before a Foundations call: with no draft, the
 // page is the Foundations tab alone and "approve" approves just that. Tests pass `test: true`, which writes the test
 // approver and only under <repo>/.scratch/.
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -77,7 +77,8 @@ export function parseApproval(said, families, kept = []) {
 /**
  * approveFolder({dir, project, exported, said, at, test, tools})
  *   -> {approved, unchanged, kept, drafts, foundations: {path, reviewed, documentHash, written, approval}}.
- * `project` is the vibe-coded project the folder was built from; `exported` is the page's combined export
+ * `project` is the vibe-coded project the folder was built from, or on path A its Extracted Library, <dir>/library
+ * (#263); `exported` is the page's combined export
  * {designSystem, documentHash, families: {family: {patch, checked}}}. `approved` lists the Contracts written approved;
  * `unchanged` the ones already approved with these ticks; `kept` the approved ones with no ticks, which the review page
  * leaves out (#180); `drafts` the excepted ones. All but `approved` are left byte-unchanged. Ticks for an approved
@@ -96,6 +97,11 @@ export async function approveFolder({ dir, project, exported, said, at = new Dat
   const key = foundations.designSystem.key;
   const documentHash = `sha256:${sha256(text)}`;
   const reasons = [];
+  // A path A folder, the one with a Family map, has its Foundations generated from its Extracted Library, never from
+  // the Prototype, which has no Code Library to read (#263).
+  const library = resolve(dir, 'library');
+  if (existsSync(files.foundations.replace(/\.foundations\.json$/, '.family-map.json')) && resolve(project) !== library)
+    reasons.push(`the Foundations of a path A folder are generated from its Extracted Library: pass ${library} as the project, not ${project}`);
   if (test && !inScratch(dir)) reasons.push(`a test approval is written only under ${join(REPO_ROOT, '.scratch')}/`);
   if (exported.designSystem !== key) reasons.push(`the review is of ${exported.designSystem}, not ${key}`);
   if (exported.documentHash !== documentHash)
