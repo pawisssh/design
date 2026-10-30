@@ -75,7 +75,8 @@ export function normalizeBaseResult(result, ledger) {
 
 /**
  * Diff a normalized Base Component readback against what the Contract resolves to for the Base Component
- * (or for `tuple`, a variant of the set). `props` defaults to the readback's `specimen` (see baseProps).
+ * (or for `tuple`, a variant of the set). `props` defaults to the readback's `specimen` (see baseProps), which
+ * also decides whether a root fill is a problem (a set's root, not a Base Component's).
  * Returns {name, changes, unread, unbuilt, problems}: each change is {kind, section, node, field, from, to, why?} with kind
  * `token-edit` (the owner bound a variable), `raw-edit` (a typed value), `detached` (a binding lost while the
  * value stayed, which a rebuild restores) or `unmapped` (a tweak the Contract cannot carry, `why` says which).
@@ -358,24 +359,25 @@ export function formatDiff(contract, readback, result) {
 const SUMMARY_CHANGES = 20;
 const SUMMARY_UNREAD = 8;
 const SUMMARY_UNCARRIED = 8;
+const SUMMARY_PROBLEMS = 8;
 
 /**
  * The diff as the CLI prints it by default (#239): the header, the differences by kind and the first of them, the
- * fields not read, and the proposals counted with the ones that cannot be carried. Its blast radii, shields and token
+ * fields not read, the problems, and the proposals counted with the ones that cannot be carried. Its blast radii, shields and token
  * candidates are what `--full` adds (formatDiff). A diff that fits is returned whole.
  */
 export function formatDiffSummary(contract, readback, result) {
   const full = formatDiff(contract, readback, result);
   const { changes, unread, proposals } = result;
-  if (!proposals.length && changes.length <= SUMMARY_CHANGES && unread.length <= SUMMARY_UNREAD && result.problems.length <= SUMMARY_UNCARRIED) return full;
+  if (!proposals.length && changes.length <= SUMMARY_CHANGES && unread.length <= SUMMARY_UNREAD && result.problems.length <= SUMMARY_PROBLEMS) return full;
   const lines = full.split('\n').slice(0, 1);
   const kinds = {};
   for (const x of changes) kinds[x.kind] = (kinds[x.kind] || 0) + 1;
   if (changes.length) lines.push(`  by kind: ${Object.entries(kinds).map(([k, n]) => `${k} ${n}`).join(', ')}`);
   for (const x of changes.slice(0, SUMMARY_CHANGES)) lines.push(`  [${x.kind}] ${x.section}.${x.node}.${x.field}: ${show(x.from)} -> ${show(x.to)}`);
   if (changes.length > SUMMARY_CHANGES) lines.push(`  ... ${changes.length - SUMMARY_CHANGES} more difference(s)`);
-  lines.push(...problemLines(result.problems.slice(0, SUMMARY_UNCARRIED)));
-  if (result.problems.length > SUMMARY_UNCARRIED) lines.push(`  ... ${result.problems.length - SUMMARY_UNCARRIED} more problem(s)`);
+  lines.push(...problemLines(result.problems.slice(0, SUMMARY_PROBLEMS)));
+  if (result.problems.length > SUMMARY_PROBLEMS) lines.push(`  ... ${result.problems.length - SUMMARY_PROBLEMS} more problem(s)`);
   if (unread.length) lines.push(`  not in this readback: ${unread.length} field(s): ${unread.slice(0, SUMMARY_UNREAD).join(', ')}${unread.length > SUMMARY_UNREAD ? ', ...' : ''}`);
   if (proposals.length) {
     const lost = proposals.filter(p => !p.expressible);

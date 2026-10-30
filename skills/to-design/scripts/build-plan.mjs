@@ -238,7 +238,8 @@ export const MAX_COMBINE = 3000;
 export const PLACE_BUDGET = 45000;
 /**
  * A sets call's plan + state JSON, at most (chars): use_figma's 50,000 less the packaged components core and
- * its wrapper (tests/bprime.test.mjs measures them).
+ * its wrapper (tests/bprime.test.mjs measures them). 12030 leaves 19 chars under the core since #236 added a text's
+ * size to its readback.
  */
 export const SETS_BUDGET = 12030;
 // a reconcile window, at most: its entries carry no fragments

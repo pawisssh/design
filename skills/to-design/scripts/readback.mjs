@@ -184,6 +184,10 @@ export function normalizeReadback(raw, ledger) {
 // ---------- problems no Contract difference shows (#236) ----------
 
 const round2 = n => Math.round(n * 100) / 100;
+// A text's line in px: its line height (px, or a percent of the font size), else Figma's automatic line, about 1.2 em.
+const AUTO_LINE = 1.2;
+const lineOf = ({ fontSize, lineHeight }) => typeof lineHeight === 'number' ? lineHeight : typeof fontSize !== 'number' ? 0
+  : /%$/.test(lineHeight) ? fontSize * parseFloat(lineHeight) / 100 : fontSize * AUTO_LINE;
 
 /**
  * What a readback shows in its visible texts that the Contract cannot say: a text one line of text is too tall for
@@ -208,8 +212,7 @@ export function textProblems(readback) {
     if (typeof w !== 'number' || typeof h !== 'number') continue;
     if (!widest || w > extras[widest].w) widest = node;
     if (w < 1) { out.push({ what: 'text-narrow', node, reason: `${round2(w)} px wide` }); continue; }
-    const line = typeof lineHeight === 'number' ? lineHeight : typeof fontSize !== 'number' ? 0
-      : /%$/.test(lineHeight) ? fontSize * parseFloat(lineHeight) / 100 : fontSize * 1.2;
+    const line = lineOf(extras[node]);
     const want = String((readback.text || {})[node] ?? '').split('\n').length;
     const lines = line > 0 ? Math.round(h / line) : 0;
     if (lines > want) out.push({ what: 'text-wrapped', node, reason: `${round2(w)} px wide and ${round2(h)} px high: ${lines} lines of ${round2(line)} px for ${want} line${want === 1 ? '' : 's'} of text` });

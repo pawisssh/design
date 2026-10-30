@@ -367,6 +367,12 @@ test('a variant narrower than its widest visible text is a problem (#236)', () =
   assert.match(narrow[0].reason, /31 px wide, narrower than its text Label \(80 px\)/);
 });
 
+test('the live-test shape (#236): every variant 31 px with a wider text is flagged, and the rebuilt 288 px set is not', () => {
+  const live = size => withText({ w: 80, h: 18 }, { size });
+  assert.deepEqual(textProblems(live({ w: 31, h: 48 })).map(p => p.what), ['variant-narrow']);
+  assert.deepEqual(textProblems(live({ w: 288, h: 48 })), []);
+});
+
 test('hidden layers, and a readback with no measured size, are exempt (#236)', () => {
   assert.deepEqual(textProblems(withText({ w: 9, h: 108 }, { visible: { Label: false } })), [], 'a hidden text');
   const underHidden = withText({ w: 9, h: 108 });

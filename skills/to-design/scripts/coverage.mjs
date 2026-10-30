@@ -165,7 +165,7 @@ export function checkSample(contract, readback, ledger, foundations) {
     const raw = readback.sample[name];
     const t = byName.get(name);
     if (!raw || !t) { problems.push({ what: raw ? 'extra' : 'missing', name }); continue; }
-    const d = diff(contract, { ...normalizeReadback(raw, ledger), specimen: 'set' }, foundations, defaultProps(contract), t);
+    const d = diff(contract, normalizeReadback(raw, ledger), foundations, defaultProps(contract), t);
     if (d.changes.length || d.unread.length || d.problems.length) problems.push({ what: 'diff', name, changes: d.changes, unread: d.unread, problems: d.problems });
     d.unbuilt.forEach(f => unbuilt.add(f));
     const wantRefs = refsOf(contract, t);

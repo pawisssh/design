@@ -67,9 +67,7 @@ for (const c of FAMILIES)
     const sample = [...new Set([0, Math.floor(n / 2), n - 1])];
     const read = await call(setsPlan(c, DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, mode: 'sample', sample, prototype: true }), COMPONENTS_CORE);
     const s = checkSample(c, read, ledger, JSON.parse(DOC_TEXT));
-    // every sampled variant carries the root fill and nothing else
-    assert.deepEqual(s.problems.map(p => [p.what, p.changes.length, p.unread.length, p.problems.map(q => q.what)]),
-      ROOT_FILL[c.family.key] ? sample.map(() => ['diff', 0, 0, ['contract']]) : []);
+    assert.deepEqual(s.problems, []);
     assert.deepEqual(s.unbuilt, UNBUILT[c.family.key]);
     assert.equal(s.sampled, sample.length);
     const theme = await call(setsPlan(c, DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, mode: 'theme', sample, prototype: true }), COMPONENTS_CORE);
