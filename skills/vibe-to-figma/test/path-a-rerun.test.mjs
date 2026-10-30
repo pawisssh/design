@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { writeJson } from '../../contract/scripts/io.mjs';
 import { mockFigma } from '../../to-design/tests/mock-figma.mjs';
 import { approveFolder } from '../scripts/approve.mjs';
-import { buildFolder } from '../scripts/folder.mjs';
+import { UNRENDERED, buildFolder } from '../scripts/folder.mjs';
 import { reviewModel } from '../scripts/review.mjs';
 import { AT, FILE_KEY, RED, drive, exported } from './drive.mjs';
 import { PATH_A as FIXTURE, PATH_A_ANSWERS as ANSWERS, PATH_A_FAMILIES as FAMILIES, read, scratch, skip, tree } from './helpers.mjs';
@@ -73,7 +73,6 @@ test('a class edit in one family redrafts only that family', { skip }, async () 
 
 // Combinations no site renders (#260): the Adapter's own omits, so they start unticked on the review page. Only the
 // warning icon button has `disabled`, so no site shows the positive or danger one disabled; hover is never omitted.
-const UNRENDERED = 'no site renders it';
 const contractOf = (w, family) => read(join(w.dir, 'contracts', `${family}.component.json`));
 const approveWith = (w, edits) => approveFolder({ dir: w.dir, project: join(w.dir, 'library'), exported: exported(w.dir, edits), said: 'approve', at: AT, test: true });
 

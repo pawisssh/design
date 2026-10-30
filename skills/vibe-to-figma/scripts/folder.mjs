@@ -25,7 +25,7 @@ import { createRequire } from 'node:module';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as contractModule from '../../contract/scripts/contract.mjs';
-import { applyOmit, asDraft, expand, matches, validate } from '../../contract/scripts/contract.mjs';
+import { applyOmit, asDraft, baseTuple, expand, matches, tupleKey, validate } from '../../contract/scripts/contract.mjs';
 import { readJson, writeJson } from '../../contract/scripts/io.mjs';
 import { generate as contractOf, readFamily } from '../../adapter-generic/scripts/components.mjs';
 import { generate as foundationsOf } from '../../adapter-generic/scripts/foundations.mjs';
@@ -239,40 +239,46 @@ export function carryOmits(prior, contract) {
   return carried ? applyOmit(contract, model.omitPatch()) : contract;
 }
 
-const UNRENDERED = 'no site renders it';
+export const UNRENDERED = 'no site renders it';
 
 /**
  * omitUnrendered(contract, sites, prior) -> `contract`, a path A family's draft, with each variant no site of the
  * Prototype renders omitted by an omit of the Adapter's own, reason "no site renders it" (#260), so the review page
  * shows it unticked and the owner may tick it back. A site renders the tuples of its axis values (`sites` are
  * extract's, a missing axis at its default) in every State but disabled, which it renders only with a `disabled`
- * attribute: the other States (hover, focus) are interactions any site has. One omit per tuple of non-state values
- * when it is gone in every State, else one per variant. The Base Component stays, and so does a variant `prior`
+ * attribute: the other States (hover, focus) are interactions any site has, and so are the values of an axis extract
+ * reads from no site (an attribute axis). One omit per tuple of non-state values when it is gone in every State, else
+ * one per State it is gone in, else one per variant. The Base Component stays, and so does a variant `prior`
  * selected: the owner ticked it back, or a site rendered it then. Returns `contract` itself when nothing is omitted.
  */
 function omitUnrendered(contract, sites, prior) {
-  const free = contract.axes.filter(a => !a.canonical), state = contract.axes.find(a => a.canonical);
-  const of = (axes, t) => JSON.stringify(axes.map(a => t[a.key]));
-  const shown = new Map(); // tuple of non-state values -> whether a site renders it disabled
+  // an axis extract gives no site a value on (the Adapter's attribute axes, Invalid, Expanded) is never omitted
+  const free = contract.axes.filter(a => !a.canonical && sites.some(s => a.key in s.values)), state = contract.axes.find(a => a.canonical);
+  const valuesKey = t => tupleKey({ axes: free }, t);
+  const rendersDisabled = new Map(); // each tuple of non-state values a site renders -> whether one renders it disabled
   for (const s of sites) {
     let tuples = [{}];
     for (const a of free) tuples = tuples.flatMap(t => (s.values[a.key] || [a.default]).map(v => ({ ...t, [a.key]: v })));
-    for (const t of tuples) shown.set(of(free, t), shown.get(of(free, t)) || s.disables);
+    for (const t of tuples) rendersDisabled.set(valuesKey(t), rendersDisabled.get(valuesKey(t)) || s.rendersDisabled);
   }
-  const kept = new Set(prior ? expand(prior).map(t => of(contract.axes, t)) : []);
-  const base = of(contract.axes, Object.fromEntries(contract.axes.map(a => [a.key, a.default])));
-  const all = expand(contract);
-  const gone = all.filter(t => {
-    const k = of(free, t);
-    const rendered = shown.has(k) && (!state || t[state.key] !== 'disabled' || shown.get(k));
-    return !rendered && of(contract.axes, t) !== base && !kept.has(of(contract.axes, t));
+  const keep = new Set([tupleKey(contract, baseTuple(contract)), ...(prior ? expand(prior).map(t => tupleKey(contract, t)) : [])]);
+  const variants = expand(contract);
+  const unrendered = variants.filter(t => {
+    const k = valuesKey(t);
+    const rendered = rendersDisabled.has(k) && (t[state.key] !== 'disabled' || rendersDisabled.get(k));
+    return !rendered && !keep.has(tupleKey(contract, t));
   });
-  if (!gone.length) return contract;
+  if (!unrendered.length) return contract;
   const omit = [];
-  for (const k of new Set(gone.map(t => of(free, t)))) {
-    const every = all.filter(t => of(free, t) === k), lost = gone.filter(t => of(free, t) === k);
-    if (lost.length === every.length) omit.push(Object.fromEntries(free.map(a => [a.key, lost[0][a.key]])));
-    else omit.push(...lost);
+  for (const k of new Set(unrendered.map(valuesKey))) {
+    const all = variants.filter(t => valuesKey(t) === k), gone = unrendered.filter(t => valuesKey(t) === k);
+    const values = Object.fromEntries(free.map(a => [a.key, gone[0][a.key]]));
+    if (gone.length === all.length) { omit.push(values); continue; }
+    for (const v of new Set(gone.map(t => t[state.key]))) {
+      const inState = t => t[state.key] === v;
+      if (gone.filter(inState).length === all.filter(inState).length) omit.push({ ...values, [state.key]: v });
+      else omit.push(...gone.filter(inState));
+    }
   }
   const c = asDraft(contract);
   c.selection.omit = [...c.selection.omit, ...omit.map(match => ({ match, reason: UNRENDERED }))];

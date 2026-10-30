@@ -232,13 +232,14 @@ function readFile(ts, file, source) {
         const init = className.initializer;
         const expr = ts.isStringLiteral(init) ? init : ts.isJsxExpression(init) ? init.expression : null;
         const disabledAttr = opening.attributes.properties.find(p => ts.isJsxAttribute(p) && p.name.getText() === 'disabled');
+        const disabledExpr = disabledAttr && disabledAttr.initializer && ts.isJsxExpression(disabledAttr.initializer) ? disabledAttr.initializer.expression : null;
         // in (#260): a site with a `disabled` attribute (but `disabled={false}`) renders its State's disabled value
-        const disables = !!disabledAttr && !(disabledAttr.initializer && /^\{\s*false\s*\}$/.test(disabledAttr.initializer.getText()));
-        const ctx = { disabled: disabledAttr && disabledAttr.initializer && ts.isJsxExpression(disabledAttr.initializer) && disabledAttr.initializer.expression ? disabledAttr.initializer.expression.getText() : null, mirrored: false };
+        const rendersDisabled = !!disabledAttr && !(disabledExpr && disabledExpr.kind === ts.SyntaxKind.FalseKeyword);
+        const ctx = { disabled: disabledExpr ? disabledExpr.getText() : null, mirrored: false };
         try {
           if (!expr) throw new Unresolved('`className` has no value');
           const tree = resolve(expr, scopesOf(node), ctx);
-          sites.push({ file, line: line(node), col: col(node), tag, path: pathOf(node), node: tree, ternary: ctx.mirrored || hasPick(tree), text: textOf(node), icon: iconOf(node), disables, at, snippet: snippetOf(opening) });
+          sites.push({ file, line: line(node), col: col(node), tag, path: pathOf(node), node: tree, ternary: ctx.mirrored || hasPick(tree), text: textOf(node), icon: iconOf(node), rendersDisabled, at, snippet: snippetOf(opening) });
         } catch (e) {
           if (!(e instanceof Unresolved)) throw e;
           skipped.push({ site: at, tag, reason: e.message, snippet: snippetOf(opening) });
@@ -612,9 +613,9 @@ function componentFile(key, tag, derived, names) {
 /**
  * extract({project, answers}) -> {library, families, requests, skipped, map, used}:
  * - `library` {path: text} is the Extracted Library (empty while a request is open);
- * - `families` [{key, tag, groups, description, grid, text, names, derived, sites: [{file, path, line, values, disables}]}],
+ * - `families` [{key, tag, groups, description, grid, text, names, derived, sites: [{file, path, line, values, rendersDisabled}]}],
  *   `used` their keys; a site's `values` are the axis values its classes give ({<axis key>: [<value key>]}, two or more
- *   on an axis a className ternary at the site picks), `disables` whether it has a `disabled` attribute;
+ *   on an axis a className ternary at the site picks), `rendersDisabled` whether it has a `disabled` attribute;
  * - `requests` the groups with a judgement still open (each with the `open` keys it still needs; nothing is built until none is open); `skipped` [{site, tag, reason}] the className
  *   expressions the script could not resolve;
  * - `map` the Family map: each family's member sites, by file and JSX path.
@@ -709,7 +710,7 @@ export function extract({ project, answers = {}, map = null }) {
     const texts = f.memberSites.map(s => s.text).filter(Boolean);
     const text = texts.length ? mostFrequent(texts) : f.merged.text;
     familyList.push({ key: f.key, tag: f.tag, groups: f.members, description: f.merged.description, grid: f.merged.grid, text, answeredText: f.merged.text, names, record: f.record,
-      sites: f.memberSites.map(s => ({ file: s.file, path: s.path, line: s.line, col: s.col, group: s.group, snippet: s.snippet, values: valuesAt(f.derived, names, s), disables: s.disables }))
+      sites: f.memberSites.map(s => ({ file: s.file, path: s.path, line: s.line, col: s.col, group: s.group, snippet: s.snippet, values: valuesAt(f.derived, names, s), rendersDisabled: s.rendersDisabled }))
         .sort((x, y) => byKey(siteKey(x), siteKey(y))), derived: f.derived });
   }
   const entry = tailwindEntry(project);
