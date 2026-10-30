@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { approve, contentHash, PROTOTYPE_APPROVER, validate } from '../../contract/scripts/contract.mjs';
 import {
-  applyEdits, approveReviewed, diff, discardNote, draftedByKind, formatReview, mainChanged, ownerEdits, regenerate, review, RAW_REASON,
+  applyEdits, approveReviewed, diff, discardNote, draftedByKind, formatDiff, formatDiffSummary, formatReview, mainChanged, ownerEdits, regenerate, review, RAW_REASON,
 } from '../scripts/base-loop.mjs';
 import { expectedBase, normalizeReadback } from '../scripts/readback.mjs';
 
@@ -275,6 +275,65 @@ test('main changing the Contract after the branch forked withholds the approve c
   assert.equal(run.status, 1);
   assert.match(run.stderr, /changed this Contract after the branch forked: rebase onto it/);
   assert.equal(git('status', '--porcelain', '--', 'button.component.json'), '', 'approve wrote nothing');
+});
+
+// A readback far larger than the Button's: 120 fields no rule sets, each a difference (#239).
+function bigReadback() {
+  const base = rb('v1');
+  const extra = Object.fromEntries(Array.from({ length: 120 }, (_, i) => [`extraField${i}`, i]));
+  return { ...base, layout: { ...base.layout, Button: { ...base.layout.Button, ...extra } } };
+}
+
+test('diff prints a summary by default and every line with --full, which is byte for byte formatDiff (#239)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'diff-summary-'));
+  writeFileSync(join(dir, 'readback.json'), JSON.stringify([bigReadback()]));
+  const run = (...extra) => spawnSync('node', [SCRIPT, 'diff', join(FIX, 'button.component.json'), join(dir, 'readback.json'), '--foundations', join(ROOT, 'design-systems/carbon/carbon.foundations.json'), ...extra], { encoding: 'utf8' });
+  const full = run('--full');
+  const brief = run();
+  assert.equal(full.status, 0, full.stderr);
+  assert.equal(brief.status, 0, brief.stderr);
+  const r = review(CONTRACT, bigReadback(), FOUNDATIONS);
+  assert.equal(full.stdout, formatDiff(CONTRACT, bigReadback(), r));
+  assert.ok(full.stdout.length > 8192, `the fixture is large: ${full.stdout.length}`);
+  assert.ok(brief.stdout.length < 4096, `the summary is short: ${brief.stdout.length}`);
+  assert.equal(brief.stdout, formatDiffSummary(CONTRACT, bigReadback(), r));
+  assert.match(brief.stdout, /122 difference\(s\)/);
+  assert.match(brief.stdout, /by kind: .*unmapped 120/);
+  assert.match(brief.stdout, /\.\.\. 102 more difference\(s\)/);
+  assert.match(brief.stdout, /rerun with --full/);
+});
+
+test('a diff that fits whole is printed whole, with or without --full (#239)', () => {
+  const clean = review(CONTRACT, rb('v0'), FOUNDATIONS);
+  assert.equal(formatDiffSummary(CONTRACT, rb('v0'), clean), formatDiff(CONTRACT, rb('v0'), clean));
+});
+
+test('the summary of a Button diff names its differences, counts the proposals and leaves out their blast radius (#239)', () => {
+  const r = review(CONTRACT, rb('tweaked'), FOUNDATIONS);
+  const brief = formatDiffSummary(CONTRACT, rb('tweaked'), r);
+  assert.match(brief, /^Kind=Primary, Size=Large, State=Enabled {2}\(.*\) {2}\d+ difference\(s\)/);
+  assert.match(brief, /proposed Contract edits: \d+, on a shared rule: \d+, not carried: \d+/);
+  assert.doesNotMatch(brief, /blast radius \d/);
+  assert.match(brief, /rerun with --full/);
+  assert.ok(brief.length < formatDiff(CONTRACT, rb('tweaked'), r).length);
+});
+
+test('the readback command prints what it holds and the problems, not every field; --full adds the normalized readback (#239)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'readback-summary-'));
+  const big = bigReadback();
+  const raw = { slice: 'base', fileKey: 'FILE', family: 'button', readback: { ...big, layout: { ...big.layout, Label: { ...big.layout.Label, fill: { var: 'VariableID:404:404' } } } } };
+  writeFileSync(join(dir, 'result.json'), JSON.stringify(raw));
+  const run = (...extra) => spawnSync('node', [SCRIPT, 'readback', join(dir, 'result.json'), '--out', join(dir, 'readback.json'), '--ledger', join(dir, 'none.ledger.json'), ...extra], { encoding: 'utf8' });
+  const brief = run();
+  assert.equal(brief.status, 0, brief.stderr);
+  assert.ok(brief.stdout.length < 4096, `${brief.stdout.length}`);
+  assert.ok(brief.stdout.startsWith(`wrote ${join(dir, 'readback.json')}\n`));
+  assert.match(brief.stdout, /Kind=Primary, Size=Large, State=Enabled {2}\(19:5\) {2}\d+ node\(s\), layout \d+/);
+  assert.match(brief.stdout, /1 variable or style id\(s\) the ledger does not know: VariableID:404:404/);
+  assert.match(brief.stdout, /rerun with --full/);
+  const full = run('--full');
+  assert.ok(full.stdout.length > 4096);
+  assert.deepEqual(JSON.parse(full.stdout.slice(full.stdout.indexOf('\n') + 1)), JSON.parse(readFileSync(join(dir, 'readback.json'), 'utf8')));
 });
 
 test('regenerating from the saved readbacks reproduces the committed outputs byte for byte', () => {

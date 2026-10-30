@@ -5,6 +5,7 @@
 // selection (`groups`), which no slice returns.
 //
 //   node skills/to-design/scripts/ledger.mjs record <result.json> [--ledger <path>]
+//   node skills/to-design/scripts/ledger.mjs built --file-key <key> --family <family> [--ledger <path>]
 //   node skills/to-design/scripts/ledger.mjs prune-list <prune-preview result.json> --name <variant name> [--name ...] --out <prune.json>
 //   node skills/to-design/scripts/ledger.mjs groups --doc <foundations.json> --file-key <key> [--add <group>] [--remove <group>] [--ledger <path>]
 import { spawnSync } from 'node:child_process';
@@ -137,8 +138,27 @@ export function setGroups(ledger, fileKey, doc, { add = [], remove = [] } = {}) 
   return { ...(ledger || emptyLedger(fileKey)), foundationsGroups };
 }
 
+/**
+ * What the ledger records of one family (#239), with no Figma call: its Component Set (id, key, name, page, the
+ * variants recorded of the total, contentHash, builtAt) and its Base Component (id, page), each null when absent.
+ * Null for a family the ledger holds neither of.
+ */
+export function builtStatus(ledger, family) {
+  const rec = ledger && ledger.sets && ledger.sets[family];
+  const base = ledger && ledger.bases && ledger.bases[family];
+  const set = rec && rec.set;
+  if (!set && !base) return null;
+  const variants = (rec && rec.variants) || [];
+  return {
+    family,
+    set: set ? { ...set, page: rec.page, variants: variants.filter(Boolean).length, total: rec.total, contentHash: rec.contentHash, builtAt: rec.builtAt } : null,
+    base: base ? { id: base.id, page: base.page, contentHash: base.contentHash, builtAt: base.builtAt } : null,
+  };
+}
+
 const USAGE = [
   'usage: ledger.mjs record <result.json> [--ledger <path>]',
+  '       ledger.mjs built --file-key <key> --family <family> [--ledger <path>]',
   '       ledger.mjs prune-list <prune-preview result.json> --name <variant name> [--name ...] --out <prune.json>',
   '       ledger.mjs groups --doc <foundations.json> --file-key <key> [--add <group>] [--remove <group>] [--ledger <path>]',
 ].join('\n');
@@ -148,7 +168,7 @@ function main() {
   try {
     args = parseArgs({ allowPositionals: true, options: {
       ledger: { type: 'string' }, name: { type: 'string', multiple: true }, out: { type: 'string' },
-      doc: { type: 'string' }, 'file-key': { type: 'string' }, add: { type: 'string', multiple: true }, remove: { type: 'string', multiple: true },
+      doc: { type: 'string' }, 'file-key': { type: 'string' }, family: { type: 'string' }, add: { type: 'string', multiple: true }, remove: { type: 'string', multiple: true },
     } });
   } catch {
     args = { positionals: [], values: {} };
@@ -162,6 +182,19 @@ function main() {
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, JSON.stringify(ledger, null, 2) + '\n');
     console.log(JSON.stringify({ status: 'written', ledger: path, groups: ledger.foundationsGroups }));
+    return;
+  }
+  if (command === 'built') {
+    const { family, 'file-key': fileKey } = args.values;
+    if (!family || !fileKey) { console.error(USAGE); process.exit(2); }
+    const path = args.values.ledger || defaultLedgerPath(fileKey);
+    const ledger = readLedger(path);
+    const status = builtStatus(ledger, family);
+    if (!status) {
+      console.error(`ledger: ${family} is not built in ${fileKey}${ledger ? '' : ` (no ledger at ${path})`}`);
+      process.exit(1);
+    }
+    console.log(JSON.stringify({ fileKey, ...status }));
     return;
   }
   if (!['record', 'prune-list'].includes(command) || !resultPath || (command === 'prune-list' && !args.values.out)) {
