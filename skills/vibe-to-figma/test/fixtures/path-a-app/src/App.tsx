@@ -11,6 +11,7 @@ export default function App() {
   const [view, setView] = useState("Day");
   const [active, setActive] = useState(false);
   const [extra, setExtra] = useState(0);
+  const [trend, setTrend] = useState("Gain");
   const canClear = extra > 0;
   let s = active ? "bg-[#16a34a] text-[#ffffff]" : "border border-[#cbd5e1] bg-[#ffffff] text-[#475569]";
 
@@ -70,6 +71,11 @@ export default function App() {
       </div>
       <div className="rounded-[4px] bg-[#fef9c3] p-2">
         <span className="text-sm">Heads up</span>
+      </div>
+      <div className="flex gap-2">
+        <button onClick={() => setTrend("Gain")} className={`inline-flex items-center rounded-[12px] px-3 py-1 text-xs font-medium ${trend === "Gain" ? "bg-[#16a34a] text-[#ffffff]" : "bg-[#f0fdf4] text-[#16a34a]"}`}>Gain</button>
+        <button onClick={() => setTrend("Loss")} className={`inline-flex items-center rounded-[12px] px-3 py-1 text-xs font-medium ${trend === "Loss" ? "bg-[#dc2626] text-[#ffffff]" : "bg-[#fef2f2] text-[#dc2626]"}`}>Loss</button>
+        <button onClick={() => setTrend("Flat")} className={`inline-flex items-center rounded-[12px] px-3 py-1 text-xs font-medium ${trend === "Flat" ? "bg-[#475569] text-[#ffffff]" : "bg-[#f1f5f9] text-[#475569]"}`}>Flat</button>
       </div>
     </div>
   );

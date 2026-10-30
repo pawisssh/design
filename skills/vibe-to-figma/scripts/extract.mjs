@@ -375,8 +375,16 @@ function deriveAxes(members) {
 
   // Each site's value ids per axis, by its file and JSX path (#265): two or more where a className ternary picks.
   const given = new Map();
-  const axes = [...components.values()].map(group => {
+  const give = (axis, s, ids) => { const per = given.get(siteKey(s)) || {}; per[axis] = ids; given.set(siteKey(s), per); };
+  const compounds = [];
+  const axes = [...components.values()].flatMap(group => {
     const categories = sorted(group);
+    const split = compoundAxes(sites, base, categories);
+    if (split) {
+      for (const { axis, values } of split.axes) for (const v of values) for (const s of v.members) give(axis.id, s, [...((given.get(siteKey(s)) || {})[axis.id] || []), v.id]);
+      compounds.push(...split.compounds);
+      return split.axes.map(({ axis }) => axis);
+    }
     const values = new Map();
     residual.forEach((l, i) => {
       const classes = sorted(l.filter(c => categories.includes(category(c))));
@@ -394,9 +402,40 @@ function deriveAxes(members) {
       (per[id] = per[id] || []).push(v.id);
       given.set(k, per);
     }
-    return { id, categories, values: list, default: usual.id };
+    return [{ id, categories, values: list, default: usual.id }];
   }).sort((a, b) => byKey(a.id, b.id));
-  return { base: sorted([...base, ...slotted, ...sites.flatMap(s => s.disabled)].filter((c, i, l) => l.indexOf(c) === i)), axes, slots, bySite: given };
+  return { base: sorted([...base, ...slotted, ...sites.flatMap(s => s.disabled)].filter((c, i, l) => l.indexOf(c) === i)), axes, compounds, slots, bySite: given };
+}
+
+/**
+ * A compound family (#258): every site picks between two class lists by one className ternary that changes the
+ * `categories`, and the sites' pairs differ (chips whose selected colours change per tone). The sites are one axis
+ * (Tone), each value the classes both of its lists share, and the ternary another (Selected, its values `v-then` and
+ * `v-else`), each value the classes that option has at every site; the rest of each list is a cva compound on the two
+ * values. Returns null for any other axis: one site, a site with no ternary or with two, or sites that all pick alike.
+ */
+function compoundAxes(sites, base, categories) {
+  if (sites.length < 2 || !sites.every(s => s.choices.length === 1 && s.lists.length === 2)) return null;
+  const inAxis = l => sorted(l.filter(c => !base.includes(c) && categories.includes(category(c))));
+  const pairs = sites.map(s => s.lists.map(inAxis));
+  if (pairs.some(([a, b]) => a.join(' ') === b.join(' '))) return null;
+  const pairKey = pair => pair.map(l => l.join(' ')).join(' | ');
+  const kinds = unique(pairs.map(pairKey));
+  if (kinds.length < 2) return null;
+  const shared = lists => lists.reduce((a, l) => a.filter(c => l.includes(c)));
+  const id = categories.join('+'), pickId = `ternary:${id}`;
+  const side = kinds.map(k => {
+    const pair = pairs[pairs.findIndex(p => pairKey(p) === k)];
+    return { id: `v-${sha256(k).slice(0, 8)}`, pair, classes: shared(pair), members: sites.filter((s, i) => pairKey(pairs[i]) === k) };
+  });
+  const pick = ['v-then', 'v-else'].map((vid, i) => ({ id: vid, classes: shared(side.map(v => v.pair[i])), members: sites }));
+  const compounds = side.flatMap(v => pick.map((p, i) => ({ match: { [id]: v.id, [pickId]: p.id }, classes: v.pair[i].filter(c => !v.classes.includes(c) && !p.classes.includes(c)) })))
+    .filter(c => c.classes.length);
+  const axis = (axisId, values) => {
+    const list = values.map(v => ({ id: v.id, classes: v.classes, sites: unique(v.members.map(s => s.at)) }));
+    return { axis: { id: axisId, categories, values: list, default: list.reduce((best, v) => (v.sites.length > best.sites.length ? v : best), list[0]).id }, values };
+  };
+  return { axes: [axis(id, side), axis(pickId, pick)], compounds };
 }
 
 // The box a spacing utility sets, its sides as one (`px-2`, `pr-1.5`: padding), so one side overrides the whole.
@@ -485,10 +524,11 @@ const VALUE_KEY = /^[a-z0-9][a-z0-9-]*$/;
 /** The group request the agent answers: where the sites are, what they share and how they differ. */
 function requestOf(id, tag, sites, derived, open, problems, existing = []) {
   const text = sites.map(s => s.text).filter(Boolean);
-  const classes = [...derived.base, ...derived.axes.flatMap(a => a.values.flatMap(v => v.classes))];
+  const classes = [...derived.base, ...derived.axes.flatMap(a => a.values.flatMap(v => v.classes)), ...derived.compounds.flatMap(c => c.classes)];
   const styled = classes.some(c => split(c).variants.length === 0 && (TEXT_SIZE.test(split(c).util) || WEIGHT.test(split(c).util)));
   return { id, tag, sites: sites.map(s => s.at), common: derived.base,
     axes: derived.axes.map(a => ({ id: a.id, categories: a.categories, default: a.default, values: a.values })),
+    ...(derived.compounds.length && { compounds: derived.compounds }),
     text: text.length ? mostFrequent(text) : null,
     needsText: !text.length && styled, open, ...(open.includes('family') && existing.length && { families: existing }), ...(problems.length && { problems }) };
 }
@@ -599,12 +639,20 @@ function componentFile(key, tag, derived, names) {
       '}', '', `export { ${Name} }`, ''].join('\n');
   }
   const axes = derived.axes.map(a => ({ ...a, name: names[a.id] }));
+  // cva matches a compound against the prop as given, so an axis whose values are true and false takes booleans (#258).
+  const literal = (a, id) => {
+    const keys = Object.values(names[a.id].values).map(v => v.key), key = names[a.id].values[id].key;
+    return keys.length === 2 && keys.includes('true') && keys.includes('false') ? key : JSON.stringify(key);
+  };
+  const byId = Object.fromEntries(derived.axes.map(a => [a.id, a]));
   const body = axes.map(a => [`      ${identifier(a.name.key)}: {`, ...a.values.map(v => `        ${identifier(a.name.values[v.id].key)}: ${JSON.stringify(v.classes.join(' '))},`), '      },'].join('\n')).join('\n');
-  const defaults = axes.map(a => `${identifier(a.name.key)}: ${JSON.stringify(a.name.values[a.default].key)}`).join(', ');
-  const props = axes.map(a => `${identifier(a.name.key)} = ${JSON.stringify(a.name.values[a.default].key)}`).join(', ');
+  const compounds = derived.compounds.map(c => `      { ${Object.entries(c.match).map(([axis, id]) => `${identifier(names[axis].key)}: ${literal(byId[axis], id)}`).join(', ')}, className: ${JSON.stringify(c.classes.join(' '))} },`);
+  const defaults = axes.map(a => `${identifier(a.name.key)}: ${literal(a, a.default)}`).join(', ');
+  const props = axes.map(a => `${identifier(a.name.key)} = ${literal(a, a.default)}`).join(', ');
   const args = axes.map(a => identifier(a.name.key)).join(', ');
   return [...lines, 'import { cva, type VariantProps } from "class-variance-authority"', 'import { cn } from "cn"', '',
-    `const ${variants} = cva(`, `  ${JSON.stringify(base)},`, '  {', '    variants: {', body, '    },', `    defaultVariants: { ${defaults} },`, '  }', ')', '',
+    `const ${variants} = cva(`, `  ${JSON.stringify(base)},`, '  {', '    variants: {', body, '    },',
+    ...(compounds.length ? ['    compoundVariants: [', ...compounds, '    ],'] : []), `    defaultVariants: { ${defaults} },`, '  }', ')', '',
     `function ${Name}({ className, ${props}, ...props }: React.ComponentProps<${JSON.stringify(tag)}> & VariantProps<typeof ${variants}>) {`,
     `  return <${tag} data-slot=${JSON.stringify(key)} className={cn(${variants}({ ${args}, className }))} {...props} />`,
     '}', '', `export { ${Name}, ${variants} }`, ''].join('\n');
@@ -781,6 +829,9 @@ function reportOf({ families, map, sites, assigned, prior, drops, skipped }) {
       // An icon Slot axis (#259), named by the Adapter's rule: the Title Case of its key, False and True.
       ...f.derived.slots.map(s => ({ id: s.key, key: s.key, label: s.key.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' '), default: 'none',
         values: [{ id: 'none', key: 'none', label: 'False', classes: [], sites: s.empty }, { id: s.key, key: s.key, label: 'True', classes: s.classes, sites: s.filled }] }))],
+      // A compound family's classes on two values together (#258), by the answered names.
+      ...(f.derived.compounds.length && { compounds: f.derived.compounds.map(c => ({
+        match: Object.fromEntries(Object.entries(c.match).map(([axis, id]) => [f.names[axis].key, f.names[axis].values[id].key])), classes: c.classes })) }),
     }])),
     unmatched: sites.filter(s => s.candidate && !assigned.has(siteKey(s))).map(s => ({ ...place(s),
       reason: dropped.has(siteKey(s)) ? dropped.get(siteKey(s)).evidence : 'it appears once and has no className ternary' })).sort(at),
