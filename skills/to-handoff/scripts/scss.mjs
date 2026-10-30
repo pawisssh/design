@@ -6,6 +6,7 @@
 const REFERENCE = /(?:([\w-]+)\.)?\$([\w-]+)/g;
 const UNRESOLVED = /\$[\w-]|#\{/;
 // A module function call (`color.adjust(..)`, `math.div(..)`): the reader has no Sass functions.
+const ARITHMETIC = /[*+]|\s[-/]\s/;
 const CALL = /\b[a-z][\w-]*\.[a-z][\w-]*\(/;
 // Sass at-rules whose blocks or statements the reader doesn't lower.
 const UNLOWERED = /^@(mixin|include|function|if|else|each|for|while|extend|at-root|return|content)\b/;
@@ -46,7 +47,10 @@ export function sassFile(read) {
 
 /** Record every `$name: value;` in `src` (any scope: the nearest later definition wins, as for a flat file). */
 export function declareVariables(sass, src) {
-  for (const m of src.matchAll(/\$([\w-]+)\s*:\s*([^;{}]+?)\s*;/g)) sass.vars.set(`$${m[1]}`, m[2].replace(/\s*!default$/, ''));
+  for (const m of src.matchAll(/\$([\w-]+)\s*:\s*([^;{}]+?)\s*;/g)) {
+    const name = `$${m[1]}`, value = m[2].replace(/\s*!default$/, '');
+    if (value === m[2] || !sass.vars.has(name)) sass.vars.set(name, value);
+  }
 }
 
 /** `value` with its variables replaced by their values; null when one is undefined here (it is counted in `unresolved`). */
@@ -54,6 +58,7 @@ export function substitute(sass, value, depth = 0) {
   const call = depth === 0 && CALL.exec(value);
   if (call) { sass.unresolved.add(`${call[0]}…)`); return null; }
   if (!UNRESOLVED.test(value)) return value;
+  if (depth === 0 && value.includes('#{')) sass.unresolved.add('#{…}');
   let missing = false;
   const out = value.replace(REFERENCE, (ref, ns, name) => {
     const found = sass.vars.get(ns ? `${ns}.$${name}` : `$${name}`);
@@ -62,7 +67,10 @@ export function substitute(sass, value, depth = 0) {
     if (inner === null) missing = true;
     return inner === null ? found : inner;
   });
-  return missing || /#\{/.test(out) ? null : out;
+  if (missing || /#\{/.test(out)) return null;
+  // Sass arithmetic (`$a * 2`) would be evaluated by a compiler; left as text it is a wrong value (#227).
+  if (depth === 0 && ARITHMETIC.test(out.replace(/(['"]).*?\1|url\(.*?\)|calc\(.*\)|var\(.*?\)/g, ''))) { sass.unresolved.add(value); return null; }
+  return out;
 }
 
 /** A statement outside any declaration: `@use`, `@forward` and `@import` bring in variables; other Sass is counted. */

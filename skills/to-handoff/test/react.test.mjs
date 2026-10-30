@@ -408,6 +408,20 @@ test('read: a configured @use and a comma @import list are notes, not read as if
   assert.match(notes[0].text, /`@use … with`, `@import list` are not read/);
 });
 
+test('read: Sass the reader would get wrong is left out and counted, never emitted as text: arithmetic, interpolation; a string holding { stays one rule; !default is the first definition (#227)', { skip: noTs }, () => {
+  const doc = readReact(sassApp([
+    '$a: 4px; $c: red !default; $c: blue !default;',
+    '.cta { padding: $a * 2; margin: $a; color: $c; content: "{"; width: 1px; }',
+    '.x-#{$a} { color: red; }',
+    '.cta { #{$a}: 1; }',
+  ].join('\n')), {});
+  assert.deepEqual(sassRules(doc).map(([sel, , decls]) => [sel, decls.map(d => d.replace(/ @.*/, ''))]), [
+    ['.cta', ['margin: 4px', 'color: red', 'content: "{"', 'width: 1px']],
+    ['.cta', []],
+  ]);
+  assert.match(doc.notes[0].text, /2 declarations using `\$a \* 2`.*#\{…\}.*`selector interpolation` is not read/);
+});
+
 test('generate: a Sass Prototype has values from its .scss, the files pinned, the note in source.notes; editing the .scss is Drift (#227)', { skip: noTs }, async () => {
   const ds = designSystem();
   const app = sassApp();

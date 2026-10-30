@@ -43,7 +43,12 @@ export function parseCss(text, base = 0, sass = null) {
       const prelude = b.prelude.trim();
       if (prelude.startsWith('@media')) walk(b.open + 1, b.close, parents, [media, sub(prelude.slice(6).trim(), true)].filter(Boolean).join(' and '));
       else if (prelude.startsWith('@') || prelude.endsWith(':')) { if (sass) noteUnlowered(sass, prelude); }
-      else walk(b.open + 1, b.close, nestSelectors(parents, sub(prelude, true), splitTop), media);
+      else {
+        const selector = sub(prelude, true);
+        // A selector built by `#{}` interpolation names no class the reader can match: counted, not emitted (#227).
+        if (sass && selector.includes('#{')) sass.unlowered.add('selector interpolation');
+        else walk(b.open + 1, b.close, nestSelectors(parents, selector, splitTop), media);
+      }
     }
   };
   walk(0, src.length, null, null);
@@ -56,9 +61,11 @@ export function parseInline(text, base = 0) {
 }
 
 function matching(src, open) {
-  let depth = 0;
+  let depth = 0, quote = null;
   for (let i = open; i < src.length; i++) {
-    if (src[i] === '{') depth++;
+    if (quote) { if (src[i] === quote && src[i - 1] !== '\\') quote = null; }
+    else if (src[i] === '"' || src[i] === "'") quote = src[i];
+    else if (src[i] === '{') depth++;
     else if (src[i] === '}' && --depth === 0) return i;
   }
   return src.length;
@@ -67,10 +74,13 @@ function matching(src, open) {
 // A block body's own statements (ranges ending at a top-level `;`, or at the end) and its nested blocks.
 function scan(src, from, to) {
   const statements = [], blocks = [];
-  let start = from, depth = 0;
+  let start = from, depth = 0, quote = null;
   for (let i = from; i < to; i++) {
     const c = src[i];
-    if (c === '(') depth++;
+    // A `{` or `;` inside a string is text, not structure (#227).
+    if (quote) { if (c === quote && src[i - 1] !== '\\') quote = null; }
+    else if (c === '"' || c === "'") quote = c;
+    else if (c === '(') depth++;
     else if (c === ')') depth--;
     else if (depth <= 0 && c === ';') { statements.push([start, i]); start = i + 1; }
     else if (depth <= 0 && c === '{') {
@@ -108,7 +118,8 @@ function declarations(src, from, to, sub = null) {
     if (colon > 0) {
       const property = part.slice(0, colon).trim().toLowerCase();
       const raw = part.slice(colon + 1).trim().replace(/\s*!important$/, '');
-      const value = sub ? sub(raw) : raw;
+      // A property built by `#{}` interpolation can't be read: it is counted as a dropped declaration (#227).
+      const value = sub ? sub(property.includes('#{') ? property : raw) : raw;
       if (property && value) for (const d of expand(property, value)) out.push({ ...d, offset: start + lead });
     }
     start += part.length + 1;
