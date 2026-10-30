@@ -87,6 +87,9 @@ test('ledger built prints what the ledger records of a family with no Figma call
   assert.equal(none.status, 1);
   assert.match(none.stderr, /text-input is not built in /);
   assert.equal(builtStatus(null, 'button'), null);
+  const other = spawnSync('node', [SCRIPT, 'built', '--file-key', 'OTHER', '--family', 'button', '--ledger', join(dir, 'l.json')], { cwd: dir, encoding: 'utf8' });
+  assert.equal(other.status, 1);
+  assert.match(other.stderr, new RegExp(`ledger is for ${FILE_KEY}, not OTHER`));
   const nofile = spawnSync('node', [SCRIPT, 'built', '--file-key', FILE_KEY, '--family', 'button', '--ledger', join(dir, 'missing.json')], { cwd: dir, encoding: 'utf8' });
   assert.equal(nofile.status, 1);
   assert.match(nofile.stderr, /no ledger at /);

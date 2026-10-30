@@ -140,7 +140,7 @@ export function setGroups(ledger, fileKey, doc, { add = [], remove = [] } = {}) 
 
 /**
  * What the ledger records of one family (#239), with no Figma call: its Component Set (id, key, name, page, the
- * variants recorded of the total, contentHash, builtAt) and its Base Component (id, page), each null when absent.
+ * variants recorded of the total, contentHash, builtAt) and its Base Component (id, page, contentHash, builtAt), each null when absent.
  * Null for a family the ledger holds neither of.
  */
 export function builtStatus(ledger, family) {
@@ -189,6 +189,7 @@ function main() {
     if (!family || !fileKey) { console.error(USAGE); process.exit(2); }
     const path = args.values.ledger || defaultLedgerPath(fileKey);
     const ledger = readLedger(path);
+    if (ledger && ledger.fileKey !== fileKey) throw new Error(`ledger is for ${ledger.fileKey}, not ${fileKey}`);
     const status = builtStatus(ledger, family);
     if (!status) {
       console.error(`ledger: ${family} is not built in ${fileKey}${ledger ? '' : ` (no ledger at ${path})`}`);

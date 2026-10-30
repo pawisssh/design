@@ -351,6 +351,7 @@ export function formatDiff(contract, readback, result) {
 // How much of a diff its summary lists before counting the rest.
 const SUMMARY_CHANGES = 20;
 const SUMMARY_UNREAD = 8;
+const SUMMARY_UNCARRIED = 8;
 
 /**
  * The diff as the CLI prints it by default (#239): the header, the differences by kind and the first of them, the
@@ -371,7 +372,9 @@ export function formatDiffSummary(contract, readback, result) {
   if (proposals.length) {
     const lost = proposals.filter(p => !p.expressible);
     lines.push(`  proposed Contract edits: ${proposals.length - lost.length}, on a shared rule: ${proposals.filter(p => p.expressible && p.shared).length}, not carried: ${lost.length}`);
-    for (const p of proposals.filter(q => q.problem || !q.expressible).slice(0, SUMMARY_UNREAD))
+    const stale = proposals.filter(q => q.stale && q.stale.length).length;
+    if (stale) lines.push(`    ${stale} edit(s) may leave a derived value stale (verify)`);
+    for (const p of proposals.filter(q => q.problem || !q.expressible).slice(0, SUMMARY_UNCARRIED))
       lines.push(`    ${p.change.node}.${p.change.field}: ${p.problem ? `cannot carry: ${p.problem}` : `NOT carried (${p.note})`}`);
   }
   lines.push('  the blast radius, shields and token candidates of each edit, and every difference: rerun with --full');
@@ -382,8 +385,8 @@ export function formatDiffSummary(contract, readback, result) {
  * A normalized readback in a few lines (#239): what it names, the fields it holds per section, and the problems the
  * ledger could not resolve (a variable or style id it does not know, an icon it does not know).
  */
-export function summarizeReadback(rb) {
-  const count = n => 1 + (n.children || []).reduce((a, c) => a + count(c), 0);
+function summarizeReadback(rb) {
+  const nodeCount = n => 1 + (n.children || []).reduce((a, c) => a + nodeCount(c), 0);
   const sections = ['layout', 'paint', 'visible', 'text', 'swap', 'extras'].filter(k => rb[k]);
   const fields = k => Object.values(rb[k]).reduce((a, v) => a + (isObj(v) ? Object.keys(v).length : 1), 0);
   const unknown = [];
@@ -395,9 +398,9 @@ export function summarizeReadback(rb) {
   })([rb.layout, rb.paint]);
   const icons = Object.entries(rb.swap || {}).filter(([, k]) => /^unknown:/.test(k)).map(([n]) => n);
   return [
-    `${rb.name}  (${rb.id})  ${rb.tree ? `${count(rb.tree)} node(s)` : 'no tree'}, ${sections.map(k => `${k} ${fields(k)}`).join(', ')}`,
+    `${rb.name}  (${rb.id})  ${rb.tree ? `${nodeCount(rb.tree)} node(s)` : 'no tree'}, ${sections.map(k => `${k} ${fields(k)}`).join(', ')}`,
     unknown.length ? `  ${unknown.length} variable or style id(s) the ledger does not know: ${[...new Set(unknown)].slice(0, 8).join(', ')}` : '  every variable and style id is known to the ledger',
-    ...(icons.length ? [`  icon(s) the ledger does not know: ${icons.join(', ')}`] : []),
+    ...(icons.length ? [`  icon(s) the ledger does not know: ${icons.slice(0, 8).join(', ')}`] : []),
     '',
   ].join('\n');
 }

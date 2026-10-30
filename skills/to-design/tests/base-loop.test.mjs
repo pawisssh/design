@@ -314,6 +314,7 @@ test('the summary of a Button diff names its differences, counts the proposals a
   assert.match(brief, /^Kind=Primary, Size=Large, State=Enabled {2}\(.*\) {2}\d+ difference\(s\)/);
   assert.match(brief, /proposed Contract edits: \d+, on a shared rule: \d+, not carried: \d+/);
   assert.doesNotMatch(brief, /blast radius \d/);
+  assert.match(brief, /2 edit\(s\) may leave a derived value stale \(verify\)/);
   assert.match(brief, /rerun with --full/);
   assert.ok(brief.length < formatDiff(CONTRACT, rb('tweaked'), r).length);
 });
