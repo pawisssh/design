@@ -352,6 +352,32 @@ createRoot(document.getElementById('app')!).render(
   ]);
 });
 
+// #400: CDS exports Button from `@coinbase/cds-web/buttons`, so a Contract's `code.package` is a prefix of the import.
+test('generate: a CDS Button and ThemeProvider imported from package subpaths are a Contract usage and the mode (#400)', { skip: noTs }, async () => {
+  const ds = mkdtempSync(join(tmpdir(), 'to-handoff-cds-'));
+  mkdirSync(join(ds, 'contracts'));
+  copyFileSync(repo('design-systems/cds/cds.foundations.json'), join(ds, 'cds.foundations.json'));
+  copyFileSync(repo('design-systems/cds/contracts/button.component.json'), join(ds, 'contracts/button.component.json'));
+  const dir = project({
+    'package.json': JSON.stringify({ name: 'cds-subpaths', dependencies: { '@coinbase/cds-web': '8.0.0', react: '19.3.1' }, devDependencies: { vite: '8.3.4' } }),
+    'index.html': '<!doctype html><html><head><title>CDS</title></head><body><div id="app"></div><script type="module" src="/src/main.tsx"></script></body></html>',
+    'src/main.tsx': `import { createRoot } from 'react-dom/client';
+import { Button } from '@coinbase/cds-web/buttons';
+import { ThemeProvider } from '@coinbase/cds-web/system';
+createRoot(document.getElementById('app')!).render(
+  <ThemeProvider activeColorScheme="dark">
+    <Button variant="primary">Save</Button>
+  </ThemeProvider>
+);
+`,
+  });
+  const result = await generate({ prototype: dir, designSystem: ds, decisions: decided() });
+  assert.deepEqual(result.requests, []);
+  assert.deepEqual(usagesOf(result.handoff.screens[0]).map(u => [u.contract, u.match && u.match.by, u.at]), [['button', 'import', 'src/main.tsx:6:5']]);
+  assert.deepEqual(result.handoff.source.modes, { light: 'dark' });
+  assert.match(result.handoff.source.notes.map(n => n.text).join('\n'), /ThemeProvider activeColorScheme="dark"/);
+});
+
 test('generate: a Next Prototype is a valid Handoff; a Code Library Button is decided once per signature, via library', { skip: noTs }, async () => {
   const ds = designSystem();
   const result = await generate({ prototype: NEXT, designSystem: ds, decisions: NEXT_DECISIONS });
