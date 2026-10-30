@@ -255,8 +255,8 @@ function readFile(ts, file, source) {
     return null;
   }
   /**
-   * The element's icon child (#259): an <svg>, or an element a package exports (lucide-react's <Check />), as its first
-   * child (inline-start) or its last (inline-end), with its size classes ([] when its className sets none or is not a string).
+   * The element's icon child (#259): an <svg>, or a childless element a package exports (lucide-react's <Check />), beside
+   * a label as its first child (inline-start) or its last (inline-end), with its size classes ([] when its className sets none or is not a string).
    */
   function iconOf(node) {
     if (!ts.isJsxElement(node)) return null;
@@ -396,19 +396,20 @@ function deriveAxes(members) {
   return { base: sorted([...base, ...slotted, ...sites.flatMap(s => s.disabled)].filter((c, i, l) => l.indexOf(c) === i)), axes, slots, bySite: given };
 }
 
+// The box a spacing utility sets, its sides as one (`px-2`, `pr-1.5`: padding), so one side overrides the whole.
+const box = cls => category(cls).replace(/^(.*:)?([pm])[xytblrse]?$/, '$1$2').replace(/^(.*:)?gap-[xy]$/, '$1gap');
+
 /**
  * An icon child whose presence changes the element's classes is a Slot axis (#259, ADR 0011), never a cva axis: on a
  * side where some sites have the icon and some have none, the classes every with-icon rendering has and no plain one
  * has become `has-data-[icon=<side>]:` utilities, and the icons' one size an `[&_svg:not([class*='size-'])]:` utility,
  * which the Adapter reads as the slot frame's size. The classes only the plain sites have join the with-icon sites, so
- * they are base, which the `has-data` utilities override. An icon with no size class, or icons of different sizes, make
- * no slot: the Adapter cannot size its frame. Returns the sites as deriveAxes reads them, the `slotted` utilities and
+ * they are base, when a `has-data` utility overrides each; one none overrides makes no slot, nor do an icon with no size
+ * class or icons of different sizes: the Adapter cannot size its frame. Returns the sites as deriveAxes reads them, the `slotted` utilities and
  * the `slots`, each {key, classes, filled, empty, keys}: the key of the Slot axis the Adapter reads (`icon-inline-start`),
  * its utilities, the sites that fill it and those that do not, for the review page, and the filled sites' keys, for
  * familySites.
  */
-// The box a spacing utility sets, its sides as one (`px-2`, `pr-1.5`: padding), so one side overrides the whole.
-const box = cls => category(cls).replace(/^(.*:)?([pm])[xytblrse]?$/, '$1$2').replace(/^(.*:)?gap-[xy]$/, '$1gap');
 function iconSlots(sites) {
   const slotted = [], slots = [];
   const every = list => list.flatMap(s => s.lists).reduce((a, l) => a.filter(c => l.includes(c)));
