@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -51,6 +51,16 @@ test('packages a plan and prints chars, fileSha256 and the stub', () => {
   );
   const manifest = JSON.parse(readFileSync(join(root, '.scratch/to-design/pkg/script-package.json'), 'utf8'));
   assert.equal(manifest.fileSha256, sha);
+});
+
+test('a .js output path is refused with a message that wants a directory, and nothing is created (#242)', () => {
+  const root = project();
+  const run = pack(root, '.scratch/to-design/pkg/build-components.mcp.js');
+  assert.equal(run.status, 2, run.stdout + run.stderr);
+  assert.equal(run.json.status, 'invalid-input');
+  assert.match(run.json.error, /^Output must be a directory.*not a \.js path: \.scratch\/to-design\/pkg\/build-components\.mcp\.js$/);
+  assert.equal(existsSync(join(root, '.scratch')), false);
+  assert.equal(pack(root, '.scratch/to-design/PKG.JS').status, 2, 'any case of .js');
 });
 
 test('re-packaging the same input gives the same sha256', () => {
