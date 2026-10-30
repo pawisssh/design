@@ -73,6 +73,12 @@ test('a class edit in one family redrafts only that family', { skip }, async () 
 
 // Combinations no site renders (#260): the Adapter's own omits, so they start unticked on the review page. Only the
 // warning icon button has `disabled`, so no site shows the positive or danger one disabled; hover is never omitted.
+// Cuts both cards, two plain elements in their place, so the trend chips after them keep their JSX paths.
+const removeCards = w => {
+  const app = w.app();
+  const start = app.indexOf('      <div className={CARD}>'), end = app.indexOf('      <div className="rounded-[4px] bg-[#fef9c3]');
+  writeFileSync(join(w.proto, 'src/App.tsx'), `${app.slice(0, start)}      <hr />\n      <hr />\n${app.slice(end)}`);
+};
 const contractOf = (w, family) => read(join(w.dir, 'contracts', `${family}.component.json`));
 const approveWith = (w, edits) => approveFolder({ dir: w.dir, project: join(w.dir, 'library'), exported: exported(w.dir, edits), said: 'approve', at: AT, test: true });
 
@@ -142,10 +148,7 @@ test('built into Figma, a class edit in one family is reviewed, approved and sen
 
 test('built into Figma, a family whose sites all go is set aside, and the build names its set orphaned', { skip }, async () => {
   const { w, approve, mock, ledger: first, record: was } = await built();
-  const app = w.app();
-  const start = app.indexOf('      <div className={CARD}>'), end = app.indexOf('      <div className="rounded-[4px] bg-[#fef9c3]');
-  // Two plain elements in the cards' place, so the trend chips after them keep their JSX paths.
-  writeFileSync(join(w.proto, 'src/App.tsx'), `${app.slice(0, start)}      <hr />\n      <hr />\n${app.slice(end)}`);
+  removeCards(w);
   assert.deepEqual((await w.rerun()).setAside.map(s => s.family), ['card']);
   const a = await approve();
   assert.deepEqual([a.approved, a.kept], [[], FAMILIES.filter(f => f !== 'card')]);
@@ -281,10 +284,7 @@ test('an owner rename and an owner drop in the Family map are kept', { skip }, a
 
 test('removing every site of a family sets it aside', { skip }, async () => {
   const w = await world();
-  const app = w.app();
-  const start = app.indexOf('      <div className={CARD}>'), end = app.indexOf('      <div className="rounded-[4px] bg-[#fef9c3]');
-  // Two plain elements in the cards' place, so the trend chips after them keep their JSX paths.
-  writeFileSync(join(w.proto, 'src/App.tsx'), `${app.slice(0, start)}      <hr />\n      <hr />\n${app.slice(end)}`);
+  removeCards(w);
   const again = await w.rerun();
   assert.equal(again.extraction, null);
   assert.deepEqual(again.families, ['action-button', 'chip', 'icon-button', 'pill-button', 'segment', 'trend-chip']);

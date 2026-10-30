@@ -25,6 +25,7 @@ const PREVIEW = readJson(fileURLToPath(new URL('../../adapter-generic/preview/pa
 const GENERATED_IMPORTS = ['class-variance-authority', 'cn'];
 const FROM_PROTOTYPE = ['react', 'react-dom', 'scheduler', 'tailwindcss', 'tw-animate-css', 'shadcn'];
 
+const mostUsed = values => values.reduce((best, v) => (v.sites.length > best.sites.length ? v : best), values[0]);
 const mostFrequent = list => list.reduce((best, t) => (list.filter(x => x === t).length > list.filter(x => x === best).length ? t : best), list[0]);
 const byKey = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const sorted = list => [...list].sort(byKey);
@@ -343,10 +344,11 @@ function groupId(site) {
 }
 
 /**
- * deriveAxes(sites) -> {base, axes} (#257): `base` the classes every rendering has plus the sites' `disabled:` utilities,
+ * deriveAxes(sites) -> {base, axes, compounds, slots, bySite} (#257): `base` the classes every rendering has plus the sites' `disabled:` utilities,
  * each axis {id, categories, values: [{id, classes, sites}], default}. A ternary is one axis (a nested one an N-value
  * axis); the categories that one ternary changes, and those that change together across renderings, are one axis; any
- * other independent difference is one axis each. The default is the value most sites use. Ids derive from content
+ * other independent difference is one axis each, and a ternary whose classes differ per site is two axes and their `compounds`
+ * (compoundAxes). The default is the value most sites use. Ids derive from content
  * (the categories, the canonical class set), so an answer survives a merge. `bySite` holds each site's value ids per axis.
  */
 function deriveAxes(members) {
@@ -375,15 +377,15 @@ function deriveAxes(members) {
 
   // Each site's value ids per axis, by its file and JSX path (#265): two or more where a className ternary picks.
   const given = new Map();
-  const give = (axis, s, ids) => { const per = given.get(siteKey(s)) || {}; per[axis] = ids; given.set(siteKey(s), per); };
+  const give = (axis, key, id) => { const per = given.get(key) || {}; (per[axis] = per[axis] || []).push(id); given.set(key, per); };
   const compounds = [];
   const axes = [...components.values()].flatMap(group => {
     const categories = sorted(group);
-    const split = compoundAxes(sites, base, categories);
-    if (split) {
-      for (const { axis, values } of split.axes) for (const v of values) for (const s of v.members) give(axis.id, s, [...((given.get(siteKey(s)) || {})[axis.id] || []), v.id]);
-      compounds.push(...split.compounds);
-      return split.axes.map(({ axis }) => axis);
+    const twoAxes = compoundAxes(sites, base, categories);
+    if (twoAxes) {
+      for (const { axis, values } of twoAxes.axes) for (const v of values) for (const s of v.members) give(axis.id, siteKey(s), v.id);
+      compounds.push(...twoAxes.compounds);
+      return twoAxes.axes.map(({ axis }) => axis);
     }
     const values = new Map();
     residual.forEach((l, i) => {
@@ -395,20 +397,15 @@ function deriveAxes(members) {
       if (!v.keys.has(siteKey(s))) { v.keys.add(siteKey(s)); v.sites.push(s.at); }
     });
     const list = [...values.values()].map(({ id, classes, sites: where }) => ({ id, classes, sites: where }));
-    const usual = list.reduce((best, v) => (v.sites.length > best.sites.length ? v : best), list[0]);
     const id = categories.join('+');
-    for (const v of values.values()) for (const k of v.keys) {
-      const per = given.get(k) || {};
-      (per[id] = per[id] || []).push(v.id);
-      given.set(k, per);
-    }
-    return [{ id, categories, values: list, default: usual.id }];
+    for (const v of values.values()) for (const k of v.keys) give(id, k, v.id);
+    return [{ id, categories, values: list, default: mostUsed(list).id }];
   }).sort((a, b) => byKey(a.id, b.id));
   return { base: sorted([...base, ...slotted, ...sites.flatMap(s => s.disabled)].filter((c, i, l) => l.indexOf(c) === i)), axes, compounds, slots, bySite: given };
 }
 
 /**
- * A compound family (#258): every site picks between two class lists by one className ternary that changes the
+ * Two axes and their cva compounds (#258): every site picks between two class lists by one className ternary that changes the
  * `categories`, and the sites' pairs differ (chips whose selected colours change per tone). The sites are one axis
  * (Tone), each value the classes both of its lists share, and the ternary another (Selected, its values `v-then` and
  * `v-else`), each value the classes that option has at every site; the rest of each list is a cva compound on the two
@@ -420,22 +417,22 @@ function compoundAxes(sites, base, categories) {
   const pairs = sites.map(s => s.lists.map(inAxis));
   if (pairs.some(([a, b]) => a.join(' ') === b.join(' '))) return null;
   const pairKey = pair => pair.map(l => l.join(' ')).join(' | ');
-  const kinds = unique(pairs.map(pairKey));
-  if (kinds.length < 2) return null;
+  const pairKeys = unique(pairs.map(pairKey));
+  if (pairKeys.length < 2) return null;
   const shared = lists => lists.reduce((a, l) => a.filter(c => l.includes(c)));
   const id = categories.join('+'), pickId = `ternary:${id}`;
-  const side = kinds.map(k => {
+  const perPair = pairKeys.map(k => {
     const pair = pairs[pairs.findIndex(p => pairKey(p) === k)];
     return { id: `v-${sha256(k).slice(0, 8)}`, pair, classes: shared(pair), members: sites.filter((s, i) => pairKey(pairs[i]) === k) };
   });
-  const pick = ['v-then', 'v-else'].map((vid, i) => ({ id: vid, classes: shared(side.map(v => v.pair[i])), members: sites }));
-  const compounds = side.flatMap(v => pick.map((p, i) => ({ match: { [id]: v.id, [pickId]: p.id }, classes: v.pair[i].filter(c => !v.classes.includes(c) && !p.classes.includes(c)) })))
+  const perOption = ['v-then', 'v-else'].map((vid, i) => ({ id: vid, classes: shared(perPair.map(v => v.pair[i])), members: sites }));
+  const compounds = perPair.flatMap(v => perOption.map((p, i) => ({ match: { [id]: v.id, [pickId]: p.id }, classes: v.pair[i].filter(c => !v.classes.includes(c) && !p.classes.includes(c)) })))
     .filter(c => c.classes.length);
   const axis = (axisId, values) => {
     const list = values.map(v => ({ id: v.id, classes: v.classes, sites: unique(v.members.map(s => s.at)) }));
-    return { axis: { id: axisId, categories, values: list, default: list.reduce((best, v) => (v.sites.length > best.sites.length ? v : best), list[0]).id }, values };
+    return { axis: { id: axisId, categories, values: list, default: mostUsed(list).id }, values };
   };
-  return { axes: [axis(id, side), axis(pickId, pick)], compounds };
+  return { axes: [axis(id, perPair), axis(pickId, perOption)], compounds };
 }
 
 // The box a spacing utility sets, its sides as one (`px-2`, `pr-1.5`: padding), so one side overrides the whole.
