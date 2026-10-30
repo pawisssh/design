@@ -325,6 +325,10 @@ test('validateHandoff refuses a usage tuple that a Contract\'s selection.omit le
   assert.equal(withOmit([{ match: { kind: 'primary', state: 'disabled' } }])(() => {}), '');
   assert.match(withOmit([{ match: { kind: 'primary', state: 'disabled' } }])(h => { usage(h, 'send').state = 'disabled'; }), /send.*selection\.omit\[0\]/);
   assert.match(withOmit([{ match: { kind: 'primary' } }])(() => {}), /send.*selection\.omit\[0\]/);
+  // A Family map site switching an axis (size, default lg) is refused only when every value it switches between is left out.
+  const switching = switches => h => { const u = usage(h, 'send'); delete u.tuple.size; u.match = { by: 'family-map', switches }; };
+  assert.doesNotMatch(withOmit([{ match: { kind: 'primary', size: 'lg' } }])(switching({ size: ['md', 'sm'] })), /usage `send`/);
+  assert.match(withOmit([{ match: { kind: 'primary', size: ['md', 'sm'] } }])(switching({ size: ['md', 'sm'] })), /send.*selection\.omit\[0\]/);
 });
 
 test('validateHandoff refuses a duplicate data id and a duplicate question id (#370)', { skip: noDeps }, async () => {
