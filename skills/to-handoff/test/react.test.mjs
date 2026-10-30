@@ -350,6 +350,72 @@ createRoot(document.getElementById('app')!).render(
   assert.match(result.handoff.source.notes.map(n => n.text).join('\n'), /ThemeProvider activeColorScheme="dark"/);
 });
 
+// #227: Sass imported from JS is read into rules at its own offsets; what the reader can't resolve offline is a note.
+const sassApp = () => project({
+  'package.json': JSON.stringify({ name: 'sassy', dependencies: { react: '19.3.1' }, devDependencies: { vite: '8.3.4', sass: '1.99.0' } }),
+  'index.html': '<!doctype html><html><head><title>Sassy</title></head><body><div id="app"></div><script type="module" src="/src/main.tsx"></script></body></html>',
+  'src/main.tsx': `import { createRoot } from 'react-dom/client';
+import './App.scss';
+createRoot(document.getElementById('app')!).render(
+  <main className="page">
+    <button className="cta">Save</button>
+  </main>
+);
+`,
+  'src/App.scss': `@use '@carbon/styles/scss/spacing' as sp;
+@use 'tokens' as t;
+$brand: #123456;
+$gap: 12px;
+$bp: 500px;
+
+// the page
+.page {
+  padding: $gap; // inline comment
+  gap: sp.$spacing-05;
+  .cta {
+    color: $brand;
+    &:hover { color: t.$hover; }
+    &--wide { width: 100%; }
+  }
+  @media (max-width: $bp) { padding: 4px; }
+}
+`,
+  'src/_tokens.scss': '$hover: #abcdef;\n',
+});
+const sassRules = doc => doc.rules.map(r => [r.selector, r.media, r.decls.map(d => `${d.property}: ${d.value} @${doc.at(d.offset)}`)]);
+
+test('read: an imported .scss is rules at its own offsets: variables substituted, nesting flattened, a partial followed (#227)', { skip: noTs }, () => {
+  const doc = readReact(sassApp(), {});
+  assert.deepEqual(sassRules(doc), [
+    ['.page', null, ['padding: 12px @src/App.scss:9:3']],
+    ['.page .cta', null, ['color: #123456 @src/App.scss:12:5']],
+    ['.page .cta:hover', null, ['color: #abcdef @src/App.scss:13:15']],
+    ['.page .cta--wide', null, ['width: 100% @src/App.scss:14:15']],
+    ['.page', '(max-width: 500px)', ['padding: 4px @src/App.scss:16:29']],
+  ]);
+  assert.deepEqual(doc.files.filter(f => f.endsWith('.scss')), ['src/App.scss', 'src/_tokens.scss']);
+});
+
+test('read: a Sass package @use the reader cannot resolve is a note naming the file; the declarations that need it are left out (#227)', { skip: noTs }, () => {
+  const { notes } = readReact(sassApp(), {});
+  assert.equal(notes.length, 1);
+  assert.match(notes[0].text, /^src\/App\.scss .*`@use '@carbon\/styles\/scss\/spacing'` \(src\/App\.scss:1:1\).*1 declaration using `sp\.\$spacing-05` is left out/);
+});
+
+test('generate: a Sass Prototype has values from its .scss, the files pinned, the note in source.notes; editing the .scss is Drift (#227)', { skip: noTs }, async () => {
+  const ds = designSystem();
+  const app = sassApp();
+  const result = await generate({ prototype: app, designSystem: ds, decisions: decided({ 'recognise:button.cta': { raw: true, reason: 'the fixture button has no Contract' } }) });
+  assert.deepEqual(result.requests, []);
+  const h = result.handoff;
+  assert.deepEqual(Object.keys(h.source.prototype.files).filter(f => f.endsWith('.scss')), ['src/App.scss', 'src/_tokens.scss']);
+  assert.match(h.source.notes.map(n => n.text).join('\n'), /src\/App\.scss is Sass/);
+  assert.ok(h.values.some(v => JSON.stringify(v.raw).includes('#123456')), 'the brand colour from $brand is an Off-system value');
+  assert.deepEqual((await check({ handoffPath: result.path, designSystem: ds, prototype: app })).drift, []);
+  writeFileSync(join(app, 'src/App.scss'), readFileSync(join(app, 'src/App.scss'), 'utf8').replace('#123456', '#654321'));
+  assert.deepEqual((await check({ handoffPath: result.path, designSystem: ds, prototype: app })).drift, [{ kind: 'prototype', key: 'src/App.scss', change: 'changed' }]);
+});
+
 test('generate: a Next Prototype is a valid Handoff; a Code Library Button is decided once per signature, via library', { skip: noTs }, async () => {
   const ds = designSystem();
   const result = await generate({ prototype: NEXT, designSystem: ds, decisions: NEXT_DECISIONS });

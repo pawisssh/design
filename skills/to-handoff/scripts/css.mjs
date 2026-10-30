@@ -4,32 +4,49 @@
 // applied (the static reader has no viewport), and a rule whose last compound has a pseudo-class (other than
 // :root) is kept apart as `pseudo`, never applied to the default render.
 
+import { blankComments, declareVariables, isDeclaration, nestSelectors, noteUnlowered, statement, substitute } from './scss.mjs';
+
 const INHERITED = new Set(['color', 'font-family', 'font-size', 'font-weight', 'line-height', 'letter-spacing']);
 
-/** Parse CSS text that starts at `base` in its file. Returns [{selectors, decls: [{property, value, offset}], media, pseudo, order}]. */
-export function parseCss(text, base = 0) {
-  const src = text.replace(/\/\*[\s\S]*?\*\//g, c => ' '.repeat(c.length));
+/**
+ * Parse CSS text that starts at `base` in its file. Returns [{selectors, decls: [{property, value, offset}], media, pseudo, order}].
+ * With a `sass` context (scss.mjs, #227) the text is SCSS: its variables are substituted and its nesting flattened, each
+ * declaration keeping the offset of its own property name.
+ */
+export function parseCss(text, base = 0, sass = null) {
+  const src = sass ? blankComments(text) : text.replace(/\/\*[\s\S]*?\*\//g, c => ' '.repeat(c.length));
+  if (sass) declareVariables(sass, src);
+  const sub = sass ? (v, lenient) => substitute(sass, v) ?? (lenient ? v : null) : v => v;
   const rules = [];
   let order = 0;
-  const block = (from, to, media) => {
-    let i = from;
-    while (i < to) {
-      const open = src.indexOf('{', i);
-      if (open < 0 || open >= to) break;
-      const prelude = src.slice(i, open).trim();
-      const close = matching(src, open);
-      if (prelude.startsWith('@media')) block(open + 1, close, prelude.slice(6).trim());
-      else if (!prelude.startsWith('@')) {
-        const decls = declarations(src, open + 1, close).map(d => ({ ...d, offset: base + d.offset }));
-        for (const selector of splitTop(prelude, ',').map(s => s.trim()).filter(Boolean)) {
-          const parsed = parseSelector(selector);
-          rules.push({ selector, parsed, specificity: specificity(parsed), decls, media: media || null, pseudo: parsed.pseudo, order: order++ });
-        }
+  const walk = (from, to, parents, media) => {
+    const { statements, blocks } = scan(src, from, to);
+    const own = [];
+    for (const [a, b] of statements) {
+      const text = src.slice(a, b);
+      const head = text.trimStart();
+      if (!sass || isDeclaration(head)) own.push([a, b]);
+      else if (head.startsWith('@')) statement(sass, head, base + a + text.length - head.length);
+    }
+    if (parents && (!sass || own.length)) {
+      const decls = own.flatMap(([a, b]) => declarations(src, a, b, sass && (v => {
+        const out = sub(v);
+        if (out === null) sass.dropped++;
+        return out;
+      }))).map(d => ({ ...d, offset: base + d.offset }));
+      for (const selector of parents) {
+        const parsed = parseSelector(selector);
+        rules.push({ selector, parsed, specificity: specificity(parsed), decls, media: media || null, pseudo: parsed.pseudo, order: order++ });
       }
-      i = close + 1;
+    }
+    for (const b of blocks) {
+      const prelude = b.prelude.trim();
+      if (prelude.startsWith('@media')) walk(b.open + 1, b.close, parents, [media, sub(prelude.slice(6).trim(), true)].filter(Boolean).join(' and '));
+      else if (prelude.startsWith('@') || prelude.endsWith(':')) { if (sass) noteUnlowered(sass, prelude); }
+      else walk(b.open + 1, b.close, nestSelectors(parents, sub(prelude, true), splitTop), media);
     }
   };
-  block(0, src.length, null);
+  walk(0, src.length, null, null);
   return rules;
 }
 
@@ -47,6 +64,26 @@ function matching(src, open) {
   return src.length;
 }
 
+// A block body's own statements (ranges ending at a top-level `;`, or at the end) and its nested blocks.
+function scan(src, from, to) {
+  const statements = [], blocks = [];
+  let start = from, depth = 0;
+  for (let i = from; i < to; i++) {
+    const c = src[i];
+    if (c === '(') depth++;
+    else if (c === ')') depth--;
+    else if (depth <= 0 && c === ';') { statements.push([start, i]); start = i + 1; }
+    else if (depth <= 0 && c === '{') {
+      const close = matching(src, i);
+      if (src[i - 1] === '#') { i = close; continue; }
+      blocks.push({ prelude: src.slice(start, i), open: i, close });
+      i = close; start = close + 1;
+    }
+  }
+  if (src.slice(start, to).trim()) statements.push([start, to]);
+  return { statements, blocks };
+}
+
 function splitTop(text, sep) {
   const out = [];
   let depth = 0, start = 0;
@@ -60,8 +97,9 @@ function splitTop(text, sep) {
   return out;
 }
 
-// Declarations between `from` and `to`, each expanded to longhands, with the offset of its property name.
-function declarations(src, from, to) {
+// Declarations between `from` and `to`, each expanded to longhands, with the offset of its property name. `sub` rewrites
+// a value first (Sass variables) and returns null for one that can't be read, which leaves the declaration out.
+function declarations(src, from, to, sub = null) {
   const out = [];
   let start = from;
   for (const part of splitTop(src.slice(from, to), ';')) {
@@ -69,7 +107,8 @@ function declarations(src, from, to) {
     const lead = part.length - part.trimStart().length;
     if (colon > 0) {
       const property = part.slice(0, colon).trim().toLowerCase();
-      const value = part.slice(colon + 1).trim().replace(/\s*!important$/, '');
+      const raw = part.slice(colon + 1).trim().replace(/\s*!important$/, '');
+      const value = sub ? sub(raw) : raw;
       if (property && value) for (const d of expand(property, value)) out.push({ ...d, offset: start + lead });
     }
     start += part.length + 1;
