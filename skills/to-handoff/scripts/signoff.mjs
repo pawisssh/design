@@ -12,6 +12,7 @@ import { contentOf, fileHash, handoffContentHash, prototypeFiles, usedHash } fro
 import { REPO_ROOT, TEST_APPROVER, inScratch, loadDesignSystem } from './system.mjs';
 import { validateHandoff } from './validate.mjs';
 
+const quoted = path => (/^[\w@%+=:,./-]+$/.test(path) ? path : `'${path.replaceAll("'", "'\\''")}'`);
 const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
 
 /**
@@ -171,8 +172,8 @@ export async function review({ handoffPath, designSystem }) {
     if (o.status !== 'approved') continue;
     for (const k of used) if (o.source.proposals && o.source.proposals[k] && system.proposals[k] && o.source.proposals[k] !== proposalContentHash(system.proposals[k])) drifts.push({ handoff: name, proposal: k });
   }
-  // Absolute (#237): the owner pastes it from any folder, or from a worktree whose own .scratch is not this one's.
-  const approveCommand = `node ${join(REPO_ROOT, 'skills/to-handoff/scripts/handoff.mjs')} approve ${resolve(handoffPath)} --ds ${resolve(designSystem)} --content-hash ${hash}`
+  // Absolute and shell-quoted (#237): the owner pastes it from any folder, or from a worktree whose own .scratch is not this one's.
+  const approveCommand = `node ${quoted(join(REPO_ROOT, 'skills/to-handoff/scripts/handoff.mjs'))} approve ${quoted(resolve(handoffPath))} --ds ${quoted(resolve(designSystem))} --content-hash ${hash}`
     + pending.map(k => ` --proposal ${k}=${proposalContentHash(system.proposals[k])}`).join('');
 
   const L = [];

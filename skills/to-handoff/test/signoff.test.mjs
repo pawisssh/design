@@ -226,6 +226,16 @@ test('review prints an approve command with absolute paths that exist, whatever 
   assert.match(rel.stderr, /content hash moved since the review/);
 });
 
+test('the printed approve command runs from another folder and quotes a path with a space (#237)', { skip: noDeps }, async () => {
+  const { ds, handoffPath } = await generated(undefined, join(SCRATCH, 'with space'));
+  const { approveCommand } = await review({ handoffPath, designSystem: ds });
+  // The hash is zeroed so the run refuses after reading every path, and approves nothing.
+  const stale = approveCommand.replace(/--content-hash sha256:\w+/, `--content-hash sha256:${'0'.repeat(64)}`);
+  const run = spawnSync('sh', ['-c', stale], { encoding: 'utf8', cwd: tmpdir() });
+  assert.match(run.stderr, /content hash moved since the review/);
+  assert.ok(approveCommand.includes(`'${handoffPath}'`), approveCommand);
+});
+
 test('review shows each container Usage with the Usages nested in it indented under it, deeper nesting chained (#195)', { skip: noTs }, async () => {
   const ds = shadcnDesignSystem();
   const decisions = read(join(V0, 'decisions.json'));
