@@ -351,7 +351,7 @@ createRoot(document.getElementById('app')!).render(
 });
 
 // #227: Sass imported from JS is read into rules at its own offsets; what the reader can't resolve offline is a note.
-const sassApp = () => project({
+const sassApp = (app = null) => project({
   'package.json': JSON.stringify({ name: 'sassy', dependencies: { react: '19.3.1' }, devDependencies: { vite: '8.3.4', sass: '1.99.0' } }),
   'index.html': '<!doctype html><html><head><title>Sassy</title></head><body><div id="app"></div><script type="module" src="/src/main.tsx"></script></body></html>',
   'src/main.tsx': `import { createRoot } from 'react-dom/client';
@@ -362,7 +362,7 @@ createRoot(document.getElementById('app')!).render(
   </main>
 );
 `,
-  'src/App.scss': `@use '@carbon/styles/scss/spacing' as sp;
+  'src/App.scss': app ?? `@use '@carbon/styles/scss/spacing' as sp;
 @use 'tokens' as t;
 $brand: #123456;
 $gap: 12px;
@@ -400,6 +400,12 @@ test('read: a Sass package @use the reader cannot resolve is a note naming the f
   const { notes } = readReact(sassApp(), {});
   assert.equal(notes.length, 1);
   assert.match(notes[0].text, /^src\/App\.scss .*`@use '@carbon\/styles\/scss\/spacing'` \(src\/App\.scss:1:1\).*1 declaration using `sp\.\$spacing-05` is left out/);
+});
+
+test('read: a configured @use and a comma @import list are notes, not read as if plain (#227)', { skip: noTs }, () => {
+  const { notes } = readReact(sassApp("@use 'tokens' as t with ($hover: red);\n@import 'tokens', 'other';\n.cta { color: t.$hover; }\n"), {});
+  assert.equal(notes.length, 1);
+  assert.match(notes[0].text, /`@use … with`, `@import list` are not read/);
 });
 
 test('generate: a Sass Prototype has values from its .scss, the files pinned, the note in source.notes; editing the .scss is Drift (#227)', { skip: noTs }, async () => {

@@ -70,6 +70,10 @@ export function statement(sass, head, offset) {
   const m = MODULE.exec(head);
   if (!m) { if (UNLOWERED.test(head)) sass.unlowered.add(head.match(/^@[\w-]+/)[0]); return; }
   const [, rule, , spec, as] = m;
+  // A `with (..)` configuration or a comma list isn't followed, so it can't be read as the plain partial (#227).
+  const rest = head.slice(m[0].length);
+  if (/^\s*with\s*\(/.test(rest)) { sass.unlowered.add(`@${rule} … with`); return; }
+  if (/^\s*,/.test(rest)) { sass.unlowered.add(`@${rule} list`); return; }
   const vars = spec.startsWith('sass:') ? null : sass.read(spec);
   if (!vars) { if (!spec.startsWith('sass:')) sass.unread.push({ rule, spec, offset }); return; }
   const bare = rule === 'import' || as === '*';
