@@ -390,7 +390,8 @@ function deriveAxes(members) {
  * which the Adapter reads as the slot frame's size. The classes only the plain sites have join the with-icon sites, so
  * they are base, which the `has-data` utilities override. An icon with no size class, or icons of different sizes, make
  * no slot: the Adapter cannot size its frame. Returns the sites as deriveAxes reads them, the `slotted` utilities and
- * the `slots`, each the key of the Slot axis the Adapter reads (`icon-inline-start`).
+ * the `slots`, each {key, classes, filled, empty}: the key of the Slot axis the Adapter reads (`icon-inline-start`), its
+ * utilities, and the sites that fill it and those that do not, for the review page.
  */
 function iconSlots(sites) {
   const slotted = [], slots = [];
@@ -404,8 +405,10 @@ function iconSlots(sites) {
     if (!only.length || sizes.length !== 1 || !sizes[0]) continue;
     const plainOnly = every(plain).filter(c => !any(iconed).has(c));
     sites = sites.map(s => (iconed.includes(s) ? { ...s, lists: s.lists.map(l => [...l.filter(c => !only.includes(c)), ...plainOnly]) } : s));
-    slotted.push(...only.map(c => `has-data-[icon=${side}]:${c}`), ...sizes[0].split(' ').map(c => `[&_svg:not([class*='size-'])]:${c}`));
-    slots.push(`icon-${side}`);
+    const classes = [...only.map(c => `has-data-[icon=${side}]:${c}`), ...sizes[0].split(' ').map(c => `[&_svg:not([class*='size-'])]:${c}`)];
+    const at = list => unique(list.map(s => s.at));
+    slotted.push(...classes);
+    slots.push({ key: `icon-${side}`, classes, filled: at(iconed), empty: at(plain) });
   }
   return { sites, slotted, slots };
 }
@@ -724,8 +727,11 @@ function reportOf({ families, map, sites, assigned, prior, drops, skipped }) {
     families: Object.fromEntries(families.map(f => [f.key, {
       tag: f.tag, by: map.families[f.key].by, evidence: map.families[f.key].evidence, description: f.description,
       sites: f.sites.map(place).sort(at),
-      axes: f.derived.axes.map(a => ({ id: a.id, key: f.names[a.id].key, label: f.names[a.id].label, default: f.names[a.id].values[a.default].key,
+      axes: [...f.derived.axes.map(a => ({ id: a.id, key: f.names[a.id].key, label: f.names[a.id].label, default: f.names[a.id].values[a.default].key,
         values: a.values.map(v => ({ id: v.id, key: f.names[a.id].values[v.id].key, label: f.names[a.id].values[v.id].label, classes: v.classes, sites: v.sites })) })),
+      // An icon Slot axis (#259), named by the Adapter's rule: the Title Case of its key, False and True.
+      ...f.derived.slots.map(s => ({ id: s.key, key: s.key, label: s.key.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' '), default: 'none',
+        values: [{ id: 'none', key: 'none', label: 'False', classes: [], sites: s.empty }, { id: s.key, key: s.key, label: 'True', classes: s.classes, sites: s.filled }] }))],
     }])),
     unmatched: sites.filter(s => s.candidate && !assigned.has(siteKey(s))).map(s => ({ ...place(s),
       reason: dropped.has(siteKey(s)) ? dropped.get(siteKey(s)).evidence : 'it appears once and has no className ternary' })).sort(at),

@@ -137,14 +137,14 @@ test('after an owner merge the rebuilt page shows the merged family, and the unt
   await buildFolder({ project: proto, root, answers: { groups: { [request.id]: { family: 'action-button', axes, grid: { columns: request.axes.map((a, i) => `axis-${i}`), rows: [] } } } } });
 
   const after = reviewModel(dir);
-  assert.deepEqual(after.extracted.families.map(f => f.family), ['action-button', 'card', 'icon-button', 'segment']);
+  assert.deepEqual(after.extracted.families.map(f => f.family), ['action-button', 'card', 'chip', 'icon-button', 'segment']);
   const merged = after.extracted.families.find(f => f.family === 'action-button');
   assert.equal(merged.by, 'owner');
   assert.equal(merged.sites.length, 2);
-  assert.deepEqual(after.families.map(f => f.family), ['action-button', 'card', 'icon-button', 'segment']);
+  assert.deepEqual(after.families.map(f => f.family), ['action-button', 'card', 'chip', 'icon-button', 'segment']);
 
   const { patches, stale } = restorable(after, stored);
-  assert.deepEqual(Object.keys(patches), ['card', 'icon-button', 'segment']);
+  assert.deepEqual(Object.keys(patches), ['card', 'chip', 'icon-button', 'segment']);
   assert.deepEqual(patches['icon-button'], picked['icon-button'].patch);
   assert.deepEqual(stale, ["action-button's saved ticks are from another snapshot"]);
 });
@@ -164,7 +164,10 @@ test('in a browser the Families tab opens first with the sites, the axis values,
     assert.equal(await tab.evaluate(() => document.querySelector('[role=tab]').getAttribute('aria-selected')), 'true');
     const panel = await tab.evaluate(() => document.getElementById('panel-families').innerText);
     const green = lineOf(proto, 'text-[#16a34a] hover');
-    assert.match(panel, /5 Component Families found in the Prototype/);
+    assert.match(panel, /6 Component Families found in the Prototype/);
+    // The chips' icon slot (#259) is shown as the axis it is, with the classes and sites that fill it.
+    const sent = lineOf(proto, 'gap-1 rounded-[10px]');
+    assert.match(panel, new RegExp(`Icon Inline Start \\(icon-inline-start\\)\\s+True \\(icon-inline-start\\)\\s+has-data-\\[icon=inline-start\\]:gap-1 \\[&_svg:not\\(\\[class\\*='size-'\\]\\)\\]:size-3\\s+src/App\\.tsx:${sent}`));
     assert.match(panel, /icon-button · 3 sites/);
     assert.ok(panel.includes(`src/App.tsx:${green}`) && panel.includes('text-[#16a34a] hover:bg-[#f0fdf4]'));
     assert.match(panel, /Tone \(tone\)\s+Positive \(positive\) · default/);
@@ -193,7 +196,7 @@ test('as an Artifact, a republished page restores the untouched families\' saved
     saved.families['icon-button'] = picker.omitPatch();
     const db = { [DOC]: saved };
     const tab = await open(browser, html, { db });
-    await tab.waitForFunction(() => /Restored the saved ticks of 1 of 5 families/.test(document.getElementById('status').textContent));
+    await tab.waitForFunction(() => /Restored the saved ticks of 1 of 6 families/.test(document.getElementById('status').textContent));
     await tab.waitForFunction(() => /Ticks save as you go/.test(document.getElementById('status').textContent));
     const unchecked = await tab.evaluate(() => {
       const f = document.querySelector('iframe[data-family="icon-button"]');
