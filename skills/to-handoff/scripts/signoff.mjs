@@ -5,13 +5,14 @@
 // review showed, and writes `approval: {by: "owner", …}`. `{test: true}` writes TEST_APPROVER instead, only
 // under <repo>/.scratch/; validateHandoff rejects that approver anywhere else. Drift is never stored.
 import { copyFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { contentHash as contractHash, proposalContentHash } from '../../contract/scripts/contract.mjs';
 import { writeJson } from '../../contract/scripts/io.mjs';
 import { contentOf, fileHash, handoffContentHash, prototypeFiles, usedHash } from './hash.mjs';
 import { REPO_ROOT, TEST_APPROVER, inScratch, loadDesignSystem } from './system.mjs';
 import { validateHandoff } from './validate.mjs';
 
+const quoted = path => (/^[\w@%+=:,./-]+$/.test(path) ? path : `'${path.replaceAll("'", "'\\''")}'`);
 const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
 
 /**
@@ -171,7 +172,8 @@ export async function review({ handoffPath, designSystem }) {
     if (o.status !== 'approved') continue;
     for (const k of used) if (o.source.proposals && o.source.proposals[k] && system.proposals[k] && o.source.proposals[k] !== proposalContentHash(system.proposals[k])) drifts.push({ handoff: name, proposal: k });
   }
-  const approveCommand = `node skills/to-handoff/scripts/handoff.mjs approve ${handoffPath} --ds ${designSystem} --content-hash ${hash}`
+  // Absolute and shell-quoted (#237): the owner pastes it from any folder, or from a worktree whose own .scratch is not this one's.
+  const approveCommand = `node ${quoted(join(REPO_ROOT, 'skills/to-handoff/scripts/handoff.mjs'))} approve ${quoted(resolve(handoffPath))} --ds ${quoted(resolve(designSystem))} --content-hash ${hash}`
     + pending.map(k => ` --proposal ${k}=${proposalContentHash(system.proposals[k])}`).join('');
 
   const L = [];

@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { isAbsolute, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { proposalContentHash } from '../../contract/scripts/contract.mjs';
 import { hasDeps, hasTypescript } from '../scripts/deps.mjs';
@@ -172,7 +172,7 @@ test('review prints the revision, hash, pins, agent marks, questions by addresse
   assert.ok(r.text.includes('"reason": "Carbon ships no avatar or avatar group'));
   assert.match(r.text, /members.*avatar-stack/);
   assert.deepEqual(r.drifts, [{ handoff: 'members', proposal: 'avatar-stack' }]);
-  assert.equal(r.approveCommand, `node skills/to-handoff/scripts/handoff.mjs approve ${handoffPath} --ds ${ds} --content-hash ${handoffContentHash(h)} --proposal avatar-stack=${proposalHash(ds)}`);
+  assert.equal(r.approveCommand, `node ${CLI} approve ${handoffPath} --ds ${ds} --content-hash ${handoffContentHash(h)} --proposal avatar-stack=${proposalHash(ds)}`);
   assert.ok(r.text.includes(r.approveCommand));
   assert.deepEqual(r.blocks, ['draft Contract text-input: the owner approves it before Sign-off']);
   const open = await generated(DECISIONS);
@@ -213,6 +213,27 @@ test('review of a Handoff with no Off-system values prints the section as none (
   writeFileSync(handoffPath, JSON.stringify(h, null, 2) + '\n');
   const { text } = await review({ handoffPath, designSystem: ds });
   assert.match(text, /\nOff-system values \(0\)\n  none\n\nOpen questions/);
+});
+
+test('review prints an approve command with absolute paths that exist, whatever folder it ran in; approve takes the relative form (#237)', { skip: noDeps }, async () => {
+  const { ds, handoffPath } = await generated();
+  const r = await review({ handoffPath: relative(process.cwd(), handoffPath), designSystem: relative(process.cwd(), ds) });
+  const [, script, , handoff, , dir] = r.approveCommand.split(' ');
+  assert.ok([script, handoff, dir].every(p => isAbsolute(p) && existsSync(p)), r.approveCommand);
+  assert.deepEqual([script, handoff, dir], [CLI, handoffPath, ds]);
+  const go = args => spawnSync('node', [CLI, 'approve', ...args], { encoding: 'utf8' });
+  const rel = go([relative(process.cwd(), handoffPath), '--ds', relative(process.cwd(), ds), '--content-hash', 'sha256:' + '0'.repeat(64), '--proposal', `avatar-stack=${proposalHash(ds)}`]);
+  assert.match(rel.stderr, /content hash moved since the review/);
+});
+
+test('the printed approve command runs from another folder and quotes a path with a space (#237)', { skip: noDeps }, async () => {
+  const { ds, handoffPath } = await generated(undefined, join(SCRATCH, 'with space'));
+  const { approveCommand } = await review({ handoffPath, designSystem: ds });
+  // The hash is zeroed so the run refuses after reading every path, and approves nothing.
+  const stale = approveCommand.replace(/--content-hash sha256:\w+/, `--content-hash sha256:${'0'.repeat(64)}`);
+  const run = spawnSync('sh', ['-c', stale], { encoding: 'utf8', cwd: tmpdir() });
+  assert.match(run.stderr, /content hash moved since the review/);
+  assert.ok(approveCommand.includes(`'${handoffPath}'`), approveCommand);
 });
 
 test('review shows each container Usage with the Usages nested in it indented under it, deeper nesting chained (#195)', { skip: noTs }, async () => {
