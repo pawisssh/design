@@ -3,6 +3,7 @@
 
 The package embeds plan and state as String.raw text (any "<" rebuilt at run time, see literal()) with a CHECK block of FNV-1a-32 hashes
 (#17); the core verifies it before its first change. The package runs only in use_figma.
+The output is a directory (build-components.mcp.js and script-package.json go in it); a .js path is refused.
 """
 import argparse
 import hashlib
@@ -269,6 +270,8 @@ def main():
     parser.add_argument("--state", type=Path)
     args = parser.parse_args()
     try:
+        if args.output.suffix.lower() == ".js":
+            raise ValueError(f"Output must be a directory, the package goes in build-components.mcp.js inside it, not a .js path: {args.output}")
         core = args.core.read_text()
         plan = json.loads(args.plan.read_text())
         state = json.loads(args.state.read_text()) if args.state else {}
