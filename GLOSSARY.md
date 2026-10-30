@@ -173,15 +173,15 @@ The read of a whole built Component Set that confirms each variant's name, grid 
 _Avoid_: Check (when the Edit check is meant), verification
 
 **Baseline**:
-The version of each variant's code that a Component Set holds, as of its last passing Coverage check, with the Contract the set was built from; a variant the owner kept as Figma has it takes the code's version it was kept at. A rerun writes only the variants whose code differs from it.
+The version of each variant's code that a Component Set holds, as of its last passing Coverage check, with the Contract the set was built from; a variant the owner kept as Figma has it, or that an Edit check reads back as the code now says, takes the code's version it was kept or read at. A rerun writes only the variants whose code differs from it.
 _Avoid_: Snapshot, last build
 
 **Edit check**:
-The read-only read, before a rerun writes over variants already in a Component Set, of those variants, each against the Contract it was built from, to find the ones changed in Figma since.
+The read-only read, before a rerun writes over variants already in a Component Set, of those variants, each against the Contract it was built from, to find the ones changed in Figma since. One changed to what the code now says is not held.
 _Avoid_: Check (when the Coverage check is meant), sample, diff
 
 **Held variant**:
-A variant whose code changed since its Baseline while Figma may no longer hold it as built: edited or deleted in Figma, or not read back by an Edit check. A rerun leaves it as Figma has it until the owner takes the code's version or keeps Figma's.
+A variant whose code changed since its Baseline while Figma may no longer hold it as built: edited or deleted in Figma (and not to what the code now says), or not read back by an Edit check. A rerun leaves it as Figma has it until the owner takes the code's version or keeps Figma's.
 _Avoid_: Conflict (that is To-design's stop before any change), Figma edit, clash
 
 **Prune list**:
