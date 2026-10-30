@@ -565,8 +565,9 @@ function recorded({ dir, fileKey, ledger, record, result, skip, at }) {
 /**
  * An edit check's result: each variant it read back, diffed against the Contract it was built from (`checkSample`, but
  * its grid cell, which every append re-places by name). One that differs, or is not in the set, was edited in Figma and
- * is held at the code's fingerprint; the others are clean for this Contract. The read must be the one
- * `next` asked for. -> {ledger, record, check: {family, clean, held}}
+ * is held at the code's fingerprint, unless it matches the Contract the code has now (#292, ADR 0017): that one is agreed, its
+ * baseline moves to the code's fingerprint and it is held no more. The others are clean for this Contract. The read must
+ * be the one `next` asked for. -> {ledger, record, check: {family, clean, agreed, held}}
  */
 function checkRecorded({ dir, fileKey, ledger, record, result, skip, at }) {
   const family = result.family;
@@ -576,10 +577,10 @@ function checkRecorded({ dir, fileKey, ledger, record, result, skip, at }) {
   const read = Object.keys(result.sample || {});
   if (!check || !check.names || read.length !== check.names.length || check.names.some(n => !read.includes(n)))
     throw new Error(`this ${family} read is not the edit check the build asked for (${check && check.names ? check.names.join('; ') : 'none'}): run next again`);
-  const report = checkSample(check.contract, result, ledger, g.doc);
+  const problems = against => checkSample(against, result, ledger, g.doc).problems.filter(p => p.what !== 'cell');
   const fps = new Map(variantFingerprints(contract).map(v => [v.name, v.fingerprint]));
   const edited = {};
-  for (const p of report.problems.filter(p => p.what !== 'cell')) {
+  for (const p of problems(check.contract)) {
     const c = edited[p.name] = edited[p.name] || { reason: p.what === 'missing' ? 'missing' : 'edited', fingerprint: fps.get(p.name), contract: check.hash, at };
     if (p.what === 'diff') c.changes = [...(c.changes || []), ...p.changes.map(x => `${x.section}.${x.node}.${x.field}`), ...p.unread.map(x => `unread ${typeof x === 'string' ? x : JSON.stringify(x)}`)];
     if (p.what === 'wiring') c.changes = [...(c.changes || []), 'wiring'];
@@ -587,18 +588,27 @@ function checkRecorded({ dir, fileKey, ledger, record, result, skip, at }) {
   const clean = check.names.filter(n => !edited[n]);
   const built = record.built[family];
   const hash = contentHash(contract);
+  // in (#292): an edited variant Figma has as the code now says already holds this Contract (ADR 0017): neither sent nor held
+  // (read against today's Contract already, its diff stands: none agreed)
+  const differNow = check.hash === hash ? null : new Set(problems(contract).map(p => p.name));
+  const agreed = differNow ? Object.keys(edited).filter(n => edited[n].reason === 'edited' && !differNow.has(n)) : [];
+  const variants = { ...built.variants };
+  for (const n of agreed) {
+    variants[n] = [fps.get(n), (built.variants[n] || [])[1]];
+    delete edited[n];
+  }
   const done = (record.checked || {})[family];
   const before = done && done.for === hash ? done.clean : [];
   const held = { ...(built.held || {}) };
   // a held variant read back clean (the owner put it back as built) is held no more
-  for (const n of clean) delete held[n];
+  for (const n of [...clean, ...agreed]) delete held[n];
   Object.assign(held, edited);
-  const next = { ...built, held };
+  const next = { ...built, variants, held };
   if (!Object.keys(held).length) delete next.held;
   return {
     ledger,
     record: { ...record, built: { ...record.built, [family]: next }, checked: { ...(record.checked || {}), [family]: { for: hash, clean: [...new Set([...before, ...clean])] } } },
-    check: { family, clean, held: Object.keys(edited) },
+    check: { family, clean, agreed, held: Object.keys(edited) },
   };
 }
 
@@ -662,7 +672,10 @@ function main() {
       process.exit(1);
     }
     if (r.check) {
-      console.log(`edit check of ${r.check.family}: ${r.check.clean.length} as built${r.check.held.length ? `, ${r.check.held.length} edited in Figma, left as they are: ${r.check.held.join('; ')}` : ''}`);
+      const said = [`${r.check.clean.length} as built`];
+      if (r.check.agreed.length) said.push(`${r.check.agreed.length} already as the code now has them: ${r.check.agreed.join('; ')}`);
+      if (r.check.held.length) said.push(`${r.check.held.length} edited in Figma, left as they are: ${r.check.held.join('; ')}`);
+      console.log(`edit check of ${r.check.family}: ${said.join(', ')}`);
       return;
     }
     if (r.verdict) {
