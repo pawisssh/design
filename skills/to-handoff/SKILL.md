@@ -120,7 +120,7 @@ node skills/to-handoff/scripts/handoff.mjs review design-systems/<ds>/handoffs/<
 - each pending Proposal in full, with its hash;
 - signed Handoffs these Proposals put into Drift;
 - what blocks sign-off;
-- the approve command.
+- the approve command, with absolute paths so it runs from any folder.
 
 Show it to the owner. Only after the owner types "approve" in chat, run the printed command:
 
