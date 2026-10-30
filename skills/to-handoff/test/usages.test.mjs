@@ -2,6 +2,9 @@
 // Design Systems, loaded once, with a decider stub instead of a generate run.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hasTypescript } from '../scripts/deps.mjs';
 import { readReact } from '../scripts/react.mjs';
@@ -156,10 +159,29 @@ test('a template-literal className signs by its static classes; a token touching
 });
 
 // #226 (moved from react.test.mjs): a Carbon wrapper holding Carbon components is a Container; Theme and Modal are walked, ModalBody is a part.
-test('a package\'s Container is walked: the components inside Theme, Modal and its part are Usages by import (#226)', () => {
-  const modal = carbonReact('Modal', { modalHeading: 'Invite', open: true }, carbonReact('ModalBody', {}, carbonReact('TextInput', { id: 'email', labelText: 'Email' })));
-  const root = el('div', {}, carbonReact('Theme', { theme: 'g10' }, carbonReact('Button', { kind: 'primary', size: 'md' }, 'Save'), modal));
-  const { recognised, d } = recognise(root, { system: carbon });
-  assert.deepEqual(recognised.map(r => [r.el.tag, r.answer.contract, r.byImport]), [['Button', 'button', true], ['TextInput', 'text-input', true]]);
+test('a package\'s Container is walked: the components inside Theme, Modal and its part are Usages by import (#226)', { skip: noTs }, () => {
+  const dir = mkdtempSync(join(tmpdir(), 'usages-carbon-'));
+  mkdirSync(join(dir, 'src'));
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'themed', dependencies: { '@carbon/react': '1.118.0', react: '19.3.1' }, devDependencies: { vite: '8.3.4' } }));
+  writeFileSync(join(dir, 'index.html'), '<!doctype html><html><head><title>Themed</title></head><body><div id="app"></div><script type="module" src="/src/main.tsx"></script></body></html>');
+  writeFileSync(join(dir, 'src/main.tsx'), `import { createRoot } from 'react-dom/client';
+import { Theme, Button, Modal, ModalBody, TextInput } from '@carbon/react';
+createRoot(document.getElementById('app')!).render(
+  <Theme theme="g10">
+    <Button kind="primary" size="md">Save</Button>
+    <Modal open modalHeading="Invite">
+      <ModalBody>
+        <TextInput id="email" labelText="Email" />
+      </ModalBody>
+    </Modal>
+  </Theme>
+);
+`);
+  const doc = readReact(dir, { packages: ['@carbon/react'] });
+  const { recognised, d } = recognise(doc.screens[0].root, { system: carbon });
+  assert.deepEqual(recognised.map(r => [r.answer.contract, r.byImport, doc.at(r.el.offset)]), [
+    ['button', true, 'src/main.tsx:5:5'],
+    ['text-input', true, 'src/main.tsx:8:9'],
+  ]);
   assert.deepEqual(d.asked, []);
 });
