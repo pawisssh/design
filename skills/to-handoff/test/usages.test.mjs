@@ -2,6 +2,9 @@
 // Design Systems, loaded once, with a decider stub instead of a generate run.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
+import { hasTypescript } from '../scripts/deps.mjs';
+import { readReact } from '../scripts/react.mjs';
 import { loadDesignSystem } from '../scripts/system.mjs';
 import { recogniseUsages } from '../scripts/usages.mjs';
 import { repo } from './helpers.mjs';
@@ -9,6 +12,8 @@ import { repo } from './helpers.mjs';
 const carbon = await loadDesignSystem(repo('design-systems/carbon'));
 const shadcn = await loadDesignSystem(repo('design-systems/shadcn'));
 const DRAFTS = 'skills/to-handoff/test/fixtures/v0-app-drafts';
+const TAILWIND = fileURLToPath(new URL('fixtures/tailwind-app', import.meta.url));
+const noTs = !hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
 
 // A reader element: a component's tag is its export; text children are text nodes; every child knows its parent.
 let offset = 0;
@@ -38,9 +43,9 @@ const decider = (answers = {}) => ({
     return answers[key];
   },
 });
-const recognise = (root, { system = shadcn, answers, drafts } = {}) => {
+const recognise = (root, { system = shadcn, answers, drafts, at = x => `at:${x.offset}` } = {}) => {
   const d = decider(answers);
-  return { ...recogniseUsages({ root, system, rules: [], decider: d, describe: x => ({ text: 'Pick one', at: `at:${x.offset}` }), drafts }), d };
+  return { ...recogniseUsages({ root, system, rules: [], decider: d, describe: x => ({ text: 'Pick one', at: at(x) }), drafts }), d };
 };
 const named = ({ recognised }) => recognised.map(r => [r.el.tag, r.answer && (r.answer.contract || r.answer.noContract), r.within && r.within.tag]);
 
@@ -131,4 +136,30 @@ test('each element claims one of usage, part, consumed (by a leaf usage, a part\
   ]);
   // A Container with no Contract is a wrapper; Carbon has no Theme Contract.
   assert.deepEqual(recognise(el('div', {}, theme), { system: carbon }).claimOf(theme), { claim: 'wrapper' });
+});
+
+// #216 (moved from react.test.mjs): a Tailwind app's template-literal classNames, one shape per line of fixtures/tailwind-app/src/App.tsx.
+test('a template-literal className signs by its static classes; a token touching a hole is left out (#216)', { skip: noTs }, () => {
+  const doc = readReact(TAILWIND, {});
+  const { d } = recognise(doc.screens[0].root, { at: x => doc.at(x.offset) });
+  // One question per signature, as the real Decider asks it: the stub records every ask, so sites sharing a key group here.
+  const bySignature = new Map();
+  for (const r of d.asked) bySignature.set(r.key, [...(bySignature.get(r.key) || []), ...r.evidence.at]);
+  assert.deepEqual([...bySignature], [
+    ['recognise:button.flex-1.py-1.5.rounded-lg', ['src/App.tsx:13:7', 'src/App.tsx:14:7']],
+    ['recognise:button.border.px-2.rounded-md.shrink-0', ['src/App.tsx:15:7']],
+    ['recognise:button.ml-auto.p-1', ['src/App.tsx:16:7']],
+    ['recognise:button.px-2.text-xs', ['src/App.tsx:17:7']],
+    ['recognise:input.text-right.w-14[type=text]', ['src/App.tsx:18:7']],
+    ['recognise:input.text-right.w-8[type=text]', ['src/App.tsx:19:7']],
+  ]);
+});
+
+// #226 (moved from react.test.mjs): a Carbon wrapper holding Carbon components is a Container; Theme and Modal are walked, ModalBody is a part.
+test('a package\'s Container is walked: the components inside Theme, Modal and its part are Usages by import (#226)', () => {
+  const modal = carbonReact('Modal', { modalHeading: 'Invite', open: true }, carbonReact('ModalBody', {}, carbonReact('TextInput', { id: 'email', labelText: 'Email' })));
+  const root = el('div', {}, carbonReact('Theme', { theme: 'g10' }, carbonReact('Button', { kind: 'primary', size: 'md' }, 'Save'), modal));
+  const { recognised, d } = recognise(root, { system: carbon });
+  assert.deepEqual(recognised.map(r => [r.el.tag, r.answer.contract, r.byImport]), [['Button', 'button', true], ['TextInput', 'text-input', true]]);
+  assert.deepEqual(d.asked, []);
 });
