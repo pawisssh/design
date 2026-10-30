@@ -99,7 +99,7 @@ test('built into Figma, a class edit in one family is reviewed, approved and sen
   const { n, ledger, record, steps } = await drive({ dir: w.dir, mock, ledger: first, record: was });
   assert.equal(n.status, 'built', JSON.stringify(n));
   assert.deepEqual(n.held.map(h => [h.family, h.reason]), [['icon-button', 'edited']]);
-  assert.deepEqual(steps.filter(s => s.step === 'sets').map(s => [s.family, s.plan.selection.entries.map(e => e[0])]), [['icon-button', [1, 2]]]);
+  assert.deepEqual(steps.filter(s => s.step === 'sets').map(s => [s.family, s.plan.selection.entries.map(e => e[0])]), [['icon-button', [1, 2, 3, 4, 5, 6, 7, 8]]]);
   assert.ok(steps.every(s => s.family === 'icon-button' || (s.step === 'foundations' && !s.writes.length)), steps.map(s => `${s.step} ${s.family}`).join());
   assert.equal(record.coverage['icon-button'].ok, true);
   assert.deepEqual(ledger.sets['icon-button'].variants, ids);
@@ -130,7 +130,7 @@ test('an edited axis value keeps the names the agent gave it', { skip }, async (
   assert.equal(again.extraction, null, 'no answer is asked');
   assert.deepEqual(again.written, ['icon-button']);
   const icon = read(join(w.dir, 'contracts/icon-button.component.json'));
-  assert.deepEqual(icon.axes.map(a => [a.key, a.values.map(v => v.key)]), [['tone', ['positive', 'danger', 'warning']], ['state', ['enabled']]]);
+  assert.deepEqual(icon.axes.map(a => [a.key, a.values.map(v => v.key)]), [['tone', ['positive', 'danger', 'warning']], ['state', ['enabled', 'hover', 'disabled']]]);
 });
 
 test('an edit elsewhere in the file redrafts nothing', { skip }, async () => {
@@ -207,7 +207,7 @@ test('an owner merge in the Family map survives reruns, with and without the ori
   const answered = { groups: { [request.id]: { family: 'action-button', axes, grid: { columns: request.axes.map((a, i) => `axis-${i}`), rows: [] } } } };
   const built = await w.rerun(answered);
   assert.equal(built.extraction, null);
-  assert.deepEqual(built.families, ['action-button', 'card', 'icon-button', 'segment']);
+  assert.deepEqual(built.families, ['action-button', 'card', 'chip', 'icon-button', 'segment']);
   assert.deepEqual(built.setAside.map(s => s.family), ['pill-button']);
   assert.ok(existsSync(join(w.dir, 'removed/pill-button.component.json')));
 
@@ -234,7 +234,7 @@ test('an owner rename and an owner drop in the Family map are kept', { skip }, a
   writeJson(w.mapPath(), map);
   const again = await w.rerun();
   assert.equal(again.extraction, null, 'the renamed family is built from its recorded answers; the dropped site is not asked');
-  assert.deepEqual(again.families, ['action-button', 'icon-button', 'panel', 'pill-button']);
+  assert.deepEqual(again.families, ['action-button', 'chip', 'icon-button', 'panel', 'pill-button']);
   assert.ok(existsSync(join(w.dir, 'library/components/ui/panel.tsx')) && !existsSync(join(w.dir, 'library/components/ui/card.tsx')));
   const settled = tree(w.root);
   const third = await w.rerun(read(ANSWERS));
@@ -253,7 +253,7 @@ test('removing every site of a family sets it aside', { skip }, async () => {
   writeFileSync(join(w.proto, 'src/App.tsx'), app.slice(0, start) + app.slice(end));
   const again = await w.rerun();
   assert.equal(again.extraction, null);
-  assert.deepEqual(again.families, ['action-button', 'icon-button', 'pill-button', 'segment']);
+  assert.deepEqual(again.families, ['action-button', 'chip', 'icon-button', 'pill-button', 'segment']);
   assert.deepEqual(again.setAside.map(s => [s.family, s.reason]), [['card', 'not used by the screens']]);
   assert.ok(existsSync(join(w.dir, 'removed/card.component.json')) && !existsSync(join(w.dir, 'contracts/card.component.json')));
   assert.ok(!existsSync(join(w.dir, 'library/components/ui/card.tsx')));

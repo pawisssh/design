@@ -80,7 +80,7 @@ export function tree(dir) {
 
 export const PATH_A = fileURLToPath(new URL('./fixtures/path-a-app', import.meta.url));
 export const PATH_A_ANSWERS = fileURLToPath(new URL('./fixtures/path-a-app.answers.json', import.meta.url));
-export const PATH_A_FAMILIES = ['action-button', 'card', 'icon-button', 'pill-button', 'segment'];
+export const PATH_A_FAMILIES = ['action-button', 'card', 'chip', 'icon-button', 'pill-button', 'segment'];
 
 // Two of the fixture's classes as Tailwind palette colours, so its Foundations hold palette tokens (#254): pill-button's
 // background when on, segment's text when off.

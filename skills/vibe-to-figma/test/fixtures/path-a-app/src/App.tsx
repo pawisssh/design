@@ -27,6 +27,14 @@ export default function App() {
           <svg className="size-4" viewBox="0 0 16 16"><path d="M2 8h12" /></svg>
         </button>
       </div>
+      <div className="flex gap-2">
+        <span className="inline-flex items-center rounded-[10px] bg-[#eef2ff] px-2 py-0.5 text-xs text-[#3730a3]">Paid</span>
+        <span className="inline-flex items-center rounded-[10px] bg-[#eef2ff] px-2 py-0.5 text-xs text-[#3730a3]">Due</span>
+        <span className="inline-flex items-center gap-1 rounded-[10px] bg-[#eef2ff] px-2 py-0.5 text-xs text-[#3730a3]">
+          <svg className="size-3" viewBox="0 0 16 16"><path d="M2 8h12" /></svg>
+          Sent
+        </span>
+      </div>
       <div className="flex items-center justify-between">
         {VIEWS.map(v => (
           <button

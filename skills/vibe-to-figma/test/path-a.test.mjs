@@ -21,12 +21,12 @@ test('the first run writes one requests file and exits 2; nothing else is writte
   const root = scratch(), requests = join(root, 'requests.json');
   const r = cli('--root', join(root, 'out'), '--requests', requests);
   assert.equal(r.status, 2, r.stderr);
-  assert.match(r.stdout, /5 groups of the Prototype await the agent's judgement/);
+  assert.match(r.stdout, /6 groups of the Prototype await the agent's judgement/);
   assert.match(r.stdout, /skipped src\/App\.tsx:\d+: `buttonClass\("solid"\)` is a function call/);
   assert.equal(existsSync(join(root, 'out')), false);
   const { path, groups, skipped } = read(requests);
   assert.equal(path, 'A');
-  assert.equal(groups.length, 5);
+  assert.equal(groups.length, 6);
   assert.deepEqual(skipped.map(s => s.site.replace(/:\d+$/, '')), ['src/App.tsx']);
   assert.deepEqual(groups.map(g => g.id), Object.keys(answers().groups).sort(), 'the committed answers name every group');
   assert.ok(groups.every(g => g.open.includes('family') && g.open.includes('description')));
@@ -37,7 +37,7 @@ test('with the committed answers the run prints OK and writes the folder; layout
   const root = scratch(), out = join(root, 'out');
   const r = cli('--root', out, '--drafts', ANSWERS);
   assert.equal(r.status, 0, r.stderr + r.stdout);
-  assert.match(r.stdout, /path-a-app: 5 Component Families extracted from the Prototype \(action-button, card, icon-button, pill-button, segment\)/);
+  assert.match(r.stdout, /path-a-app: 6 Component Families extracted from the Prototype \(action-button, card, chip, icon-button, pill-button, segment\)/);
   assert.match(r.stdout, /OK\s*$/);
   const dir = join(out, 'path-a-app');
   assert.deepEqual(Object.keys(tree(dir)).filter(f => f.startsWith('contracts/')), FAMILIES.map(f => `contracts/${f}.component.json`));
@@ -48,12 +48,12 @@ test('with the committed answers the run prints OK and writes the folder; layout
   // svg icons are in none.
   const map = read(join(dir, 'path-a-app.family-map.json'));
   assert.deepEqual(Object.keys(map.families), FAMILIES);
-  assert.deepEqual(Object.fromEntries(Object.entries(map.families).map(([k, f]) => [k, f.sites.length])), { 'action-button': 1, card: 2, 'icon-button': 3, 'pill-button': 1, segment: 1 });
+  assert.deepEqual(Object.fromEntries(Object.entries(map.families).map(([k, f]) => [k, f.sites.length])), { 'action-button': 1, card: 2, chip: 3, 'icon-button': 3, 'pill-button': 1, segment: 1 });
   const sites = Object.values(map.families).flatMap(f => f.sites);
   assert.ok(sites.every(s => s.file === 'src/App.tsx' && /^App:/.test(s.path) && Object.keys(s).join() === 'file,path'));
   assert.ok(!sites.some(s => /\/svg|\/path/.test(s.path)));
   assert.equal(new Set(sites.map(s => s.path)).size, sites.length, 'a site belongs to one family');
-  assert.equal(sites.length, 8, 'eight elements make the five families; the other divs are layout wrappers');
+  assert.equal(sites.length, 11, 'eleven elements make the six families; the other divs are layout wrappers');
   assert.ok(Object.values(map.families).every(f => f.by === 'agent' && /^sha256:/.test(f.fingerprint) && f.evidence.length));
 });
 
@@ -83,12 +83,31 @@ test('every Contract validates and is drafted from the Extracted Library, not th
   assert.equal(read(join(dir, 'library/components.json')).tailwind.css, 'src/index.css');
   assert.equal(readFileSync(join(dir, 'library/src/index.css'), 'utf8'), readFileSync(join(PROTOTYPE, 'src/index.css'), 'utf8'));
   const icon = read(join(dir, 'contracts/icon-button.component.json'));
-  assert.deepEqual(icon.axes.map(a => [a.key, a.values.map(v => v.key)]), [['tone', ['positive', 'danger', 'warning']], ['state', ['enabled']]]);
+  assert.deepEqual(icon.axes.map(a => [a.key, a.values.map(v => v.key)]), [['tone', ['positive', 'danger', 'warning']], ['state', ['enabled', 'hover', 'disabled']]]);
   assert.equal(icon.family.description, 'A small square icon button; its tone sets the icon colour and the hover wash.');
   assert.deepEqual(icon.figma.grid, { columns: ['tone'], rows: ['state'] });
   // The ternary that mirrors `disabled` is the disabled State, not an axis: no axis of the action button.
-  assert.deepEqual(read(join(dir, 'contracts/action-button.component.json')).axes.map(a => a.key), ['state']);
+  assert.deepEqual(read(join(dir, 'contracts/action-button.component.json')).axes.map(a => [a.key, a.values.map(v => v.key)]), [['state', ['enabled', 'disabled']]]);
   assert.match(readFileSync(join(dir, 'library/components/ui/action-button.tsx'), 'utf8'), /disabled:bg-\[#e2e8f0\]/);
+});
+
+test('the chips with and without an icon child are one family with a Slot axis: Figma gets an icon frame and Icon True/False (#259)', { skip }, async () => {
+  const root = scratch();
+  await buildFolder({ project: PROTOTYPE, root, answers: answers() });
+  const dir = join(root, 'path-a-app');
+  assert.equal(read(join(dir, 'path-a-app.family-map.json')).families.chip.sites.length, 3);
+  const tsx = readFileSync(join(dir, 'library/components/ui/chip.tsx'), 'utf8');
+  assert.match(tsx, /has-data-\[icon=inline-start\]:gap-1/);
+  assert.deepEqual([...tsx.matchAll(/^import .* from "([^"]+)"/gm)].map(m => m[1]), ['react', 'cn'], 'no icon package');
+  const chip = read(join(dir, 'contracts/chip.component.json'));
+  const slot = chip.axes.find(a => a.slot);
+  assert.deepEqual([slot.key, slot.default, slot.values.map(v => [v.key, v.label])], ['icon-inline-start', 'none', [['none', 'False'], ['icon-inline-start', 'True']]]);
+  assert.deepEqual(chip.anatomy.children.map(n => [n.name, n.type, n.role]), [['Icon Inline Start', 'FRAME', 'icon'], ['Label', 'TEXT', undefined]]);
+  assert.deepEqual(chip.figma.grid, { columns: ['state'], rows: ['icon-inline-start'] });
+  // The icon sites' gap is the filled value's alone; without the slot the frame is hidden and the root has no gap.
+  const [always, filled] = chip.layout;
+  assert.deepEqual([always.match, always.set.Chip.gap, always.set['Icon Inline Start']], [{}, { token: 'spacing-0' }, { width: { token: 'spacing-3' }, height: { token: 'spacing-3' }, visible: false }]);
+  assert.deepEqual(filled, { match: { 'icon-inline-start': 'icon-inline-start' }, set: { Chip: { gap: { token: 'spacing-1' } }, 'Icon Inline Start': { visible: true } } });
 });
 
 test('a second run with the same answers writes nothing, byte for byte', { skip }, async () => {

@@ -34,15 +34,19 @@ test('each mapped site is a Usage of its family\'s Contract by the Family map, w
     { at: 'src/App.tsx:20:9', contract: 'icon-button', tuple: { tone: 'positive' } },
     { at: 'src/App.tsx:23:9', contract: 'icon-button', tuple: { tone: 'danger' } },
     { at: 'src/App.tsx:26:9', contract: 'icon-button', tuple: { tone: 'warning' } },
+    // An icon child fills the chip's Slot axis (#259): the site with it is the filled value, the others none.
+    { at: 'src/App.tsx:31:9', contract: 'chip', tuple: { 'icon-inline-start': 'none' } },
+    { at: 'src/App.tsx:32:9', contract: 'chip', tuple: { 'icon-inline-start': 'none' } },
+    { at: 'src/App.tsx:33:9', contract: 'chip', tuple: { 'icon-inline-start': 'icon-inline-start' } },
     // A className ternary at the site switches its axis between values: the tuple leaves it out, `switches` names them.
-    { at: 'src/App.tsx:32:11', contract: 'segment', tuple: {}, switches: { selected: ['on', 'off'] } },
-    { at: 'src/App.tsx:41:7', contract: 'action-button', tuple: {} },
-    { at: 'src/App.tsx:48:7', contract: 'pill-button', tuple: {}, switches: { active: ['on', 'off'] } },
-    { at: 'src/App.tsx:55:7', contract: 'card', tuple: {} },
-    { at: 'src/App.tsx:60:7', contract: 'card', tuple: {} },
+    { at: 'src/App.tsx:40:11', contract: 'segment', tuple: {}, switches: { selected: ['on', 'off'] } },
+    { at: 'src/App.tsx:49:7', contract: 'action-button', tuple: {} },
+    { at: 'src/App.tsx:56:7', contract: 'pill-button', tuple: {}, switches: { active: ['on', 'off'] } },
+    { at: 'src/App.tsx:63:7', contract: 'card', tuple: {} },
+    { at: 'src/App.tsx:68:7', contract: 'card', tuple: {} },
   ]);
   // The skipped site is no family: it is decided by its signature, as before.
-  assert.deepEqual(usagesOf(r.handoff).filter(u => u.raw).map(u => [u.at, u.raw.element]), [['src/App.tsx:54:7', 'button']]);
+  assert.deepEqual(usagesOf(r.handoff).filter(u => u.raw).map(u => [u.at, u.raw.element]), [['src/App.tsx:62:7', 'button']]);
   assert.deepEqual(validateHandoff(r.handoff, await loadDesignSystem(dir)).errors, []);
 });
 
@@ -52,15 +56,15 @@ test('the review and the Rendering show the Usages the Family map gave, and the 
   assert.equal(first.handoff.source.familyMap, fileHash(readFileSync(join(dir, 'path-a-app.family-map.json'), 'utf8')));
   const { text } = await review({ handoffPath: first.path, designSystem: dir });
   assert.match(text, /^ {2}family map sha256:/m);
-  assert.match(text, /\nRecognised through the Family map \(8\)\n/);
-  assert.match(text, /\n {2}[\w-]+: segment \{\} switching selected on\/off at src\/App\.tsx:32:11\n/);
+  assert.match(text, /\nRecognised through the Family map \(11\)\n/);
+  assert.match(text, /\n {2}[\w-]+: segment \{\} switching selected on\/off at src\/App\.tsx:40:11\n/);
   assert.match(text, /\n {2}[\w-]+: icon-button \{"tone":"danger"\} at src\/App\.tsx:23:9\n/);
   // The Rendering flags each as the Family map's, its switched axes beside its tuple. The Generic Adapter's renderer reads
   // its own fixture, not this folder's library (#529), so a stand-in renders the specimens.
   const system = await loadDesignSystem(dir);
   const standIn = { ...system, adapter: { ...system.adapter, renderer: async () => ({ stylesheet: '', modeClass: k => `mode-${k}`, render: () => '<i></i>' }) } };
   const html = await renderHtml(first.handoff, standIn);
-  assert.equal((html.match(/✓ Family map<\/span>/g) || []).length, 8);
+  assert.equal((html.match(/✓ Family map<\/span>/g) || []).length, 11);
   assert.match(html, /<code>segment<\/code>  selected=on\|off · /);
   const again = await generate({ prototype: proto, designSystem: dir, decisions: DECISIONS });
   assert.equal(again.wrote, false);
@@ -101,7 +105,7 @@ test('a Family map naming none of the Prototype\'s files is another Prototype\'s
   const file = join(dir, 'path-a-app.family-map.json');
   const map = JSON.parse(readFileSync(file, 'utf8'));
   const moved = (n) => { const m = structuredClone(map); Object.values(m.families).flatMap(f => f.sites).slice(0, n).forEach(s => (s.file = 'src/Other.tsx')); return m; };
-  writeFileSync(file, JSON.stringify(moved(8)));
+  writeFileSync(file, JSON.stringify(moved(11)));
   const other = await generate({ prototype: proto, designSystem: dir, decisions: DECISIONS });
   assert.ok(other.requests.some(q => q.key.startsWith('recognise:')), 'its sites are asked by signature, as before');
   writeFileSync(file, JSON.stringify(moved(1)));

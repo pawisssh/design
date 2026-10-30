@@ -5,7 +5,7 @@
 //   `:disabled` with its other spellings `[aria-disabled="true"]` and `[data-disabled]`;
 // - an attribute condition: an attribute the component sets from its own prop (`[data-size="sm"]`) is that prop's
 //   value, and any other (`[aria-invalid="true"]`) is kept for the caller to sort;
-// - a filled slot, from `:has([<attr>="<value>"])` (shadcn `has-data-[icon=inline-start]`, #121), is kept for the caller;
+// - a filled slot, from `:has([<attr>="<value>"])` or `:has(*[…])` (shadcn `has-data-[icon=inline-start]`, #121), is kept for the caller;
 // - anything a tuple cannot decide is kept apart with its kind (`skip`): an ancestor (`:where(…) .x`), any other slot
 //   (`:has(>svg)`), a descendant (`.x svg`), another media query, or another condition (`:not(…)`, two states).
 // The winner for a property is the applicable rule with the highest specificity, then the latest in the output.
@@ -63,8 +63,10 @@ export function compiledRules(css, layer = 'utilities') {
       }
       const isAt = n.prelude.startsWith('@');
       const nextAt = isAt && !SUPPORTS.test(n.prelude) ? [...at, n.prelude] : at;
-      const sel = isAt ? selector : n.prelude;
-      if (sel) {
+      // Tailwind 4.2 nests a variant's selector under the utility's (`.x { &:hover { … } }`); 4.3 writes it flat (#259).
+      const sel = isAt ? selector : selector && n.prelude.includes('&') ? n.prelude.replaceAll('&', selector) : n.prelude;
+      // A rule that only nests others declares nothing of its own.
+      if (sel && n.decls.length) {
         const key = `${nextAt.join('\n')}\n${sel}`;
         if (!byKey.has(key)) byKey.set(key, { selector: sel, at: nextAt, decls: {}, order: byKey.size });
         const rule = byKey.get(key);
@@ -141,7 +143,8 @@ export function candidateRules(rules, candidate, { modes = [], attrs = {} } = {}
       const mode = /^:is\((.+) \*\)$/.exec(p);
       const attr = /^\[([\w-]+)(?:="([^"]*)")?\]$/.exec(p);
       const pseudo = /^:([\w-]+)$/.exec(p);
-      const slot = /^:has\((\[[\w-]+="[^"]*"\])\)$/.exec(p);
+      // Tailwind 4.2 writes the slot `:has(*[data-icon="inline-start"])`, 4.3 without the `*` (#259).
+      const slot = /^:has\(\*?(\[[\w-]+="[^"]*"\])\)$/.exec(p);
       let state = null;
       if (mode && modes.some(m => m.selector === mode[1])) when.mode = modes.find(m => m.selector === mode[1]).key;
       else if (DISABLED_ATTRS.includes(p)) state = 'disabled';

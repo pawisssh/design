@@ -17,6 +17,8 @@ import { loadTypescript } from '../../to-handoff/scripts/deps.mjs';
 const INTERACTIVE = new Set(['button', 'input', 'select', 'textarea', 'a']);
 const MAX_RENDERINGS = 64;
 const SNIPPET_MAX = 240;
+// The sides an icon slot takes, as the Adapter's Slot axis names them (`has-data-[icon=inline-start]:`).
+const SIDES = ['inline-start', 'inline-end'];
 const PREVIEW = readJson(fileURLToPath(new URL('../../adapter-generic/preview/package.json', import.meta.url))).dependencies;
 // The packages the library's lockfile takes from the Prototype's: what the Adapter compiles with, and what a component renders with.
 // The other packages the generated components import, at the Adapter's pins; no icon package or Radix (#262).
@@ -111,6 +113,10 @@ function readFile(ts, file, source) {
     return text.length > SNIPPET_MAX ? `${text.slice(0, SNIPPET_MAX - 1)}…` : text;
   };
   const tagNameOf = x => (ts.isJsxElement(x) ? x.openingElement.tagName.getText() : x.tagName.getText());
+  // The names this file imports from a package (`import { Check } from "lucide-react"`), not from its own code.
+  const packaged = new Set(sf.statements.filter(st => ts.isImportDeclaration(st) && st.importClause && !/^(?:\.|\/|@\/|~\/)/.test(st.moduleSpecifier.text))
+    .flatMap(st => [st.importClause.name, ...(st.importClause.namedBindings && ts.isNamedImports(st.importClause.namedBindings) ? st.importClause.namedBindings.elements.map(e => e.name) : [])])
+    .filter(Boolean).map(n => n.text));
 
   // A `let` that is assigned again cannot be read from its initializer.
   const assigned = new Set();
@@ -230,7 +236,7 @@ function readFile(ts, file, source) {
         try {
           if (!expr) throw new Unresolved('`className` has no value');
           const tree = resolve(expr, scopesOf(node), ctx);
-          sites.push({ file, line: line(node), col: col(node), tag, path: pathOf(node), node: tree, ternary: ctx.mirrored || hasPick(tree), text: textOf(node), at, snippet: snippetOf(opening) });
+          sites.push({ file, line: line(node), col: col(node), tag, path: pathOf(node), node: tree, ternary: ctx.mirrored || hasPick(tree), text: textOf(node), icon: iconOf(node), at, snippet: snippetOf(opening) });
         } catch (e) {
           if (!(e instanceof Unresolved)) throw e;
           skipped.push({ site: at, tag, reason: e.message, snippet: snippetOf(opening) });
@@ -247,6 +253,25 @@ function readFile(ts, file, source) {
       if (t.trim()) return t.trim().replace(/\s+/g, ' ');
     }
     return null;
+  }
+  /**
+   * The element's icon child (#259): an <svg>, or a childless element a package exports (lucide-react's <Check />), beside
+   * a label as its first child (inline-start) or its last (inline-end), with its size classes ([] when its className sets none or is not a string).
+   */
+  function iconOf(node) {
+    if (!ts.isJsxElement(node)) return null;
+    const children = node.children.filter(c => !(ts.isJsxText(c) && !c.text.trim()) && !(ts.isJsxExpression(c) && !c.expression));
+    // An icon is an `<svg>`, or a package's element with no children of its own (`<Check />`, not `<Badge>2</Badge>`).
+    const isIcon = c => c && (ts.isJsxElement(c) && tagNameOf(c) === 'svg' || ts.isJsxSelfClosingElement(c) && (tagNameOf(c) === 'svg' || packaged.has(tagNameOf(c))));
+    // An icon beside a label: an icon alone, or icons at both ends, fill no one side.
+    const first = children[0], last = children[children.length - 1];
+    if (children.length < 2 || isIcon(first) && isIcon(last)) return null;
+    const [side, icon] = isIcon(first) ? ['inline-start', first] : isIcon(last) ? ['inline-end', last] : [];
+    if (!side) return null;
+    const cls = (ts.isJsxElement(icon) ? icon.openingElement : icon).attributes.properties.find(p => ts.isJsxAttribute(p) && p.name.getText() === 'className');
+    const init = cls && cls.initializer && (ts.isJsxExpression(cls.initializer) ? cls.initializer.expression : cls.initializer);
+    const text = init && (ts.isStringLiteral(init) || ts.isNoSubstitutionTemplateLiteral(init)) ? init.text : '';
+    return { side, size: sorted(tokens(text).filter(c => /^(?:size|w|h)-/.test(c))) };
   }
   /** The element's place in the code: the enclosing component, then each ancestor element's tag and its index among its parent's elements. */
   function pathOf(node) {
@@ -321,7 +346,8 @@ function groupId(site) {
  * other independent difference is one axis each. The default is the value most sites use. Ids derive from content
  * (the categories, the canonical class set), so an answer survives a merge. `bySite` holds each site's value ids per axis.
  */
-function deriveAxes(sites) {
+function deriveAxes(members) {
+  const { sites, slotted, slots } = iconSlots(members);
   const all = sites.flatMap(s => s.lists.map(classes => ({ site: s, classes })));
   const base = all.map(r => r.classes).reduce((a, l) => a.filter(c => l.includes(c)));
   const residual = all.map(r => r.classes.filter(c => !base.includes(c)));
@@ -367,7 +393,45 @@ function deriveAxes(sites) {
     }
     return { id, categories, values: list, default: usual.id };
   }).sort((a, b) => byKey(a.id, b.id));
-  return { base: sorted([...base, ...sites.flatMap(s => s.disabled)].filter((c, i, l) => l.indexOf(c) === i)), axes, bySite: given };
+  return { base: sorted([...base, ...slotted, ...sites.flatMap(s => s.disabled)].filter((c, i, l) => l.indexOf(c) === i)), axes, slots, bySite: given };
+}
+
+// The box a spacing utility sets, its sides as one (`px-2`, `pr-1.5`: padding), so one side overrides the whole.
+const box = cls => category(cls).replace(/^(.*:)?([pm])[xytblrse]?$/, '$1$2').replace(/^(.*:)?gap-[xy]$/, '$1gap');
+
+/**
+ * An icon child whose presence changes the element's classes is a Slot axis (#259, ADR 0011), never a cva axis: on a
+ * side where some sites have the icon and some have none, the classes every with-icon rendering has and no plain one
+ * has become `has-data-[icon=<side>]:` utilities, and the icons' one size an `[&_svg:not([class*='size-'])]:` utility,
+ * which the Adapter reads as the slot frame's size. The classes only the plain sites have join the with-icon sites, so
+ * they are base, when a `has-data` utility overrides each; one none overrides makes no slot, nor do an icon with no size
+ * class or icons of different sizes: the Adapter cannot size its frame. Returns the sites as deriveAxes reads them, the `slotted` utilities and
+ * the `slots`, each {key, classes, filled, empty, keys}: the key of the Slot axis the Adapter reads (`icon-inline-start`),
+ * its utilities, the sites that fill it and those that do not, for the review page, and the filled sites' keys, for
+ * familySites.
+ */
+function iconSlots(sites) {
+  const slotted = [], slots = [];
+  const every = list => list.flatMap(s => s.lists).reduce((a, l) => a.filter(c => l.includes(c)));
+  const any = list => new Set(list.flatMap(s => s.lists.flat()));
+  for (const side of SIDES) {
+    const iconed = sites.filter(s => s.icon && s.icon.side === side), plain = sites.filter(s => !s.icon);
+    if (!iconed.length || !plain.length) continue;
+    const inPlain = any(plain), inIconed = any(iconed);
+    const only = every(iconed).filter(c => !inPlain.has(c));
+    const sizes = unique(iconed.map(s => s.icon.size.join(' ')));
+    if (!only.length || sizes.length !== 1 || !sizes[0]) continue;
+    // A class only the plain sites have joins the icon sites when a has-data utility overrides it (`px-2` under `pr-1.5`);
+    // one none overrides (`underline`) would style the icon sites, so the difference stays an axis.
+    const plainOnly = every(plain).filter(c => !inIconed.has(c));
+    if (plainOnly.some(c => !only.some(o => box(o) === box(c)))) continue;
+    sites = sites.map(s => (iconed.includes(s) ? { ...s, lists: s.lists.map(l => [...l.filter(c => !only.includes(c)), ...plainOnly]) } : s));
+    const classes = [...only.map(c => `has-data-[icon=${side}]:${c}`), ...sizes[0].split(' ').map(c => `[&_svg:not([class*='size-'])]:${c}`)];
+    const at = list => unique(list.map(s => s.at));
+    slotted.push(...classes);
+    slots.push({ key: `icon-${side}`, classes, filled: at(iconed), empty: at(plain), keys: new Set(iconed.map(siteKey)) });
+  }
+  return { sites, slotted, slots };
 }
 
 // ---------- the Prototype ----------
@@ -683,7 +747,9 @@ export function familySites({ project, map }) {
   return found.families.flatMap(f => f.sites.map(s => {
     const given = f.derived.bySite.get(siteKey(s));
     return { file: s.file, line: s.line, col: s.col, family: f.key,
-      values: Object.fromEntries(f.derived.axes.map(a => [f.names[a.id].key, given[a.id].map(id => f.names[a.id].values[id].key)])) };
+      values: Object.fromEntries([...f.derived.axes.map(a => [f.names[a.id].key, given[a.id].map(id => f.names[a.id].values[id].key)]),
+        // An icon Slot axis (#259): filled where the site has the icon child.
+        ...f.derived.slots.map(sl => [sl.key, [sl.keys.has(siteKey(s)) ? sl.key : 'none']])]) };
   }));
 }
 
@@ -702,8 +768,11 @@ function reportOf({ families, map, sites, assigned, prior, drops, skipped }) {
     families: Object.fromEntries(families.map(f => [f.key, {
       tag: f.tag, by: map.families[f.key].by, evidence: map.families[f.key].evidence, description: f.description,
       sites: f.sites.map(place).sort(at),
-      axes: f.derived.axes.map(a => ({ id: a.id, key: f.names[a.id].key, label: f.names[a.id].label, default: f.names[a.id].values[a.default].key,
+      axes: [...f.derived.axes.map(a => ({ id: a.id, key: f.names[a.id].key, label: f.names[a.id].label, default: f.names[a.id].values[a.default].key,
         values: a.values.map(v => ({ id: v.id, key: f.names[a.id].values[v.id].key, label: f.names[a.id].values[v.id].label, classes: v.classes, sites: v.sites })) })),
+      // An icon Slot axis (#259), named by the Adapter's rule: the Title Case of its key, False and True.
+      ...f.derived.slots.map(s => ({ id: s.key, key: s.key, label: s.key.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' '), default: 'none',
+        values: [{ id: 'none', key: 'none', label: 'False', classes: [], sites: s.empty }, { id: s.key, key: s.key, label: 'True', classes: s.classes, sites: s.filled }] }))],
     }])),
     unmatched: sites.filter(s => s.candidate && !assigned.has(siteKey(s))).map(s => ({ ...place(s),
       reason: dropped.has(siteKey(s)) ? dropped.get(siteKey(s)).evidence : 'it appears once and has no className ternary' })).sort(at),

@@ -34,6 +34,7 @@ const CSS = `@layer theme { :root { --x: 1px; } }
   .active\\:not-aria-\\[haspopup\\]\\:translate-y-px:active:not([aria-haspopup]) { --tw-translate-y: 1px; translate: var(--tw-translate-x) var(--tw-translate-y); }
   :where([data-slot="button-group"]) .in-data-\\[slot\\=button-group\\]\\:rounded-lg { border-radius: var(--radius); }
   .has-data-\\[icon\\=inline-end\\]\\:pr-2:has([data-icon="inline-end"]) { padding-right: calc(var(--spacing) * 2); }
+  .has-data-\\[icon\\=inline-start\\]\\:gap-1:has(*[data-icon="inline-start"]) { gap: var(--spacing); }
   .has-\\[\\>svg\\]\\:px-3:has(>svg) { padding-inline: calc(var(--spacing) * 3); }
   .\\[\\&_svg\\]\\:shrink-0 svg { flex-shrink: 0; }
   @media (width >= 40rem) { .sm\\:p-2 { padding: calc(var(--spacing) * 2); } }
@@ -81,6 +82,11 @@ test('a filled slot, :has([attr="value"]), is a condition the caller decides (#1
   const r = one('has-data-[icon=inline-end]:pr-2');
   assert.deepEqual([r.skip, r.when], [undefined, { mode: null, state: null, attrs: {}, slot: '[data-icon="inline-end"]' }]);
   assert.deepEqual(r.specificity, [0, 2, 0], 'it beats the plain padding utility it overrides');
+});
+
+test('Tailwind 4.2\'s spelling of a filled slot, :has(*[attr="value"]), is the same slot (#259)', () => {
+  const r = one('has-data-[icon=inline-start]:gap-1');
+  assert.deepEqual([r.skip, r.when, r.specificity], [undefined, { mode: null, state: null, attrs: {}, slot: '[data-icon="inline-start"]' }, [0, 2, 0]]);
 });
 
 test('specificity counts classes, attributes and pseudo-classes; :is takes its argument, :where counts nothing', () => {
