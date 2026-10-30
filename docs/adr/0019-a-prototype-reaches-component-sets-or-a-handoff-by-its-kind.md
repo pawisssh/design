@@ -79,3 +79,4 @@ Decided in [#325](https://github.com/pawisssh/design/issues/325) on 2026-10-22, 
 - **The entry refuses a gap it can't close yet.** Each supported kind or output that doesn't work yet has a ticket linked from #318, and the entry's refusal names it.
 - **Vibe-to-Figma's SKILL.md no longer pairs the shadcn path with Lovable.** Lovable's defaults fail a gate: TanStack Start with bun, or Tailwind 3.
 - **A new tool needs no new decision when its default is a kind already here.** A kind gains support when a reader takes it.
+- Amended 2026-10-30 by [ADR 0022](0022-a-family-map-site-is-a-usage-by-the-family-map.md) ([#265](https://github.com/pawisssh/design/issues/265)): a path A Prototype's Handoff against its own folder is supported, its JSX sites read through the Family map. Plain HTML's markup sites wait on [#528](https://github.com/pawisssh/design/issues/528).
