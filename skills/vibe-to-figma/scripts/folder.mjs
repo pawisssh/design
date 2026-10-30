@@ -70,9 +70,11 @@ function draftsOf(extracted) {
       d[`axes.${f.names[a.id].key}.label`] = f.names[a.id].label;
       for (const v of a.values) d[`axes.${f.names[a.id].key}.values.${f.names[a.id].values[v.id].key}.label`] = f.names[a.id].values[v.id].label;
     }
-    // Every family has the canonical State axis, a grid axis too: in the rows, or the one column of a family with no other axis.
+    // Every family has the canonical State axis, a grid axis too: in the rows, or the one column of a family with no other
+    // axis. An icon Slot axis (#259) is the Adapter's, never answered, so it joins the rows before State.
     const grid = f.grid || { columns: [], rows: [] };
-    d['figma.grid'] = grid.columns.length ? { columns: grid.columns, rows: [...grid.rows, 'state'] } : { columns: ['state'], rows: [] };
+    const slots = f.derived.slots;
+    d['figma.grid'] = grid.columns.length ? { columns: grid.columns, rows: [...grid.rows, ...slots, 'state'] } : { columns: ['state'], rows: slots };
     if (f.text) d['properties.label.default'] = f.text;
   }
   return drafts;

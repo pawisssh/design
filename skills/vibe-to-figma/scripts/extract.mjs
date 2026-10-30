@@ -16,6 +16,8 @@ import { loadTypescript } from '../../to-handoff/scripts/deps.mjs';
 const INTERACTIVE = new Set(['button', 'input', 'select', 'textarea', 'a']);
 const MAX_RENDERINGS = 64;
 const SNIPPET_MAX = 240;
+// The sides an icon slot takes, as the Adapter's Slot axis names them (`has-data-[icon=inline-start]:`).
+const SIDES = ['inline-start', 'inline-end'];
 const PREVIEW = readJson(fileURLToPath(new URL('../../adapter-generic/preview/package.json', import.meta.url))).dependencies;
 // The packages the library's lockfile takes from the Prototype's: what the Adapter compiles with, and what a component renders with.
 // The other packages the generated components import, at the Adapter's pins; no icon package or Radix (#262).
@@ -109,6 +111,10 @@ function readFile(ts, file, source) {
     return text.length > SNIPPET_MAX ? `${text.slice(0, SNIPPET_MAX - 1)}…` : text;
   };
   const tagNameOf = x => (ts.isJsxElement(x) ? x.openingElement.tagName.getText() : x.tagName.getText());
+  // The names this file imports from a package (`import { Check } from "lucide-react"`), not from its own code.
+  const packaged = new Set(sf.statements.filter(st => ts.isImportDeclaration(st) && st.importClause && !/^(?:\.|\/|@\/|~\/)/.test(st.moduleSpecifier.text))
+    .flatMap(st => [st.importClause.name, ...(st.importClause.namedBindings && ts.isNamedImports(st.importClause.namedBindings) ? st.importClause.namedBindings.elements.map(e => e.name) : [])])
+    .filter(Boolean).map(n => n.text));
 
   // A `let` that is assigned again cannot be read from its initializer.
   const assigned = new Set();
@@ -228,7 +234,7 @@ function readFile(ts, file, source) {
         try {
           if (!expr) throw new Unresolved('`className` has no value');
           const tree = resolve(expr, scopesOf(node), ctx);
-          sites.push({ file, line: line(node), tag, path: pathOf(node), node: tree, ternary: ctx.mirrored || hasPick(tree), text: textOf(node), at, snippet: snippetOf(opening) });
+          sites.push({ file, line: line(node), tag, path: pathOf(node), node: tree, ternary: ctx.mirrored || hasPick(tree), text: textOf(node), icon: iconOf(node), at, snippet: snippetOf(opening) });
         } catch (e) {
           if (!(e instanceof Unresolved)) throw e;
           skipped.push({ site: at, tag, reason: e.message, snippet: snippetOf(opening) });
@@ -245,6 +251,22 @@ function readFile(ts, file, source) {
       if (t.trim()) return t.trim().replace(/\s+/g, ' ');
     }
     return null;
+  }
+  /**
+   * The element's icon child (#259): an <svg>, or an element a package exports (lucide-react's <Check />), as its first
+   * child (inline-start) or its last (inline-end), with its size classes ([] when its className sets none or is not a string).
+   */
+  function iconOf(node) {
+    if (!ts.isJsxElement(node)) return null;
+    const children = node.children.filter(c => !(ts.isJsxText(c) && !c.text.trim()) && !(ts.isJsxExpression(c) && !c.expression));
+    const isIcon = c => c && (ts.isJsxElement(c) || ts.isJsxSelfClosingElement(c)) && (tagNameOf(c) === 'svg' || packaged.has(tagNameOf(c)));
+    const side = isIcon(children[0]) ? 'inline-start' : isIcon(children[children.length - 1]) ? 'inline-end' : null;
+    if (!side) return null;
+    const icon = side === 'inline-start' ? children[0] : children[children.length - 1];
+    const cls = (ts.isJsxElement(icon) ? icon.openingElement : icon).attributes.properties.find(p => ts.isJsxAttribute(p) && p.name.getText() === 'className');
+    const init = cls && cls.initializer && (ts.isJsxExpression(cls.initializer) ? cls.initializer.expression : cls.initializer);
+    const text = init && (ts.isStringLiteral(init) || ts.isNoSubstitutionTemplateLiteral(init)) ? init.text : '';
+    return { side, size: sorted(tokens(text).filter(c => /^(?:size|w|h)-/.test(c))) };
   }
   /** The element's place in the code: the enclosing component, then each ancestor element's tag and its index among its parent's elements. */
   function pathOf(node) {
@@ -319,7 +341,8 @@ function groupId(site) {
  * other independent difference is one axis each. The default is the value most sites use. Ids derive from content
  * (the categories, the canonical class set), so an answer survives a merge.
  */
-function deriveAxes(sites) {
+function deriveAxes(members) {
+  const { sites, slotted, slots } = iconSlots(members);
   const all = sites.flatMap(s => s.lists.map(classes => ({ site: s, classes })));
   const base = all.map(r => r.classes).reduce((a, l) => a.filter(c => l.includes(c)));
   const residual = all.map(r => r.classes.filter(c => !base.includes(c)));
@@ -357,7 +380,34 @@ function deriveAxes(sites) {
     const usual = list.reduce((best, v) => (v.sites.length > best.sites.length ? v : best), list[0]);
     return { id: categories.join('+'), categories, values: list, default: usual.id };
   }).sort((a, b) => byKey(a.id, b.id));
-  return { base: sorted([...base, ...sites.flatMap(s => s.disabled)].filter((c, i, l) => l.indexOf(c) === i)), axes };
+  return { base: sorted([...base, ...slotted, ...sites.flatMap(s => s.disabled)].filter((c, i, l) => l.indexOf(c) === i)), axes, slots };
+}
+
+/**
+ * An icon child whose presence changes the element's classes is a Slot axis (#259, ADR 0011), never a cva axis: on a
+ * side where some sites have the icon and some have none, the classes every with-icon rendering has and no plain one
+ * has become `has-data-[icon=<side>]:` utilities, and the icons' one size an `[&_svg:not([class*='size-'])]:` utility,
+ * which the Adapter reads as the slot frame's size. The classes only the plain sites have join the with-icon sites, so
+ * they are base, which the `has-data` utilities override. An icon with no size class, or icons of different sizes, make
+ * no slot: the Adapter cannot size its frame. Returns the sites as deriveAxes reads them, the `slotted` utilities and
+ * the `slots`, each the key of the Slot axis the Adapter reads (`icon-inline-start`).
+ */
+function iconSlots(sites) {
+  const slotted = [], slots = [];
+  const every = list => list.flatMap(s => s.lists).reduce((a, l) => a.filter(c => l.includes(c)));
+  const any = list => new Set(list.flatMap(s => s.lists.flat()));
+  for (const side of SIDES) {
+    const iconed = sites.filter(s => s.icon && s.icon.side === side), plain = sites.filter(s => !s.icon);
+    if (!iconed.length || !plain.length) continue;
+    const only = every(iconed).filter(c => !any(plain).has(c));
+    const sizes = unique(iconed.map(s => s.icon.size.join(' ')));
+    if (!only.length || sizes.length !== 1 || !sizes[0]) continue;
+    const plainOnly = every(plain).filter(c => !any(iconed).has(c));
+    sites = sites.map(s => (iconed.includes(s) ? { ...s, lists: s.lists.map(l => [...l.filter(c => !only.includes(c)), ...plainOnly]) } : s));
+    slotted.push(...only.map(c => `has-data-[icon=${side}]:${c}`), ...sizes[0].split(' ').map(c => `[&_svg:not([class*='size-'])]:${c}`));
+    slots.push(`icon-${side}`);
+  }
+  return { sites, slotted, slots };
 }
 
 // ---------- the Prototype ----------

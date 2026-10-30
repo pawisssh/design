@@ -92,6 +92,11 @@
       "family": "card",
       "description": "A bordered white card with a soft shadow.",
       "axes": {}
+    },
+    "span-73b686d5": {
+      "family": "chip",
+      "description": "A small rounded status chip; an icon before its label adds a gap.",
+      "axes": {}
     }
   }
 }

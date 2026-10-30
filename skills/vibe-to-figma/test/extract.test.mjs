@@ -194,3 +194,47 @@ test('a Prototype with no lockfile fails before any request is made', { skip }, 
   rmSync(join(dir, 'package-lock.json'));
   assert.throws(() => extract({ project: dir }), /no package-lock\.json/);
 });
+
+// #259: an icon child whose presence changes the element's classes is a Slot axis (ADR 0011), written as
+// `has-data-[icon=…]:` utilities the Adapter reads, with the icons' size as the slot's svg size utility.
+const CHIP = 'inline-flex items-center rounded-full bg-[#eef2ff] px-2 py-0.5 text-xs';
+const ICON = '<svg className="size-3" viewBox="0 0 16 16"><path d="M2 8h12" /></svg>';
+const chips = (...sites) => proto({ 'src/App.tsx': `import { Check } from "lucide-react";\nexport default function App() {\n  return (<div>${sites.join('')}</div>);\n}\n` });
+const tsxOf = dir => {
+  const first = extract({ project: dir });
+  return { requests: first.requests, tsx: extract({ project: dir, answers: answerAll(first.requests) }).library['components/ui/span-0.tsx'] };
+};
+
+test('an icon child that adds classes is a Slot axis: its classes are has-data-[icon=…]: utilities, not a cva axis (#259)', { skip }, () => {
+  const dir = chips(`<span className="${CHIP}">Paid</span>`, `<span className="${CHIP}">Due</span>`,
+    `<span className="${CHIP} gap-1">${ICON}Sent</span>`, `<span className="${CHIP} gap-1"><Check className="size-3" />Done</span>`);
+  const { requests, tsx } = tsxOf(dir);
+  assert.equal(requests.length, 1);
+  assert.deepEqual(requests[0].axes, [], 'the with-icon classes are no axis the agent names');
+  assert.ok(requests[0].common.includes('has-data-[icon=inline-start]:gap-1'));
+  assert.doesNotMatch(tsx, /variants:/);
+  assert.match(tsx, /"[^"]*has-data-\[icon=inline-start\]:gap-1[^"]*"/);
+  assert.match(tsx, /\[&_svg:not\(\[class\*='size-'\]\)\]:size-3/);
+  assert.doesNotMatch(tsx, /(?<!has-data-\[icon=inline-start\]:)\bgap-1\b/, 'without the slot, gap-1 is absent');
+  assert.deepEqual([...tsx.matchAll(/^import .* from "([^"]+)"/gm)].map(m => m[1]), ['react', 'cn'], 'no icon package');
+});
+
+test('an icon after the text is the inline-end slot; a class only the plain sites have stays in the base (#259)', { skip }, () => {
+  const base = 'inline-flex items-center rounded-full bg-[#eef2ff] py-0.5 text-xs';
+  const dir = chips(`<span className="${base} px-2">Paid</span>`, `<span className="${base} px-2">Due</span>`,
+    `<span className="${base} pl-2 pr-1.5 gap-1">Sent${ICON}</span>`);
+  const { tsx } = tsxOf(dir);
+  assert.match(tsx, /has-data-\[icon=inline-end\]:gap-1/);
+  assert.match(tsx, /has-data-\[icon=inline-end\]:pr-1\.5/);
+  assert.match(tsx, /"[^"]*(?<![:\w-])px-2\b/);
+});
+
+test('an icon with no size class, or a family whose every site has the icon, makes no Slot axis (#259)', { skip }, () => {
+  const unsized = chips(`<span className="${CHIP}">Paid</span>`, `<span className="${CHIP}">Due</span>`,
+    `<span className="${CHIP} gap-1"><Check />Done</span>`);
+  const [g] = requestsOf(unsized);
+  assert.deepEqual(g.axes.map(a => a.id), ['gap']);
+  assert.ok(!g.common.some(c => c.startsWith('has-data-')));
+  const all = chips(`<span className="${CHIP} gap-1">${ICON}Sent</span>`, `<span className="${CHIP} gap-1">${ICON}Done</span>`);
+  assert.ok(!requestsOf(all)[0].common.some(c => c.startsWith('has-data-') || c.startsWith('[&_svg')));
+});
