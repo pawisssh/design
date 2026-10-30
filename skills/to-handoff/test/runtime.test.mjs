@@ -224,7 +224,9 @@ test('render --screenshot writes a PNG of the Rendering beside index.html; plain
   assert.equal(shot.status, 0, shot.stderr);
   const bytes = readFileSync(png);
   assert.deepEqual([...bytes.subarray(0, 8)], [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-  assert.ok(bytes.length > 1000);
+  // IHDR: width, height. A full-page shot of the long Rendering is taller than the 800px viewport.
+  assert.equal(bytes.readUInt32BE(16), 1280);
+  assert.ok(bytes.readUInt32BE(20) > 800);
   assert.ok(existsSync(join(dirname(path), 'renderings/index.html')));
 });
 

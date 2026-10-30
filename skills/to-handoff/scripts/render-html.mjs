@@ -4,7 +4,7 @@
 // Handoff alone (no clock), so a re-render of the same Handoff is byte-identical. It is the review copy the
 // owner signs off from; it never signs off itself.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, parse } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { DEPS_DIR, loadChromium } from './deps.mjs';
 import { handoffContentHash } from './generate.mjs';
@@ -49,7 +49,7 @@ export async function screenshotRendering(htmlPath, depsDir = DEPS_DIR) {
     browser = await chromium.launch(launchOptions);
     const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
     await page.goto(pathToFileURL(htmlPath).href);
-    const path = htmlPath.replace(/\.html$/, '.png');
+    const path = join(dirname(htmlPath), `${parse(htmlPath).name}.png`);
     await page.screenshot({ path, fullPage: true, animations: 'disabled' });
     return { path };
   } catch (e) {
