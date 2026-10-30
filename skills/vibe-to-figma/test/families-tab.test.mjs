@@ -105,6 +105,10 @@ test('one real catalog of an Extracted Library family renders with the React its
   const html = buildCatalog({ contract, foundations: read(join(dir, 'path-a-app.foundations.json')), renderer });
   assert.match(html, /text-\[#16a34a\]/);
   assert.match(html, /<button/);
+  // The chip's icon Slot axis renders the slot's svg stand-in, from no icon package (#259).
+  const chip = read(join(dir, 'contracts/chip.component.json'));
+  const chipHtml = buildCatalog({ contract: chip, foundations: read(join(dir, 'path-a-app.foundations.json')), renderer: await previewRenderer(chip, { project: library }) });
+  assert.match(chipHtml, /\\u003csvg data-icon=\\"inline-start\\"/, 'a specimen, escaped in the page\'s JSON');
 });
 
 test('after an owner merge the rebuilt page shows the merged family, and the untouched families\' ticks restore', { skip }, async () => {
