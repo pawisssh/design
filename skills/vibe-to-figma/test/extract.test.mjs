@@ -199,7 +199,7 @@ test('a Prototype with no lockfile fails before any request is made', { skip }, 
 // `has-data-[icon=…]:` utilities the Adapter reads, with the icons' size as the slot's svg size utility.
 const CHIP = 'inline-flex items-center rounded-full bg-[#eef2ff] px-2 py-0.5 text-xs';
 const ICON = '<svg className="size-3" viewBox="0 0 16 16"><path d="M2 8h12" /></svg>';
-const chips = (...sites) => proto({ 'src/App.tsx': `import { Check } from "lucide-react";\nexport default function App() {\n  return (<div>${sites.join('')}</div>);\n}\n` });
+const chips = (...sites) => proto({ 'src/App.tsx': `import { Check } from "lucide-react";\nimport { Badge } from "some-ui";\nexport default function App() {\n  return (<div>${sites.join('')}</div>);\n}\n` });
 const tsxOf = dir => {
   const first = extract({ project: dir });
   return { requests: first.requests, tsx: extract({ project: dir, answers: answerAll(first.requests) }).library['components/ui/span-0.tsx'] };
@@ -229,7 +229,7 @@ test('an icon after the text is the inline-end slot; a class only the plain site
   assert.match(tsx, /"[^"]*(?<![:\w-])px-2\b/);
 });
 
-test('an icon with no size class, or a family whose every site has the icon, makes no Slot axis (#259)', { skip }, () => {
+test('an icon with no size class, a family whose every site has the icon, or a package element with children makes no Slot axis (#259)', { skip }, () => {
   const unsized = chips(`<span className="${CHIP}">Paid</span>`, `<span className="${CHIP}">Due</span>`,
     `<span className="${CHIP} gap-1"><Check />Done</span>`);
   const [g] = requestsOf(unsized);
@@ -237,4 +237,7 @@ test('an icon with no size class, or a family whose every site has the icon, mak
   assert.ok(!g.common.some(c => c.startsWith('has-data-')));
   const all = chips(`<span className="${CHIP} gap-1">${ICON}Sent</span>`, `<span className="${CHIP} gap-1">${ICON}Done</span>`);
   assert.ok(!requestsOf(all)[0].common.some(c => c.startsWith('has-data-') || c.startsWith('[&_svg')));
+  // A package's element with children of its own (a badge, a link) is no icon.
+  const badged = chips(`<span className="${CHIP}">Paid</span>`, `<span className="${CHIP} gap-1"><Badge className="size-3">2</Badge>Due</span>`);
+  assert.deepEqual(requestsOf(badged)[0].axes.map(a => a.id), ['gap']);
 });

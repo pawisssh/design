@@ -261,10 +261,11 @@ function readFile(ts, file, source) {
   function iconOf(node) {
     if (!ts.isJsxElement(node)) return null;
     const children = node.children.filter(c => !(ts.isJsxText(c) && !c.text.trim()) && !(ts.isJsxExpression(c) && !c.expression));
-    const isIcon = c => c && (ts.isJsxElement(c) || ts.isJsxSelfClosingElement(c)) && (tagNameOf(c) === 'svg' || packaged.has(tagNameOf(c)));
-    const side = isIcon(children[0]) ? 'inline-start' : isIcon(children[children.length - 1]) ? 'inline-end' : null;
+    // An icon is an `<svg>`, or a package's element with no children of its own (`<Check />`, not `<Badge>2</Badge>`).
+    const isIcon = c => c && (ts.isJsxElement(c) && tagNameOf(c) === 'svg' || ts.isJsxSelfClosingElement(c) && (tagNameOf(c) === 'svg' || packaged.has(tagNameOf(c))));
+    const first = children[0], last = children[children.length - 1];
+    const [side, icon] = isIcon(first) ? ['inline-start', first] : isIcon(last) ? ['inline-end', last] : [];
     if (!side) return null;
-    const icon = side === 'inline-start' ? children[0] : children[children.length - 1];
     const cls = (ts.isJsxElement(icon) ? icon.openingElement : icon).attributes.properties.find(p => ts.isJsxAttribute(p) && p.name.getText() === 'className');
     const init = cls && cls.initializer && (ts.isJsxExpression(cls.initializer) ? cls.initializer.expression : cls.initializer);
     const text = init && (ts.isStringLiteral(init) || ts.isNoSubstitutionTemplateLiteral(init)) ? init.text : '';
