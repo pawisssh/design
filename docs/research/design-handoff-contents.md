@@ -135,7 +135,7 @@ What the sources ask for:
 - Carbon's checklist asks designs to cover behaviours such as responsiveness, content overflow, reflow, expansion and scrolling. It asks code to work on all device sizes, down to about 320 px wide (`CARBON-CHECK`).
 - WCAG 1.4.10 Reflow (AA) requires that content stays usable at a width equivalent to 320 CSS px (`WCAG`).
 
-A repo finding: the Generic Adapter's smallest breakpoint is `sm` at 640 (`to-handoff/SKILL.md` §3). So no screenshot of a shadcn or v0 Prototype shows the 320 width that Reflow names. Carbon's `sm` is 320.
+A repo finding: the Generic Adapter's smallest breakpoint is `sm` at 640 (`skills/adapter-generic/scripts/handoff-adapter.mjs`). So no screenshot of a shadcn or v0 Prototype shows the 320 width that Reflow names. Carbon's `sm` is 320.
 
 **Motion and transitions: missing.**
 
