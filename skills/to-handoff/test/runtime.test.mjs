@@ -13,7 +13,7 @@ import { DEPS_DIR, hasDeps, hasRuntime, loadTypescript } from '../scripts/deps.m
 import { generate, loadDesignSystem, render, screenshotRendering, validateHandoff } from '../scripts/handoff.mjs';
 import { readHtml, walk } from '../scripts/reader.mjs';
 import { tagHtml, tagJsx } from '../scripts/tag.mjs';
-import { DECISIONS, PROTOTYPE, V0, decided, designSystem, shadcnDesignSystem } from './helpers.mjs';
+import { DECISIONS, PROTOTYPE, V0, V0_DECISIONS, decided, designSystem, shadcnDesignSystem, usagesOf, v0Copy } from './helpers.mjs';
 
 const noDeps = !hasDeps() && 'To-handoff packages missing; run: node skills/to-handoff/scripts/deps.mjs';
 
@@ -290,8 +290,7 @@ test('runtime: a static run of a React Prototype keeps its colours from the sour
 });
 
 test("runtime: v0's white surfaces bind their own tokens by the built reference, with no token-tie (#284)", { skip: noRuntime }, async () => {
-  const decisions = JSON.parse(readFileSync(join(V0, 'decisions.json'), 'utf8'));
-  const { requests, handoff } = await generate({ prototype: V0, designSystem: shadcnDesignSystem(), decisions, runtime: true });
+  const { requests, handoff } = await generate({ prototype: V0, designSystem: shadcnDesignSystem(), decisions: V0_DECISIONS, runtime: true });
   assert.deepEqual(requests.filter(r => r.kind === 'token-tie'), []);
   const styles = handoff.screens[0].regions.flatMap(r => r.styles);
   const bg = at => styles.find(s => s.property === 'background-color' && s.at.includes(at));
@@ -302,28 +301,14 @@ test("runtime: v0's white surfaces bind their own tokens by the built reference,
 
 // ---------- Off-axis from a Contract Usage's computed colours on a React Prototype's runtime run (#286) ----------
 
-const usagesOf = handoff => handoff.screens.flatMap(s => s.regions.flatMap(r => r.usages));
-// A copy of the v0 Prototype with each `[file, from, to]` edit applied in place, so every line keeps its `at`.
-function v0Copy(edits) {
-  const dir = mkdtempSync(join(tmpdir(), 'to-handoff-v0-'));
-  cpSync(V0, dir, { recursive: true });
-  for (const [file, from, to] of edits) {
-    const text = readFileSync(join(dir, file), 'utf8');
-    assert.ok(text.includes(from), `${file} has ${from}`);
-    writeFileSync(join(dir, file), text.replace(from, to));
-  }
-  return dir;
-}
-
 test("runtime: a Contract Usage's stray computed background is Off-axis with its question; an inherited text colour is not (#286)", { skip: noRuntime }, async () => {
   const prototype = v0Copy([
     // The success state's outline Button: a stray background, and a text colour it inherits from a red parent.
     ['app/request-access-form.tsx', 'gap-3 py-6 text-center">', 'gap-3 py-6 text-center text-red-600">'],
     ['app/request-access-form.tsx', '<Button variant="outline" onClick', '<Button variant="outline" className="bg-red-500" onClick'],
   ]);
-  const decisions = JSON.parse(readFileSync(join(V0, 'decisions.json'), 'utf8'));
   const ds = shadcnDesignSystem();
-  const { requests, handoff, path } = await generate({ prototype, designSystem: ds, decisions, runtime: true });
+  const { requests, handoff, path } = await generate({ prototype, designSystem: ds, decisions: V0_DECISIONS, runtime: true });
   assert.deepEqual(requests, []);
   const off = usagesOf(handoff).flatMap(u => (u.offAxis || []).filter(o => o.question.startsWith('q-off-axis-')).map(o => ({ id: u.id, at: u.at, ...o })));
   assert.deepEqual(off.map(({ reason, ...o }) => o), [

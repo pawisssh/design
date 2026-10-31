@@ -17,7 +17,7 @@ import { matchDeclaration, matchText } from '../scripts/match.mjs';
 import { innerHtmlTemplates } from '../scripts/reader.mjs';
 import { mediaAtBreakpoints } from '../scripts/generate.mjs';
 import { standIns } from '../scripts/recognise.mjs';
-import { BUTTON, DECISIONS, PROTOTYPE, designSystem, fixture, repo } from './helpers.mjs';
+import { BUTTON, DECISIONS, PROTOTYPE, designSystem, fixture, repo, usagesOf as usages } from './helpers.mjs';
 
 const BUTTON_BYTES = readFileSync(BUTTON, 'utf8');
 // Stands in for the Adapter's agent step: the TextInput Contract an agent wrote under adapter-carbon SKILL.md §2.
@@ -34,7 +34,6 @@ async function run() {
   shared = { ds, result, handoff: result.handoff, system: await loadDesignSystem(ds) };
   return shared;
 }
-const usages = h => h.screens.flatMap(s => s.regions.flatMap(r => r.usages || []));
 const usage = (h, id) => usages(h).find(u => u.id === id);
 const styles = h => h.screens.flatMap(s => s.regions.flatMap(r => r.styles || []));
 // fn edits a copy of the Handoff; the result is its validation messages, one per line.
