@@ -315,6 +315,8 @@ test('generate with an empty decisions file returns decision requests and writes
   const acceptance = result.requests.find(r => r.key === 'acceptance');
   assert.deepEqual(acceptance.screens, ['invite-teammates']);
   assert.deepEqual({ screen: acceptance.example.screen, state: acceptance.example.state }, { screen: 'invite-teammates', state: 'default' });
+  await assert.rejects(generate({ prototype: PROTOTYPE, designSystem: ds, decisions: { ...DECISIONS, acceptance: [acceptance.example] } }),
+    /decision "acceptance": .*the example's placeholders filled in/, 'the example verbatim is no answer');
 });
 
 test('an answer that is not among its request candidates is refused', { skip: noDeps }, async () => {

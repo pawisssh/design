@@ -824,11 +824,14 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   const screenList = screenIds.map(s => `"${s}"`).join(' | ');
   const presentStates = STANDARD_STATES.filter(s => allPresent.has(s));
   // The screen ids are data, with an example criterion that uses one, so an answer needs no question prose (#244).
+  // Its given, when and then are placeholders: a criterion that keeps one is refused.
+  const example = { id: `${screenIds[0]}-${presentStates[0]}`, screen: screenIds[0], state: presentStates[0], given: '<what is true first>', when: '<what the user does>', then: '<what they see>' };
+  const filled = x => ['given', 'when', 'then'].every(k => x[k] && x[k] !== example[k]);
   const acceptance = d.ask('acceptance', {
     kind: 'acceptance', question: `Acceptance criteria for ${screenIds.join(', ')}: [{id, screen, state, given, when, then}], one per state at least.`, candidates: presentStates,
-    screens: screenIds, example: { id: `${screenIds[0]}-${presentStates[0]}`, screen: screenIds[0], state: presentStates[0], given: '<what is true first>', when: '<what the user does>', then: '<what they see>' },
-  }, a => (Array.isArray(a) && a.length && a.every(x => x.id && screenIds.includes(x.screen) && STANDARD_STATES.includes(x.state) && x.given && x.when && x.then) ? null
-    : `acceptance is a non-empty list of {id, screen: ${screenList}, state, given, when, then}`));
+    screens: screenIds, example,
+  }, a => (Array.isArray(a) && a.length && a.every(x => x.id && screenIds.includes(x.screen) && STANDARD_STATES.includes(x.state) && filled(x)) ? null
+    : `acceptance is a non-empty list of {id, screen: ${screenList}, state, given, when, then}, the example's placeholders filled in`));
 
   // ---- the owner's answers to questions and own acceptance criteria, by question and acceptance id ----
   const criteria = acceptance ? acceptance.map(a => ({ id: a.id, screen: a.screen, state: a.state, given: a.given, when: a.when, then: a.then, by: d.isOwner('acceptance') ? 'owner' : 'agent' })) : [];

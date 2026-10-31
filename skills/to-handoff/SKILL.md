@@ -37,7 +37,7 @@ With an empty `{}` it exits 2 and prints `{requests: [{key, kind, question, cand
 | `condition:<expr>` | `true` or `false`: a plain condition's value when the screen first shows. |
 | `reach:<screen>:<state>` | runtime only: how a present non-default state is reached from first load, `{steps: [{fill: "<selector>", value} \| {click: "<selector>"} \| {clock: <ms>} \| {expect: "<selector>"}]}`, or `{unreachable: "<reason>"}`. |
 | `feature` | `{owner, goal, scope, nonGoals}`. |
-| `acceptance` | `[{id, screen, state, given, when, then}]`. |
+| `acceptance` | `[{id, screen, state, given, when, then}]`. The request lists the screen ids in `screens` (each `screen` is one of them), the present states in `candidates`, and an `example` criterion on the first screen, whose `given`, `when` and `then` placeholders an answer must replace. |
 
 **Owner decisions.** Only on the owner's words in chat, an entry is `{"by": "owner", "answer": …}`:
 
