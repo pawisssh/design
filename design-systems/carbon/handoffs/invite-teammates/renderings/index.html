@@ -37427,11 +37427,11 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <body class="page">
 <header class="top">
 <h1>Invite teammates</h1>
-<p class="stamp">r6 · d45027b93109 · signed off</p>
+<p class="stamp">r7 · 529bc1273598 · pending sign-off</p>
 <label>Mode <select id="mode"><option value="white" data-class="cds--white" selected>White</option><option value="g10" data-class="cds--g10">Gray 10</option><option value="g90" data-class="cds--g90">Gray 90</option><option value="g100" data-class="cds--g100">Gray 100</option></select></label>
 <p class="unverified" id="unverified" hidden>Unverified: the Prototype maps only light → White.</p>
 </header>
-<nav class="groups"><a href="#overview">Overview</a><a href="#look">Needs a look (31)</a><a href="#states">States</a><a href="#usages">Components</a><a href="#tokens">Tokens &amp; values</a><a href="#copy">Copy &amp; questions</a></nav>
+<nav class="groups"><a href="#overview">Overview</a><a href="#look">Needs a look (33)</a><a href="#states">States</a><a href="#usages">Components</a><a href="#tokens">Tokens &amp; values</a><a href="#copy">Copy &amp; questions</a></nav>
 <main class="doc">
 <section class="group" id="overview"><h2>Overview</h2>
 <p>Let a workspace member invite teammates by email and pick their role.</p>
@@ -37447,10 +37447,12 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <section class="optional"><h3>tokensToAdd</h3><p class="not-specified">Not specified · this Handoff has no <code>tokensToAdd</code></p></section>
 </section>
 <section class="group" id="look"><h2>Needs a look</h2>
-<p class="counts"><span class="flag" data-g="≠">≠ Off-system</span> 3 · <span class="flag" data-g="≈">≈ near match</span> 1 · <span class="flag" data-g="◇">◇ agent pick</span> 17 · <span class="flag" data-g="+">+ Proposal</span> 1 · <span class="flag" data-g="↯">↯ off-axis</span> 4 · <span class="flag" data-g="!">! missing state</span> 1 · <span class="flag" data-g="◌">◌ mock</span> 1 · <span class="flag" data-g="◌">◌ simulated</span> 1 · <span class="flag" data-g="◌">◌ placeholder copy</span> 2</p>
+<p class="counts"><span class="flag" data-g="≠">≠ Off-system</span> 5 · <span class="flag" data-g="≈">≈ near match</span> 1 · <span class="flag" data-g="◇">◇ agent pick</span> 17 · <span class="flag" data-g="+">+ Proposal</span> 1 · <span class="flag" data-g="↯">↯ off-axis</span> 4 · <span class="flag" data-g="!">! missing state</span> 1 · <span class="flag" data-g="◌">◌ mock</span> 1 · <span class="flag" data-g="◌">◌ simulated</span> 1 · <span class="flag" data-g="◌">◌ placeholder copy</span> 2</p>
 <div class="table-wrap"><table><tr><th>flag</th><th>what</th><th>why</th><th>where</th></tr>
+<tr><td><span class="flag" data-g="≠">≠ Off-system</span></td><td><code>20px/30px/400/0px</code> as text</td><td>No Text Style is 20px/30px/400/0px; only its font size is `heading-03-font-size`</td><td>index.html:57:11</td></tr>
 <tr><td><span class="flag" data-g="≠">≠ Off-system</span></td><td><code>#edf5ff</code> as background-color</td><td>No Background, Layer, Field, Support token is within ΔE 0.02 of #edf5ff in White; the chroma guard dropped 5 grey candidates for a tinted colour</td><td>index.html:18:12</td></tr>
 <tr><td><span class="flag" data-g="≠">≠ Off-system</span></td><td><code>#002d9c</code> as color</td><td>No Text, Link, Icon token is within ΔE 0.02 of #002d9c in White</td><td>index.html:18:33</td></tr>
+<tr><td><span class="flag" data-g="≠">≠ Off-system</span></td><td><code>14px/normal/400/0px</code> as text</td><td>No Text Style is 14px/normal/400/0px; only its font size is `body-compact-01-font-size`</td><td>index.html:59:26, index.html:65:100, index.html:66:88, index.html:67:58</td></tr>
 <tr><td><span class="flag" data-g="≠">≠ Off-system</span></td><td><code>10px</code> as gap</td><td>10px is between spacing-03 (8) and spacing-04 (12); no Spacing step within 1px</td><td>index.html:20:25</td></tr>
 <tr><td><span class="flag" data-g="≈">≈ near match</span></td><td><code>background-color: #fafafa</code> → <code>background</code> (ΔE 0.0149)</td><td>among background, field-02, layer-02</td><td>index.html:13:64</td></tr>
 <tr><td><span class="flag" data-g="◇">◇ agent pick</span></td><td><code>color: #161616</code> → <code>text-primary</code></td><td>tied with icon-primary</td><td>index.html:13:85</td></tr>
@@ -37617,17 +37619,19 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 </table></div>
 <h3>Text</h3>
 <div class="table-wrap"><table><tr><th>region</th><th>text</th><th>Text Style</th><th></th><th>where</th></tr>
-<tr><td>header</td><td>“Invite teammates”</td><td>font size <code>heading-03-font-size</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:57:11</td></tr>
+<tr><td>header</td><td>“Invite teammates”</td><td><code>value:text-20-30-400-0</code> · font size <code>heading-03-font-size</code></td><td><span class="flag" data-g="≠">≠ Off-system</span></td><td>index.html:57:11</td></tr>
 <tr><td>header</td><td>“Teammates get an email with a link to join this workspace.”</td><td><code>body-compact-01</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:58:23</td></tr>
-<tr><td>promo</td><td>“Lorem ipsum: invite 3 more people to unlock shared dashboards.”</td><td>font size <code>body-compact-01-font-size</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:59:26</td></tr>
-<tr><td>card</td><td>“{invites.length + 1} of 5 seats used”</td><td>font size <code>body-compact-01-font-size</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:65:100</td></tr>
-<tr><td>card</td><td>“{email} · {role}”</td><td>font size <code>body-compact-01-font-size</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:66:88 · default, loading, success</td></tr>
-<tr><td>card</td><td>“No pending invites yet.”</td><td>font size <code>body-compact-01-font-size</code></td><td><span class="flag" data-g="◇">◇ agent pick</span></td><td>index.html:67:58 · empty</td></tr>
+<tr><td>promo</td><td>“Lorem ipsum: invite 3 more people to unlock shared dashboards.”</td><td><code>value:text-14-normal-400-0</code> · font size <code>body-compact-01-font-size</code></td><td><span class="flag" data-g="≠">≠ Off-system</span></td><td>index.html:59:26</td></tr>
+<tr><td>card</td><td>“{invites.length + 1} of 5 seats used”</td><td><code>value:text-14-normal-400-0</code> · font size <code>body-compact-01-font-size</code></td><td><span class="flag" data-g="≠">≠ Off-system</span></td><td>index.html:65:100</td></tr>
+<tr><td>card</td><td>“{email} · {role}”</td><td><code>value:text-14-normal-400-0</code> · font size <code>body-compact-01-font-size</code></td><td><span class="flag" data-g="≠">≠ Off-system</span></td><td>index.html:66:88 · default, loading, success</td></tr>
+<tr><td>card</td><td>“No pending invites yet.”</td><td><code>value:text-14-normal-400-0</code> · font size <code>body-compact-01-font-size</code></td><td><span class="flag" data-g="≠">≠ Off-system</span></td><td>index.html:67:58 · empty</td></tr>
 </table></div>
 <h3>Off-system values</h3>
 <div class="table-wrap"><table><tr><th>id</th><th>raw</th><th>role</th><th>reason</th><th>nearest</th></tr>
+<tr><td><code>text-20-30-400-0</code></td><td><code>20px/30px/400/0px</code></td><td>text</td><td>No Text Style is 20px/30px/400/0px; only its font size is `heading-03-font-size`</td><td><code>fluid-heading-03</code>, <code>heading-03</code>, <code>fluid-quotation-01</code></td></tr>
 <tr><td><code>background-color-edf5ff</code></td><td><span class="swatch" style="background:#edf5ff"></span><code>#edf5ff</code></td><td>background-color</td><td>No Background, Layer, Field, Support token is within ΔE 0.02 of #edf5ff in White; the chroma guard dropped 5 grey candidates for a tinted colour</td><td><code>field-01</code>, <code>field-03</code>, <code>layer-01</code> · Primitive <code>blue.10</code></td></tr>
 <tr><td><code>color-002d9c</code></td><td><span class="swatch" style="background:#002d9c"></span><code>#002d9c</code></td><td>color</td><td>No Text, Link, Icon token is within ΔE 0.02 of #002d9c in White</td><td><code>link-primary-hover</code>, <code>link-secondary</code>, <code>icon-secondary</code> · Primitive <code>blue.80</code></td></tr>
+<tr><td><code>text-14-normal-400-0</code></td><td><code>14px/normal/400/0px</code></td><td>text</td><td>No Text Style is 14px/normal/400/0px; only its font size is `body-compact-01-font-size`</td><td><code>body-01</code>, <code>body-compact-01</code>, <code>helper-text-02</code></td></tr>
 <tr><td><code>gap-10px</code></td><td><span class="swatch" style="background:transparent"></span><code>10px</code></td><td>gap</td><td>10px is between spacing-03 (8) and spacing-04 (12); no Spacing step within 1px</td><td><code>spacing-03</code>, <code>spacing-04</code></td></tr>
 </table></div>
 </section>

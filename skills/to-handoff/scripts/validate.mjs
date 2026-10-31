@@ -86,6 +86,7 @@ export function validateHandoff(handoff, system) {
         if (s.textStyle !== undefined) textStyle(s.textStyle, at);
         (s.candidates || []).forEach(c => textStyle(c, `${at}.candidates`));
         for (const m of Object.values(s.partial || {})) { if (m.token) token(m.token, `${at}.partial`); (m.candidates || []).forEach(c => token(c, `${at}.partial`)); }
+        if (s.value !== undefined && !values.has(s.value.slice(6))) err('value', at, `${at}: unknown value "${s.value}"`);
         (t.states || []).forEach(x => state(x, at));
       });
       (region.usages || []).forEach(u => {
@@ -164,6 +165,13 @@ export function validateHandoff(handoff, system) {
         for (const ref of Object.values(us.properties || {})) copyRef(ref, `${at}.usageStates.${id}`);
       }
     }
+  });
+  // A text value (#287) carries its metric and its nearest Text Styles; no other role has a metric.
+  (h.values || []).forEach((v, i) => {
+    const at = `values[${i}] (${v.id})`;
+    if (v.role !== 'text') { if (v.metric) err('value', at, `${at}: only a text value has a metric`); return; }
+    if (!v.metric) err('value', at, `${at}: a text value needs a metric`);
+    (v.nearest || []).forEach(n => textStyle(n.token, `${at}.nearest`));
   });
   const screens = new Set((h.screens || []).map(s => s.id));
   (h.acceptance || []).forEach((a, i) => {

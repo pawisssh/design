@@ -36,6 +36,7 @@ async function run() {
 }
 const usage = (h, id) => usages(h).find(u => u.id === id);
 const styles = h => h.screens.flatMap(s => s.regions.flatMap(r => r.styles || []));
+const texts = h => h.screens.flatMap(s => s.regions.flatMap(r => r.text || []));
 // fn edits a copy of the Handoff; the result is its validation messages, one per line.
 const editor = (handoff, system) => fn => { const h = JSON.parse(JSON.stringify(handoff)); fn(h); return validateHandoff(h, system).errors.map(e => e.message).join('\n'); };
 
@@ -203,12 +204,57 @@ test('#edf5ff is Off-system with nearest and its Primitive; a near match and a t
   assert.equal(h1.style.textStyle, undefined);
   assert.equal(h1.style.partial.fontSize.token, 'heading-03-font-size');
   assert.equal(h1.style.partial.fontSize.by, 'agent');
+  assert.equal(h1.style.value, 'value:text-20-30-400-0');
   const ref = styles(handoff).find(s => s.property === 'border-color');
   assert.equal(ref.token, 'border-subtle-01');
   assert.ok(handoff.openQuestions.filter(q => q.kind === 'font').length === 1);
   // A static run never saw a viewport, and says so (#146).
   assert.equal(handoff.openQuestions.find(q => q.id === 'q-breakpoint-max-width-640px').text,
     '@media (max-width: 640px) changes .actions, .actions .btn; the static reader has no viewport. Which Design System breakpoint is it, and what should change there?');
+});
+
+test('text that matches no Text Style is one Off-system value per metric, with its nearest Text Styles (#287)', { skip: noDeps }, async () => {
+  const { handoff, system } = await run();
+  const off = texts(handoff).filter(t => !t.style.textStyle);
+  assert.equal(off.length, 5);
+  // Each is a partial match: it keeps its font-size token and points at a value instead of a raw metric.
+  for (const t of off) {
+    assert.equal(t.style.raw, undefined);
+    assert.ok(t.style.partial.fontSize.token);
+    assert.match(t.style.value, /^value:text-/);
+  }
+  const values = handoff.values.filter(v => v.role === 'text');
+  assert.deepEqual(values.map(v => [v.id, v.raw.light, v.metric, v.at.length]), [
+    ['text-20-30-400-0', '20px/30px/400/0px', { fontSize: 20, lineHeight: 30, fontWeight: 400, letterSpacing: 0 }, 1],
+    ['text-14-normal-400-0', '14px/normal/400/0px', { fontSize: 14, lineHeight: null, fontWeight: 400, letterSpacing: 0 }, 4],
+  ]);
+  for (const v of values) {
+    assert.deepEqual(off.filter(t => t.style.value === `value:${v.id}`).map(t => t.at), v.at);
+    assert.ok(v.nearest.length > 0 && v.nearest.length <= 3);
+    for (const n of v.nearest) assert.ok(system.foundations.textStyles[n.token], `${n.token} is a Text Style`);
+    assert.equal(v.nearest[0].delta, 0, 'a Text Style of the same font size comes first');
+  }
+  assert.match(values[0].reason, /heading-03-font-size/);
+});
+
+test('an answer of "value" to a text-near request gives a text Off-system value (#287)', { skip: noDeps }, async () => {
+  // The lead paragraph at 14/19 is 1px off body-compact-01's 14/18: near, not exact.
+  const proto = join(mkdtempSync(join(tmpdir(), 'to-handoff-near-')), 'index.html');
+  writeFileSync(proto, readFileSync(PROTOTYPE, 'utf8').replace('line-height: 18px; letter-spacing: 0.16px', 'line-height: 19px; letter-spacing: 0.16px'));
+  const ds = designSystem();
+  const key = 'textStyle:14/19/400/0.16';
+  const request = (await generate({ prototype: proto, designSystem: ds, decisions: DECISIONS })).requests.find(r => r.key === key);
+  assert.equal(request.kind, 'text-near');
+  assert.match(request.question, /or "value" to keep it Off-system/);
+  const { handoff, system } = await generate({ prototype: proto, designSystem: ds, decisions: { ...DECISIONS, [key]: 'value' } }).then(async r => ({ handoff: r.handoff, system: await loadDesignSystem(ds) }));
+  const lead = texts(handoff).find(t => t.style.value === 'value:text-14-19-400-0-16');
+  assert.ok(lead, 'the lead points at its value');
+  assert.equal(lead.style.textStyle, undefined);
+  const v = handoff.values.find(x => x.id === 'text-14-19-400-0-16');
+  assert.deepEqual([v.role, v.raw.light, v.metric], ['text', '14px/19px/400/0.16px', { fontSize: 14, lineHeight: 19, fontWeight: 400, letterSpacing: 0.16 }]);
+  assert.match(v.reason, /The owner kept 14px\/19px\/400\/0.16px Off-system rather than/);
+  for (const n of v.nearest) assert.ok(system.foundations.textStyles[n.token], n.token);
+  assert.deepEqual(validateHandoff(handoff, system).errors, []);
 });
 
 test('states, Stand-ins and the missing error state come from the Prototype', { skip: noDeps }, async () => {
@@ -304,6 +350,17 @@ test('validateHandoff refuses a bad tuple, an unknown or non-theme token, a miss
   const retired = await loadDesignSystem(designSystem());
   retired.proposals['avatar-stack'] = { ...retired.proposals['avatar-stack'], retirement: { contract: 'button', how: 'replaced', map: {}, by: 'owner', at: '2026-10-17' } };
   assert.match(validateHandoff(handoff, retired).errors.map(e => e.message).join('\n'), /`avatar-stack` retired into `button`: migrate/);
+});
+
+test('validateHandoff refuses a text value without a metric, a metric on another role and a nearest that is no Text Style (#287)', { skip: noDeps }, async () => {
+  const { handoff, system } = await run();
+  const edit = editor(handoff, system);
+  const textValue = h => h.values.find(v => v.role === 'text');
+  assert.equal(edit(() => {}), '');
+  assert.match(edit(h => { delete textValue(h).metric; }), /values\[\d+\] \(text-20-30-400-0\): a text value needs a metric/);
+  assert.match(edit(h => { h.values.find(v => v.role === 'background-color').metric = textValue(h).metric; }), /values\[\d+\] \(background-color-edf5ff\): only a text value has a metric/);
+  assert.match(edit(h => { textValue(h).nearest[0].token = 'heading-03-font-size'; }), /unknown Text Style "heading-03-font-size"/);
+  assert.match(edit(h => { texts(h).find(t => t.style.value).style.value = 'value:nope'; }), /text\[\d+\]: unknown value "value:nope"/);
 });
 
 test('validateHandoff refuses a usage tuple that a Contract\'s selection.omit leaves out, naming the rule (#245)', { skip: noDeps }, async () => {
@@ -418,6 +475,10 @@ test('render writes the static HTML Rendering: real renders, flags, mode toggle,
   assert.match(html, /<li id="q-state-error">/, 'a "? q-…" flag links to its question');
   assert.match(html, /<p class="counts">.*≠ Off-system<\/span> \d+/, 'Needs a look counts its flags per kind');
   assert.match(html, />Needs a look \(\d+\)<\/a>/);
+  // A text value (#287): ≠ in its region's text row, and no swatch in the values table.
+  assert.match(html.match(/<tr><td>header<\/td><td>“Invite teammates”<\/td>.*?<\/tr>/)[0], /<code>value:text-20-30-400-0<\/code>.*data-g="≠"/);
+  assert.doesNotMatch(html.match(/<tr><td><code>text-20-30-400-0<\/code><\/td>.*?<\/tr>/)[0], /swatch/);
+  assert.match(html, /<code>20px\/30px\/400\/0px<\/code> as text/);
   assert.match(html, /screenshot missing · static-only: generated without the runtime reader/);
   const themeModes = system.foundations.collections.find(c => c.key === 'theme').modes;
   for (const m of themeModes) {

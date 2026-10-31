@@ -240,22 +240,37 @@ function matchLength(value, role, need, groups, ctx) {
   return offSystem(`${n}px is between ${nearest.map(s => `${s.token} (${s.value})`).join(' and ') || 'no steps'}; no ${groups.join(', ')} step within 1px`, nearest);
 }
 
+// A Text Style's line height and letter spacing in px: a line height in another unit is none, a letter spacing 0.
+const lineHeightOf = s => (s.lineHeight && s.lineHeight.unit === 'PIXELS' ? s.lineHeight.value : null);
+const letterSpacingOf = s => (s.letterSpacing && s.letterSpacing.unit === 'PIXELS' ? s.letterSpacing.value : 0);
+
+/**
+ * The Text Styles nearest a text tuple that matches none (#287), at most three: ranked by font-size, then weight,
+ * line-height and letter-spacing difference, then key. Two line heights of none are equal; one of none is farthest.
+ * Each is {token, delta: the font-size difference in px}.
+ */
+export function nearestText(t, system) {
+  const apart = (a, b) => (a === b ? 0 : a === null || b === null ? Infinity : Math.abs(a - b));
+  return Object.entries(system.foundations.textStyles)
+    .map(([token, s]) => ({ token, by: [Math.abs(s.fontSize - t.fontSize), Math.abs(s.fontWeight - t.fontWeight), apart(lineHeightOf(s), t.lineHeight), Math.abs(letterSpacingOf(s) - t.letterSpacing)] }))
+    .sort((a, b) => a.by.reduce((r, x, i) => r || (x === b.by[i] ? 0 : x - b.by[i]), 0) || (a.token < b.token ? -1 : 1))
+    .slice(0, 3).map(x => ({ token: x.token, delta: round(x.by[0], 2) }));
+}
+
 /**
  * Match a text tuple {fontSize, lineHeight|null, fontWeight, letterSpacing} against the Text Styles (#61 Type):
  * exact | tie | near (size and weight equal, line height within 1px) | partial (the font size against the Type variables) | off-system.
  */
 export function matchText(t, ctx) {
   const styles = Object.entries(ctx.system.foundations.textStyles);
-  const lh = s => s.lineHeight && s.lineHeight.unit === 'PIXELS' ? s.lineHeight.value : null;
-  const ls = s => (s.letterSpacing && s.letterSpacing.unit === 'PIXELS' ? s.letterSpacing.value : 0);
   const base = styles.filter(([, s]) => s.fontSize === t.fontSize && s.fontWeight === t.fontWeight);
   if (t.lineHeight !== null) {
-    const exact = base.filter(([, s]) => lh(s) !== null && Math.abs(lh(s) - t.lineHeight) <= 0.5 && Math.abs(ls(s) - t.letterSpacing) <= 0.05);
+    const exact = base.filter(([, s]) => lineHeightOf(s) !== null && Math.abs(lineHeightOf(s) - t.lineHeight) <= 0.5 && Math.abs(letterSpacingOf(s) - t.letterSpacing) <= 0.05);
     if (exact.length === 1) return { kind: 'exact', token: exact[0][0] };
     if (exact.length > 1) return { kind: 'tie', candidates: exact.map(([k]) => k).sort() };
-    const close = base.filter(([, s]) => lh(s) !== null && Math.abs(lh(s) - t.lineHeight) <= 1);
+    const close = base.filter(([, s]) => lineHeightOf(s) !== null && Math.abs(lineHeightOf(s) - t.lineHeight) <= 1);
     if (close.length) {
-      const dist = s => Math.abs((lh(s) ?? 0) - t.lineHeight) + Math.abs(ls(s) - t.letterSpacing);
+      const dist = s => Math.abs((lineHeightOf(s) ?? 0) - t.lineHeight) + Math.abs(letterSpacingOf(s) - t.letterSpacing);
       const ranked = close.map(([k, s]) => ({ token: k, delta: round(dist(s), 2) })).sort((a, b) => a.delta - b.delta || (a.token < b.token ? -1 : 1));
       return { kind: 'near', candidates: ranked.slice(0, 3) };
     }
