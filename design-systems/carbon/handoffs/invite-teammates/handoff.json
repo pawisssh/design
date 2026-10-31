@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": 6,
-  "status": "approved",
-  "approval": { "by": "owner", "at": "2026-10-26T16:10:57.124Z", "revision": 6, "contentHash": "sha256:708fb18763ba1e6a2bb20ac48b578ed4fc046119da236a1898c93564e35d0297" },
+  "revision": 7,
+  "status": "pending",
+  "approval": null,
   "feature": {
     "key": "invite-teammates",
     "name": "Invite teammates",
@@ -182,12 +182,7 @@
                     "by": "agent"
                   }
                 },
-                "raw": {
-                  "fontSize": 20,
-                  "lineHeight": 30,
-                  "fontWeight": 400,
-                  "letterSpacing": 0
-                }
+                "value": "value:text-20-30-400-0"
               }
             },
             {
@@ -284,12 +279,7 @@
                     "by": "agent"
                   }
                 },
-                "raw": {
-                  "fontSize": 14,
-                  "lineHeight": null,
-                  "fontWeight": 400,
-                  "letterSpacing": 0
-                }
+                "value": "value:text-14-normal-400-0"
               }
             }
           ],
@@ -442,12 +432,7 @@
                     "by": "agent"
                   }
                 },
-                "raw": {
-                  "fontSize": 14,
-                  "lineHeight": null,
-                  "fontWeight": 400,
-                  "letterSpacing": 0
-                }
+                "value": "value:text-14-normal-400-0"
               }
             },
             {
@@ -477,12 +462,7 @@
                     "by": "agent"
                   }
                 },
-                "raw": {
-                  "fontSize": 14,
-                  "lineHeight": null,
-                  "fontWeight": 400,
-                  "letterSpacing": 0
-                }
+                "value": "value:text-14-normal-400-0"
               }
             },
             {
@@ -510,12 +490,7 @@
                     "by": "agent"
                   }
                 },
-                "raw": {
-                  "fontSize": 14,
-                  "lineHeight": null,
-                  "fontWeight": 400,
-                  "letterSpacing": 0
-                }
+                "value": "value:text-14-normal-400-0"
               }
             }
           ],
@@ -905,6 +880,37 @@
   },
   "values": [
     {
+      "id": "text-20-30-400-0",
+      "raw": {
+        "light": "20px/30px/400/0px"
+      },
+      "role": "text",
+      "metric": {
+        "fontSize": 20,
+        "lineHeight": 30,
+        "fontWeight": 400,
+        "letterSpacing": 0
+      },
+      "reason": "No Text Style is 20px/30px/400/0px; only its font size is `heading-03-font-size`",
+      "nearest": [
+        {
+          "token": "fluid-heading-03",
+          "delta": 0
+        },
+        {
+          "token": "heading-03",
+          "delta": 0
+        },
+        {
+          "token": "fluid-quotation-01",
+          "delta": 0
+        }
+      ],
+      "at": [
+        "index.html:57:11"
+      ]
+    },
+    {
       "id": "background-color-edf5ff",
       "raw": {
         "light": "#edf5ff"
@@ -954,6 +960,40 @@
       "primitive": "blue.80",
       "at": [
         "index.html:18:33"
+      ]
+    },
+    {
+      "id": "text-14-normal-400-0",
+      "raw": {
+        "light": "14px/normal/400/0px"
+      },
+      "role": "text",
+      "metric": {
+        "fontSize": 14,
+        "lineHeight": null,
+        "fontWeight": 400,
+        "letterSpacing": 0
+      },
+      "reason": "No Text Style is 14px/normal/400/0px; only its font size is `body-compact-01-font-size`",
+      "nearest": [
+        {
+          "token": "body-01",
+          "delta": 0
+        },
+        {
+          "token": "body-compact-01",
+          "delta": 0
+        },
+        {
+          "token": "helper-text-02",
+          "delta": 0
+        }
+      ],
+      "at": [
+        "index.html:59:26",
+        "index.html:65:100",
+        "index.html:66:88",
+        "index.html:67:58"
       ]
     },
     {

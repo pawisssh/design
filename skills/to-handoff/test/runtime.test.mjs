@@ -286,7 +286,8 @@ test("runtime: a React Prototype's computed colours fill its styles: a --color-*
 test('runtime: a static run of a React Prototype keeps its colours from the source declarations alone (#284)', { skip: noDeps }, async () => {
   const { handoff } = await generate({ prototype: THEMED, designSystem: shadcnDesignSystem(), decisions: decided() });
   assert.deepEqual(handoff.screens[0].regions.flatMap(colours), [], 'Tailwind utilities declare nothing the static reader reads');
-  assert.deepEqual(handoff.values, []);
+  // Its text with no Text Style is a text value on every run (#287); no colour or length is.
+  assert.deepEqual(handoff.values.filter(v => v.role !== 'text'), []);
 });
 
 test("runtime: v0's white surfaces bind their own tokens by the built reference, with no token-tie (#284)", { skip: noRuntime }, async () => {

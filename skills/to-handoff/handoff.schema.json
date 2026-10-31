@@ -135,7 +135,7 @@
         "style": { "type": "object", "properties": {
           "textStyle": { "type": "string" }, "match": { "const": "near" }, "delta": { "type": "number" },
           "candidates": { "type": "array", "items": { "type": "string" } }, "by": { "enum": ["agent", "owner"] },
-          "raw": { "type": "object" }, "value": { "$ref": "#/$defs/valueRef" },
+          "value": { "$ref": "#/$defs/valueRef" },
           "partial": { "type": "object", "additionalProperties": { "$ref": "#/$defs/match" } } } }
       }
     },
@@ -220,6 +220,8 @@
         "id": { "$ref": "#/$defs/key" },
         "raw": { "type": "object", "additionalProperties": { "type": "string" } },
         "role": { "type": "string" },
+        "metric": { "type": "object", "description": "A text value's metric (#287): required when role is text, absent otherwise.", "required": ["fontSize", "lineHeight", "fontWeight", "letterSpacing"], "properties": {
+          "fontSize": { "type": "number" }, "lineHeight": { "type": ["number", "null"] }, "fontWeight": { "type": "number" }, "letterSpacing": { "type": "number" } } },
         "reason": { "type": "string", "minLength": 1 },
         "nearest": { "type": "array", "items": { "type": "object", "required": ["token"], "properties": {
           "token": { "type": "string" }, "delta": { "type": "number" }, "value": { "type": "number" } } } },

@@ -183,23 +183,25 @@ test('review lists every Off-system value with its nearest tokens; they do not b
   const { ds, handoffPath } = await generated();
   // The values come from the generated Handoff, not Carbon's numbers today; the line format is the literal.
   const values = read(handoffPath).values;
-  assert.ok(values.length > 0 && values.every(v => v.at.length === 1));
+  assert.ok(values.length > 0);
+  assert.ok(values.some(v => v.role === 'text'), 'a text value (#287)');
   const { text, blocks } = await review({ handoffPath, designSystem: ds });
   const section = text.slice(text.indexOf('\nOff-system values'), text.indexOf('\nOpen questions'));
   assert.ok(text.indexOf('\nAgent marks') < text.indexOf('\nOff-system values'));
-  const near = n => `${n.token} (${n.delta === undefined ? n.value : `ΔE ${n.delta}`})`;
+  const near = v => n => `${n.token} (${n.delta === undefined ? n.value : v.role === 'text' ? `font size Δ ${n.delta}px` : `ΔE ${n.delta}`})`;
   assert.equal(section, [
     '',
     `Off-system values (${values.length})`,
     ...values.flatMap(v => [
-      `  ${v.id}: ${v.role} light ${v.raw.light}, 1 site`,
+      `  ${v.id}: ${v.role} light ${v.raw.light}, ${v.at.length} site${v.at.length === 1 ? '' : 's'}`,
       `    reason: ${v.reason}`,
-      `    nearest: ${v.nearest.map(near).join(', ')}`,
+      `    nearest: ${v.nearest.map(near(v)).join(', ')}`,
       ...(v.primitive ? [`    primitive: ${v.primitive}`] : []),
     ]),
     '  These do not block Sign-off; approving covers them.',
     '',
   ].join('\n'));
+  assert.match(section, /\(font size Δ 0px\)/, "a text value's nearest Text Styles show their font-size delta");
   assert.deepEqual(blocks, []);
   assert.ok(!/Blocks sign-off/.test(text));
   await approve({ handoffPath, designSystem: ds, ...shown(ds, handoffPath), at: AT, test: true });

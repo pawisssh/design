@@ -52,9 +52,10 @@ export function validateHandoff(handoff, system) {
   const { foundations, contracts, proposals } = system;
   const h = handoff;
   const copy = h.copy || {};
-  const values = new Set((h.values || []).map(v => v.id));
+  const values = new Map((h.values || []).map(v => [v.id, v.role]));
   const questions = new Set((h.openQuestions || []).map(q => q.id));
   const copyRef = (ref, at) => { if (typeof ref === 'string' && ref.startsWith('copy:') && !(ref.slice(5) in copy)) err('copy', at, `${at}: unknown copy "${ref}"`); };
+  const valueRef = (ref, at) => { if (ref !== undefined && !values.has(ref.slice(6))) err('value', at, `${at}: unknown value "${ref}"`); };
   const questionRef = (id, at) => { if (id !== undefined && !questions.has(id)) err('question', at, `${at}: unknown question "${id}"`); };
   const token = (key, at) => {
     const v = foundations.variables[key];
@@ -77,7 +78,7 @@ export function validateHandoff(handoff, system) {
         const at = `${rp}.styles[${i}]`;
         if (st.token !== undefined) token(st.token, at);
         (st.candidates || []).forEach(c => token(c, `${at}.candidates`));
-        if (st.value !== undefined && !values.has(st.value.slice(6))) err('value', at, `${at}: unknown value "${st.value}"`);
+        valueRef(st.value, at);
       });
       (region.text || []).forEach((t, i) => {
         const at = `${rp}.text[${i}]`;
@@ -86,6 +87,11 @@ export function validateHandoff(handoff, system) {
         if (s.textStyle !== undefined) textStyle(s.textStyle, at);
         (s.candidates || []).forEach(c => textStyle(c, `${at}.candidates`));
         for (const m of Object.values(s.partial || {})) { if (m.token) token(m.token, `${at}.partial`); (m.candidates || []).forEach(c => token(c, `${at}.partial`)); }
+        // Text with no Text Style points at a text value (#287).
+        if (s.textStyle === undefined && s.value === undefined) err('value', at, `${at}: text with no Text Style needs a value`);
+        valueRef(s.value, at);
+        const role = s.value && values.get(s.value.slice(6));
+        if (role && role !== 'text') err('value', at, `${at}: "${s.value}" is not a text value`);
         (t.states || []).forEach(x => state(x, at));
       });
       (region.usages || []).forEach(u => {
@@ -164,6 +170,13 @@ export function validateHandoff(handoff, system) {
         for (const ref of Object.values(us.properties || {})) copyRef(ref, `${at}.usageStates.${id}`);
       }
     }
+  });
+  // A text value (#287) carries its metric and its nearest Text Styles; no other role has a metric.
+  (h.values || []).forEach((v, i) => {
+    const at = `values[${i}] (${v.id})`;
+    if (v.role !== 'text') { if (v.metric) err('value', at, `${at}: only a text value has a metric`); return; }
+    if (!v.metric) err('value', at, `${at}: a text value needs a metric`);
+    (v.nearest || []).forEach(n => textStyle(n.token, `${at}.nearest`));
   });
   const screens = new Set((h.screens || []).map(s => s.id));
   (h.acceptance || []).forEach((a, i) => {

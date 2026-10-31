@@ -189,13 +189,15 @@ ${Object.keys(s.usageStates || {}).length ? `<ul>${Object.entries(s.usageStates)
     const f = s.value ? flag('off') : s.match === 'near' ? flag('near') : s.by === 'agent' ? flag('pick') : flag('exact');
     return `<tr><td>${esc(r.id)}</td><td>${code(s.property)}</td><td>${code(s.raw)}</td><td>${target}</td><td>${f}</td><td>${esc(s.at.join(', '))}</td></tr>`;
   })).join('\n');
+  // Text with no Text Style shows its value, ≠ (#287); a partial match's font-size pick is in Needs a look.
   const textRows = regions.flatMap(r => r.text.map(t => {
     const s = t.style || {};
-    const target = s.textStyle ? code(s.textStyle) : s.partial ? `font size ${code(s.partial.fontSize.token)}` : 'Off-system';
-    const f = s.match === 'near' ? flag('near') : s.by === 'agent' || (s.partial && s.partial.fontSize.by) ? flag('pick') : s.textStyle ? flag('exact') : flag('off');
+    const target = s.textStyle ? code(s.textStyle) : `${code(s.value)}${s.partial ? ` · font size ${code(s.partial.fontSize.token)}` : ''}`;
+    const f = s.value ? flag('off') : s.match === 'near' ? flag('near') : s.by === 'agent' ? flag('pick') : flag('exact');
     return `<tr><td>${esc(r.id)}</td><td>“${esc(h.copy[t.copy].text)}”</td><td>${target}</td><td>${f}</td><td>${esc(t.at)}${t.states ? ` · ${esc(t.states.join(', '))}` : ''}</td></tr>`;
   })).join('\n');
-  const valueRows = h.values.map(v => `<tr><td>${code(v.id)}</td><td><span class="swatch" style="background:${/color/.test(v.role) ? esc(Object.values(v.raw)[0]) : 'transparent'}"></span>${code(Object.values(v.raw)[0])}</td><td>${esc(v.role)}</td><td>${esc(v.reason)}</td><td>${v.nearest.map(n => code(n.token)).join(', ')}${v.primitive ? ` · Primitive ${code(v.primitive)}` : ''}</td></tr>`).join('\n');
+  // A text value has no colour to swatch (#287).
+  const valueRows = h.values.map(v => `<tr><td>${code(v.id)}</td><td>${v.role === 'text' ? '' : `<span class="swatch" style="background:${/color/.test(v.role) ? esc(Object.values(v.raw)[0]) : 'transparent'}"></span>`}${code(Object.values(v.raw)[0])}</td><td>${esc(v.role)}</td><td>${esc(v.reason)}</td><td>${v.nearest.map(n => code(n.token)).join(', ')}${v.primitive ? ` · Primitive ${code(v.primitive)}` : ''}</td></tr>`).join('\n');
 
   // ---- overview ----
   const f = h.feature;
