@@ -7,20 +7,57 @@
 //   anything else         a dynamic value, kept as its expression text.
 // A branch that holds markup is parsed and mounted where the hole sits, marked with its condition. This is
 // a reader for templated markup, not a JavaScript parser: scripts are otherwise scanned as text.
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { dirname, isAbsolute, posix, relative, resolve, sep } from 'node:path';
 import { parseCss, parseInline } from './css.mjs';
 import { loadParse5 } from './deps.mjs';
 
 // A private-use character (U+E000) that stands in for a template hole while the HTML is parsed.
 const MASK = '\uE000';
 
-/** Read one HTML file (or `text` in its place). `rel` is its path relative to the Prototype root (the `at` prefix). */
-export function readHtml(path, rel, { depsDir, text = readFileSync(path, 'utf8') } = {}) {
+/**
+ * Read one HTML file (or `text` in its place). `rel` is its path relative to the Prototype root (the `at` prefix).
+ * With `linked` (#246), each local `<link rel=stylesheet href>` and `<script src>` is read too, into `rules` and
+ * `scripts`: every file read gets a base offset after the one before, so `at` maps an offset back to its own
+ * `file:line:col` (`fileAt` gives the file and the offset within it). `files` lists the files read, {rel, base, text}; a remote, missing or outside one is left out with
+ * a `notes` line.
+ */
+export function readHtml(path, rel, { depsDir, text = readFileSync(path, 'utf8'), linked = false } = {}) {
   const parse5 = loadParse5(depsDir);
-  const lines = lineStarts(text);
-  const at = offset => { const l = lineOf(lines, offset); return `${rel}:${l + 1}:${offset - lines[l] + 1}`; };
+  const files = [{ rel, base: 0, text, lines: lineStarts(text) }];
+  // Every file read, each at its base: any offset indexes this, as an offset in the HTML file indexes `text`.
+  let all = text;
+  // The file an offset falls in, and the offset within it.
+  const fileAt = offset => {
+    const file = files.findLast(x => offset >= x.base);
+    return { file, local: offset - file.base };
+  };
+  const at = offset => {
+    const { file: f, local } = fileAt(offset), l = lineOf(f.lines, local);
+    return `${f.rel}:${l + 1}:${local - f.lines[l] + 1}`;
+  };
   const doc = parse5.parse(text, { sourceCodeLocationInfo: true });
-  const out = { file: rel, text, at, rules: [], scripts: [], root: null, mounts: [] };
+  const out = { file: rel, text, at, fileAt, rules: [], scripts: [], root: null, mounts: [], files, notes: [] };
+
+  // A linked stylesheet or script, read into the address space once; null when it is not read, with a note why.
+  const readLinked = (ref, offset, what) => {
+    const skip = why => { out.notes.push({ level: 'info', text: `The ${what} \`${ref}\` (${at(offset)}) ${why}, so the static reader does not read it.` }); return null; };
+    if (/^([a-z][a-z0-9+.-]*:|\/\/)/i.test(ref)) return skip('is remote');
+    let local = ref.split(/[?#]/)[0];
+    try { local = decodeURI(local); } catch { /* kept as written */ }
+    // A root-relative path is the page's folder's (the Prototype folder), as the runtime reader serves it.
+    const dir = dirname(path), abs = resolve(dir, local.replace(/^\/+/, ''));
+    const inside = relative(dir, abs);
+    if (!inside || inside === '..' || inside.startsWith(`..${sep}`) || isAbsolute(inside)) return skip('is outside the Prototype folder');
+    if (!existsSync(abs) || !statSync(abs).isFile()) return skip('is not in the Prototype folder');
+    const fileRel = posix.join(posix.dirname(rel), inside.split(sep).join('/'));
+    if (files.some(f => f.rel === fileRel)) return null;
+    const fileText = readFileSync(abs, 'utf8');
+    const f = { rel: fileRel, base: all.length + 1, text: fileText, lines: lineStarts(fileText) };
+    all += `\n${fileText}`;
+    files.push(f);
+    return f;
+  };
 
   const convert = (node, parent, ctx) => {
     if (node.nodeName === '#text') {
@@ -44,8 +81,12 @@ export function readHtml(path, rel, { depsDir, text = readFileSync(path, 'utf8')
     if (typeof el.attrs.class === 'string') el.classes = el.attrs.class.split(/\s+/).filter(Boolean);
     if (typeof el.attrs.style === 'string' && loc.attrs && loc.attrs.style) {
       const aloc = loc.attrs.style;
-      const valueStart = text.indexOf(el.attrs.style, ctx.base + aloc.startOffset);
+      const valueStart = all.indexOf(el.attrs.style, ctx.base + aloc.startOffset);
       el.inline = parseInline(el.attrs.style, valueStart >= 0 ? valueStart : ctx.base + aloc.startOffset);
+    }
+    if (linked && el.tag === 'link' && /(^|\s)stylesheet(\s|$)/i.test(el.attrs.rel || '') && typeof el.attrs.href === 'string' && el.attrs.href) {
+      const f = readLinked(el.attrs.href, el.offset, 'stylesheet');
+      if (f) out.rules.push(...parseCss(f.text, f.base));
     }
     if (el.tag === 'style') {
       const t = node.childNodes[0];
@@ -54,7 +95,11 @@ export function readHtml(path, rel, { depsDir, text = readFileSync(path, 'utf8')
     }
     if (el.tag === 'script') {
       const t = node.childNodes[0];
-      if (t && !el.attrs.src) out.scripts.push({ text: t.value, offset: ctx.base + t.sourceCodeLocation.startOffset });
+      if (!el.attrs.src) { if (t) out.scripts.push({ text: t.value, offset: ctx.base + t.sourceCodeLocation.startOffset }); }
+      else if (linked && typeof el.attrs.src === 'string') {
+        const f = readLinked(el.attrs.src, el.offset, 'script');
+        if (f) out.scripts.push({ text: f.text, offset: f.base });
+      }
       return null;
     }
     const kids = node.tagName === 'template' && node.content ? node.content.childNodes : node.childNodes;
@@ -97,8 +142,8 @@ export function readHtml(path, rel, { depsDir, text = readFileSync(path, 'utf8')
       const mount = findById(out.root, t.mountId) || findTag(out.root, 'body');
       if (!out.mounts.includes(mount)) out.mounts.push(mount);
       const abs = script.offset + t.start;
-      const holes = t.holes.map(h => ({ start: script.offset + h.start, end: script.offset + h.end, expr: h.expr, analysed: analyse(text, script.offset + h.start + 2, script.offset + h.end - 1) }));
-      const sub = parseFragment(parse5, text.slice(abs, script.offset + t.end), abs, holes);
+      const holes = t.holes.map(h => ({ start: script.offset + h.start, end: script.offset + h.end, expr: h.expr, analysed: analyse(all, script.offset + h.start + 2, script.offset + h.end - 1) }));
+      const sub = parseFragment(parse5, all.slice(abs, script.offset + t.end), abs, holes);
       const ctx = { base: abs, holeAt: sub.holeAt, holesIn: sub.holesIn };
       for (const n of sub.fragment.childNodes) mountChild(mount, n, ctx);
     }

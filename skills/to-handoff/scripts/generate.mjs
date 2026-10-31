@@ -34,6 +34,8 @@ const LANDMARK_ROLES = new Set(['banner', 'navigation', 'main', 'complementary',
 const HEADINGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
 // Without breakpoints from the Adapter, the runtime reader screenshots one desktop width.
 const DEFAULT_BREAKPOINTS = [{ key: 'desktop', width: 1280 }];
+// The fields an acceptance criterion is read for.
+const CRITERION_FIELDS = ['id', 'screen', 'state', 'given', 'when', 'then'];
 // Above this many routes, To-handoff asks whether to split the Prototype (#62).
 const MAX_SCREENS = 6;
 
@@ -62,6 +64,20 @@ function decider(decisions, carried = {}) {
   }
   const used = new Map();
   const dropped = [];
+  // The agent keys this run read, and each answer field no request names (#246), listed once per key and field.
+  const read = new Set();
+  const unreadFields = (key, answer, fields, by) => {
+    if (!fields || !answer || typeof answer !== 'object') return;
+    const items = Array.isArray(answer) ? answer.map((x, i) => [`${i}.`, x]) : [['', answer]];
+    for (const [prefix, item] of items) {
+      if (!item || typeof item !== 'object') continue;
+      const known = fields(item);
+      for (const f of Object.keys(item)) {
+        if (known.includes(f) || dropped.some(x => x.key === key && x.field === prefix + f)) continue;
+        dropped.push({ key, field: prefix + f, reason: `the answer's fields are ${known.join(', ')}`, by });
+      }
+    }
+  };
   return {
     requests,
     dropped,
@@ -73,28 +89,36 @@ function decider(decisions, carried = {}) {
     /** The owner's answer for a key the pass settles itself (questions, acceptance), or undefined. */
     ownerOf(key) { const o = owner.get(key); return o && o.answer; },
     use(key) { used.set(key, owner.get(key).answer); },
-    drop(key, reason) { dropped.push({ key, answer: owner.get(key).answer, reason }); owner.delete(key); },
+    drop(key, reason) { dropped.push({ key, answer: owner.get(key).answer, reason, by: 'owner' }); owner.delete(key); },
     /** Owner keys this run never reached: their key is gone. */
     unreached() { return [...owner.keys()].filter(k => !used.has(k)).sort(); },
+    /** Mark `key` as the Prototype's though this run does not ask it (a reach on a static run): it is not listed unread. */
+    known(key) { read.add(key); },
+    /** List each agent key no request asked for. Only a run with no request open lists them: one that is may not have reached a key yet. */
+    unreadKeys() { for (const k of Object.keys(agent).filter(k => !read.has(k)).sort()) dropped.push({ key: k, answer: agent[k], reason: 'no request asks for it', by: 'agent' }); },
     /**
      * The answer to `key`, checked by `check` (which throws), or undefined after recording a request. A caller
      * may stand in the first candidate for an undefined answer, only so the pass goes on to collect every
-     * request: with any request open, generate returns them and writes nothing.
+     * request: with any request open, generate returns them and writes nothing. `fields(answer)` names the
+     * fields an object answer (or each item of a list) is read for; any other is listed in `dropped`. A scalar
+     * answer (a candidate, true or false) passes none.
      */
-    ask(key, request, check) {
+    ask(key, request, check, fields) {
       if (owner.has(key)) {
         const { answer, fresh } = owner.get(key);
         const problem = check ? check(answer) : null;
-        if (!problem) { used.set(key, answer); return answer; }
+        if (!problem) { used.set(key, answer); unreadFields(key, answer, fields, 'owner'); return answer; }
         if (fresh) throw new Error(`owner decision "${key}": ${problem}`);
         this.drop(key, problem);
       }
       if (Object.prototype.hasOwnProperty.call(agent, key)) {
         const answer = agent[key];
+        read.add(key);
         if (check) {
           const problem = check(answer);
           if (problem) throw new Error(`decision "${key}": ${problem}`);
         }
+        unreadFields(key, answer, fields, 'agent');
         return answer;
       }
       const seen = byKey.get(key);
@@ -322,12 +346,13 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       if (s === 'default') return { steps: [] };
       const answer = d.ask(`reach:${screenId}:${s}`, {
         kind: 'reach', question: `How does ${screenId} reach ${s} from first load? Answer {steps: [{fill, value} | {click} | {clock: ms} | {expect}]} (selectors) or {unreachable: reason}.`, candidates: [],
-      }, checkReach);
+      }, checkReach, a => (a.unreachable !== undefined ? ['unreachable'] : ['steps']));
       if (!answer) return { steps: null, reason: `no reach decision for ${s} yet` };
       return answer.unreachable ? { steps: null, reason: answer.unreachable } : answer;
     };
     const expectIn = s => { const out = []; walk(mount, el => { const ins = shownIn(el); if (ins && ins.includes(s) && !ins.includes('default')) out.push(at(el.offset)); }); return out; };
     const runtimeStates = runtime ? present.map(s => ({ state: s, ...reach(s), expect: expectIn(s) })) : null;
+    if (!runtime) for (const s of present) d.known(`reach:${screenId}:${s}`);
     return { screen, mount, atoms, present, stateAtoms, atomsIn, shownIn, runtimeStates };
   }
 
@@ -820,7 +845,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   // ---- feature and acceptance: the owner's words, as decisions ----
   const feature = d.ask('feature', {
     kind: 'feature', question: `What is "${title}" for? Answer {owner, goal, scope: [..], nonGoals: [..]}.`, candidates: [],
-  }, a => (a && typeof a.goal === 'string' && a.goal ? null : 'a feature answer needs a goal'));
+  }, a => (a && typeof a.goal === 'string' && a.goal ? null : 'a feature answer needs a goal'), () => ['owner', 'goal', 'scope', 'nonGoals']);
   const screenList = screenIds.map(s => `"${s}"`).join(' | ');
   const presentStates = STANDARD_STATES.filter(s => allPresent.has(s));
   // The screen ids are data, with an example criterion that uses one, so an answer needs no question prose (#244).
@@ -831,10 +856,10 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     kind: 'acceptance', question: `Acceptance criteria for ${screenIds.join(', ')}: [{id, screen, state, given, when, then}], one per state at least.`, candidates: presentStates,
     screens: screenIds, example,
   }, a => (Array.isArray(a) && a.length && a.every(x => x.id && screenIds.includes(x.screen) && STANDARD_STATES.includes(x.state) && filled(x)) ? null
-    : `acceptance is a non-empty list of {id, screen: ${screenList}, state, given, when, then}, the example's placeholders filled in`));
+    : `acceptance is a non-empty list of {id, screen: ${screenList}, state, given, when, then}, the example's placeholders filled in`), () => CRITERION_FIELDS);
 
   // ---- the owner's answers to questions and own acceptance criteria, by question and acceptance id ----
-  const criteria = acceptance ? acceptance.map(a => ({ id: a.id, screen: a.screen, state: a.state, given: a.given, when: a.when, then: a.then, by: d.isOwner('acceptance') ? 'owner' : 'agent' })) : [];
+  const criteria = acceptance ? acceptance.map(a => ({ ...Object.fromEntries(CRITERION_FIELDS.map(k => [k, a[k]])), by: d.isOwner('acceptance') ? 'owner' : 'agent' })) : [];
   const openQuestions = questions.map(q => ({ ...q, answer: null }));
   for (const key of d.unreached()) {
     const answer = d.ownerOf(key);
@@ -859,6 +884,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     } else d.drop(key, 'its key no longer exists');
   }
 
+  if (!d.requests.length) d.unreadKeys();
   if (d.requests.length) return { requests: d.requests, dropped: d.dropped, handoff: undefined, path: null, wrote: false };
 
   // A mid-run draft that passed joins contracts/ as the Adapter wrote it, once per family; it never replaces one.
@@ -917,10 +943,10 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
 function readPrototype(prototype, { depsDir, packages, title }) {
   if (!/\.html?$/i.test(prototype)) return readReact(prototype, { depsDir, packages });
   const rel = basename(prototype);
-  const doc = readHtml(prototype, rel, { depsDir });
+  const doc = readHtml(prototype, rel, { depsDir, linked: true });
   const mount = doc.mounts[0] || findTag(doc.root, 'body');
   return {
-    kind: 'html-file', files: [rel], at: doc.at, rules: doc.rules, standIns: standIns(doc.scripts), fonts: [], notes: [], ignored: [],
+    kind: 'html-file', files: doc.files.map(f => f.rel), at: doc.at, rules: doc.rules, standIns: standIns(doc.scripts), fonts: [], notes: doc.notes, ignored: [],
     screens: [{ id: kebab(title), name: title, route: '/', offset: mount.offset, root: doc.root, mount }],
   };
 }
