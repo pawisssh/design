@@ -1,15 +1,17 @@
-/* Tailwind v4 with a non-inline @theme: a utility names --color-<name>, which the built :root declares, here as
-   another custom property, the Foundations token's own name. */
+/* Tailwind v4 with a non-inline @theme: a utility names --color-<name> or --radius-<name>, which the built :root
+   declares, here as another custom property, the Foundations token's own name. */
 @import "tailwindcss";
 
 @theme {
   --color-primary: var(--primary);
   --color-card: var(--card);
+  --radius-lg: var(--radius);
 }
 
 :root {
   --primary: oklch(0.205 0 0);
   --card: oklch(1 0 0);
+  --radius: 0.625rem;
 }
 
 /* A global border-color reset, as shadcn's `* { @apply border-border }`: no border is drawn, so it records nothing. */

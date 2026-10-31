@@ -116,29 +116,32 @@ export function matchDeclaration({ property, value }, ctx) {
 }
 
 /**
- * Match one computed colour of a runtime run (#284). `ref` is the declared `var()` that gives `value` (see
- * referenceOf), followed through the built stylesheet's root custom properties (`ctx.custom`) to a Foundations
- * token. A Foundations name is read first at each hop, but only when one of the token's Mode values is `value`:
- * a built theme defines `--card` as its literal too, and a Prototype that redefines `--primary` paints another
- * colour. A name neither knows, or no `ref`, matches the computed value by value.
+ * Match one computed colour, spacing or radius of a runtime run (#284, #285). `ref` is the declared `var()` that
+ * gives `value` (see referenceOf), followed through the built stylesheet's root custom properties (`ctx.custom`)
+ * to a Foundations token. A Foundations name is read first at each hop, but only when one of the token's Mode
+ * values is `value`: a built theme defines `--card` as its literal too, and a Prototype that redefines
+ * `--primary` paints another colour. A name neither knows, or no `ref`, matches the computed value by value.
  */
 export function matchComputed({ property, value, ref }, ctx) {
   const role = roleOf(property);
-  if (!COLOR_ROLES.has(role)) return { kind: 'skip' };
+  if (!role || TYPE_ROLES.has(role)) return { kind: 'skip' };
   const f = ref ? follow(ref, role, ctx, value) : {};
   return f.result || byValue(value, role, ctx);
 }
 
 /** The one declared `var()` whose custom property, read on the element, gives its computed `value`; else null. */
-export function referenceOf(value, refs) {
-  const live = [...new Set(refs.filter(r => sameColour(r.resolved, value)).map(r => r.ref))];
+export function referenceOf(property, value, refs) {
+  const same = sameIn(roleOf(property));
+  const live = [...new Set(refs.filter(r => same(r.resolved, value)).map(r => r.ref))];
   return live.length === 1 ? live[0] : null;
 }
 
-// Two colours the shared converter reads as the same, alpha included.
+// Two values the same for a role: colours as the shared converter reads them, alpha included; lengths in px.
+const sameIn = role => (COLOR_ROLES.has(role) ? sameColour : sameLength);
 const sameColour = (a, b) => {
   try { const x = convert(a), y = convert(b); return sameHex(x.hex, y.hex) && Math.abs(x.alpha - y.alpha) < 0.01; } catch { return false; }
 };
+const sameLength = (a, b) => { const x = px(String(a)), y = px(String(b)); return x !== null && y !== null && Math.abs(x - y) <= 0.01; };
 
 // A var() chain followed through `ctx.custom` and Foundations code syntax: {result} for a token reference or a
 // refused one, {unknown} for a name neither knows, else {value} with the literal it ends on. Given the colour the
@@ -154,7 +157,7 @@ function follow(value, role, ctx, rendered) {
     const key = webIndex(foundations)[ref[1]];
     const own = ctx.custom && ctx.custom[ref[1]] !== undefined;
     const variable = key && foundations.variables[key];
-    const named = key && (rendered === undefined ? !own : Object.keys(variable.values).some(m => sameColour(valueIn(variable, m, foundations), rendered)));
+    const named = key && (rendered === undefined ? !own : Object.keys(variable.values).some(m => sameIn(role)(valueIn(variable, m, foundations), rendered)));
     if (!named && own) { via.push(ref[1]); v = ctx.custom[ref[1]]; continue; }
     if (!named && ref[2]) { v = ref[2].trim(); continue; }
     if (!named) return { unknown: ref[1] };

@@ -299,3 +299,14 @@ test('matchComputed: a Foundations name binds only where one of its Mode values 
   assert.equal(redefined.kind, 'off-system', 'not primary by name: Foundations primary is #171717 or #e5e5e5');
   assert.equal(matchComputed({ property: 'background-color', value: 'oklch(0.205 0 0)', ref: 'var(--primary)' }, ctx).token, 'primary', 'a name that paints its own value still binds');
 });
+
+test('matchComputed: a length binds a Foundations name only where the token is the rendered length; redefined, it matches by value (#285)', async () => {
+  const system = await loadDesignSystem(shadcnDesignSystem());
+  const ctx = { system, mode: 'light', custom: { '--radius': '0.75rem' } };
+  assert.deepEqual(matchComputed({ property: 'border-top-left-radius', value: '10px', ref: 'var(--radius)' }, ctx), { kind: 'reference', token: 'radius-lg' });
+  const redefined = matchComputed({ property: 'border-top-left-radius', value: '12px', ref: 'var(--radius)' }, ctx);
+  assert.notEqual(redefined.kind, 'reference', 'not radius-lg by name: Foundations radius-lg is 10');
+  assert.equal(matchComputed({ property: 'padding-top', value: '16px' }, ctx).token, 'spacing-4');
+  assert.equal(matchComputed({ property: 'margin-left', value: '0px' }, ctx).kind, 'skip');
+  assert.equal(matchComputed({ property: 'font-size', value: '16px' }, ctx).kind, 'skip', 'text metrics match as Text Styles, not here');
+});

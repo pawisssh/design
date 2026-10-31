@@ -21,7 +21,7 @@ import { hasRuntime } from './deps.mjs';
 import { featureOf, kebab } from './feature-key.mjs';
 import { readHtml, walk } from './reader.mjs';
 import { readReact } from './react.mjs';
-import { STEP_KINDS, run } from './runtime.mjs';
+import { COLLAPSE, STEP_KINDS, run } from './runtime.mjs';
 import {
   STANDARD_STATES, atomIn, evaluate, isPlaceholderText, ownDeclarations, parseCondition, standIns, stateOfAtom,
 } from './recognise.mjs';
@@ -156,8 +156,8 @@ const hasTernary = el => {
  * `prototype` is the HTML file or a React Prototype folder (Next.js App Router or Vite + react-router, #114);
  * `designSystem` the design-systems/<ds> folder. With any request open it returns {requests, handoff:
  * undefined, path: null, wrote: false} and writes nothing. With `runtime`, the runtime reader (#113) renders a
- * scratch copy for screenshots, computed text metrics and a React Prototype's computed colours (#284); when it
- * cannot run, the Handoff is static-only and says why.
+ * scratch copy for screenshots, computed text metrics and a React Prototype's computed colours, spacing and radii
+ * (#284, #285); when it cannot run, the Handoff is static-only and says why.
  */
 export async function generate({ prototype, designSystem, decisions = {}, depsDir, runtime = false } = {}) {
   const system = await loadDesignSystem(designSystem);
@@ -332,15 +332,15 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   function screenPass({ screen, mount, atoms, present, stateAtoms, atomsIn, shownIn }, rt) {
     const screenId = screen.id;
     const live = el => rt.elements[at(el.offset)];
-    // A React Prototype's runtime run paints its regions from the computed colours (#284); an HTML Prototype, and an
-    // element the run did not render, keep the source declarations.
+    // A React Prototype's runtime run reads its regions' colours, spacing and radii from the computed style (#284,
+    // #285); an HTML Prototype, and an element the run did not render, keep the source declarations.
     const paintsLive = runtime && !/\.html?$/i.test(prototype);
     // The built stylesheet's custom properties stand in for the source's: the built theme is the one that rendered.
     const liveCtx = { ...ctx, custom: rt.custom || {} };
     const declarationsOf = el => {
       const own = ownDeclarations(rules, el);
-      const paint = paintsLive && live(el) && live(el).paint;
-      return paint ? [...own.filter(x => !COLOR_ROLES.has(roleOf(x.property))), ...paintDeclarations(paint, el.offset, liveCtx)] : own;
+      const sets = paintsLive && live(el) && live(el).sets;
+      return sets ? [...own.filter(x => !LIVE_ROLES.has(roleOf(x.property))), ...liveDeclarations(sets, el.offset, liveCtx)] : own;
     };
 
     const usageStates = Object.fromEntries(present.map(s => [s, {}]));
@@ -675,18 +675,19 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     if (decl.property === 'font-family') { fonts.push({ value: decl.value, at: at(decl.offset) }); return; }
     const role = roleOf(decl.property);
     if (!role) return;
-    const words = COLOR_ROLES.has(role) ? [decl.value] : splitWords(decl.value);
+    const { rendered } = decl;
+    const words = rendered || COLOR_ROLES.has(role) ? [decl.value] : splitWords(decl.value);
     for (const raw of words) {
-      const { paint } = decl;
-      const result = paint
-        ? matchComputed({ property: decl.property, value: paint.value, ref: paint.ref }, paint.ctx)
+      const result = rendered
+        ? matchComputed({ property: decl.property, value: rendered.value, ref: rendered.ref }, rendered.ctx)
         : matchDeclaration({ property: decl.property, value: raw }, ctx);
       if (result.kind === 'skip') continue;
       const where = at(decl.offset);
       const existing = r.styles.find(s => s.property === decl.property && s.raw === raw);
       if (existing) { if (!existing.at.includes(where)) existing.at.push(where); continue; }
       const s = { property: decl.property, raw, at: [where] };
-      const norm = COLOR_ROLES.has(role) ? colorText(paint ? paint.value : followCustom(raw, custom)) : raw;
+      const shown = rendered ? rendered.value : raw;
+      const norm = COLOR_ROLES.has(role) ? colorText(rendered ? shown : followCustom(raw, custom)) : shown;
       const key = `token:${role}:${norm}`;
       if (result.kind === 'reference' || result.kind === 'exact') {
         s.token = result.token;
@@ -796,7 +797,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
 
   if (rt.error) question({
     id: 'q-runtime', kind: 'runtime', to: 'owner',
-    text: `The runtime reader could not run the Prototype (${rt.error}), so this Handoff is static-only: no screenshots, and colours and text metrics read from the source alone. Fix it and re-run To-handoff?`,
+    text: `The runtime reader could not run the Prototype (${rt.error}), so this Handoff is static-only: no screenshots, and colours, spacing, radii and text metrics read from the source alone. Fix it and re-run To-handoff?`,
   });
   for (const f of rt.failed || []) question({
     id: `q-untagged-${kebab(f.file)}`, kind: 'runtime', to: 'developer',
@@ -971,17 +972,24 @@ async function runtimeRead(options) {
   }
 }
 
-// One element's computed paint as declarations for addStyle (#284): `value` is the declared var() that gives the
-// colour (referenceOf), else the computed colour, and `paint` carries what matchComputed reads. Four equal
-// border sides are one `border-color`.
-function paintDeclarations(paint, offset, ctx) {
-  const decls = Object.entries(paint).map(([property, { value, refs }]) => {
-    const ref = referenceOf(value, refs);
-    return { property, value: ref || colorText(value), offset, paint: { value, ref, ctx } };
+// The roles a runtime run reads from the computed style (#284, #285): the source's declarations of them give way.
+const LIVE_ROLES = new Set([...COLOR_ROLES, 'padding', 'margin', 'gap', 'border-radius']);
+
+// One element's computed colours, spacing and radii as declarations for addStyle (#284, #285): `value` is the
+// declared var() that gives it (referenceOf), else the computed value, and `rendered` carries what matchComputed
+// reads. A COLLAPSE group whose longhands are all set and equal is its shorthand.
+function liveDeclarations(sets, offset, ctx) {
+  let decls = Object.entries(sets).map(([property, { value, refs }]) => {
+    const ref = referenceOf(property, value, refs);
+    const shown = COLOR_ROLES.has(roleOf(property)) ? colorText(value) : value;
+    return { property, value: ref || shown, offset, rendered: { value, ref, ctx } };
   });
-  const sides = decls.filter(x => /^border-\w+-color$/.test(x.property));
-  if (sides.length < 4 || sides.some(x => x.value !== sides[0].value || x.paint.value !== sides[0].paint.value)) return decls;
-  return decls.flatMap(x => (x === sides[0] ? [{ ...x, property: 'border-color' }] : sides.includes(x) ? [] : [x]));
+  for (const [short, longs] of Object.entries(COLLAPSE)) {
+    const group = longs.map(p => decls.find(x => x.property === p));
+    if (group.some(x => !x || x.value !== group[0].value || x.rendered.value !== group[0].rendered.value)) continue;
+    decls = decls.flatMap(x => (x === group[0] ? [{ ...x, property: short }] : group.includes(x) ? [] : [x]));
+  }
+  return decls;
 }
 
 // Computed text metrics, in the matcher's units: px, unitless weight, `normal` line height as null.
