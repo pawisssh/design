@@ -13,7 +13,7 @@ import { driftOf, review } from '../scripts/signoff.mjs';
 import { loadDesignSystem } from '../scripts/system.mjs';
 import { validateHandoff } from '../scripts/validate.mjs';
 import { pathAFolder, skip } from '../../vibe-to-figma/test/helpers.mjs';
-import { decided } from './helpers.mjs';
+import { decided, usagesOf } from './helpers.mjs';
 
 // What the run asks beside recognition: the two plain conditions, and the one button whose className is a function call,
 // which extraction skips, so the map has no family for it.
@@ -22,7 +22,6 @@ const DECISIONS = decided({
   'condition:canClear': false,
   'recognise:button': { raw: true, reason: 'its className is a function call, which no family reads' },
 });
-const usagesOf = handoff => handoff.screens.flatMap(s => s.regions.flatMap(r => r.usages || []));
 
 test('each mapped site is a Usage of its family\'s Contract by the Family map, with the axis values its classes give', { skip }, async () => {
   const { proto, dir } = await pathAFolder();

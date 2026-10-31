@@ -1,7 +1,7 @@
 // Shared test setup: the "Invite teammates" fixture and a Design System assembled in a temp dir from the
 // committed Carbon Foundations document and Button Contract, the form-control fixture Contracts and the fixture
 // avatar-stack Proposal, so no test writes under design-systems/.
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
+import { copyFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,6 +11,8 @@ export const fixture = p => fileURLToPath(new URL(`fixtures/invite-teammates/${p
 export const PROTOTYPE = fixture('index.html');
 export const DECISIONS = JSON.parse(readFileSync(fixture('decisions.json'), 'utf8'));
 export const BUTTON = repo('design-systems/carbon/contracts/button.component.json');
+
+export const usagesOf = handoff => handoff.screens.flatMap(s => s.regions.flatMap(r => r.usages || []));
 
 export function designSystem() {
   const dir = mkdtempSync(join(tmpdir(), 'to-handoff-ds-'));
@@ -35,6 +37,18 @@ export const decided = (extra = {}) => ({
 // The v0 request-access Prototype, and the committed shadcn Foundations document and Contracts, named one by one,
 // in a temp Design System.
 export const V0 = fileURLToPath(new URL('fixtures/v0-app', import.meta.url));
+export const V0_DECISIONS = JSON.parse(readFileSync(join(V0, 'decisions.json'), 'utf8'));
+// A temp copy of the v0 Prototype with each `[file, from, to]` edit applied in place, so every line keeps its `at`.
+export function v0Copy(edits = []) {
+  const dir = mkdtempSync(join(tmpdir(), 'to-handoff-v0-'));
+  cpSync(V0, dir, { recursive: true });
+  for (const [file, from, to] of edits) {
+    const text = readFileSync(join(dir, file), 'utf8');
+    if (!text.includes(from)) throw new Error(`${file} has no ${from}`);
+    writeFileSync(join(dir, file), text.replace(from, to));
+  }
+  return dir;
+}
 export function shadcnDesignSystem() {
   const dir = mkdtempSync(join(tmpdir(), 'to-handoff-shadcn-'));
   mkdirSync(join(dir, 'contracts'));

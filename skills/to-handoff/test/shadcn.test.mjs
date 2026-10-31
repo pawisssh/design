@@ -4,8 +4,7 @@
 // Input, Label and Textarea are drafted mid-run from v0-app-drafts/, the Generic Adapter's output for the decisions' paths.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hasRuntime, hasTypescript } from '../scripts/deps.mjs';
@@ -17,18 +16,16 @@ import { walk } from '../scripts/reader.mjs';
 import { matchComputed } from '../scripts/match.mjs';
 import { loadDesignSystem } from '../scripts/system.mjs';
 import { validateHandoff } from '../scripts/validate.mjs';
-import { repo, shadcnDesignSystem, V0 } from './helpers.mjs';
+import { repo, shadcnDesignSystem, V0, V0_DECISIONS as DECISIONS, v0Copy as copy } from './helpers.mjs';
 
 const noTs = !hasTypescript() && 'TypeScript 6 or parse5 missing; run: node skills/to-handoff/scripts/deps.mjs';
 // The runtime test installs the fixture from its lockfile into the scratch run, so it needs the npm registry too.
 const noRuntime = !hasRuntime() && 'the runtime packages or a browser are missing; run: node skills/to-handoff/scripts/deps.mjs';
 const BUTTON_PACKAGE = '@/components/ui/button';
 const elements = (root, pick) => { const out = []; walk(root, el => { if (pick(el)) out.push(el); }); return out; };
-const DECISIONS = JSON.parse(readFileSync(join(V0, 'decisions.json'), 'utf8'));
 const noRender = async () => noTs || (!(await loadDesignSystem(shadcnDesignSystem())).adapter.available()
   && 'Generic preview packages missing; run: node skills/adapter-generic/scripts/sources.mjs');
 
-const copy = () => { const dir = mkdtempSync(join(tmpdir(), 'to-handoff-v0-')); cpSync(V0, dir, { recursive: true }); return dir; };
 
 test('read: a Code Library import that resolves to a Contract package file is a Design System leaf; other ui imports stay ui', { skip: noTs }, () => {
   const doc = readReact(V0, { packages: [BUTTON_PACKAGE] });
