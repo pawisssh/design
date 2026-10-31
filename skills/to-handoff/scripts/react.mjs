@@ -688,17 +688,29 @@ function standInsOf(ts, sources, routes) {
       // A timer in a component (an effect, an inline handler) is that effect's or handler's own work, named for the state it
       // fills, else the next state it sets, else the component's timer: never the component itself (#230).
       const inComponent = isComponent(fn);
-      let scope = fn;
-      if (inComponent) { scope = timer.parent; while (scope && !ts.isFunctionLike(scope)) scope = scope.parent; if (scope === fn) scope = timer; }
-      if (seen.has(scope)) continue;
-      seen.add(scope);
+      // The effect or handler around the timer, not a `new Promise(r => setTimeout(r, n))` executor, which holds no state calls.
+      const executor = x => ts.isFunctionLike(x) && ts.isNewExpression(x.parent) && x.parent.expression.getText(s.sf) === 'Promise';
+      let scope = fn, sleeping = false;
+      if (inComponent) {
+        scope = timer.parent;
+        while (scope && !(ts.isFunctionLike(scope) && !executor(scope))) { sleeping = sleeping || executor(scope); scope = scope.parent; }
+        if (scope === fn) scope = timer;
+      }
+      // A component's timers are one Stand-in each, a function's is one in all.
+      const key = inComponent ? timer : fn;
+      if (seen.has(key)) continue;
+      seen.add(key);
       const start = timer.getStart(s.sf);
       const cb = timer.arguments[0];
-      const filled = [...(cb && ts.isFunctionLike(cb) ? setCalls(cb, a => !empty(a)) : []), ...(inComponent ? setCalls(scope, a => !empty(a)).filter(c => c.getStart(s.sf) > start) : [])];
-      const name = inComponent ? (filled[0] ? stateOf(filled[0]) : `${kebab(nameOf(fn))}-timer`) : nameOf(fn);
+      // A state is filled by a value, so a boolean literal (`setLoading(false)`) is not the one the timer is named for.
+      const value = a => !empty(a) && a.kind !== ts.SyntaxKind.TrueKeyword && a.kind !== ts.SyntaxKind.FalseKeyword;
+      const filled = [...(cb && ts.isFunctionLike(cb) ? setCalls(cb, value) : []), ...(inComponent ? setCalls(scope, value).filter(c => c.getStart(s.sf) > start) : [])];
+      // A callback passed by name (`setTimeout(load, 500)`) is the function that does the work.
+      const named = inComponent && !sleeping && cb && ts.isIdentifier(cb) ? cb.text : null;
+      const name = named || (inComponent ? (filled[0] ? stateOf(filled[0]) : `${kebab(nameOf(fn))}-timer`) : nameOf(fn));
       const calls = setCalls(inComponent ? scope : fn.body, a => a.kind === ts.SyntaxKind.TrueKeyword);
       simulated.push({
-        name, kind: !inComponent ? 'function' : filled[0] ? 'state' : 'timer', delay: timer.arguments[1] && ts.isNumericLiteral(timer.arguments[1]) ? Number(timer.arguments[1].text) : null,
+        name, kind: !inComponent || named ? 'function' : filled[0] ? 'state' : 'timer', delay: timer.arguments[1] && ts.isNumericLiteral(timer.arguments[1]) ? Number(timer.arguments[1].text) : null,
         offset: s.base + (inComponent ? timer : ts.isFunctionDeclaration(fn) ? fn : fn.parent).getStart(s.sf),
         before: calls.filter(c => c.getStart(s.sf) < start).map(stateOf),
         after: calls.filter(c => c.getStart(s.sf) > start).map(stateOf),

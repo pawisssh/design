@@ -385,6 +385,17 @@ test('read: each timer in a component is its own Stand-in; one that sets nothing
   assert.deepEqual(simulated(doc).map(f => [f.name, f.kind, f.delay]), [['tasks', 'state', 600], ['users', 'state', 300], ['pause', 'function', 200], ['app-timer', 'timer', 100]]);
 });
 
+test('read: a boolean reset is not the state a timer is named for; two timers in one effect are two Stand-ins; a callback by name and a promise sleep are read (#230)', { skip: noTs }, () => {
+  const doc = readReact(timerApp(`  useEffect(() => { setTimeout(() => { setLoading(false); setTasks(mockTasks); }, 500); setTimeout(() => setUsers(['ada']), 700); }, []);
+  useEffect(() => { setTimeout(load, 900); }, []);
+  const load = () => setUsers([]);
+  const save = async () => { setSaving(true); await new Promise(r => setTimeout(r, 300)); setOpen(false); };
+  return <button onClick={async () => { setSaving(true); await new Promise(r => setTimeout(r, 400)); setUsers(['bo']); }}>Go</button>;`), {});
+  assert.deepEqual(simulated(doc).map(f => [f.name, f.kind, f.delay, f.before]), [
+    ['tasks', 'state', 500, []], ['users', 'state', 700, []], ['load', 'function', 900, []], ['save', 'function', 300, ['saving']], ['users', 'state', 400, ['saving']],
+  ]);
+});
+
 test('generate: a state and its mock are two Stand-ins with two ids and two questions, the timer worded for the state (#230)', { skip: noTs }, async () => {
   const { requests, handoff } = await generate({ prototype: timerApp(EFFECT), designSystem: designSystem(), decisions: decided({ 'recognise:button.add': { raw: true, reason: 'the fixture button has no Contract' }, 'token:font-size:16px': 'body-02-font-size' }) });
   assert.deepEqual(requests, []);
