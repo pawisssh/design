@@ -293,6 +293,14 @@ test('Next: a Code Library component from components.json aliases.ui is a leaf; 
     { attrs: { type: 'submit' }, holes: ['isSubmitting'], at: 'app/subscribe/subscribe-form.tsx:22:7' });
 });
 
+test('generate: the acceptance request names every screen id as data (#244)', { skip: noTs }, async () => {
+  const { acceptance, ...decisions } = VITE_DECISIONS;
+  const request = (await generate({ prototype: VITE, designSystem: designSystem(), decisions })).requests.find(r => r.key === 'acceptance');
+  assert.deepEqual(request.screens, ['index', 'invite']);
+  assert.equal(request.example.screen, 'index');
+  assert.ok(request.candidates.includes(request.example.state));
+});
+
 test('generate: a Vite Prototype is a valid Handoff with a screen per route; the Carbon Button is its Contract by import', { skip: noTs }, async () => {
   const ds = designSystem();
   const button = readFileSync(join(ds, 'contracts/button.component.json'));

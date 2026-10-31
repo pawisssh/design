@@ -822,8 +822,11 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     kind: 'feature', question: `What is "${title}" for? Answer {owner, goal, scope: [..], nonGoals: [..]}.`, candidates: [],
   }, a => (a && typeof a.goal === 'string' && a.goal ? null : 'a feature answer needs a goal'));
   const screenList = screenIds.map(s => `"${s}"`).join(' | ');
+  const presentStates = STANDARD_STATES.filter(s => allPresent.has(s));
+  // The screen ids are data, with an example criterion that uses one, so an answer needs no question prose (#244).
   const acceptance = d.ask('acceptance', {
-    kind: 'acceptance', question: `Acceptance criteria for ${screenIds.join(', ')}: [{id, screen, state, given, when, then}], one per state at least.`, candidates: STANDARD_STATES.filter(s => allPresent.has(s)),
+    kind: 'acceptance', question: `Acceptance criteria for ${screenIds.join(', ')}: [{id, screen, state, given, when, then}], one per state at least.`, candidates: presentStates,
+    screens: screenIds, example: { id: `${screenIds[0]}-${presentStates[0]}`, screen: screenIds[0], state: presentStates[0], given: '<what is true first>', when: '<what the user does>', then: '<what they see>' },
   }, a => (Array.isArray(a) && a.length && a.every(x => x.id && screenIds.includes(x.screen) && STANDARD_STATES.includes(x.state) && x.given && x.when && x.then) ? null
     : `acceptance is a non-empty list of {id, screen: ${screenList}, state, given, when, then}`));
 
