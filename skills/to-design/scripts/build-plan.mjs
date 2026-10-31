@@ -20,7 +20,7 @@ import { parseArgs } from 'node:util';
 import { baseTuple, contentHash, expand, ICON_KEY, icons as iconKeys, iconName, PROTOTYPE_APPROVER, validate, variantName } from '../../contract/scripts/contract.mjs';
 import { baseProps, defaultProps, expectedBase, expectedVariant, iconRef as iconRefKey, norm } from './readback.mjs';
 import { defaultLedgerPath, emptyLedger, readLedger } from './ledger.mjs';
-import { assertNested, familyNodes, heldIds, loadHeld } from './nested.mjs';
+import { assertNested, familyNodes, figmaProps, heldIds, loadHeld, nestedOf } from './nested.mjs';
 import { assertRecorded, CALL_BUDGET, chunks, chunkState, selectedGroups, selection, subsetDocument } from './foundations-subset.mjs';
 
 // Fields the core never needs, so the package leaves them out: the reviewer's, and a Mode's selector (To-preview and To-handoff read it).
@@ -245,10 +245,10 @@ export const MAX_COMBINE = 3000;
 export const PLACE_BUDGET = 45000;
 /**
  * A sets call's plan + state JSON, at most (chars): use_figma's 50,000 less the packaged components core and
- * its wrapper (tests/bprime.test.mjs measures them). 10606 leaves 20 chars under the core since #593 added nested
+ * its wrapper (tests/bprime.test.mjs measures them). 11496 leaves 20 chars under the core since #593 added nested
  * instances' properties, overrides and main components to it.
  */
-export const SETS_BUDGET = 10606;
+export const SETS_BUDGET = 11496;
 // a reconcile window, at most: its entries carry no fragments
 const RECONCILE_PER_CALL = 500;
 /**
@@ -293,7 +293,7 @@ const stripFields = fields => Object.fromEntries(Object.entries(fields).map(([k,
 // numbered over the whole expansion so a number means the same fragment in every batch; and each distinct
 // property wiring ({visible, text, swap, refs} at the property defaults, and a nested instance's props). Returns per tuple its references, and
 // the layer tree every variant shares (an ELLIPSE is an arc in every variant or in none, #442).
-function fragmentsOf(contract, tuples, doc, held) {
+function fragmentsOf(contract, tuples, doc, held, ledger) {
   const frags = new Map();
   const wirings = new Map();
   const props = defaultProps(contract);
@@ -308,8 +308,9 @@ function fragmentsOf(contract, tuples, doc, held) {
         if (!frags.has(key)) frags.set(key, frags.size);
         ids.push(frags.get(key));
       }
-    // a nested instance's property values (#593), only where the Contract holds one, so other plans stay as they were
-    const w = JSON.stringify({ visible: exp.visible, text: exp.text, swap: exp.swap, refs: exp.refs, ...(Object.keys(exp.props).length ? { props: exp.props } : {}) });
+    // a nested instance's property values by Figma key (#593), only where the Contract holds one, so other plans stay as they were
+    const nestedProps = Object.keys(exp.props).length ? { props: figmaProps(nestedOf(contract, t, held), held, ledger) } : {};
+    const w = JSON.stringify({ visible: exp.visible, text: exp.text, swap: exp.swap, refs: exp.refs, ...nestedProps });
     if (!wirings.has(w)) wirings.set(w, wirings.size);
     return { p: wirings.get(w), frags: ids };
   });
@@ -395,7 +396,7 @@ export function setsPlan(contract, docText, ledger, {
   const unplaced = combined && rec.placed === false;
   if (!combined && (next || mode === 'build' || mode === 'combine') && total > MAX_COMBINE)
     throw new Error(`a first build of ${family} combines its ${total} variants in one call, above MAX_COMBINE (${MAX_COMBINE}): the combine measured 46.9 s at 2304 and grows with the square (about ${Math.round(46.9 * (total / 2304) ** 2)} s here), near the ~2 min call ceiling`);
-  const { frags, wirings, refs, tree } = fragmentsOf(contract, tuples, doc, held);
+  const { frags, wirings, refs, tree } = fragmentsOf(contract, tuples, doc, held, ledger);
   const ax = k => contract.axes.findIndex(a => a.key === k);
   const pos = (t, k) => contract.axes.find(a => a.key === k).values.findIndex(v => v.key === t[k]);
   // a tuple's index in the axis-value product, in Contract order

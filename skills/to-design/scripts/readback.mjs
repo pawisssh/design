@@ -3,7 +3,7 @@
 // matching, expansion and the closure live only in the shared Contract module.
 import { baseTuple, expand, resolve, variantName } from '../../contract/scripts/contract.mjs';
 import { valueAt } from './foundations-value.mjs';
-import { familyNodes, heldRefs, nestedOf } from './nested.mjs';
+import { familyNodes, heldRefs, nestedBack, nestedOf } from './nested.mjs';
 
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isToken = v => isObj(v) && 'token' in v;
@@ -160,8 +160,9 @@ export function expectedBase(contract, props = reviewProps(contract), foundation
 /**
  * A core readback (ids) in Contract vocabulary: `{var: id}` becomes `{token: flatName}` and
  * `{style: id}` becomes `{token: styleName}` through the file's ledger; a swap's component id becomes the
- * icon key, or a held variant's ref through the ledger's sets and `held` (#593), and so does a nested instance's
- * INSTANCE_SWAP property value. An id the ledger does not know becomes `{token: null, id}`.
+ * icon key, or a held variant's ref through the ledger's sets and `held` (#593); a nested instance's properties and
+ * overrides (`nested`) become `props` and `over` (nested.mjs nestedBack). An id the ledger does not know becomes
+ * `{token: null, id}`.
  */
 export function normalizeReadback(raw, ledger, held = null) {
   const f = (ledger && ledger.foundations) || {};
@@ -187,9 +188,10 @@ export function normalizeReadback(raw, ledger, held = null) {
   const variants = heldRefs(held, ledger);
   const out = { ...raw, layout: map(raw.layout), paint: map(raw.paint) };
   if (raw.swap) out.swap = Object.fromEntries(Object.entries(raw.swap).map(([n, id]) => [n, icons[id] || variants[id] || (id ? `unknown:${id}` : null)]));
-  if (raw.props)
-    out.props = Object.fromEntries(Object.entries(raw.props).map(([n, p]) => [n, Object.fromEntries(Object.entries(p).map(([k, v]) =>
-      [k, isObj(v) && 'icon' in v ? { icon: icons[v.icon] || `unknown:${v.icon}` } : v]))]));
+  if (raw.nested) {
+    delete out.nested;
+    Object.assign(out, nestedBack(raw.nested, held, ledger));
+  }
   return out;
 }
 

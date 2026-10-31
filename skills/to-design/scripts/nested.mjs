@@ -97,6 +97,55 @@ export function heldRefs(held, ledger) {
   return out;
 }
 
+/**
+ * What the plan writes into one tuple's nested instances (#593): {node: {Figma property key: value}}, every held
+ * property keyed as the ledger's held set records it, an INSTANCE_SWAP value as the icon's component id.
+ */
+export function figmaProps(nested, held, ledger) {
+  const comps = (ledger && ledger.icons && ledger.icons.components) || {};
+  const out = {};
+  for (const [node, n] of Object.entries(nested)) {
+    const keys = ledger.sets[n.key].props || {};
+    out[node] = {};
+    for (const p of held.contracts[n.key].properties) {
+      const v = n.props[p.label];
+      out[node][keys[p.key]] = p.type === 'INSTANCE_SWAP' ? comps[v.icon].id : v;
+    }
+  }
+  return out;
+}
+
+/**
+ * A core readback's nested instances, `{node: [componentProperties, [[layer name, fields]]]}`, in Contract terms
+ * (#593): `props` {node: {label: value}} (an INSTANCE_SWAP's as {icon: key}) and `over` {node: [[path, fields]]}, the
+ * path '' for the instance itself. The held family is the one whose set records the property keys.
+ */
+export function nestedBack(raw, held, ledger) {
+  const icons = {};
+  for (const [key, o] of Object.entries((ledger && ledger.icons && ledger.icons.components) || {})) icons[o.id] = key;
+  const byKey = {};
+  for (const [key, c] of Object.entries((held && held.contracts) || {})) {
+    const keys = (ledger && ledger.sets && ledger.sets[key] && ledger.sets[key].props) || {};
+    for (const p of c.properties) if (keys[p.key]) byKey[keys[p.key]] = { c, p };
+  }
+  const props = {};
+  const over = {};
+  for (const [node, [cp, overrides]] of Object.entries(raw)) {
+    props[node] = {};
+    let c = null;
+    for (const [k, { value }] of Object.entries(cp)) {
+      const hit = byKey[k];
+      if (!hit) continue;
+      c = hit.c;
+      props[node][hit.p.label] = hit.p.type === 'INSTANCE_SWAP' ? { icon: icons[value] || `unknown:${value}` } : value;
+    }
+    const paths = { [c ? c.anatomy.name : '']: '' };
+    if (c) (function walk(n, at) { for (const k of n.children || []) { paths[k.name] = at ? `${at}/${k.name}` : k.name; walk(k, paths[k.name]); } })(c.anatomy, '');
+    over[node] = overrides.map(([name, fields]) => [name in paths ? paths[name] : name, [...fields].sort()]);
+  }
+  return { props, over };
+}
+
 /** The variant id each ref names, from the ledger's sets by the held Contract's expansion order: {ref: {id}}. */
 export function heldIds(refs, held, ledger) {
   const byRef = {};
@@ -109,9 +158,10 @@ export function heldIds(refs, held, ledger) {
  * named Conflict {node, kind, reason}. Kinds: `design-system` (a held family in another Design System, #594),
  * `held-contract` (not loaded), `not-built` (no placed set, or a variant without an id), `stale` (the set was built
  * from another contentHash than the held Contract's), `not-selected` (a resolved tuple outside the held selection) and
- * `property` (a props key that is no held property, or a value of the wrong type).
+ * `property` (a props key that is no held property, or a value of the wrong type) and `icon` (an INSTANCE_SWAP value
+ * the ledger has no icon for, #313).
  */
-export function nestedConflicts(contract, held, ledger) {
+function nestedConflicts(contract, held, ledger) {
   const nodes = familyNodes(contract);
   const out = [];
   const seen = new Set();
@@ -143,6 +193,13 @@ export function nestedConflicts(contract, held, ledger) {
         if (!p) bad(node, 'property', `${k} is no property of ${c.family.name}`);
         else if (typeof value !== PROP_TYPES[p.type] || (p.type === 'INSTANCE_SWAP' && !/^icon:/.test(value)))
           bad(node, 'property', `${k} is a ${p.type} property of ${c.family.name}, not ${JSON.stringify(value)}`);
+      }
+      const keys = ledger.sets[c.family.key].props || {};
+      for (const p of c.properties) {
+        if (!keys[p.key]) bad(node, 'not-built', `the ${c.family.key} set records no Figma key for its ${p.key} property: run its place calls first`);
+        const value = p.key in v.props ? v.props[p.key] : p.default;
+        const icon = p.type === 'INSTANCE_SWAP' && String(value).replace(/^icon:/, '');
+        if (icon && !((ledger.icons && ledger.icons.components) || {})[icon]) bad(node, 'icon', `${p.key} swaps to icon ${icon}, which the ledger lacks: build icons first (#313)`);
       }
     }
   }

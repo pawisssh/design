@@ -386,7 +386,9 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
     _copy() {
       const copy = (src, parent) => {
         const n = new SceneNode(src.type, src.name, { x: src._x, y: src._y, width: src.width, height: src.height });
-        n._fills = clone(src._fills); n._constraints = { ...src._constraints }; n.parent = parent;
+        // as in Figma, a layer inside an instance is I<instance id>;<main layer id>, and keeps the main layer's references
+        nodes.delete(n.id); n.id = `I${this.id};${src.id}`; nodes.set(n.id, n);
+        n._fills = clone(src._fills); n._constraints = { ...src._constraints }; n.parent = parent; n._refs = src._refs && { ...src._refs };
         n.children = src.children.map(c => copy(c, n));
         return n;
       };

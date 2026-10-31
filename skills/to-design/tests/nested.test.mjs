@@ -10,6 +10,7 @@ import { approve, contentHash } from '../../contract/scripts/contract.mjs';
 import { basePlan, documentHash, setsPlan } from '../scripts/build-plan.mjs';
 import { checkCoverage, checkSample } from '../scripts/coverage.mjs';
 import { buildOrder } from '../scripts/nested.mjs';
+import { normalizeReadback } from '../scripts/readback.mjs';
 import { chain, COMPONENTS_CORE, ROOT } from './chain.mjs';
 import { mockFigma } from './mock-figma.mjs';
 
@@ -35,7 +36,7 @@ const FILE_KEY = 'MOCKFILEKEY';
 const HELD = { designSystem: 'shadcn', contracts: { button: BUTTON } };
 function standIn(button = BUTTON) {
   const anyId = new Proxy({}, { get: (t, k) => (typeof k === 'string' ? 'VariableID:123:4567' : undefined), has: () => true });
-  const sets = button ? { button: { page: '1:1', section: '1:2', set: { id: '1:3', key: 'k', name: 'Button' }, props: {}, variants: ['2:1', '2:2', '2:3', '2:4'], total: 4, contentHash: contentHash(button), placed: true } } : {};
+  const sets = button ? { button: { page: '1:1', section: '1:2', set: { id: '1:3', key: 'k', name: 'Button' }, props: { label: 'Label#9:1', badge: 'Badge#9:2' }, variants: ['2:1', '2:2', '2:3', '2:4'], total: 4, contentHash: contentHash(button), placed: true } } : {};
   return { schemaVersion: 1, fileKey: FILE_KEY, foundations: { documentHash: documentHash(DOC_TEXT), variables: anyId, textStyles: anyId }, icons: { components: {} }, sets };
 }
 const cardPlan = (ledger, held = HELD, card = CARD) => setsPlan(card, DOC_TEXT, ledger, { fileKey: FILE_KEY, at: AT, prototype: true, held, batch: 0 });
@@ -51,8 +52,8 @@ test('the Card plan resolves each nested instance to a Button variant id through
   ]);
   assert.deepEqual(state.icons, { 'family:shadcn/button/secondary|md|enabled': { id: '2:3' }, 'family:shadcn/button/primary|md|enabled': { id: '2:1' },
     'family:shadcn/button/secondary|sm|enabled': { id: '2:4' }, 'family:shadcn/button/primary|sm|enabled': { id: '2:2' } });
-  // every Button property, at the value the Card writes, else Button's default
-  assert.deepEqual(plan.P[0].props, { Cancel: { Label: 'Cancel', Badge: false }, Confirm: { Label: 'Confirm', Badge: true } });
+  // every Button property by the Figma key the ledger records, at the value the Card writes, else Button's default
+  assert.deepEqual(plan.P[0].props, { Cancel: { 'Label#9:1': 'Cancel', 'Badge#9:2': false }, Confirm: { 'Label#9:1': 'Confirm', 'Badge#9:2': true } });
 });
 
 test('the plan stops on a named Conflict: a tuple outside Button\'s selection, a stale Button contentHash, an unbuilt Button, another Design System', () => {
@@ -134,7 +135,7 @@ test('the Edit check reads a nested instance\'s main component, props and overri
   // only the Card's own layers are read: nothing inside a nested instance
   const sample = Object.values(clean.sample)[0];
   assert.deepEqual(Object.keys(sample.paint).filter(n => n.includes('/')), []);
-  assert.deepEqual(sample.props, { Cancel: { Label: 'Cancel', Badge: false }, Confirm: { Label: 'Confirm', Badge: true } });
+  assert.deepEqual(normalizeReadback(sample, ledger, HELD).props, { Cancel: { Label: 'Cancel', Badge: false }, Confirm: { Label: 'Confirm', Badge: true } });
 
   // a held field the Card does not override is Button's: a Button restyle reaches the instances and is no Card edit
   const primaryMd = await mock.figma.getNodeByIdAsync(ledger.sets.button.variants[0]);
