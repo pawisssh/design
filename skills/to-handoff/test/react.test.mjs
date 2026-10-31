@@ -350,6 +350,51 @@ createRoot(document.getElementById('app')!).render(
   assert.match(result.handoff.source.notes.map(n => n.text).join('\n'), /ThemeProvider activeColorScheme="dark"/);
 });
 
+// #230: a timer inside a component is named for the work it simulates, never for the component, and its id is its own.
+const timerApp = effects => project({
+  'package.json': JSON.stringify({ name: 'timers', dependencies: { react: '19.3.1' }, devDependencies: { vite: '8.3.4' } }),
+  'index.html': '<!doctype html><html><head><title>Timers</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>',
+  'src/main.tsx': `import { createRoot } from 'react-dom/client';
+import { useEffect, useState } from 'react';
+const mockTasks = [{ id: 1, title: 'Write' }];
+function App() {
+  const [tasks, setTasks] = useState<typeof mockTasks>([]);
+  const [users, setUsers] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [open, setOpen] = useState(false);
+${effects}
+  return <main><button className="add" onClick={() => setOpen(true)}>Add</button><p>{loading ? 'Loading' : tasks.length}</p></main>;
+}
+createRoot(document.getElementById('root')!).render(<App />);
+`,
+});
+const EFFECT = `  useEffect(() => { setSaving(true); setTimeout(() => { setTasks(mockTasks); setLoading(false); }, 600); }, []);`;
+const simulated = doc => doc.standIns.simulated.map(f => ({ name: f.name, kind: f.kind, delay: f.delay, before: f.before, after: f.after, at: doc.at(f.offset) }));
+
+test('read: a timer in a component is named for the state it sets, with only its own effect\'s states, not for the component (#230)', { skip: noTs }, () => {
+  const doc = readReact(timerApp(EFFECT), {});
+  assert.deepEqual(simulated(doc), [{ name: 'tasks', kind: 'state', delay: 600, before: ['saving'], after: [], at: 'src/main.tsx:10:38' }]);
+});
+
+test('read: each timer in a component is its own Stand-in; one that sets nothing is not named for the component (#230)', { skip: noTs }, () => {
+  const doc = readReact(timerApp(`${EFFECT}
+  useEffect(() => { setTimeout(() => setUsers(['ada']), 300); }, []);
+  async function pause() { await new Promise(r => setTimeout(r, 200)); setUsers([]); }
+  useEffect(() => { setTimeout(() => console.log('tick'), 100); }, []);`), {});
+  assert.deepEqual(simulated(doc).map(f => [f.name, f.kind, f.delay]), [['tasks', 'state', 600], ['users', 'state', 300], ['pause', 'function', 200], ['app-timer', 'timer', 100]]);
+});
+
+test('generate: a state and its mock are two Stand-ins with two ids and two questions, the timer worded for the state (#230)', { skip: noTs }, async () => {
+  const { requests, handoff } = await generate({ prototype: timerApp(EFFECT), designSystem: designSystem(), decisions: decided({ 'recognise:button.add': { raw: true, reason: 'the fixture button has no Contract' }, 'token:font-size:16px': 'body-02-font-size' }) });
+  assert.deepEqual(requests, []);
+  assert.deepEqual(handoff.data.map(x => [x.id, x.source, x.question]), [['tasks', 'mock', 'q-data-tasks'], ['tasks-2', 'simulated', 'q-data-tasks-2']]);
+  const timer = handoff.data[1], question = handoff.openQuestions.find(q => q.id === 'q-data-tasks-2');
+  assert.match(timer.note, /^`tasks` is filled by a 600ms setTimeout/);
+  assert.match(question.text, /Where does `tasks` come from, and how does it fail\?/);
+  assert.doesNotMatch(JSON.stringify(handoff), /App\(\)/);
+});
+
 // #227: Sass imported from JS is read into rules at its own offsets; what the reader can't resolve offline is a note.
 const sassApp = (app = null) => project({
   'package.json': JSON.stringify({ name: 'sassy', dependencies: { react: '19.3.1' }, devDependencies: { vite: '8.3.4', sass: '1.99.0' } }),

@@ -19,7 +19,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { parseCss } from './css.mjs';
 import { sassFile, sassNote } from './scss.mjs';
-import { EXTS, appDirOf, metadataTitle, packageOf, reactKind } from './feature-key.mjs';
+import { EXTS, appDirOf, kebab, metadataTitle, packageOf, reactKind } from './feature-key.mjs';
 import { loadTypescript } from './deps.mjs';
 import { lineOf, lineStarts, readHtml, walk } from './reader.mjs';
 
@@ -614,10 +614,11 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
 // ---------- Stand-ins (#62) by name and shape, over the files the reader read ----------
 
 /**
- * {mocks: [{name, offset}], simulated: [{name, delay, offset, before, after}], stubs: [{route, method, file, name,
+ * {mocks: [{name, offset}], simulated: [{name, kind, delay, offset, before, after}], stubs: [{route, method, file, name,
  * offset, sets, before, after}]}: `mock…` constants and literal exports of a data/ or fixtures/ file; functions
  * that wait on a setTimeout, with the state each `setX(true)` sets before the timer (`before`) and after it
- * (`after`), named by its useState pair. A timer that only clears state after the work, `setTimeout(() =>
+ * (`after`), named by its useState pair. A timer in a component is the work of its effect or handler, `kind` 'state' and named
+ * for the state it fills (`tasks`), else 'timer' named `<component>-timer`, never the component (#230); in a function, `kind` is 'function'. A timer that only clears state after the work, `setTimeout(() =>
  * setMsg(null), 2000)`, is not simulated work. A stub is a `fetch('<path>')` or `` fetch(`<path>`) `` of a route
  * the Prototype serves itself (#341, #352), `route` its folder pattern (`/api/items/[id]`), with the state variables
  * its innermost function sets (`sets`, named only when that function is) and the states it sets before and after
@@ -665,23 +666,37 @@ function standInsOf(ts, sources, routes) {
       return cb.body.statements.length > 0 && cb.body.statements.every(st => ts.isExpressionStatement(st) && resets(st.expression));
     };
     const seen = new Set();
+    const isComponent = fn => /^[A-Z]/.test(nameOf(fn));
+    const setCalls = (root, keep) => {
+      const out = [];
+      const walk = x => {
+        if (ts.isCallExpression(x) && ts.isIdentifier(x.expression) && /^set[A-Z]/.test(x.expression.text) && x.arguments[0] && keep(x.arguments[0])) out.push(x);
+        ts.forEachChild(x, walk);
+      };
+      walk(root);
+      return out;
+    };
+    const atom = c => setters[c.expression.text] || c.expression.text.replace(/^set(.)/, (_, ch) => ch.toLowerCase());
     for (const timer of timers) {
       if (clears(timer)) continue;
       let fn = timer.parent;
       while (fn && !nameOf(fn)) fn = fn.parent;
-      if (!fn || seen.has(fn)) continue;
-      seen.add(fn);
-      const calls = [];
-      const scan = x => {
-        if (ts.isCallExpression(x) && ts.isIdentifier(x.expression) && /^set[A-Z]/.test(x.expression.text) && x.arguments[0] && x.arguments[0].kind === ts.SyntaxKind.TrueKeyword) calls.push(x);
-        ts.forEachChild(x, scan);
-      };
-      scan(fn.body);
-      const atom = c => setters[c.expression.text] || c.expression.text.replace(/^set(.)/, (_, ch) => ch.toLowerCase());
+      if (!fn) continue;
+      // A timer in a component (an effect, an inline handler) is that effect's or handler's own work, named for the state it
+      // fills, else the next state it sets, else the component's timer: never the component itself (#230).
+      const inComponent = isComponent(fn);
+      let scope = fn;
+      if (inComponent) { scope = timer.parent; while (scope && !ts.isFunctionLike(scope)) scope = scope.parent; if (scope === fn) scope = timer; }
+      if (seen.has(scope)) continue;
+      seen.add(scope);
       const start = timer.getStart(s.sf);
+      const cb = timer.arguments[0];
+      const filled = [...(cb && ts.isFunctionLike(cb) ? setCalls(cb, a => !empty(a)) : []), ...(inComponent ? setCalls(scope, a => !empty(a)).filter(c => c.getStart(s.sf) > start) : [])];
+      const name = inComponent ? (filled[0] ? atom(filled[0]) : `${kebab(nameOf(fn))}-timer`) : nameOf(fn);
+      const calls = setCalls(inComponent ? scope : fn.body, a => a.kind === ts.SyntaxKind.TrueKeyword);
       simulated.push({
-        name: nameOf(fn), delay: timer.arguments[1] && ts.isNumericLiteral(timer.arguments[1]) ? Number(timer.arguments[1].text) : null,
-        offset: s.base + (ts.isFunctionDeclaration(fn) ? fn : fn.parent).getStart(s.sf),
+        name, kind: !inComponent ? 'function' : filled[0] ? 'state' : 'timer', delay: timer.arguments[1] && ts.isNumericLiteral(timer.arguments[1]) ? Number(timer.arguments[1].text) : null,
+        offset: s.base + (inComponent ? timer : ts.isFunctionDeclaration(fn) ? fn : fn.parent).getStart(s.sf),
         before: calls.filter(c => c.getStart(s.sf) < start).map(atom),
         after: calls.filter(c => c.getStart(s.sf) > start).map(atom),
       });
