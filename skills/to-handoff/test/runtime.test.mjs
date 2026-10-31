@@ -13,7 +13,7 @@ import { DEPS_DIR, hasDeps, hasRuntime, loadTypescript } from '../scripts/deps.m
 import { generate, loadDesignSystem, render, screenshotRendering, validateHandoff } from '../scripts/handoff.mjs';
 import { readHtml, walk } from '../scripts/reader.mjs';
 import { tagHtml, tagJsx } from '../scripts/tag.mjs';
-import { DECISIONS, PROTOTYPE, designSystem } from './helpers.mjs';
+import { DECISIONS, PROTOTYPE, V0, decided, designSystem, shadcnDesignSystem } from './helpers.mjs';
 
 const noDeps = !hasDeps() && 'To-handoff packages missing; run: node skills/to-handoff/scripts/deps.mjs';
 
@@ -252,4 +252,48 @@ test('render: a failed runtime shows its reason in the Rendering', { skip: await
   const html = readFileSync(await render({ handoffPath: path, designSystem: ds }), 'utf8');
   assert.ok(html.includes('screenshot missing · static-only: the runtime reader failed: npm run build failed (exit 1): the build is broken'));
   assert.match(html, /<li id="q-runtime">/);
+});
+
+// ---------- computed colours on a React Prototype's runtime run (#284) ----------
+
+const THEMED = fileURLToPath(new URL('fixtures/tailwind-theme-app', import.meta.url));
+const colours = region => region.styles.filter(s => /color$/.test(s.property));
+
+test("runtime: a React Prototype's computed colours fill its styles: a --color-* chain binds its token, a palette colour matches by value (#284)", { skip: noRuntime }, async () => {
+  const ds = shadcnDesignSystem();
+  const { requests, handoff } = await generate({ prototype: THEMED, designSystem: ds, decisions: decided(), runtime: true });
+  assert.deepEqual(requests, []);
+  const summary = handoff.screens[0].regions.find(r => r.id === 'summary');
+  const badge = handoff.values.find(v => v.at.includes('src/App.jsx:10:7'));
+  assert.deepEqual(colours(summary), [
+    { property: 'background-color', raw: 'var(--color-card)', at: ['src/App.jsx:5:5'], token: 'card', via: ['--color-card'] },
+    // Set once on the section: its heading and paragraph inherit it.
+    { property: 'color', raw: 'var(--color-primary)', at: ['src/App.jsx:6:7'], token: 'primary', via: ['--color-primary'] },
+    // Tailwind's own palette variable: Foundations doesn't know it, so the computed colour matches by value.
+    { property: 'background-color', raw: 'var(--color-blue-500)', at: ['src/App.jsx:10:7'], value: `value:${badge.id}` },
+    // Four equal sides are one entry; the global border-color reset draws no border, so it records nothing.
+    { property: 'border-color', raw: 'var(--color-primary)', at: ['src/App.jsx:11:7'], token: 'primary', via: ['--color-primary'] },
+  ]);
+  assert.equal(badge.role, 'background-color');
+  assert.equal(badge.raw.light, '#2b7fff');
+  assert.match(badge.reason, /No .* token is within ΔE/);
+  assert.deepEqual(handoff.screens[0].regions.flatMap(colours).filter(s => s.at.includes('src/App.jsx:5:5') && s.property !== 'background-color'), []);
+  const again = await generate({ prototype: THEMED, designSystem: ds, decisions: decided(), runtime: true });
+  assert.equal(again.wrote, false, 'a re-run on the same inputs is unchanged');
+});
+
+test('runtime: a static run of a React Prototype keeps its colours from the source declarations alone (#284)', { skip: noDeps }, async () => {
+  const { handoff } = await generate({ prototype: THEMED, designSystem: shadcnDesignSystem(), decisions: decided() });
+  assert.deepEqual(handoff.screens[0].regions.flatMap(colours), [], 'Tailwind utilities declare nothing the static reader reads');
+  assert.deepEqual(handoff.values, []);
+});
+
+test("runtime: v0's white surfaces bind their own tokens by the built reference, with no token-tie (#284)", { skip: noRuntime }, async () => {
+  const decisions = JSON.parse(readFileSync(join(V0, 'decisions.json'), 'utf8'));
+  const { requests, handoff } = await generate({ prototype: V0, designSystem: shadcnDesignSystem(), decisions, runtime: true });
+  assert.deepEqual(requests.filter(r => r.kind === 'token-tie'), []);
+  const styles = handoff.screens[0].regions.flatMap(r => r.styles);
+  const bg = at => styles.find(s => s.property === 'background-color' && s.at.includes(at));
+  assert.equal(bg('app/layout.tsx:28:7').token, 'background', 'the body');
+  assert.equal(bg('app/page.tsx:17:5').token, 'muted', 'the page: muted, not its value twins secondary and accent');
 });

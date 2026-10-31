@@ -15,7 +15,7 @@ import { convert, deltaE } from '../../contract/scripts/color.mjs';
 import { contentHash as contractHash, proposalContentHash, resolve } from '../../contract/scripts/contract.mjs';
 import { computed, splitWords } from './css.mjs';
 import { fileHash, handoffContentHash, prototypeFiles, snapshotIdOf, usedHash } from './hash.mjs';
-import { COLOR_ROLES, collectionOf, colorText, followCustom, matchDeclaration, matchText, roleOf, sameHex, valueIn } from './match.mjs';
+import { COLOR_ROLES, collectionOf, colorText, followCustom, matchComputed, matchDeclaration, matchText, referenceOf, roleOf, sameHex, valueIn } from './match.mjs';
 import { loadDesignSystem, stateAxisOf } from './system.mjs';
 import { hasRuntime } from './deps.mjs';
 import { featureOf, kebab } from './feature-key.mjs';
@@ -331,6 +331,14 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   function screenPass({ screen, mount, atoms, present, stateAtoms, atomsIn, shownIn }, rt) {
     const screenId = screen.id;
     const live = el => rt.elements[at(el.offset)];
+    // A React Prototype's runtime run paints its regions from the computed colours (#284); an HTML Prototype, and an
+    // element the run did not render, keep the source declarations.
+    const paintsLive = runtime && !/\.html?$/i.test(prototype);
+    const declarationsOf = el => {
+      const own = ownDeclarations(rules, el);
+      const paint = paintsLive && live(el) && live(el).paint;
+      return paint ? [...own.filter(x => !COLOR_ROLES.has(roleOf(x.property))), ...paintDeclarations(paint, el.offset, rt.custom)] : own;
+    };
 
     const usageStates = Object.fromEntries(present.map(s => [s, {}]));
 
@@ -537,12 +545,12 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
           const u = usages.get(el);
           r.usages.push(u);
           // A raw usage has no Contract to carry its look: its own styles stay in the region, matched like any other.
-          if (u.raw) walk(el, x => { for (const decl of ownDeclarations(rules, x)) addStyle(r, decl); });
+          if (u.raw) walk(el, x => { for (const decl of declarationsOf(x)) addStyle(r, decl); });
           continue;
         }
         if (insideUsage(el)) continue;
         // A container usage's parts are its Contract's look; their className is off-axis.
-        if (claim !== 'part') for (const decl of ownDeclarations(rules, el)) addStyle(r, decl);
+        if (claim !== 'part') for (const decl of declarationsOf(el)) addStyle(r, decl);
         if (!shell) for (const t of textNodes(el)) addText(r, el, t);
       }
       return r;
@@ -666,13 +674,16 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     if (!role) return;
     const words = COLOR_ROLES.has(role) ? [decl.value] : splitWords(decl.value);
     for (const raw of words) {
-      const result = matchDeclaration({ property: decl.property, value: raw }, ctx);
+      const { computed } = decl;
+      const result = computed
+        ? matchComputed({ property: decl.property, value: computed.value, ref: computed.ref }, { ...ctx, custom: computed.custom })
+        : matchDeclaration({ property: decl.property, value: raw }, ctx);
       if (result.kind === 'skip') continue;
       const where = at(decl.offset);
       const existing = r.styles.find(s => s.property === decl.property && s.raw === raw);
       if (existing) { if (!existing.at.includes(where)) existing.at.push(where); continue; }
       const s = { property: decl.property, raw, at: [where] };
-      const norm = COLOR_ROLES.has(role) ? colorText(followCustom(raw, custom)) : raw;
+      const norm = COLOR_ROLES.has(role) ? colorText(computed ? computed.value : followCustom(raw, custom)) : raw;
       const key = `token:${role}:${norm}`;
       if (result.kind === 'reference' || result.kind === 'exact') {
         s.token = result.token;
@@ -782,7 +793,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
 
   if (rt.error) question({
     id: 'q-runtime', kind: 'runtime', to: 'owner',
-    text: `The runtime reader could not run the Prototype (${rt.error}), so this Handoff is static-only: no screenshots, and text metrics read from the source alone. Fix it and re-run To-handoff?`,
+    text: `The runtime reader could not run the Prototype (${rt.error}), so this Handoff is static-only: no screenshots, and colours and text metrics read from the source alone. Fix it and re-run To-handoff?`,
   });
   for (const f of rt.failed || []) question({
     id: `q-untagged-${kebab(f.file)}`, kind: 'runtime', to: 'developer',
@@ -949,12 +960,25 @@ async function runtimeRead(options) {
         shots[state] = {};
         for (const [bp, shot] of Object.entries(byBp)) shots[state][bp] = typeof shot === 'string' ? { name: basename(shot), png: readFileSync(shot) } : shot;
       }
-      screens[id] = { elements: read.elements, shots };
+      screens[id] = { elements: read.elements, shots, custom: read.custom };
     }
     return { screens, failed: r.failed };
   } finally {
     r.cleanup();
   }
+}
+
+// One element's computed paint as declarations for addStyle (#284): `value` is the declared var() that gives the
+// colour (referenceOf), else the computed colour, and `computed` carries what matchComputed reads. Four equal
+// border sides are one `border-color`.
+function paintDeclarations(paint, offset, custom) {
+  const decls = Object.entries(paint).map(([property, { value, refs }]) => {
+    const ref = referenceOf(value, refs);
+    return { property, value: ref || colorText(value), offset, computed: { value, ref, custom } };
+  });
+  const sides = decls.filter(x => /^border-\w+-color$/.test(x.property));
+  if (sides.length < 4 || sides.some(x => x.value !== sides[0].value || x.computed.value !== sides[0].computed.value)) return decls;
+  return decls.flatMap(x => (x === sides[0] ? [{ ...x, property: 'border-color' }] : sides.includes(x) ? [] : [x]));
 }
 
 // Computed text metrics, in the matcher's units: px, unitless weight, `normal` line height as null.

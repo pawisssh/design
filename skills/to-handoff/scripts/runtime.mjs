@@ -23,18 +23,22 @@ import { ATTR, tagHtml, tagJsx } from './tag.mjs';
 const SKIP_DIRS = new Set(['node_modules', '.git', '.next', 'dist', 'build', 'out']);
 const VIEWPORT_HEIGHT = 900;
 const STEP_TIMEOUT = 5000;
-// The computed properties the matcher reads: the text metrics. Colours and spacing still match from the source
-// declarations, which keep their var() references.
+// The computed properties the matcher reads: the text metrics, and the paint an element sets (#284), each with
+// the declared var()s that may name its token. Spacing still matches from the source declarations.
 const PROPS = ['font-size', 'line-height', 'font-weight', 'letter-spacing'];
+const PAINT = ['background-color', 'color', 'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color', 'outline-color'];
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon', '.woff2': 'font/woff2' };
 
 /**
- * run({prototype, screens, breakpoints, depsDir}) -> {screens: {<screen>: {elements, shots}}, failed, cleanup}.
+ * run({prototype, screens, breakpoints, depsDir}) -> {screens: {<screen>: {elements, shots, custom}}, failed, cleanup}.
  * `prototype` is the HTML file (its folder is the Prototype root) or a React app folder, built once for every
  * screen. `screens` is [{screen, route, states}]: a React screen loads at its route. `states` is [{state, steps,
  * expect}], where `steps` is null for a state with no way to reach it (its `reason` says why) and `expect` lists
- * the `at`s that must be on the page once it is reached. `elements` maps an `at` to {style, rect, via} for the
- * first host element that joins to it, `via` naming the join (own, fibre, ancestor or shell); `shots` maps
+ * the `at`s that must be on the page once it is reached. `elements` maps an `at` to {style, rect, via, paint} for
+ * the first host element that joins to it, `via` naming the join (own, fibre, ancestor or shell), and `paint`
+ * mapping each PAINT longhand the element sets to {value, refs: [{ref, resolved}]}: its computed value, and each
+ * declared `var()` with that custom property read on the element. `custom` is the built stylesheet's root custom
+ * properties, name -> declared value, the shape of the static reader's. `shots` maps
  * state -> breakpoint -> a PNG path inside `dir` or {missing, reason}. The caller copies the PNGs it keeps and
  * calls cleanup().
  */
@@ -78,6 +82,7 @@ export async function run({ prototype, screens, breakpoints, depsDir = DEPS_DIR 
     const url = server.url + (server.app ? route || '/' : '/' + rel);
     const elements = {};
     const shots = {};
+    let custom = null;
     const widest = breakpoints[breakpoints.length - 1];
     for (const s of states) {
       shots[s.state] = {};
@@ -99,7 +104,11 @@ export async function run({ prototype, screens, breakpoints, depsDir = DEPS_DIR 
           const file = join(out, `${screen}.${s.state}.${b.key}.png`);
           await page.screenshot({ path: file, fullPage: true, animations: 'disabled' });
           shots[s.state][b.key] = file;
-          if (b === widest) for (const r of await page.evaluate(snapshot, { ATTR, PROPS, uiDir, shell: rel || '' })) if (!elements[r.at]) elements[r.at] = { style: r.style, rect: r.rect, via: r.via };
+          if (b === widest) {
+            const snap = await page.evaluate(snapshot, { ATTR, PROPS, PAINT, uiDir, shell: rel || '' });
+            custom = custom || snap.custom;
+            for (const r of snap.elements) if (!elements[r.at]) elements[r.at] = { style: r.style, rect: r.rect, via: r.via, paint: r.paint };
+          }
         } catch (e) {
           shots[s.state][b.key] = { missing: true, reason: `the steps for ${s.state} failed: ${scrub(e.message)}` };
         } finally {
@@ -107,7 +116,7 @@ export async function run({ prototype, screens, breakpoints, depsDir = DEPS_DIR 
         }
       }
     }
-    return { elements, shots };
+    return { elements, shots, custom: custom || {} };
   }
 }
 
@@ -128,7 +137,49 @@ async function perform(page, step) {
 //   2. else the first app site up the React fibre tree (memoizedProps);
 //   3. else the nearest DOM ancestor with one;
 //   4. else the document shell.
-function snapshot({ ATTR, PROPS, uiDir, shell }) {
+// An element sets a paint longhand (#284) when a built rule that matches it, or its inline style, declares it or a
+// shorthand of it; `color` only where it differs from the parent's, a border side only where it draws, and an
+// outline only where it is drawn. A shorthand holding a var() reads its longhands as '', so the shorthands count.
+function snapshot({ ATTR, PROPS, PAINT, uiDir, shell }) {
+  // The built style rules that apply at this width: @layer blocks walked, @media and @supports where they hold.
+  const rules = [];
+  const collect = list => {
+    for (const rule of list) {
+      if (rule instanceof CSSStyleRule) rules.push(rule);
+      else if (rule instanceof CSSMediaRule) { if (matchMedia(rule.media.mediaText).matches) collect(rule.cssRules); }
+      else if (rule instanceof CSSSupportsRule) { if (CSS.supports(rule.conditionText)) collect(rule.cssRules); }
+      else if (rule instanceof CSSLayerBlockRule) collect(rule.cssRules);
+    }
+  };
+  for (const sheet of document.styleSheets) { try { collect(sheet.cssRules); } catch { /* a cross-origin sheet */ } }
+  const custom = {};
+  for (const rule of rules) {
+    if (!rule.selectorText.split(',').some(s => /^(:root|html)$/.test(s.trim()))) continue;
+    for (const name of rule.style) if (name.startsWith('--')) custom[name] = rule.style.getPropertyValue(name).trim();
+  }
+  const SHORTHANDS = { 'background-color': ['background'], color: [], 'outline-color': ['outline'] };
+  for (const side of ['top', 'right', 'bottom', 'left']) {
+    const axis = side === 'top' || side === 'bottom' ? 'block' : 'inline';
+    SHORTHANDS[`border-${side}-color`] = ['border-color', 'border', `border-${side}`, `border-${axis}-color`, `border-${axis}`];
+  }
+  const VAR = /^var\(\s*(--[\w-]+)\s*(,[\s\S]*)?\)$/;
+  const drawn = (cs, prop) => {
+    const edge = prop.replace(/-color$/, '');
+    return cs.getPropertyValue(`${edge}-style`) !== 'none' && parseFloat(cs.getPropertyValue(`${edge}-width`)) > 0;
+  };
+  const paintOf = (el, cs) => {
+    const sources = [...rules.filter(r => { try { return el.matches(r.selectorText); } catch { return false; } }).map(r => r.style), el.style];
+    const out = {};
+    for (const prop of PAINT) {
+      const declared = sources.flatMap(st => [prop, ...SHORTHANDS[prop]].map(n => st.getPropertyValue(n).trim())).filter(Boolean);
+      if (!declared.length) continue;
+      if (prop === 'color' && el.parentElement && getComputedStyle(el.parentElement).color === cs.color) continue;
+      if (prop !== 'color' && prop !== 'background-color' && !drawn(cs, prop)) continue;
+      const refs = [...new Set(declared.filter(v => VAR.test(v)))].map(ref => ({ ref, resolved: cs.getPropertyValue(VAR.exec(ref)[1]).trim() }));
+      out[prop] = { value: cs.getPropertyValue(prop), refs };
+    }
+    return out;
+  };
   const app = chain => (chain ? chain.split(' ').filter(s => !s.startsWith(uiDir)).pop() : undefined);
   const fibre = el => {
     const key = Object.keys(el).find(k => k.startsWith('__reactFiber'));
@@ -144,9 +195,9 @@ function snapshot({ ATTR, PROPS, uiDir, shell }) {
     const via = own ? 'own' : viaFibre ? 'fibre' : viaAncestor ? 'ancestor' : 'shell';
     const cs = getComputedStyle(el);
     const r = el.getBoundingClientRect();
-    out.push({ at, via, style: Object.fromEntries(PROPS.map(p => [p, cs.getPropertyValue(p)])), rect: { width: Math.round(r.width * 100) / 100, height: Math.round(r.height * 100) / 100 } });
+    out.push({ at, via, style: Object.fromEntries(PROPS.map(p => [p, cs.getPropertyValue(p)])), rect: { width: Math.round(r.width * 100) / 100, height: Math.round(r.height * 100) / 100 }, paint: paintOf(el, cs) });
   }
-  return out;
+  return { custom, elements: out };
 }
 
 // Every .tsx/.jsx under the copy, tagged. A file TypeScript cannot parse stays untagged: its elements join

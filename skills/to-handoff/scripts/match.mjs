@@ -108,27 +108,62 @@ function webIndex(foundations) {
 export function matchDeclaration({ property, value }, ctx) {
   const role = roleOf(property);
   if (!role || TYPE_ROLES.has(role)) return { kind: 'skip' };
-  const { foundations, adapter } = ctx.system;
-  const need = ROLE_SCOPE[role];
   // 1. The Prototype's own custom properties, then a reference to a Foundations token by its code syntax.
+  const f = follow(value, role, ctx, false);
+  if (f.result) return f.result;
+  if (f.unknown) return offSystem(`unknown token \`${f.unknown}\``, []);
+  return byValue(f.value, role, ctx);
+}
+
+/**
+ * Match one computed colour of a runtime run (#284). `ref` is the declared `var()` that gives `value` (see
+ * referenceOf), followed through the built stylesheet's root custom properties (`ctx.custom`) to a Foundations
+ * token. Foundations is read first at each hop: a built theme defines `--card` as its literal too. A name
+ * neither knows, or no `ref`, matches the computed value by value.
+ */
+export function matchComputed({ property, value, ref }, ctx) {
+  const role = roleOf(property);
+  if (!COLOR_ROLES.has(role)) return { kind: 'skip' };
+  const f = ref ? follow(ref, role, ctx, true) : {};
+  return f.result || byValue(value, role, ctx);
+}
+
+/** The one declared `var()` whose custom property, read on the element, gives its computed `value`; else null. */
+export function referenceOf(value, refs) {
+  const hex = text => { try { const c = convert(text); return c.alpha > 0 ? c.hex : null; } catch { return null; } };
+  const want = hex(value);
+  const live = want ? [...new Set(refs.filter(r => hex(r.resolved) && sameHex(hex(r.resolved), want)).map(r => r.ref))] : [];
+  return live.length === 1 ? live[0] : null;
+}
+
+// A var() chain followed through `ctx.custom` and Foundations code syntax: {result} for a token reference or a
+// refused one, {unknown} for a name neither knows, else {value} with the literal it ends on.
+function follow(value, role, ctx, systemFirst) {
+  const { foundations } = ctx.system;
+  const need = ROLE_SCOPE[role];
   let v = String(value).trim();
   const via = [];
   for (let hops = 0; hops < 8; hops++) {
     const ref = /^var\(\s*(--[\w-]+)\s*(?:,\s*([\s\S]*))?\)$/.exec(v);
     if (!ref) break;
-    if (ctx.custom && ctx.custom[ref[1]] !== undefined) { via.push(ref[1]); v = ctx.custom[ref[1]]; continue; }
     const key = webIndex(foundations)[ref[1]];
+    if (ctx.custom && ctx.custom[ref[1]] !== undefined && !(systemFirst && key)) { via.push(ref[1]); v = ctx.custom[ref[1]]; continue; }
     if (!key && ref[2]) { v = ref[2].trim(); continue; }
-    if (!key) return offSystem(`unknown token \`${ref[1]}\``, []);
+    if (!key) return { unknown: ref[1] };
     const variable = foundations.variables[key];
-    if (variable.hidden) return offSystem(`\`${ref[1]}\` is a hidden Primitive; a region binds theme tokens only`, [], key);
-    if (variable.family) return offSystem(`\`${ref[1]}\` is a component token of \`${variable.family}\`; a region binds theme tokens only`, []);
-    if (!coversScope(variable.scopes, need)) return offSystem(`\`${key}\` is not scoped for ${role} (${need})`, []);
-    return { kind: 'reference', token: key, ...(via.length ? { via } : {}) };
+    if (variable.hidden) return { result: offSystem(`\`${ref[1]}\` is a hidden Primitive; a region binds theme tokens only`, [], key) };
+    if (variable.family) return { result: offSystem(`\`${ref[1]}\` is a component token of \`${variable.family}\`; a region binds theme tokens only`, []) };
+    if (!coversScope(variable.scopes, need)) return { result: offSystem(`\`${key}\` is not scoped for ${role} (${need})`, []) };
+    return { result: { kind: 'reference', token: key, ...(via.length ? { via } : {}) } };
   }
+  return { value: v };
+}
+
+function byValue(value, role, ctx) {
+  const { adapter } = ctx.system;
   const groups = (adapter.roleGroups && adapter.roleGroups[role]) || [];
-  if (COLOR_ROLES.has(role)) return matchColor(v, role, need, groups, ctx);
-  return matchLength(v, role, need, groups, ctx);
+  if (COLOR_ROLES.has(role)) return matchColor(value, role, ROLE_SCOPE[role], groups, ctx);
+  return matchLength(value, role, ROLE_SCOPE[role], groups, ctx);
 }
 
 function offSystem(reason, nearest, primitive) {
