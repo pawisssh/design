@@ -92,3 +92,19 @@ test('at most four issues are posted at once', async () => {
   assert.equal(peak, 4);
   assert.deepEqual(lines, issues.map(i => `ok #${i.number} commented`));
 });
+
+test('a new issue citing a later one, a bad blocker or a bad close reason posts nothing', async () => {
+  const { gh, calls } = fakeGh();
+  const later = { repo: 'o/r', new: [{ id: 'a', title: 'A', body: 'after {{new:b}}' }, { id: 'b', title: 'B', body: 'x' }] };
+  await assert.rejects(run(later, { gh, read: read({}) }), /a: no new issue "b"/);
+  await assert.rejects(run({ repo: 'o/r', issues: [{ number: 3, blockedBy: ['#36O'] }] }, { gh, read: read({}) }), /#3: blocker "#36O"/);
+  await assert.rejects(run({ repo: 'o/r', issues: [{ number: 4, comment: 'c', close: 'wontfix' }] }, { gh, read: read({}) }), /#4: close is "wontfix"/);
+  assert.equal(calls.length, 0);
+});
+
+test('a filing that fails prints the numbers already filed and posts nothing more', async () => {
+  const { gh, calls } = fakeGh({ 'issue create -R o/r --title B': 'HTTP 502' });
+  const plan = { repo: 'o/r', new: [{ id: 'a', title: 'A', body: 'x' }, { id: 'b', title: 'B', body: 'y' }], issues: [{ number: 5, comment: 'c' }] };
+  assert.deepEqual(await run(plan, { gh, read: read({}) }), { ok: false, lines: ['filed #600 a', 'FAIL filing b: HTTP 502'] });
+  assert.ok(!calls.some(c => c.args[1] === 'comment'));
+});

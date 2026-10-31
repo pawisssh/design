@@ -25,19 +25,33 @@ export function fill(text, numbers) {
   });
 }
 
-// Every placeholder and file is checked before the first write, so a typo posts nothing.
-function check(plan, read) {
-  const ids = new Set((plan.new ?? []).map(n => n.id));
-  const known = Object.fromEntries([...ids].map(id => [id, 0]));
-  const texts = [];
-  for (const n of plan.new ?? []) texts.push([n.id, n.bodyFile ? read(n.bodyFile) : n.body ?? '', ...(n.blockedBy ?? []).map(String)]);
-  for (const i of plan.issues ?? []) texts.push([`#${i.number}`, i.commentFile ? read(i.commentFile) : i.comment ?? '', ...(i.blockedBy ?? []).map(String)]);
-  for (const [name, ...rest] of texts) {
-    try { rest.forEach(t => fill(t, known)); } catch (e) { throw new Error(`${name}: ${e.message}`); }
-  }
+const BLOCKER = /^(\d+|\{\{new:[\w-]+\}\})$/;
+const CLOSE_REASONS = ['completed', 'not planned'];
+
+// The plan with every file read, so each entry carries its text. Each placeholder, blocker and close reason is
+// checked before the first write, so a typo posts nothing; a new issue's body cites only the new issues before it,
+// which are filed first.
+function readPlan(plan, read) {
+  const text = (file, inline) => (file ? read(file) : inline ?? '');
+  const known = {};
+  const checked = (name, entry, body) => {
+    try {
+      fill(body, known);
+      for (const b of entry.blockedBy ?? []) {
+        if (!BLOCKER.test(String(b))) throw new Error(`blocker "${b}" is neither a number nor {{new:<id>}}`);
+        fill(String(b), known);
+      }
+      if (entry.close && !CLOSE_REASONS.includes(entry.close)) throw new Error(`close is "${entry.close}", not ${CLOSE_REASONS.join(' or ')}`);
+    } catch (e) { throw new Error(`${name}: ${e.message}`); }
+    return { ...entry, text: body };
+  };
+  const created = (plan.new ?? []).map(n => { const c = checked(n.id, n, text(n.bodyFile, n.body)); known[n.id] = 0; return c; });
+  return { repo: plan.repo, new: created, issues: (plan.issues ?? []).map(i => checked(`#${i.number}`, i, text(i.commentFile, i.comment))) };
 }
 
 const reason = e => (e.stderr || e.message).trim().split('\n')[0];
+// What GitHub answers, with HTTP 422, to an edge that already exists: #364's edges from #360 and #367 at the
+// 2026-11-01 triage (#595).
 const EDGE_EXISTS = /already been taken/;
 
 // One issue's comment, labels, close and edges, in that order; the first failure stops the rest of its unit.
@@ -75,28 +89,33 @@ async function post(gh, repo, unit) {
   }
 }
 
-/** Files the plan's new issues, then posts every unit; resolves to { ok, lines }. Rejects, posting nothing, on a bad plan. */
-export async function run(plan, { gh, read, concurrency = 4 }) {
-  check(plan, read);
-  const repo = plan.repo;
+/**
+ * Files the plan's new issues, then posts every unit; resolves to { ok, lines }. Rejects, posting nothing, on a bad
+ * plan. A filing that fails stops the run there, after printing the numbers already filed.
+ */
+export async function run(input, { gh, read, concurrency = 4 }) {
+  const plan = readPlan(input, read);
+  const { repo } = plan;
   const numbers = {};
   const lines = [];
-  for (const n of plan.new ?? []) {
+  for (const n of plan.new) {
     if (n.number) { numbers[n.id] = n.number; continue; }
     const args = ['issue', 'create', '-R', repo, '--title', n.title, '--body-file', '-'];
     if (n.labels?.length) args.push('--label', n.labels.join(','));
-    const url = await gh(args, fill(n.bodyFile ? read(n.bodyFile) : n.body ?? '', numbers));
-    numbers[n.id] = Number(url.trim().split('/').pop());
+    try {
+      numbers[n.id] = Number((await gh(args, fill(n.text, numbers))).trim().split('/').pop());
+    } catch (e) {
+      return { ok: false, lines: [...lines, `FAIL filing ${n.id}: ${reason(e)}`] };
+    }
     lines.push(`filed #${numbers[n.id]} ${n.id}`);
   }
   const blockers = list => (list ?? []).map(b => Number(fill(String(b), numbers).replace('#', '')));
   const units = [
-    ...(plan.issues ?? []).map(i => ({
-      number: i.number,
-      comment: i.commentFile || i.comment ? fill(i.commentFile ? read(i.commentFile) : i.comment, numbers) : undefined,
+    ...plan.issues.map(i => ({
+      number: i.number, comment: i.text && fill(i.text, numbers),
       add: i.add, remove: i.remove, close: i.close, blockedBy: blockers(i.blockedBy),
     })),
-    ...(plan.new ?? []).filter(n => n.blockedBy?.length).map(n => ({ number: numbers[n.id], blockedBy: blockers(n.blockedBy) })),
+    ...plan.new.filter(n => n.blockedBy?.length).map(n => ({ number: numbers[n.id], blockedBy: blockers(n.blockedBy) })),
   ];
   const results = new Array(units.length);
   let next = 0;
