@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 13,
+  "revision": 14,
   "status": "pending",
   "approval": null,
   "feature": {
@@ -64,7 +64,7 @@
     "proposals": {},
     "foundations": {
       "documentHash": "sha256:9de3c77c8cc37d156f74c72aead593a9bd882ee914ae867100cec74d0cf40ee1",
-      "usedHash": "sha256:2994b0dd3341aebb6e2ad5b267722b92690beea96f37d53dab997cde98909022"
+      "usedHash": "sha256:a9a5d0ef73b43d59d97a84cd6d254c126c4c0eb6128514dd21896465eeebfff4"
     },
     "modes": {
       "light": "light"
@@ -127,6 +127,58 @@
                 "app/page.tsx:17:5"
               ],
               "token": "muted"
+            },
+            {
+              "property": "padding",
+              "raw": "24px",
+              "at": [
+                "app/page.tsx:17:5"
+              ],
+              "token": "spacing-6"
+            },
+            {
+              "property": "gap",
+              "raw": "8px",
+              "at": [
+                "app/page.tsx:20:11",
+                "app/request-access-form.tsx:64:7",
+                "app/request-access-form.tsx:68:7",
+                "app/request-access-form.tsx:72:7",
+                "app/request-access-form.tsx:85:7"
+              ],
+              "token": "spacing-2"
+            },
+            {
+              "property": "padding-top",
+              "raw": "24px",
+              "at": [
+                "app/request-access-form.tsx:45:7"
+              ],
+              "token": "spacing-6"
+            },
+            {
+              "property": "padding-bottom",
+              "raw": "24px",
+              "at": [
+                "app/request-access-form.tsx:45:7"
+              ],
+              "token": "spacing-6"
+            },
+            {
+              "property": "gap",
+              "raw": "12px",
+              "at": [
+                "app/request-access-form.tsx:45:7"
+              ],
+              "token": "spacing-3"
+            },
+            {
+              "property": "gap",
+              "raw": "16px",
+              "at": [
+                "app/request-access-form.tsx:56:5"
+              ],
+              "token": "spacing-4"
             }
           ],
           "text": [

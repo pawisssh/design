@@ -9,8 +9,8 @@
 //   node skills/to-handoff/scripts/handoff.mjs check <handoff.json> --ds <design-systems/ds> --prototype <index.html | app folder>
 //
 // generate runs the Prototype's scratch copy with the runtime reader (#113) for screenshots, computed text
-// metrics and, on a React Prototype, computed colours (#284), unless --static; when the runtime cannot run, the
-// Handoff is static-only and says why.
+// metrics and, on a React Prototype, computed colours, spacing and radii (#284, #285), unless --static; when the
+// runtime cannot run, the Handoff is static-only and says why.
 // generate exits 2 and prints {requests} when any decision is unanswered; it writes nothing then. A generated
 // Handoff is always pending. approve is the owner's sign-off: run it only after the owner types "approve" in
 // chat, with the hashes review printed (#116). It exits 1 with its reasons when it refuses; check exits 1 on Drift.
