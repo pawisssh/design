@@ -154,6 +154,7 @@ test('"approve except select" builds every family but select, and names it a dra
   const dir = await approvedFolder('approve except select');
   const g = gate({ dir, fileKey: FILE_KEY });
   assert.deepEqual(g.drafts, ['select']);
+  assert.deepEqual(g.refused, [], 'no family holds select');
   assert.deepEqual(g.families, READABLE.filter(f => f !== 'select'));
   const mock = mockFigma({ fileKey: FILE_KEY });
   const { n, steps } = await drive({ dir, mock });

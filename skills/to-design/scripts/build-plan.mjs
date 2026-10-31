@@ -18,9 +18,9 @@ import { dirname, join, resolve as resolvePath, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { baseTuple, contentHash, expand, ICON_KEY, icons as iconKeys, iconName, PROTOTYPE_APPROVER, validate, variantName } from '../../contract/scripts/contract.mjs';
-import { baseProps, defaultProps, expectedBase, expectedVariant, iconRef as iconRefKey, norm } from './readback.mjs';
+import { baseProps, defaultProps, expectedBase, expectedVariant, norm } from './readback.mjs';
 import { defaultLedgerPath, emptyLedger, readLedger } from './ledger.mjs';
-import { assertNested, familyNodes, figmaProps, heldIds, loadHeld, nestedOf } from './nested.mjs';
+import { assertNested, familyNodes, figmaProps, heldIds, iconRef as iconRefKey, loadHeld, nestedOf } from './nested.mjs';
 import { assertRecorded, CALL_BUDGET, chunks, chunkState, selectedGroups, selection, subsetDocument } from './foundations-subset.mjs';
 
 // Fields the core never needs, so the package leaves them out: the reviewer's, and a Mode's selector (To-preview and To-handoff read it).
@@ -156,13 +156,14 @@ export function iconsPlan(contracts, iconsDir, ledger, { fileKey, adopt = false,
  * the file's foundations were last built from (ledger documentHash), so every token has a variable. State
  * carries only the ids this plan uses, plus the ledger's `bases` section.
  * Options: fileKey (required), adopt, adoptVariant (take the variant of the family's recorded Component Set at the
- * base index as the Base Component, #235), readOnly, page (default the Contract's figma.page), at.
+ * base index as the Base Component, #235), readOnly, page (default the Contract's figma.page), at, held (a holding
+ * family's held Contracts, as setsPlan takes them: its nested instances swap to the held variants its base tuple
+ * resolves to and get the props it writes, refused with the same Conflicts while a held set is not built, #593).
  */
-export function basePlan(contract, docText, ledger, { fileKey, adopt = false, adoptVariant = false, readOnly = false, page = null, at = new Date().toISOString() } = {}) {
+export function basePlan(contract, docText, ledger, { fileKey, adopt = false, adoptVariant = false, readOnly = false, page = null, at = new Date().toISOString(), held = null } = {}) {
   if (!fileKey) throw new Error('fileKey is required');
   if (!ledger || ledger.fileKey !== fileKey) throw new Error(`no ledger for ${fileKey}: build foundations and icons first`);
-  const nested = familyNodes(contract).map(n => n.node);
-  if (nested.length) throw new Error(`${contract.family.key} holds other families (${nested.join(', ')}): a holding family is built as a Component Set (#593), not as a Base Component alone`);
+  assertNested(contract, held, ledger);
   const doc = JSON.parse(docText);
   const v = validate(contract, doc);
   if (!v.ok) throw new Error(`the Contract does not validate: ${v.errors.map(e => `${e.at}: ${e.message}`).join("; ")}`);
@@ -185,9 +186,11 @@ export function basePlan(contract, docText, ledger, { fileKey, adopt = false, ad
     adopted = { id: variantId, page: rec.page };
   }
   // the review specimen while the base stands alone; the property defaults once the family's set holds it
-  const exp = expectedBase(contract, baseProps(contract, !!(ledger.sets && ledger.sets[contract.family.key])), doc);
+  const exp = expectedBase(contract, baseProps(contract, !!(ledger.sets && ledger.sets[contract.family.key])), doc, held);
   const strip = sec => Object.fromEntries(Object.entries(sec).map(([n, fields]) => [n, Object.fromEntries(Object.entries(fields).map(([k, x]) => [k, norm(x)]))]));
-  const base = { name: exp.name, tree: exp.tree, layout: strip(exp.layout), paint: strip(exp.paint), visible: exp.visible, text: exp.text, swap: exp.swap, fonts: [] };
+  // a nested instance's written props (#593), only where the Contract holds one, so other plans stay as they were
+  const nestedProps = Object.keys(exp.props).length ? { props: figmaProps(nestedOf(contract, baseTuple(contract), held), held, ledger) } : {};
+  const base = { name: exp.name, tree: exp.tree, layout: strip(exp.layout), paint: strip(exp.paint), visible: exp.visible, text: exp.text, swap: exp.swap, ...nestedProps, fonts: [] };
   const variables = {};
   const textStyles = {};
   const use = (field, x) => {
@@ -202,8 +205,11 @@ export function basePlan(contract, docText, ledger, { fileKey, adopt = false, ad
   for (const t of Object.keys(textStyles)) fonts.add(JSON.stringify({ family: doc.textStyles[t].fontFamily, style: doc.textStyles[t].fontStyle }));
   base.fonts = [...fonts].sort().map(s => JSON.parse(s));
   const comps = (ledger.icons && ledger.icons.components) || {};
-  const icons = {};
+  // a nested instance's held variant (#593) beside the icons, by its ref
+  const refs = Object.values(base.swap).filter(k => /^family:/.test(k));
+  const icons = refs.length ? heldIds(refs, held, ledger) : {};
   for (const key of Object.values(base.swap)) {
+    if (refs.includes(key)) continue;
     if (!comps[key]) throw new Error(`icon ${key} is not in the ledger: build icons first`);
     icons[key] = comps[key].id;
   }
@@ -678,9 +684,9 @@ export function setsPlan(contract, docText, ledger, {
  * `contract`'s, when both derive the same sets plans: every build window and the place plan, `contentHash` aside
  * (#389). An edit the builder never reads, such as a drafted value's evidence, still moves the hash; this spares the
  * update-free re-run of every batch it would otherwise take. Refuses a set not recorded as built and placed from
- * `from` with every variant id, and a pair whose plans differ.
+ * `from` with every variant id, and a pair whose plans differ. `held`: a holding family's held Contracts (#593).
  */
-export function rehashSets(from, contract, docText, ledger, { fileKey }) {
+export function rehashSets(from, contract, docText, ledger, { fileKey, held = null }) {
   const family = contract.family.key;
   if (from.family.key !== family) throw new Error(`--from is ${from.family.key}, the Contract ${family}`);
   const rec = ledger && ledger.sets && ledger.sets[family];
@@ -690,7 +696,7 @@ export function rehashSets(from, contract, docText, ledger, { fileKey }) {
   if (!rec.set || rec.placed === false || !(rec.variants || [null]).every(Boolean)) throw new Error(`the ${family} set is not placed with every variant id recorded: finish its build first (sets --next)`);
   const plans = c => {
     const derive = (mode, batch) => {
-      const { plan } = setsPlan(c, docText, ledger, { fileKey, mode, ...(batch != null ? { batch } : {}), at: rec.builtAt });
+      const { plan } = setsPlan(c, docText, ledger, { fileKey, mode, held, ...(batch != null ? { batch } : {}), at: rec.builtAt });
       delete plan.contentHash;
       return plan;
     };
@@ -740,7 +746,8 @@ function main() {
     const path = values.ledger || defaultLedgerPath(values['file-key']);
     const read = p => JSON.parse(readFileSync(p, 'utf8'));
     const contract = read(values.contract[0]);
-    const ledger = rehashSets(read(values.from), contract, readFileSync(values.doc, 'utf8'), readLedger(path), { fileKey: values['file-key'] });
+    const held = loadHeld(values.contract[0], contract, JSON.parse(readFileSync(values.doc, 'utf8')).designSystem.key);
+    const ledger = rehashSets(read(values.from), contract, readFileSync(values.doc, 'utf8'), readLedger(path), { fileKey: values['file-key'], held });
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, JSON.stringify(ledger, null, 2) + '\n');
     console.log(JSON.stringify({ status: 'rehashed', family: contract.family.key, contentHash: ledger.sets[contract.family.key].contentHash, ledger: path }));
@@ -767,10 +774,7 @@ function main() {
     process.exit(2);
   }
   // the Contracts a holding family's nested instances hold, from beside its own (#593)
-  const heldOf = () => {
-    const contract = JSON.parse(readFileSync(values.contract[0], 'utf8'));
-    return familyNodes(contract).length ? loadHeld(values.contract[0], contract, JSON.parse(readFileSync(values.doc, 'utf8')).designSystem.key) : null;
-  };
+  const heldOf = () => loadHeld(values.contract[0], JSON.parse(readFileSync(values.contract[0], 'utf8')), JSON.parse(readFileSync(values.doc, 'utf8')).designSystem.key);
   const derived = slice === 'sets'
     ? setsPlan(JSON.parse(readFileSync(values.contract[0], 'utf8')), readFileSync(values.doc, 'utf8'), readLedger(path), {
       fileKey, mode: values.mode, held: heldOf(), next: values.next, adopt: values.adopt, prototype: values.prototype, prune: pruneFile && pruneFile.prune,
@@ -780,7 +784,7 @@ function main() {
     })
     : slice === 'base'
     ? basePlan(JSON.parse(readFileSync(values.contract[0], 'utf8')), readFileSync(values.doc, 'utf8'), readLedger(path), {
-      fileKey, adopt: values.adopt, adoptVariant: values['adopt-variant'], readOnly: values['read-only'], ...(values.page ? { page: values.page } : {}),
+      fileKey, adopt: values.adopt, adoptVariant: values['adopt-variant'], readOnly: values['read-only'], held: heldOf(), ...(values.page ? { page: values.page } : {}),
     })
     : slice === 'foundations'
     ? foundationsPlan(readFileSync(values.doc, 'utf8'), readLedger(path), {

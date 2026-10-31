@@ -21,20 +21,46 @@ export function familyNodes(contract) {
   return out;
 }
 
-/** The held Contracts a Contract's dependencies name, read from its own contracts folder: {designSystem, contracts}. */
+/** A Contract's `dependencies.families` in its own Design System: one that names a `designSystem` is another's (#594). */
+export const localFamilies = contract => ((contract.dependencies && contract.dependencies.families) || []).filter(d => !d.designSystem);
+
+/**
+ * The held Contracts a Contract's dependencies name, read from its own contracts folder: {designSystem, contracts}, or
+ * null for a Contract that holds no family.
+ */
 export function loadHeld(contractPath, contract, designSystem) {
+  if (!familyNodes(contract).length) return null;
   const contracts = {};
-  for (const dep of contract.dependencies.families || []) {
+  for (const dep of localFamilies(contract)) {
     const path = join(dirname(contractPath), `${dep.contract || dep.key}.component.json`);
-    if (!dep.designSystem && existsSync(path)) contracts[dep.key] = readJson(path);
+    if (existsSync(path)) contracts[dep.key] = readJson(path);
   }
   return { designSystem, contracts };
 }
 
+// "icon:default" -> the Contract's default icon key; "icon:<key>" -> key.
+export const iconRef = (contract, ref) => {
+  const key = String(ref).replace(/^icon:/, '');
+  return key === 'default' ? contract.icons && contract.icons.default : key;
+};
+
+/** A held variant's ref, as a swap and the state's ids name it: `family:<designSystem>/<key>/<tupleKey>`. */
+export const heldRef = (designSystem, key, c, t) => `family:${designSystem}/${key}/${tupleKey(c, t)}`;
+
+// One nested instance as the holder's rule on it (`v`, from resolveInstances) sets it: the held tuple, where the axes
+// left out take the held default, and each held property at the value written, else the held default (`written`).
+function heldValues(c, v = { variant: {}, props: {} }) {
+  return {
+    tuple: { ...baseTuple(c), ...v.variant },
+    values: c.properties.map(p => ({ p, written: p.key in v.props, value: p.key in v.props ? v.props[p.key] : p.default })),
+  };
+}
+
 /**
- * What one tuple's nested instances hold: {node: {key, tuple, ref, props}}. `tuple` is the held variant (the axes
- * the holder leaves out take the held default), `ref` names it `family:<designSystem>/<key>/<tupleKey>`, and `props`
- * every held property by label, at the value the holder writes, else the held default (an INSTANCE_SWAP as {icon}).
+ * What one tuple's nested instances hold: {node: {key, tuple, ref, props, written}}. `tuple` is the held variant,
+ * `ref` names it (heldRef), `props` holds every held property by label, at the value the holder writes, else the held
+ * Contract's default (an INSTANCE_SWAP as {icon}), and `written` only the ones the holder writes. A property left out
+ * keeps the held family's default, so the build writes only `written` (#317).
  */
 export function nestedOf(contract, tuple, held) {
   const set = resolveInstances(contract, tuple);
@@ -42,14 +68,14 @@ export function nestedOf(contract, tuple, held) {
   for (const { node, key } of familyNodes(contract)) {
     const c = held && held.contracts[key];
     if (!c) throw new Error(`${contract.family.key}.${node} holds ${key}, whose Contract is not loaded: give the held Contracts`);
-    const v = set[node] || { variant: {}, props: {} };
-    const t = { ...baseTuple(c), ...v.variant };
+    const { tuple: t, values } = heldValues(c, set[node]);
     const props = {};
-    for (const p of c.properties) {
-      const value = p.key in v.props ? v.props[p.key] : p.default;
-      props[p.label] = p.type === 'INSTANCE_SWAP' ? { icon: String(value).replace(/^icon:/, '') } : value;
+    const written = {};
+    for (const { p, value, written: w } of values) {
+      props[p.label] = p.type === 'INSTANCE_SWAP' ? { icon: iconRef(c, value) } : value;
+      if (w) written[p.label] = props[p.label];
     }
-    out[node] = { key, tuple: t, ref: `family:${held.designSystem}/${key}/${tupleKey(c, t)}`, props };
+    out[node] = { key, tuple: t, ref: heldRef(held.designSystem, key, c, t), props, written };
   }
   return out;
 }
@@ -92,14 +118,15 @@ export function heldRefs(held, ledger) {
   for (const [key, c] of Object.entries((held && held.contracts) || {})) {
     const rec = ledger && ledger.sets && ledger.sets[key];
     if (!rec || rec.contentHash !== contentHash(c)) continue;
-    expand(c).forEach((t, i) => { if (rec.variants[i]) out[rec.variants[i]] = `family:${held.designSystem}/${key}/${tupleKey(c, t)}`; });
+    expand(c).forEach((t, i) => { if (rec.variants[i]) out[rec.variants[i]] = heldRef(held.designSystem, key, c, t); });
   }
   return out;
 }
 
 /**
- * What the plan writes into one tuple's nested instances (#593): {node: {Figma property key: value}}, every held
- * property keyed as the ledger's held set records it, an INSTANCE_SWAP value as the icon's component id.
+ * What the plan writes into one tuple's nested instances (#593): {node: {Figma property key: value}}, each property
+ * the holder writes keyed as the ledger's held set records it, an INSTANCE_SWAP value as the icon's component id. A
+ * node that writes none is {}, so the core still reads its properties and overrides back.
  */
 export function figmaProps(nested, held, ledger) {
   const comps = (ledger && ledger.icons && ledger.icons.components) || {};
@@ -108,7 +135,8 @@ export function figmaProps(nested, held, ledger) {
     const keys = ledger.sets[n.key].props || {};
     out[node] = {};
     for (const p of held.contracts[n.key].properties) {
-      const v = n.props[p.label];
+      if (!(p.label in n.written)) continue;
+      const v = n.written[p.label];
       out[node][keys[p.key]] = p.type === 'INSTANCE_SWAP' ? comps[v.icon].id : v;
     }
   }
@@ -117,12 +145,11 @@ export function figmaProps(nested, held, ledger) {
 
 /**
  * A core readback's nested instances, `{node: [componentProperties, [[layer name, fields]]]}`, in Contract terms
- * (#593): `props` {node: {label: value}} (an INSTANCE_SWAP's as {icon: key}) and `over` {node: [[path, fields]]}, the
- * path '' for the instance itself. The held family is the one whose set records the property keys.
+ * (#593): `props` {node: {label: value}} (an INSTANCE_SWAP's as {icon: key}, through `icons`, the ledger's icon keys by
+ * component id) and `over` {node: [[path, fields]]}, the path '' for the instance itself. The held family is the one
+ * whose set records the property keys.
  */
-export function nestedBack(raw, held, ledger) {
-  const icons = {};
-  for (const [key, o] of Object.entries((ledger && ledger.icons && ledger.icons.components) || {})) icons[o.id] = key;
+export function nestedBack(raw, held, ledger, icons) {
   const byKey = {};
   for (const [key, c] of Object.entries((held && held.contracts) || {})) {
     const keys = (ledger && ledger.sets && ledger.sets[key] && ledger.sets[key].props) || {};
@@ -164,6 +191,7 @@ export function heldIds(refs, held, ledger) {
 function nestedConflicts(contract, held, ledger) {
   const nodes = familyNodes(contract);
   const out = [];
+  if (!nodes.length) return out;
   const seen = new Set();
   const bad = (node, kind, reason) => { const k = `${node}\n${kind}\n${reason}`; if (!seen.has(k)) { seen.add(k); out.push({ node, kind, reason }); } };
   const ok = {};
@@ -171,7 +199,7 @@ function nestedConflicts(contract, held, ledger) {
     const dep = (contract.dependencies.families || []).find(d => d.key === key) || {};
     const c = held && held.contracts[key];
     const rec = ledger && ledger.sets && ledger.sets[key];
-    if (dep.designSystem && dep.designSystem !== (held && held.designSystem))
+    if (dep.designSystem)
       bad(node, 'design-system', `${key} is a family of Design System ${dep.designSystem}: building against another Design System's ledger is #594`);
     else if (!c) bad(node, 'held-contract', `no Contract of ${key} is loaded beside ${contract.family.key}: load the held Contracts (dependencies.families)`);
     else if (!rec || !rec.set || rec.placed === false) bad(node, 'not-built', `the ${key} set is not built yet: build it, record it and run its Coverage check before ${contract.family.key}`);
@@ -182,7 +210,7 @@ function nestedConflicts(contract, held, ledger) {
     const set = resolveInstances(contract, t);
     for (const [node, c] of Object.entries(ok)) {
       const v = set[node] || { variant: {}, props: {} };
-      const ht = { ...baseTuple(c), ...v.variant };
+      const { tuple: ht, values } = heldValues(c, v);
       const i = expand(c).findIndex(x => tupleKey(c, x) === tupleKey(c, ht));
       const unknown = Object.keys(v.variant).filter(k => !c.axes.some(a => a.key === k));
       if (unknown.length || i === -1)
@@ -195,10 +223,9 @@ function nestedConflicts(contract, held, ledger) {
           bad(node, 'property', `${k} is a ${p.type} property of ${c.family.name}, not ${JSON.stringify(value)}`);
       }
       const keys = ledger.sets[c.family.key].props || {};
-      for (const p of c.properties) {
+      for (const { p, value } of values) {
         if (!keys[p.key]) bad(node, 'not-built', `the ${c.family.key} set records no Figma key for its ${p.key} property: run its place calls first`);
-        const value = p.key in v.props ? v.props[p.key] : p.default;
-        const icon = p.type === 'INSTANCE_SWAP' && String(value).replace(/^icon:/, '');
+        const icon = p.type === 'INSTANCE_SWAP' && iconRef(c, value);
         if (icon && !((ledger.icons && ledger.icons.components) || {})[icon]) bad(node, 'icon', `${p.key} swaps to icon ${icon}, which the ledger lacks: build icons first (#313)`);
       }
     }
@@ -223,7 +250,7 @@ export function buildOrder(contracts) {
     if (state[key] === 'done') return;
     if (state[key] === 'open') throw new Error(`families hold each other in a cycle: ${[...path.slice(path.indexOf(key)), key].join(' → ')}`);
     state[key] = 'open';
-    for (const dep of contracts[key].dependencies.families || []) if (contracts[dep.key]) visit(dep.key, [...path, key]);
+    for (const dep of localFamilies(contracts[key])) if (contracts[dep.key]) visit(dep.key, [...path, key]);
     state[key] = 'done';
     out.push(key);
   };
