@@ -311,6 +311,12 @@ test('generate with an empty decisions file returns decision requests and writes
   assert.deepEqual(keys, [...new Set(keys)], 'one request per stable key');
   const tie = result.requests.find(r => r.key === 'token:background-color:#f4f4f4');
   assert.ok(tie.candidates.includes('layer-01') && tie.candidates.includes('field-01'));
+  // The acceptance request names its screens as data, and an example criterion uses the real id (#244).
+  const acceptance = result.requests.find(r => r.key === 'acceptance');
+  assert.deepEqual(acceptance.screens, ['invite-teammates']);
+  assert.deepEqual({ screen: acceptance.example.screen, state: acceptance.example.state }, { screen: 'invite-teammates', state: 'default' });
+  await assert.rejects(generate({ prototype: PROTOTYPE, designSystem: ds, decisions: { ...DECISIONS, acceptance: [acceptance.example] } }),
+    /decision "acceptance": .*the example's placeholders filled in/, 'the example verbatim is no answer');
 });
 
 test('an answer that is not among its request candidates is refused', { skip: noDeps }, async () => {
