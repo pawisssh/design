@@ -69,8 +69,10 @@ From a worktree the path starts with `.claude/worktrees/<worktree>/`. Copy the s
 ## 1. Foundations
 
 ```
-node skills/to-design/scripts/build-plan.mjs foundations --doc design-systems/<ds>/<ds>.foundations.json --file-key <key> --out .scratch/to-design/<run> [--page <name>] [--adopt] [--prune a,b] [--chunk N]
+node skills/to-design/scripts/build-plan.mjs foundations --doc design-systems/<ds>/<ds>.foundations.json --file-key <key> --out .scratch/to-design/<run> [--mode build|diff] [--page <name>] [--adopt] [--prune a,b] [--chunk N]
 ```
+
+`--mode diff` makes a read-only call (#241): the core runs the same preflight and compare, skips every write (no page switch, no font load), and returns what a build would `created` and `updated` (and `orphaned`), with the ledger unchanged, so it needs no `ledger.mjs record`. It reads any `--chunk` against the file as it is, with or without the earlier chunks recorded. Use it to check a file against the document before a build, or after one: a built file reads as `created: 0, updated: 0`.
 
 Core: `builder-core.js`. It builds the Variable collections, modes, variables and Text Styles and follows the [update semantics](../contract/references/foundations-schema.md#update-semantics-idempotent): ownership through the ledger, `conflict` before any change, diff-based writes, mode order fixed with `setDefaultMode`, orphans kept until `--prune` with names the owner confirmed. The plan drops the document's review-only fields. Record the result: the ledger's `foundations.documentHash` gates every later slice, so rebuild foundations after every regeneration of the document that changed it.
 

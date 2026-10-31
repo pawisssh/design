@@ -170,6 +170,27 @@ test('a selection over the budget is chunked by group, Primitives first, each ch
   assert.deepEqual(again.ledger.foundations.variables, ledger.foundations.variables);
 });
 
+test('a diff reads each chunk of a built file as no difference, and a chunk whose predecessors are unrecorded as all created (#241)', async () => {
+  const budget = 14000;
+  const mock = mockFigma({ fileKey: FILE_KEY });
+  const { ledger, plans } = await buildInChunks(mock, DOC_TEXT, null, { budget });
+  mock.log.length = 0;
+  for (let chunk = 1; chunk <= plans.length; chunk++) {
+    const { plan, code, out } = pack({ ledger, options: { budget, chunk, readOnly: true } });
+    assert.ok(out.chars < 50000, `chunk ${chunk} is ${out.chars} chars`);
+    const result = await runPackage(code, mock.figma);
+    assert.equal(result.summary.created + result.summary.updated, 0, `chunk ${chunk}`);
+    assert.equal(result.summary.unchanged, plan.foundations.collections.length + Object.keys(plan.foundations.variables).length + Object.keys(plan.foundations.textStyles).length, `chunk ${chunk} reads all it holds`);
+    assert.deepEqual(recordResult(ledger, result), ledger, `chunk ${chunk}: a record after the diff changes nothing`);
+  }
+  assert.deepEqual(mock.log, [], 'a diff writes nothing');
+  const fresh = mockFigma({ fileKey: FILE_KEY });
+  const second = await runPackage(pack({ options: { budget, chunk: 2, readOnly: true } }).code, fresh.figma);
+  assert.equal(second.summary.created, second.created.variables.length + second.created.textStyles.length + second.created.collections.length + second.created.modes.length);
+  assert.ok(second.created.variables.length > 0 && second.summary.updated === 0);
+  assert.deepEqual(fresh.log, []);
+});
+
 test('a chunked build orphans a dropped group once, in chunk 1', async () => {
   const docText = wholeTheme();
   const doc = JSON.parse(docText);

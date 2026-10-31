@@ -58,7 +58,7 @@ export function subsetDocument(doc, names) {
   return { ...doc, collections: doc.collections.filter(c => used.has(c.key)), variables, textStyles: pick(doc.textStyles, names.textStyles) };
 }
 
-// use_figma takes 50,000 chars of code. The packaged core and its wrapper take 16.8K of them (measured on the
+// use_figma takes 50,000 chars of code. The packaged core and its wrapper take 17.6K of them (measured on the
 // foundations package), so a call's plan and state get the rest, less a margin.
 export const CALL_BUDGET = 50000 - 18000;
 // Per call, outside the entries: the plan's header and collections, the state's collections and orphans.

@@ -165,6 +165,88 @@ test('a run on a file whose sets are built carries only the foundations record, 
   assert.deepEqual([after.sets, after.templates], [sets, ledger.templates]);
 });
 
+// ---- diff mode (#241): the foundations core reads and reports what a build would change, and writes nothing ----
+
+const diffOf = (mock, ledger, docText) => call(mock, { docText, ledger, options: { readOnly: true } });
+
+test('diff mode on a file that matches the document reports nothing to create or update, writes nothing and carries the ledger', async () => {
+  const { mock, ledger } = await built();
+  const before = mock.snapshot();
+  const result = await diffOf(mock, ledger);
+  assert.equal(result.error, undefined, JSON.stringify(result).slice(0, 300));
+  assert.deepEqual(result.summary, { created: 0, updated: 0, unchanged: 81, orphaned: 0, restored: 0, pruned: 0, conflicts: 0 });
+  assert.deepEqual(result.created, { collections: [], modes: [], variables: [], textStyles: [] });
+  assert.deepEqual(result.updated, { collections: {}, variables: {}, textStyles: {} });
+  assert.deepEqual(mock.log, [], 'no write, no page switch, no font load');
+  assert.deepEqual(mock.snapshot(), before);
+  assert.deepEqual(result.ledger, { foundations: ledger.foundations }, 'a later record changes nothing');
+  assert.equal(result.mode, 'diff');
+});
+
+test('diff mode reports file drift, a new variable and an orphan, and still writes nothing', async () => {
+  const { mock, ledger } = await built();
+  const f = ledger.foundations;
+  const spacing = await mock.figma.variables.getVariableByIdAsync(f.variables['spacing-05']);
+  spacing.setValueForMode(f.collections.layout.modes.default, 15);
+  const style = await mock.figma.getStyleByIdAsync(f.textStyles['body-compact-01']);
+  style.setBoundVariable('fontSize', null);
+  const docText = docWith(doc => {
+    doc.variables['spacing-new'] = { ...doc.variables['spacing-05'], name: 'Spacing/spacing-new' };
+    delete doc.variables['spacing-13'];
+  });
+  mock.log.length = 0;
+  const before = mock.snapshot();
+  const result = await diffOf(mock, ledger, docText);
+  assert.equal(result.error, undefined, JSON.stringify(result).slice(0, 300));
+  assert.deepEqual(result.updated.variables, { 'spacing-05': ['value:default'] });
+  assert.deepEqual(result.updated.textStyles, { 'body-compact-01': ['bind:fontSize'] });
+  assert.deepEqual(result.created.variables, ['spacing-new']);
+  assert.deepEqual(result.orphaned.variables, ['spacing-13']);
+  assert.deepEqual(mock.log, []);
+  assert.deepEqual(mock.snapshot(), before);
+  assert.deepEqual(result.ledger, { foundations: ledger.foundations });
+  // the build that follows reports the same changes
+  const build = await call(mock, { docText, ledger });
+  assert.deepEqual([build.created.variables, build.updated.variables, build.updated.textStyles, build.orphaned.variables],
+    [result.created.variables, result.updated.variables, result.updated.textStyles, result.orphaned.variables]);
+});
+
+test('diff mode on an empty file lists every collection, mode, variable and Text Style as created, without creating any', async () => {
+  const mock = mockFigma({ fileKey: FILE_KEY });
+  const before = mock.snapshot();
+  const result = await diffOf(mock, null);
+  assert.deepEqual(result.created.collections, ['primitives', 'theme', 'layout', 'type']);
+  assert.equal(result.created.modes.length, 7);
+  assert.equal(result.created.variables.length, 75);
+  assert.deepEqual(result.created.textStyles, ['body-compact-01', 'body-compact-02']);
+  assert.deepEqual(result.summary, { created: 88, updated: 0, unchanged: 0, orphaned: 0, restored: 0, pruned: 0, conflicts: 0 });
+  assert.deepEqual(mock.log, []);
+  assert.deepEqual(mock.snapshot(), before);
+});
+
+test('diff mode reports a missing mode as created, and a file without the ledger as conflicts, and writes nothing', async () => {
+  const { mock, ledger } = await built();
+  const theme = byName(mock.snapshot().collections, 'Theme');
+  const col = (await mock.figma.variables.getLocalVariableCollectionsAsync()).find(c => c.id === theme.id);
+  col.removeMode(theme.modes[3].modeId);
+  mock.log.length = 0;
+  const result = await diffOf(mock, ledger);
+  assert.deepEqual(result.created.modes, ['theme/g100']);
+  assert.deepEqual(mock.log, []);
+  const lost = await diffOf(mock, null);
+  assert.ok(lost.conflicts.length > 0);
+  assert.deepEqual(mock.log, []);
+});
+
+test('the diff package is the build package plus the read-only option, and fits the call as the build does', () => {
+  const build = pack();
+  const diff = pack({ options: { readOnly: true } });
+  assert.equal(diff.plan.options.readOnly, true);
+  assert.equal(build.plan.options.readOnly, undefined, 'a build plan is unchanged');
+  assert.ok(diff.out.chars < 50000 && build.out.chars < 50000);
+  assert.ok(Math.abs(diff.out.chars - build.out.chars) < 40);
+});
+
 // ---- ownership ----
 
 const docWith = edit => { const doc = JSON.parse(DOC_TEXT); edit(doc); return JSON.stringify(doc, null, 2) + '\n'; };
