@@ -261,6 +261,9 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
         const main = await n.getMainComponentAsync();
         if (!main || main.id !== I[spec.swap[name]].id) { n.swapComponent(I[spec.swap[name]]); touch(name, 'mainComponent'); }
       }
+      // a nested instance's property values by Figma key (#593), all set where one differs
+      const P = (spec.props || {})[name];
+      if (P && Object.keys(P).some(k => n.componentProperties[k].value !== P[k])) { n.setProperties(P); touch(name, 'properties'); }
       await writeFields(spec, name, n, touch, missing);
       if (name in spec.text && n.characters !== spec.text[name]) { n.characters = spec.text[name]; touch(name, 'characters'); }
       if (name in spec.visible && n.visible !== spec.visible[name]) { n.visible = spec.visible[name]; touch(name, 'visible'); }
@@ -290,7 +293,13 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
         r.text[n.name] = n.characters;
         r.extras[n.name] = { fontFamily: n.fontName.family, fontStyle: n.fontName.style, fontSize: n.fontSize, lineHeight: metric(n.lineHeight), letterSpacing: metric(n.letterSpacing), w: n.width, h: n.height };
       }
-      if (n.type === 'INSTANCE') { const main = await n.getMainComponentAsync(); r.swap[n.name] = main ? main.id : null; return; }
+      if (n.type === 'INSTANCE') {
+        const main = await n.getMainComponentAsync();
+        r.swap[n.name] = main ? main.id : null;
+        // a nested instance's properties and its overrides as [layer name, '' for itself, and fields] (#593)
+        if ((spec.props || {})[n.name]) (r.nested = r.nested || {})[n.name] = [n.componentProperties, n.overrides.map(o => [o.id === n.id ? '' : n.findOne(y => y.id === o.id).name, o.overriddenFields])];
+        return;
+      }
       for (const c of n.children || []) await walk(c, false);
     };
     await walk(comp, true);
@@ -402,7 +411,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     };
     const specOf = e => {
       const w = plan.P[e[nAx + 1]];
-      const s = { tree: plan.tree, layout: {}, paint: {}, visible: w.visible, text: w.text, swap: w.swap, refs: w.refs };
+      const s = { tree: plan.tree, layout: {}, paint: {}, visible: w.visible, text: w.text, swap: w.swap, refs: w.refs, props: w.props };
       for (const id of e.slice(nAx + 2)) { const f = plan.frags[id]; s[f[0]][f[1]] = f[2]; }
       return s;
     };
@@ -803,15 +812,21 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
         const R = opts.rows;
         // [variant, node, px past the half pixel] for each absolute node off its parent's centre
         const off = [];
+        // the main component of each nested instance (plan.nested, #593), whose own layers are not the variant's
+        const N = plan.nested, M = [];
         for (const k of R ? set.children.slice(R[0], R[1] == null ? undefined : R[1]) : set.children) {
           const refs = {};
-          for (const x of k.findAll(() => true)) {
+          const mains = {};
+          // a layer inside an instance has an id with a ';' in it
+          for (const x of k.findAll(x => !N || x.id.indexOf(';') < 0)) {
+            if (N && N.indexOf(x.name) !== -1) mains[x.name] = (await x.getMainComponentAsync() || {}).id;
             const o = x.layoutPositioning === 'ABSOLUTE' && readField(x, 'offCentre');
             if (o > 1e-3) off.push([k.name, x.name, o]);
             const r = x.componentPropertyReferences;
             if (r && Object.keys(r).length) { refs[x.name] = {}; for (const f of Object.keys(r)) refs[x.name][f] = String(r[f]).split('#')[0]; }
           }
           rows.push([k.name.split(', ').map(D), D(JSON.stringify(refs)), k.gridRowAnchorIndex, k.gridColumnAnchorIndex, k.type === 'COMPONENT' ? 1 : 0].concat(oid.indexOf(k.id) === -1 ? [] : [k.id]));
+          if (N) M.push(D(JSON.stringify(mains)));
         }
         const defs = set.componentPropertyDefinitions;
         const props = {};
@@ -832,7 +847,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
           section: section && { name: section.name, minWidth: section.minWidth, minHeight: section.minHeight, layoutMode: section.layoutMode, children: section.children.map(x => x.name) },
           header: Object.keys(hp).reduce((m, k) => { m[k.split('#')[0]] = hp[k].value; return m; }, {}),
           content: content && { padding: [content.paddingTop, content.paddingRight, content.paddingBottom, content.paddingLeft], gap: content.itemSpacing },
-          props, dict, rows, offCentre: off,
+          props, dict, rows, offCentre: off, mains: N && M,
         };
       }
       const specs = E.map(specOf);

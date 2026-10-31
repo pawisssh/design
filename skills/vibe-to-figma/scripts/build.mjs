@@ -37,10 +37,11 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { canonical, contentHash, expand, icons as iconKeys, PROTOTYPE_APPROVER, resolve as resolveTuple, sha256, validate, variantName } from '../../contract/scripts/contract.mjs';
+import { canonical, contentHash, expand, icons as iconKeys, PROTOTYPE_APPROVER, resolve as resolveTuple, resolveInstances, sha256, validate, variantName } from '../../contract/scripts/contract.mjs';
 import { documentHash, foundationsNext, foundationsPlan, MAX_COMBINE, setsPlan } from '../../to-design/scripts/build-plan.mjs';
 import { checkCoverage, checkSample, mergeCoverage } from '../../to-design/scripts/coverage.mjs';
 import { ledgerPath, mainCheckoutOf, readLedger, recordResult } from '../../to-design/scripts/ledger.mjs';
+import { buildOrder, familyNodes, localFamilies } from '../../to-design/scripts/nested.mjs';
 import { REPO_ROOT, TEST_APPROVER, inScratch } from '../../to-handoff/scripts/system.mjs';
 import { folderFiles, foundationsApproval } from './review.mjs';
 
@@ -119,7 +120,9 @@ export function parseResolve(takeCode = [], keepFigma = []) {
 /**
  * The approval gate, before anything reaches Figma. Loads design-systems/<name>/ and returns {key, doc, docText,
  * documentHash, foundationsRefused: null or why, contracts: {family: Contract as To-design takes it}, families
- * (approved, to build), drafts, skipped, orphaned: [{family, set, variants}], ask: [{family, total}]}.
+ * (approved, to build), drafts, skipped, refused: [{family, reason}], orphaned: [{family, set, variants}],
+ * ask: [{family, total}]}. `refused` are the approved families that hold a family not built here (`unbuildable`):
+ * left out by name, so the rest build.
  * `foundationsRefused` is null when the folder's Foundations approval covers the document, else the reason a
  * Foundations call is refused. `orphaned` are the ledger's sets whose family has no Contract in the folder at all.
  * Throws, naming each reason, when nothing is approved, an approved Contract does
@@ -155,8 +158,13 @@ export function gate({ dir, fileKey, ledger = null, skip = [], maxCombine = MAX_
     // To-design builds an approved Contract; a test approval goes through as its prototype approval, never written
     contracts[f] = test ? { ...c, selection: { ...c.selection, approval: { ...c.selection.approval, by: PROTOTYPE_APPROVER } } } : c;
   }
+  const out = unbuildable(contracts, { drafts, skipped: skip });
+  for (const f of Object.keys(out)) delete contracts[f];
+  const refused = Object.keys(out).sort().map(family => ({ family, reason: out[family] }));
+  // each family after the families it holds (#593), so a held set is built and Coverage-checked before its holder
+  let families = Object.keys(contracts);
+  try { families = buildOrder(contracts); } catch (e) { reasons.push(e.message); }
   if (reasons.length) throw new Error(`cannot build ${dir} into ${fileKey}:\n- ${reasons.join('\n- ')}`);
-  const families = Object.keys(contracts);
   const ask = families
     .filter(f => !(ledger && ledger.sets && ledger.sets[f] && ledger.sets[f].set))
     .map(f => ({ family: f, total: expand(contracts[f]).length }))
@@ -169,7 +177,30 @@ export function gate({ dir, fileKey, ledger = null, skip = [], maxCombine = MAX_
   const notApproved = !approval || approval.designSystem !== key || approval.documentHash !== hash
     ? `no approve covers the Foundations document ${hash}${approval ? ` (the last approve covered ${approval.documentHash})` : ''}, so nothing is written to Figma: build the review page (review.mjs), show it to the owner and run approve.mjs after their own "approve" in chat`
     : approval.by === TEST_APPROVER && !inScratch(dir) ? `the Foundations document is approved by "${TEST_APPROVER}", which builds only under ${join(REPO_ROOT, '.scratch')}/` : null;
-  return { key, doc, docText, documentHash: hash, foundationsRefused: notApproved, contracts, families, drafts, skipped: [...skip].sort(), orphaned, ask };
+  return { key, doc, docText, documentHash: hash, foundationsRefused: notApproved, contracts, families, drafts, skipped: [...skip].sort(), refused, orphaned, ask };
+}
+
+/**
+ * The families that hold a family not built here (#593), with why: {family: reason}. A held family is not built here
+ * when it is another Design System's (#594), a draft, left out by --skip, or has no approved Contract among
+ * `contracts`; a family that holds a refused family is refused too.
+ */
+export function unbuildable(contracts, { drafts = [], skipped = [] } = {}) {
+  const out = {};
+  const why = dep => (dep.designSystem ? `holds ${dep.key} of Design System ${dep.designSystem}: building against another Design System's ledger is #594`
+    : out[dep.key] ? `holds ${dep.key}, which is not built here: ${out[dep.key]}`
+      : drafts.includes(dep.key) ? `holds ${dep.key}, a draft: approve it to build both`
+        : skipped.includes(dep.key) ? `holds ${dep.key}, which --skip leaves out`
+          : !contracts[dep.key] ? `holds ${dep.key}, which has no approved Contract here` : null);
+  for (let more = true; more;) {
+    more = false;
+    for (const f of Object.keys(contracts)) {
+      if (out[f]) continue;
+      const reason = ((contracts[f].dependencies && contracts[f].dependencies.families) || []).map(why).find(Boolean);
+      if (reason) { out[f] = reason; more = true; }
+    }
+  }
+  return out;
 }
 
 /** A plan in the file's namespace: its Variable collections and its Templates page carry the prefix. */
@@ -186,13 +217,25 @@ const prototypeOf = c => c.selection.approval.by === PROTOTYPE_APPROVER;
 /**
  * Each variant's fingerprint, by expansion index: [{name, fingerprint}]. It covers what a build writes into the variant
  * (the anatomy's layer tree, the resolved layout and paint, and the property wiring), so a variant whose name and
- * fingerprint hold needs no write. Its grid cell is left out: every append call places each child by its name.
+ * fingerprint hold needs no write. Its grid cell is left out: every append call places each child by its name. A
+ * nested instance (#593, #317 Decision 8) adds the held family's key and Design System (a dependency's own
+ * `designSystem`; a family of the holder's own Design System names none, the same for every fingerprint one build
+ * record keeps) and the variant and props its holder's rules write, never the held Contract: a rebuild of the held
+ * family, a change of its default axes among it, rewrites no holding variant. A Contract without `instances` keeps
+ * the fingerprints it had.
  */
 export function variantFingerprints(contract) {
   const tree = canonical(contract.anatomy);
+  const deps = (contract.dependencies && contract.dependencies.families) || [];
+  const family = Object.fromEntries(familyNodes(contract).map(({ node, key }) => {
+    const dep = deps.find(d => d.key === key) || {};
+    return [node, { key, ...(dep.designSystem ? { designSystem: dep.designSystem } : {}) }];
+  }));
   return expand(contract).map(t => {
     const { layout, paint, binds } = resolveTuple(contract, t);
-    return { name: variantName(contract, t), fingerprint: `sha256:${sha256(tree + canonical({ layout, paint, binds }))}` };
+    const instances = Object.fromEntries(Object.entries(resolveInstances(contract, t)).map(([node, v]) => [node, { ...family[node], ...v }]));
+    const text = canonical({ layout, paint, binds, ...(Object.keys(instances).length ? { instances } : {}) });
+    return { name: variantName(contract, t), fingerprint: `sha256:${sha256(tree + text)}` };
   });
 }
 
@@ -270,7 +313,23 @@ export function settled(record, g) {
 
 // To-design's read of these variants (expansion indexes in this Contract) as they are in the set.
 const samplePlan = (contract, sample, g, ledger, fileKey, at) =>
-  setsPlan(contract, g.docText, ledger, { fileKey, mode: 'sample', sample, prototype: prototypeOf(contract), at });
+  setsPlan(contract, g.docText, ledger, { fileKey, mode: 'sample', sample, prototype: prototypeOf(contract), held: nestedHeld(g), at });
+
+// The families a holding family's nested instances hold (#593): To-design's `held`, the gate's approved Contracts.
+const nestedHeld = g => ({ designSystem: g.key, contracts: g.contracts });
+
+// A coverage verdict read from the set as the ledger has it now. Coverage reads names, cells and wiring, none of which
+// a Foundations build writes: a verdict outlives one.
+const currentVerdict = (verdict, set) => !!(verdict && set && set.set && verdict.contentHash === set.contentHash && verdict.set === set.set.id);
+
+// A family waits while a family of its own Design System it holds has no current Coverage pass.
+function waits(f, g, ledger, record) {
+  return localFamilies(g.contracts[f]).some(({ key }) => {
+    if (!g.contracts[key]) return false;
+    const verdict = (record.coverage || {})[key];
+    return !(currentVerdict(verdict, ledger && ledger.sets && ledger.sets[key]) && verdict.ok);
+  });
+}
 
 /**
  * An update's variants still to send, by expansion index: the family's Contract changed since its set's baseline, and
@@ -410,7 +469,7 @@ function assertNamespace(record, namespace) {
  *   {status: 'ask', ask}                                       a set above maxCombine: nothing derived, ask the owner
  *   {status: 'step', step: 'foundations'|'check'|'sets'|'coverage', family?, core, plan, state, options}
  *   {status: 'problems', family, problems}                     a coverage check failed: stop and report
- *   {status: 'built', families: [{family, variants, set}], drafts, skipped, held, orphaned: [{family, set, variants}]}
+ *   {status: 'built', families: [{family, variants, set}], drafts, skipped, refused: [{family, reason}], held, orphaned: [{family, set, variants}]}
  * Each also carries `record`, the build record with any new baseline (`baselined`), for the CLI to keep.
  * Options: dir, fileKey, ledger, record (the build record), namespace, skip, maxCombine, coveragePerCall, at,
  * rebuild: families whose failed coverage check starts a rebuild of their set (one already under way goes on anyway),
@@ -433,7 +492,10 @@ function nextOf({ g, fileKey, ledger, record, namespace, coveragePerCall, rebuil
   const chunk = foundationsNext(g.docText, ledger);
   if (chunk && g.foundationsRefused) throw new Error(`cannot build the Foundations of ${g.key} into ${fileKey}: ${g.foundationsRefused}`);
   if (chunk) return step('foundations', null, CORES.foundations, foundationsPlan(g.docText, ledger, { fileKey, chunk, at }));
+  const held = nestedHeld(g);
   for (const f of g.families) {
+    // a holding family is built once each family it holds is built and passes Coverage (#593)
+    if (waits(f, g, ledger, record)) continue;
     const prototype = prototypeOf(g.contracts[f]);
     // an update after a code change: only the variants that changed, a call's worth at a time, each in the set read
     // back first; one edited in Figma is held and is not sent
@@ -444,22 +506,21 @@ function nextOf({ g, fileKey, ledger, record, namespace, coveragePerCall, rebuil
       if (check) return step('check', f, CORES.sets, samplePlan(check.contract, check.sample, g, ledger, fileKey, at));
       const send = toSend(g.contracts[f], built, pending);
       if (send.length || ledger.sets[f].contentHash !== contentHash(g.contracts[f])) {
-        const { perCall } = setsPlan(g.contracts[f], g.docText, ledger, { fileKey, mode: 'build', batch: 0, prototype, at }).plan.options;
-        return step('sets', f, CORES.sets, setsPlan(g.contracts[f], g.docText, ledger, { fileKey, mode: 'build', indexes: send.slice(0, perCall), prototype, at }));
+        const { perCall } = setsPlan(g.contracts[f], g.docText, ledger, { fileKey, mode: 'build', batch: 0, prototype, held, at }).plan.options;
+        return step('sets', f, CORES.sets, setsPlan(g.contracts[f], g.docText, ledger, { fileKey, mode: 'build', indexes: send.slice(0, perCall), prototype, held, at }));
       }
     }
-    const d = setsPlan(g.contracts[f], g.docText, ledger, { fileKey, next: true, prototype, at });
+    const d = setsPlan(g.contracts[f], g.docText, ledger, { fileKey, next: true, prototype, held, at });
     if (d) return step('sets', f, CORES.sets, d);
   }
   for (const f of g.families) {
     const verdict = (record.coverage || {})[f];
     const set = ledger.sets[f];
     const rebuilt = (record.rebuild || {})[f];
-    // coverage reads names, cells and wiring, none of which a Foundations build writes: a verdict outlives one
-    const current = verdict && verdict.contentHash === set.contentHash && verdict.set === set.set.id;
+    const current = currentVerdict(verdict, set);
     if (rebuilt || (current && !verdict.ok && rebuild.includes(f))) {
       // each build batch again, in the set: the first one recorded drops the failed verdict
-      const opts = { fileKey, mode: 'build', prototype: prototypeOf(g.contracts[f]), at };
+      const opts = { fileKey, mode: 'build', prototype: prototypeOf(g.contracts[f]), held, at };
       const of = setsPlan(g.contracts[f], g.docText, ledger, { ...opts, batch: 0 }).plan.options.of;
       const batch = Array.from({ length: of }, (_, i) => i).find(i => !(rebuilt || []).includes(i));
       return step('sets', f, CORES.sets, setsPlan(g.contracts[f], g.docText, ledger, { ...opts, batch }));
@@ -469,7 +530,7 @@ function nextOf({ g, fileKey, ledger, record, namespace, coveragePerCall, rebuil
       continue;
     }
     const read = Object.keys((record.pages || {})[f] || {}).map(Number);
-    const opts = { fileKey, mode: 'coverage', prototype: prototypeOf(g.contracts[f]), at, ...(coveragePerCall ? { coveragePerCall } : {}) };
+    const opts = { fileKey, mode: 'coverage', prototype: prototypeOf(g.contracts[f]), held, at, ...(coveragePerCall ? { coveragePerCall } : {}) };
     const of = setsPlan(g.contracts[f], g.docText, ledger, { ...opts, batch: 0 }).plan.options.of;
     const batch = Array.from({ length: of }, (_, i) => i).find(i => !read.includes(i));
     return step('coverage', f, CORES.sets, setsPlan(g.contracts[f], g.docText, ledger, { ...opts, batch }));
@@ -479,6 +540,7 @@ function nextOf({ g, fileKey, ledger, record, namespace, coveragePerCall, rebuil
     families: g.families.map(f => ({ family: f, variants: expand(g.contracts[f]).length, set: ledger.sets[f].set.id, page: g.contracts[f].figma.page })),
     drafts: g.drafts,
     skipped: g.skipped,
+    refused: g.refused,
     held: heldOf(record),
     orphaned: g.orphaned,
   };
@@ -513,7 +575,7 @@ function recorded({ dir, fileKey, ledger, record, result, skip, at }) {
     let merged;
     try { merged = mergeCoverage(Object.values(pages)); }
     catch (e) { delete next.pages[family]; throw new Error(`${e.message}: the ${family} pages are dropped, read them again`); }
-    const report = checkCoverage(contract, merged, ledger);
+    const report = checkCoverage(contract, merged, ledger, { held: nestedHeld(g) });
     // a held variant is in the set as Figma has it, not as the Contract does: its problems are not the set's
     const held = ((record.built || {})[family] || {}).held || {};
     report.problems = report.problems.filter(p => !(p.name && held[p.name]));
@@ -581,7 +643,7 @@ function checkRecorded({ dir, fileKey, ledger, record, result, skip, at }) {
   const read = Object.keys(result.sample || {});
   if (!check || !check.names || read.length !== check.names.length || check.names.some(n => !read.includes(n)))
     throw new Error(`this ${family} read is not the edit check the build asked for (${check && check.names ? check.names.join('; ') : 'none'}): run next again`);
-  const problems = against => checkSample(against, result, ledger, g.doc).problems.filter(p => p.what !== 'cell');
+  const problems = against => checkSample(against, result, ledger, g.doc, nestedHeld(g)).problems.filter(p => p.what !== 'cell');
   const fps = new Map(variantFingerprints(contract).map(v => [v.name, v.fingerprint]));
   const edited = {};
   for (const p of problems(check.contract)) {
@@ -705,6 +767,7 @@ function main() {
       ...n.families.map(f => `built ${f.family}: ${f.variants} variants on page ${f.page} (set ${f.set}), coverage passed`),
       ...n.drafts.map(f => `not built ${f}: a draft`),
       ...n.skipped.map(f => `not built ${f}: skipped on the owner's word`),
+      ...n.refused.map(r => `not built ${r.family}: it ${r.reason}`),
       ...heldLines(n.held),
       ...(n.held.length ? [`Each held variant is the owner's to resolve, per variant: --take-code <family>:<variant> writes the code's version over it, --keep-figma <family>:<variant> keeps Figma's.`] : []),
       ...n.orphaned.map(o => `orphaned ${o.family}: set ${o.set} (${o.variants} variants) stays in Figma, but the project no longer has its component; nothing was deleted`),

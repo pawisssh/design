@@ -78,6 +78,7 @@
     "properties": { "type": "array", "items": { "$ref": "#/$defs/property" } },
     "layout": { "type": "array", "items": { "$ref": "#/$defs/rule" } },
     "paint": { "type": "array", "items": { "$ref": "#/$defs/rule" } },
+    "instances": { "type": "array", "items": { "$ref": "#/$defs/instancesRule" }, "description": "per-variant values of each nested instance (#317): its held variant and properties" },
     "icons": {
       "type": "object",
       "required": ["source", "default", "preferred"],
@@ -92,7 +93,7 @@
       "type": "object",
       "required": ["families", "fonts"],
       "properties": {
-        "families": { "type": "array", "items": { "type": "object", "required": ["key", "contract"] } },
+        "families": { "type": "array", "items": { "type": "object", "required": ["key", "contract"], "properties": { "designSystem": { "type": "string", "minLength": 1, "description": "the Design System folder that holds the family (#317); absent means this Contract's own" } } } },
         "fonts": { "type": "array", "items": { "type": "object", "required": ["family", "styles"] } }
       }
     },
@@ -160,6 +161,23 @@
           }
         },
         "dropped": { "type": "array", "items": { "type": "object", "required": ["key", "reason", "evidence"] } }
+      }
+    },
+    "instancesRule": {
+      "type": "object",
+      "required": ["match", "set"],
+      "properties": {
+        "match": { "$ref": "#/$defs/pattern" },
+        "set": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "variant": { "type": "object", "additionalProperties": { "type": "string" } },
+              "props": { "type": "object", "additionalProperties": { "type": ["string", "boolean"] } }
+            }
+          }
+        }
       }
     },
     "pattern": {

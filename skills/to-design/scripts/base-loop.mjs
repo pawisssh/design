@@ -3,7 +3,7 @@
 // The pure functions sit on the shared Contract module (expansion, rule matching, the closure and the hash
 // live only there); this file adds the readback diff, the blast radius and the edit write-back.
 //
-//   node skills/to-design/scripts/base-loop.mjs readback <result.json> --out <readback.json> [--ledger <path>] [--full]
+//   node skills/to-design/scripts/base-loop.mjs readback <result.json> --out <readback.json> [--ledger <path>] [--full] [--contract <component.json>]
 //   node skills/to-design/scripts/base-loop.mjs diff     <component.json> <readback.json> [--full]
 //   node skills/to-design/scripts/base-loop.mjs apply    <component.json> <readback.json> [--confirm Node.field,...|all] [--by <who>] [--out <path>]
 //   node skills/to-design/scripts/base-loop.mjs discard  <component.json> <readback.json> --note <at> [--out <path>]
@@ -21,6 +21,7 @@ import {
 } from '../../contract/scripts/contract.mjs';
 import { foundationsPathFor, readJson, writeJson } from '../../contract/scripts/io.mjs';
 import { anatomyTree, baseProps, expectedBase, expectedVariant, near, norm, normalizeReadback, rootFillProblems, same, textProblems } from './readback.mjs';
+import { allowedOverrides, loadHeld } from './nested.mjs';
 import { defaultLedgerPath, readLedger } from './ledger.mjs';
 import { groupOf } from './foundations-subset.mjs';
 import { valueAt } from './foundations-value.mjs';
@@ -61,16 +62,18 @@ const UNMAPPED = {
   effects: ['effects change as a whole list, with no in-place form', 'Edit the effects by hand if wanted.'],
   foreign: ['bound to a variable or style the foundations ledger does not know', 'Bind a foundations variable instead.'],
   drawn: ['the builder derives it from the Contract (an ELLIPSE\'s path and stroke, an absolute node\'s place)', 'A rebuild restores it.'],
+  nested: ['a nested instance\'s property value differs from the one the Contract writes (else the held default)', 'Set it in the Contract\'s instances by hand if wanted.'],
+  override: ['an override inside a nested instance that the Contract does not write', 'Style the instance with layout and paint rules, or set its props in instances, by hand if wanted.'],
 };
 
 /**
  * A base slice result's readback in Contract vocabulary (see normalizeReadback), marked with the property
  * values it was built at: `specimen` is "set" once the ledger records the family's Component Set (property
- * defaults), else "review" (every BOOLEAN on). See baseProps.
+ * defaults), else "review" (every BOOLEAN on). See baseProps. `held`: a holding family's held Contracts (#593).
  */
-export function normalizeBaseResult(result, ledger) {
+export function normalizeBaseResult(result, ledger, held = null) {
   const inSet = !!(ledger && ledger.sets && ledger.sets[result.family]);
-  return { ...normalizeReadback(result.readback, ledger), specimen: inSet ? 'set' : 'review' };
+  return { ...normalizeReadback(result.readback, ledger, held), specimen: inSet ? 'set' : 'review' };
 }
 
 /**
@@ -82,10 +85,12 @@ export function normalizeBaseResult(result, ledger) {
  * value stayed, which a rebuild restores) or `unmapped` (a tweak the Contract cannot carry, `why` says which).
  * `unread` lists the expected fields the readback does not report, and `unbuilt` the raw text styles the builder
  * does not write until the Foundations document has Text Styles (#160). `problems` are what the Contract cannot
- * say (textProblems, rootFillProblems; #236). Effects are compared in order.
+ * say (textProblems, rootFillProblems; #236). Effects are compared in order. A nested instance (#593) is compared by
+ * its main component (`swap`), its property values and its override list, through `held`: an override the Contract
+ * does not write is an `override` change; the held family's own fields are never read.
  */
-export function diff(contract, readback, foundations, props = baseProps(contract, readback.specimen === 'set'), tuple = baseTuple(contract)) {
-  const exp = expectedVariant(contract, tuple, props, foundations);
+export function diff(contract, readback, foundations, props = baseProps(contract, readback.specimen === 'set'), tuple = baseTuple(contract), held = null) {
+  const exp = expectedVariant(contract, tuple, props, foundations, held);
   const changes = [];
   const unread = [];
   const unbuilt = [];
@@ -137,6 +142,20 @@ export function diff(contract, readback, foundations, props = baseProps(contract
       if (!readback[part] || !(node in readback[part])) { unread.push(`${part}.${node}`); continue; }
       if (readback[part][node] !== want) unmapped('property', part, node, part === 'visible' ? 'visible' : part === 'text' ? 'characters' : 'mainComponent', want, readback[part][node]);
     }
+  if (Object.keys(exp.props).length) {
+    const allowed = allowedOverrides(contract, tuple, held);
+    for (const [node, want] of Object.entries(exp.props)) {
+      const got = readback.props && readback.props[node];
+      if (!got) { unread.push(`props.${node}`); continue; }
+      for (const label of new Set([...Object.keys(want), ...Object.keys(got)]))
+        if (JSON.stringify(got[label]) !== JSON.stringify(want[label])) unmapped('nested', 'props', node, label, want[label], got[label]);
+      const over = readback.over && readback.over[node];
+      if (!over) { unread.push(`overrides.${node}`); continue; }
+      for (const [path, fields] of over)
+        for (const f of fields)
+          if (!(allowed[node][path] || []).includes(f)) unmapped('override', 'overrides', path ? `${node}/${path}` : node, f, undefined, 'overridden');
+    }
+  }
   // what no difference shows (#236): a text that wrapped, a variant narrower than its text, a root fill in a set
   const problems = [...textProblems(readback), ...(readback.specimen === 'set' ? rootFillProblems(contract, [tuple]) : [])];
   return { name: exp.name, changes, unread, unbuilt, problems };
@@ -217,9 +236,9 @@ export function propose(contract, change, foundations, { by = 'owner', built = n
   };
 }
 
-/** Diff a readback and propose an edit for each change: {name, changes, unread, proposals}. */
+/** Diff a readback and propose an edit for each change: {name, changes, unread, proposals}. `opts.held` as diff takes it. */
 export function review(contract, readback, foundations, opts = {}) {
-  const d = diff(contract, readback, foundations, opts.props);
+  const d = diff(contract, readback, foundations, opts.props, undefined, opts.held || null);
   return { ...d, proposals: d.changes.map(ch => propose(contract, ch, foundations, opts)) };
 }
 
@@ -275,10 +294,10 @@ export function applyEdits(contract, proposals, { confirm = [] } = {}) {
  * it: the `warning` note at `at` becomes `info`, so it no longer blocks approval. Refused while the readback
  * shows any difference, or does not report the noted field (a blind readback cannot prove the tweak is gone).
  */
-export function discardNote(contract, at, readback, foundations) {
+export function discardNote(contract, at, readback, foundations, held = null) {
   const i = (contract.notes || []).findIndex(n => n.level === 'warning' && n.at === at);
   if (i < 0) throw new Error(`no warning note at ${at}`);
-  const d = diff(contract, readback, foundations);
+  const d = diff(contract, readback, foundations, undefined, undefined, held);
   const still = d.changes.filter(ch => `${ch.section}.${ch.node}.${ch.field}` === at);
   if (still.length) throw new Error(`the readback still shows ${at}: ${show(still[0].from)} -> ${show(still[0].to)}; rebuild the Base Component first`);
   if (d.changes.length) throw new Error(`the readback is not clean (${d.changes.length} difference(s)); rebuild the Base Component first`);
@@ -487,8 +506,8 @@ export function formatReview(contract, readback, result, { fileKey, contractPath
  * field read) and `snapshotId` and `contentHash` equal the Contract's current values. Only after an explicit
  * "approve" from the owner in chat. `prototype` writes the prototype approver (never valid outside prototypes).
  */
-export function approveReviewed(contract, readback, foundations, { snapshotId, contentHash: hash, at, prototype = false }) {
-  const d = diff(contract, readback, foundations);
+export function approveReviewed(contract, readback, foundations, { snapshotId, contentHash: hash, at, prototype = false, held = null }) {
+  const d = diff(contract, readback, foundations, undefined, undefined, held);
   if (d.changes.length || d.unread.length || d.problems.length)
     throw new Error(`the readback is not clean: ${d.changes.length} difference(s), ${d.unread.length} field(s) not read${d.problems.length ? `, ${d.problems.length} problem(s)` : ''}`);
   if (readback.name !== d.name) throw new Error(`the readback is ${readback.name}, not the Base Component ${d.name}`);
@@ -548,7 +567,7 @@ function main() {
   const { values, positionals } = parseArgs({
     allowPositionals: true,
     options: {
-      foundations: { type: 'string' }, ledger: { type: 'string' }, out: { type: 'string' }, confirm: { type: 'string', default: '' },
+      foundations: { type: 'string' }, ledger: { type: 'string' }, out: { type: 'string' }, confirm: { type: 'string', default: '' }, contract: { type: 'string' },
       by: { type: 'string', default: 'owner' }, note: { type: 'string' }, 'file-key': { type: 'string' },
       'snapshot-id': { type: 'string' }, 'content-hash': { type: 'string' }, at: { type: 'string' }, prototype: { type: 'boolean', default: false }, full: { type: 'boolean', default: false },
     },
@@ -559,7 +578,9 @@ function main() {
     const result = readJson(a);
     if (result.error || !result.readback) throw new Error(`no readback in ${a}: ${result.error || 'missing'}`);
     const ledger = readLedger(values.ledger || defaultLedgerPath(result.fileKey));
-    const normalized = normalizeBaseResult(result, ledger);
+    // a holding family's nested instances read through its held Contracts (#593): --contract names its Contract
+    const held = values.contract ? loadHeld(values.contract, readJson(values.contract), readJson(foundationsPathFor(values.contract, values.foundations)).designSystem.key) : null;
+    const normalized = normalizeBaseResult(result, ledger, held);
     writeOutput(values.out, normalized);
     return print(`wrote ${values.out}\n${values.full ? JSON.stringify(normalized, null, 2) + '\n' : `${summarizeReadback(normalized)}every field: rerun with --full, or read ${values.out}\n`}`);
   }
@@ -574,9 +595,10 @@ function main() {
   const foundations = readJson(foundationsPathFor(a, values.foundations));
   const readback = readReadback(b);
   const outPath = values.out || a;
-  if (cmd === 'diff') return print((values.full ? formatDiff : formatDiffSummary)(contract, readback, review(contract, readback, foundations)));
+  const held = loadHeld(a, contract, foundations.designSystem.key);
+  if (cmd === 'diff') return print((values.full ? formatDiff : formatDiffSummary)(contract, readback, review(contract, readback, foundations, { held })));
   if (cmd === 'apply') {
-    const r = review(contract, readback, foundations, { by: values.by });
+    const r = review(contract, readback, foundations, { by: values.by, held });
     const confirm = values.confirm === 'all' ? 'all' : values.confirm.split(',').map(s => s.trim()).filter(Boolean);
     const res = applyEdits(contract, r.proposals, { confirm });
     const v = writeContract(outPath, res.contract, foundations, a);
@@ -584,14 +606,14 @@ function main() {
   }
   if (cmd === 'discard') {
     if (!values.note) throw new Error('discard needs --note <at>');
-    writeContract(outPath, discardNote(contract, values.note, readback, foundations), foundations, a);
+    writeContract(outPath, discardNote(contract, values.note, readback, foundations, held), foundations, a);
     return print(`discarded the note at ${values.note}; wrote ${outPath}\n`);
   }
   if (cmd === 'review') {
     if (!values['file-key']) throw new Error('review needs --file-key');
     // the file's built variables mark the picker's unbuilt tokens (#107); a review needs no ledger otherwise
     const f = (readLedger(values.ledger || defaultLedgerPath(values['file-key'])) || {}).foundations;
-    return print(formatReview(contract, readback, review(contract, readback, foundations, f ? { built: f.variables } : {}), { fileKey: values['file-key'], contractPath: a, readbackPath: b, staleMain: mainChanged(a, { fetch: true }) }));
+    return print(formatReview(contract, readback, review(contract, readback, foundations, { held, ...(f ? { built: f.variables } : {}) }), { fileKey: values['file-key'], contractPath: a, readbackPath: b, staleMain: mainChanged(a, { fetch: true }) }));
   }
   if (cmd === 'approve') {
     if (values.prototype) {
@@ -601,7 +623,7 @@ function main() {
     const staleMain = mainChanged(a);
     if (staleMain) throw new Error(staleBase(staleMain));
     const c = approveReviewed(contract, readback, foundations, {
-      snapshotId: values['snapshot-id'], contentHash: values['content-hash'], at: values.at || new Date().toISOString(), prototype: values.prototype,
+      snapshotId: values['snapshot-id'], contentHash: values['content-hash'], at: values.at || new Date().toISOString(), prototype: values.prototype, held,
     });
     // a prototype approval fails rule 8 by design: it is never an owner approval
     const v = writeContract(outPath, c, foundations, a, e => values.prototype && e.rule === 8 && /only the owner approves/.test(e.message));

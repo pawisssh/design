@@ -33,7 +33,13 @@ if (contractPath.endsWith('.proposal.json')) {
   const readAll = (dir, suffix) => (existsSync(dir) ? readdirSync(dir).filter(f => f.endsWith(suffix)).map(f => readJson(join(dir, f))) : []);
   const contracts = readAll(join(dsDir, 'contracts'), '.component.json');
   const proposals = readAll(dirname(contractPath), '.proposal.json').filter(x => !c.family || !x.family || x.family.key !== c.family.key);
-  const result = validateProposal(c, foundations, { contracts, proposals });
+  // a dependency's `designSystem` names a sibling folder, whose approved Contracts it is looked up among (#317)
+  const designSystems = {};
+  for (const f of (c.dependencies && c.dependencies.families) || []) {
+    const dir = f.designSystem && join(dsDir, '..', f.designSystem, 'contracts');
+    if (dir && existsSync(dir)) designSystems[f.designSystem] = readAll(dir, '.component.json');
+  }
+  const result = validateProposal(c, foundations, { contracts, proposals, designSystems });
   for (const e of result.errors) console.log(`FAIL [rule ${e.rule}] ${e.message}`);
   if (result.readyToRetire) console.log(`ready to retire: Contract "${result.readyToRetire}" has this key; the owner confirms retirement in chat`);
   console.log(result.ok ? `\nOK (Proposal ${c.family.key}, status ${c.status})` : `\nINVALID (${result.errors.length} errors)`);

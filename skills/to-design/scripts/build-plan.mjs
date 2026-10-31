@@ -18,8 +18,9 @@ import { dirname, join, resolve as resolvePath, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { baseTuple, contentHash, expand, ICON_KEY, icons as iconKeys, iconName, PROTOTYPE_APPROVER, validate, variantName } from '../../contract/scripts/contract.mjs';
-import { baseProps, defaultProps, expectedBase, expectedVariant, iconRef as iconRefKey, norm } from './readback.mjs';
+import { baseProps, defaultProps, expectedBase, expectedVariant, norm } from './readback.mjs';
 import { defaultLedgerPath, emptyLedger, readLedger } from './ledger.mjs';
+import { assertNested, familyNodes, figmaProps, heldIds, iconRef as iconRefKey, loadHeld, nestedOf } from './nested.mjs';
 import { assertRecorded, CALL_BUDGET, chunks, chunkState, selectedGroups, selection, subsetDocument } from './foundations-subset.mjs';
 
 // Fields the core never needs, so the package leaves them out: the reviewer's, and a Mode's selector (To-preview and To-handoff read it).
@@ -155,11 +156,14 @@ export function iconsPlan(contracts, iconsDir, ledger, { fileKey, adopt = false,
  * the file's foundations were last built from (ledger documentHash), so every token has a variable. State
  * carries only the ids this plan uses, plus the ledger's `bases` section.
  * Options: fileKey (required), adopt, adoptVariant (take the variant of the family's recorded Component Set at the
- * base index as the Base Component, #235), readOnly, page (default the Contract's figma.page), at.
+ * base index as the Base Component, #235), readOnly, page (default the Contract's figma.page), at, held (a holding
+ * family's held Contracts, as setsPlan takes them: its nested instances swap to the held variants its base tuple
+ * resolves to and get the props it writes, refused with the same Conflicts while a held set is not built, #593).
  */
-export function basePlan(contract, docText, ledger, { fileKey, adopt = false, adoptVariant = false, readOnly = false, page = null, at = new Date().toISOString() } = {}) {
+export function basePlan(contract, docText, ledger, { fileKey, adopt = false, adoptVariant = false, readOnly = false, page = null, at = new Date().toISOString(), held = null } = {}) {
   if (!fileKey) throw new Error('fileKey is required');
   if (!ledger || ledger.fileKey !== fileKey) throw new Error(`no ledger for ${fileKey}: build foundations and icons first`);
+  assertNested(contract, held, ledger);
   const doc = JSON.parse(docText);
   const v = validate(contract, doc);
   if (!v.ok) throw new Error(`the Contract does not validate: ${v.errors.map(e => `${e.at}: ${e.message}`).join("; ")}`);
@@ -182,9 +186,11 @@ export function basePlan(contract, docText, ledger, { fileKey, adopt = false, ad
     adopted = { id: variantId, page: rec.page };
   }
   // the review specimen while the base stands alone; the property defaults once the family's set holds it
-  const exp = expectedBase(contract, baseProps(contract, !!(ledger.sets && ledger.sets[contract.family.key])), doc);
+  const exp = expectedBase(contract, baseProps(contract, !!(ledger.sets && ledger.sets[contract.family.key])), doc, held);
   const strip = sec => Object.fromEntries(Object.entries(sec).map(([n, fields]) => [n, Object.fromEntries(Object.entries(fields).map(([k, x]) => [k, norm(x)]))]));
-  const base = { name: exp.name, tree: exp.tree, layout: strip(exp.layout), paint: strip(exp.paint), visible: exp.visible, text: exp.text, swap: exp.swap, fonts: [] };
+  // a nested instance's written props (#593), only where the Contract holds one, so other plans stay as they were
+  const nestedProps = Object.keys(exp.props).length ? { props: figmaProps(nestedOf(contract, baseTuple(contract), held), held, ledger) } : {};
+  const base = { name: exp.name, tree: exp.tree, layout: strip(exp.layout), paint: strip(exp.paint), visible: exp.visible, text: exp.text, swap: exp.swap, ...nestedProps, fonts: [] };
   const variables = {};
   const textStyles = {};
   const use = (field, x) => {
@@ -199,8 +205,11 @@ export function basePlan(contract, docText, ledger, { fileKey, adopt = false, ad
   for (const t of Object.keys(textStyles)) fonts.add(JSON.stringify({ family: doc.textStyles[t].fontFamily, style: doc.textStyles[t].fontStyle }));
   base.fonts = [...fonts].sort().map(s => JSON.parse(s));
   const comps = (ledger.icons && ledger.icons.components) || {};
-  const icons = {};
+  // a nested instance's held variant (#593) beside the icons, by its ref
+  const refs = Object.values(base.swap).filter(k => /^family:/.test(k));
+  const icons = refs.length ? heldIds(refs, held, ledger) : {};
   for (const key of Object.values(base.swap)) {
+    if (refs.includes(key)) continue;
     if (!comps[key]) throw new Error(`icon ${key} is not in the ledger: build icons first`);
     icons[key] = comps[key].id;
   }
@@ -242,10 +251,11 @@ export const MAX_COMBINE = 3000;
 export const PLACE_BUDGET = 45000;
 /**
  * A sets call's plan + state JSON, at most (chars): use_figma's 50,000 less the packaged components core and
- * its wrapper (tests/bprime.test.mjs measures them). 12030 leaves 19 chars under the core since #236 added a text's
- * size to its readback.
+ * its wrapper (tests/bprime.test.mjs measures them). 11496 leaves 20 chars under the core since #593 added nested
+ * instances' properties, overrides and main components to it, so a 245-variant reconcile (Carbon Button) now
+ * takes 2 calls.
  */
-export const SETS_BUDGET = 12030;
+export const SETS_BUDGET = 11496;
 // a reconcile window, at most: its entries carry no fragments
 const RECONCILE_PER_CALL = 500;
 /**
@@ -288,15 +298,15 @@ const stripFields = fields => Object.fromEntries(Object.entries(fields).map(([k,
 
 // The fragments every variant is built from: each (section, node) field group a resolved tuple holds,
 // numbered over the whole expansion so a number means the same fragment in every batch; and each distinct
-// property wiring ({visible, text, swap, refs} at the property defaults). Returns per tuple its references, and
+// property wiring ({visible, text, swap, refs} at the property defaults, and a nested instance's props). Returns per tuple its references, and
 // the layer tree every variant shares (an ELLIPSE is an arc in every variant or in none, #442).
-function fragmentsOf(contract, tuples, doc) {
+function fragmentsOf(contract, tuples, doc, held, ledger) {
   const frags = new Map();
   const wirings = new Map();
   const props = defaultProps(contract);
   let tree; // one layer tree for the set: validate refuses an ELLIPSE that is an arc in some variants only
   const refs = tuples.map(t => {
-    const exp = expectedVariant(contract, t, props, doc);
+    const exp = expectedVariant(contract, t, props, doc, held);
     tree = tree || exp.tree;
     const ids = [];
     for (const sec of ['layout', 'paint'])
@@ -305,7 +315,9 @@ function fragmentsOf(contract, tuples, doc) {
         if (!frags.has(key)) frags.set(key, frags.size);
         ids.push(frags.get(key));
       }
-    const w = JSON.stringify({ visible: exp.visible, text: exp.text, swap: exp.swap, refs: exp.refs });
+    // a nested instance's property values by Figma key (#593), only where the Contract holds one, so other plans stay as they were
+    const nestedProps = Object.keys(exp.props).length ? { props: figmaProps(nestedOf(contract, t, held), held, ledger) } : {};
+    const w = JSON.stringify({ visible: exp.visible, text: exp.text, swap: exp.swap, refs: exp.refs, ...nestedProps });
     if (!wirings.has(w)) wirings.set(w, wirings.size);
     return { p: wirings.get(w), frags: ids };
   });
@@ -353,12 +365,16 @@ export function entrySpec(plan, entry) {
  * those variants, in place of a batch window: an update that leaves every other variant as it is (#180). It may be
  * empty: the call then updates only the set itself (its name, description, properties and grid) and re-places its
  * children.
+ * A family that holds another (#593) is planned with `held` ({designSystem, contracts}, see nested.mjs): each nested
+ * instance swaps to its held variant, whose id the state carries under its ref (`family:<ds>/<key>/<tupleKey>`) beside
+ * the icons, and is refused with named Conflicts (assertNested) unless the held set is built from the held Contract
+ * and holds every resolved tuple. A coverage read lists the nested instances (`nested`), whose main components it reads.
  * Options: fileKey (required), mode, next, batch, indexes, perCall, coveragePerCall, budget, sample, prune, adopt,
- * prototype, page, at.
+ * prototype, page, at, held.
  */
 export function setsPlan(contract, docText, ledger, {
   fileKey, mode = 'build', next = false, batch, indexes = null, perCall, coveragePerCall = COVERAGE_PER_CALL, budget = PLACE_BUDGET, sample = [], prune = null, adopt = false,
-  prototype = false, page = null, at = new Date().toISOString(),
+  prototype = false, page = null, at = new Date().toISOString(), held = null,
 } = {}) {
   if (!fileKey) throw new Error('fileKey is required');
   if (!SET_MODES.includes(mode)) throw new Error(`mode must be one of ${SET_MODES.join(', ')}`);
@@ -371,6 +387,8 @@ export function setsPlan(contract, docText, ledger, {
   const f = ledger.foundations;
   if (!f) throw new Error('the ledger has no foundations: build them first');
   if (f.documentHash !== documentHash(docText)) throw new Error(`the foundations document changed since the last foundations build (${f.documentHash}); rebuild foundations first`);
+  assertNested(contract, held, ledger);
+  const nested = familyNodes(contract).map(n => n.node);
   const family = contract.family.key;
   const tuples = expand(contract);
   const total = tuples.length;
@@ -385,7 +403,7 @@ export function setsPlan(contract, docText, ledger, {
   const unplaced = combined && rec.placed === false;
   if (!combined && (next || mode === 'build' || mode === 'combine') && total > MAX_COMBINE)
     throw new Error(`a first build of ${family} combines its ${total} variants in one call, above MAX_COMBINE (${MAX_COMBINE}): the combine measured 46.9 s at 2304 and grows with the square (about ${Math.round(46.9 * (total / 2304) ** 2)} s here), near the ~2 min call ceiling`);
-  const { frags, wirings, refs, tree } = fragmentsOf(contract, tuples, doc);
+  const { frags, wirings, refs, tree } = fragmentsOf(contract, tuples, doc, held, ledger);
   const ax = k => contract.axes.findIndex(a => a.key === k);
   const pos = (t, k) => contract.axes.find(a => a.key === k).values.findIndex(v => v.key === t[k]);
   // a tuple's index in the axis-value product, in Contract order
@@ -468,6 +486,7 @@ export function setsPlan(contract, docText, ledger, {
       P,
       frags: usedFrags,
       selection: { schemaVersion: 1, axes, entries, ...(member ? { member } : {}) },
+      ...(mode === 'coverage' && nested.length ? { nested } : {}),
     };
     // A place call settles every variant: its property wiring, and its root's `fill` sizing (a loose component on the
     // page has no auto layout parent to fill). Per product index, a base-36 index into the distinct kinds, '-' unselected.
@@ -490,7 +509,9 @@ export function setsPlan(contract, docText, ledger, {
       plan.settle = { kinds, at: cells.join('') };
     }
     const bases = ledger.bases && ledger.bases[family] ? { [family]: ledger.bases[family] } : {};
-    return { plan, state: { schemaVersion: 1, fileKey, variables, textStyles, icons, bases, sets: {}, templates: ledger.templates || null } };
+    // the held variants the picked entries swap to, beside the icons (#593)
+    const heldVariants = nested.length ? heldIds([...new Set(Object.values(P).flatMap(w => Object.values(w.swap).filter(k => /^family:/.test(k))))], held, ledger) : {};
+    return { plan, state: { schemaVersion: 1, fileKey, variables, textStyles, icons: { ...icons, ...heldVariants }, bases, sets: {}, templates: ledger.templates || null } };
   }
 
   // The family's ledger record, with the variant ids of the picked entries only: a call carries no other ids.
@@ -643,7 +664,7 @@ export function setsPlan(contract, docText, ledger, {
   if (mode !== 'reconcile')
     entries.forEach((e, n) => {
       // with the fields the builder draws (#442); `visible` is property wiring, not a layout fragment (#93)
-      const r = expectedVariant(contract, decoded[n].tuple, defaultProps(contract), doc);
+      const r = expectedVariant(contract, decoded[n].tuple, defaultProps(contract), doc, held);
       const spec = entrySpec(plan, e);
       for (const sec of ['layout', 'paint'])
         if (JSON.stringify(spec[sec]) !== JSON.stringify(Object.fromEntries(Object.entries(r[sec]).map(([node, fl]) => [node, stripFields(fl)]))))
@@ -663,9 +684,9 @@ export function setsPlan(contract, docText, ledger, {
  * `contract`'s, when both derive the same sets plans: every build window and the place plan, `contentHash` aside
  * (#389). An edit the builder never reads, such as a drafted value's evidence, still moves the hash; this spares the
  * update-free re-run of every batch it would otherwise take. Refuses a set not recorded as built and placed from
- * `from` with every variant id, and a pair whose plans differ.
+ * `from` with every variant id, and a pair whose plans differ. `held`: a holding family's held Contracts (#593).
  */
-export function rehashSets(from, contract, docText, ledger, { fileKey }) {
+export function rehashSets(from, contract, docText, ledger, { fileKey, held = null }) {
   const family = contract.family.key;
   if (from.family.key !== family) throw new Error(`--from is ${from.family.key}, the Contract ${family}`);
   const rec = ledger && ledger.sets && ledger.sets[family];
@@ -675,7 +696,7 @@ export function rehashSets(from, contract, docText, ledger, { fileKey }) {
   if (!rec.set || rec.placed === false || !(rec.variants || [null]).every(Boolean)) throw new Error(`the ${family} set is not placed with every variant id recorded: finish its build first (sets --next)`);
   const plans = c => {
     const derive = (mode, batch) => {
-      const { plan } = setsPlan(c, docText, ledger, { fileKey, mode, ...(batch != null ? { batch } : {}), at: rec.builtAt });
+      const { plan } = setsPlan(c, docText, ledger, { fileKey, mode, held, ...(batch != null ? { batch } : {}), at: rec.builtAt });
       delete plan.contentHash;
       return plan;
     };
@@ -725,7 +746,8 @@ function main() {
     const path = values.ledger || defaultLedgerPath(values['file-key']);
     const read = p => JSON.parse(readFileSync(p, 'utf8'));
     const contract = read(values.contract[0]);
-    const ledger = rehashSets(read(values.from), contract, readFileSync(values.doc, 'utf8'), readLedger(path), { fileKey: values['file-key'] });
+    const held = loadHeld(values.contract[0], contract, JSON.parse(readFileSync(values.doc, 'utf8')).designSystem.key);
+    const ledger = rehashSets(read(values.from), contract, readFileSync(values.doc, 'utf8'), readLedger(path), { fileKey: values['file-key'], held });
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, JSON.stringify(ledger, null, 2) + '\n');
     console.log(JSON.stringify({ status: 'rehashed', family: contract.family.key, contentHash: ledger.sets[contract.family.key].contentHash, ledger: path }));
@@ -751,16 +773,18 @@ function main() {
     console.error(`--prune-list is for ${pruneFile.family} in ${pruneFile.fileKey}: a sets prune of that family and file only`);
     process.exit(2);
   }
+  // the Contracts a holding family's nested instances hold, from beside its own (#593)
+  const heldOf = () => loadHeld(values.contract[0], JSON.parse(readFileSync(values.contract[0], 'utf8')), JSON.parse(readFileSync(values.doc, 'utf8')).designSystem.key);
   const derived = slice === 'sets'
     ? setsPlan(JSON.parse(readFileSync(values.contract[0], 'utf8')), readFileSync(values.doc, 'utf8'), readLedger(path), {
-      fileKey, mode: values.mode, next: values.next, adopt: values.adopt, prototype: values.prototype, prune: pruneFile && pruneFile.prune,
+      fileKey, mode: values.mode, held: heldOf(), next: values.next, adopt: values.adopt, prototype: values.prototype, prune: pruneFile && pruneFile.prune,
       sample: values.sample ? values.sample.split(',').map(Number) : [], ...(values.batch != null ? { batch: Number(values.batch) } : {}),
       ...(values['per-call'] ? { perCall: Number(values['per-call']) } : {}), ...(values.budget != null ? { budget: Number(values.budget) } : {}),
       ...(values.page ? { page: values.page } : {}),
     })
     : slice === 'base'
     ? basePlan(JSON.parse(readFileSync(values.contract[0], 'utf8')), readFileSync(values.doc, 'utf8'), readLedger(path), {
-      fileKey, adopt: values.adopt, adoptVariant: values['adopt-variant'], readOnly: values['read-only'], ...(values.page ? { page: values.page } : {}),
+      fileKey, adopt: values.adopt, adoptVariant: values['adopt-variant'], readOnly: values['read-only'], held: heldOf(), ...(values.page ? { page: values.page } : {}),
     })
     : slice === 'foundations'
     ? foundationsPlan(readFileSync(values.doc, 'utf8'), readLedger(path), {

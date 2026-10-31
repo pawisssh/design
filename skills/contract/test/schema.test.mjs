@@ -131,3 +131,17 @@ test('the Button with an absolute spinner of two ELLIPSEs satisfies the schema, 
   shape.anatomy.children[2].type = 'CIRCLE';
   assert.ok(check(schema, shape).some(e => e.startsWith('$.anatomy.children[2].type')));
 });
+
+test('a holding Contract\'s `instances` and `designSystem` satisfy the schema, which rejects the value types validate rejects (#317)', () => {
+  const c = load(fixtures.button);
+  c.anatomy.children.push({ name: 'Menu', type: 'INSTANCE', instanceOf: 'family:overflow-menu' });
+  c.dependencies.families.push({ key: 'overflow-menu', designSystem: 'carbon', contract: 'overflow-menu' });
+  c.instances = [{ match: {}, set: { Menu: { variant: { size: 'md' }, props: { icon: 'icon:add', open: false } } } }];
+  assert.deepEqual(check(schema, c), []);
+  c.instances[0].set.Menu.props.count = 3;
+  c.dependencies.families[0].designSystem = 7;
+  const errors = check(schema, c);
+  assert.ok(errors.some(e => e.startsWith('$.instances[0].set.Menu.props.count')), errors.join('\n'));
+  assert.ok(errors.some(e => e.startsWith('$.dependencies.families[0].designSystem')), errors.join('\n'));
+  assert.equal(contract.validate(c, foundations).ok, false);
+});

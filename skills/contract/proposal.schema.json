@@ -73,12 +73,13 @@
     "properties": { "type": "array", "items": { "$ref": "contract.schema.json#/$defs/property" } },
     "layout": { "type": "array", "items": { "$ref": "contract.schema.json#/$defs/rule" } },
     "paint": { "type": "array", "items": { "$ref": "contract.schema.json#/$defs/rule" } },
+    "instances": { "type": "array", "items": { "$ref": "contract.schema.json#/$defs/instancesRule" } },
     "icons": { "type": "object", "required": ["default"], "properties": { "default": { "type": "string" }, "preferred": { "type": "array", "items": { "type": "string" } } } },
     "subComponents": { "type": "array", "items": { "type": "object", "required": ["name", "anatomy"], "properties": { "name": { "type": "string", "pattern": "^_" } } } },
     "dependencies": {
       "type": "object",
       "properties": {
-        "families": { "type": "array", "items": { "type": "object", "required": ["key"], "properties": { "key": { "type": "string" }, "contract": { "type": "string" }, "proposal": { "type": "string" } } } }
+        "families": { "type": "array", "items": { "type": "object", "required": ["key"], "properties": { "key": { "type": "string" }, "contract": { "type": "string" }, "proposal": { "type": "string" }, "designSystem": { "type": "string", "minLength": 1 } } } }
       }
     },
     "notes": { "type": "array", "items": { "$ref": "contract.schema.json#/$defs/note" } },

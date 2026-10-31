@@ -768,3 +768,99 @@ test('Spinner stacks its Track and Arc without Auto Layout: an arc needs a FRAME
   const absolute = spinner(L => { Object.assign(L.Arc, { position: 'absolute', constraints: { horizontal: 'center', vertical: 'center' } }); });
   rejects(absolute, 5, 'absolute Arc needs a parent with Auto Layout');
 });
+
+// ---------- nested instances (#317, #592) ----------
+// The Button with a `Menu` node that holds Carbon's OverflowMenu, and per-variant `instances` values.
+const holder = () => {
+  const c = button();
+  c.anatomy.children.push({ name: 'Menu', type: 'INSTANCE', instanceOf: 'family:overflow-menu' });
+  c.dependencies.families.push({ key: 'overflow-menu', designSystem: 'carbon', contract: 'overflow-menu', source: { tag: 'v11.118.0' } });
+  c.instances = [
+    { match: {}, set: { Menu: { variant: { size: 'md' }, props: { icon: 'icon:file-lines', label: 'More', open: false } } } },
+    { match: { state: 'disabled' }, set: { Menu: { props: { icon: 'icon:circle-notch' } } } },
+  ];
+  return contract.asDraft(c); // `instances` is inside contentHash, so the committed approval no longer holds
+};
+
+test('a holding Contract with an `instances` list of {match, set} rules is valid', () => {
+  assert.deepEqual(contract.validate(holder(), foundations), { ok: true, errors: [] });
+});
+
+test('an `instances` set key is an INSTANCE node whose instanceOf is family: (rule 7)', () => {
+  for (const node of ['Label', 'Glyph', 'Menu/Glyph', 'Nope']) {
+    const c = holder();
+    c.instances[1].set[node] = { variant: { size: 'sm' } };
+    const { errors } = contract.validate(c, foundations);
+    assert.deepEqual(errors.map(e => [e.rule, e.at]), [[7, 'instances[1].set']], node);
+    assert.match(errors[0].message, new RegExp(`"${node}" is not a nested instance \\(an INSTANCE node with instanceOf family:<key>\\)`));
+  }
+});
+
+test('an `instances` match names this Contract\'s own axes and values (rule 3)', () => {
+  const axis = holder();
+  axis.instances[1].match = { loading: 'true' };
+  const value = holder();
+  value.instances[1].match = { state: 'loading' };
+  for (const [c, message] of [[axis, 'unknown axis "loading"'], [value, 'unknown state value "loading"']]) {
+    const { errors } = contract.validate(c, foundations);
+    assert.deepEqual(errors.map(e => [e.rule, e.at, e.message]), [[3, 'instances[1].match', message]]);
+  }
+});
+
+test('an `instances` value is {variant?, props?}: axis values are strings, props are strings or booleans (rule 7)', () => {
+  const cases = [
+    [{ variant: { size: 2 } }, '"Menu": variant.size is a string (a value key of the held family), not 2'],
+    [{ props: { count: 3 } }, '"Menu": props.count is a string or a boolean, not 3'],
+    [{ props: { icon: { key: 'add' } } }, '"Menu": props.icon is a string or a boolean, not {"key":"add"}'],
+    [{ fill: { token: 'button-primary' } }, '"Menu": `fill` is not an instances field (variant, props); style the instance with layout and paint rules'],
+    [{ variant: 'md' }, '"Menu": variant is an object of axis values'],
+    ['md', '"Menu" is {variant?, props?}'],
+  ];
+  for (const [value, message] of cases) {
+    const c = holder();
+    c.instances[1].set.Menu = value;
+    const { errors } = contract.validate(c, foundations);
+    assert.deepEqual(errors.map(e => [e.rule, e.at, e.message]), [[7, 'instances[1].set', message]], message);
+  }
+});
+
+test('`instances` is an array of {match, set} rules, and a dependency\'s `designSystem` is a string (schema)', () => {
+  const notArray = holder();
+  notArray.instances = { Menu: {} };
+  rejects(notArray, 'schema', '`instances` must be an array');
+  const notRule = holder();
+  notRule.instances.push({ set: { Menu: {} } });
+  rejects(notRule, 'schema', 'an instances rule is {match, set}');
+  const ds = holder();
+  ds.dependencies.families[0].designSystem = 7;
+  rejects(ds, 'schema', 'a dependency\'s `designSystem` is a Design System folder name');
+});
+
+test('a dependency key is unique within a Contract, since family:<key> names it alone (rule 7)', () => {
+  const c = holder();
+  c.dependencies.families.push({ key: 'overflow-menu', contract: 'overflow-menu' });
+  const { errors } = contract.validate(c, foundations);
+  assert.deepEqual(errors.map(e => [e.rule, e.at, e.message]), [[7, 'dependencies.families', 'duplicate dependency key "overflow-menu"']]);
+});
+
+test('the icon list adds the icon: values that `instances` props swap to, after the family\'s own', () => {
+  assert.deepEqual(contract.icons(holder()).slice(-2), ['file-lines', 'circle-notch']);
+  // a holding family with no icon slot of its own still lists its swap values
+  const bare = holder();
+  delete bare.icons;
+  bare.anatomy.children.splice(1, 1);
+  assert.deepEqual(contract.icons(bare), ['file-lines', 'circle-notch']);
+  const bad = holder();
+  bad.instances[1].set.Menu.props.icon = 'icon:../up';
+  assert.deepEqual(contract.validate(bad, foundations).errors.map(e => [e.rule, e.message]), [[7, 'icon key "../up" is not an icon file name']]);
+});
+
+test('resolveInstances merges the `instances` rules a tuple matches, a later rule winning per field', () => {
+  const c = holder();
+  assert.deepEqual(contract.resolveInstances(c, { kind: 'primary', size: 'lg', state: 'enabled' }),
+    { Menu: { variant: { size: 'md' }, props: { icon: 'icon:file-lines', label: 'More', open: false } } });
+  // the Disabled rule swaps the icon and keeps the size and the other props
+  assert.deepEqual(contract.resolveInstances(c, { kind: 'primary', size: 'lg', state: 'disabled' }),
+    { Menu: { variant: { size: 'md' }, props: { icon: 'icon:circle-notch', label: 'More', open: false } } });
+  assert.deepEqual(contract.resolveInstances(button(), contract.baseTuple(button())), {});
+});

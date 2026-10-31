@@ -136,6 +136,23 @@ export function resolve(contract, tuple) {
   return out;
 }
 
+/**
+ * A tuple's nested instance values (#317): every matching `instances` rule in order, a later rule winning per
+ * `variant.<axis>` and per `props.<name>`. Returns {node: {variant, props}} for each node a matching rule sets.
+ */
+export function resolveInstances(contract, tuple) {
+  const out = {};
+  for (const rule of contract.instances || []) {
+    if (!matches(rule.match, tuple)) continue;
+    for (const [node, value] of Object.entries(rule.set || {})) {
+      if (!out[node]) out[node] = { variant: {}, props: {} };
+      Object.assign(out[node].variant, value.variant);
+      Object.assign(out[node].props, value.props);
+    }
+  }
+  return out;
+}
+
 // "Glyph/Vector.fill" -> ["Glyph/Vector", "fill"]: the field is after the last dot.
 function splitRef(ref) {
   const i = ref.lastIndexOf('.');
@@ -183,17 +200,25 @@ function walkRefs(value, path, fn, key) {
 
 /**
  * The icon list: the icon keys the builder makes atoms for, `icons.default` then `icons.preferred`, then every
- * fixed `icon:<key>` an INSTANCE names (a form control's status icons, #93), each once.
+ * fixed `icon:<key>` an INSTANCE names (a form control's status icons, #93), then every `icon:<key>` an `instances`
+ * prop swaps a nested instance to (#317), each once.
  */
 export function icons(contract) {
   const i = contract.icons;
-  if (!i) return [];
+  // the icons a nested instance's INSTANCE_SWAP props swap to (#317), which a holding family with no icon slot has too
+  const swaps = (contract.instances || [])
+    .flatMap(r => Object.values(r.set || {}))
+    .flatMap(v => (isObj(v) && isObj(v.props) ? Object.values(v.props) : []))
+    .map(v => typeof v === 'string' && /^icon:(.+)$/.exec(v))
+    .filter(Boolean)
+    .map(m => m[1]);
+  if (!i) return swaps.filter((k, n, all) => all.indexOf(k) === n);
   const fixed = [contract, ...(contract.subComponents || [])]
     .flatMap(c => Object.values(anatomyIndex(c)))
     .map(n => /^icon:(.+)$/.exec(n.instanceOf || ''))
     .filter(m => m && m[1] !== 'default')
     .map(m => m[1]);
-  return [i.default].concat(i.preferred || [], fixed).filter((k, n, all) => k && all.indexOf(k) === n);
+  return [i.default].concat(i.preferred || [], fixed, swaps).filter((k, n, all) => k && all.indexOf(k) === n);
 }
 
 /** An icon key as a file name: `[A-Za-z0-9]` segments joined by `-` or `--` (Carbon's `arrow--right`, CDS's `forwardArrow`, #403); no `/`, `.` or whitespace. */
@@ -418,6 +443,7 @@ function checkPatterns(c, err) {
         else if (!anatomy[node]) err(3, at, `"${node}": \`visible\` is set on anatomy nodes only`);
       }
     });
+  (c.instances || []).forEach((rule, i) => checkPattern(rule.match, `instances[${i}].match`));
   (c.properties || []).forEach(p => (p.binds || []).forEach((b, i) => {
     if (b.match) checkPattern(b.match, `properties.${p.key}.binds[${i}].match`);
     if (!anatomy[b.node]) err(3, `properties.${p.key}.binds[${i}]`, `unknown anatomy node "${b.node}"`);
@@ -610,10 +636,15 @@ function checkTokens(c, foundations, err, extra) {
   });
 }
 
+// `dependencies.families`, or none when it is not a list.
+const dependencyFamilies = c => (isObj(c.dependencies) && Array.isArray(c.dependencies.families) ? c.dependencies.families : []);
+
 // Rule 7. `familyKnown(key)` says whether a `family:<key>` instance target is declared.
 function checkInstances(c, err, familyKnown) {
   const anatomy = anatomyIndex(c);
   const iconsBlock = c.icons;
+  const deps = dependencyFamilies(c).map(f => f.key);
+  dupes(deps).forEach(k => err(7, 'dependencies.families', `duplicate dependency key "${k}"`));
   for (const n of Object.values(anatomy)) {
     const to = n.instanceOf;
     if (!to) continue;
@@ -623,6 +654,27 @@ function checkInstances(c, err, familyKnown) {
       : kind === 'sub' ? (c.subComponents || []).some(s => s.name === name) : false;
     if (!ok) err(7, `anatomy.${n.name}.instanceOf`, `instance target "${to}" is not declared`);
   }
+  // `instances` (#317) sets a nested instance's held variant and properties; the held family's tuple and property
+  // keys are checked by To-design's build plan, where both Contracts are loaded.
+  (c.instances || []).forEach((rule, i) => {
+    const at = `instances[${i}].set`;
+    for (const [name, value] of Object.entries(rule.set || {})) {
+      const n = anatomy[name];
+      if (!n || n.type !== 'INSTANCE' || !/^family:/.test(n.instanceOf || ''))
+        err(7, at, `"${name}" is not a nested instance (an INSTANCE node with instanceOf family:<key>)`);
+      if (!isObj(value)) { err(7, at, `"${name}" is {variant?, props?}`); continue; }
+      for (const field of Object.keys(value))
+        if (field !== 'variant' && field !== 'props')
+          err(7, at, `"${name}": \`${field}\` is not an instances field (variant, props); style the instance with layout and paint rules`);
+      for (const field of ['variant', 'props']) {
+        if (!(field in value)) continue;
+        if (!isObj(value[field])) { err(7, at, `"${name}": ${field} is an object of ${field === 'variant' ? 'axis values' : 'property values'}`); continue; }
+        for (const [k, v] of Object.entries(value[field]))
+          if (field === 'variant' ? typeof v !== 'string' : typeof v !== 'string' && typeof v !== 'boolean')
+            err(7, at, `"${name}": ${field}.${k} is ${field === 'variant' ? 'a string (a value key of the held family)' : 'a string or a boolean'}, not ${JSON.stringify(v)}`);
+      }
+    }
+  });
   if (iconsBlock && Array.isArray(iconsBlock.preferred) && !iconsBlock.preferred.includes(iconsBlock.default))
     err(7, 'icons.default', `default icon "${iconsBlock.default}" is not in icons.preferred`);
   // the icons slice reads each key as a file name, so check.mjs refuses what it would refuse (#403)
@@ -694,18 +746,36 @@ function checkShape(c, err) {
     });
   if (isObj(c.anatomy) && (typeof c.anatomy.name !== 'string' || typeof c.anatomy.type !== 'string'))
     err('schema', 'anatomy', 'the anatomy root needs `name` and `type`');
+  checkNestedShape(c, err);
+}
+
+// The optional blocks of a nested instance (#317), in a Contract and a Proposal: `instances` rules and a
+// dependency's `designSystem`.
+function checkNestedShape(c, err) {
+  if ('instances' in c) {
+    if (!Array.isArray(c.instances)) err('schema', 'instances', '`instances` must be an array');
+    else c.instances.forEach((r, i) => {
+      if (!isObj(r) || !isObj(r.match) || !isObj(r.set)) err('schema', `instances[${i}]`, 'an instances rule is {match, set}');
+    });
+  }
+  const families = dependencyFamilies(c);
+  families.forEach((f, i) => {
+    if (isObj(f) && 'designSystem' in f && (typeof f.designSystem !== 'string' || !f.designSystem))
+      err('schema', `dependencies.families[${i}].designSystem`, 'a dependency\'s `designSystem` is a Design System folder name');
+  });
 }
 
 // ---------- Component Proposal (#60, #80): a family the Code Library does not ship ----------
 
 const PROPOSAL_REQUIRED = { schemaVersion: 'number', family: 'object', proposal: 'object', axes: 'array', anatomy: 'object' };
-const PROPOSAL_OPTIONAL = { properties: 'array', layout: 'array', paint: 'array', icons: 'object', subComponents: 'array', dependencies: 'object', notes: 'array', retirement: 'object', built: 'object' };
+const PROPOSAL_OPTIONAL = { properties: 'array', layout: 'array', paint: 'array', instances: 'array', icons: 'object', subComponents: 'array', dependencies: 'object', notes: 'array', retirement: 'object', built: 'object' };
 const PROPOSAL_FORBIDDEN = ['source', 'code', 'selection', 'excluded', 'figma'];
 
 /**
  * Validate a Component Proposal against the foundations document and the Design System's other files.
- * `known` is {contracts: [Contract], proposals: [Proposal]} (an array is read as `contracts`); checks that need
- * them are skipped when they are not given. Rules 1, 2 (defaults only), 3, 6 and 7 are the Contract's; rules
+ * `known` is {contracts: [Contract], proposals: [Proposal], designSystems: {<ds>: [Contract]}} (an array is read as
+ * `contracts`); checks that need them are skipped when they are not given. `designSystems` holds the Contracts of each
+ * other Design System a dependency's `designSystem` names (#317). Rules 1, 2 (defaults only), 3, 6 and 7 are the Contract's; rules
  * 4 and 5 do not apply. Further rules: "schema" (required, optional and forbidden blocks), 6 also refuses
  * component tokens and Primitives, 7 lets `family:<key>` name a Contract or a Proposal, "cycle", "considered",
  * 8 (status and approval), "retirement" and "built".
@@ -740,13 +810,26 @@ export function validateProposal(proposal, foundations, known) {
     if (variable.hidden) return `token "${t}" is a hidden Primitive; a Proposal binds theme tokens only`;
   });
 
-  // 7. instance targets: a declared dependency that names a Contract or a Proposal
+  // 7. instance targets: a declared dependency that names a Contract or a Proposal of this Design System, or an
+  // approved Contract of the Design System its `designSystem` names (#317): another Design System's Proposal or
+  // draft is never built, so it never counts.
   const contractKeys = contracts.map(c => c.family.key), proposalKeys = proposals.map(x => x.family.key);
   const deps = (p.dependencies && p.dependencies.families) || [];
   const exists = key => contractKeys.indexOf(key) >= 0 || proposalKeys.indexOf(key) >= 0;
   checkInstances(p, err, key => deps.some(f => f.key === key));
-  if (contracts.length || proposals.length)
-    deps.forEach((f, i) => { if (!exists(f.key)) err(7, `dependencies.families[${i}]`, `family "${f.key}" is neither a Contract nor a Proposal in this Design System`); });
+  deps.forEach((f, i) => {
+    const at = `dependencies.families[${i}]`;
+    if (!f.designSystem) {
+      if ((contracts.length || proposals.length) && !exists(f.key)) err(7, at, `family "${f.key}" is neither a Contract nor a Proposal in this Design System`);
+      return;
+    }
+    if ('proposal' in f) return err(7, at, `family "${f.key}" in Design System "${f.designSystem}" names a Proposal; another Design System's dependency is an approved Contract`);
+    if (!opts.designSystems) return;
+    const theirs = opts.designSystems[f.designSystem];
+    if (!theirs) return err(7, at, `family "${f.key}" is in Design System "${f.designSystem}", which was not loaded`);
+    if (!theirs.some(c => c.family.key === f.key && c.selection.status === 'approved'))
+      err(7, at, `family "${f.key}" is not an approved Contract in Design System "${f.designSystem}"`);
+  });
 
   // cycle: a Proposal may compose other Proposals, never itself
   const byKey = {};
@@ -820,6 +903,7 @@ function checkProposalShape(p, err) {
     err('schema', 'anatomy', 'the anatomy root needs `name` and `type`');
   if (isObj(p.dependencies) && 'families' in p.dependencies && !Array.isArray(p.dependencies.families))
     err('schema', 'dependencies.families', '`dependencies.families` must be an array');
+  checkNestedShape(p, err);
 }
 
 function findCycle(start, byKey) {
@@ -831,6 +915,7 @@ function findCycle(start, byKey) {
     if (!x) return null;
     path.push(key);
     for (const f of (x.dependencies && x.dependencies.families) || []) {
+      if (f.designSystem) continue; // another Design System's Contract, never one of these Proposals
       const found = walk(f.key);
       if (found) return found;
     }
