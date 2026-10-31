@@ -6,12 +6,14 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DEPS_DIR, hasDeps, hasRuntime, loadTypescript } from '../scripts/deps.mjs';
 import { generate, loadDesignSystem, render, screenshotRendering, validateHandoff } from '../scripts/handoff.mjs';
 import { readHtml, walk } from '../scripts/reader.mjs';
+import { STEP_TIMEOUT, run } from '../scripts/runtime.mjs';
 import { tagHtml, tagJsx } from '../scripts/tag.mjs';
 import { DECISIONS, PROTOTYPE, V0, V0_DECISIONS, decided, designSystem, shadcnDesignSystem, usagesOf, v0Copy } from './helpers.mjs';
 
@@ -254,6 +256,25 @@ test('runtime: a package.json with neither Next nor Vite is installed, built and
   const { requests, handoff } = await generate({ prototype, designSystem: designSystem(), decisions: DECISIONS, runtime: true });
   assert.deepEqual(requests, []);
   assert.equal(handoff.screens[0].states.default.screenshots.max, 'screens/invite-teammates.default.max.png');
+});
+
+// A loaded CI runner loads a page slower than a state's steps may take (#601): the step budget bounds the steps only.
+test('runtime: a page that loads slower than the step timeout still gives its screenshot and computed values; a step still fails at the step timeout (#601)', { skip: noRuntime }, async () => {
+  const slow = createServer((req, res) => setTimeout(() => { res.writeHead(200, { 'content-type': 'image/svg+xml' }); res.end('<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"/>'); }, STEP_TIMEOUT + 1000));
+  await new Promise(r => slow.listen(0, '127.0.0.1', r));
+  const dir = mkdtempSync(join(tmpdir(), 'to-handoff-slow-'));
+  writeFileSync(join(dir, 'index.html'), `<!doctype html>\n<html><body>\n<main><p style="font-size: 20px">Hi</p><img src="http://127.0.0.1:${slow.address().port}/a.svg" alt=""></main>\n</body></html>\n`);
+  let r;
+  try {
+    r = await run({ prototype: join(dir, 'index.html'), screens: [{ screen: 'slow', states: [{ state: 'default', steps: [] }, { state: 'never', steps: [{ expect: '#never' }] }] }], breakpoints: [{ key: 'desktop', width: 800 }] });
+    const shot = r.screens.slow.shots.default.desktop;
+    assert.equal(typeof shot, 'string', JSON.stringify(shot));
+    assert.equal(r.screens.slow.elements['index.html:3:7'].style['font-size'], '20px');
+    assert.deepEqual(r.screens.slow.shots.never.desktop, { missing: true, reason: `the steps for never failed: page.waitForSelector: Timeout ${STEP_TIMEOUT}ms exceeded.` });
+  } finally {
+    if (r) r.cleanup();
+    slow.close();
+  }
 });
 
 test('render: a failed runtime shows its reason in the Rendering', { skip: await noRender() }, async () => {

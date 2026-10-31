@@ -337,7 +337,7 @@ test('a rebuild whose first call was lost and reconciled still keeps the dropped
   const ids = new Map((await setNode(env)).children.map(k => [k.name, k.id]));
   const omitted = withoutFocus();
   await sets(env, { batch: 0 }, { contract: omitted, drop: true });
-  await sets(env, { mode: 'reconcile' }, { contract: omitted });
+  await reconcileAll(env, {}, { contract: omitted });
   await buildAll(env, omitted);
   const orphans = env.ledger.sets.button.orphans;
   assert.equal(Object.keys(orphans).length, 49);
@@ -527,7 +527,7 @@ test('an orphan a hand moved out of the set is refused by the preview and the pr
   assert.deepEqual(writes(env.mock), [], 'a refused prune changes nothing');
   assert.equal(await env.mock.figma.getNodeByIdAsync(node.id), node);
   // the node is no longer the set's, so the next reconcile drops it from the orphans and the preview runs again
-  await sets(env, { mode: 'reconcile' }, { contract: omitted });
+  await reconcileAll(env, {}, { contract: omitted });
   assert.ok(!(moved in env.ledger.sets.button.orphans));
   assert.equal((await preview(env, omitted)).summary.orphans, 48);
 });
