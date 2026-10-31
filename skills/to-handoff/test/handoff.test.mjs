@@ -361,6 +361,8 @@ test('validateHandoff refuses a text value without a metric, a metric on another
   assert.match(edit(h => { h.values.find(v => v.role === 'background-color').metric = textValue(h).metric; }), /values\[\d+\] \(background-color-edf5ff\): only a text value has a metric/);
   assert.match(edit(h => { textValue(h).nearest[0].token = 'heading-03-font-size'; }), /unknown Text Style "heading-03-font-size"/);
   assert.match(edit(h => { texts(h).find(t => t.style.value).style.value = 'value:nope'; }), /text\[\d+\]: unknown value "value:nope"/);
+  assert.match(edit(h => { delete texts(h).find(t => t.style.value).style.value; }), /text\[\d+\]: text with no Text Style needs a value/);
+  assert.match(edit(h => { texts(h).find(t => t.style.value).style.value = 'value:background-color-edf5ff'; }), /text\[\d+\]: "value:background-color-edf5ff" is not a text value/);
 });
 
 test('validateHandoff refuses a usage tuple that a Contract\'s selection.omit leaves out, naming the rule (#245)', { skip: noDeps }, async () => {

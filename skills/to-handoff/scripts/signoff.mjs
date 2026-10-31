@@ -122,7 +122,8 @@ function offSystemLines(handoff) {
   if (!values.length) return [...lines, '  none'];
   for (const v of values) {
     const raw = Object.entries(v.raw).map(([mode, x]) => `${mode} ${x}`).join(', ');
-    const near = n => `${n.token} (${n.delta !== undefined ? `ΔE ${n.delta}` : n.value})`;
+    // A text value's delta is its font-size difference in px (#287), a colour's its ΔE.
+    const near = n => `${n.token} (${n.delta === undefined ? n.value : v.role === 'text' ? `font size Δ ${n.delta}px` : `ΔE ${n.delta}`})`;
     lines.push(`  ${v.id}: ${v.role} ${raw}, ${v.at.length} site${v.at.length === 1 ? '' : 's'}`, `    reason: ${v.reason}`);
     if (v.nearest.length) lines.push(`    nearest: ${v.nearest.map(near).join(', ')}`);
     if (v.primitive) lines.push(`    primitive: ${v.primitive}`);

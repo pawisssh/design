@@ -107,6 +107,9 @@ function decider(decisions, carried = {}) {
   };
 }
 
+// A text metric as its Off-system raw value (#287): `14px/normal/400/0.16px`.
+const metricText = m => `${m.fontSize}px/${m.lineHeight === null ? 'normal' : `${m.lineHeight}px`}/${m.fontWeight}/${m.letterSpacing}px`;
+
 const among = (candidates, extra = []) => answer =>
   [...candidates, ...extra].includes(answer) ? null : `${JSON.stringify(answer)} is not among its candidates (${[...candidates, ...extra].join(', ')})`;
 
@@ -572,7 +575,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       const result = matchText(raw, ctx);
       const where = at(t.offset);
       const tkey = `textStyle:${fontSize}/${lineHeight === null ? 'normal' : lineHeight}/${fontWeight}/${letterSpacing}`;
-      const norm = `${fontSize}px/${lineHeight === null ? 'normal' : `${lineHeight}px`}/${fontWeight}/${letterSpacing}px`;
+      const norm = metricText(raw);
       const s = {};
       if (result.kind === 'exact') s.textStyle = result.token;
       else if (result.kind === 'tie' || result.kind === 'near') {
@@ -582,7 +585,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
           question: `Text ${fontSize}px / ${lineHeight ?? 'normal'} / ${fontWeight} / ${letterSpacing}px is ${result.kind === 'tie' ? 'exactly' : 'near'} ${cands.join(', ')}: which Text Style${result.kind === 'near' ? ', or "value" to keep it Off-system' : ''}?`,
           candidates: cands, evidence: { at: [where] },
         }, among(cands, ['value']));
-        if (answer === 'value') textValue(s, raw, norm, `The owner kept ${norm} Off-system rather than ${cands.join(', ')}`, where);
+        if (answer === 'value') textValue(s, raw, `The owner kept ${norm} Off-system rather than ${cands.join(', ')}`, where);
         else {
           s.textStyle = answer || cands[0];
           if (result.kind === 'near') { s.match = 'near'; s.delta = result.candidates.find(x => x.token === s.textStyle).delta; }
@@ -602,8 +605,8 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
           token = d.mark({ token: answer || m.candidates[0], candidates: m.candidates }, fkey);
         }
         s.partial = { fontSize: token };
-        textValue(s, raw, norm, `No Text Style is ${norm}; only its font size is \`${token.token}\``, where);
-      } else textValue(s, raw, norm, result.reason, where);
+        textValue(s, raw, `No Text Style is ${norm}; only its font size is \`${token.token}\``, where);
+      } else textValue(s, raw, result.reason, where);
       // In a Tailwind Prototype, copy with no name of its own takes its component's name, else its first words (#216).
       const base = nameOf(el) || (!el.component && doc.tailwind && firstWords(text)) || el.tag;
       const entry = { copy: addCopy(kebab(base), text, t.offset).slice(5), at: where };
@@ -725,11 +728,11 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   }
 
   // Text that matches no Text Style (#287): one value per metric across the Handoff, with the nearest Text Styles.
-  function textValue(s, metric, norm, reason, where) {
+  function textValue(s, metric, reason, where) {
     const { fontSize, lineHeight, fontWeight, letterSpacing } = metric;
     const spacing = letterSpacing < 0 ? `minus-${-letterSpacing}` : letterSpacing;
     const id = kebab(`text-${fontSize}-${lineHeight === null ? 'normal' : lineHeight}-${fontWeight}-${spacing}`);
-    offSystemValue(s, 'text', norm, { reason, nearest: nearestText(metric, ctx.system), metric: { fontSize, lineHeight, fontWeight, letterSpacing } }, where, id);
+    offSystemValue(s, 'text', metricText(metric), { reason, nearest: nearestText(metric, ctx.system), metric: { fontSize, lineHeight, fontWeight, letterSpacing } }, where, id);
   }
 
   // Text metrics from the source alone: a size the cascade does not set reads as 16px.
