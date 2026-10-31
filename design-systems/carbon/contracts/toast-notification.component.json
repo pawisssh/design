@@ -85,10 +85,10 @@
   ],
   "excluded": [],
   "selection": {
-    "status": "approved",
+    "status": "draft",
     "omit": [],
     "expectedCount": 6,
-    "approval": { "by": "owner", "at": "2026-10-17T00:00:00Z", "snapshotId": "sha256:43954adf2ff1b4015bfe8fb98a58492ea6ec309e3f4f32a316d9003e9119ab8f", "contentHash": "sha256:80115c9a4a94214a3fe56b4a8cce2ec2d3f50c2611cc413f548897b18d750671" }
+    "approval": null
   },
   "anatomy": {
     "name": "Toast notification",
@@ -660,12 +660,12 @@
     {
       "level": "info",
       "at": "anatomy.Accent",
-      "message": "The 3px start border (_mixins.scss L35, notification--experimental) is its own FRAME, as a border on one side is (ADR 0013). It and the status icon take the kind colour: support-<kind>-inverse, with info and info-square sharing support-info-inverse and warning and warning-alt sharing support-warning-inverse (_toast-notification.scss L185-L214)."
+      "message": "The 3px start border (_mixins.scss L35, notification--experimental) is its own FRAME, as a border on one side is (ADR 0013). It and the status icon take the kind colour: support-<kind>-inverse. Info and info-square share toast-notification-info-base (_toast-notification.scss L201-L204), which passes $support-info-inverse (L92-L97); warning and warning-alt share toast-notification-warning-base (L211-L214), which passes $support-warning-inverse (L102-L107)."
     },
     {
       "level": "info",
       "at": "layout.Details.paddingBottom",
-      "message": "Carbon renders title, subtitle and caption only when given (Notification.tsx L475-L489). The Contract always shows Title and Subtitle; the spacing is the title-and-subtitle case: the title's margin-block-start $spacing-05 (L287) on top, the subtitle's margin-block-end $spacing-05 (L295) and the details' $spacing-05 (L238) below."
+      "message": "Carbon renders title, subtitle and caption only when given (Notification.tsx L475-L489). The Contract always shows Title and Subtitle; the spacing is the title-and-subtitle case: the title's margin-block-start $spacing-05 (_toast-notification.scss L287) on top, the subtitle's margin-block: 0 $spacing-05 (_toast-notification.scss L295) and the details' margin-block-end $spacing-05 (_toast-notification.scss L238) below."
     },
     {
       "level": "info",
@@ -696,14 +696,14 @@
       "evidence": [
         "Notification.tsx:L492-L498 NotificationButton, a button.cds--toast-notification__close-button (L202-L210)"
       ],
-      "fingerprint": "sha256:7badd5c979f727fbf1523307d91d5e18970380f2b9810c60a73ad4d0403c64bb"
+      "fingerprint": "sha256:90c238bbe00b583fe62a91c655d5be4c57a0d3f64d61d757c1c090fae5cfb064"
     },
     "anatomy.Close icon": {
       "by": "agent",
       "evidence": [
         "Notification.tsx:L187 and L209 Close with .cds--toast-notification__close-icon"
       ],
-      "fingerprint": "sha256:e959a0f2575b91a636483968e3cc72bfed1ff323307661f37dd034b20be0fce9"
+      "fingerprint": "sha256:57f877428fd3317141b5fd9d43dd89e1391eb59e1e5f80c11cb85d45ce1ded4b"
     },
     "anatomy.Content": {
       "by": "agent",
@@ -717,77 +717,77 @@
       "evidence": [
         "Notification.tsx:L472-L491 div.cds--toast-notification__details"
       ],
-      "fingerprint": "sha256:c72c1886ad2071fd4f342e274529963fdb5b5a21d7b4fd3699a1de98b2045c17"
+      "fingerprint": "sha256:968a6fcdb6fabfeeedd1723ea8d376babd51bbdd898d02e434bfb59c481dfdba"
     },
     "anatomy.Error icon": {
       "by": "agent",
       "evidence": [
         "Notification.tsx:L261-L268 iconTypes['error'] at size 20 (L295)"
       ],
-      "fingerprint": "sha256:dabcf7b0cbfc0c81998c50416e7d275ece466ea554bc4b36776e4435635df7fd"
+      "fingerprint": "sha256:fcf069afa79b96d38998739861d495169b173767daf4c7a76d5cc01c72f21b30"
     },
     "anatomy.Icon": {
       "by": "agent",
       "evidence": [
         "Notification.tsx:L467-L471 NotificationIcon with .cds--toast-notification__icon"
       ],
-      "fingerprint": "sha256:bc11ce0615bec047f8e333de3f59307c073541dff588be95b72b833057978796"
+      "fingerprint": "sha256:2bf5b8623788fcef4ca71111797e031d322fa1f6236dced46a0c7baf9471d78f"
     },
     "anatomy.Info Square icon": {
       "by": "agent",
       "evidence": [
         "Notification.tsx:L261-L268 iconTypes['info-square'] at size 20 (L295)"
       ],
-      "fingerprint": "sha256:66119315cde82736f971bb55cf9c6901640088da6ff73e7dc80f96b9398e78de"
+      "fingerprint": "sha256:32fcfb772b63f738afa5b98277db8ee971033b0525a31120b2df1b834020c66f"
     },
     "anatomy.Info icon": {
       "by": "agent",
       "evidence": [
         "Notification.tsx:L261-L268 iconTypes['info'] at size 20 (L295)"
       ],
-      "fingerprint": "sha256:8a3e7b15978b3a114bb90928cdc6b9c6e95a280072e05e307a61b5e03d92ba86"
+      "fingerprint": "sha256:900495da8715ecfaa5dd005af703011bc0107d2515f72aba2e67e75c978ef6d6"
     },
     "anatomy.Subtitle": {
       "by": "agent",
       "evidence": [
         "Notification.tsx:L480-L484 div.cds--toast-notification__subtitle"
       ],
-      "fingerprint": "sha256:0bb90193f73b15be3a2019ff4a9d050f7ef7bf2300529b97e1f00469cd7e015f"
+      "fingerprint": "sha256:330cc0d8a312e52f4fc51ceaf3e5e37cb64321490cd4ef40889d3d0571cc42ab"
     },
     "anatomy.Success icon": {
       "by": "agent",
       "evidence": [
         "Notification.tsx:L261-L268 iconTypes['success'] at size 20 (L295)"
       ],
-      "fingerprint": "sha256:a6c46cfc0848e1f0702adb37fa2deb2d0968b048656eefb4f35a887024d40f30"
+      "fingerprint": "sha256:c4ca5fee1557fc5084e1e9ea83a4ba7d5165342087a0df0b915e9b8ef5457024"
     },
     "anatomy.Title": {
       "by": "agent",
       "evidence": [
         "Notification.tsx:L475-L479 div.cds--toast-notification__title"
       ],
-      "fingerprint": "sha256:a01a61b6925cedf6b8ec1b7a1a13b89e57c9ddf96568e7160d1fdbd15b500ffb"
+      "fingerprint": "sha256:629448346fa97fb744a049930f0b13a1006362cd0e04a4642d1c4fea2d61d2fd"
     },
     "anatomy.Toast notification": {
       "by": "agent",
       "evidence": [
         "Notification.tsx:L466 div.cds--toast-notification"
       ],
-      "fingerprint": "sha256:62b688ad405992c4476f9af4d8b433794eaa3602f4248d68ceedf6d8dd72b346"
+      "fingerprint": "sha256:0596f58ae63fd9ece0795f72e7cdc6b8dd17e054801e09550037211ba479383b"
     },
     "anatomy.Warning Alt icon": {
       "by": "agent",
       "evidence": [
         "Notification.tsx:L261-L268 iconTypes['warning-alt'] at size 20 (L295)"
       ],
-      "fingerprint": "sha256:1c59ae7abb99c7255c747bc2c63c004151c5f3476fc4db065c948b8d950468ff"
+      "fingerprint": "sha256:44f56797d514edd14e65320b115d6529efd0e78ccb9c54697b543f3edddd9989"
     },
     "anatomy.Warning icon": {
       "by": "agent",
       "evidence": [
         "Notification.tsx:L261-L268 iconTypes['warning'] at size 20 (L295)"
       ],
-      "fingerprint": "sha256:2cf706eeccc5281e4c8ba4e6b283e565b52ed83e67c52453a3746f9363062ebc"
+      "fingerprint": "sha256:6b66b1a84681a6366336525573d9e7574e5cb91b969c2399eca766cfadefa39f"
     },
     "axes.kind.label": {
       "by": "agent",
@@ -969,28 +969,28 @@
       "evidence": [
         "Notification.tsx:L385 subtitle prop; the text is the Carbon docs example"
       ],
-      "fingerprint": "sha256:4869bef329273403331ab2e30cf64121a5593b194a74cdcba69f7ca5edb59f7f"
+      "fingerprint": "sha256:1f3cea5aec1dca6ef5755bb6a9f202b810fe89d2b9f90588981eb2b696e6ee19"
     },
     "properties.subtitle.label": {
       "by": "agent",
       "evidence": [
         "Notification.tsx:L385 subtitle prop"
       ],
-      "fingerprint": "sha256:4869bef329273403331ab2e30cf64121a5593b194a74cdcba69f7ca5edb59f7f"
+      "fingerprint": "sha256:1f3cea5aec1dca6ef5755bb6a9f202b810fe89d2b9f90588981eb2b696e6ee19"
     },
     "properties.title.default": {
       "by": "agent",
       "evidence": [
         "Notification.tsx:L395 title prop; the text is the Carbon docs example"
       ],
-      "fingerprint": "sha256:02dfbd62a9b7e2b01a9eda95ec8bf71ef502f05643ee7f398fb9f78aa27c6b58"
+      "fingerprint": "sha256:823175b10dfedfc69274d87ae3216890eb79f7ab7f64ccdd790404c2978b4977"
     },
     "properties.title.label": {
       "by": "agent",
       "evidence": [
         "Notification.tsx:L395 title prop"
       ],
-      "fingerprint": "sha256:02dfbd62a9b7e2b01a9eda95ec8bf71ef502f05643ee7f398fb9f78aa27c6b58"
+      "fingerprint": "sha256:823175b10dfedfc69274d87ae3216890eb79f7ab7f64ccdd790404c2978b4977"
     }
   }
 }

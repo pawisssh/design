@@ -131,6 +131,17 @@ test('a citation that opens a clause mid-sentence backs the clause after it (#46
   assert.deepEqual(prose({ note: 'The span takes hiddenCss, ProgressCircle.tsx L6, and opacity 0.' }), [], 'one followed by punctuation backs the claim before');
 });
 
+test('a bare L<n> in a sentence that names more than one file is ambiguous: it names its file (#462)', () => {
+  // #462's toast-notification notes[4]: bare lines meant for one file resolved to another the sentence named
+  const two = 'ProgressCircle.tsx L2 sets strokeDashoffset and Button.tsx L4 renders the Icon, at pathLength 1 (L3).';
+  assert.deepEqual(prose({ note: two }), [`notes[0]: "${two}": L3 follows more than one file (ProgressCircle.tsx, Button.tsx): name its file`]);
+  const after = 'ProgressCircle.tsx L2 sets strokeDashoffset and Button.tsx L4 renders the Icon; pathLength is 1 (L3).';
+  assert.match(prose({ note: after })[0], /: L3 follows more than one file \(ProgressCircle\.tsx, Button\.tsx\): name its file$/, 'a `;` clause is still the sentence');
+  assert.deepEqual(prose({ note: 'ProgressCircle.tsx L2 sets strokeDashoffset and Button.tsx L4 renders the Icon, at pathLength 1 (ProgressCircle.tsx L3).' }), []);
+  assert.deepEqual(prose({ note: 'Button.tsx L4 renders the Icon. ProgressCircle.tsx L2 sets strokeDashoffset and L3 sets pathLength.' }), [], 'a file named in an earlier sentence is not this one\'s');
+  assert.deepEqual(prose({ note: 'ProgressCircle.tsx L2 sets strokeDashoffset, packages/web/src/visualizations/ProgressCircle.tsx L3 pathLength, L4 strokeDasharray.' }), [], 'one file named twice');
+});
+
 test('prose without a citation and an owner\'s `was` are not checked', () => {
   assert.deepEqual(prose({ reason: 'derived (size − 1lh)/2', note: 'Figma has no animation, so the Arc does not spin.' }), []);
 });

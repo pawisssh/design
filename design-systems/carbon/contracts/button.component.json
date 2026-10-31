@@ -91,10 +91,10 @@
   "excluded": [],
 
   "selection": {
-    "status": "approved",
+    "status": "draft",
     "omit": [],
     "expectedCount": 245,
-    "approval": { "by": "owner", "at": "2026-10-16T11:03:39.643Z", "snapshotId": "sha256:4c82c3cc7f2af6fa24fba39bb5e159c415b5691800130268c9d8903901164152", "contentHash": "sha256:4a9e9f38d7a42ccfd0ea029241862365784bfe49b7f087e48ceee8ee07711bf5" }
+    "approval": null
   },
 
   "anatomy": {

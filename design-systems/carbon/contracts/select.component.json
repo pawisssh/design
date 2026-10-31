@@ -193,10 +193,10 @@
     }
   ],
   "selection": {
-    "status": "approved",
+    "status": "draft",
     "omit": [],
     "expectedCount": 52,
-    "approval": { "by": "owner", "at": "2026-10-17T00:00:00Z", "snapshotId": "sha256:6d36c2b22a7ad32899a5080c48e270fa4578beff8edef845236b574d4c60b2ff", "contentHash": "sha256:34b5b1f0c09c68f8789ac006f6e89ec91beb0e3be947f2e8fcfbbc407087e167" }
+    "approval": null
   },
   "anatomy": {
     "name": "Select",
@@ -812,17 +812,17 @@
     {
       "level": "info",
       "at": "anatomy.Invalid text",
-      "message": "useNormalizedInputProps.tsx L79-L99 renders invalidText when invalid and warnText when warn, in the same .cds--form-requirement, and Select.tsx L369 drops helperText for either. The Contract keeps one TEXT node and one property per message, shown by `visible` rules (#93), so each property names one code prop."
+      "message": "useNormalizedInputProps.tsx L79-L99 renders invalidText when invalid and warnText when warn, in the same .cds--form-requirement, and Select.tsx L369 drops helper for either; helper holds helperText (Select.tsx L242-L250). The Contract keeps one TEXT node and one property per message, shown by `visible` rules (#93), so each property names one code prop."
     },
     {
       "level": "info",
       "at": "properties.value",
-      "message": "The Value text is the selected SelectItem's text (SelectItem.tsx L61). The options are children the feature supplies (code.items, ADR 0013); the Contract shows one, and a Handoff's Usage lists them."
+      "message": "The Value text is the selected SelectItem's text (SelectItem.tsx L40 and L61). The options are children the feature supplies (code.items, ADR 0013); the Contract shows one, and a Handoff's Usage lists them."
     },
     {
       "level": "info",
       "at": "layout.Box.gap",
-      "message": "Carbon positions the chevron at inset-inline-end $spacing-05 (_select.scss L170) and the status icon at $spacing-08 (L185), both absolutely, and reserves room with padding-inline-end $spacing-09 (L67), or $spacing-10 with a status icon (L141-L144). In Auto Layout that is right padding $spacing-05 plus a $spacing-05 gap before the 16px chevron, closing to $spacing-03 when the status icon shows."
+      "message": "Carbon positions the chevron at inset-inline-end $spacing-05 (_select.scss L170) and the status icon at $spacing-08 (L185), both absolutely, and reserves room with padding-inline: $spacing-05 $spacing-09, whose end is $spacing-09 (L67), or $spacing-10 with a status icon (L141-L144). In Auto Layout that is right padding $spacing-05 plus a $spacing-05 gap before the 16px chevron, closing to $spacing-03 when the status icon shows."
     },
     {
       "level": "info",
@@ -851,56 +851,56 @@
       "evidence": [
         "Select.tsx:L235-L237 and L301-L313 select.cds--select-input"
       ],
-      "fingerprint": "sha256:c79341fcdedf4a85667d1bed10dd59ea6eab05584b8e560660d09d1bde5ce873"
+      "fingerprint": "sha256:3b21f7062b130214e697b228c93d9c7b10be2b7beacc54c8d9d8fe163e9d3574"
     },
     "anatomy.Chevron": {
       "by": "agent",
       "evidence": [
         "Select.tsx:L315 ChevronDown with .cds--select__arrow"
       ],
-      "fingerprint": "sha256:22314dc7a17c95f7e35a0a45a465a048aeb38bfd2315897e744497a9ace0049a"
+      "fingerprint": "sha256:247bf418959e63213cb1815b3f94b815bbab92cf9fea01609a81d69225b50d11"
     },
     "anatomy.Field": {
       "by": "agent",
       "evidence": [
         "Select.tsx:L349-L354 div.cds--select-input__wrapper"
       ],
-      "fingerprint": "sha256:a1a4ccfdd142deb4c8028ecdb8af0381064421c0cb751befdae383b9d99ef8cf"
+      "fingerprint": "sha256:4893a35e26c2081d8e57256b8bd164c98c9d0342b11d5b88d96e3dfdec21902d"
     },
     "anatomy.Field group": {
       "by": "agent",
       "evidence": [
         "Select.tsx:L329 div.cds--select holds the wrapper and the message; no element of its own"
       ],
-      "fingerprint": "sha256:3fa7b7fa0169c68115df0cf307463624e9d15961cf79898d954f0b8b5898a61e"
+      "fingerprint": "sha256:dc03215abd2fa74a78553751bc56d0a59cef3153b819704eff52b3b17bcaf712"
     },
     "anatomy.Helper": {
       "by": "agent",
       "evidence": [
         "Select.tsx:L243-L249 div.cds--form__helper-text"
       ],
-      "fingerprint": "sha256:8e54ac4269bb97370ad1e5e423154daa7292e20e04a4d0aa9958bc3476634f71"
+      "fingerprint": "sha256:dd52837bb16e55bfa8868a007e391e1afa370068ff33a3e275d696f2b63d309b"
     },
     "anatomy.Invalid icon": {
       "by": "agent",
       "evidence": [
         "Select.tsx:L316-L318 WarningFilled with .cds--select__invalid-icon"
       ],
-      "fingerprint": "sha256:ecbe1c98289dea95754bfd0485c99cccb3d1d35623897a8695986a01ac68327f"
+      "fingerprint": "sha256:b0be2ebfa0529ba03191a46daebb7982b27682d2a3e44c8e869fb7d5672339e2"
     },
     "anatomy.Invalid text": {
       "by": "agent",
       "evidence": [
         "useNormalizedInputProps.tsx:L81-L88 div.cds--form-requirement holding invalidText"
       ],
-      "fingerprint": "sha256:c3f80bdeb024b2fe96d969ca826aca54797c7e37a0d1a456d6f7594eeabca4aa"
+      "fingerprint": "sha256:1b2a25e25a33685a6af9b294b1477593f0e9cb15785276d472fbc8bc49281949"
     },
     "anatomy.Label": {
       "by": "agent",
       "evidence": [
         "Select.tsx:L331-L337 label.cds--label from labelText"
       ],
-      "fingerprint": "sha256:b423073215e5d4da5e948f2b9cb23d8e78b250aa873f86674f42c6cbdef06b79"
+      "fingerprint": "sha256:8dd9f520a4074f0d820c8f02b8d00187d5133e776e44f3d7b1dd969cb9bd9007"
     },
     "anatomy.Underline": {
       "by": "agent",
@@ -914,21 +914,21 @@
       "evidence": [
         "Select.tsx:L301-L313 the select's selected option text; no element of its own"
       ],
-      "fingerprint": "sha256:ef5f2e8722bbe5f000063849948728272ad0633afb550e06531b01d66177d965"
+      "fingerprint": "sha256:ee156cc3c2110fabaeafe8956f741b7ff378f361c3860937ec86d256ea62ad89"
     },
     "anatomy.Warn icon": {
       "by": "agent",
       "evidence": [
         "Select.tsx:L319-L323 WarningAltFilled with .cds--select__invalid-icon--warning"
       ],
-      "fingerprint": "sha256:7f960da74db86c35bb29de7ed46edb720b475f83a308118eb483f5727f273bfa"
+      "fingerprint": "sha256:6baeb8c47a2b7e41481c01a48633f6e2ec6bd33fc84853273f68a7ec3112ea04"
     },
     "anatomy.Warn text": {
       "by": "agent",
       "evidence": [
         "useNormalizedInputProps.tsx:L91-L98 div.cds--form-requirement holding warnText"
       ],
-      "fingerprint": "sha256:1204f78ab8ef99d613e7080dd49584bb5fec113894ab19160b37751cbe152fe7"
+      "fingerprint": "sha256:6b2cb8dda7e5cd27b7be759c26c82a38c87a2a558263c7efdb55205118d92c60"
     },
     "axes.readOnly.label": {
       "by": "agent",
@@ -1143,7 +1143,7 @@
     "layout.Value.width": {
       "by": "agent",
       "evidence": [
-        "_select.scss:L63 the select text fills the select; fill is judged"
+        "_select.scss:L63 inline-size: 100%: the select text fills the select; fill is judged"
       ],
       "fingerprint": "sha256:0297c9acb675a5a3de7e699449fea7442d800009118bde34016f8353d5857005"
     },
@@ -1166,56 +1166,56 @@
       "evidence": [
         "Select.tsx:L69 helperText prop"
       ],
-      "fingerprint": "sha256:c430909c5ab23b1334b36b5e9381ed3ae824a78e1ff39bb9c2873931f3e24aab"
+      "fingerprint": "sha256:a9b68730bcd2c4936f3d53def4a400c8ef6bc1fdcaa2dec0be93e87330e372e7"
     },
     "properties.helperText.label": {
       "by": "agent",
       "evidence": [
         "Select.tsx:L69 helperText prop"
       ],
-      "fingerprint": "sha256:c430909c5ab23b1334b36b5e9381ed3ae824a78e1ff39bb9c2873931f3e24aab"
+      "fingerprint": "sha256:a9b68730bcd2c4936f3d53def4a400c8ef6bc1fdcaa2dec0be93e87330e372e7"
     },
     "properties.invalidText.default": {
       "by": "agent",
       "evidence": [
         "Select.tsx:L94 invalidText prop"
       ],
-      "fingerprint": "sha256:2619be530fe99c4855c301d006bd8c1b1df2729029162f0d2db208ff06036ca3"
+      "fingerprint": "sha256:0fe095941e3308c7442ed3c6dfae5e02791ec5ea8791ac6429ff369cc442cd6b"
     },
     "properties.invalidText.label": {
       "by": "agent",
       "evidence": [
         "Select.tsx:L94 invalidText prop"
       ],
-      "fingerprint": "sha256:2619be530fe99c4855c301d006bd8c1b1df2729029162f0d2db208ff06036ca3"
+      "fingerprint": "sha256:0fe095941e3308c7442ed3c6dfae5e02791ec5ea8791ac6429ff369cc442cd6b"
     },
     "properties.label.default": {
       "by": "agent",
       "evidence": [
         "Select.tsx:L99, L155 labelText prop, default 'Select'"
       ],
-      "fingerprint": "sha256:415658b55739e3f95b8664de395ddac81eb34d97de73a73cae13b251827b34e9"
+      "fingerprint": "sha256:f6f738dbfa6ad9c75b27632d8f5ed32d2eec0233560d7a5293cddf9516559de7"
     },
     "properties.label.label": {
       "by": "agent",
       "evidence": [
         "Select.tsx:L99 labelText prop"
       ],
-      "fingerprint": "sha256:415658b55739e3f95b8664de395ddac81eb34d97de73a73cae13b251827b34e9"
+      "fingerprint": "sha256:f6f738dbfa6ad9c75b27632d8f5ed32d2eec0233560d7a5293cddf9516559de7"
     },
     "properties.warnText.default": {
       "by": "agent",
       "evidence": [
         "Select.tsx:L145 warnText prop"
       ],
-      "fingerprint": "sha256:3b689cdc956e367ec19e24b59728429680e20de9372a7ee446b8e14b2d7a20d6"
+      "fingerprint": "sha256:f87e56d00e5ef206be4a41ac523fd993c928a0148fb24e427909a3cf4faa309d"
     },
     "properties.warnText.label": {
       "by": "agent",
       "evidence": [
         "Select.tsx:L145 warnText prop"
       ],
-      "fingerprint": "sha256:3b689cdc956e367ec19e24b59728429680e20de9372a7ee446b8e14b2d7a20d6"
+      "fingerprint": "sha256:f87e56d00e5ef206be4a41ac523fd993c928a0148fb24e427909a3cf4faa309d"
     }
   }
 }

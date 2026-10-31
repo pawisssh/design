@@ -188,10 +188,10 @@
     }
   ],
   "selection": {
-    "status": "approved",
+    "status": "draft",
     "omit": [],
     "expectedCount": 36,
-    "approval": { "by": "owner", "at": "2026-10-17T00:00:00Z", "snapshotId": "sha256:1a5e61e829858c59e445d7febf9c44c5d920bae55ddd39de50851196f1502c4c", "contentHash": "sha256:ffc567ffda43ccc993b609efd9111bb3d652edadddf331cf0bd9f77b67e8e151" }
+    "approval": null
   },
   "anatomy": {
     "name": "Text input",
@@ -741,12 +741,12 @@
     {
       "level": "verify",
       "at": "anatomy.Warn icon",
-      "message": "WarningAltFilled is two-tone: _text-input.scss L115 paints its inner path (path:first-of-type) $black-100 while the outer path takes $support-warning. Icons are one flattened Vector (#13), so the Design Library shows a support-warning triangle with the mark cut out instead of a black mark. Its key exists only in svg/32 at @carbon/icons 11.90.0, so it resolves through the fallback."
+      "message": "WarningAltFilled is two-tone: _text-input.scss L115-L116 paints its inner path (path:first-of-type) $black-100 while the outer path takes $support-warning. Icons are one flattened Vector (#13), so the Design Library shows a support-warning triangle with the mark cut out instead of a black mark. Its key exists only in svg/32 at @carbon/icons 11.90.0, so it resolves through the fallback."
     },
     {
       "level": "info",
       "at": "anatomy.Invalid text",
-      "message": "useNormalizedInputProps.tsx L79-L99 renders invalidText when invalid and warnText when warn, in the same .cds--form-requirement, and TextInput.tsx L429 drops helperText for either. The Contract keeps one TEXT node and one property per message, shown by `visible` rules (#93), so each property names one code prop."
+      "message": "useNormalizedInputProps.tsx L79-L99 renders invalidText when invalid and warnText when warn, in the same .cds--form-requirement, and TextInput.tsx L429 drops helper for either; helper holds helperText (TextInput.tsx L336-L343). The Contract keeps one TEXT node and one property per message, shown by `visible` rules (#93), so each property names one code prop."
     },
     {
       "level": "info",
@@ -780,49 +780,49 @@
       "evidence": [
         "TextInput.tsx:L227 and L345-L355 input.cds--text-input"
       ],
-      "fingerprint": "sha256:529006540d34e3978abe95044e8f95c103b2ae9e51f40100b73c8b5dc3182f5f"
+      "fingerprint": "sha256:442045638d625a5d84f5f5f231b1494edfcba26eb0e2148f493fd58c70d552fc"
     },
     "anatomy.Field": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L292-L299 div.cds--text-input__field-wrapper"
       ],
-      "fingerprint": "sha256:cea4a9446a2a3383bd3ce339b4033a9b0823733533c7de7bf23ee452f13703ca"
+      "fingerprint": "sha256:e8cf454c3c47b5ac2524148e621dc09522bb950270832f82bbdd7ce66ff45786"
     },
     "anatomy.Field group": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L286-L291 div.cds--text-input__field-outer-wrapper"
       ],
-      "fingerprint": "sha256:43c9679a4201fc9b7328ccee8ae445ac2381d23a6c9274008c9c4bc5b2b070f0"
+      "fingerprint": "sha256:097f3718c9a7ff00bede12654437d9f3924f075d4bf0ae7d256865cf96343d6d"
     },
     "anatomy.Helper": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L336-L343 div.cds--form__helper-text"
       ],
-      "fingerprint": "sha256:2ac931a3321c7f8e32836e8665ec8639d6e51e320c61c822c2190566a15bac6a"
+      "fingerprint": "sha256:b686216231a6cb97e47c9206c512dc6174489aab78f491b212e213e370dd35c9"
     },
     "anatomy.Invalid icon": {
       "by": "agent",
       "evidence": [
         "useNormalizedInputProps.tsx:L80 WarningFilled, rendered at TextInput.tsx:L407 with .cds--text-input__invalid-icon"
       ],
-      "fingerprint": "sha256:7fce4f4ed81dc7feb13e9b1064f2259bb22665d85107f00f1306b1781d622d49"
+      "fingerprint": "sha256:f2ef5c01a766e33617f4318d8349ea87b3de0b883fec45290a60d16ade41c71e"
     },
     "anatomy.Invalid text": {
       "by": "agent",
       "evidence": [
         "useNormalizedInputProps.tsx:L81-L88 div.cds--form-requirement holding invalidText"
       ],
-      "fingerprint": "sha256:c5963b6980e38fe9f56e11536e902b0c63b206de076f68d6506abfe2eece5788"
+      "fingerprint": "sha256:7028a7932b1463f0aaa0e46b5d1e5c4e83572a61415f72969267c08607089954"
     },
     "anatomy.Label": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L318-L322 label.cds--label from labelText"
       ],
-      "fingerprint": "sha256:07d08cb5dd74696f197de2b76efa394d50d32909546083a56963ceacc98af3ef"
+      "fingerprint": "sha256:0ed9c6556e372e85ce1b837de5e0ee7f7dfd7a64dcfc94b96c264dc0cfa6b99e"
     },
     "anatomy.Underline": {
       "by": "agent",
@@ -836,21 +836,21 @@
       "evidence": [
         "TextInput.tsx:L247 the input's placeholder or value; no element of its own"
       ],
-      "fingerprint": "sha256:e9eb1c5a5059644c69493059d6eefa31761e29440ad69ff79042b68a64b3dbe5"
+      "fingerprint": "sha256:b84f822d44ac35ea298841bddd4e6268d38d324375a820cc8b299f0219726858"
     },
     "anatomy.Warn icon": {
       "by": "agent",
       "evidence": [
         "useNormalizedInputProps.tsx:L90 WarningAltFilled, rendered at TextInput.tsx:L407 with .cds--text-input__invalid-icon--warning"
       ],
-      "fingerprint": "sha256:9d26c14901893814a0ea58278305affb66e0d5b5b9834ec9bff7fbed48eb1254"
+      "fingerprint": "sha256:8861be4721e6ee4a91a42a8d3371bf69cf7a37c41ffeebcffc23acce815035b7"
     },
     "anatomy.Warn text": {
       "by": "agent",
       "evidence": [
         "useNormalizedInputProps.tsx:L91-L98 div.cds--form-requirement holding warnText"
       ],
-      "fingerprint": "sha256:af869e9b9745cc18a9b12ebf9b7530d8058fa6567cf42c9f071a999513fa8e1e"
+      "fingerprint": "sha256:85eb3f88b9e722c14a0b65a508d22c061cf9856893251bf973ad29b12b7ea128"
     },
     "axes.readOnly.label": {
       "by": "agent",
@@ -1088,70 +1088,70 @@
       "evidence": [
         "TextInput.tsx:L67 helperText prop"
       ],
-      "fingerprint": "sha256:23bd987a6c0a3b08f50ef1e788ca0a5ddcada8bc83661de844618d9f4504ab5a"
+      "fingerprint": "sha256:b13a6eee8ace527070869938fe29639f853af26068d0fbb7e878f651d697d061"
     },
     "properties.helperText.label": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L67 helperText prop"
       ],
-      "fingerprint": "sha256:23bd987a6c0a3b08f50ef1e788ca0a5ddcada8bc83661de844618d9f4504ab5a"
+      "fingerprint": "sha256:b13a6eee8ace527070869938fe29639f853af26068d0fbb7e878f651d697d061"
     },
     "properties.invalidText.default": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L92 invalidText prop"
       ],
-      "fingerprint": "sha256:857ead04336154f731abe833d6eac1818b411f548f05928c5137c579aed044d1"
+      "fingerprint": "sha256:f20e9a022418d773a3dc81fefb871ee95a4e4481e4896c96046df872e3b2a3fe"
     },
     "properties.invalidText.label": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L92 invalidText prop"
       ],
-      "fingerprint": "sha256:857ead04336154f731abe833d6eac1818b411f548f05928c5137c579aed044d1"
+      "fingerprint": "sha256:f20e9a022418d773a3dc81fefb871ee95a4e4481e4896c96046df872e3b2a3fe"
     },
     "properties.label.default": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L98 labelText prop"
       ],
-      "fingerprint": "sha256:1f86ba8438e33c7e78f96ab1d5ae2205291a4317256d3bfbb2b99a85cc0386b7"
+      "fingerprint": "sha256:ed156932984d9220db8302da299adc00b29e869b3be187f11e0dd6606b4f290d"
     },
     "properties.label.label": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L98 labelText prop"
       ],
-      "fingerprint": "sha256:1f86ba8438e33c7e78f96ab1d5ae2205291a4317256d3bfbb2b99a85cc0386b7"
+      "fingerprint": "sha256:ed156932984d9220db8302da299adc00b29e869b3be187f11e0dd6606b4f290d"
     },
     "properties.placeholder.default": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L128 placeholder prop"
       ],
-      "fingerprint": "sha256:39888156ab29b130678ee31f5cc1a296fa9b43667052db05d5b01ad362543bc7"
+      "fingerprint": "sha256:52004578fd1e1e265e19bb8fc23c9d6851da8a484c7a94142e07667596522c1f"
     },
     "properties.placeholder.label": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L128 placeholder prop"
       ],
-      "fingerprint": "sha256:39888156ab29b130678ee31f5cc1a296fa9b43667052db05d5b01ad362543bc7"
+      "fingerprint": "sha256:52004578fd1e1e265e19bb8fc23c9d6851da8a484c7a94142e07667596522c1f"
     },
     "properties.warnText.default": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L164 warnText prop"
       ],
-      "fingerprint": "sha256:5fc714c8e6383a29d982930de80e93c8c3fee3ef72383962a0d83466f60778dd"
+      "fingerprint": "sha256:ebfcd280f46785b2231aaac7bd95a398125505fc5eb35aa065a0616fde7b24e4"
     },
     "properties.warnText.label": {
       "by": "agent",
       "evidence": [
         "TextInput.tsx:L164 warnText prop"
       ],
-      "fingerprint": "sha256:5fc714c8e6383a29d982930de80e93c8c3fee3ef72383962a0d83466f60778dd"
+      "fingerprint": "sha256:ebfcd280f46785b2231aaac7bd95a398125505fc5eb35aa065a0616fde7b24e4"
     }
   }
 }

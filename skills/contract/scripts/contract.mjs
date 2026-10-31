@@ -1057,12 +1057,14 @@ export function draftedFingerprints(contract, { nodeFacts, parts, keys, cited })
 const PROSE = new Set(('the and with for its from each one not but has are was this that into any all per via when ' +
   'then than there their them they which what who out off two how can may own').split(' '));
 
-// A citation: `<file>:L<a>[-L<b>]`, or `<file> L<a>` in a reason or a note; a bare `L<n>` is in the last file named.
+// A citation: `<file>:L<a>[-L<b>]`, or `<file> L<a>` in a reason or a note; a bare `L<n>` is in the last file named,
+// and must name its file when its sentence names more than one (#462).
 const FILE = /[\w./-]+\.[A-Za-z]\w*/g;
 const CITE = new RegExp(`(?:(${FILE.source})[: ])?\\bL(\\d+)(?:-L(\\d+))?\\b`, 'g');
 // The end of a claim in a reason or a note: its sentence's, its `;` clause's, or a contrast word, so in "L1 shows a
 // while b", b is the next claim's (#462).
 const CLAUSE = /[.;]\s|\b(?:while|whereas|but|though)\b/;
+const SENTENCE = /[.!?]\s/;
 // Whether a source path is the cited file: the path, or its last segments.
 const isFile = (path, file) => path === file || path.endsWith(`/${file}`);
 // In a reason or a note a claim's identifier matches source text across case and hyphens: `stroke-dashoffset`
@@ -1077,8 +1079,9 @@ const isIdent = w => /[a-z][A-Z]|[-_$]/.test(w);
  * They are checked in `drafted`'s agent evidence, in every `reason` (an owner's `was` skipped) and in every note.
  * An evidence string is `<file>:L<a>[-L<b>] what it shows`; the claim may cite more ranges, `L<n>` in the same file or
  * `<other file>:L<n>`. A reason or a note cites `<file> L<n>` or `<file>:L<n>` anywhere, and a bare `L<n>` is in the
- * last file it named. Each file must be exactly one path (the path, or its last segments), and each range must lie in
- * it. In evidence, when the claim (the whole string) names a word its files hold, the cited lines must hold one of
+ * last file it named; one whose sentence names more than one file before it is ambiguous (#462). Each file must be
+ * exactly one path (the path, or its last segments), and each range must lie in it. In evidence, when the claim
+ * (the whole string) names a word its files hold, the cited lines must hold one of
  * those words, so a citation a line off shows none. In a reason or a note each citation, or run of citations ("L132
  * and L140"), backs the claim before it, back to the previous run or the start of its sentence or `;` clause; a run
  * that opens one (or follows a `:`, or a `,` or `and` with a word after the run) backs the claim after it, to the next
@@ -1100,6 +1103,11 @@ export function draftedEvidence(contract, files, normalise) {
     for (const m of text.matchAll(CITE)) {
       const file = m[1] || (mentions.filter(f => f.index + f[0].length <= m.index).at(-1) || [])[0];
       if (!file) return `L${m[2]} names no file`;
+      if (!m[1]) {
+        const start = m.index - text.slice(0, m.index).split(SENTENCE).at(-1).length;
+        const named = [...new Map(mentions.filter(f => f.index >= start && f.index + f[0].length <= m.index).map(f => [sources(f[0])[0], f[0]])).values()];
+        if (named.length > 1) return `L${m[2]} follows more than one file (${named.join(', ')}): name its file`;
+      }
       const hits = sources(file);
       if (hits.length !== 1) return `${hits.length ? 'more than one' : 'no'} source file is ${file}`;
       const lines = files[hits[0]].split('\n'), a = +m[2], b = +(m[3] || m[2]);
