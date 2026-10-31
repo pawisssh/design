@@ -4,7 +4,7 @@
 // and writes plan.json and state.json for the packager. The plan is disposable: re-derive it for every call.
 //
 //   node skills/to-design/scripts/build-plan.mjs foundations --doc <foundations.json> --file-key <key> --out <dir>
-//        [--adopt] [--prune name,name] [--page "Page 1"] [--chunk N] [--ledger <path>]
+//        [--mode build|diff] [--adopt] [--prune name,name] [--page "Page 1"] [--chunk N] [--ledger <path>]
 //   node skills/to-design/scripts/build-plan.mjs icons --contract <component.json> [--contract ...]
 //        --icons-dir <unpacked icon package> --file-key <key> --out <dir> [--adopt] [--page Icons] [--ledger <path>]
 //   node skills/to-design/scripts/build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir>
@@ -67,14 +67,18 @@ export function foundationsNext(docText, ledger, { budget = CALL_BUDGET } = {}) 
  * `docText` is the document file's text (its bytes are the documentHash); `ledger` is the file's ledger or null.
  * Options: fileKey (required), adopt, prune (orphan names the owner confirmed for deletion), page, at, strip,
  * chunk (1-based, when the selection needs several calls: `plan.chunk` says how many) and budget (chars per call).
+ * `readOnly` makes a diff: the core reports what a build would create and update, writes nothing and carries the
+ * ledger unchanged, so any chunk can be read without the earlier ones recorded and no `record` follows it (#241).
  */
-export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune = [], page = null, at = new Date().toISOString(), strip = true, chunk = 1, budget = CALL_BUDGET } = {}) {
+export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune = [], readOnly = false, page = null, at = new Date().toISOString(), strip = true, chunk = 1, budget = CALL_BUDGET } = {}) {
   if (!fileKey) throw new Error('fileKey is required');
   if (ledger && ledger.fileKey !== fileKey) throw new Error(`ledger is for ${ledger.fileKey}, not ${fileKey}`);
   const { doc, names, parts } = foundationsParts(docText, ledger, budget);
   if (!(chunk >= 1 && chunk <= parts.length)) throw new Error(`there is no chunk ${chunk} of ${parts.length}`);
+  if (readOnly && prune.length) throw new Error('a diff takes no prune: it writes nothing');
   if (chunk > 1 && prune.length) throw new Error('prune runs with chunk 1, which carries the whole selection\'s orphans');
-  assertRecorded(ledger, parts, chunk, documentHash(docText));
+  // a diff reads one chunk against whatever the file holds, recorded or not
+  if (!readOnly) assertRecorded(ledger, parts, chunk, documentHash(docText));
   const sub = subsetDocument(doc, parts.length > 1 ? parts[chunk - 1].names : names);
   const plan = {
     schemaVersion: 1,
@@ -82,7 +86,7 @@ export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune
     fileKey,
     page,
     at,
-    options: { adopt: !!adopt, prune: [...prune] },
+    options: { adopt: !!adopt, prune: [...prune], ...(readOnly ? { readOnly: true } : {}) },
     designSystem: doc.designSystem.key,
     snapshotId: doc.source.snapshotId,
     documentHash: documentHash(docText),
@@ -692,7 +696,7 @@ export function rehashSets(from, contract, docText, ledger, { fileKey }) {
 }
 
 const USAGE = [
-  'usage: build-plan.mjs foundations --doc <foundations.json> --file-key <key> --out <dir> [--adopt] [--prune a,b] [--page <name>] [--chunk N] [--ledger <path>]',
+  'usage: build-plan.mjs foundations --doc <foundations.json> --file-key <key> --out <dir> [--mode build|diff] [--adopt] [--prune a,b] [--page <name>] [--chunk N] [--ledger <path>]',
   '       build-plan.mjs icons --contract <component.json> [--contract ...] --icons-dir <package dir> --file-key <key> --out <dir> [--adopt] [--page <name>] [--ledger <path>]',
   '       build-plan.mjs base --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir> [--adopt | --adopt-variant] [--read-only] [--page <name>] [--ledger <path>]',
   '       build-plan.mjs sets --contract <component.json> --doc <foundations.json> --file-key <key> --out <dir>',
@@ -715,6 +719,7 @@ function main() {
     },
   });
   const slice = positionals[0];
+  if (slice === 'foundations' && !['build', 'diff'].includes(values.mode)) { console.error(`foundations --mode takes build or diff, not ${values.mode}`); process.exit(2); }
   if (slice === 'rehash') {
     if (!values.from || !values.contract || values.contract.length !== 1 || !values.doc || !values['file-key']) { console.error(USAGE); process.exit(2); }
     const path = values.ledger || defaultLedgerPath(values['file-key']);
@@ -759,7 +764,7 @@ function main() {
     })
     : slice === 'foundations'
     ? foundationsPlan(readFileSync(values.doc, 'utf8'), readLedger(path), {
-      fileKey, adopt: values.adopt, prune: values.prune ? values.prune.split(',').map(s => s.trim()).filter(Boolean) : [], page: values.page ?? null, chunk: Number(values.chunk),
+      fileKey, adopt: values.adopt, readOnly: values.mode === 'diff', prune: values.prune ? values.prune.split(',').map(s => s.trim()).filter(Boolean) : [], page: values.page ?? null, chunk: Number(values.chunk),
     })
     : iconsPlan(values.contract.map(p => JSON.parse(readFileSync(p, 'utf8'))), values['icons-dir'], readLedger(path), {
       fileKey, adopt: values.adopt, ...(values.page ? { page: values.page } : {}),

@@ -62,6 +62,8 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const F = plan.foundations;
     const opts = plan.options || {};
     const adopt = !!opts.adopt;
+    // readOnly (a diff, #241): the same preflight and compare, every write skipped, the ledger carried unchanged.
+    const dry = !!opts.readOnly;
     const prev = state.foundations || null;
     const prevCollections = (prev && prev.collections) || {};
     const prevVariables = (prev && prev.variables) || {};
@@ -178,7 +180,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
 
     // -- apply --
     const page = figma.root.children.find(p => p.name === plan.page) || figma.root.children[0];
-    await figma.setCurrentPageAsync(page);
+    if (!dry) await figma.setCurrentPageAsync(page);
     const created = { collections: [], modes: [], variables: [], textStyles: [] };
     const updated = { collections: {}, variables: {}, textStyles: {} };
     const restored = [];
@@ -191,22 +193,25 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       let col = cols[c.key].col;
       const isNew = !col;
       const fields = [];
+      // A diff lists a new collection, its modes and its variables as created and goes no further: nothing is made for them to read.
+      if (isNew && dry) { created.collections.push(c.key); c.modes.forEach(m => created.modes.push(`${c.key}/${m.key}`)); continue; }
       if (isNew) { col = figma.variables.createVariableCollection(c.name); created.collections.push(c.key); }
-      else if (col.name !== c.name) { col.name = c.name; fields.push('name'); }
-      if (col.hiddenFromPublishing !== !!c.hidden) { col.hiddenFromPublishing = !!c.hidden; fields.push('hidden'); }
+      else if (col.name !== c.name) { if (!dry) col.name = c.name; fields.push('name'); }
+      if (col.hiddenFromPublishing !== !!c.hidden) { if (!dry) col.hiddenFromPublishing = !!c.hidden; fields.push('hidden'); }
       const ids = {};
       c.modes.forEach((m, i) => {
         let id = cols[c.key].modes[m.key];
         if (!id) {
-          if (isNew && i === 0) { id = col.modes[0].modeId; col.renameMode(id, m.label); } else id = col.addMode(m.label);
+          if (isNew && i === 0) { id = col.modes[0].modeId; col.renameMode(id, m.label); } else if (!dry) id = col.addMode(m.label);
           created.modes.push(`${c.key}/${m.key}`);
-        } else if (col.modes.find(x => x.modeId === id).name !== m.label) { col.renameMode(id, m.label); fields.push(`mode:${m.key}`); }
+        } else if (col.modes.find(x => x.modeId === id).name !== m.label) { if (!dry) col.renameMode(id, m.label); fields.push(`mode:${m.key}`); }
         ids[m.key] = id;
       });
       // No reorder API: setDefaultMode moves a mode to index 0, so calling it in reverse order fixes the order (#27).
       const target = c.modes.map(m => ids[m.key]);
-      if (target.some((id, i) => col.modes[i].modeId !== id)) {
-        for (const id of target.slice().reverse()) col.setDefaultMode(id);
+      // (a diff has no id for a mode it would add, so it reads the order only when every mode exists)
+      if (target.every(Boolean) && target.some((id, i) => col.modes[i].modeId !== id)) {
+        if (!dry) for (const id of target.slice().reverse()) col.setDefaultMode(id);
         fields.push('modeOrder');
       }
       for (const m of col.modes) if (!target.includes(m.modeId)) extraModes.push({ collection: c.key, name: m.name, modeId: m.modeId });
@@ -218,7 +223,8 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const made = {};
     const ledgerVariables = {};
     const value = (type, val) => {
-      if (val.alias != null) return figma.variables.createVariableAlias(made[val.alias]);
+      // a diff makes no alias: an existing target's id, else null (the target is created, so the value differs)
+      if (val.alias != null) return dry ? { type: 'VARIABLE_ALIAS', id: made[val.alias] ? made[val.alias].id : null } : figma.variables.createVariableAlias(made[val.alias]);
       if (val.raw != null) return rgba(val.raw, val.alpha);
       return type === 'COLOR' ? rgba(val.value) : val.value;
     };
@@ -228,18 +234,20 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       for (const [flat, v] of mine.filter(([k]) => !inner(k)).concat(mine.filter(([k]) => inner(k)))) {
         let x = vars[flat];
         const isNew = !x;
+        if (isNew && dry) { created.variables.push(flat); continue; }
         if (isNew) { x = figma.variables.createVariable(v.name, col, v.type); created.variables.push(flat); }
         else if (prevOrphans.variables[flat] && prevOrphans.variables[flat].id === x.id) restored.push(flat);
         const fields = [];
-        if (x.name !== v.name) { x.name = v.name; fields.push('name'); }
-        if (!sameList(x.scopes, v.scopes)) { x.scopes = v.scopes; fields.push('scopes'); }
+        if (x.name !== v.name) { if (!dry) x.name = v.name; fields.push('name'); }
+        if (!sameList(x.scopes, v.scopes)) { if (!dry) x.scopes = v.scopes; fields.push('scopes'); }
         const web = (v.codeSyntax || {}).WEB;
-        if (x.codeSyntax.WEB !== web) { if (web) x.setVariableCodeSyntax('WEB', web); else x.removeVariableCodeSyntax('WEB'); fields.push('codeSyntax'); }
-        if (x.hiddenFromPublishing !== !!v.hidden) { x.hiddenFromPublishing = !!v.hidden; fields.push('hidden'); }
+        if (x.codeSyntax.WEB !== web) { if (!dry) { if (web) x.setVariableCodeSyntax('WEB', web); else x.removeVariableCodeSyntax('WEB'); } fields.push('codeSyntax'); }
+        if (x.hiddenFromPublishing !== !!v.hidden) { if (!dry) x.hiddenFromPublishing = !!v.hidden; fields.push('hidden'); }
         const current = x.valuesByMode;
         for (const [mk, val] of Object.entries(v.values)) {
+          if (dry && !modes[mk]) continue; // a mode the diff lists as created has no values to read
           const want = value(v.type, val);
-          if (!sameValue(current[modes[mk]], want)) { x.setValueForMode(modes[mk], want); fields.push(`value:${mk}`); }
+          if (!sameValue(current[modes[mk]], want)) { if (!dry) x.setValueForMode(modes[mk], want); fields.push(`value:${mk}`); }
         }
         if (!isNew) note('variables', flat, fields);
         made[flat] = x;
@@ -252,21 +260,23 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     for (const [flat, s] of Object.entries(F.textStyles)) {
       let st = styles[flat];
       const isNew = !st;
+      if (isNew && dry) { created.textStyles.push(flat); continue; }
       if (isNew) { st = figma.createTextStyle(); created.textStyles.push(flat); }
       else if (prevOrphans.textStyles[flat] && prevOrphans.textStyles[flat].id === st.id) restored.push(flat);
       const fields = [];
-      if (st.name !== s.name) { st.name = s.name; fields.push('name'); }
+      if (st.name !== s.name) { if (!dry) st.name = s.name; fields.push('name'); }
       const binds = s.binds || {};
       const literal = field => isNew || !binds[field];
       const font = { family: s.fontFamily, style: s.fontStyle };
-      await figma.loadFontAsync(font);
-      if ((literal('fontFamily') || literal('fontWeight')) && (st.fontName.family !== font.family || st.fontName.style !== font.style)) { st.fontName = font; fields.push('fontName'); }
-      if (s.fontSize != null && literal('fontSize') && !near(st.fontSize, s.fontSize, 1e-4)) { st.fontSize = s.fontSize; fields.push('fontSize'); }
-      if (s.lineHeight && literal('lineHeight') && !sameMetric(st.lineHeight, s.lineHeight)) { st.lineHeight = s.lineHeight; fields.push('lineHeight'); }
-      if (s.letterSpacing && literal('letterSpacing') && !sameMetric(st.letterSpacing, s.letterSpacing)) { st.letterSpacing = s.letterSpacing; fields.push('letterSpacing'); }
+      if (!dry) await figma.loadFontAsync(font);
+      if ((literal('fontFamily') || literal('fontWeight')) && (st.fontName.family !== font.family || st.fontName.style !== font.style)) { if (!dry) st.fontName = font; fields.push('fontName'); }
+      if (s.fontSize != null && literal('fontSize') && !near(st.fontSize, s.fontSize, 1e-4)) { if (!dry) st.fontSize = s.fontSize; fields.push('fontSize'); }
+      if (s.lineHeight && literal('lineHeight') && !sameMetric(st.lineHeight, s.lineHeight)) { if (!dry) st.lineHeight = s.lineHeight; fields.push('lineHeight'); }
+      if (s.letterSpacing && literal('letterSpacing') && !sameMetric(st.letterSpacing, s.letterSpacing)) { if (!dry) st.letterSpacing = s.letterSpacing; fields.push('letterSpacing'); }
       const bound = st.boundVariables || {};
       for (const [field, token] of Object.entries(binds)) {
-        if (!bound[field] || bound[field].id !== made[token].id) { st.setBoundVariable(field, made[token]); fields.push(`bind:${field}`); }
+        // (a token a diff would create is not in `made`: the field is bound to it)
+        if (!bound[field] || !made[token] || bound[field].id !== made[token].id) { if (!dry) st.setBoundVariable(field, made[token]); fields.push(`bind:${field}`); }
       }
       if (!isNew) note('textStyles', flat, fields);
       ledgerStyles[flat] = st.id;
@@ -277,7 +287,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     for (const [kind, name] of prune) {
       const id = orphans[kind][name].id;
       const obj = kind === 'variables' ? varById.get(id) : styleById.get(id);
-      if (obj) obj.remove();
+      if (obj && !dry) obj.remove();
       delete orphans[kind][name];
       pruned.push(name);
     }
@@ -285,8 +295,9 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const orphanedCount = orphaned.variables.length + orphaned.textStyles.length;
     return Object.assign(report, {
       summary: { created: countAll(created), updated: countAll(updated), unchanged, orphaned: orphanedCount, restored: restored.length, pruned: pruned.length, conflicts: 0 },
-      created, updated, orphaned, restored, pruned, conflicts, extraModes,
-      ledger: {
+      // a diff carries the ledger as it was, so a `record` after it changes nothing
+      created, updated, orphaned, restored, pruned, conflicts, extraModes, ...(dry ? { mode: 'diff' } : {}),
+      ledger: dry ? { foundations: prev } : {
         foundations: {
           designSystem: plan.designSystem, snapshotId: plan.snapshotId, documentHash: plan.documentHash, appliedAt: plan.at,
           collections: ledgerCollections, variables: ledgerVariables, textStyles: ledgerStyles, orphans,
