@@ -297,6 +297,45 @@ test("runtime: v0's white surfaces bind their own tokens by the built reference,
   const bg = at => styles.find(s => s.property === 'background-color' && s.at.includes(at));
   assert.equal(bg('app/layout.tsx:28:7').token, 'background', 'the body');
   assert.equal(bg('app/page.tsx:17:5').token, 'muted', 'the page: muted, not its value twins secondary and accent');
+  assert.deepEqual(usagesOf(handoff).flatMap(u => (u.offAxis || []).filter(o => o.question.startsWith('q-off-axis-'))), [], "no Usage's computed colours are Off-axis (#286)");
+});
+
+// ---------- Off-axis from a Contract Usage's computed colours on a React Prototype's runtime run (#286) ----------
+
+const usagesOf = handoff => handoff.screens.flatMap(s => s.regions.flatMap(r => r.usages));
+// A copy of the v0 Prototype with each `[file, from, to]` edit applied in place, so every line keeps its `at`.
+function v0Copy(edits) {
+  const dir = mkdtempSync(join(tmpdir(), 'to-handoff-v0-'));
+  cpSync(V0, dir, { recursive: true });
+  for (const [file, from, to] of edits) {
+    const text = readFileSync(join(dir, file), 'utf8');
+    assert.ok(text.includes(from), `${file} has ${from}`);
+    writeFileSync(join(dir, file), text.replace(from, to));
+  }
+  return dir;
+}
+
+test("runtime: a Contract Usage's stray computed background is Off-axis with its question; an inherited text colour is not (#286)", { skip: noRuntime }, async () => {
+  const prototype = v0Copy([
+    // The success state's outline Button: a stray background, and a text colour it inherits from a red parent.
+    ['app/request-access-form.tsx', 'gap-3 py-6 text-center">', 'gap-3 py-6 text-center text-red-600">'],
+    ['app/request-access-form.tsx', '<Button variant="outline" onClick', '<Button variant="outline" className="bg-red-500" onClick'],
+  ]);
+  const decisions = JSON.parse(readFileSync(join(V0, 'decisions.json'), 'utf8'));
+  const ds = shadcnDesignSystem();
+  const { requests, handoff, path } = await generate({ prototype, designSystem: ds, decisions, runtime: true });
+  assert.deepEqual(requests, []);
+  const off = usagesOf(handoff).flatMap(u => (u.offAxis || []).filter(o => o.question.startsWith('q-off-axis-')).map(o => ({ id: u.id, at: u.at, ...o })));
+  assert.deepEqual(off.map(({ reason, ...o }) => o), [
+    { id: 'button', at: 'app/request-access-form.tsx:48:9', property: 'background-color', raw: '#fb2c36', question: 'q-off-axis-button' },
+  ], 'the stray bg-red-500 only: the inherited red text is not the Button setting it');
+  assert.match(off[0].reason, /^`button` outline .* paints no #fb2c36 in Light$/);
+  assert.equal(handoff.openQuestions.find(q => q.id === 'q-off-axis-button').text,
+    '`button` (button) sets background-color #fb2c36, which its tuple does not paint. Keep the Contract\'s look, pick another tuple, or record a variant?');
+  const html = readFileSync(await render({ handoffPath: path, designSystem: ds }), 'utf8');
+  const card = html.slice(html.indexOf('<h3>button</h3>'), html.indexOf('</article>', html.indexOf('<h3>button</h3>')));
+  assert.match(card, /↯/, "the Usage's card flags it Off-axis");
+  assert.match(card, /paints no #fb2c36/);
 });
 
 // ---------- computed spacing and radius on a React Prototype's runtime run (#285) ----------

@@ -484,7 +484,8 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       for (const [k, v] of Object.entries(byAttr)) if (typeof el.attrs[k] === 'string') u.state = v;
     }
 
-    // Off-axis (#62): a usage's own colour no paint token of its tuple has, in the mapped mode.
+    // Off-axis (#62): a usage's own colour no paint token of its tuple has, in the mapped mode. On a React
+    // Prototype's runtime run it is the computed colour its outermost host element sets (#286).
     function offAxis(contract, tuple, el, id) {
       const full = { ...Object.fromEntries(contract.axes.map(a => [a.key, a.default])), ...tuple };
       const tokens = new Set();
@@ -492,13 +493,14 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
       collect(resolve(contract, full).paint);
       const hexes = [...tokens].filter(t => foundations.variables[t]).map(t => convert(valueIn(foundations.variables[t], mode, foundations)).hex);
       const out = [];
-      for (const decl of ownDeclarations(rules, el)) {
+      for (const decl of declarationsOf(el)) {
         const role = roleOf(decl.property);
         if (!COLOR_ROLES.has(role)) continue;
+        const text = decl.rendered ? decl.rendered.value : followCustom(decl.value, custom);
         let c;
-        try { c = convert(followCustom(decl.value, custom)); } catch { continue; }
+        try { c = convert(text); } catch { continue; }
         if (c.alpha === 0 || hexes.some(h => sameHex(h, c.hex))) continue;
-        const raw = colorText(followCustom(decl.value, custom));
+        const raw = colorText(text);
         if (out.some(o => o.property === decl.property && o.raw === raw)) continue;
         out.push({ property: decl.property, raw, reason: `\`${contract.family.key}\` ${Object.values(full).join(' ')} paints no ${raw} in ${best.label}`, question: `q-off-axis-${id}` });
       }
