@@ -22,7 +22,11 @@ import { ATTR, tagHtml, tagJsx } from './tag.mjs';
 
 const SKIP_DIRS = new Set(['node_modules', '.git', '.next', 'dist', 'build', 'out']);
 const VIEWPORT_HEIGHT = 900;
-const STEP_TIMEOUT = 5000;
+// A state's steps fail fast on a page that never reaches it. Loading the page and taking its screenshot are not
+// steps: a loaded machine can take longer than a step may (#601), so they have their own bound, the one the
+// server start has too.
+export const STEP_TIMEOUT = 5000;
+const LOAD_TIMEOUT = 30000;
 // The computed properties the matcher reads: the text metrics, and the paint, spacing and radius an element sets
 // (#284, #285), each with the declared var()s that may name its token.
 const PROPS = ['font-size', 'line-height', 'font-weight', 'letter-spacing'];
@@ -103,6 +107,7 @@ export async function run({ prototype, screens, breakpoints, depsDir = DEPS_DIR 
         if (!s.steps) { shots[s.state][b.key] = { missing: true, reason: s.reason }; continue; }
         const page = await browser.newPage({ viewport: { width: b.width, height: VIEWPORT_HEIGHT }, deviceScaleFactor: 1 });
         page.setDefaultTimeout(STEP_TIMEOUT);
+        page.setDefaultNavigationTimeout(LOAD_TIMEOUT);
         try {
           await page.clock.install();
           const response = await page.goto(url, { waitUntil: 'load' });
@@ -113,7 +118,7 @@ export async function run({ prototype, screens, breakpoints, depsDir = DEPS_DIR 
           for (const at of s.expect || []) if (!(await page.$(`[${ATTR}~="${at}"]`))) absent.push(at);
           if (absent.length) { shots[s.state][b.key] = { missing: true, reason: `the steps did not reach ${s.state}: ${absent.join(', ')} not on the page` }; continue; }
           const file = join(out, `${screen}.${s.state}.${b.key}.png`);
-          await page.screenshot({ path: file, fullPage: true, animations: 'disabled' });
+          await page.screenshot({ path: file, fullPage: true, animations: 'disabled', timeout: LOAD_TIMEOUT });
           shots[s.state][b.key] = file;
           if (b === widest) {
             const snap = await page.evaluate(snapshot, { ATTR, PROPS, SETS, uiDir, shell: rel || '' });
