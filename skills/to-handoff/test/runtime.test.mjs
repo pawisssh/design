@@ -265,20 +265,20 @@ test("runtime: a React Prototype's computed colours fill its styles: a --color-*
   const { requests, handoff } = await generate({ prototype: THEMED, designSystem: ds, decisions: decided(), runtime: true });
   assert.deepEqual(requests, []);
   const summary = handoff.screens[0].regions.find(r => r.id === 'summary');
-  const badge = handoff.values.find(v => v.at.includes('src/App.jsx:12:7'));
+  const badge = handoff.values.find(v => v.at.includes('src/App.jsx:13:7'));
   assert.deepEqual(colours(summary), [
-    { property: 'background-color', raw: 'var(--color-card)', at: ['src/App.jsx:7:5'], token: 'card', via: ['--color-card'] },
+    { property: 'background-color', raw: 'var(--color-card)', at: ['src/App.jsx:8:5'], token: 'card', via: ['--color-card'] },
     // Set once on the section: its heading and paragraph inherit it.
-    { property: 'color', raw: 'var(--color-primary)', at: ['src/App.jsx:8:7'], token: 'primary', via: ['--color-primary'] },
+    { property: 'color', raw: 'var(--color-primary)', at: ['src/App.jsx:9:7'], token: 'primary', via: ['--color-primary'] },
     // Tailwind's own palette variable: Foundations doesn't know it, so the computed colour matches by value.
-    { property: 'background-color', raw: 'var(--color-blue-500)', at: ['src/App.jsx:12:7'], value: `value:${badge.id}` },
+    { property: 'background-color', raw: 'var(--color-blue-500)', at: ['src/App.jsx:13:7'], value: `value:${badge.id}` },
     // Four equal sides are one entry; the global border-color reset draws no border, so it records nothing.
-    { property: 'border-color', raw: 'var(--color-primary)', at: ['src/App.jsx:13:7'], token: 'primary', via: ['--color-primary'] },
+    { property: 'border-color', raw: 'var(--color-primary)', at: ['src/App.jsx:14:7'], token: 'primary', via: ['--color-primary'] },
   ]);
   assert.equal(badge.role, 'background-color');
   assert.equal(badge.raw.light, '#2b7fff');
   assert.match(badge.reason, /No .* token is within ΔE/);
-  assert.deepEqual(handoff.screens[0].regions.flatMap(colours).filter(s => s.at.includes('src/App.jsx:7:5') && s.property !== 'background-color'), []);
+  assert.deepEqual(handoff.screens[0].regions.flatMap(colours).filter(s => s.at.includes('src/App.jsx:8:5') && s.property !== 'background-color'), []);
   const again = await generate({ prototype: THEMED, designSystem: ds, decisions: decided(), runtime: true });
   assert.equal(again.wrote, false, 'a re-run on the same inputs is unchanged');
 });
@@ -301,22 +301,29 @@ test("runtime: v0's white surfaces bind their own tokens by the built reference,
 
 // ---------- computed spacing and radius on a React Prototype's runtime run (#285) ----------
 
-test("runtime: a React Prototype's computed padding, margin, gap and radius fill its styles: equal sides are one entry, resets and auto record nothing (#285)", { skip: noRuntime }, async () => {
+test("runtime: a React Prototype's computed padding, margin, gap and radius fill its styles: equal sides are one entry, resets, auto and percentages record nothing (#285)", { skip: noRuntime }, async () => {
   const ds = shadcnDesignSystem();
   const { requests, handoff } = await generate({ prototype: THEMED, designSystem: ds, decisions: decided(), runtime: true });
   assert.deepEqual(requests, []);
   assert.deepEqual(handoff.screens[0].regions.flatMap(lengths), [
     // p-4 is calc(var(--spacing) * 4): no single reference, so 16px matches by value.
-    { property: 'padding', raw: '16px', at: ['src/App.jsx:8:7'], token: 'spacing-4' },
-    { property: 'border-radius', raw: 'var(--radius-lg)', at: ['src/App.jsx:8:7'], token: 'radius-lg', via: ['--radius-lg'] },
+    { property: 'padding', raw: '16px', at: ['src/App.jsx:9:7'], token: 'spacing-4' },
+    { property: 'border-radius', raw: 'var(--radius-lg)', at: ['src/App.jsx:9:7'], token: 'radius-lg', via: ['--radius-lg'] },
     // px-4 py-2: unequal sides stay per side; rounded-full is calc(infinity * 1px), skipped.
-    { property: 'padding-top', raw: '8px', at: ['src/App.jsx:12:7'], token: 'spacing-2' },
-    { property: 'padding-right', raw: '16px', at: ['src/App.jsx:12:7'], token: 'spacing-4' },
-    { property: 'padding-bottom', raw: '8px', at: ['src/App.jsx:12:7'], token: 'spacing-2' },
-    { property: 'padding-left', raw: '16px', at: ['src/App.jsx:12:7'], token: 'spacing-4' },
+    { property: 'padding-top', raw: '8px', at: ['src/App.jsx:13:7'], token: 'spacing-2' },
+    { property: 'padding-right', raw: '16px', at: ['src/App.jsx:13:7'], token: 'spacing-4' },
+    { property: 'padding-bottom', raw: '8px', at: ['src/App.jsx:13:7'], token: 'spacing-2' },
+    { property: 'padding-left', raw: '16px', at: ['src/App.jsx:13:7'], token: 'spacing-4' },
     // A flex container's gap; the block's gap-5 draws nothing.
-    { property: 'gap', raw: '12px', at: ['src/App.jsx:14:7'], token: 'spacing-3' },
+    { property: 'gap', raw: '12px', at: ['src/App.jsx:15:7'], token: 'spacing-3' },
     // mt-6 beside mx-auto: the auto sides and the reset's zero record nothing.
-    { property: 'margin-top', raw: '24px', at: ['src/App.jsx:19:7'], token: 'spacing-6' },
+    { property: 'margin-top', raw: '24px', at: ['src/App.jsx:20:7'], token: 'spacing-6' },
+    // margin: 16px auto: the auto sides record nothing, the 16px ones do.
+    { property: 'margin-top', raw: '16px', at: ['src/App.jsx:21:7'], token: 'spacing-4' },
+    { property: 'margin-bottom', raw: '16px', at: ['src/App.jsx:21:7'], token: 'spacing-4' },
+    // mx-auto lg:mx-8 at the widest breakpoint: the lg rule wins, so its 32px records.
+    { property: 'margin-right', raw: '32px', at: ['src/App.jsx:22:7'], token: 'spacing-8' },
+    { property: 'margin-left', raw: '32px', at: ['src/App.jsx:22:7'], token: 'spacing-8' },
+    // p-[10%] m-[5%] compute to px, but a percentage records nothing.
   ]);
 });

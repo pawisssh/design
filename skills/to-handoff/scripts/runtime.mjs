@@ -150,8 +150,8 @@ async function perform(page, step) {
 // An element sets a SETS longhand (#284, #285) when a built rule that matches it, or its inline style, declares it
 // or a shorthand of it (a logical one too, read left to right); `color` only where it differs from the parent's,
 // a border side only where it draws, an outline only where it is drawn, a gap only on a flex or grid container,
-// and a margin not where it is declared `auto` (its computed value is the used px). A shorthand holding a var()
-// reads its longhands as '', so the shorthands count.
+// and a padding or margin side not where its winning declaration is `auto` or a percentage (its computed value is
+// the used px). A shorthand holding a var() reads its longhands as '', so the shorthands count.
 function snapshot({ ATTR, PROPS, SETS, uiDir, shell }) {
   // The built style rules that apply at this width: @layer blocks walked, @media and @supports where they hold.
   // Rules nested in a style rule are not: a Tailwind build is flattened (no native nesting).
@@ -184,6 +184,11 @@ function snapshot({ ATTR, PROPS, SETS, uiDir, shell }) {
     const edge = prop.replace(/-color$/, '');
     return cs.getPropertyValue(`${edge}-style`) !== 'none' && parseFloat(cs.getPropertyValue(`${edge}-width`)) > 0;
   };
+  // A side's declaration in the last source that declares it: its longhand where the CSSOM splits the shorthand,
+  // else the shorthand's text (one holding a var() does not split).
+  const winning = (sources, prop) => [...sources].reverse()
+    .map(st => st.getPropertyValue(prop).trim() || SHORTHANDS[prop].map(n => st.getPropertyValue(n).trim()).find(Boolean))
+    .find(Boolean);
   const setsOf = (el, cs) => {
     const sources = [...rules.filter(r => { try { return el.matches(r.selectorText); } catch { return false; } }).map(r => r.style), el.style];
     const out = {};
@@ -193,7 +198,7 @@ function snapshot({ ATTR, PROPS, SETS, uiDir, shell }) {
       if (prop === 'color' && el.parentElement && getComputedStyle(el.parentElement).color === cs.color) continue;
       if (/^(border-\w+|outline)-color$/.test(prop) && !drawn(cs, prop)) continue;
       if (/gap$/.test(prop) && !/(flex|grid)$/.test(cs.display)) continue;
-      if (prop.startsWith('margin') && declared.some(v => /\bauto\b/.test(v))) continue;
+      if (/^(padding|margin)-/.test(prop) && /\bauto\b|%/.test(winning(sources, prop))) continue;
       const refs = [...new Set(declared.filter(v => VAR.test(v)))].map(ref => ({ ref, resolved: cs.getPropertyValue(VAR.exec(ref)[1]).trim() }));
       out[prop] = { value: cs.getPropertyValue(prop), refs };
     }
