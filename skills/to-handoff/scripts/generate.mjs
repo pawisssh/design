@@ -231,7 +231,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     text: wrappedMode
       ? `\`<${wrapper.component} ${wrapper.prop}="${value}">\` (${at(wrapped.offset)}) sets the Prototype's mode to ${best.label}; the page surfaces are not compared. The other ${theme.name} modes render unverified.`
       : surfaceNote,
-  }];
+  }, ...doc.notes];
   // A wrapper whose value the Adapter has no mode for, or that is not a literal, is the owner's question: the surfaces stand in.
   const wrapperQuestion = wrapped && !wrappedMode ? {
     id: 'q-mode-theme', kind: 'mode-map', to: 'owner',
@@ -873,7 +873,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
 }
 
 /**
- * The Prototype as one shape for either reader: {kind, files, at, rules, standIns, fonts, ignored,
+ * The Prototype as one shape for either reader: {kind, files, at, rules, standIns, fonts, notes, ignored,
  * screens: [{id, name, route, offset, root, mount}]}. A single HTML file is one screen named by its feature's `title`.
  */
 function readPrototype(prototype, { depsDir, packages, title }) {
@@ -882,7 +882,7 @@ function readPrototype(prototype, { depsDir, packages, title }) {
   const doc = readHtml(prototype, rel, { depsDir });
   const mount = doc.mounts[0] || findTag(doc.root, 'body');
   return {
-    kind: 'html-file', files: [rel], at: doc.at, rules: doc.rules, standIns: standIns(doc.scripts), fonts: [], ignored: [],
+    kind: 'html-file', files: [rel], at: doc.at, rules: doc.rules, standIns: standIns(doc.scripts), fonts: [], notes: [], ignored: [],
     screens: [{ id: kebab(title), name: title, route: '/', offset: mount.offset, root: doc.root, mount }],
   };
 }

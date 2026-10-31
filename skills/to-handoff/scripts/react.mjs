@@ -18,6 +18,7 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { parseCss } from './css.mjs';
+import { sassFile, sassNote } from './scss.mjs';
 import { EXTS, appDirOf, metadataTitle, packageOf, reactKind } from './feature-key.mjs';
 import { loadTypescript } from './deps.mjs';
 import { lineOf, lineStarts, readHtml, walk } from './reader.mjs';
@@ -45,7 +46,7 @@ export function codeLibraryDir(root, ts, kind = reactKind(root), paths = compile
 }
 
 /**
- * readReact(root, {depsDir, packages}) -> {kind, files, at, rules, standIns, fonts, screens, uiDir, ignored, tailwind}.
+ * readReact(root, {depsDir, packages}) -> {kind, files, at, rules, standIns, fonts, screens, uiDir, notes, ignored, tailwind}.
  * `packages` are the Design System's code packages (each Contract's `code.package`): their components are
  * leaves, and a package that resolves to a project file is that file under any import of it. `screens` is
  * [{id, name, route, offset, root, mount}], `files` the files read (relative paths), `fonts` the next/font and
@@ -61,6 +62,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
   const rules = [];
   const sources = new Map();
   const ignored = [];
+  const notes = [];
   const fonts = [];
   const text = (s, node) => node.getText(s.sf).replace(/\s+/g, ' ').trim();
 
@@ -77,7 +79,26 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
   const css = rel => {
     if (!rel || space.has(rel)) return;
     const f = space.add(rel, readFileSync(join(root, rel), 'utf8'));
-    rules.push(...parseCss(f.text, f.base));
+    if (/\.scss$/.test(rel)) rules.push(...scss(rel, f).rules);
+    else rules.push(...parseCss(f.text, f.base));
+  };
+  // A Sass file is lowered by the reader itself, with no compiler (#227). A relative `@use`/`@import` of a project partial is
+  // read with it, its rules first and its variables the importer's; anything else is a note.
+  const scss = (rel, f) => {
+    const sass = sassFile(spec => {
+      const dir = posix.join(posix.dirname(rel), posix.dirname(spec)), name = posix.basename(spec);
+      const partial = [`${name}.scss`, `_${name}.scss`, `${name}/_index.scss`, `${name}/index.scss`].map(c => posix.join(dir, c)).find(isFile);
+      if (!partial) return null;
+      if (space.has(partial)) return new Map();
+      const pf = space.add(partial, readFileSync(join(root, partial), 'utf8'));
+      const read = scss(partial, pf);
+      rules.push(...read.rules);
+      return read.vars;
+    });
+    const parsed = parseCss(f.text, f.base, sass);
+    const note = sassNote(rel, sass, space.at);
+    if (note) notes.push(note);
+    return { rules: parsed, vars: sass.vars };
   };
   const has = (node, kind) => (node.modifiers || []).some(m => m.kind === kind);
   const source = rel => {
@@ -93,7 +114,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
       if (ts.isImportDeclaration(st)) {
         const spec = st.moduleSpecifier.text;
         const clause = st.importClause;
-        if (/\.css$/.test(spec)) { css(resolveFile(rel, spec)); continue; }
+        if (/\.s?css$/.test(spec)) { css(resolveFile(rel, spec)); continue; }
         if (/^(next\/font\/|geist\/font\/)/.test(spec) && clause) {
           const names = [clause.name, ...(clause.namedBindings && ts.isNamedImports(clause.namedBindings) ? clause.namedBindings.elements.map(e => e.name) : [])].filter(Boolean);
           for (const n of names) fonts.push({ module: spec, name: n.text, offset: f.base + n.getStart(sf) });
@@ -585,7 +606,7 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
   const fetched = new Set(standIns.stubs.map(f => `${f.file} (API route)`));
   return {
     kind, files: space.files.map(f => f.rel).sort(), at: space.at, rules,
-    standIns, fonts, screens: read.screens, uiDir, ignored: [...new Set(ignored)].filter(x => !fetched.has(x)).sort(),
+    standIns, fonts, screens: read.screens, uiDir, notes, ignored: [...new Set(ignored)].filter(x => !fetched.has(x)).sort(),
     tailwind: usesTailwind(root),
   };
 }
