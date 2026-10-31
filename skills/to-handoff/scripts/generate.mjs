@@ -21,7 +21,7 @@ import { hasRuntime } from './deps.mjs';
 import { featureOf, kebab } from './feature-key.mjs';
 import { readHtml, walk } from './reader.mjs';
 import { readReact } from './react.mjs';
-import { STEP_KINDS, run } from './runtime.mjs';
+import { COLLAPSE, STEP_KINDS, run } from './runtime.mjs';
 import {
   STANDARD_STATES, atomIn, evaluate, isPlaceholderText, ownDeclarations, parseCondition, standIns, stateOfAtom,
 } from './recognise.mjs';
@@ -675,19 +675,19 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     if (decl.property === 'font-family') { fonts.push({ value: decl.value, at: at(decl.offset) }); return; }
     const role = roleOf(decl.property);
     if (!role) return;
-    const { paint } = decl;
-    const words = paint || COLOR_ROLES.has(role) ? [decl.value] : splitWords(decl.value);
+    const { rendered } = decl;
+    const words = rendered || COLOR_ROLES.has(role) ? [decl.value] : splitWords(decl.value);
     for (const raw of words) {
-      const result = paint
-        ? matchComputed({ property: decl.property, value: paint.value, ref: paint.ref }, paint.ctx)
+      const result = rendered
+        ? matchComputed({ property: decl.property, value: rendered.value, ref: rendered.ref }, rendered.ctx)
         : matchDeclaration({ property: decl.property, value: raw }, ctx);
       if (result.kind === 'skip') continue;
       const where = at(decl.offset);
       const existing = r.styles.find(s => s.property === decl.property && s.raw === raw);
       if (existing) { if (!existing.at.includes(where)) existing.at.push(where); continue; }
       const s = { property: decl.property, raw, at: [where] };
-      const shown = paint ? paint.value : raw;
-      const norm = COLOR_ROLES.has(role) ? colorText(paint ? shown : followCustom(raw, custom)) : shown;
+      const shown = rendered ? rendered.value : raw;
+      const norm = COLOR_ROLES.has(role) ? colorText(rendered ? shown : followCustom(raw, custom)) : shown;
       const key = `token:${role}:${norm}`;
       if (result.kind === 'reference' || result.kind === 'exact') {
         s.token = result.token;
@@ -974,28 +974,19 @@ async function runtimeRead(options) {
 
 // The roles a runtime run reads from the computed style (#284, #285): the source's declarations of them give way.
 const LIVE_ROLES = new Set([...COLOR_ROLES, 'padding', 'margin', 'gap', 'border-radius']);
-const SIDES = ['top', 'right', 'bottom', 'left'];
-// Longhands that, all set and all equal, are their shorthand.
-const COLLAPSE = {
-  'border-color': SIDES.map(s => `border-${s}-color`),
-  padding: SIDES.map(s => `padding-${s}`),
-  margin: SIDES.map(s => `margin-${s}`),
-  'border-radius': ['top-left', 'top-right', 'bottom-right', 'bottom-left'].map(c => `border-${c}-radius`),
-  gap: ['row-gap', 'column-gap'],
-};
 
 // One element's computed colours, spacing and radii as declarations for addStyle (#284, #285): `value` is the
-// declared var() that gives it (referenceOf), else the computed value, and `paint` carries what matchComputed
+// declared var() that gives it (referenceOf), else the computed value, and `rendered` carries what matchComputed
 // reads. A COLLAPSE group whose longhands are all set and equal is its shorthand.
 function liveDeclarations(sets, offset, ctx) {
   let decls = Object.entries(sets).map(([property, { value, refs }]) => {
     const ref = referenceOf(property, value, refs);
     const shown = COLOR_ROLES.has(roleOf(property)) ? colorText(value) : value;
-    return { property, value: ref || shown, offset, paint: { value, ref, ctx } };
+    return { property, value: ref || shown, offset, rendered: { value, ref, ctx } };
   });
   for (const [short, longs] of Object.entries(COLLAPSE)) {
     const group = longs.map(p => decls.find(x => x.property === p));
-    if (group.some(x => !x || x.value !== group[0].value || x.paint.value !== group[0].paint.value)) continue;
+    if (group.some(x => !x || x.value !== group[0].value || x.rendered.value !== group[0].rendered.value)) continue;
     decls = decls.flatMap(x => (x === group[0] ? [{ ...x, property: short }] : group.includes(x) ? [] : [x]));
   }
   return decls;

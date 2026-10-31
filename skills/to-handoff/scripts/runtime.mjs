@@ -27,11 +27,16 @@ const STEP_TIMEOUT = 5000;
 // (#284, #285), each with the declared var()s that may name its token.
 const PROPS = ['font-size', 'line-height', 'font-weight', 'letter-spacing'];
 const SIDES = ['top', 'right', 'bottom', 'left'];
-const SETS = [
-  'background-color', 'color', ...SIDES.map(s => `border-${s}-color`), 'outline-color',
-  ...SIDES.map(s => `padding-${s}`), ...SIDES.map(s => `margin-${s}`), 'row-gap', 'column-gap',
-  'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius',
-];
+// Longhands that, all set and all equal, are their shorthand (#284, #285).
+export const COLLAPSE = {
+  'border-color': SIDES.map(s => `border-${s}-color`),
+  padding: SIDES.map(s => `padding-${s}`),
+  margin: SIDES.map(s => `margin-${s}`),
+  gap: ['row-gap', 'column-gap'],
+  'border-radius': ['top-left', 'top-right', 'bottom-right', 'bottom-left'].map(c => `border-${c}-radius`),
+};
+const { 'border-color': borders, ...lengths } = COLLAPSE;
+const SETS = ['background-color', 'color', ...borders, 'outline-color', ...Object.values(lengths).flat()];
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon', '.woff2': 'font/woff2' };
 
 /**
@@ -167,7 +172,7 @@ function snapshot({ ATTR, PROPS, SETS, uiDir, shell }) {
   }
   const SHORTHANDS = { 'background-color': ['background'], color: [], 'outline-color': ['outline'], 'row-gap': ['gap'], 'column-gap': ['gap'] };
   const LOGICAL = { top: 'block-start', bottom: 'block-end', left: 'inline-start', right: 'inline-end' };
-  for (const side of ['top', 'right', 'bottom', 'left']) {
+  for (const side of Object.keys(LOGICAL)) {
     const axis = LOGICAL[side].split('-')[0];
     SHORTHANDS[`border-${side}-color`] = ['border-color', 'border', `border-${side}`, `border-${axis}-color`, `border-${axis}`];
     for (const box of ['padding', 'margin']) SHORTHANDS[`${box}-${side}`] = [box, `${box}-${axis}`, `${box}-${LOGICAL[side]}`];
