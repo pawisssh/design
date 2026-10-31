@@ -217,18 +217,30 @@ test('the CLI --check passes a draft whose fingerprints agree, and names each en
 
 test('the CLI --write leaves an approved Contract whose fingerprints agree untouched, and notes its citations', { skip }, () => {
   const script = new URL('../scripts/fingerprints.mjs', import.meta.url).pathname;
-  const text = readFileSync(LIVE, 'utf8');
-  const c = load(LIVE);
-  assert.equal(c.selection.status, 'approved');
-  c.drafted['anatomy.Box'].evidence = ['_text-input.scss:L1 the .cds--text-input box'];
+  // The live TextInput is a draft until the owner re-approves it (#462): a copy stands in approved, as `citing` does.
+  const c = { ...load(LIVE), selection: { status: 'approved', approval: { by: 'owner', at: '2026-10-31T00:00:00Z' } } };
+  const text = `${JSON.stringify(c, null, 2)}\n`;
   const path = join(mkdtempSync(join(tmpdir(), 'fingerprints-')), 'text-input.component.json');
   writeFileSync(path, text);
   const write = spawnSync(process.execPath, [script, path, '--nodes', NODES, '--write'], { encoding: 'utf8' });
   assert.equal(write.status, 0, write.stderr);
   assert.match(write.stdout, /^OK wrote 0 of \d+ fingerprints$/m);
   assert.equal(readFileSync(path, 'utf8'), text);
+  // A line off, in the file it cited: its fingerprint holds the same cited pins, so only the citation fails.
+  c.drafted['anatomy.Box'].evidence = ['TextInput.tsx:L1 the input.cds--text-input'];
   writeFileSync(path, JSON.stringify(c));
   const check = spawnSync(process.execPath, [script, path, '--nodes', NODES, '--check'], { encoding: 'utf8' });
   assert.equal(check.status, 0, check.stderr);
-  assert.match(check.stdout, /^OK \d+ fingerprints\nnote: anatomy\.Box: "_text-input\.scss:L1 the \.cds--text-input box": the cited lines show none of cds--text-input, box\nnote: notes\[0\]: .*L115: the cited lines do not show \$black-100\nnote: notes\[1\]: .*\n$/, 'the notes flagged in #462, notes[3] aside: its L107 backs its own clause');
+  assert.match(check.stdout, /^OK \d+ fingerprints\nnote: anatomy\.Box: "TextInput\.tsx:L1 the input\.cds--text-input": the cited lines show none of input, cds--text-input\n$/);
 });
+
+for (const family of ['text-input', 'select', 'toast-notification']) {
+  test(`the CLI --check passes the live ${family} draft with no citation flagged (#462)`, { skip }, () => {
+    const [path, map] = committed(family);
+    const r = spawnSync(process.execPath, [new URL('../scripts/fingerprints.mjs', import.meta.url).pathname, path, '--nodes', map, '--check'], { encoding: 'utf8' });
+    assert.equal(load(path).selection.status, 'draft');
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stdout, /^OK \d+ fingerprints\n$/);
+    assert.equal(r.stderr, '');
+  });
+}
