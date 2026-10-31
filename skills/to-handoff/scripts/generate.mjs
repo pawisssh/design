@@ -156,7 +156,8 @@ const hasTernary = el => {
  * `prototype` is the HTML file or a React Prototype folder (Next.js App Router or Vite + react-router, #114);
  * `designSystem` the design-systems/<ds> folder. With any request open it returns {requests, handoff:
  * undefined, path: null, wrote: false} and writes nothing. With `runtime`, the runtime reader (#113) renders a
- * scratch copy for screenshots and computed text metrics; when it cannot run, the Handoff is static-only and says why.
+ * scratch copy for screenshots, computed text metrics and a React Prototype's computed colours (#284); when it
+ * cannot run, the Handoff is static-only and says why.
  */
 export async function generate({ prototype, designSystem, decisions = {}, depsDir, runtime = false } = {}) {
   const system = await loadDesignSystem(designSystem);
@@ -334,10 +335,12 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     // A React Prototype's runtime run paints its regions from the computed colours (#284); an HTML Prototype, and an
     // element the run did not render, keep the source declarations.
     const paintsLive = runtime && !/\.html?$/i.test(prototype);
+    // The built stylesheet's custom properties stand in for the source's: the built theme is the one that rendered.
+    const liveCtx = { ...ctx, custom: rt.custom || {} };
     const declarationsOf = el => {
       const own = ownDeclarations(rules, el);
       const paint = paintsLive && live(el) && live(el).paint;
-      return paint ? [...own.filter(x => !COLOR_ROLES.has(roleOf(x.property))), ...paintDeclarations(paint, el.offset, rt.custom)] : own;
+      return paint ? [...own.filter(x => !COLOR_ROLES.has(roleOf(x.property))), ...paintDeclarations(paint, el.offset, liveCtx)] : own;
     };
 
     const usageStates = Object.fromEntries(present.map(s => [s, {}]));
@@ -674,16 +677,16 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     if (!role) return;
     const words = COLOR_ROLES.has(role) ? [decl.value] : splitWords(decl.value);
     for (const raw of words) {
-      const { computed } = decl;
-      const result = computed
-        ? matchComputed({ property: decl.property, value: computed.value, ref: computed.ref }, { ...ctx, custom: computed.custom })
+      const { paint } = decl;
+      const result = paint
+        ? matchComputed({ property: decl.property, value: paint.value, ref: paint.ref }, paint.ctx)
         : matchDeclaration({ property: decl.property, value: raw }, ctx);
       if (result.kind === 'skip') continue;
       const where = at(decl.offset);
       const existing = r.styles.find(s => s.property === decl.property && s.raw === raw);
       if (existing) { if (!existing.at.includes(where)) existing.at.push(where); continue; }
       const s = { property: decl.property, raw, at: [where] };
-      const norm = COLOR_ROLES.has(role) ? colorText(computed ? computed.value : followCustom(raw, custom)) : raw;
+      const norm = COLOR_ROLES.has(role) ? colorText(paint ? paint.value : followCustom(raw, custom)) : raw;
       const key = `token:${role}:${norm}`;
       if (result.kind === 'reference' || result.kind === 'exact') {
         s.token = result.token;
@@ -969,15 +972,15 @@ async function runtimeRead(options) {
 }
 
 // One element's computed paint as declarations for addStyle (#284): `value` is the declared var() that gives the
-// colour (referenceOf), else the computed colour, and `computed` carries what matchComputed reads. Four equal
+// colour (referenceOf), else the computed colour, and `paint` carries what matchComputed reads. Four equal
 // border sides are one `border-color`.
-function paintDeclarations(paint, offset, custom) {
+function paintDeclarations(paint, offset, ctx) {
   const decls = Object.entries(paint).map(([property, { value, refs }]) => {
     const ref = referenceOf(value, refs);
-    return { property, value: ref || colorText(value), offset, computed: { value, ref, custom } };
+    return { property, value: ref || colorText(value), offset, paint: { value, ref, ctx } };
   });
   const sides = decls.filter(x => /^border-\w+-color$/.test(x.property));
-  if (sides.length < 4 || sides.some(x => x.value !== sides[0].value || x.computed.value !== sides[0].computed.value)) return decls;
+  if (sides.length < 4 || sides.some(x => x.value !== sides[0].value || x.paint.value !== sides[0].paint.value)) return decls;
   return decls.flatMap(x => (x === sides[0] ? [{ ...x, property: 'border-color' }] : sides.includes(x) ? [] : [x]));
 }
 

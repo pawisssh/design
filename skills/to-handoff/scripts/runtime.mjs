@@ -142,6 +142,7 @@ async function perform(page, step) {
 // outline only where it is drawn. A shorthand holding a var() reads its longhands as '', so the shorthands count.
 function snapshot({ ATTR, PROPS, PAINT, uiDir, shell }) {
   // The built style rules that apply at this width: @layer blocks walked, @media and @supports where they hold.
+  // Rules nested in a style rule are not: a Tailwind build is flattened (no native nesting).
   const rules = [];
   const collect = list => {
     for (const rule of list) {
