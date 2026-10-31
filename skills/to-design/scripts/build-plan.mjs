@@ -246,7 +246,8 @@ export const PLACE_BUDGET = 45000;
 /**
  * A sets call's plan + state JSON, at most (chars): use_figma's 50,000 less the packaged components core and
  * its wrapper (tests/bprime.test.mjs measures them). 11496 leaves 20 chars under the core since #593 added nested
- * instances' properties, overrides and main components to it.
+ * instances' properties, overrides and main components to it, so a 245-variant reconcile (Carbon Button) now
+ * takes 2 calls.
  */
 export const SETS_BUDGET = 11496;
 // a reconcile window, at most: its entries carry no fragments

@@ -70,6 +70,21 @@ async function buildAll(env, contract = BUTTON, options = {}) {
   return runs;
 }
 
+// A reconcile of the whole set, by every batch the derive asks for: the 245-variant Button takes 2 calls (#593).
+// Each call is recorded as it comes unless `drop`; `found` is the variants every call found, by expansion index.
+async function reconcileAll(env, options = {}, { contract = BUTTON, drop = false } = {}) {
+  const whole = { fileKey: FILE_KEY, at: AT, ...options, mode: 'reconcile' };
+  const { of } = setsPlan(contract, DOC_TEXT, env.ledger, { ...whole, batch: 0 }).plan.options;
+  const runs = [];
+  for (let batch = 0; batch !== of; batch++) runs.push(await sets(env, { ...options, mode: 'reconcile', batch }, { contract, drop }));
+  const sum = key => runs.reduce((n, { result }) => n + result.summary[key], 0);
+  return {
+    runs,
+    found: Object.assign({}, ...runs.map(({ result }) => result.ledger.sets[contract.family.key].variants)),
+    summary: { found: sum('found'), absent: sum('absent') },
+  };
+}
+
 const writes = mock => mock.log.filter(([op]) => !['setCurrentPage', 'loadFont', 'setExplicitVariableMode', 'clearExplicitVariableMode'].includes(op));
 const setNode = env => env.mock.figma.getNodeByIdAsync(env.ledger.sets.button.set.id);
 
@@ -201,7 +216,8 @@ test('after a contentHash change with a Base Component outside the set, the rebu
   // a read-only reconcile finds the set's own variants, the one under the base's name too (checked before any build
   // call: two variants of one name in the set never settle in the grid)
   const at = expand(edited).findIndex(t => variantName(edited, t) === base.name);
-  const found = (await sets(env, { mode: 'reconcile' }, { contract: edited, drop: true })).result.ledger.sets.button.variants;
+  const { found, runs: read } = await reconcileAll(env, {}, { contract: edited, drop: true });
+  assert.equal(read.length, 2, 'a 245-variant reconcile takes 2 calls');
   assert.deepEqual([found[at], Object.values(found)], [before[at], before], 'every recorded variant found, the base not taken');
 
   const baseIds = new Set([base, ...base.findAll(() => true)].map(n => n.id));
@@ -296,16 +312,19 @@ test('the selection bitset a reconcile carries decodes in the core to exactly th
     { kind: 'danger--ghost', size: '2xl', state: 'disabled' },
   ];
   const picked = approve(applyOmit(BUTTON, { family: 'button', snapshotId: BUTTON.source.snapshotId, omit, expectedCount: TOTAL - 5 }), AT);
-  const { plan, result } = await sets(env, { mode: 'reconcile' }, { contract: picked, drop: true });
-  assert.equal(plan.selection.member.length, 62);
-  assert.deepEqual(result.dropped.map(d => d[0]).sort(), [
-    'Kind=Danger Ghost, Size=2XL, State=Disabled',
-    'Kind=Primary, Size=Extra Small, State=Disabled',
-    'Kind=Primary, Size=Extra Small, State=Focus',
-    'Kind=Secondary, Size=Extra Small, State=Disabled',
-    'Kind=Secondary, Size=Small, State=Enabled',
-  ]);
-  assert.deepEqual([result.summary.found, result.summary.absent], [TOTAL - 5, 0]);
+  const { runs, summary } = await reconcileAll(env, {}, { contract: picked, drop: true });
+  // every call carries the whole bitset, so each one tells the same five dropped variants
+  for (const { plan, result } of runs) {
+    assert.equal(plan.selection.member.length, 62);
+    assert.deepEqual(result.dropped.map(d => d[0]).sort(), [
+      'Kind=Danger Ghost, Size=2XL, State=Disabled',
+      'Kind=Primary, Size=Extra Small, State=Disabled',
+      'Kind=Primary, Size=Extra Small, State=Focus',
+      'Kind=Secondary, Size=Extra Small, State=Disabled',
+      'Kind=Secondary, Size=Small, State=Enabled',
+    ]);
+  }
+  assert.deepEqual([summary.found, summary.absent], [TOTAL - 5, 0]);
 });
 
 test('a rebuild whose first call was lost and reconciled still keeps the dropped variants as orphans', async () => {
@@ -536,8 +555,8 @@ test('after a lost connection the ledger is reconciled before the retry, and not
   const { plan } = await sets(env, { batch: 0 });
   await sets(env, { batch: 1 }, { drop: true }); // committed in the file, result lost
   const lost = env.ledger.sets.button.variants.filter(Boolean).length;
-  const { result } = await sets(env, { mode: 'reconcile' });
-  assert.equal(result.summary.found, 2 * plan.options.perCall, 'the loose variants, found by name on the page');
+  const { summary } = await reconcileAll(env);
+  assert.equal(summary.found, 2 * plan.options.perCall, 'the loose variants, found by name on the page');
   assert.ok(env.ledger.sets.button.variants.filter(Boolean).length > lost);
   const retry = await sets(env, { batch: 1 });
   assert.equal(retry.result.summary.created, 0);
@@ -636,8 +655,8 @@ test('a first loose batch lost before its ledger is found again by a reconcile, 
   const blind = await sets(env, { batch: 1 });
   assert.ok(blind.result.summary.conflicts > 0, 'a retry without the ledger stops on what the lost call made');
   assert.deepEqual(writes(env.mock), [], 'a conflict stops before the first change');
-  const rec = await sets(env, { mode: 'reconcile' });
-  assert.equal(rec.result.summary.found, per + 1, JSON.stringify(rec.result));
+  const rec = await reconcileAll(env);
+  assert.equal(rec.summary.found, per + 1, JSON.stringify(rec.runs.map(r => r.result.summary)));
   const retry = await sets(env, { batch: 1 });
   assert.deepEqual([retry.result.summary.created, retry.result.made], [0, []]);
   assert.equal(loose().length, per + 1);
@@ -747,7 +766,9 @@ test('every plan shape the build emits is accepted by the packager, set-only app
   assert.deepEqual([setOnly.plan.selection.entries, setOnly.result.summary.conflicts], [[], 0]);
   seen(setOnly);
   // the read-only modes, whole and by batch as Vibe-to-Figma's coverage and To-design's reconcile take them
-  for (const options of [{ mode: 'reconcile' }, { mode: 'reconcile', batch: 0 }, { mode: 'coverage' }, { mode: 'coverage', batch: 0, coveragePerCall: 100 },
+  // a whole-set reconcile of the 245-variant Button takes 2 calls (#593), so without --batch it is refused
+  assert.throws(() => setsPlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, mode: 'reconcile' }), /takes 2 calls: give --batch 0\.\.1/);
+  for (const options of [{ mode: 'reconcile', batch: 0 }, { mode: 'reconcile', batch: 1 }, { mode: 'coverage' }, { mode: 'coverage', batch: 0, coveragePerCall: 100 },
     { mode: 'sample', sample: [0, 37] }, { mode: 'theme', sample: [0, 120] }]) seen(await sets(env, options));
   // a rebuild after an omit edit leaves orphans: the prune preview, then a prune of one the owner listed
   const omitted = withoutFocus();
