@@ -37,7 +37,16 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
     const loaded = [...fonts].map(f => f.split('/')).find(([fam, style]) => fam === family && style.replace(/\s/g, '') === want);
     return loaded ? loaded[1] : want;
   };
-  const w = (op, ...args) => log.push([op, ...args]);
+  // A write to a node inside an instance, or to the instance itself, is an override of that node's field (#593):
+  // InstanceNode.overrides lists them. An op names its field (`node.fills`), else these do.
+  const OVERRIDES = { resize: ['width', 'height'], setProperties: ['componentProperties'], 'text.characters': ['characters'] };
+  const w = (op, ...args) => {
+    log.push([op, ...args]);
+    const n = nodes.get(args[0]);
+    if (!n || !(n.type === 'INSTANCE' || n._inInstance())) return;
+    const fields = op === 'node.setBoundVariable' ? [args[1]] : OVERRIDES[op] || (op.startsWith('node.') ? [op.slice(5)] : []);
+    for (const f of fields) (n._over = n._over || new Set()).add(f);
+  };
 
   function storeValue(type, value) {
     if (value && value.type === 'VARIABLE_ALIAS') {
@@ -384,13 +393,22 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
       this.children = this._main.children.map(c => copy(c, this));
     }
     get mainComponent() { throw new Error('mock: in dynamic-page mode, use getMainComponentAsync'); }
+    // a variant's properties are its set's
+    get _defs() { return this._main.parent && this._main.parent.type === 'COMPONENT_SET' ? this._main.parent._props : this._main._props; }
     get componentProperties() {
       const values = this._values || {};
-      return Object.fromEntries(Object.entries(this._main._props).map(([k, d]) => [k, { type: d.type, value: k in values ? values[k] : d.defaultValue }]));
+      return Object.fromEntries(Object.entries(this._defs).map(([k, d]) => [k, { type: d.type, value: k in values ? values[k] : d.defaultValue }]));
     }
     setProperties(values) {
-      for (const k of Object.keys(values)) if (!this._main._props[k]) throw new Error(`mock: no property ${k}`);
+      for (const k of Object.keys(values)) if (!this._defs[k]) throw new Error(`mock: no property ${k}`);
       w('setProperties', this.id, values); this._values = { ...(this._values || {}), ...values };
+    }
+    // the direct overrides on this instance and every layer inside it, hidden ones too
+    get overrides() {
+      const out = [];
+      const walk = n => { if (n._over && n._over.size) out.push({ id: n.id, overriddenFields: [...n._over] }); n.children.forEach(walk); };
+      walk(this);
+      return out;
     }
     async getMainComponentAsync() { return nodes.has(this._main.id) ? this._main : null; }
     swapComponent(main) {

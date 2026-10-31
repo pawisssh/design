@@ -3,6 +3,7 @@
 // matching, expansion and the closure live only in the shared Contract module.
 import { baseTuple, expand, resolve, variantName } from '../../contract/scripts/contract.mjs';
 import { valueAt } from './foundations-value.mjs';
+import { familyNodes, heldRefs, nestedOf } from './nested.mjs';
 
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isToken = v => isObj(v) && 'token' in v;
@@ -117,9 +118,11 @@ function draw(contract, r, foundations) {
  * `text` the TEXT property's node, `swap` each INSTANCE node's icon key, `refs` the property each bound
  * node field follows ({node: {field: propertyKey}}). `layout` holds the fields the builder draws (see draw), which
  * `drawn` lists by node, and `tree` an arc as the VECTOR it is drawn as. `foundations` (the Foundations document)
- * gives an arc's token sizes their numbers.
+ * gives an arc's token sizes their numbers. A nested instance (#593) swaps to its held variant's ref
+ * (`family:<designSystem>/<key>/<tupleKey>`), and `props` holds its property values by label (see nested.mjs
+ * nestedOf), which `held` ({designSystem, contracts}) resolves.
  */
-export function expectedVariant(contract, tuple, props, foundations) {
+export function expectedVariant(contract, tuple, props, foundations, held) {
   const r = resolve(contract, tuple);
   const visible = {};
   const text = {};
@@ -140,8 +143,11 @@ export function expectedVariant(contract, tuple, props, foundations) {
       if (p.type === 'TEXT' && b.field === 'characters') text[b.node] = props[p.key];
       if (p.type === 'INSTANCE_SWAP' && b.field === 'mainComponent') swap[b.node] = iconRef(contract, props[p.key]);
     }
+  const nested = {};
+  if (familyNodes(contract).length)
+    for (const [node, n] of Object.entries(nestedOf(contract, tuple, held))) { swap[node] = n.ref; nested[node] = n.props; }
   const { types, drawn } = draw(contract, r, foundations);
-  return { tuple, name: variantName(contract, tuple), tree: anatomyTree(contract.anatomy, types), layout: r.layout, paint: r.paint, visible, text, swap, refs, drawn };
+  return { tuple, name: variantName(contract, tuple), tree: anatomyTree(contract.anatomy, types), layout: r.layout, paint: r.paint, visible, text, swap, refs, drawn, props: nested };
 }
 
 /** What the Base Component should read back as, for `props` (default: the review specimen; see baseProps). */
@@ -154,9 +160,10 @@ export function expectedBase(contract, props = reviewProps(contract), foundation
 /**
  * A core readback (ids) in Contract vocabulary: `{var: id}` becomes `{token: flatName}` and
  * `{style: id}` becomes `{token: styleName}` through the file's ledger; a swap's component id becomes the
- * icon key. An id the ledger does not know becomes `{token: null, id}`.
+ * icon key, or a held variant's ref through the ledger's sets and `held` (#593), and so does a nested instance's
+ * INSTANCE_SWAP property value. An id the ledger does not know becomes `{token: null, id}`.
  */
-export function normalizeReadback(raw, ledger) {
+export function normalizeReadback(raw, ledger, held = null) {
   const f = (ledger && ledger.foundations) || {};
   const byId = {};
   const add = (map, kind) => { for (const [name, id] of Object.entries(map || {})) byId[id] = { kind, name }; };
@@ -176,8 +183,13 @@ export function normalizeReadback(raw, ledger) {
     }
     return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, map(x)]));
   };
+  // a nested instance's main component is a held variant (#593), through the ledger's sets
+  const variants = heldRefs(held, ledger);
   const out = { ...raw, layout: map(raw.layout), paint: map(raw.paint) };
-  if (raw.swap) out.swap = Object.fromEntries(Object.entries(raw.swap).map(([n, id]) => [n, icons[id] || (id ? `unknown:${id}` : null)]));
+  if (raw.swap) out.swap = Object.fromEntries(Object.entries(raw.swap).map(([n, id]) => [n, icons[id] || variants[id] || (id ? `unknown:${id}` : null)]));
+  if (raw.props)
+    out.props = Object.fromEntries(Object.entries(raw.props).map(([n, p]) => [n, Object.fromEntries(Object.entries(p).map(([k, v]) =>
+      [k, isObj(v) && 'icon' in v ? { icon: icons[v.icon] || `unknown:${v.icon}` } : v]))]));
   return out;
 }
 

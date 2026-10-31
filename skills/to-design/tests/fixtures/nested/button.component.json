@@ -1,0 +1,281 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "button",
+    "name": "Button",
+    "description": "A test Button for nested instances (#593)."
+  },
+  "source": {
+    "codeLibrary": "shadcn/ui",
+    "adapter": "generic",
+    "packages": {},
+    "files": {
+      "components/ui/button.tsx": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "snapshotId": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "axes": [
+    {
+      "key": "kind",
+      "label": "Kind",
+      "default": "primary",
+      "defaultSource": "cva defaultVariants",
+      "values": [
+        {
+          "key": "primary",
+          "label": "Primary",
+          "code": {
+            "variant": "default"
+          }
+        },
+        {
+          "key": "secondary",
+          "label": "Secondary",
+          "code": {
+            "variant": "secondary"
+          }
+        }
+      ]
+    },
+    {
+      "key": "size",
+      "label": "Size",
+      "default": "md",
+      "defaultSource": "cva defaultVariants",
+      "values": [
+        {
+          "key": "md",
+          "label": "Medium",
+          "code": {
+            "size": "default"
+          }
+        },
+        {
+          "key": "sm",
+          "label": "Small",
+          "code": {
+            "size": "sm"
+          }
+        }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        {
+          "key": "enabled",
+          "label": "Enabled",
+          "code": {}
+        }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 4,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Button",
+    "type": "COMPONENT",
+    "children": [
+      {
+        "name": "Badge",
+        "type": "FRAME"
+      },
+      {
+        "name": "Label",
+        "type": "TEXT"
+      }
+    ]
+  },
+  "properties": [
+    {
+      "key": "label",
+      "label": "Label",
+      "type": "TEXT",
+      "default": "Button",
+      "binds": [
+        {
+          "node": "Label",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "children"
+      }
+    },
+    {
+      "key": "badge",
+      "label": "Badge",
+      "type": "BOOLEAN",
+      "default": true,
+      "binds": [
+        {
+          "node": "Badge",
+          "field": "visible"
+        }
+      ],
+      "code": {
+        "prop": "badge"
+      }
+    }
+  ],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Button": {
+          "direction": "row",
+          "width": "hug",
+          "height": "hug",
+          "alignMain": "center",
+          "alignCross": "center",
+          "paddingTop": {
+            "token": "spacing-4"
+          },
+          "paddingRight": {
+            "token": "spacing-4"
+          },
+          "paddingBottom": {
+            "token": "spacing-4"
+          },
+          "paddingLeft": {
+            "token": "spacing-4"
+          },
+          "gap": {
+            "token": "spacing-2"
+          }
+        },
+        "Badge": {
+          "width": {
+            "raw": 8,
+            "level": "info",
+            "reason": "size-2"
+          },
+          "height": {
+            "raw": 8,
+            "level": "info",
+            "reason": "size-2"
+          }
+        },
+        "Label": {
+          "textStyle": {
+            "raw": {
+              "fontSize": 14,
+              "lineHeight": 20,
+              "fontWeight": 500
+            },
+            "level": "warning",
+            "reason": "test: no Text Style"
+          },
+          "textResize": "width-and-height"
+        }
+      }
+    },
+    {
+      "match": {
+        "size": "sm"
+      },
+      "set": {
+        "Button": {
+          "paddingTop": {
+            "token": "spacing-2"
+          },
+          "paddingRight": {
+            "token": "spacing-2"
+          },
+          "paddingBottom": {
+            "token": "spacing-2"
+          },
+          "paddingLeft": {
+            "token": "spacing-2"
+          }
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "primary"
+          },
+          "stroke": "none",
+          "effects": []
+        },
+        "Badge": {
+          "fill": {
+            "token": "primary-foreground"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "primary-foreground"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "kind": "secondary"
+      },
+      "set": {
+        "Button": {
+          "fill": {
+            "token": "secondary"
+          }
+        },
+        "Badge": {
+          "fill": {
+            "token": "secondary-foreground"
+          }
+        },
+        "Label": {
+          "fill": {
+            "token": "secondary-foreground"
+          }
+        }
+      }
+    }
+  ],
+  "subComponents": [],
+  "dependencies": {
+    "families": [],
+    "fonts": []
+  },
+  "figma": {
+    "page": "Button",
+    "componentSetName": "Button",
+    "description": "Test Button (#593).",
+    "header": {
+      "type": "Component",
+      "title": "Button",
+      "namespace": "@/components/ui/button"
+    },
+    "grid": {
+      "columns": [
+        "kind"
+      ],
+      "rows": [
+        "size"
+      ]
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@/components/ui/button",
+    "component": "Button",
+    "import": "import { Button } from \"@/components/ui/button\"",
+    "alwaysEmit": []
+  },
+  "notes": []
+}

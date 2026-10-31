@@ -14,7 +14,8 @@ import { fileURLToPath } from 'node:url';
 import { baseTuple, expand, resolve, variantName } from '../../contract/scripts/contract.mjs';
 import { diff } from './base-loop.mjs';
 import { valueAt } from './foundations-value.mjs';
-import { defaultProps, iconRef, normalizeReadback, rootFillProblems } from './readback.mjs';
+import { defaultProps, expectedVariant, iconRef, normalizeReadback, rootFillProblems } from './readback.mjs';
+import { familyNodes, heldRefs } from './nested.mjs';
 import { defaultLedgerPath, readLedger } from './ledger.mjs';
 
 // The grid cell [row, column] a tuple sits in: figma.grid lists the axes that make the rows and the columns;
@@ -69,13 +70,16 @@ export function mergeCoverage(pages) {
   const di = new Map();
   const D = s => (di.has(s) ? di.get(s) : (di.set(s, dict.push(s) - 1), dict.length - 1));
   const rows = [];
+  const mains = [];
   for (let i = 0; i < of; i++) {
     const p = byBatch.get(i);
     for (const [parts, refs, ...rest] of p.rows) rows.push([parts.map(x => D(p.dict[x])), D(p.dict[refs]), ...rest]);
+    for (const m of p.mains || []) mains.push(D(p.dict[m]));
   }
-  const { batch, offCentre, ...first } = pages[0];
+  const { batch, offCentre, mains: _, ...first } = pages[0];
   const centring = pages.every(p => Array.isArray(p.offCentre)) ? { offCentre: pages.flatMap(p => p.offCentre) } : {};
-  return { ...first, summary: { ...first.summary, variants: rows.length }, dict, rows, ...centring };
+  const nested = pages.every(p => Array.isArray(p.mains)) ? { mains } : {};
+  return { ...first, summary: { ...first.summary, variants: rows.length }, dict, rows, ...centring, ...nested };
 }
 
 /**
@@ -84,9 +88,10 @@ export function mergeCoverage(pages) {
  * default variant top-left, its property wiring, every absolute node centred in its parent (#442), the set's
  * properties, and the set's page, frame and header. The page is on `page` (the name `--page` built it on) when
  * given; else, when the ledger records the set's page and the readback has its id, on that page (matched by id, so
- * a rename is no problem); else on the Contract's.
+ * a rename is no problem); else on the Contract's. A nested instance (#593) holds the held variant its tuple resolves to:
+ * its main component, read per variant (`mains`), is named through the ledger's sets and `held` (see nested.mjs).
  */
-export function checkCoverage(contract, readback, ledger = null, { page = null } = {}) {
+export function checkCoverage(contract, readback, ledger = null, { page = null, held = null } = {}) {
   const problems = [];
   // a variant the selection dropped, which the ledger keeps as an orphan until a prune (#67), is listed under the
   // name the ledger keeps, not a problem. It is matched by its id (the readback's row ends with it), and by name
@@ -101,7 +106,10 @@ export function checkCoverage(contract, readback, ledger = null, { page = null }
   const want = new Map(tuples.map(t => [variantName(contract, t), t]));
   const labels = new Map(contract.axes.map(a => [a.label, new Set(a.values.map(v => v.label))]));
   const seen = new Map();
-  for (const [parts, refsIdx, row, col, isComponent, id] of readback.rows) {
+  const nested = familyNodes(contract).map(n => n.node);
+  const variants = nested.length ? heldRefs(held, ledger) : {};
+  if (nested.length && !Array.isArray(readback.mains)) bad('nested', { reason: 'unread' });
+  for (const [r, [parts, refsIdx, row, col, isComponent, id]] of readback.rows.entries()) {
     const pairs = parts.map(i => readback.dict[i]);
     const name = pairs.join(', ');
     if (byId.has(id)) { orphaned.push(byId.get(id)); continue; }
@@ -120,6 +128,13 @@ export function checkCoverage(contract, readback, ledger = null, { page = null }
     const refs = JSON.parse(readback.dict[refsIdx]);
     const wantRefs = refsOf(contract, t);
     if (!eqJ(refs, wantRefs)) bad('wiring', { name, want: wantRefs, got: refs });
+    if (!nested.length || !Array.isArray(readback.mains)) continue;
+    const mains = JSON.parse(readback.dict[readback.mains[r]]);
+    const { swap } = expectedVariant(contract, t, defaultProps(contract), null, held);
+    for (const node of nested) {
+      const got = node in mains ? variants[mains[node]] || (mains[node] ? `unknown:${mains[node]}` : null) : undefined;
+      if (got !== swap[node]) bad('nested', { name, node, want: swap[node], got });
+    }
   }
   for (const name of want.keys()) if (!seen.has(name)) bad('missing', { name });
   // the core lists [variant, node, px] for each absolute node more than Figma's half pixel off its parent's centre
@@ -155,8 +170,11 @@ export function checkCoverage(contract, readback, ledger = null, { page = null }
   return { ok: problems.length === 0, expected: tuples.length, read: readback.rows.length, orphaned, problems };
 }
 
-/** A `sample` readback: each variant diffed against what the Contract resolves for it, at the property defaults. */
-export function checkSample(contract, readback, ledger, foundations) {
+/**
+ * A `sample` readback: each variant diffed against what the Contract resolves for it, at the property defaults. A
+ * nested instance's main component, property values and overrides are diffed too, through `held` (#593).
+ */
+export function checkSample(contract, readback, ledger, foundations, held = null) {
   const byName = new Map(expand(contract).map(t => [variantName(contract, t), t]));
   const problems = [];
   const unbuilt = new Set();
@@ -165,7 +183,7 @@ export function checkSample(contract, readback, ledger, foundations) {
     const raw = readback.sample[name];
     const t = byName.get(name);
     if (!raw || !t) { problems.push({ what: raw ? 'extra' : 'missing', name }); continue; }
-    const d = diff(contract, normalizeReadback(raw, ledger), foundations, defaultProps(contract), t);
+    const d = diff(contract, normalizeReadback(raw, ledger, held), foundations, defaultProps(contract), t, held);
     if (d.changes.length || d.unread.length || d.problems.length) problems.push({ what: 'diff', name, changes: d.changes, unread: d.unread, problems: d.problems });
     d.unbuilt.forEach(f => unbuilt.add(f));
     const wantRefs = refsOf(contract, t);

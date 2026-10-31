@@ -1,0 +1,288 @@
+{
+  "schemaVersion": 1,
+  "family": {
+    "key": "card",
+    "name": "Card",
+    "description": "A test Card for nested instances (#593)."
+  },
+  "source": {
+    "codeLibrary": "shadcn/ui",
+    "adapter": "generic",
+    "packages": {},
+    "files": {
+      "components/ui/card.tsx": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "snapshotId": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "axes": [
+    {
+      "key": "density",
+      "label": "Density",
+      "default": "comfortable",
+      "defaultSource": "test",
+      "values": [
+        {
+          "key": "comfortable",
+          "label": "Comfortable",
+          "code": {}
+        },
+        {
+          "key": "compact",
+          "label": "Compact",
+          "code": {
+            "compact": true
+          }
+        }
+      ]
+    },
+    {
+      "key": "state",
+      "label": "State",
+      "canonical": true,
+      "default": "enabled",
+      "defaultSource": "canonical State axis (#6)",
+      "values": [
+        {
+          "key": "enabled",
+          "label": "Enabled",
+          "code": {}
+        }
+      ]
+    }
+  ],
+  "excluded": [],
+  "selection": {
+    "status": "draft",
+    "omit": [],
+    "expectedCount": 2,
+    "approval": null
+  },
+  "anatomy": {
+    "name": "Card",
+    "type": "COMPONENT",
+    "children": [
+      {
+        "name": "Title",
+        "type": "TEXT"
+      },
+      {
+        "name": "Actions",
+        "type": "FRAME",
+        "children": [
+          {
+            "name": "Cancel",
+            "type": "INSTANCE",
+            "instanceOf": "family:button"
+          },
+          {
+            "name": "Confirm",
+            "type": "INSTANCE",
+            "instanceOf": "family:button"
+          }
+        ]
+      }
+    ]
+  },
+  "properties": [
+    {
+      "key": "title",
+      "label": "Title",
+      "type": "TEXT",
+      "default": "Card title",
+      "binds": [
+        {
+          "node": "Title",
+          "field": "characters"
+        }
+      ],
+      "code": {
+        "prop": "title"
+      }
+    }
+  ],
+  "layout": [
+    {
+      "match": {},
+      "set": {
+        "Card": {
+          "direction": "column",
+          "width": "hug",
+          "height": "hug",
+          "alignMain": "start",
+          "alignCross": "start",
+          "paddingTop": {
+            "token": "spacing-4"
+          },
+          "paddingRight": {
+            "token": "spacing-4"
+          },
+          "paddingBottom": {
+            "token": "spacing-4"
+          },
+          "paddingLeft": {
+            "token": "spacing-4"
+          },
+          "gap": {
+            "token": "spacing-4"
+          }
+        },
+        "Title": {
+          "textStyle": {
+            "raw": {
+              "fontSize": 16,
+              "lineHeight": 24,
+              "fontWeight": 600
+            },
+            "level": "warning",
+            "reason": "test: no Text Style"
+          },
+          "textResize": "width-and-height"
+        },
+        "Actions": {
+          "direction": "row",
+          "width": "hug",
+          "height": "hug",
+          "alignMain": "end",
+          "alignCross": "center",
+          "paddingTop": {
+            "token": "spacing-0"
+          },
+          "paddingRight": {
+            "token": "spacing-0"
+          },
+          "paddingBottom": {
+            "token": "spacing-0"
+          },
+          "paddingLeft": {
+            "token": "spacing-0"
+          },
+          "gap": {
+            "token": "spacing-2"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "density": "compact"
+      },
+      "set": {
+        "Card": {
+          "paddingTop": {
+            "token": "spacing-2"
+          },
+          "paddingRight": {
+            "token": "spacing-2"
+          },
+          "paddingBottom": {
+            "token": "spacing-2"
+          },
+          "paddingLeft": {
+            "token": "spacing-2"
+          },
+          "gap": {
+            "token": "spacing-2"
+          }
+        }
+      }
+    }
+  ],
+  "paint": [
+    {
+      "match": {},
+      "set": {
+        "Card": {
+          "fill": {
+            "token": "card"
+          },
+          "stroke": {
+            "token": "border"
+          },
+          "effects": []
+        },
+        "Title": {
+          "fill": {
+            "token": "card-foreground"
+          }
+        },
+        "Actions": {
+          "fill": "none",
+          "stroke": "none",
+          "effects": []
+        }
+      }
+    }
+  ],
+  "instances": [
+    {
+      "match": {},
+      "set": {
+        "Cancel": {
+          "variant": {
+            "kind": "secondary"
+          },
+          "props": {
+            "label": "Cancel",
+            "badge": false
+          }
+        },
+        "Confirm": {
+          "props": {
+            "label": "Confirm"
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "density": "compact"
+      },
+      "set": {
+        "Cancel": {
+          "variant": {
+            "size": "sm"
+          }
+        },
+        "Confirm": {
+          "variant": {
+            "size": "sm"
+          }
+        }
+      }
+    }
+  ],
+  "subComponents": [],
+  "dependencies": {
+    "families": [
+      {
+        "key": "button",
+        "contract": "button"
+      }
+    ],
+    "fonts": []
+  },
+  "figma": {
+    "page": "Card",
+    "componentSetName": "Card",
+    "description": "Test Card (#593).",
+    "header": {
+      "type": "Component",
+      "title": "Card",
+      "namespace": "@/components/ui/card"
+    },
+    "grid": {
+      "columns": [
+        "density"
+      ],
+      "rows": []
+    }
+  },
+  "code": {
+    "framework": "react",
+    "package": "@/components/ui/card",
+    "component": "Card",
+    "import": "import { Card } from \"@/components/ui/card\"",
+    "alwaysEmit": []
+  },
+  "notes": []
+}

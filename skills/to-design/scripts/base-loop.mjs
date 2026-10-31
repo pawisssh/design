@@ -21,6 +21,7 @@ import {
 } from '../../contract/scripts/contract.mjs';
 import { foundationsPathFor, readJson, writeJson } from '../../contract/scripts/io.mjs';
 import { anatomyTree, baseProps, expectedBase, expectedVariant, near, norm, normalizeReadback, rootFillProblems, same, textProblems } from './readback.mjs';
+import { allowedOverrides } from './nested.mjs';
 import { defaultLedgerPath, readLedger } from './ledger.mjs';
 import { groupOf } from './foundations-subset.mjs';
 import { valueAt } from './foundations-value.mjs';
@@ -61,6 +62,8 @@ const UNMAPPED = {
   effects: ['effects change as a whole list, with no in-place form', 'Edit the effects by hand if wanted.'],
   foreign: ['bound to a variable or style the foundations ledger does not know', 'Bind a foundations variable instead.'],
   drawn: ['the builder derives it from the Contract (an ELLIPSE\'s path and stroke, an absolute node\'s place)', 'A rebuild restores it.'],
+  nested: ['a nested instance\'s property value differs from the one the Contract writes (else the held default)', 'Set it in the Contract\'s instances by hand if wanted.'],
+  override: ['an override inside a nested instance that the Contract does not write', 'Style the instance with layout and paint rules, or set its props in instances, by hand if wanted.'],
 };
 
 /**
@@ -82,10 +85,12 @@ export function normalizeBaseResult(result, ledger) {
  * value stayed, which a rebuild restores) or `unmapped` (a tweak the Contract cannot carry, `why` says which).
  * `unread` lists the expected fields the readback does not report, and `unbuilt` the raw text styles the builder
  * does not write until the Foundations document has Text Styles (#160). `problems` are what the Contract cannot
- * say (textProblems, rootFillProblems; #236). Effects are compared in order.
+ * say (textProblems, rootFillProblems; #236). Effects are compared in order. A nested instance (#593) is compared by
+ * its main component (`swap`), its property values and its override list, through `held`: an override the Contract
+ * does not write is an `override` change; the held family's own fields are never read.
  */
-export function diff(contract, readback, foundations, props = baseProps(contract, readback.specimen === 'set'), tuple = baseTuple(contract)) {
-  const exp = expectedVariant(contract, tuple, props, foundations);
+export function diff(contract, readback, foundations, props = baseProps(contract, readback.specimen === 'set'), tuple = baseTuple(contract), held = null) {
+  const exp = expectedVariant(contract, tuple, props, foundations, held);
   const changes = [];
   const unread = [];
   const unbuilt = [];
@@ -137,6 +142,20 @@ export function diff(contract, readback, foundations, props = baseProps(contract
       if (!readback[part] || !(node in readback[part])) { unread.push(`${part}.${node}`); continue; }
       if (readback[part][node] !== want) unmapped('property', part, node, part === 'visible' ? 'visible' : part === 'text' ? 'characters' : 'mainComponent', want, readback[part][node]);
     }
+  if (Object.keys(exp.props).length) {
+    const allowed = allowedOverrides(contract, tuple, held);
+    for (const [node, want] of Object.entries(exp.props)) {
+      const got = readback.props && readback.props[node];
+      if (!got) { unread.push(`props.${node}`); continue; }
+      for (const label of new Set([...Object.keys(want), ...Object.keys(got)]))
+        if (JSON.stringify(got[label]) !== JSON.stringify(want[label])) unmapped('nested', 'props', node, label, want[label], got[label]);
+      const over = readback.over && readback.over[node];
+      if (!over) { unread.push(`overrides.${node}`); continue; }
+      for (const [path, fields] of over)
+        for (const f of fields)
+          if (!(allowed[node][path] || []).includes(f)) unmapped('override', 'overrides', path ? `${node}/${path}` : node, f, undefined, 'overridden');
+    }
+  }
   // what no difference shows (#236): a text that wrapped, a variant narrower than its text, a root fill in a set
   const problems = [...textProblems(readback), ...(readback.specimen === 'set' ? rootFillProblems(contract, [tuple]) : [])];
   return { name: exp.name, changes, unread, unbuilt, problems };
