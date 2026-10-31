@@ -193,6 +193,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       let col = cols[c.key].col;
       const isNew = !col;
       const fields = [];
+      // A diff lists a new collection, its modes and its variables as created and goes no further: nothing is made for them to read.
       if (isNew && dry) { created.collections.push(c.key); c.modes.forEach(m => created.modes.push(`${c.key}/${m.key}`)); continue; }
       if (isNew) { col = figma.variables.createVariableCollection(c.name); created.collections.push(c.key); }
       else if (col.name !== c.name) { if (!dry) col.name = c.name; fields.push('name'); }
@@ -208,6 +209,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       });
       // No reorder API: setDefaultMode moves a mode to index 0, so calling it in reverse order fixes the order (#27).
       const target = c.modes.map(m => ids[m.key]);
+      // (a diff has no id for a mode it would add, so it reads the order only when every mode exists)
       if (target.every(Boolean) && target.some((id, i) => col.modes[i].modeId !== id)) {
         if (!dry) for (const id of target.slice().reverse()) col.setDefaultMode(id);
         fields.push('modeOrder');
@@ -221,6 +223,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const made = {};
     const ledgerVariables = {};
     const value = (type, val) => {
+      // a diff makes no alias: an existing target's id, else null (the target is created, so the value differs)
       if (val.alias != null) return dry ? { type: 'VARIABLE_ALIAS', id: made[val.alias] ? made[val.alias].id : null } : figma.variables.createVariableAlias(made[val.alias]);
       if (val.raw != null) return rgba(val.raw, val.alpha);
       return type === 'COLOR' ? rgba(val.value) : val.value;
@@ -242,6 +245,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
         if (x.hiddenFromPublishing !== !!v.hidden) { if (!dry) x.hiddenFromPublishing = !!v.hidden; fields.push('hidden'); }
         const current = x.valuesByMode;
         for (const [mk, val] of Object.entries(v.values)) {
+          if (dry && !modes[mk]) continue; // a mode the diff lists as created has no values to read
           const want = value(v.type, val);
           if (!sameValue(current[modes[mk]], want)) { if (!dry) x.setValueForMode(modes[mk], want); fields.push(`value:${mk}`); }
         }
@@ -271,6 +275,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       if (s.letterSpacing && literal('letterSpacing') && !sameMetric(st.letterSpacing, s.letterSpacing)) { if (!dry) st.letterSpacing = s.letterSpacing; fields.push('letterSpacing'); }
       const bound = st.boundVariables || {};
       for (const [field, token] of Object.entries(binds)) {
+        // (a token a diff would create is not in `made`: the field is bound to it)
         if (!bound[field] || !made[token] || bound[field].id !== made[token].id) { if (!dry) st.setBoundVariable(field, made[token]); fields.push(`bind:${field}`); }
       }
       if (!isNew) note('textStyles', flat, fields);
@@ -290,6 +295,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
     const orphanedCount = orphaned.variables.length + orphaned.textStyles.length;
     return Object.assign(report, {
       summary: { created: countAll(created), updated: countAll(updated), unchanged, orphaned: orphanedCount, restored: restored.length, pruned: pruned.length, conflicts: 0 },
+      // a diff carries the ledger as it was, so a `record` after it changes nothing
       created, updated, orphaned, restored, pruned, conflicts, extraModes, ...(dry ? { mode: 'diff' } : {}),
       ledger: dry ? { foundations: prev } : {
         foundations: {

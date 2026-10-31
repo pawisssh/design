@@ -232,10 +232,23 @@ test('diff mode reports a missing mode as created, and a file without the ledger
   mock.log.length = 0;
   const result = await diffOf(mock, ledger);
   assert.deepEqual(result.created.modes, ['theme/g100']);
+  assert.deepEqual(result.updated.variables, {}, 'values in the mode a build would add are not read');
   assert.deepEqual(mock.log, []);
   const lost = await diffOf(mock, null);
   assert.ok(lost.conflicts.length > 0);
   assert.deepEqual(mock.log, []);
+});
+
+test('the CLI makes a diff plan with --mode diff, refuses another mode, and a diff takes no prune', () => {
+  const out = mkdtempSync(join(tmpdir(), 'diff-'));
+  const run = (...args) => spawnSync('node', [join(fileURLToPath(new URL('../scripts/build-plan.mjs', import.meta.url))), 'foundations', '--doc', DOC_PATH, '--file-key', FILE_KEY, '--out', out, '--ledger', join(out, 'none.json'), ...args], { encoding: 'utf8' });
+  const diff = run('--mode', 'diff');
+  assert.equal(diff.status, 0, diff.stderr);
+  assert.equal(JSON.parse(diff.stdout).options.readOnly, true);
+  assert.equal(JSON.parse(readFileSync(join(out, 'plan.json'), 'utf8')).options.readOnly, true);
+  assert.equal(JSON.parse(run().stdout).options.readOnly, undefined);
+  assert.equal(run('--mode', 'reconcile').status, 2);
+  assert.match(run('--mode', 'diff', '--prune', 'spacing-13').stderr, /a diff takes no prune/);
 });
 
 test('the diff package is the build package plus the read-only option, and fits the call as the build does', () => {

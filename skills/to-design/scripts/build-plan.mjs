@@ -75,6 +75,7 @@ export function foundationsPlan(docText, ledger, { fileKey, adopt = false, prune
   if (ledger && ledger.fileKey !== fileKey) throw new Error(`ledger is for ${ledger.fileKey}, not ${fileKey}`);
   const { doc, names, parts } = foundationsParts(docText, ledger, budget);
   if (!(chunk >= 1 && chunk <= parts.length)) throw new Error(`there is no chunk ${chunk} of ${parts.length}`);
+  if (readOnly && prune.length) throw new Error('a diff takes no prune: it writes nothing');
   if (chunk > 1 && prune.length) throw new Error('prune runs with chunk 1, which carries the whole selection\'s orphans');
   // a diff reads one chunk against whatever the file holds, recorded or not
   if (!readOnly) assertRecorded(ledger, parts, chunk, documentHash(docText));

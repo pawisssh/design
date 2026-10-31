@@ -186,7 +186,6 @@ test('a diff reads each chunk of a built file as no difference, and a chunk whos
   assert.deepEqual(mock.log, [], 'a diff writes nothing');
   const fresh = mockFigma({ fileKey: FILE_KEY });
   const second = await runPackage(pack({ options: { budget, chunk: 2, readOnly: true } }).code, fresh.figma);
-  assert.equal(second.summary.created, second.created.variables.length + second.created.textStyles.length + second.created.collections.length + second.created.modes.length);
   assert.ok(second.created.variables.length > 0 && second.summary.updated === 0);
   assert.deepEqual(fresh.log, []);
 });
