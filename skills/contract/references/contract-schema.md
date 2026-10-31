@@ -22,7 +22,8 @@ Worked example: [`button.component.json`](../../../design-systems/carbon/contrac
 | `paint` | yes | [Rules](#rules) that set fills, strokes and effects per anatomy node. This is the state model. |
 | `icons` | when an icon slot exists | Icon source, default icon and preferred icons. See [Icons](#icons). |
 | `subComponents` | yes (may be `[]`) | `_`-prefixed Sub-components, tier `item` or `base`. See [Sub-components](#sub-components). |
-| `dependencies` | yes | `families`: other Component Families used as instances, as `{key, contract, source.tag}`. `fonts`: the fonts used. Tokens and icons are not listed here, because they are derived (see [Derived, not stored](#derived-not-stored)). |
+| `instances` | no | [Nested instances](#nested-instances): `{match, set}` rules that set each `family:<key>` node's held variant and property values per variant (#317). |
+| `dependencies` | yes | `families`: other Component Families used as instances, as `{key, contract, source.tag}`, plus `designSystem` when the family is in another Design System (#317, see [Nested instances](#nested-instances)). Keys are unique. `fonts`: the fonts used. Tokens and icons are not listed here, because they are derived (see [Derived, not stored](#derived-not-stored)). |
 | `figma` | yes | Figma-only presentation: `page` (plural), `componentSetName`, `description`, `header` (Type, Title, Namespace for the `Component Header` instance), and `grid` (`columns` and `rows` as axis keys). |
 | `code` | yes | Code Connect: `framework`, `package`, `component`, `import`, `alwaysEmit`, and optionally `required` and `items` (#93, see [Code](#code)). Per-value and per-property code mappings sit next to the value or property they describe. |
 | `notes` | no | Report entries `{level: info|warning|verify, at, message}` for decisions and render checks that are not tied to a single raw value. When a probe settles a `verify` note, it becomes `info` and its message starts with `Resolved (#N)` or `Adjusted (#N)`. |
@@ -119,7 +120,7 @@ A tweak the owner makes to the Base Component in Figma lands **in place**, on th
 
 - One tree per Component Set, shared by every variant (#6). States and sizes change bound values, never the tree.
 - Layer names are final Figma layer names, and they are unique within the tree. Rules address nodes by name. A path such as `Glyph/Vector` addresses a layer inside an instance; the single-`Vector` icon rule from #13 makes that path stable.
-- `instanceOf` is `icon:default`, `icon:<key>` (one fixed icon, #93), `family:<key>` (another Component Family, which must be built first), or `sub:<name>` (a Sub-component).
+- `instanceOf` is `icon:default`, `icon:<key>` (one fixed icon, #93), `family:<key>` (another Component Family, a [nested instance](#nested-instances), which must be built first), or `sub:<name>` (a Sub-component).
 - A node that shows only in some variants, such as a form control's status icon or validation message, is in the tree once and hidden with a `visible: false` layout rule elsewhere (#88, #93). Where the content differs per variant, each version is its own node: TextInput has `Invalid icon` (`icon:warning--filled`) and `Warn icon` (`icon:warning--alt--filled`), and `Invalid text` and `Warn text`, each shown by its validation value. One node per version keeps one icon per INSTANCE, one code prop per property and one fill per path.
 - An **absolute node** (#442) is a non-root node with `position: "absolute"`. It sits outside its parent's Auto Layout flow, centred by `constraints`, and doesn't count toward the parent's hug size, as in CSS. Its parent is the COMPONENT or a FRAME with Auto Layout (`direction` `row` or `column`), and it has a fixed `width` and `height` (a token or a number). The builder unclips that parent (Figma clips a new frame), so the Contract has no clip field. CDS Button's spinner is one: an absolute `Spinner` in `Middle`, centred over the hidden label.
 - A FRAME with `direction: "none"`, or with no `direction` at all, has no Auto Layout. Its children sit at its top left, and a later child draws on top of an earlier one. This is how CDS's `Spinner` stacks its `Track` under its `Arc` (#442).
@@ -168,6 +169,25 @@ A `token` or `raw` value may also carry `by: "owner"` and `was` (see [Owner edit
 
 A token whose *mode value* is raw in Figma (the alpha entries, `button-danger-hover` from #9) is still a `token` reference in the Contract. Rawness inside a mode belongs to the foundations, not to the Contract.
 
+## Nested instances
+
+A family that renders another family holds it as an `INSTANCE` node with `instanceOf: "family:<key>"` ([ADR 0023](../../../docs/adr/0023-a-family-holds-another-as-a-nested-instance.md), #317). The held family keeps its own Contract and Component Set in its own Design System, and its Contract never names who holds it.
+
+```json
+"dependencies": { "families": [ { "key": "overflow-menu", "designSystem": "carbon", "contract": "overflow-menu", "source": { "tag": "v11.118.0" } } ] },
+"instances": [
+  { "match": {}, "set": { "Menu": { "variant": { "size": "md" }, "props": { "icon": "icon:file-lines" } } } },
+  { "match": { "loading": "true" }, "set": { "Menu": { "props": { "icon": "icon:circle-notch" } } } }
+]
+```
+
+- **`designSystem`** (optional) on a `dependencies.families` entry names the Design System folder that holds the family (`design-systems/carbon`). When it is absent, the family is in the Contract's own Design System.
+- **`instances`** (optional) is an ordered list of `{match, set}` rules, as [Rules](#rules) are. `set` maps a nested instance's node name to `{variant?, props?}`. For each variant every matching rule applies in order, and a later rule wins per `variant.<axis>` and per `props.<name>` (`resolveInstances(contract, tuple)`).
+  - `variant` names the held family's axis values. An axis left out takes the held family's default.
+  - `props` names the held family's own properties: a string for TEXT, `true` or `false` for BOOLEAN, and `icon:<key>` for INSTANCE_SWAP. A swap value names an icon of the holding Design System. A property left out keeps the held family's default.
+- **Styling stays in `layout` and `paint`** (ADR 0012): rules on the node (`Menu`) and on paths into it (`Menu/Glyph/Vector`), as `Glyph/Vector` works. Text inside a held family is set only through its TEXT properties, never by path.
+- **Where it is checked.** `validate` checks that each `set` key is a `family:` node, that `match` names this Contract's axes and values, and the value types (rules 3 and 7). That the resolved tuple is in the held family's selection, and that each property exists with its type, is checked by To-design's build plan, where both Contracts are loaded.
+
 ## Icons
 
 ```json
@@ -193,7 +213,7 @@ A Sub-component uses the same fields as a family, without `source`, `selection`,
 These are computed from the Contract, never written into it:
 
 - the token closure, which feeds the foundations scope (#9)
-- the icon list: `icons(contract)` returns one Contract's `default`, then its `preferred`, then every fixed `icon:<key>` an INSTANCE names in the anatomy or a Sub-component (#93), without duplicates (the builder takes the union over Contracts), and `iconName(key)` gives the kit-style name (`trash-can` → `Trash-can`)
+- the icon list: `icons(contract)` returns one Contract's `default`, then its `preferred`, then every fixed `icon:<key>` an INSTANCE names in the anatomy or a Sub-component (#93), then every `icon:<key>` an `instances` prop swaps a nested instance to (#317), without duplicates (the builder takes the union over Contracts), and `iconName(key)` gives the kit-style name (`trash-can` → `Trash-can`)
 - the expanded variant tuples and their tuple keys (`tupleKey`, To-preview's internal ids)
 - Figma ids and keys, which live in the builder ledger
 
@@ -240,11 +260,11 @@ A TEXT property whose node a variant hides (`visible: false`) is not emitted for
 
 1. `schemaVersion` is known, and the axis, value and property keys are unique. Labels are unique per axis, Title Case, and contain no `=` or `,`.
 2. Every axis has a `default` that is one of its values. The default tuple is selected.
-3. Every pattern (`excluded`, `selection.omit`, rules, property `binds`) names known axes and values. Every exclusion has `reason` and `evidence`. Every rule and bind names an anatomy node, or an `<INSTANCE node>/<layer>` path such as `Glyph/Vector`. Every field a rule sets is one listed under [Rules](#rules) for its section: a layout or geometry field in a `layout` rule, a paint field in a `paint` rule (#459). `visible` is `true` or `false`, set only by a layout rule and only on a non-root anatomy node. `code.required` names no prop an axis value or a property already sets; `code.items` has a `component` and a non-empty `props`; a property's `code.itemProp` is on a TEXT property and is one of `code.items.props` (#93). A TEXT property's `code.child` names a component, its optional `childProp` a prop, and it sets neither `prop` nor `itemProp` (#166). A Slot axis names a non-root anatomy node, is not canonical and has exactly one filled and one empty value; `filled` appears on Slot axis values only; a `code.visibleWhen: {axis}` names a Slot axis whose slot is the node the property binds (#121). The geometry fields are layout fields with the values listed under [Rules](#rules); `position` and `constraints` are never on the root; `arc` and `strokeCap` are on ELLIPSE nodes only; an ELLIPSE is not the root, has no children, and no rule sets its `strokeAlign`; no rule sets a field the builder draws (`path`, `dashPattern`, `x`, `y`, `offCentre`, `clipsContent`) (#442).
+3. Every pattern (`excluded`, `selection.omit`, rules, `instances`, property `binds`) names known axes and values. Every exclusion has `reason` and `evidence`. Every rule and bind names an anatomy node, or an `<INSTANCE node>/<layer>` path such as `Glyph/Vector`. Every field a rule sets is one listed under [Rules](#rules) for its section: a layout or geometry field in a `layout` rule, a paint field in a `paint` rule (#459). `visible` is `true` or `false`, set only by a layout rule and only on a non-root anatomy node. `code.required` names no prop an axis value or a property already sets; `code.items` has a `component` and a non-empty `props`; a property's `code.itemProp` is on a TEXT property and is one of `code.items.props` (#93). A TEXT property's `code.child` names a component, its optional `childProp` a prop, and it sets neither `prop` nor `itemProp` (#166). A Slot axis names a non-root anatomy node, is not canonical and has exactly one filled and one empty value; `filled` appears on Slot axis values only; a `code.visibleWhen: {axis}` names a Slot axis whose slot is the node the property binds (#121). The geometry fields are layout fields with the values listed under [Rules](#rules); `position` and `constraints` are never on the root; `arc` and `strokeCap` are on ELLIPSE nodes only; an ELLIPSE is not the root, has no children, and no rule sets its `strokeAlign`; no rule sets a field the builder draws (`path`, `dashPattern`, `x`, `y`, `offCentre`, `clipsContent`) (#442).
 4. The expansion equals `selection.expectedCount`.
 5. Every selected variant resolves every required field for every anatomy node, every `sameAs` resolves, and every variant gets exactly one bind per property. Required fields are, per anatomy node type: COMPONENT `direction`, `padding*`, `gap`, `fill`, `stroke`; TEXT `textStyle`, `fill`; FRAME `width`, `height`; ELLIPSE `width`, `height`, `strokeWeight`, `arc`, `stroke`. On top of these, a field that any rule sets for a node is required for that node in every selected variant, so the builder never falls back to a Figma default (for Button this makes every field of the first layout and paint rules required everywhere, plus `minHeight` on every size). No property binds a `visible` that a rule sets (#93). For a Slot axis, the slot node's `visible` equals the tuple's value `filled` (#121). In every selected variant, an absolute node and an ELLIPSE have a fixed `width` and `height` (a token or a number, not `hug`, `fill`, `fixed` or a `raw` that is not a number, #458); an absolute node has `constraints` and a parent whose `direction` is `row` or `column`; a node with `constraints` is absolute; and an arc (`sweep` < 360) has a FRAME parent whose `direction` is `none` or absent, so an arc is never absolute or in an Auto Layout flow; an arc has the same `width` and `height`; and an ELLIPSE is an arc in every selected variant or a full circle in every one, since a Component Set's variants share one layer tree (#442).
 6. Every `raw` value has `level` (`info` or `warning`) and `reason`. A raw size (`width`, `height`, `min*`, `max*`, `padding*`, `gap`, `radius`, `strokeWeight`) is a number, since the builder writes it as one (#458). Every token a selected variant uses exists in the foundations document (`textStyle` in `textStyles`, every other field in `variables`) and is used inside that variable's `scopes`. The scope a field needs: `padding*` and `gap` → `GAP` (Figma has no padding scope, #27); `width`, `height`, `min*`, `max*` → `WIDTH_HEIGHT`; `radius` → `CORNER_RADIUS`; `strokeWeight` → `STROKE_FLOAT`; `stroke` → `STROKE_COLOR`; effect `color` → `EFFECT_COLOR`; `fill` → `TEXT_FILL` on a TEXT node, `SHAPE_FILL` on an ELLIPSE or an `<instance>/<layer>` path, `FRAME_FILL` otherwise (`ALL_FILLS` covers all three). Uses are checked after `sameAs`, so `Glyph/Vector` checks the label colour as `SHAPE_FILL`, and an arc whose `stroke` is `{sameAs: "Label.fill"}` checks the label colour as `STROKE_COLOR`. `was` is skipped.
-7. Every `instanceOf` target is declared: `icon:*` needs `icons` (whose `default` is in `preferred`, and whose every key is a file name: `[A-Za-z0-9]` segments joined by `-` or `--`, `ICON_KEY`), `family:<key>` needs `dependencies.families`, `sub:<name>` needs `subComponents`. That each target is built first is enforced by the builder's build order, not by `validate`.
+7. Every `instanceOf` target is declared: `icon:*` needs `icons` (whose `default` is in `preferred`, and whose every key is a file name: `[A-Za-z0-9]` segments joined by `-` or `--`, `ICON_KEY`), `family:<key>` needs `dependencies.families`, whose keys are unique, `sub:<name>` needs `subComponents`. Every `instances` `set` key is an INSTANCE node whose `instanceOf` is `family:<key>`, and its value is `{variant?, props?}`, with string `variant` values and string or boolean `props` values (#317). That each target is built first is enforced by the builder's build order, not by `validate`.
 8. `status` is `draft` with `approval: null`, or `approved` with an [approval](#approval) by the owner whose `snapshotId` and `contentHash` both match, and no `warning` note (an uncarried owner tweak) is open.
 9. Every [`drafted`](#drafted-values) key names a value in the Contract, and every entry is `{by: "agent", evidence, fingerprint}`, with at least one evidence string and a `sha256:<64 hex>` fingerprint, or `{by: "owner", was}`.
 
@@ -254,8 +274,8 @@ A Component Proposal records a Component Family the Code Library does not ship (
 
 - **Required:** `schemaVersion`, `family`, `proposal`, `axes` (may be `[]`), `anatomy`, `status` and `approval`.
   - `proposal` is `{by: "agent", reason, considered: [{contract, whyNot}], origin: {input, repo?, commit?, url?, at?}, home: {where: "code-library" | "app", package?, path?}}`.
-- **Optional:** `properties`, `layout`, `paint`, `icons`, `subComponents`, `dependencies` and `notes`, written as in a Contract. Anything present must validate.
-  - `dependencies.families` entries are `{key, contract}` or `{key, proposal}`.
+- **Optional:** `properties`, `layout`, `paint`, `instances`, `icons`, `subComponents`, `dependencies` and `notes`, written as in a Contract. Anything present must validate.
+  - `dependencies.families` entries are `{key, contract}` or `{key, proposal}`, or `{key, designSystem, contract}` for a family in another Design System (#317).
 - **Never present:** `source`, `code`, `selection`, `excluded` and `figma`, and no `code` mapping on an axis value or a property. Axis, value and property keys double as the suggested prop names.
 - **Theme tokens only.** A component token (a Foundations variable with `family`) or a hidden Primitive fails rule 6. A mode-specific paint is an Off-system value in the Handoff.
 - **Approval.** `status: "pending"` with `approval: null`, or `status: "approved"` with `approval: {by: "owner", at, contentHash}`. There is no `snapshotId`, since there is no code.
@@ -265,14 +285,14 @@ A Component Proposal records a Component Family the Code Library does not ship (
   - `map` is `{values: {"<axis>.<value>": {axis, value} | {property, value} | null}, properties: {"<property>": "<contract property>" | null}}` **[assumption, #111]**.
 - **`built`** (optional) is `{ref: "repo@commit:path", export, by: "owner", at}`, for a `home.where: "app"` Proposal.
 
-`validateProposal(proposal, foundations, {contracts, proposals})` returns `{ok, errors, readyToRetire}`. An array as the third argument is read as `contracts`. The checks that need those lists are skipped when they are not given.
+`validateProposal(proposal, foundations, {contracts, proposals, designSystems})` returns `{ok, errors, readyToRetire}`. An array as the third argument is read as `contracts`. The checks that need those lists are skipped when they are not given.
 
 - **Applied from the Contract:**
   - rule 1;
   - rule 2's defaults (there is no selection);
   - rule 3;
   - rule 6, plus theme tokens only;
-  - rule 7, including the icon key check, where `family:<key>` must be declared and name a Contract or a Proposal.
+  - rule 7, including the icon key check, where `family:<key>` must be declared and name a Contract or a Proposal. A dependency with a `designSystem` names an approved Contract of that Design System, looked up in `designSystems: {<ds>: [Contract]}` (`check.mjs` reads `design-systems/<ds>/contracts`). That Design System's drafts and Proposals never count, and a Design System that was not loaded is an error. Such a dependency is no part of a Proposal cycle.
 - **Not applied:** rule 4, rule 5 (a description-only input could never meet it) and rule 8's `snapshotId` part.
 - **Added:**
   - `"schema"`: required, optional and forbidden blocks;

@@ -3,7 +3,8 @@
 //   node skills/contract/scripts/check.mjs <component.json> [--foundations <file>] [--table]
 //   node skills/contract/scripts/check.mjs <proposal.json> [--foundations <file>]
 // A Proposal (design-systems/<ds>/proposals/<key>.proposal.json) is validated against the Design System's
-// Contracts (contracts/*.component.json) and other Proposals.
+// Contracts (contracts/*.component.json) and other Proposals, and a dependency with a `designSystem` against that
+// Design System's Contracts (design-systems/<designSystem>/contracts).
 // The foundations document defaults to the one next to the contracts folder
 // (design-systems/<ds>/contracts/<family>.component.json -> design-systems/<ds>/<ds>.foundations.json).
 // --table prints the resolved paint for the Figma grid rows (figma.grid.rows) at the default of
@@ -33,7 +34,13 @@ if (contractPath.endsWith('.proposal.json')) {
   const readAll = (dir, suffix) => (existsSync(dir) ? readdirSync(dir).filter(f => f.endsWith(suffix)).map(f => readJson(join(dir, f))) : []);
   const contracts = readAll(join(dsDir, 'contracts'), '.component.json');
   const proposals = readAll(dirname(contractPath), '.proposal.json').filter(x => !c.family || !x.family || x.family.key !== c.family.key);
-  const result = validateProposal(c, foundations, { contracts, proposals });
+  // a dependency's `designSystem` names a sibling folder, whose approved Contracts it is looked up among (#317)
+  const designSystems = {};
+  for (const f of (c.dependencies && c.dependencies.families) || []) {
+    const dir = f.designSystem && join(dsDir, '..', f.designSystem, 'contracts');
+    if (dir && existsSync(dir)) designSystems[f.designSystem] = readAll(dir, '.component.json');
+  }
+  const result = validateProposal(c, foundations, { contracts, proposals, designSystems });
   for (const e of result.errors) console.log(`FAIL [rule ${e.rule}] ${e.message}`);
   if (result.readyToRetire) console.log(`ready to retire: Contract "${result.readyToRetire}" has this key; the owner confirms retirement in chat`);
   console.log(result.ok ? `\nOK (Proposal ${c.family.key}, status ${c.status})` : `\nINVALID (${result.errors.length} errors)`);

@@ -169,7 +169,7 @@ A reason To-design stops a call before it changes anything in Figma, such as a s
 _Avoid_: Held variant (that is a variant a rerun leaves as Figma has it), clash, collision
 
 **Coverage check**:
-The read of a whole built Component Set that confirms each variant's name, grid cell and property wiring match its Contract.
+The read of a whole built Component Set that confirms each variant's name, grid cell, property wiring and nested instances match its Contract.
 _Avoid_: Check (when the Edit check is meant), verification
 
 **Baseline**:

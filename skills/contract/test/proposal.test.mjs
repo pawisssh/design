@@ -248,3 +248,58 @@ test('check.mjs validates a .proposal.json against the Design System beside it',
   assert.match(run.stdout, /ready to retire: Contract "button"/);
   assert.match(run.stdout, /OK \(Proposal button, status pending\)/);
 });
+
+// ---------- a dependency in another Design System (#317, #592) ----------
+// design-systems/carbon has no OverflowMenu Contract yet (#333), so the Carbon one here is the Button renamed.
+const carbonContract = (key, status = 'approved') => {
+  const c = button();
+  c.family.key = key;
+  if (status !== 'approved') Object.assign(c.selection, { status, approval: null });
+  return c;
+};
+const holding = () => {
+  const p = proposal();
+  p.anatomy.children.push({ name: 'Menu', type: 'INSTANCE', instanceOf: 'family:overflow-menu' });
+  p.dependencies.families.push({ key: 'overflow-menu', designSystem: 'carbon', contract: 'overflow-menu', source: { tag: 'v11.118.0' } });
+  return p;
+};
+
+test('a dependency with a designSystem is looked up among that Design System\'s approved Contracts (rule 7)', () => {
+  const ok = contract.validateProposal(holding(), foundations(), { ...known(), designSystems: { carbon: [carbonContract('overflow-menu')] } });
+  assert.deepEqual(ok.errors, []);
+  // not this Design System's: a local Contract with the key does not count
+  const local = contract.validateProposal(holding(), foundations(), { contracts: [button(), carbonContract('overflow-menu')], designSystems: { carbon: [] } });
+  assert.deepEqual(local.errors.map(e => [e.rule, e.at, e.message]),
+    [[7, 'dependencies.families[1]', 'family "overflow-menu" is not an approved Contract in Design System "carbon"']]);
+  // a draft is never built, and Carbon's Proposals are never looked at
+  const draft = contract.validateProposal(holding(), foundations(), { ...known(), designSystems: { carbon: [carbonContract('overflow-menu', 'draft')] } });
+  assert.deepEqual(rules(draft), [7]);
+  // checked when only the other Design System is given
+  assert.deepEqual(rules(contract.validateProposal(holding(), foundations(), { designSystems: { carbon: [] } })), [7]);
+  // a Design System that was not loaded, and a dependency on another Design System's Proposal
+  const unloaded = contract.validateProposal(holding(), foundations(), { ...known(), designSystems: {} });
+  assert.match(unloaded.errors[0].message, /in Design System "carbon", which was not loaded/);
+  const asProposal = holding();
+  asProposal.dependencies.families[1] = { key: 'overflow-menu', designSystem: 'carbon', proposal: 'overflow-menu' };
+  const refused = contract.validateProposal(asProposal, foundations(), { ...known(), designSystems: { carbon: [carbonContract('overflow-menu')] } });
+  assert.deepEqual(refused.errors.map(e => [e.rule, e.message]),
+    [[7, 'family "overflow-menu" in Design System "carbon" names a Proposal; another Design System\'s dependency is an approved Contract']]);
+});
+
+test('a dependency in another Design System is no part of a cycle, even when a local Proposal has its key', () => {
+  const local = proposal();
+  local.family = { key: 'overflow-menu', name: 'Overflow menu' };
+  local.dependencies.families = [{ key: 'promo-banner', proposal: 'promo-banner' }];
+  const result = contract.validateProposal(holding(), foundations(), { contracts: [button()], proposals: [local], designSystems: { carbon: [carbonContract('overflow-menu')] } });
+  assert.deepEqual(result.errors, []);
+});
+
+test('a Proposal may set its nested instances in `instances`, checked as in a Contract', () => {
+  const p = holding();
+  p.instances = [{ match: { emphasis: 'high' }, set: { Menu: { variant: { size: 'sm' } } } }];
+  const opts = { ...known(), designSystems: { carbon: [carbonContract('overflow-menu')] } };
+  assert.deepEqual(contract.validateProposal(p, foundations(), opts).errors, []);
+  p.instances.push({ match: {}, set: { Title: { props: { label: 2 } } } });
+  assert.deepEqual(contract.validateProposal(p, foundations(), opts).errors.map(e => [e.rule, e.at]),
+    [[7, 'instances[1].set'], [7, 'instances[1].set']]);
+});
