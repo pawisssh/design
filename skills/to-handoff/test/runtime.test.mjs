@@ -303,7 +303,8 @@ test("runtime: v0's white surfaces bind their own tokens by the built reference,
 
 test("runtime: a Contract Usage's stray computed background is Off-axis with its question; an inherited text colour is not (#286)", { skip: noRuntime }, async () => {
   const prototype = v0Copy([
-    // The success state's outline Button: a stray background, and a text colour it inherits from a red parent.
+    // The success state's outline Button: a stray background, and a text colour it inherits from a red parent
+    // (preflight's `button { color: inherit }` declares it, so the parent check is what leaves it out).
     ['app/request-access-form.tsx', 'gap-3 py-6 text-center">', 'gap-3 py-6 text-center text-red-600">'],
     ['app/request-access-form.tsx', '<Button variant="outline" onClick', '<Button variant="outline" className="bg-red-500" onClick'],
   ]);
