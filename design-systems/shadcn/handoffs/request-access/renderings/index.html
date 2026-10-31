@@ -590,7 +590,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <body class="page">
 <header class="top">
 <h1>Request access</h1>
-<p class="stamp">r12 · 078d896032aa · signed off</p>
+<p class="stamp">r13 · 20c00b5ea65c · pending sign-off</p>
 <label>Mode <select id="mode"><option value="light" data-class="mode-light" selected>Light</option><option value="dark" data-class="dark">Dark</option></select></label>
 <p class="unverified" id="unverified" hidden>Unverified: the Prototype maps only light → Light.</p>
 </header>
@@ -601,7 +601,7 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 
 
 
-<div class="table-wrap"><table><tr><td>Contract <code>alert</code></td><td><code>47a7a2df67cd</code></td></tr><tr><td>Contract <code>button</code></td><td><code>a53a7bf44fa8</code></td></tr><tr><td>Contract <code>card</code></td><td><code>19e0531923e1</code></td></tr><tr><td>Contract <code>input</code></td><td><code>e4ffaa65f6eb</code></td></tr><tr><td>Contract <code>label</code></td><td><code>501cef7842a2</code></td></tr><tr><td>Contract <code>select</code></td><td><code>f808ade6ce2e</code></td></tr><tr><td>Contract <code>textarea</code></td><td><code>71cfa4784001</code></td></tr><tr><td>Prototype <code>app/api/request-access/route.ts</code>, <code>app/globals.css</code>, <code>app/layout.tsx</code>, <code>app/page.tsx</code>, <code>app/request-access-form.tsx</code>, <code>components/submit-button.tsx</code>, <code>components/ui/alert.tsx</code>, <code>components/ui/button.tsx</code>, <code>components/ui/card.tsx</code>, <code>components/ui/input.tsx</code>, <code>components/ui/label.tsx</code>, <code>components/ui/select.tsx</code>, <code>components/ui/sonner.tsx</code>, <code>components/ui/textarea.tsx</code></td><td><code>b817f7e06720</code></td></tr><tr><td>Foundations (used)</td><td><code>63205972e3fb</code></td></tr></table></div>
+<div class="table-wrap"><table><tr><td>Contract <code>alert</code></td><td><code>47a7a2df67cd</code></td></tr><tr><td>Contract <code>button</code></td><td><code>a53a7bf44fa8</code></td></tr><tr><td>Contract <code>card</code></td><td><code>19e0531923e1</code></td></tr><tr><td>Contract <code>input</code></td><td><code>e4ffaa65f6eb</code></td></tr><tr><td>Contract <code>label</code></td><td><code>501cef7842a2</code></td></tr><tr><td>Contract <code>select</code></td><td><code>f808ade6ce2e</code></td></tr><tr><td>Contract <code>textarea</code></td><td><code>71cfa4784001</code></td></tr><tr><td>Prototype <code>app/api/request-access/route.ts</code>, <code>app/globals.css</code>, <code>app/layout.tsx</code>, <code>app/page.tsx</code>, <code>app/request-access-form.tsx</code>, <code>components/submit-button.tsx</code>, <code>components/ui/alert.tsx</code>, <code>components/ui/button.tsx</code>, <code>components/ui/card.tsx</code>, <code>components/ui/input.tsx</code>, <code>components/ui/label.tsx</code>, <code>components/ui/select.tsx</code>, <code>components/ui/sonner.tsx</code>, <code>components/ui/textarea.tsx</code></td><td><code>b817f7e06720</code></td></tr><tr><td>Foundations (used)</td><td><code>2994b0dd3341</code></td></tr></table></div>
 <p class="note">info: Single-mode Prototype: its page surface (#ffffff) map best to Light (Light ΔE 0, Dark ΔE 0.8552). The other Theme modes render unverified.</p>
 <section class="optional"><h3>flow</h3><table><tr><th>from</th><th>trigger</th><th>to</th><th>source</th></tr><tr><td>default</td><td><code>onSubmit() calls POST /api/request-access</code></td><td>loading</td><td>simulated</td></tr><tr><td>loading</td><td><code>POST /api/request-access fails</code></td><td>error</td><td>simulated</td></tr><tr><td>loading</td><td><code>POST /api/request-access answers ok</code></td><td>success</td><td>simulated</td></tr></table></section>
 <section class="optional"><h3>interactions</h3><p class="not-specified">Not specified · this Handoff has no <code>interactions</code></p></section>
@@ -778,7 +778,9 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { text
 <section class="group" id="tokens"><h2>Tokens &amp; values</h2>
 <h3>Styles</h3>
 <div class="table-wrap"><table><tr><th>region</th><th>property</th><th>raw</th><th>token or value</th><th></th><th>where</th></tr>
-
+<tr><td>shell</td><td><code>background-color</code></td><td><code>var(--background)</code></td><td><code>background</code></td><td><span class="flag" data-g="=">= exact</span></td><td>app/layout.tsx:28:7</td></tr>
+<tr><td>shell</td><td><code>color</code></td><td><code>var(--foreground)</code></td><td><code>foreground</code></td><td><span class="flag" data-g="=">= exact</span></td><td>app/layout.tsx:28:7</td></tr>
+<tr><td>main</td><td><code>background-color</code></td><td><code>var(--muted)</code></td><td><code>muted</code></td><td><span class="flag" data-g="=">= exact</span></td><td>app/page.tsx:17:5</td></tr>
 </table></div>
 <h3>Text</h3>
 <div class="table-wrap"><table><tr><th>region</th><th>text</th><th>Text Style</th><th></th><th>where</th></tr>

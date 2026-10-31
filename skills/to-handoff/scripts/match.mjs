@@ -108,27 +108,69 @@ function webIndex(foundations) {
 export function matchDeclaration({ property, value }, ctx) {
   const role = roleOf(property);
   if (!role || TYPE_ROLES.has(role)) return { kind: 'skip' };
-  const { foundations, adapter } = ctx.system;
-  const need = ROLE_SCOPE[role];
   // 1. The Prototype's own custom properties, then a reference to a Foundations token by its code syntax.
+  const f = follow(value, role, ctx);
+  if (f.result) return f.result;
+  if (f.unknown) return offSystem(`unknown token \`${f.unknown}\``, []);
+  return byValue(f.value, role, ctx);
+}
+
+/**
+ * Match one computed colour of a runtime run (#284). `ref` is the declared `var()` that gives `value` (see
+ * referenceOf), followed through the built stylesheet's root custom properties (`ctx.custom`) to a Foundations
+ * token. A Foundations name is read first at each hop, but only when one of the token's Mode values is `value`:
+ * a built theme defines `--card` as its literal too, and a Prototype that redefines `--primary` paints another
+ * colour. A name neither knows, or no `ref`, matches the computed value by value.
+ */
+export function matchComputed({ property, value, ref }, ctx) {
+  const role = roleOf(property);
+  if (!COLOR_ROLES.has(role)) return { kind: 'skip' };
+  const f = ref ? follow(ref, role, ctx, value) : {};
+  return f.result || byValue(value, role, ctx);
+}
+
+/** The one declared `var()` whose custom property, read on the element, gives its computed `value`; else null. */
+export function referenceOf(value, refs) {
+  const live = [...new Set(refs.filter(r => sameColour(r.resolved, value)).map(r => r.ref))];
+  return live.length === 1 ? live[0] : null;
+}
+
+// Two colours the shared converter reads as the same, alpha included.
+const sameColour = (a, b) => {
+  try { const x = convert(a), y = convert(b); return sameHex(x.hex, y.hex) && Math.abs(x.alpha - y.alpha) < 0.01; } catch { return false; }
+};
+
+// A var() chain followed through `ctx.custom` and Foundations code syntax: {result} for a token reference or a
+// refused one, {unknown} for a name neither knows, else {value} with the literal it ends on. Given the colour the
+// page `rendered`, a Foundations name that paints it comes before the custom properties (see matchComputed).
+function follow(value, role, ctx, rendered) {
+  const { foundations } = ctx.system;
+  const need = ROLE_SCOPE[role];
   let v = String(value).trim();
   const via = [];
   for (let hops = 0; hops < 8; hops++) {
     const ref = /^var\(\s*(--[\w-]+)\s*(?:,\s*([\s\S]*))?\)$/.exec(v);
     if (!ref) break;
-    if (ctx.custom && ctx.custom[ref[1]] !== undefined) { via.push(ref[1]); v = ctx.custom[ref[1]]; continue; }
     const key = webIndex(foundations)[ref[1]];
-    if (!key && ref[2]) { v = ref[2].trim(); continue; }
-    if (!key) return offSystem(`unknown token \`${ref[1]}\``, []);
-    const variable = foundations.variables[key];
-    if (variable.hidden) return offSystem(`\`${ref[1]}\` is a hidden Primitive; a region binds theme tokens only`, [], key);
-    if (variable.family) return offSystem(`\`${ref[1]}\` is a component token of \`${variable.family}\`; a region binds theme tokens only`, []);
-    if (!coversScope(variable.scopes, need)) return offSystem(`\`${key}\` is not scoped for ${role} (${need})`, []);
-    return { kind: 'reference', token: key, ...(via.length ? { via } : {}) };
+    const own = ctx.custom && ctx.custom[ref[1]] !== undefined;
+    const variable = key && foundations.variables[key];
+    const named = key && (rendered === undefined ? !own : Object.keys(variable.values).some(m => sameColour(valueIn(variable, m, foundations), rendered)));
+    if (!named && own) { via.push(ref[1]); v = ctx.custom[ref[1]]; continue; }
+    if (!named && ref[2]) { v = ref[2].trim(); continue; }
+    if (!named) return { unknown: ref[1] };
+    if (variable.hidden) return { result: offSystem(`\`${ref[1]}\` is a hidden Primitive; a region binds theme tokens only`, [], key) };
+    if (variable.family) return { result: offSystem(`\`${ref[1]}\` is a component token of \`${variable.family}\`; a region binds theme tokens only`, []) };
+    if (!coversScope(variable.scopes, need)) return { result: offSystem(`\`${key}\` is not scoped for ${role} (${need})`, []) };
+    return { result: { kind: 'reference', token: key, ...(via.length ? { via } : {}) } };
   }
+  return { value: v };
+}
+
+function byValue(value, role, ctx) {
+  const { adapter } = ctx.system;
   const groups = (adapter.roleGroups && adapter.roleGroups[role]) || [];
-  if (COLOR_ROLES.has(role)) return matchColor(v, role, need, groups, ctx);
-  return matchLength(v, role, need, groups, ctx);
+  if (COLOR_ROLES.has(role)) return matchColor(value, role, ROLE_SCOPE[role], groups, ctx);
+  return matchLength(value, role, ROLE_SCOPE[role], groups, ctx);
 }
 
 function offSystem(reason, nearest, primitive) {

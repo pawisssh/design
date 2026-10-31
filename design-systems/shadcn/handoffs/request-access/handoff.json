@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": 12,
-  "status": "approved",
-  "approval": { "by": "owner", "at": "2026-10-22T23:31:19.249Z", "revision": 12, "contentHash": "sha256:078d896032aaaa05f1d3aa1753dd03c3eaac2dc9da3d5340f3d5b9cdf072c4d2" },
+  "revision": 13,
+  "status": "pending",
+  "approval": null,
   "feature": {
     "key": "request-access",
     "name": "Request access",
@@ -64,7 +64,7 @@
     "proposals": {},
     "foundations": {
       "documentHash": "sha256:9de3c77c8cc37d156f74c72aead593a9bd882ee914ae867100cec74d0cf40ee1",
-      "usedHash": "sha256:63205972e3fb3ff989a91fb6083b529e135939ad0a89f83902bc5d56824a2898"
+      "usedHash": "sha256:2994b0dd3341aebb6e2ad5b267722b92690beea96f37d53dab997cde98909022"
     },
     "modes": {
       "light": "light"
@@ -94,7 +94,24 @@
           "landmark": null,
           "shell": true,
           "at": "app/layout.tsx:27:5",
-          "styles": [],
+          "styles": [
+            {
+              "property": "background-color",
+              "raw": "var(--background)",
+              "at": [
+                "app/layout.tsx:28:7"
+              ],
+              "token": "background"
+            },
+            {
+              "property": "color",
+              "raw": "var(--foreground)",
+              "at": [
+                "app/layout.tsx:28:7"
+              ],
+              "token": "foreground"
+            }
+          ],
           "text": [],
           "usages": []
         },
@@ -102,7 +119,16 @@
           "id": "main",
           "landmark": "main",
           "at": "app/page.tsx:17:5",
-          "styles": [],
+          "styles": [
+            {
+              "property": "background-color",
+              "raw": "var(--muted)",
+              "at": [
+                "app/page.tsx:17:5"
+              ],
+              "token": "muted"
+            }
+          ],
           "text": [
             {
               "copy": "thanks-your-request",

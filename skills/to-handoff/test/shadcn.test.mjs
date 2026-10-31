@@ -14,6 +14,7 @@ import { generate } from '../scripts/generate.mjs';
 import { render } from '../scripts/render-html.mjs';
 import { readReact } from '../scripts/react.mjs';
 import { walk } from '../scripts/reader.mjs';
+import { matchComputed } from '../scripts/match.mjs';
 import { loadDesignSystem } from '../scripts/system.mjs';
 import { validateHandoff } from '../scripts/validate.mjs';
 import { repo, shadcnDesignSystem, V0 } from './helpers.mjs';
@@ -287,4 +288,14 @@ test('runtime: one Next build screenshots each reached state at each Tailwind br
   for (const state of ['default', 'loading', 'error', 'success'])
     for (const bp of screen.breakpoints) assert.equal(screen.states[state].screenshots[bp], `screens/index.${state}.${bp}.png`, `${state} at ${bp}`);
   assert.deepEqual(h.source.modes, { light: 'light' });
+});
+
+test('matchComputed: a Foundations name binds only where one of its Mode values is the rendered colour; redefined, it matches by value (#284)', async () => {
+  const system = await loadDesignSystem(shadcnDesignSystem());
+  // A built shadcn theme defines its tokens' own names as literals, and this Prototype redefines --primary.
+  const ctx = { system, mode: 'light', custom: { '--background': 'oklch(1 0 0)', '--primary': 'oklch(0.6 0.2 30)' } };
+  assert.deepEqual(matchComputed({ property: 'background-color', value: 'oklch(1 0 0)', ref: 'var(--background)' }, ctx), { kind: 'reference', token: 'background' });
+  const redefined = matchComputed({ property: 'background-color', value: 'oklch(0.6 0.2 30)', ref: 'var(--primary)' }, ctx);
+  assert.equal(redefined.kind, 'off-system', 'not primary by name: Foundations primary is #171717 or #e5e5e5');
+  assert.equal(matchComputed({ property: 'background-color', value: 'oklch(0.205 0 0)', ref: 'var(--primary)' }, ctx).token, 'primary', 'a name that paints its own value still binds');
 });
