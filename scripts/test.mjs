@@ -4,6 +4,7 @@
 // to-design" is one command rather than a hand-written glob (#450).
 //
 //   npm run test:skills -- contract to-design   run those skills' suites; exits 1 if any fails
+//   npm run test:skills -- to-handoff --name '#230' --skip runtime   only tests whose name matches / not matching a regex (#588)
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -28,11 +29,24 @@ export function testFilesOf(skill) {
   return files;
 }
 
+/** `--name` and `--skip` regexes become node's name-pattern flags, which must come before the files: after them they are ignored (#588). */
+export function parseArgs(args) {
+  const skills = [], flags = [];
+  for (let i = 0; i < args.length; i++) {
+    const flag = { '--name': '--test-name-pattern', '--skip': '--test-skip-pattern' }[args[i]];
+    if (!flag) { skills.push(args[i]); continue; }
+    if (!args[i + 1]) throw new Error(`${args[i]} needs a regex`);
+    flags.push(`${flag}=${args[++i]}`);
+  }
+  return { skills, flags };
+}
+
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
-  const skills = process.argv.slice(2);
+  let skills, flags;
+  try { ({ skills, flags } = parseArgs(process.argv.slice(2))); } catch (e) { console.error(`test: ${e.message}`); process.exit(2); }
   if (!skills.length) {
-    console.error('usage: npm run test:skills -- <skill>…');
+    console.error('usage: npm run test:skills -- <skill>… [--name <regex>] [--skip <regex>]');
     process.exit(2);
   }
   const filesOf = {};
@@ -42,7 +56,7 @@ if (isMain) {
   const failed = [];
   for (const [skill, files] of Object.entries(filesOf)) {
     console.log(`test: ${skill} (${files.length} files)`);
-    const run = spawnSync(process.execPath, ['--test', `--test-concurrency=${CONCURRENCY}`, ...files],
+    const run = spawnSync(process.execPath, ['--test', `--test-concurrency=${CONCURRENCY}`, ...flags, ...files],
       { cwd: ROOT, stdio: 'inherit' });
     if (run.status !== 0) failed.push(skill);
   }
