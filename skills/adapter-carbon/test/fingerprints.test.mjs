@@ -235,10 +235,9 @@ test('the CLI --write leaves an approved Contract whose fingerprints agree untou
 });
 
 for (const family of ['text-input', 'select', 'toast-notification']) {
-  test(`the CLI --check passes the live ${family} draft with no citation flagged (#462)`, { skip }, () => {
+  test(`the CLI --check passes the live ${family} Contract with no citation flagged, as a note or a failure (#462)`, { skip }, () => {
     const [path, map] = committed(family);
     const r = spawnSync(process.execPath, [new URL('../scripts/fingerprints.mjs', import.meta.url).pathname, path, '--nodes', map, '--check'], { encoding: 'utf8' });
-    assert.equal(load(path).selection.status, 'draft');
     assert.equal(r.status, 0, r.stderr);
     assert.match(r.stdout, /^OK \d+ fingerprints\n$/);
     assert.equal(r.stderr, '');
