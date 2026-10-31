@@ -15,7 +15,7 @@ import { baseTuple, expand, resolve, variantName } from '../../contract/scripts/
 import { diff } from './base-loop.mjs';
 import { valueAt } from './foundations-value.mjs';
 import { defaultProps, expectedVariant, iconRef, normalizeReadback, rootFillProblems } from './readback.mjs';
-import { familyNodes, heldRefs } from './nested.mjs';
+import { familyNodes, heldRefs, loadHeld } from './nested.mjs';
 import { defaultLedgerPath, readLedger } from './ledger.mjs';
 
 // The grid cell [row, column] a tuple sits in: figma.grid lists the axes that make the rows and the columns;
@@ -259,10 +259,12 @@ function main() {
   const result = mergeCoverage([resultPath, ...pages].map(p => JSON.parse(readFileSync(p, 'utf8'))));
   const root = fileURLToPath(new URL('../../../', import.meta.url));
   const foundations = JSON.parse(readFileSync(foundationsArg || join(root, 'design-systems', contract.source.adapter, `${contract.source.adapter}.foundations.json`), 'utf8'));
+  // the Contracts a holding family's nested instances hold, from beside its own (#593)
+  const held = familyNodes(contract).length ? loadHeld(contractPath, contract, foundations.designSystem.key) : null;
   let report;
-  if (what === 'coverage') report = checkCoverage(contract, result, readLedger(ledgerArg || defaultLedgerPath(result.fileKey)), { page: pageArg });
+  if (what === 'coverage') report = checkCoverage(contract, result, readLedger(ledgerArg || defaultLedgerPath(result.fileKey)), { page: pageArg, held });
   else if (what === 'theme') report = checkTheme(contract, result, foundations);
-  else report = checkSample(contract, result, readLedger(ledgerArg || defaultLedgerPath(result.fileKey)), foundations);
+  else report = checkSample(contract, result, readLedger(ledgerArg || defaultLedgerPath(result.fileKey)), foundations, held);
   console.log(JSON.stringify(report, null, 2));
   process.exit(report.ok ? 0 : 1);
 }

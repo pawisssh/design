@@ -161,6 +161,8 @@ export function iconsPlan(contracts, iconsDir, ledger, { fileKey, adopt = false,
 export function basePlan(contract, docText, ledger, { fileKey, adopt = false, adoptVariant = false, readOnly = false, page = null, at = new Date().toISOString() } = {}) {
   if (!fileKey) throw new Error('fileKey is required');
   if (!ledger || ledger.fileKey !== fileKey) throw new Error(`no ledger for ${fileKey}: build foundations and icons first`);
+  const nested = familyNodes(contract).map(n => n.node);
+  if (nested.length) throw new Error(`${contract.family.key} holds other families (${nested.join(', ')}): a holding family is built as a Component Set (#593), not as a Base Component alone`);
   const doc = JSON.parse(docText);
   const v = validate(contract, doc);
   if (!v.ok) throw new Error(`the Contract does not validate: ${v.errors.map(e => `${e.at}: ${e.message}`).join("; ")}`);
@@ -243,10 +245,10 @@ export const MAX_COMBINE = 3000;
 export const PLACE_BUDGET = 45000;
 /**
  * A sets call's plan + state JSON, at most (chars): use_figma's 50,000 less the packaged components core and
- * its wrapper (tests/bprime.test.mjs measures them). 12030 leaves 19 chars under the core since #236 added a text's
- * size to its readback.
+ * its wrapper (tests/bprime.test.mjs measures them). 10606 leaves 20 chars under the core since #593 added nested
+ * instances' properties, overrides and main components to it.
  */
-export const SETS_BUDGET = 12030;
+export const SETS_BUDGET = 10606;
 // a reconcile window, at most: its entries carry no fragments
 const RECONCILE_PER_CALL = 500;
 /**
@@ -500,8 +502,8 @@ export function setsPlan(contract, docText, ledger, {
     }
     const bases = ledger.bases && ledger.bases[family] ? { [family]: ledger.bases[family] } : {};
     // the held variants the picked entries swap to, beside the icons (#593)
-    const held_ = nested.length ? heldIds([...new Set(Object.values(P).flatMap(w => Object.values(w.swap).filter(k => /^family:/.test(k))))], held, ledger) : {};
-    return { plan, state: { schemaVersion: 1, fileKey, variables, textStyles, icons: { ...icons, ...held_ }, bases, sets: {}, templates: ledger.templates || null } };
+    const heldVariants = nested.length ? heldIds([...new Set(Object.values(P).flatMap(w => Object.values(w.swap).filter(k => /^family:/.test(k))))], held, ledger) : {};
+    return { plan, state: { schemaVersion: 1, fileKey, variables, textStyles, icons: { ...icons, ...heldVariants }, bases, sets: {}, templates: ledger.templates || null } };
   }
 
   // The family's ledger record, with the variant ids of the picked entries only: a call carries no other ids.
@@ -762,9 +764,14 @@ function main() {
     console.error(`--prune-list is for ${pruneFile.family} in ${pruneFile.fileKey}: a sets prune of that family and file only`);
     process.exit(2);
   }
+  // the Contracts a holding family's nested instances hold, from beside its own (#593)
+  const heldOf = () => {
+    const contract = JSON.parse(readFileSync(values.contract[0], 'utf8'));
+    return familyNodes(contract).length ? loadHeld(values.contract[0], contract, JSON.parse(readFileSync(values.doc, 'utf8')).designSystem.key) : null;
+  };
   const derived = slice === 'sets'
     ? setsPlan(JSON.parse(readFileSync(values.contract[0], 'utf8')), readFileSync(values.doc, 'utf8'), readLedger(path), {
-      fileKey, mode: values.mode, next: values.next, adopt: values.adopt, prototype: values.prototype, prune: pruneFile && pruneFile.prune,
+      fileKey, mode: values.mode, held: heldOf(), next: values.next, adopt: values.adopt, prototype: values.prototype, prune: pruneFile && pruneFile.prune,
       sample: values.sample ? values.sample.split(',').map(Number) : [], ...(values.batch != null ? { batch: Number(values.batch) } : {}),
       ...(values['per-call'] ? { perCall: Number(values['per-call']) } : {}), ...(values.budget != null ? { budget: Number(values.budget) } : {}),
       ...(values.page ? { page: values.page } : {}),

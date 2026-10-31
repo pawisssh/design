@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { approve, contentHash } from '../../contract/scripts/contract.mjs';
-import { documentHash, setsPlan } from '../scripts/build-plan.mjs';
+import { basePlan, documentHash, setsPlan } from '../scripts/build-plan.mjs';
 import { checkCoverage, checkSample } from '../scripts/coverage.mjs';
 import { buildOrder } from '../scripts/nested.mjs';
 import { chain, COMPONENTS_CORE, ROOT } from './chain.mjs';
@@ -72,6 +72,8 @@ test('the plan stops on a named Conflict: a tuple outside Button\'s selection, a
   // a held family in another Design System is #594
   const carbon = approve({ ...CARD, dependencies: { ...CARD.dependencies, families: [{ key: 'button', contract: 'button', designSystem: 'carbon' }] } }, AT, { prototype: true });
   assert.throws(() => cardPlan(standIn(), HELD, carbon), /Cancel design-system: .*another Design System's ledger is #594/);
+  // a holding family is built as a set, never as a Base Component alone
+  assert.throws(() => basePlan(CARD, DOC_TEXT, standIn(), { fileKey: FILE_KEY, at: AT }), /card holds other families \(Cancel, Confirm\): .*built as a Component Set/);
 });
 
 // Foundations, then the Button set and its Coverage check, then the Card set holding it, on one mock file.
