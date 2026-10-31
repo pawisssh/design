@@ -431,6 +431,14 @@ export function mockFigma({ fileKey = 'MOCKFILEKEY', pages = ['Page 1'] } = {}) 
       this._font = { family: 'Inter', style: 'Regular' }; this._size = 12; this._lh = { unit: 'AUTO' }; this._ls = { unit: 'PERCENT', value: 0 };
       this._chars = ''; this._style = ''; this._p.textAutoResize = 'NONE'; this._autoRename = true;
     }
+    // Text layout (#236): a text that resizes itself measures half its font size per character on one line.
+    get width() { return this._p.textAutoResize === 'WIDTH_AND_HEIGHT' ? this._chars.length * this._size / 2 : this._w; }
+    set width(v) { this._w = v; }
+    get height() {
+      if (this._p.textAutoResize !== 'WIDTH_AND_HEIGHT') return this._h;
+      return this._chars.split('\n').length * (this._lh.unit === 'PIXELS' ? this._lh.value : this._lh.unit === 'PERCENT' ? this._size * this._lh.value / 100 : this._size * 1.2);
+    }
+    set height(v) { this._h = v; }
     get name() { return this._name; }
     set name(v) { w('node.name', this.id, v); if (v !== this._name) this._autoRename = false; this._name = v; }
     get autoRename() { return this._autoRename; }

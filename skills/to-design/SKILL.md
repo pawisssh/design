@@ -196,6 +196,15 @@ node skills/to-design/scripts/coverage.mjs theme <component.json> .scratch/to-de
 - `sample`: the chosen variants in full, diffed like the base (layout, paint, bindings, effects in order). Pick the base, one per kind and the extreme sizes and states. A raw `textStyle` (a Generic Adapter text layer no Text Style fits, such as Card Title's `leading-snug`, #160) is not built: the layer keeps Figma's default font, and the check lists it under `unbuilt`, not as a problem.
 - `theme`: each bound colour resolved in every mode of its collection, against the foundations document; the call restores the explicit modes. A Layer token (`field`) is read per Layer mode and its expected colour follows the alias to that level's Theme token in the default Theme; Theme × Layer is not read, so a level aliased to a Theme token equal to the right one in White (`field-01` and `field-03` are both `#f4f4f4`) passes.
 
+**Problems no difference shows** (#236). The core reports each text's size beside its typography (`extras[node].w` and `.h`). The diff of a readback, of a sampled variant and of the base review lists `[problem]` lines under `problems`, which make a readback unclean and block approval:
+
+- `text-wrapped`: a visible text one line of text is too tall for, because its box is narrower than its words.
+- `text-narrow`: a visible text under 1 px wide.
+- `variant-narrow`: a variant narrower than its widest visible text.
+- `contract`: a root with `width: "fill"` in a set (a hug grid has nothing to fill, so the root reads back as its content): the Contract should say hug or a fixed width. `coverage` reports it over every variant, and the diff of a readback marked `specimen: "set"`; a Base Component standing alone has a page to fill and is not flagged. The Vibe-to-Figma build prints it as a `WARNING` on stderr and goes on, until path A stops emitting a root fill (#560).
+
+Hidden layers are exempt, and so is a readback from a core that reports no size. A text meant to wrap over several lines is flagged too: the check cannot tell it. Text sizes are read only on the base and the sampled variants, so a bad variant outside the sample is found by the sample, not by `coverage`.
+
 Each prints `{ok, problems, ...}` and exits 1 on a problem. A new text layer is named `Text` with `autoRename` on, so the builder turns `autoRename` off. Otherwise an anatomy layer named `Text` would take its characters as its name and lose its property wiring (#179's Label). A hidden child of an auto layout reports FILL sizing as `FIXED`, so the readback takes fill from `layoutGrow` (main axis) or `layoutAlign: STRETCH` (cross axis). Packaging or parsing a script is never evidence of what Figma holds: report a step as done only from a recorded result and a passing check. Report the Figma link, the variant count built against the Contract's `expectedCount`, and the raw `warning` values the Contract carries.
 
 ## 6. Publish (owner)

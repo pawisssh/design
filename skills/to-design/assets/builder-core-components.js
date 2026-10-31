@@ -288,7 +288,7 @@ async function buildComponentSets(figma, PLAN_SRC, STATE_SRC, CHECK) {
       if (!root) r.visible[n.name] = n.visible;
       if (n.type === 'TEXT') {
         r.text[n.name] = n.characters;
-        r.extras[n.name] = { fontFamily: n.fontName.family, fontStyle: n.fontName.style, fontSize: n.fontSize, lineHeight: metric(n.lineHeight), letterSpacing: metric(n.letterSpacing) };
+        r.extras[n.name] = { fontFamily: n.fontName.family, fontStyle: n.fontName.style, fontSize: n.fontSize, lineHeight: metric(n.lineHeight), letterSpacing: metric(n.letterSpacing), w: n.width, h: n.height };
       }
       if (n.type === 'INSTANCE') { const main = await n.getMainComponentAsync(); r.swap[n.name] = main ? main.id : null; return; }
       for (const c of n.children || []) await walk(c, false);

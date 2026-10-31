@@ -20,7 +20,7 @@ import {
   approve, asDraft, baseTuple, closure, contentHash, coversScope, draftedKey, draftedValue, expand, matches, resolve, scopeFor, validate, variantName,
 } from '../../contract/scripts/contract.mjs';
 import { foundationsPathFor, readJson, writeJson } from '../../contract/scripts/io.mjs';
-import { anatomyTree, baseProps, expectedBase, expectedVariant, near, norm, normalizeReadback, same } from './readback.mjs';
+import { anatomyTree, baseProps, expectedBase, expectedVariant, near, norm, normalizeReadback, rootFillProblems, same, textProblems } from './readback.mjs';
 import { defaultLedgerPath, readLedger } from './ledger.mjs';
 import { groupOf } from './foundations-subset.mjs';
 import { valueAt } from './foundations-value.mjs';
@@ -75,12 +75,14 @@ export function normalizeBaseResult(result, ledger) {
 
 /**
  * Diff a normalized Base Component readback against what the Contract resolves to for the Base Component
- * (or for `tuple`, a variant of the set). `props` defaults to the readback's `specimen` (see baseProps).
- * Returns {name, changes, unread, unbuilt}: each change is {kind, section, node, field, from, to, why?} with kind
+ * (or for `tuple`, a variant of the set). `props` defaults to the readback's `specimen` (see baseProps), which
+ * also decides whether a root fill is a problem (a set's root, not a Base Component's).
+ * Returns {name, changes, unread, unbuilt, problems}: each change is {kind, section, node, field, from, to, why?} with kind
  * `token-edit` (the owner bound a variable), `raw-edit` (a typed value), `detached` (a binding lost while the
  * value stayed, which a rebuild restores) or `unmapped` (a tweak the Contract cannot carry, `why` says which).
  * `unread` lists the expected fields the readback does not report, and `unbuilt` the raw text styles the builder
- * does not write until the Foundations document has Text Styles (#160). Effects are compared in order.
+ * does not write until the Foundations document has Text Styles (#160). `problems` are what the Contract cannot
+ * say (textProblems, rootFillProblems; #236). Effects are compared in order.
  */
 export function diff(contract, readback, foundations, props = baseProps(contract, readback.specimen === 'set'), tuple = baseTuple(contract)) {
   const exp = expectedVariant(contract, tuple, props, foundations);
@@ -135,7 +137,9 @@ export function diff(contract, readback, foundations, props = baseProps(contract
       if (!readback[part] || !(node in readback[part])) { unread.push(`${part}.${node}`); continue; }
       if (readback[part][node] !== want) unmapped('property', part, node, part === 'visible' ? 'visible' : part === 'text' ? 'characters' : 'mainComponent', want, readback[part][node]);
     }
-  return { name: exp.name, changes, unread, unbuilt };
+  // what no difference shows (#236): a text that wrapped, a variant narrower than its text, a root fill in a set
+  const problems = [...textProblems(readback), ...(readback.specimen === 'set' ? rootFillProblems(contract, [tuple]) : [])];
+  return { name: exp.name, changes, unread, unbuilt, problems };
 }
 
 // ---------- proposals: where each tweak lands, and what else it changes ----------
@@ -328,10 +332,13 @@ export function draftedByKind(contract) {
 
 // ---------- reports ----------
 
+const problemLines = problems => problems.map(p => `  [problem] ${p.what} ${p.node}: ${p.reason}`);
+
 /** The diff and its proposals as text, one line per change. */
 export function formatDiff(contract, readback, result) {
-  const lines = [`${result.name}  (${readback.id})  ${result.changes.length ? `${result.changes.length} difference(s)` : 'MATCHES the Contract'}`];
+  const lines = [`${result.name}  (${readback.id})  ${result.changes.length ? `${result.changes.length} difference(s)` : 'MATCHES the Contract'}${result.problems.length ? `, ${result.problems.length} problem(s)` : ''}`];
   for (const x of result.changes) lines.push(`  [${x.kind}] ${x.section}.${x.node}.${x.field}: ${show(x.from)} -> ${show(x.to)}${x.why ? `  (${x.why})` : ''}`);
+  lines.push(...problemLines(result.problems));
   if (result.unread.length) lines.push(`  not in this readback: ${result.unread.join(', ')}`);
   if (result.proposals.length) lines.push('', 'Proposed Contract edits:');
   for (const p of result.proposals) {
@@ -352,22 +359,25 @@ export function formatDiff(contract, readback, result) {
 const SUMMARY_CHANGES = 20;
 const SUMMARY_UNREAD = 8;
 const SUMMARY_UNCARRIED = 8;
+const SUMMARY_PROBLEMS = 8;
 
 /**
  * The diff as the CLI prints it by default (#239): the header, the differences by kind and the first of them, the
- * fields not read, and the proposals counted with the ones that cannot be carried. Its blast radii, shields and token
+ * fields not read, the problems, and the proposals counted with the ones that cannot be carried. Its blast radii, shields and token
  * candidates are what `--full` adds (formatDiff). A diff that fits is returned whole.
  */
 export function formatDiffSummary(contract, readback, result) {
   const full = formatDiff(contract, readback, result);
   const { changes, unread, proposals } = result;
-  if (!proposals.length && changes.length <= SUMMARY_CHANGES && unread.length <= SUMMARY_UNREAD) return full;
+  if (!proposals.length && changes.length <= SUMMARY_CHANGES && unread.length <= SUMMARY_UNREAD && result.problems.length <= SUMMARY_PROBLEMS) return full;
   const lines = full.split('\n').slice(0, 1);
   const kinds = {};
   for (const x of changes) kinds[x.kind] = (kinds[x.kind] || 0) + 1;
   if (changes.length) lines.push(`  by kind: ${Object.entries(kinds).map(([k, n]) => `${k} ${n}`).join(', ')}`);
   for (const x of changes.slice(0, SUMMARY_CHANGES)) lines.push(`  [${x.kind}] ${x.section}.${x.node}.${x.field}: ${show(x.from)} -> ${show(x.to)}`);
   if (changes.length > SUMMARY_CHANGES) lines.push(`  ... ${changes.length - SUMMARY_CHANGES} more difference(s)`);
+  lines.push(...problemLines(result.problems.slice(0, SUMMARY_PROBLEMS)));
+  if (result.problems.length > SUMMARY_PROBLEMS) lines.push(`  ... ${result.problems.length - SUMMARY_PROBLEMS} more problem(s)`);
   if (unread.length) lines.push(`  not in this readback: ${unread.length} field(s): ${unread.slice(0, SUMMARY_UNREAD).join(', ')}${unread.length > SUMMARY_UNREAD ? ', ...' : ''}`);
   if (proposals.length) {
     const lost = proposals.filter(p => !p.expressible);
@@ -445,15 +455,16 @@ export function formatReview(contract, readback, result, { fileKey, contractPath
   const notes = contract.notes || [];
   const warnings = notes.filter(n => n.level === 'warning');
   const verify = notes.filter(n => n.level === 'verify');
-  const clean = !result.changes.length && !result.unread.length;
+  const clean = !result.changes.length && !result.unread.length && !result.problems.length;
   const lines = [
     `Base Component review: ${result.name}`,
     `Figma node: https://www.figma.com/design/${fileKey}/?node-id=${nodeId}`,
     `snapshotId: ${contract.source.snapshotId}`,
     `contentHash: ${contentHash(contract)}`,
     `selection: ${contract.selection.status}, ${expand(contract).length} variants`,
-    `Readback: ${result.changes.length} difference(s), ${result.unread.length} field(s) not read${clean ? ' -- clean' : ''}`,
+    `Readback: ${result.changes.length} difference(s), ${result.unread.length} field(s) not read${result.problems.length ? `, ${result.problems.length} problem(s)` : ''}${clean ? ' -- clean' : ''}`,
     ...result.changes.map(x => `  [${x.kind}] ${x.section}.${x.node}.${x.field}: ${show(x.from)} -> ${show(x.to)}`),
+    ...problemLines(result.problems),
     `Edits with by/was: ${edits.length}`,
     ...edits.flatMap(e => [`  ${e.path} = ${show(e.value)}  by ${e.by}, was ${show(e.was)}; changes ${e.blast.count}/${e.blast.of} variants`,
       ...e.shields.map(x => `    shielded by ${e.path.split('[')[0]}[${x.rule}] ${JSON.stringify(x.match)} = ${show(x.value)}`)]),
@@ -478,7 +489,8 @@ export function formatReview(contract, readback, result, { fileKey, contractPath
  */
 export function approveReviewed(contract, readback, foundations, { snapshotId, contentHash: hash, at, prototype = false }) {
   const d = diff(contract, readback, foundations);
-  if (d.changes.length || d.unread.length) throw new Error(`the readback is not clean: ${d.changes.length} difference(s), ${d.unread.length} field(s) not read`);
+  if (d.changes.length || d.unread.length || d.problems.length)
+    throw new Error(`the readback is not clean: ${d.changes.length} difference(s), ${d.unread.length} field(s) not read${d.problems.length ? `, ${d.problems.length} problem(s)` : ''}`);
   if (readback.name !== d.name) throw new Error(`the readback is ${readback.name}, not the Base Component ${d.name}`);
   if (snapshotId !== contract.source.snapshotId) throw new Error(`snapshotId ${snapshotId} is not the Contract's ${contract.source.snapshotId}: the source moved since the review`);
   if (hash !== contentHash(contract)) throw new Error(`contentHash ${hash} is not the Contract's ${contentHash(contract)}: the Contract changed since the review`);

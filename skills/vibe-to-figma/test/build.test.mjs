@@ -74,8 +74,15 @@ test('after "approve", Foundations then every Component Set by B′, each passin
   assert.ok(!('namespace' in plain.record));
   assert.ok(!('foundations' in plain.record));
   // In its own namespace it builds, on from the conflict.
-  const { n, ledger, record, steps } = await drive({ dir, mock, ledger: plain.ledger, record: plain.record, namespace: 'v0-app', coveragePerCall: 4 });
+  // A root width fill in a hug set warns on stderr and does not stop the build (#236, #560).
+  const warned = [];
+  const error = console.error;
+  console.error = m => warned.push(String(m));
+  let built;
+  try { built = await drive({ dir, mock, ledger: plain.ledger, record: plain.record, namespace: 'v0-app', coveragePerCall: 4 }); } finally { console.error = error; }
+  const { n, ledger, record, steps } = built;
   assert.equal(n.status, 'built', JSON.stringify(n));
+  assert.ok(warned.some(m => /^WARNING: the alert set: width "fill" has nothing to fill in a hug grid set/.test(m)), warned.join('\n'));
   assert.deepEqual(n.families.map(f => f.family), READABLE);
   assert.deepEqual(n.drafts, []);
   assert.equal(ledger.foundations.designSystem, 'v0-app');

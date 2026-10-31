@@ -45,6 +45,8 @@ async function buildAll() {
   }
   return { mock, ledger, coverage, call };
 }
+// Card's and Alert's roots are width: fill, which a hug grid set has nothing to fill (#236): the one problem they carry.
+const ROOT_FILL = { button: false, card: true, alert: true };
 const built = buildAll();
 built.catch(() => {}); // each test awaits it and reports a failed build itself
 
@@ -53,7 +55,7 @@ for (const [c, count] of FAMILIES.map(c => [c, { button: 624, card: 2, alert: 2 
     const { ledger, coverage } = await built;
     assert.equal(expand(c).length, count);
     assert.equal(ledger.sets[c.family.key].variants.filter(Boolean).length, count);
-    assert.deepEqual(checkCoverage(c, coverage[c.family.key], ledger).problems, []);
+    assert.deepEqual(checkCoverage(c, coverage[c.family.key], ledger).problems.map(p => p.what), ROOT_FILL[c.family.key] ? ['contract'] : []);
   });
 
 // the text layers no Text Style fits stay raw and unbuilt (#160): Card Title's leading-snug; the sampled Button and Alert layers each bind one
