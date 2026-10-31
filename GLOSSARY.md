@@ -55,8 +55,8 @@ A child component that a Component Family's code takes any number of, with conte
 _Avoid_: Item (that is a Sub-component tier), option, slot
 
 **Nested instance**:
-An instance of another Component Family inside a family's anatomy, such as the Buttons in a chat card. The holding family's Contract chooses its variant and property values per variant, and styles it without changing the held family's Contract.
-_Avoid_: Nested component, Repeated child (the feature chooses those), Sub-component (that is private to one family), slot
+An instance of another Component Family inside a family's anatomy, such as the Buttons in a chat card. The family whose anatomy has the instance is the holding family, and the family it is an instance of is the held family. The holding family's Contract chooses its variant and property values per variant, and styles it without changing the held family's Contract.
+_Avoid_: Held variant (that is a variant a rerun leaves as Figma has it), Nested component, Repeated child (the feature chooses those), Sub-component (that is private to one family), slot
 
 **Component Set**:
 The Figma node that groups a Component Family's variants. Used only for the Figma artifact.

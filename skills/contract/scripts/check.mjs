@@ -3,8 +3,7 @@
 //   node skills/contract/scripts/check.mjs <component.json> [--foundations <file>] [--table]
 //   node skills/contract/scripts/check.mjs <proposal.json> [--foundations <file>]
 // A Proposal (design-systems/<ds>/proposals/<key>.proposal.json) is validated against the Design System's
-// Contracts (contracts/*.component.json) and other Proposals, and a dependency with a `designSystem` against that
-// Design System's Contracts (design-systems/<designSystem>/contracts).
+// Contracts (contracts/*.component.json) and other Proposals.
 // The foundations document defaults to the one next to the contracts folder
 // (design-systems/<ds>/contracts/<family>.component.json -> design-systems/<ds>/<ds>.foundations.json).
 // --table prints the resolved paint for the Figma grid rows (figma.grid.rows) at the default of

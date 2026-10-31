@@ -636,11 +636,14 @@ function checkTokens(c, foundations, err, extra) {
   });
 }
 
+// `dependencies.families`, or none when it is not a list.
+const dependencyFamilies = c => (isObj(c.dependencies) && Array.isArray(c.dependencies.families) ? c.dependencies.families : []);
+
 // Rule 7. `familyKnown(key)` says whether a `family:<key>` instance target is declared.
 function checkInstances(c, err, familyKnown) {
   const anatomy = anatomyIndex(c);
   const iconsBlock = c.icons;
-  const deps = (isObj(c.dependencies) && Array.isArray(c.dependencies.families) ? c.dependencies.families : []).map(f => f.key);
+  const deps = dependencyFamilies(c).map(f => f.key);
   dupes(deps).forEach(k => err(7, 'dependencies.families', `duplicate dependency key "${k}"`));
   for (const n of Object.values(anatomy)) {
     const to = n.instanceOf;
@@ -755,7 +758,7 @@ function checkNestedShape(c, err) {
       if (!isObj(r) || !isObj(r.match) || !isObj(r.set)) err('schema', `instances[${i}]`, 'an instances rule is {match, set}');
     });
   }
-  const families = isObj(c.dependencies) && Array.isArray(c.dependencies.families) ? c.dependencies.families : [];
+  const families = dependencyFamilies(c);
   families.forEach((f, i) => {
     if (isObj(f) && 'designSystem' in f && (typeof f.designSystem !== 'string' || !f.designSystem))
       err('schema', `dependencies.families[${i}].designSystem`, 'a dependency\'s `designSystem` is a Design System folder name');
