@@ -70,11 +70,14 @@ async function buildAll(env, contract = BUTTON, options = {}) {
   return runs;
 }
 
-// A reconcile of the whole set, by every batch the derive asks for: the 245-variant Button takes 2 calls (#593).
+// The calls a whole-set reconcile takes: the plan's `of` (the 245-variant Button takes more than one, #593).
+const reconcileOf = (env, contract = BUTTON, options = {}) =>
+  setsPlan(contract, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, ...options, mode: 'reconcile', batch: 0 }).plan.options.of;
+
+// A reconcile of the whole set, by every batch the derive asks for (reconcileOf).
 // Each call is recorded as it comes unless `drop`; `found` is the variants every call found, by expansion index.
 async function reconcileAll(env, options = {}, { contract = BUTTON, drop = false } = {}) {
-  const whole = { fileKey: FILE_KEY, at: AT, ...options, mode: 'reconcile' };
-  const { of } = setsPlan(contract, DOC_TEXT, env.ledger, { ...whole, batch: 0 }).plan.options;
+  const of = reconcileOf(env, contract, options);
   const runs = [];
   for (let batch = 0; batch !== of; batch++) runs.push(await sets(env, { ...options, mode: 'reconcile', batch }, { contract, drop }));
   const sum = key => runs.reduce((n, { result }) => n + result.summary[key], 0);
@@ -216,8 +219,9 @@ test('after a contentHash change with a Base Component outside the set, the rebu
   // a read-only reconcile finds the set's own variants, the one under the base's name too (checked before any build
   // call: two variants of one name in the set never settle in the grid)
   const at = expand(edited).findIndex(t => variantName(edited, t) === base.name);
+  const calls = reconcileOf(env, edited);
   const { found, runs: read } = await reconcileAll(env, {}, { contract: edited, drop: true });
-  assert.equal(read.length, 2, 'a 245-variant reconcile takes 2 calls');
+  assert.equal(read.length, calls, 'a whole-set reconcile takes every batch its plan names');
   assert.deepEqual([found[at], Object.values(found)], [before[at], before], 'every recorded variant found, the base not taken');
 
   const baseIds = new Set([base, ...base.findAll(() => true)].map(n => n.id));
@@ -766,9 +770,11 @@ test('every plan shape the build emits is accepted by the packager, set-only app
   assert.deepEqual([setOnly.plan.selection.entries, setOnly.result.summary.conflicts], [[], 0]);
   seen(setOnly);
   // the read-only modes, whole and by batch as Vibe-to-Figma's coverage and To-design's reconcile take them
-  // a whole-set reconcile of the 245-variant Button takes 2 calls (#593), so without --batch it is refused
-  assert.throws(() => setsPlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, mode: 'reconcile' }), /takes 2 calls: give --batch 0\.\.1/);
-  for (const options of [{ mode: 'reconcile', batch: 0 }, { mode: 'reconcile', batch: 1 }, { mode: 'coverage' }, { mode: 'coverage', batch: 0, coveragePerCall: 100 },
+  // a whole-set reconcile takes the plan's `of` calls (#593): past one, without --batch it is refused
+  const of = reconcileOf(env);
+  if (of > 1) assert.throws(() => setsPlan(BUTTON, DOC_TEXT, env.ledger, { fileKey: FILE_KEY, at: AT, mode: 'reconcile' }), { message: new RegExp(`takes ${of} calls: give --batch 0\\.\\.${of - 1}$`) });
+  const reconciles = of > 1 ? Array.from({ length: of }, (_, batch) => ({ mode: 'reconcile', batch })) : [{ mode: 'reconcile' }];
+  for (const options of [...reconciles, { mode: 'coverage' }, { mode: 'coverage', batch: 0, coveragePerCall: 100 },
     { mode: 'sample', sample: [0, 37] }, { mode: 'theme', sample: [0, 120] }]) seen(await sets(env, options));
   // a rebuild after an omit edit leaves orphans: the prune preview, then a prune of one the owner listed
   const omitted = withoutFocus();

@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { variantFingerprints } from '../scripts/build.mjs';
+import { unbuildable, variantFingerprints } from '../scripts/build.mjs';
 
 const fixture = name => JSON.parse(readFileSync(new URL(`../../to-design/tests/fixtures/nested/${name}.component.json`, import.meta.url), 'utf8'));
 const BUTTON = fixture('button');
@@ -29,4 +29,32 @@ test('a held family restyled leaves the holding variants\' fingerprints, and a C
   assert.deepEqual(prints(label).map((f, i) => f === card[i]), [true, false]);
   const kind = { ...CARD, instances: [...CARD.instances, { match: { density: 'comfortable' }, set: { Cancel: { variant: { kind: 'primary' } } } }] };
   assert.deepEqual(prints(kind).map((f, i) => f === card[i]), [false, true]);
+});
+
+// #317 Decision 8: a nested instance's fingerprint names the held family, its key and Design System, beside the rules
+test('a nested instance\'s fingerprint names the held family and its Design System', () => {
+  const card = prints(CARD);
+  // the same node and rules, holding another family of the same Design System
+  const text = JSON.stringify(CARD).replaceAll('family:button', 'family:action');
+  const other = { ...JSON.parse(text), dependencies: { ...CARD.dependencies, families: [{ key: 'action', contract: 'action' }] } };
+  assert.deepEqual(prints(other).map((f, i) => f === card[i]), [false, false]);
+  // the same key, in another Design System
+  const foreign = { ...CARD, dependencies: { ...CARD.dependencies, families: [{ key: 'button', contract: 'button', designSystem: 'carbon' }] } };
+  assert.deepEqual(prints(foreign).map((f, i) => f === card[i]), [false, false]);
+});
+
+// A holder of a family not built here is refused by name and the rest build (#593): one in another Design System
+// (#594), a draft, a --skip'ped family, or one with no approved Contract; a holder of a refused holder goes too.
+test('the gate leaves out a holder of a family not built here, by name, and builds the rest', () => {
+  const panel = { ...CARD, family: { ...CARD.family, key: 'panel', name: 'Panel' },
+    anatomy: { ...CARD.anatomy, children: [{ name: 'Inner', type: 'INSTANCE', instanceOf: 'family:card' }] },
+    instances: [], dependencies: { ...CARD.dependencies, families: [{ key: 'card', contract: 'card' }] } };
+  assert.deepEqual(unbuildable({ button: BUTTON, card: CARD, panel }), {});
+  assert.deepEqual(Object.keys(unbuildable({ card: CARD, panel }, { drafts: ['button'] })), ['card', 'panel']);
+  assert.match(unbuildable({ card: CARD }, { drafts: ['button'] }).card, /holds button, a draft/);
+  assert.match(unbuildable({ card: CARD }, { skipped: ['button'] }).card, /holds button, which --skip leaves out/);
+  assert.match(unbuildable({ card: CARD }).card, /holds button, which has no approved Contract here/);
+  const foreign = { ...CARD, dependencies: { ...CARD.dependencies, families: [{ key: 'button', contract: 'button', designSystem: 'carbon' }] } };
+  assert.match(unbuildable({ button: BUTTON, card: foreign }).card, /holds button of Design System carbon/);
+  assert.match(unbuildable({ card: CARD, panel }, { drafts: ['button'] }).panel, /holds card, which is not built here/);
 });

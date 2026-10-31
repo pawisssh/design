@@ -3,7 +3,7 @@
 // matching, expansion and the closure live only in the shared Contract module.
 import { baseTuple, expand, resolve, variantName } from '../../contract/scripts/contract.mjs';
 import { valueAt } from './foundations-value.mjs';
-import { familyNodes, heldRefs, nestedBack, nestedOf } from './nested.mjs';
+import { familyNodes, heldRefs, iconRef, nestedBack, nestedOf } from './nested.mjs';
 
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isToken = v => isObj(v) && 'token' in v;
@@ -30,12 +30,6 @@ export function defaultProps(contract) {
 export function baseProps(contract, inSet) {
   return inSet ? defaultProps(contract) : reviewProps(contract);
 }
-
-// "icon:default" -> the Contract's default icon key; "icon:<key>" -> key.
-export const iconRef = (contract, ref) => {
-  const key = String(ref).replace(/^icon:/, '');
-  return key === 'default' ? contract.icons && contract.icons.default : key;
-};
 
 /**
  * The anatomy as a readback reports it: name, type and children (an instance's children are not part of it).
@@ -151,8 +145,8 @@ export function expectedVariant(contract, tuple, props, foundations, held) {
 }
 
 /** What the Base Component should read back as, for `props` (default: the review specimen; see baseProps). */
-export function expectedBase(contract, props = reviewProps(contract), foundations) {
-  return expectedVariant(contract, baseTuple(contract), props, foundations);
+export function expectedBase(contract, props = reviewProps(contract), foundations, held = null) {
+  return expectedVariant(contract, baseTuple(contract), props, foundations, held);
 }
 
 // ---------- readback: Figma ids -> Contract vocabulary ----------
@@ -190,7 +184,7 @@ export function normalizeReadback(raw, ledger, held = null) {
   if (raw.swap) out.swap = Object.fromEntries(Object.entries(raw.swap).map(([n, id]) => [n, icons[id] || variants[id] || (id ? `unknown:${id}` : null)]));
   if (raw.nested) {
     delete out.nested;
-    Object.assign(out, nestedBack(raw.nested, held, ledger));
+    Object.assign(out, nestedBack(raw.nested, held, ledger, icons));
   }
   return out;
 }
