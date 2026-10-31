@@ -9,7 +9,8 @@ A lane is an ordered list of tickets one session works for an orchestrator sessi
 3. Work test-first (`tdd`); the failing test comes before the change.
 4. Run only `npm run test:skills -- <skill>` for each skill touched, then `git fetch origin && npm run check`. The full `npm test` is CI's.
 5. Run `code-review` (Standards and Spec) on `git diff origin/main...HEAD` and fold the findings in or name them in the PR.
-6. Open one PR per ticket with a `pr`-skill body (Summary, Evidence, Merge Danger) and `Closes #<n>`. Then stop and report the PR number; the orchestrator merges and sends the next ticket.
+6. Search the open issues for each function and file the change touches (`gh issue list -R pawisssh/design --state open --search "<name> in:body"`). An issue the change fixes is named in the PR body: `Closes #<m>`, or `Refs #<m>` with what is left. Triage found four such fixes still open (#281, #277, #354, #410).
+7. Open one PR per ticket with a `pr`-skill body (Summary, Evidence, Merge Danger) and `Closes #<n>`. Then stop and report the PR number; the orchestrator merges and sends the next ticket.
 
 ## Never
 

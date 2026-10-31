@@ -11,6 +11,8 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 - **Comment on an issue**: `gh issue comment <number> --body "..."`
 - **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
 - **Close**: `gh issue close <number> --comment "..."`
+- **Blocked by**: whoever writes "Blocked by #n" (or "after #n") in an issue also sets the native edge, as in **Blocking** below; prose alone does not gate the frontier.
+- **A triage batch** (comments, label swaps, closes, edges, and new issues the comments cite): one plan file, `node scripts/triage-file.mjs <plan.json>`. It files the new issues first and puts their numbers into each `{{new:<id>}}`, then posts each issue as one unit, four at a time, an existing edge counting as done; the plan's shape is at the top of the script.
 
 Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.
 
