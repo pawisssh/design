@@ -4,14 +4,15 @@
 // under design-systems/. Assertions are properties, not byte goldens: the Foundations document grows (#109).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { contentHash, validate } from '../../contract/scripts/contract.mjs';
 import { generate as carbonFoundations } from '../../adapter-carbon/scripts/foundations.mjs';
 import { hasSources, readSources } from '../../adapter-carbon/scripts/sources.mjs';
 import { hasDeps } from '../scripts/deps.mjs';
-import { generate, loadDesignSystem, render, renderHtml, validateHandoff } from '../scripts/handoff.mjs';
+import { check, generate, loadDesignSystem, render, renderHtml, validateHandoff } from '../scripts/handoff.mjs';
 import { parseInline } from '../scripts/css.mjs';
 import { matchDeclaration, matchText } from '../scripts/match.mjs';
 import { innerHtmlTemplates } from '../scripts/reader.mjs';
@@ -530,6 +531,70 @@ test('the CLI refuses with decision requests and exit code 2 when decisions are 
     const [a, b] = [listed[i - 1], listed[i]];
     assert.ok(a.n > b.n || (a.n === b.n && first(a.kind) < first(b.kind)), `${a.kind} before ${b.kind}`);
   }
+});
+
+// The fixture as a page that links its stylesheet and script (#246): its <style> moved out to styles.css, its <script>
+// to js/app.js, and a remote stylesheet before them.
+function linkedPage() {
+  const dir = mkdtempSync(join(tmpdir(), 'to-handoff-linked-'));
+  const html = readFileSync(PROTOTYPE, 'utf8');
+  const style = /<style>\n([\s\S]*?)<\/style>/.exec(html), script = /<script>\n([\s\S]*?)<\/script>/.exec(html);
+  writeFileSync(join(dir, 'styles.css'), style[1]);
+  mkdirSync(join(dir, 'js'));
+  writeFileSync(join(dir, 'js/app.js'), script[1]);
+  writeFileSync(join(dir, 'index.html'), html
+    .replace(style[0], '<link rel="stylesheet" href="https://fonts.example.com/inter.css">\n<link rel="stylesheet" href="styles.css">')
+    .replace(script[0], '<script src="js/app.js"></script>'));
+  return dir;
+}
+
+test('generate reads a page\'s local linked stylesheet and script at their own offsets and pins them; a remote one is a note (#246)', { skip: noDeps }, async () => {
+  const { handoff: inline } = await run();
+  const dir = linkedPage();
+  const prototype = join(dir, 'index.html');
+  const ds = designSystem();
+  const result = await generate({ prototype, designSystem: ds, decisions: DECISIONS });
+  const { handoff } = result;
+  assert.deepEqual(Object.keys(handoff.source.prototype.files), ['index.html', 'js/app.js', 'styles.css']);
+  // The same styles, usages and copy as the inline page, at the file each one is in.
+  assert.deepEqual(styles(handoff).map(s => [s.property, s.raw, s.token || s.value]), styles(inline).map(s => [s.property, s.raw, s.token || s.value]));
+  assert.deepEqual(usages(handoff).map(u => [u.id, u.contract || u.proposal || null]), usages(inline).map(u => [u.id, u.contract || u.proposal || null]));
+  assert.deepEqual(Object.keys(handoff.copy), Object.keys(inline.copy));
+  const css = readFileSync(join(dir, 'styles.css'), 'utf8').split('\n');
+  const fromCss = styles(handoff).flatMap(s => s.at.filter(a => a.startsWith('styles.css:')).map(a => [s.property, Number(a.split(':')[1])]));
+  assert.ok(fromCss.length > 0);
+  // Its line declares it, or the shorthand it comes from.
+  for (const [property, line] of fromCss) assert.ok(css[line - 1].includes(property.split('-')[0]), `${property} on styles.css line ${line}`);
+  const js = readFileSync(join(dir, 'js/app.js'), 'utf8').split('\n');
+  const send = handoff.copy[usage(handoff, 'send').properties.label.slice(5)];
+  assert.match(send.at, /^js\/app\.js:\d+:\d+$/);
+  assert.ok(js[Number(send.at.split(':')[1]) - 1].includes('Send invites'));
+  assert.ok(handoff.source.notes.some(n => n.level === 'info' && n.text.includes('https://fonts.example.com/inter.css')), 'the remote stylesheet is a note');
+  assert.deepEqual(validateHandoff(handoff, await loadDesignSystem(ds)).errors, []);
+  // check sees the linked files: an edit to the stylesheet is Drift.
+  assert.deepEqual((await check({ handoffPath: result.path, designSystem: ds, prototype })).drift, []);
+  writeFileSync(join(dir, 'styles.css'), css.join('\n').replace('#c6c6c6', '#ff0000'));
+  assert.deepEqual((await check({ handoffPath: result.path, designSystem: ds, prototype })).drift, [{ kind: 'prototype', key: 'styles.css', change: 'changed' }]);
+});
+
+test('generate lists a decision key no request asks for and a recognise answer field it does not read, on stderr and in `dropped` (#246)', { skip: noDeps }, async () => {
+  const decisions = { ...DECISIONS, 'recognise:select': { ...DECISIONS['recognise:select'], reason: 'a select' }, 'tokn:color:#161616': 'text-primary' };
+  const expected = [
+    { key: 'recognise:select', field: 'reason', reason: 'the answer\'s fields are contract, tuple, via, candidates', by: 'agent' },
+    { key: 'tokn:color:#161616', answer: 'text-primary', reason: 'no request asks for it', by: 'agent' },
+  ];
+  assert.deepEqual((await generate({ prototype: PROTOTYPE, designSystem: designSystem(), decisions })).dropped, expected);
+  // The fixture's decisions are all read: a static run reads no reach, but each reach key names a state it has.
+  assert.deepEqual((await run()).result.dropped, []);
+  const ds = designSystem();
+  const file = join(ds, 'decisions.json');
+  writeFileSync(file, JSON.stringify(decisions));
+  const r = spawnSync(process.execPath, [repo('skills/to-handoff/scripts/handoff.mjs'), 'generate', PROTOTYPE, '--ds', ds, '--decisions', file, '--static'], { encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  assert.deepEqual(r.stderr.trim().split('\n'), [
+    'dropped decision recognise:select field "reason": the answer\'s fields are contract, tuple, via, candidates',
+    'dropped decision tokn:color:#161616: no request asks for it',
+  ]);
 });
 
 test('a media query at the breakpoints: where it applies, the two a px width falls between, else the widths seen (#146)', () => {

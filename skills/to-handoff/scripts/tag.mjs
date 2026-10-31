@@ -1,26 +1,28 @@
 // Source tagging for the runtime reader (#84, #113): the scratch copy's elements carry `data-handoff-at`, so a
 // rendered host element joins back to the static reader's `at`. Only the copy is rewritten, never the Prototype.
-//   tagHtml(doc)        one HTML file: every element the static reader found, scripted markup included.
+//   tagHtml(doc)        one HTML file and the scripts it links: every element the static reader found, scripted markup included.
 //   tagJsx(text, rel, ts)  one .tsx/.jsx file: every JSX element, as a chain of sites (outermost first).
 // Both insert text only, back to front, so every other offset stays where the static reader saw it.
 
 export const ATTR = 'data-handoff-at';
 
 /**
- * The HTML file the reader read (`doc` from readHtml), with ` data-handoff-at=<file:line:col>` after each
- * element's tag name. The value is unquoted (an `at` has no space, quote, `=`, `<`, `>` or backtick), so it is
- * safe inside markup a script holds in a quoted string or a template literal.
+ * Each file the reader read (`doc` from readHtml: the HTML file, and the files it links, #246) as {rel: text},
+ * with ` data-handoff-at=<file:line:col>` after each element's tag name in the file that holds it. The value is
+ * unquoted (an `at` has no space, quote, `=`, `<`, `>` or backtick), so it is safe inside markup a script holds in
+ * a quoted string or a template literal.
  */
 export function tagHtml(doc) {
-  const edits = [];
+  const edits = new Map(doc.files.map(f => [f, []]));
   const visit = el => {
     if (el.type !== 'element') return;
-    const name = new RegExp(`^<${el.tag}`, 'i').exec(doc.text.slice(el.offset, el.offset + el.tag.length + 1));
-    if (name) edits.push({ pos: el.offset + name[0].length, text: ` ${ATTR}=${doc.at(el.offset)}` });
+    const f = doc.files.findLast(x => el.offset >= x.base), local = el.offset - f.base;
+    const name = new RegExp(`^<${el.tag}`, 'i').exec(f.text.slice(local, local + el.tag.length + 1));
+    if (name) edits.get(f).push({ pos: local + name[0].length, text: ` ${ATTR}=${doc.at(el.offset)}` });
     el.children.forEach(visit);
   };
   visit(doc.root);
-  return apply(doc.text, edits);
+  return Object.fromEntries(doc.files.map(f => [f.rel, apply(f.text, edits.get(f))]));
 }
 
 /**

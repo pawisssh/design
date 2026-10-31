@@ -93,6 +93,10 @@ export function recogniseUsages({ root, system, rules, decider: d, describe, dra
     return 'an answer names a contract, a proposal, a draft, raw or noContract';
   };
 
+  // The fields each recognise answer is read for (#246): the one that names its kind decides.
+  const recogniseFields = a => (a.contract ? ['contract', 'tuple', 'via', 'candidates'] : a.proposal ? ['proposal', 'tuple', 'via', 'candidates']
+    : a.draft ? ['draft', 'tuple', 'via', 'reason'] : a.raw === true ? ['raw', 'reason'] : ['noContract', 'reason']);
+
   // ---- a family the Code Library ships with no Contract (#90, #115): the Adapter writes it mid-run ----
   // The agent follows the Adapter's procedure for the whole family and answers with the file it wrote. A draft
   // that passes the Adapter's check is used in this run and written into contracts/ once nothing is open; one
@@ -102,7 +106,8 @@ export function recogniseUsages({ root, system, rules, decider: d, describe, dra
     const answer = d.ask(`contract:${family}`, {
       kind: 'contract-draft', candidates: [],
       question: `\`${family}\` has no Contract in ${system.key}. ${procedureFor(adapter, family)}. Write the whole family at status draft with its Drafted values, then answer {path} with the file, or {unwritable: reason}.`,
-    }, a => (a && (typeof a.path === 'string' && a.path || typeof a.unwritable === 'string' && a.unwritable) ? null : 'a draft answer is {path} or {unwritable: reason}'));
+    }, a => (a && (typeof a.path === 'string' && a.path || typeof a.unwritable === 'string' && a.unwritable) ? null : 'a draft answer is {path} or {unwritable: reason}'),
+    a => (a.unwritable !== undefined ? ['unwritable'] : ['path']));
     let result = null;
     if (answer && answer.unwritable) result = { failed: answer.unwritable };
     else if (answer) {
@@ -218,7 +223,7 @@ export function recogniseUsages({ root, system, rules, decider: d, describe, dra
       const answer = resolveDraftAnswer(d.ask(key, {
         kind: 'recognise', question: `What is \`${cand.sig}\` ("${text.slice(0, 40)}")?`, candidates: families,
         evidence: { at: [at], ...(rendered ? { rendered } : {}) },
-      }, checkRecognise), key);
+      }, checkRecognise, recogniseFields), key);
       recognised.push({ el, cand, answer, key, within });
     }
     const { answer } = recognised[recognised.length - 1];

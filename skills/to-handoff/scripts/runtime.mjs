@@ -67,9 +67,10 @@ export async function run({ prototype, screens, breakpoints, depsDir = DEPS_DIR 
   try {
     cpSync(root, copy, { recursive: true, filter: src => !SKIP_DIRS.has(basename(src)) || src === root });
     mkdirSync(out);
-    // The HTML file is tagged at the static reader's offsets: the Prototype itself, or a Vite app's index.html.
+    // The HTML file is tagged at the static reader's offsets: the Prototype itself with the scripts it links (#246),
+    // or a Vite app's index.html, whose module script is a .tsx/.jsx tagged below.
     rel = folder ? (existsSync(join(copy, 'index.html')) ? 'index.html' : null) : relative(root, prototype).split(sep).join('/');
-    if (rel) writeFileSync(join(copy, rel), tagHtml(readHtml(join(copy, rel), rel, { depsDir })));
+    if (rel) for (const [file, text] of Object.entries(tagHtml(readHtml(join(copy, rel), rel, { depsDir, linked: !folder })))) writeFileSync(join(copy, file), text);
     const ts = loadTypescript(depsDir);
     const failed = tagTree(copy, ts);
     uiDir = codeLibraryDir(copy, ts);

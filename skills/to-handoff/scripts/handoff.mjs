@@ -39,7 +39,10 @@ const requestCounts = requests => {
   const kinds = [...counts].sort((a, b) => b[1] - a[1]).map(([kind, n]) => `${n} ${kind}`);
   return `${requests.length} request${requests.length === 1 ? '' : 's'}: ${kinds.join(', ')}`;
 };
-const printDropped = dropped => { for (const x of dropped || []) console.error(`dropped owner decision ${x.key}: ${x.reason}`); };
+// A dropped owner decision, an agent key no request asks for, or an answer field no request reads (#246).
+const printDropped = dropped => {
+  for (const x of dropped || []) console.error(`dropped ${x.by === 'owner' ? 'owner ' : ''}decision ${x.key}${x.field ? ` field "${x.field}"` : ''}: ${x.reason}`);
+};
 
 async function main(argv) {
   const { positionals, values } = parseArgs({ args: argv, allowPositionals: true, options: {

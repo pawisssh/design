@@ -21,7 +21,7 @@ const elements = doc => { const out = []; walk(doc.root, el => out.push(el)); re
 
 test('tagHtml tags every element the reader finds, scripted markup included, with its own file:line:col', { skip: noDeps }, () => {
   const doc = readHtml(PROTOTYPE, 'index.html');
-  const tagged = tagHtml(doc);
+  const tagged = tagHtml(doc)['index.html'];
   const again = readHtml(PROTOTYPE, 'index.html', { text: tagged });
   const before = elements(doc), after = elements(again);
   assert.equal(after.length, before.length);
@@ -31,6 +31,17 @@ test('tagHtml tags every element the reader finds, scripted markup included, wit
     assert.equal(after[i].attrs['data-handoff-at'], doc.at(before[i].offset), `${before[i].tag} at ${doc.at(before[i].offset)}`);
   }
   for (const s of again.scripts) assert.doesNotThrow(() => new Function(s.text), 'a tagged script still parses');
+});
+
+test('tagHtml tags markup a linked script builds in that script, at its own file:line:col (#246)', { skip: noDeps }, () => {
+  const dir = mkdtempSync(join(tmpdir(), 'to-handoff-tag-'));
+  writeFileSync(join(dir, 'index.html'), '<!doctype html>\n<html><body>\n<main id="app"></main>\n<script src="app.js"></script>\n</body></html>\n');
+  writeFileSync(join(dir, 'app.js'), 'const app = document.getElementById(\'app\');\napp.innerHTML = `<p class="lead">Hi</p>`;\n');
+  const doc = readHtml(join(dir, 'index.html'), 'index.html', { linked: true });
+  const tagged = tagHtml(doc);
+  assert.deepEqual(Object.keys(tagged), ['index.html', 'app.js']);
+  assert.equal(tagged['app.js'], 'const app = document.getElementById(\'app\');\napp.innerHTML = `<p data-handoff-at=app.js:2:18 class="lead">Hi</p>`;\n');
+  assert.match(tagged['index.html'], /<main data-handoff-at=index\.html:3:1 id="app">/);
 });
 
 test('tagJsx: a host element rendered through a {...props} spread carries the chain, outermost site first', { skip: noDeps }, () => {
