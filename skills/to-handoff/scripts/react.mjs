@@ -19,7 +19,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { parseCss } from './css.mjs';
 import { sassFile, sassNote } from './scss.mjs';
-import { EXTS, appDirOf, metadataTitle, packageOf, reactKind } from './feature-key.mjs';
+import { EXTS, appDirOf, kebab, metadataTitle, packageOf, reactKind } from './feature-key.mjs';
 import { loadTypescript } from './deps.mjs';
 import { lineOf, lineStarts, readHtml, walk } from './reader.mjs';
 
@@ -614,10 +614,11 @@ export function readReact(root, { depsDir, packages = [] } = {}) {
 // ---------- Stand-ins (#62) by name and shape, over the files the reader read ----------
 
 /**
- * {mocks: [{name, offset}], simulated: [{name, delay, offset, before, after}], stubs: [{route, method, file, name,
+ * {mocks: [{name, offset}], simulated: [{name, kind, delay, offset, before, after}], stubs: [{route, method, file, name,
  * offset, sets, before, after}]}: `mock…` constants and literal exports of a data/ or fixtures/ file; functions
  * that wait on a setTimeout, with the state each `setX(true)` sets before the timer (`before`) and after it
- * (`after`), named by its useState pair. A timer that only clears state after the work, `setTimeout(() =>
+ * (`after`), named by its useState pair. A timer in a component is the work of its effect or handler, `kind` 'state' and named
+ * for the state it fills (`tasks`), else 'timer' named `<component>-timer`, never the component (#230); in a function, `kind` is 'function'. A timer that only clears state after the work, `setTimeout(() =>
  * setMsg(null), 2000)`, is not simulated work. A stub is a `fetch('<path>')` or `` fetch(`<path>`) `` of a route
  * the Prototype serves itself (#341, #352), `route` its folder pattern (`/api/items/[id]`), with the state variables
  * its innermost function sets (`sets`, named only when that function is) and the states it sets before and after
@@ -657,7 +658,20 @@ function standInsOf(ts, sources, routes) {
     findCalls(s.sf);
     // A timer whose callback only resets state to null, undefined or '' clears a message after the work (#217).
     const empty = x => x.kind === ts.SyntaxKind.NullKeyword || (ts.isIdentifier(x) && x.text === 'undefined') || (ts.isStringLiteralLike(x) && x.text === '');
-    const resets = x => ts.isCallExpression(x) && ts.isIdentifier(x.expression) && /^set[A-Z]/.test(x.expression.text) && x.arguments.length === 1 && empty(x.arguments[0]);
+    const isSetCall = x => ts.isCallExpression(x) && ts.isIdentifier(x.expression) && /^set[A-Z]/.test(x.expression.text);
+    // The state a `setX(..)` call sets, named by its useState pair.
+    const stateOf = c => setters[c.expression.text] || c.expression.text.replace(/^set(.)/, (_, ch) => ch.toLowerCase());
+    // The `setX(arg)` calls under `root` whose first argument `keep` accepts.
+    const setCalls = (root, keep) => {
+      const out = [];
+      const walk = x => {
+        if (isSetCall(x) && x.arguments[0] && keep(x.arguments[0])) out.push(x);
+        ts.forEachChild(x, walk);
+      };
+      walk(root);
+      return out;
+    };
+    const resets = x => isSetCall(x) && x.arguments.length === 1 && empty(x.arguments[0]);
     const clears = timer => {
       const cb = timer.arguments[0];
       if (!cb || !(ts.isArrowFunction(cb) || ts.isFunctionExpression(cb))) return false;
@@ -665,25 +679,41 @@ function standInsOf(ts, sources, routes) {
       return cb.body.statements.length > 0 && cb.body.statements.every(st => ts.isExpressionStatement(st) && resets(st.expression));
     };
     const seen = new Set();
+    const isComponent = fn => /^[A-Z]/.test(nameOf(fn));
     for (const timer of timers) {
       if (clears(timer)) continue;
       let fn = timer.parent;
       while (fn && !nameOf(fn)) fn = fn.parent;
-      if (!fn || seen.has(fn)) continue;
-      seen.add(fn);
-      const calls = [];
-      const scan = x => {
-        if (ts.isCallExpression(x) && ts.isIdentifier(x.expression) && /^set[A-Z]/.test(x.expression.text) && x.arguments[0] && x.arguments[0].kind === ts.SyntaxKind.TrueKeyword) calls.push(x);
-        ts.forEachChild(x, scan);
-      };
-      scan(fn.body);
-      const atom = c => setters[c.expression.text] || c.expression.text.replace(/^set(.)/, (_, ch) => ch.toLowerCase());
+      if (!fn) continue;
+      // A timer in a component (an effect, an inline handler) is that effect's or handler's own work, named for the state it
+      // fills, else the next state it sets, else the component's timer: never the component itself (#230).
+      const inComponent = isComponent(fn);
+      // The effect or handler around the timer, not a `new Promise(r => setTimeout(r, n))` executor, which holds no state calls.
+      const executor = x => ts.isFunctionLike(x) && ts.isNewExpression(x.parent) && x.parent.expression.getText(s.sf) === 'Promise';
+      let scope = fn, sleeping = false;
+      if (inComponent) {
+        scope = timer.parent;
+        while (scope && !(ts.isFunctionLike(scope) && !executor(scope))) { sleeping = sleeping || executor(scope); scope = scope.parent; }
+        if (scope === fn) scope = timer;
+      }
+      // A component's timers are one Stand-in each, a function's is one in all.
+      const key = inComponent ? timer : fn;
+      if (seen.has(key)) continue;
+      seen.add(key);
       const start = timer.getStart(s.sf);
+      const cb = timer.arguments[0];
+      // A state is filled by a value, so a boolean literal (`setLoading(false)`) is not the one the timer is named for.
+      const value = a => !empty(a) && a.kind !== ts.SyntaxKind.TrueKeyword && a.kind !== ts.SyntaxKind.FalseKeyword;
+      const filled = [...(cb && ts.isFunctionLike(cb) ? setCalls(cb, value) : []), ...(inComponent ? setCalls(scope, value).filter(c => c.getStart(s.sf) > start) : [])];
+      // A callback passed by name (`setTimeout(load, 500)`) is the function that does the work.
+      const named = inComponent && !sleeping && cb && ts.isIdentifier(cb) ? cb.text : null;
+      const name = named || (inComponent ? (filled[0] ? stateOf(filled[0]) : `${kebab(nameOf(fn))}-timer`) : nameOf(fn));
+      const calls = setCalls(inComponent ? scope : fn.body, a => a.kind === ts.SyntaxKind.TrueKeyword);
       simulated.push({
-        name: nameOf(fn), delay: timer.arguments[1] && ts.isNumericLiteral(timer.arguments[1]) ? Number(timer.arguments[1].text) : null,
-        offset: s.base + (ts.isFunctionDeclaration(fn) ? fn : fn.parent).getStart(s.sf),
-        before: calls.filter(c => c.getStart(s.sf) < start).map(atom),
-        after: calls.filter(c => c.getStart(s.sf) > start).map(atom),
+        name, kind: !inComponent || named ? 'function' : filled[0] ? 'state' : 'timer', delay: timer.arguments[1] && ts.isNumericLiteral(timer.arguments[1]) ? Number(timer.arguments[1].text) : null,
+        offset: s.base + (inComponent ? timer : ts.isFunctionDeclaration(fn) ? fn : fn.parent).getStart(s.sf),
+        before: calls.filter(c => c.getStart(s.sf) < start).map(stateOf),
+        after: calls.filter(c => c.getStart(s.sf) > start).map(stateOf),
       });
     }
     for (const call of fetches) {
@@ -695,19 +725,12 @@ function standInsOf(ts, sources, routes) {
       while (fn && !ts.isFunctionLike(fn)) fn = fn.parent;
       const opts = call.arguments[1];
       const m = opts && ts.isObjectLiteralExpression(opts) && opts.properties.find(p => ts.isPropertyAssignment(p) && p.name.getText(s.sf) === 'method');
-      const calls = [];
-      const scan = x => {
-        const a = ts.isCallExpression(x) && ts.isIdentifier(x.expression) && /^set[A-Z]/.test(x.expression.text) && x.arguments[0];
-        if (a && a.kind !== ts.SyntaxKind.FalseKeyword && !empty(a)) calls.push(x);
-        ts.forEachChild(x, scan);
-      };
-      if (fn && fn.body) scan(fn.body);
-      const name = c => setters[c.expression.text] || c.expression.text.replace(/^set(.)/, (_, ch) => ch.toLowerCase());
-      const atom = c => (ts.isStringLiteralLike(c.arguments[0]) ? `${name(c)} === ${c.arguments[0].getText(s.sf)}` : name(c));
+      const calls = fn && fn.body ? setCalls(fn.body, a => a.kind !== ts.SyntaxKind.FalseKeyword && !empty(a)) : [];
+      const atom = c => (ts.isStringLiteralLike(c.arguments[0]) ? `${stateOf(c)} === ${c.arguments[0].getText(s.sf)}` : stateOf(c));
       const start = call.getStart(s.sf);
       stubs.push({
         route: route.route, method: m && ts.isStringLiteralLike(m.initializer) ? m.initializer.text.toUpperCase() : 'GET', file: route.file,
-        name: fn ? nameOf(fn) : null, offset: s.base + start, sets: [...new Set(calls.map(name))],
+        name: fn ? nameOf(fn) : null, offset: s.base + start, sets: [...new Set(calls.map(stateOf))],
         before: calls.filter(c => c.getStart(s.sf) < start).map(atom), after: calls.filter(c => c.getStart(s.sf) > start).map(atom),
       });
     }

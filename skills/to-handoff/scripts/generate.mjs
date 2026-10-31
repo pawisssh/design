@@ -260,6 +260,7 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   const values = [];
   const fonts = [];
   const sim = doc.standIns;
+  const simulatedBy = f => (f.kind === 'state' ? `the ${f.name} timer` : f.kind === 'timer' ? f.name : `${f.name}()`);
   const flow = [];
   // Mid-run drafts (#90, #115) by family, carried from screen to screen: usages.mjs resolves them; generate notes
   // each one that passed and writes it into contracts/ once nothing is open. A drafted Contract is read from here.
@@ -604,8 +605,8 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     // A simulated function belongs to the screen whose conditions read the state it sets.
     const mine = sim.simulated.filter(f => !multi || [...f.before, ...f.after].some(a => atoms.includes(a)));
     for (const f of mine) {
-      for (const a of f.before) if (stateOfAtom(a)) trigger[stateOfAtom(a)] = `${f.name}() sets ${a} (simulated)`;
-      for (const a of f.after) if (stateOfAtom(a)) trigger[stateOfAtom(a)] = `${f.name}() sets ${a} after a ${f.delay}ms timer (simulated)`;
+      for (const a of f.before) if (stateOfAtom(a)) trigger[stateOfAtom(a)] = `${simulatedBy(f)} sets ${a} (simulated)`;
+      for (const a of f.after) if (stateOfAtom(a)) trigger[stateOfAtom(a)] = `${simulatedBy(f)} sets ${a} after a ${f.delay}ms timer (simulated)`;
     }
     // A stub-route fetch (#341) belongs to the screen whose conditions read a state its function sets.
     const stubs = sim.stubs.filter(f => !multi || f.sets.some(v => atoms.some(a => new RegExp(`\\b${v}\\b`).test(a))));
@@ -639,9 +640,9 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     const stateRef = s => (multi ? `${screenId}/${s}` : s);
     for (const f of mine) {
       const from = f.before.map(stateOfAtom).find(Boolean), to = f.after.map(stateOfAtom).find(Boolean);
-      if (from) flow.push({ from: stateRef('default'), trigger: `${f.name}()`, to: stateRef(from), source: 'simulated' });
+      if (from) flow.push({ from: stateRef('default'), trigger: simulatedBy(f), to: stateRef(from), source: 'simulated' });
       if (from && to) flow.push({ from: stateRef(from), trigger: `${f.delay}ms timer`, to: stateRef(to), source: 'simulated' });
-      if (from && !present.includes('error')) flow.push({ from: stateRef(from), trigger: `${f.name}() fails`, to: stateRef('error'), source: 'missing' });
+      if (from && !present.includes('error')) flow.push({ from: stateRef(from), trigger: `${simulatedBy(f)} fails`, to: stateRef('error'), source: 'missing' });
     }
     // Two fetches of one route from one state give one row per transition.
     const transition = (from, trigger, to, source) => {
@@ -754,8 +755,11 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
   }
   for (const f of sim.simulated) {
     const id = uniqueId(dataIds, kebab(f.name));
-    data.push({ id, source: 'simulated', note: `\`${f.name}()\` simulates its work with a ${f.delay}ms setTimeout`, at: at(f.offset),
-      question: question({ id: `q-data-${id}`, kind: 'stand-in', to: 'developer', text: `What does \`${f.name}()\` call, and how does it fail? The Prototype simulates it with a timer.` }) });
+    // A timer in a component is named for the state it fills, not the component (#230).
+    const [note, text] = f.kind === 'state' ? [`\`${f.name}\` is filled by a ${f.delay}ms setTimeout`, `Where does \`${f.name}\` come from, and how does it fail? The Prototype simulates it with a timer.`]
+      : f.kind === 'timer' ? [`\`${f.name}\` is a ${f.delay}ms setTimeout the Prototype simulates work with`, `What does the \`${f.name}\` timer stand in for, and how does it fail?`]
+      : [`\`${f.name}()\` simulates its work with a ${f.delay}ms setTimeout`, `What does \`${f.name}()\` call, and how does it fail? The Prototype simulates it with a timer.`];
+    data.push({ id, source: 'simulated', note, at: at(f.offset), question: question({ id: `q-data-${id}`, kind: 'stand-in', to: 'developer', text }) });
   }
   // A route the Prototype serves itself is a stub API (#341): the entry says what it pretends to do, never how.
   // One entry per route; an id another Stand-in has already taken gains `-api` (#352), then a number.
