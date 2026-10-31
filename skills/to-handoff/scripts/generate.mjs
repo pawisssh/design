@@ -35,7 +35,7 @@ const HEADINGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
 // Without breakpoints from the Adapter, the runtime reader screenshots one desktop width.
 const DEFAULT_BREAKPOINTS = [{ key: 'desktop', width: 1280 }];
 // The fields an acceptance criterion is read for.
-const CRITERION = ['id', 'screen', 'state', 'given', 'when', 'then'];
+const CRITERION_FIELDS = ['id', 'screen', 'state', 'given', 'when', 'then'];
 // Above this many routes, To-handoff asks whether to split the Prototype (#62).
 const MAX_SCREENS = 6;
 
@@ -100,7 +100,8 @@ function decider(decisions, carried = {}) {
      * The answer to `key`, checked by `check` (which throws), or undefined after recording a request. A caller
      * may stand in the first candidate for an undefined answer, only so the pass goes on to collect every
      * request: with any request open, generate returns them and writes nothing. `fields(answer)` names the
-     * fields an object answer (or each item of a list) is read for; any other is listed in `dropped`.
+     * fields an object answer (or each item of a list) is read for; any other is listed in `dropped`. A scalar
+     * answer (a candidate, true or false) passes none.
      */
     ask(key, request, check, fields) {
       if (owner.has(key)) {
@@ -855,10 +856,10 @@ export async function generate({ prototype, designSystem, decisions = {}, depsDi
     kind: 'acceptance', question: `Acceptance criteria for ${screenIds.join(', ')}: [{id, screen, state, given, when, then}], one per state at least.`, candidates: presentStates,
     screens: screenIds, example,
   }, a => (Array.isArray(a) && a.length && a.every(x => x.id && screenIds.includes(x.screen) && STANDARD_STATES.includes(x.state) && filled(x)) ? null
-    : `acceptance is a non-empty list of {id, screen: ${screenList}, state, given, when, then}, the example's placeholders filled in`), () => CRITERION);
+    : `acceptance is a non-empty list of {id, screen: ${screenList}, state, given, when, then}, the example's placeholders filled in`), () => CRITERION_FIELDS);
 
   // ---- the owner's answers to questions and own acceptance criteria, by question and acceptance id ----
-  const criteria = acceptance ? acceptance.map(a => ({ ...Object.fromEntries(CRITERION.map(k => [k, a[k]])), by: d.isOwner('acceptance') ? 'owner' : 'agent' })) : [];
+  const criteria = acceptance ? acceptance.map(a => ({ ...Object.fromEntries(CRITERION_FIELDS.map(k => [k, a[k]])), by: d.isOwner('acceptance') ? 'owner' : 'agent' })) : [];
   const openQuestions = questions.map(q => ({ ...q, answer: null }));
   for (const key of d.unreached()) {
     const answer = d.ownerOf(key);

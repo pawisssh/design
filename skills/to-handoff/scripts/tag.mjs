@@ -16,7 +16,7 @@ export function tagHtml(doc) {
   const edits = new Map(doc.files.map(f => [f, []]));
   const visit = el => {
     if (el.type !== 'element') return;
-    const f = doc.files.findLast(x => el.offset >= x.base), local = el.offset - f.base;
+    const { file: f, local } = doc.fileAt(el.offset);
     const name = new RegExp(`^<${el.tag}`, 'i').exec(f.text.slice(local, local + el.tag.length + 1));
     if (name) edits.get(f).push({ pos: local + name[0].length, text: ` ${ATTR}=${doc.at(el.offset)}` });
     el.children.forEach(visit);

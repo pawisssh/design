@@ -19,7 +19,7 @@ const MASK = '\uE000';
  * Read one HTML file (or `text` in its place). `rel` is its path relative to the Prototype root (the `at` prefix).
  * With `linked` (#246), each local `<link rel=stylesheet href>` and `<script src>` is read too, into `rules` and
  * `scripts`: every file read gets a base offset after the one before, so `at` maps an offset back to its own
- * `file:line:col`. `files` lists the files read, {rel, base, text}; a remote, missing or outside one is left out with
+ * `file:line:col` (`fileAt` gives the file and the offset within it). `files` lists the files read, {rel, base, text}; a remote, missing or outside one is left out with
  * a `notes` line.
  */
 export function readHtml(path, rel, { depsDir, text = readFileSync(path, 'utf8'), linked = false } = {}) {
@@ -27,13 +27,17 @@ export function readHtml(path, rel, { depsDir, text = readFileSync(path, 'utf8')
   const files = [{ rel, base: 0, text, lines: lineStarts(text) }];
   // Every file read, each at its base: any offset indexes this, as an offset in the HTML file indexes `text`.
   let all = text;
+  // The file an offset falls in, and the offset within it.
+  const fileAt = offset => {
+    const file = files.findLast(x => offset >= x.base);
+    return { file, local: offset - file.base };
+  };
   const at = offset => {
-    const f = files.findLast(x => offset >= x.base);
-    const local = offset - f.base, l = lineOf(f.lines, local);
+    const { file: f, local } = fileAt(offset), l = lineOf(f.lines, local);
     return `${f.rel}:${l + 1}:${local - f.lines[l] + 1}`;
   };
   const doc = parse5.parse(text, { sourceCodeLocationInfo: true });
-  const out = { file: rel, text, at, rules: [], scripts: [], root: null, mounts: [], files, notes: [] };
+  const out = { file: rel, text, at, fileAt, rules: [], scripts: [], root: null, mounts: [], files, notes: [] };
 
   // A linked stylesheet or script, read into the address space once; null when it is not read, with a note why.
   const readLinked = (ref, offset, what) => {
@@ -41,7 +45,7 @@ export function readHtml(path, rel, { depsDir, text = readFileSync(path, 'utf8')
     if (/^([a-z][a-z0-9+.-]*:|\/\/)/i.test(ref)) return skip('is remote');
     let local = ref.split(/[?#]/)[0];
     try { local = decodeURI(local); } catch { /* kept as written */ }
-    // A root-relative path is the Prototype folder's, as the runtime reader serves it.
+    // A root-relative path is the page's folder's (the Prototype folder), as the runtime reader serves it.
     const dir = dirname(path), abs = resolve(dir, local.replace(/^\/+/, ''));
     const inside = relative(dir, abs);
     if (!inside || inside === '..' || inside.startsWith(`..${sep}`) || isAbsolute(inside)) return skip('is outside the Prototype folder');
