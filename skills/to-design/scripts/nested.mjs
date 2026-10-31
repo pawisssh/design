@@ -45,7 +45,7 @@ export const iconRef = (contract, ref) => {
 };
 
 /** A held variant's ref, as a swap and the state's ids name it: `family:<designSystem>/<key>/<tupleKey>`. */
-export const heldRef = (designSystem, key, c, t) => `family:${designSystem}/${key}/${tupleKey(c, t)}`;
+const heldRef = (designSystem, key, c, t) => `family:${designSystem}/${key}/${tupleKey(c, t)}`;
 
 // One nested instance as the holder's rule on it (`v`, from resolveInstances) sets it: the held tuple, where the axes
 // left out take the held default, and each held property at the value written, else the held default (`written`).
