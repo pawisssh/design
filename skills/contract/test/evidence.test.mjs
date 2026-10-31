@@ -131,6 +131,19 @@ test('a citation that opens a clause mid-sentence backs the clause after it (#46
   assert.deepEqual(prose({ note: 'The span takes hiddenCss, ProgressCircle.tsx L6, and opacity 0.' }), [], 'one followed by punctuation backs the claim before');
 });
 
+test('a bare L<n> in a clause that names more than one file is ambiguous: it names its file (#462)', () => {
+  // #462's toast-notification notes[4]: bare lines meant for one file resolved to another the note named
+  const two = 'ProgressCircle.tsx L2 sets strokeDashoffset and Button.tsx L4 renders the Icon, at pathLength 1 (L3).';
+  assert.deepEqual(prose({ note: two }), [`notes[0]: "${two}": L3 follows more than one file in its clause (ProgressCircle.tsx, Button.tsx): name its file`]);
+  assert.deepEqual(prose({ note: 'ProgressCircle.tsx L2 sets strokeDashoffset but Button.tsx L4 renders the Icon (L4).' }), [], 'a contrast word ends the clause');
+  assert.deepEqual(prose({ note: 'ProgressCircle.tsx L2 sets strokeDashoffset and Button.tsx L4 renders the Icon; ProgressCircle.tsx L3 sets pathLength (L3).' }), [], 'a `;` clause names its own file');
+  assert.deepEqual(prose({ note: 'ProgressCircle.tsx L2 sets strokeDashoffset; Button.tsx L4 renders the Icon (L4).' }), [], 'the clause before names another file');
+  assert.deepEqual(prose({ note: 'Button.tsx L4 renders the Icon, and pathLength and strokeDasharray are 1 (ProgressCircle.tsx L3 and L4).' }), [], 'L4 continues the run of ProgressCircle.tsx L3');
+  assert.deepEqual(prose({ note: 'ProgressCircle.tsx L2 sets strokeDashoffset and Button.tsx L4 renders the Icon, at pathLength 1 (ProgressCircle.tsx L3).' }), []);
+  assert.deepEqual(prose({ note: 'Button.tsx L4 renders the Icon. ProgressCircle.tsx L2 sets strokeDashoffset and L3 sets pathLength.' }), [], 'a file named in an earlier sentence is not this one\'s');
+  assert.deepEqual(prose({ note: 'ProgressCircle.tsx L2 sets strokeDashoffset, packages/web/src/visualizations/ProgressCircle.tsx L3 pathLength, L4 strokeDasharray.' }), [], 'one file named twice');
+});
+
 test('prose without a citation and an owner\'s `was` are not checked', () => {
   assert.deepEqual(prose({ reason: 'derived (size − 1lh)/2', note: 'Figma has no animation, so the Arc does not spin.' }), []);
 });

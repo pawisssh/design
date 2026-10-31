@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 7,
+  "revision": 8,
   "status": "pending",
   "approval": null,
   "feature": {
@@ -35,15 +35,15 @@
       },
       "select": {
         "snapshotId": "sha256:6d36c2b22a7ad32899a5080c48e270fa4578beff8edef845236b574d4c60b2ff",
-        "contentHash": "sha256:34b5b1f0c09c68f8789ac006f6e89ec91beb0e3be947f2e8fcfbbc407087e167"
+        "contentHash": "sha256:fffe3267a93296902ba1b767f53750030151e8b6e58fecea89ec78df59318bae"
       },
       "text-input": {
         "snapshotId": "sha256:1a5e61e829858c59e445d7febf9c44c5d920bae55ddd39de50851196f1502c4c",
-        "contentHash": "sha256:ffc567ffda43ccc993b609efd9111bb3d652edadddf331cf0bd9f77b67e8e151"
+        "contentHash": "sha256:d9759d124c9a085f554341d454625227f39e56d1735fac973640f2cdd75d5026"
       },
       "toast-notification": {
         "snapshotId": "sha256:43954adf2ff1b4015bfe8fb98a58492ea6ec309e3f4f32a316d9003e9119ab8f",
-        "contentHash": "sha256:80115c9a4a94214a3fe56b4a8cce2ec2d3f50c2611cc413f548897b18d750671"
+        "contentHash": "sha256:7a6c8e8085fb55c20bfe91229bec8718151a8e7fed100072d72898a700f770f7"
       }
     },
     "proposals": {

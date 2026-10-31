@@ -450,7 +450,7 @@
     {
       "level": "info",
       "at": "paint[state=focus].Control.stroke",
-      "message": "Focus is on the hidden input. The control around it draws the ring: :has(:focus-visible) sets a 2px solid outline in bgPrimary, 1px outside its border box (Control.tsx L53-L59). The Contract draws it as a 2px outside stroke with no gap. To-preview forces :focus-visible on every element of the specimen, so its Focus card also shows the outlines no real focus draws: the Interactable's own, offset 2px (Interactable.tsx L80-L85), and the circle's (Radio.tsx L47-L52), a presentation div that never takes focus (L124)."
+      "message": "Focus is on the hidden input. The control around it draws the ring: :has(:focus-visible) sets a 2px solid outline in bgPrimary, 1px outside its border box (Control.tsx L53-L59). The Contract draws it as a 2px outside stroke with no gap. To-preview forces :focus-visible on every element of the specimen, so its Focus card also shows the outlines no real focus draws: the Interactable's own, offset 2px (Interactable.tsx L80-L85), and the circle's (Radio.tsx L47-L52), a presentation div that never takes focus (Radio.tsx L124)."
     },
     {
       "level": "info",
